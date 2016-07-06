@@ -39,7 +39,7 @@ define([
             var $menuBtn = $('<button type="button" data-toggle="dropdown" aria-haspopup="true" class="btn btn-default btn-xs">')
                 .append($('<span class="fa fa-cog" style="font-size:14pt">'));
 
-            this.$collapseBtn = $('<button type="button" class="btn btn-default btn-xs" role="button" data-button="toggle" style="width:20px"><span class="fa fa-chevron-down"></button>')
+            this.$collapseBtn = $('<button type="button" class="btn btn-default btn-xs" role="button" data-button="toggle" style="width:20px"><span class="fa fa-chevron-down" style="color: silver;"></button>')
                 .on('click', function (e) {
                     this.$elem.trigger('toggle.toolbar');
                     e.preventDefault();

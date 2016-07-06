@@ -186,12 +186,12 @@ define([
                     } else if (/\s/.test(parsedValue)) {
                         diagnosis = 'invalid';
                         errorMessage = 'spaces are not allowed in data object names';
-                    } else if (/^\d+$/.test(parsedValue)) {
+                    } else if (/^[\+\-]*\d+$/.test(parsedValue)) {
                         diagnosis = 'invalid';
-                        errorMessage = 'data object names cannot be a number';
-                    } else if (!/^[A-Za-z0-9|\.|\||_\-]*$/.test(parsedValue)) {
+                        errorMessage = 'data object names may not be in the form of an integer';
+                    } else if (!/^[A-Za-z0-9|\.|\||_\-]+$/.test(parsedValue)) {
                         diagnosis = 'invalid';
-                        errorMessage = 'object names can only include the symbols _ - . |';
+                        errorMessage = 'object names may only include the symbols _ - . |';
                     } else if (options.shouldNotExist) {
                         return workspaceObjectExists(options.workspaceId, parsedValue, options.authToken, options.workspaceServiceUrl)
                             .then(function (exists) {

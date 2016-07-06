@@ -46,7 +46,7 @@ define([
                     onOpen: function (arg) {
                         arg.node.innerHTML = '';
                         var logViewer = LogViewer.make();
-                        widgets.jobLog = logViewer;
+                        widgets.logViewer = logViewer;
                         logViewer.start();
                         logViewer.bus.emit('run', {
                             node: arg.node,
@@ -54,8 +54,10 @@ define([
                         });
                     },
                     onClose: function (arg) {
-                        widgets.logViewer.bus.emit('stop');
-                        delete widgets.jobLog;
+                        if (widgets.logViewer) {
+                            widgets.logViewer.bus.emit('stop');
+                        }
+                        delete widgets.logViewer;
                         arg.node.innerHTML = 'done';
                     }
                 },
@@ -230,6 +232,50 @@ define([
             });
         }
 
+        function renderExecStatus() {
+            var labelStyle = {
+                textAlign: 'right',
+                border: '1px transparent solid',
+                padding: '4px'
+            },
+                dataStyle = {
+                    border: '1px silver solid',
+                    padding: '4px',
+                    display: 'inline-block',
+                    minWidth: '20px',
+                    backgroundColor: 'gray',
+                    color: '#FFF'
+                };
+            return dom.buildPanel({
+                title: 'Execution Status',
+                name: 'execStatus',
+                hidden: false,
+                type: 'primary',
+                body: [
+                    div({class: 'row', dataElement: 'launch'}, [
+                        div({class: 'col-md-2', style: labelStyle}, span({dataElement: 'label'}, 'Launch')),
+                        div({class: 'col-md-2', style: dataStyle}, span({dataElement: 'elapsed'}))
+                    ]),
+                    div({class: 'row', dataElement: 'queue'}, [
+                        div({class: 'col-md-2', style: labelStyle}, span({dataElement: 'label'}, 'Queue')),
+                        div({class: 'col-md-2', style: dataStyle}, span({dataElement: 'elapsed'})),
+                        div({class: 'col-md-2', style: labelStyle}, 'Position'),
+                        div({class: 'col-md-2', style: dataStyle}, span({dataElement: 'position'}))
+                    ]),
+                    div({class: 'row', dataElement: 'run'}, [
+                        div({class: 'col-md-2', style: labelStyle}, span({dataElement: 'label'}, 'Run')),
+                        div({class: 'col-md-2', style: dataStyle}, span({dataElement: 'elapsed'}))
+                    ]),
+                    div({class: 'row', dataElement: 'finish'}, [
+                        div({class: 'col-md-2', style: labelStyle}, 'Finish'),
+                        div({class: 'col-md-2', style: dataStyle}, span({dataElement: 'state'})),
+                        div({class: 'col-md-2', style: labelStyle}, 'When'),
+                        div({class: 'col-md-2', style: dataStyle}, span({dataElement: 'finishedAt'}))
+                    ])
+                ]
+            });
+        }
+
         function renderJobDetails() {
             return dom.buildPanel({
                 title: 'Job Details',
@@ -316,9 +362,9 @@ define([
 
         function render() {
             var events = Events.make({node: container}),
-                content = div([
+                content = div({style: {margin: '-15px -15px -15px -15px'}}, [
                     dom.buildPanel({
-                        title: 'Options',
+                        title: null,
                         type: 'default',
                         body: [
                             dom.makeButton('Show Details', 'toggle-job-details', {events: events}),
@@ -327,7 +373,9 @@ define([
                             dom.makeButton('Show Log', 'toggle-job-log', {events: events})
                         ]
                     }),
-                    renderJobStatus(),
+                    // replaced with
+                    // renderJobStatus(),
+                    renderExecStatus(),
                     renderJobError(),
                     renderJobReport(),
                     renderJobResult(),
@@ -343,7 +391,7 @@ define([
         // DATA FETCH
 
 
-        // TODO: corral in the async requests! We don't want them to overlap, 
+        // TODO: corral in the async requests! We don't want them to overlap,
         // that's for sure.
         function updateJobLog(data) {
             Jobs.getLogData(data.jobId, 0)
@@ -369,14 +417,14 @@ define([
          * In the job state is a "step_job_ids" a holdover from the app days
          * In it is one property, which represents the job for this app.
          * The key matches the outputs found in the step_outputs property.
-         * The value for that the step_outputs property is a string, but it is a 
-         * tricky string, for it is a JSON string. We parse that to get the 
+         * The value for that the step_outputs property is a string, but it is a
+         * tricky string, for it is a JSON string. We parse that to get the
          * final project ... the report_ref, which we can use to get the report!
-         * 
+         *
          */
 //        function updateJobReport(job) {
 //            /*
-//             * If the job has not completed, there will be not outputs, so we 
+//             * If the job has not completed, there will be not outputs, so we
 //             * can just bail.
 //             */
 //            if (!job.state.step_outputs || Object.keys(job.state.step_outputs).length === 0) {
@@ -441,6 +489,44 @@ define([
         }
 
         function renderRunState() {
+            var state = model.getItem('runState');
+
+            if (!state) {
+                return;
+            }
+
+            dom.setContent(['runStatus', 'last-updated-at'], utils.formatTime(state.lastUpdatedTime));
+            dom.setContent(['runStatus', 'state'], state.canonicalState);
+            dom.setContent(['runStatus', 'temporalState'], state.temporalState);
+            dom.setContent(['runStatus', 'executionState'], state.executionState);
+
+            dom.setContent(['runStatus', 'run-id'], state.runId);
+            dom.setContent(['runStatus', 'job-id'], state.jobId);
+
+            if (state.success) {
+                showJobResult();
+                // dom.hideElement('job-report');
+            }
+
+            if (state.error) {
+                dom.showElement(['run-error']);
+                dom.setContent(['run-error', 'location'], state.error.location);
+                dom.setContent(['run-error', 'type'], state.error.type);
+                dom.setContent(['run-error', 'message'], state.error.message);
+                dom.setContent(['run-error', 'detail'], state.error.detail);
+                // console.log('ERROR', state.error);
+            } else {
+                dom.hideElement(['run-error']);
+            }
+
+            // Now be more stateful here...
+            if (state.jobId) {
+                dom.enableButton('toggle-job-log');
+            } else {
+                dom.disableButton('toggle-job-log');
+            }
+        }
+        function renderRunStatex() {
             var state = model.getItem('runState');
 
             if (!state) {
@@ -557,16 +643,125 @@ define([
                 dom.disableButton('toggle-job-log');
             }
         }
+         function renderExecState() {
+            var state = model.getItem('runState');
 
-        function updateRunStateFromLaunchEvent(launchEvent, launchState) {
-            var temporalState, executionState, canonicalState,
-                error, now = new Date().getTime(),
-                jobId = null;
-            if (!launchEvent) {
+            if (!state) {
                 return;
             }
 
-            switch (launchEvent.event) {
+            // Prepare
+//            dom.setContent(['execStatus', 'last-updated-at'], utils.formatTime(state.lastUpdatedTime));
+//            dom.setContent(['execStatus', 'state'], state.canonicalState);
+//            dom.setContent(['execStatus', 'temporalState'], state.temporalState);
+//            dom.setContent(['execStatus', 'executionState'], state.executionState);
+//
+//            dom.setContent(['execStatus', 'run-id'], state.runId);
+//            dom.setContent(['execStatus', 'job-id'], state.jobId);
+
+
+
+            // LAUNCH
+             if (state.elapsedLaunchTime) {
+                (function () {
+                    // dom.showElement(['execStatus', 'launch-time']);
+                    var label;
+                    if (state.temporalState === 'launching') {
+                        label = 'Launching';
+                    } else {
+                        label = 'Launching';
+                    }
+                    dom.setContent(['execStatus', 'launch', 'label'], label);
+                    dom.setContent(['execStatus', 'launch', 'elapsed'], utils.formatElapsedTime(state.elapsedLaunchTime) || '');
+                }());
+            } else {
+                // dom.hideElement(['execStatus', 'launch-time']);
+                dom.setContent(['execStatus', 'launch', 'elapsed'], '-');
+            }
+
+            // QUEUE
+             if (state.elapsedQueueTime) {
+                (function () {
+                    //dom.showElement(['execStatus', 'queue']);
+                    var label;
+                    if (state.elapsedRunTime) {
+                        label = 'Was Queued for';
+                    } else {
+                        label = 'In Queue';
+                    }
+                    // console.log('POSITION', JSON.parse(JSON.stringify(state)));
+                    if (state.jobState.position !== undefined) {
+                        dom.setContent(['execStatus', 'queue', 'position'], state.jobState.position);
+                    } else {
+                        dom.setContent(['execStatus', 'queue', 'position'], '-');
+                    }
+                    dom.setContent(['execStatus', 'queue', 'label'], label);
+                    dom.setContent(['execStatus', 'queue', 'elapsed'], utils.formatElapsedTime(state.elapsedQueueTime) || '');
+                }());
+            } else {
+                //dom.hideElement(['execStatus', 'queue']);
+                dom.setContent(['execStatus', 'queue', 'position'], '-');
+                dom.setContent(['execStatus', 'queue', 'elapsed'], '-');
+            }
+
+            // RUN
+             if (state.elapsedRunTime) {
+                (function () {
+                    //dom.showElement(['runStatus', 'run-time']);
+                    var label;
+                    if (state.completedTime) {
+                        label = 'Ran In';
+                    } else {
+                        label = 'Running For';
+                    }
+                    dom.setContent(['execStatus', 'run', 'label'], label);
+                    dom.setContent(['execStatus', 'run', 'elapsed'], utils.formatElapsedTime(state.elapsedRunTime) || '');
+                }());
+            } else {
+                //dom.hideElement(['execStatus', 'run-time']);
+                dom.setContent(['execStatus', 'run', 'elapsed'], '-');
+            }
+
+            // console.error('WHAT?', state);
+            if (state.success) {
+                // dom.showElement(['execStatus', 'finish', 'success']);
+                dom.setContent(['execStatus', 'finish', 'state'], 'success');
+                dom.setContent(['execStatus', 'finish', 'finishedAt'], format.niceElapsedTime(state.completedTime));
+                // dom.showElement('job-report');
+                // showJobReport();
+                showJobResult();
+            } else if (state.error) {
+                // dom.setContent(['execStatus', 'finish', 'finishedAt'], format.niceElapsedTime(state.completedTime));
+                dom.setContent(['execStatus', 'finish', 'finishedAt'], format.niceElapsedTime(state.completedTime));
+                dom.setContent(['execStatus', 'finish', 'state'], 'error');
+                dom.showElement(['run-error']);
+                dom.setContent(['run-error', 'location'], state.error.location);
+                dom.setContent(['run-error', 'type'], state.error.type);
+                dom.setContent(['run-error', 'message'], state.error.message);
+                dom.setContent(['run-error', 'detail'], state.error.detail);
+                // console.error('ERROR', state.error);
+            } else {
+                //dom.hideElement(['run-error']);
+                dom.setContent(['execStatus', 'finish', 'state'], '-');
+            }
+
+            // Now be more stateful here...
+            //if (state.jobId) {
+            //    dom.enableButton('toggle-job-log');
+            //} else {
+            //    dom.disableButton('toggle-job-log');
+            // }
+        }
+
+        function updateRunStateFromLaunchState(launchState) {
+            var temporalState, executionState, canonicalState,
+                error, now = new Date().getTime(),
+                launchStartTime = launchState.startTime,
+                elapsed = now - launchStartTime, newRunState;
+
+            // console.log('LAUNCH STATE UPDATE', launchState);
+
+            switch (launchState.event) {
                 case 'validating_app':
                     temporalState = 'launching';
                     executionState = 'processing';
@@ -586,7 +781,6 @@ define([
                     temporalState = 'launching';
                     executionState = 'processing';
                     canonicalState = 'launched-request';
-                    jobId = launchEvent.job_id;
                     break;
                 case 'error':
                     temporalState = 'launching';
@@ -594,21 +788,18 @@ define([
                     canonicalState = 'launch-error';
                     error = {
                         location: 'launching',
-                        type: launchEvent.error_type,
-                        message: launchEvent.error_message,
-                        detail: launchEvent.error_stacktrace
+                        type: launchState.error.type,
+                        message: launchState.error.message,
+                        detail: launchState.error.detail
                     };
                     break;
                 default:
-                    throw new Error('Invalid launch state ' + launchEvent.event);
+                    throw new Error('Invalid launch state ' + launchState.event);
             }
 
-            var launchStartTime = launchState.startTime,
-                elapsed = now - launchStartTime;
-
-            var newRunState = {
-                runId: launchEvent.run_id,
-                jobId: null,
+            newRunState = {
+                runId: launchState.runId,
+                jobId: launchState.jobId,
                 lastUpdatedTime: new Date().getTime(),
                 temporalState: temporalState,
                 executionState: executionState,
@@ -625,11 +816,16 @@ define([
         }
 
         function updateRunStateFromJobState() {
-            var jobState = model.getItem('jobState');
+            var jobState = model.getItem('jobState'),
+                runState = model.getItem('runState'),
+                now = new Date().getTime(),
+                newRunState,
+                temporalState,
+                submitTime, startTime, completedTime,
+                elapsedQueueTime, elapsedRunTime;
             if (!jobState) {
                 return;
             }
-            var now = new Date().getTime();
 
             /*
              * All jobs can exist in three temporal zones which we can define
@@ -640,32 +836,32 @@ define([
              * - running: the job is currently executing
              * - completed: the job has completed
              * - error: the job has completed with error
-             * 
-             * In addition, each of these states is associated with a set of 
+             *
+             * In addition, each of these states is associated with a set of
              * outcomes, either success or error. That is, they may progress from
              *   preparation -> queued -> running -> completed -> end
              * or any one may terminate with an error.
              *   preparation -> error
              *   preparation -> queued -> error
              *   preparation -> queued -> running -> error
-             * 
+             *
              * If an error is encountered, it places the job into the 'suspended' state
              * and sets an error message in a specific property (not described here, it is convoluted.)
-             * 
+             *
              * If an either queued, running, or completed states are entered a timestamp
              * is set, that is the signal we have that the state has been entered.
              * In the error state no timestamp has been set:
-             * 
-             * TODO: we should request an error timestamp, as well as 
+             *
+             * TODO: we should request an error timestamp, as well as
              * an error structure (e.g. id, message, stacktrace, additional info)
-             * 
+             *
              * In the completed state as well there is a job report (not described here at the moment).
-             * 
+             *
              */
 
             /*
              * From the NJSWrapper spec:
-             * 
+             *
              job_id - id of job running app
              finished - indicates whether job is done (including error cases) or not,
              if the value is true then either of 'returned_data' or 'detailed_error'
@@ -678,9 +874,9 @@ define([
              in error block of JSON RPC response;
              job_state - 'queued', 'in-progress', 'completed', or 'suspend';
              position - position of the job in execution waiting queue;
-             creation_time, exec_start_time and finish_time - time moments of submission, execution 
+             creation_time, exec_start_time and finish_time - time moments of submission, execution
              start and finish events in milliseconds since Unix Epoch.
-             
+
              typedef structure {
              string job_id;
              boolean finished;
@@ -700,9 +896,6 @@ define([
             /*
              * Determine temrporal state based on timestamps left behind.
              */
-            var temporalState = jobState.job_state,
-                submitTime, startTime, completedTime,
-                elapsedQueueTime, elapsedRunTime;
             if (jobState.creation_time) {
                 submitTime = jobState.creation_time;
                 if (jobState.exec_start_time) {
@@ -711,15 +904,19 @@ define([
                     if (jobState.finish_time) {
                         completedTime = jobState.finish_time;
                         elapsedRunTime = completedTime - startTime;
-                        // temporalState = 'completed';
                     } else {
                         elapsedRunTime = now - startTime;
                         // we've been  using running, but maybe we should switch.
                         // temporalState = 'running';
                     }
                 } else {
-                    elapsedQueueTime = now - submitTime;
-                    // temporalState = 'queued';
+                    if (jobState.finish_time) {
+                        completedTime = jobState.finish_time;
+                        elapsedQueueTime = completedTime - submitTime;
+                        // temporalState = 'completed';
+                    } else {
+                        elapsedQueueTime = now - submitTime;
+                    }
                 }
             } else {
                 throw new Error('Job state without submission time?');
@@ -747,7 +944,7 @@ define([
 //                    errorDetail = '';
 //                }
                 var errorId = new Uuid(4).format();
-                console.log('EXEC ERROR', errorId, errorInfo);
+                // console.log('EXEC ERROR', errorId, errorInfo);
 
                 var errorType, errorMessage, errorDetail;
                 if (errorInfo.error) {
@@ -798,21 +995,22 @@ define([
             }
 
             /*
-             * Setting up the run status structure. 
+             * Setting up the run status structure.
              * This is a view model used to provide information to the user
              * as well as switches for controlling the user interface.
-             * 
+             *
              * state: a simple string describing the run state
-             * 
+             *
              * launch, queue, running times: elapsed times in those states.
-             * 
-             * 
+             *
+             *
              */
 
             // TODO: get the preparation time.
             // todo: can we store the initial execution time in the job record
             // stored in the narrative?
             var canonicalState;
+            temporalState = jobState.job_state;
             switch (temporalState) {
                 case 'lauching':
                     switch (executionState) {
@@ -844,7 +1042,7 @@ define([
                             canonicalState = 'running';
                             break;
                         default:
-                            // note that errors which occur during running are 
+                            // note that errors which occur during running are
                             // converted into completed temporal state with
                             // and error message.
                             throw new Error('Invalid execution state ' + executionState + ' for temporal state ' + temporalState);
@@ -865,21 +1063,19 @@ define([
                             console.log('INVAL EXEC STATE', jobState);
                             throw new Error('Invalid execution state ' + executionState + ' for temporal state ' + temporalState);
                     }
-                    break;                
+                    break;
             }
 
-            var runState = model.getItem('runState'), runId;
-            if (runState) {
-                runId = runState.runId;
-            }
-            var newRunStatus = {
-                runId: runId,
+
+            var newRunState = {
+                runId: runState.runId,
                 jobId: jobState.job_id,
                 lastUpdatedTime: model.getItem('jobStateLastUpdatedTime'),
                 temporalState: temporalState,
                 executionState: executionState,
                 canonicalState: canonicalState,
                 jobState: jobState,
+                elapsedLaunchTime: runState.elapsedLaunchTime,
                 elapsedQueueTime: elapsedQueueTime,
                 elapsedRunTime: elapsedRunTime,
                 completedTime: completedTime,
@@ -887,7 +1083,7 @@ define([
                 success: success
             };
 
-            model.setItem('runState', newRunStatus);
+            model.setItem('runState', newRunState);
         }
 
 
@@ -933,12 +1129,12 @@ define([
         }
 
         /*
-         * 
+         *
          * Job errors
          */
 //        function getJobError(jobState) {
 //            /*
-//             * If the job has not completed, there will be not outputs, so we 
+//             * If the job has not completed, there will be not outputs, so we
 //             * can just bail.
 //             */
 //            if (!jobState.step_errors || Object.keys(jobState.step_errors).length === 0) {
@@ -954,7 +1150,7 @@ define([
 //
 //        function getJobError2(jobState) {
 //            /*
-//             * If the job has not completed, there will be not outputs, so we 
+//             * If the job has not completed, there will be not outputs, so we
 //             * can just bail.
 //             */
 //            if (!jobState.step_errors || Object.keys(jobState.step_errors).length === 0) {
@@ -969,7 +1165,7 @@ define([
 
 //        function getJobReportRef(jobState) {
 //            /*
-//             * If the job has not completed, there will be not outputs, so we 
+//             * If the job has not completed, there will be not outputs, so we
 //             * can just bail.
 //             */
 //            if (!jobState.step_outputs || Object.keys(jobState.step_outputs).length === 0) {
@@ -986,7 +1182,7 @@ define([
 
 //        function getJobReportRef(jobState) {
 //            /*
-//             * If the job has not completed, there will be not outputs, so we 
+//             * If the job has not completed, there will be not outputs, so we
 //             * can just bail.
 //             */
 //            if (!jobState.step_outputs || Object.keys(jobState.step_outputs).length === 0) {
@@ -1004,7 +1200,7 @@ define([
 //
 //        function getJobOutputs(jobState) {
 //            /*
-//             * If the job has not completed, there will be not outputs, so we 
+//             * If the job has not completed, there will be not outputs, so we
 //             * can just bail.
 //             */
 //            if (!jobState.step_outputs || Object.keys(jobState.step_outputs).length === 0) {
@@ -1021,8 +1217,10 @@ define([
 //            }
 //        }
 
-        function processNewLaunchEvent(launchEvent) {
+        function processNewLaunchState(launchEvent) {
             // we don't have to handle duplicates.
+
+            console.log('LAUNCH', launchEvent);
 
             model.setItem('lastLaunchEvent', launchEvent);
 
@@ -1031,27 +1229,34 @@ define([
                 if (launchEvent.event !== 'validating_app') {
                     console.warn('Initializing launch time without validating_app (' + launchEvent.event + ')');
                 }
+                // These are always set on the first event.
                 launchState = {
-                    startTime: new Date(launchEvent.event_at).getTime(),
-                    event: launchEvent.event,
                     runId: launchEvent.run_id,
-                    cellId: launchEvent.cell_id,
-                    jobId: launchEvent.job_id
+                    startTime: new Date(launchEvent.event_at).getTime(),
+                    cellId: launchEvent.cell_id
                 };
-            } else {
-                launchState.event = launchEvent.event;
-                if (!launchEvent.jobId) {
-                    launchState.jobId = launchEvent.job_id;
-                }
             }
-            model.setItem('launchState');
+            // These will or may be updated with new events.
+            launchState.event = launchEvent.event;
+            if (!launchEvent.jobId) {
+                launchState.jobId = launchEvent.job_id;
+            }
+            if (launchEvent.error_type) {
+                launchState.error = {
+                    type: launchEvent.error_type,
+                    message: launchEvent.error_message,
+                    detail: launchEvent.error_stacktrace
+                };
+            }
+            model.setItem('launchState', launchState);
 
-            updateRunStateFromLaunchEvent(launchEvent, launchState);
-            renderRunState();
+            updateRunStateFromLaunchState(launchState);
+            // renderRunState();
+            renderExecState();
         }
 
         function processNewJobState(jobState) {
-            // Only update the job state if the job state is different. 
+            // Only update the job state if the job state is different.
             // How can we tell? Well for now we simply look at the job_state
             // for the incoming job notification, and compare it to our copy
             // of the most recent one, if any.
@@ -1065,6 +1270,7 @@ define([
                 updateJobDetails();
                 showJobDetails();
                 renderRunState();
+                renderExecState();
             }
             // If any.
             // showJobError();
@@ -1114,7 +1320,10 @@ define([
 
         function setup() {
             var ev;
-        
+
+            // Reset the state in case we are being re-run.
+            model.deleteItem('runState');
+
             togglesDb = {};
             toggles.forEach(function (toggle) {
                 togglesDb[toggle.name] = toggle;
@@ -1122,7 +1331,7 @@ define([
                 model.setItem(['user-settings.toggle-state', toggle.name].join('.'), toggle);
                 // mapping for toggle event.
 
-                // universal handler for all toggle- events. 
+                // universal handler for all toggle- events.
                 bus.on('toggle-' + toggle.name, function () {
                     toggleElement(toggle.name);
                 });
@@ -1130,9 +1339,9 @@ define([
                 // show toggled area initial state.
                 showToggleElement(toggle.name);
             });
-            
+
             // INTERNAL EVENTS
-                        
+
             bus.on('show-job-report', function (message) {
                 getJobReport(message.reportRef)
                     .then(function (jobReport) {
@@ -1141,55 +1350,64 @@ define([
                         showJobReport();
                     });
             });
-            
+
 
 
             // CELL EVENTS
             /*
-             * These events are trapped by the app cell, and then issued on the 
+             * These events are trapped by the app cell, and then issued on the
              * cell bus. This abstracts the "cell" from subwidgets, so that
              * subwidgets are just aware that an external bus, passed in,
              * will potentially have these events.
-             * 
+             *
              * Alternatively, we could pass these events through the exec
              * bus itself...
              */
-            ev = cellBus.on('run-state', function (message) {
-                processNewLaunchEvent(message);
+            ev = cellBus.on('launch-status', function (message) {
+                console.log('GOT LAUNCH STATUS', message);
+                processNewLaunchState(message.launchState);
             });
             listeners.push(ev);
 
-            
+
             /*
              * NB: The app cell listens for job updates, and issues job state
              * changes on type: job-state.
-             * This was done, rather thanhave 
+             * This was done, rather thanhave
              */
             ev = cellBus.on('job-state', function (message) {
-                // console.log('EXEC got it!', message);
                 processNewJobState(message.jobState);
             });
             listeners.push(ev);
             // not sure if this is the wisest thing to do...
-            
+
             ev = cellBus.on('job-state-updated', function (message) {
                 model.setItem('jobStateLastUpdatedTime', new Date().getTime());
             });
             listeners.push(ev);
 
             // GLOBAL EVENTS
-            
+
             ev = runtime.bus().on('clock-tick', function () {
                 // only update the ui on clock tick if we are currently running
                 // a job. TODO: the clock should be disconnected.
                 // console.log('tick');
+                // disable for now ... need to find a better way of processing clock ticks...
+                // return;
                 var runState = model.getItem('runState');
                 if (runState && runState.executionState === 'processing') {
                     updateRunStateFromJobState();
                 }
                 renderRunState();
+                renderExecState();
             });
             listeners.push(ev);
+        }
+        
+        function teardown() {
+            listeners.forEach(function (listener) {
+                runtime.bus().removeListener(listener);
+            });
         }
 
         function start() {
@@ -1201,10 +1419,22 @@ define([
                 });
                 render();
                 setup();
+                // TODO: we need a "rolled up" version of launch state
+                // for restoring.
+                if (message.launchState) {
+                    processNewLaunchState(message.launchState);
+                }
                 if (message.jobState) {
                     processNewJobState(message.jobState);
                 }
                 renderRunState();
+                renderExecState();
+            });
+            bus.on('stop', function (message) {
+                teardown();
+            });
+            bus.on('reset', function (message) {
+                console.log('I should reset right about now.');
             });
         }
 
@@ -1214,8 +1444,14 @@ define([
                 runtime.bus().removeListener(listener);
             });
             listeners = [];
+            // reset job state...
+            model = Props.make({
+                onUpdate: function () {
+                    // render();
+                }
+            });
         }
-        
+
         function getBus() {
             return bus;
         }

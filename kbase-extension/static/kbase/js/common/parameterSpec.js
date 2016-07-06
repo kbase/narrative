@@ -457,6 +457,56 @@ define([
 
             }
         }
+        
+        /*
+         * The parameter class is either input, output, or parameter.
+         * This method both determines the class and ensures that the param
+         * is set up in a manner consistent with the class.
+         */
+        var attributes = {
+            paramClass: null
+        };
+        function setupParamClass() {
+            // The primary flag for the param class is the ui_class property.
+            // Perhaps not the best name for this property.
+            
+            var paramClassName = spec.ui_class;
+            if (!paramClassName) {
+                throw new Error('Parameter ' + spec.id + ' has no ui_class set');
+            }
+            
+            switch (paramClassName) {
+                case 'input': 
+                    // do stuff
+                    if (spec.text_options && spec.text_options.is_output_name) {
+                        throw new Error('Parameter ' + spec.id + ' is an input type, but has text_options.is_output_name specified');
+                    }
+                    break;
+                case 'output':
+                    // must have the isOutputName = spec.text_options && spec.text_options.is_output_name;
+                    // do more stuff
+                    if (!spec.text_options || !spec.text_options.is_output_name) {
+                        throw new Error('Parameter ' + spec.id + ' is an output type, but does not have text_options.is_output_name specified');
+                    }
+                    break;
+                case 'parameter':
+                    // do outlandish things
+                    if (spec.text_options && spec.text_options.is_output_name) {
+                        throw new Error('Parameter ' + spec.id + ' is a parameter type, but has text_options.is_output_name specified');
+                    }
+                    break;
+            }
+            
+            attributes.paramClass = paramClassName;
+            
+        }
+        
+        setupParamClass();
+        
+        // NEW -- validate and completely set up normalized param first,
+        // so that errors are caught early.
+        
+        
 
         return {
             id: id,

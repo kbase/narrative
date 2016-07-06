@@ -32,10 +32,10 @@ define([
             var workspace = new Workspace(runtime.config('services.workspace.url'), {
                 token: runtime.authToken()
             });
-            console.log('OBJ', {
-                    wsid: workspaceId,
-                    name: model.getItem('value')
-                });
+//            console.log('OBJ', {
+//                    wsid: workspaceId,
+//                    name: model.getItem('value')
+//                });
             return workspace.get_object_info_new({
                 objects: [{
                     wsid: workspaceId,

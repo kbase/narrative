@@ -1,9 +1,9 @@
 /*global define,console*/
 /*jslint white:true,browser:true*/
 /*
- * KBase App Cell Extension
+ * KBase View Cell Extension
  *
- * Supports kbase app cells and the kbase cell toolbar.
+ * Supports kbase view cells and the kbase cell toolbar.
  *
  * Note that, out of our control, this operates under the "module as singleton" model.
  * In this model, the execution of the module the first time per session is the same
@@ -22,7 +22,7 @@ define([
     'bluebird',
     'uuid',
     'kb_common/html',
-    './widgets/appCellWidget',
+    './widgets/viewCellWidget',
     'common/runtime',
     'common/parameterSpec',
     'common/utils',
@@ -39,7 +39,7 @@ define([
     Promise,
     Uuid,
     html,
-    AppCellWidget,
+    ViewCellWidget,
     Runtime,
     ParameterSpec,
     utils,
@@ -59,13 +59,16 @@ define([
      * Dealing with metadata
      */
 
-   // This is copied out of jupyter code.
+
+    // This is copied out of jupyter code.
     function activateToolbar() {
         var toolbarName = 'KBase';
         Jupyter.CellToolbar.global_show();
         Jupyter.CellToolbar.activate_preset(toolbarName, Jupyter.events);
         Jupyter.notebook.metadata.celltoolbar = toolbarName;
     }
+
+
 
     // TODO: move into app cell widget and invoke with an event 'reset-to-default-values'
     function setupParams(cell, appSpec) {
@@ -79,7 +82,7 @@ define([
                 defaultParams[param.id()] = defaultValue;
             }
         });
-        utils.setCellMeta(cell, 'kbase.appCell.params', defaultParams);
+        utils.setMeta(cell, 'viewCell', 'params', defaultParams);
     }
 
     /*
@@ -282,18 +285,22 @@ define([
      * It creates the correct metadata and then sets up the cell.
      *
      */
-    function upgradeToAppCell(cell, appSpec, appTag) {
+    function upgradeToViewCell(cell, appSpec, appTag) {
         return Promise.try(function () {
             // Create base app cell
             var meta = cell.metadata;
             meta.kbase = {
-                type: 'app',
+                type: 'view',
                 attributes: {
                     id: new Uuid(4).format(),
                     status: 'new',
-                    created: (new Date()).toUTCString()
+                    created: (new Date()).toUTCString(),
+                    icon: 'bar-chart'
                 },
-                appCell: {
+                cellState: {
+                    icon: 'bar-chart'
+                },
+                viewCell: {
                     app: {
                         id: appSpec.info.id,
                         gitCommitHash: appSpec.info.git_commit_hash,
@@ -329,7 +336,7 @@ define([
             });
     }
     
- function specializeCell(cell) {
+    function specializeCell(cell) {
         cell.minimize = function () {
             var $cellNode = $(this.element),
                 inputArea = this.input.find('.input_area'),
@@ -358,6 +365,39 @@ define([
             viewInputArea.removeClass('hidden');
         };
     }
+    
+    function specializeCell(cell) {
+        cell.minimize = function () {
+            var $cellNode = $(this.element),
+                inputArea = this.input.find('.input_area'),
+                outputArea = this.element.find('.output_wrapper'),
+                viewInputArea = this.element.find('[data-subarea-type="view-cell-input"]'),
+                showCode = utils.getCellMeta(cell, 'kbase.appCell.user-settings.showCodeInputArea');
+            
+            if (showCode) {
+                inputArea.addClass('hidden');
+            }
+            outputArea.addClass('hidden');
+            viewInputArea.addClass('hidden');
+        };
+
+        cell.maximize = function () {
+            var $cellNode = $(this.element),
+                inputArea = this.input.find('.input_area'),
+                outputArea = this.element.find('.output_wrapper'),
+                viewInputArea = this.element.find('[data-subarea-type="view-cell-input"]'),
+                showCode = utils.getCellMeta(cell, 'kbase.appCell.user-settings.showCodeInputArea');
+            
+            if (showCode) {
+                inputArea.removeClass('hidden');
+            }
+            outputArea.removeClass('hidden');
+            viewInputArea.removeClass('hidden');
+        };
+        
+        
+
+    }
 
     function setupCell(cell) {
         return Promise.try(function () {
@@ -370,7 +410,7 @@ define([
                 // console.log('not a kbase code cell');
                 return;
             }
-            if (cell.metadata.kbase.type !== 'app') {
+            if (cell.metadata.kbase.type !== 'view') {
                 // console.log('not a kbase app cell, ignoring');
                 return;
             }
@@ -383,14 +423,14 @@ define([
             };
 
             // Update metadata.
-            utils.setCellMeta(cell, 'kbase.attributes.lastLoaded', (new Date()).toUTCString());
+            utils.setMeta(cell, 'attributes', 'lastLoaded', (new Date()).toUTCString());
 
             // TODO: the code cell input widget should instantiate its state
             // from the cell!!!!
             var cellBus = runtime.bus().makeChannelBus(null, 'Parent comm for The Cell Bus'),
-                appId = utils.getMeta(cell, 'appCell', 'app').id,
-                appTag = utils.getMeta(cell, 'appCell', 'app').tag,
-                appCellWidget = AppCellWidget.make({
+                appId = utils.getMeta(cell, 'viewCell', 'app').id,
+                appTag = utils.getMeta(cell, 'viewCell', 'app').tag,
+                viewCellWidget = ViewCellWidget.make({
                     bus: cellBus,
                     cell: cell,
                     runtime: runtime,
@@ -398,23 +438,23 @@ define([
                 }),
                 dom = Dom.make({node: cell.input[0]}),
                 kbaseNode = dom.createNode(div({
-                    dataSubareaType: 'app-cell-input'
+                    dataSubareaType: 'view-cell-input'
                 }));
 
             // Create (above) and place the main container for the input cell.
             cell.input.after($(kbaseNode));
             cell.kbase.node = kbaseNode;
             cell.kbase.$node = $(kbaseNode);
-            
-            return appCellWidget.init()
+
+            return viewCellWidget.init()
                 .then(function () {
-                    return appCellWidget.attach(kbaseNode);
+                    return viewCellWidget.attach(kbaseNode);
                 })
                 .then(function () {
-                    return appCellWidget.start();
+                    return viewCellWidget.start();
                 })
                 .then(function () {
-                    return appCellWidget.run({
+                    return viewCellWidget.run({
                         appId: appId,
                         appTag: appTag,
                         authToken: runtime.authToken()
@@ -424,7 +464,7 @@ define([
                     // AppCellController.start();
                     cell.renderMinMax();
                     return {
-                        widget: appCellWidget,
+                        widget: viewCellWidget,
                         bus: cellBus
                     };
                 })
@@ -478,24 +518,12 @@ define([
      * The work is carried out asynchronously through an orphan promise.
      */
     function load_ipython_extension() {
-        // console.log('Loading KBase App Cell Extension...');
-
         // Listen for interesting narrative jquery events...
         // dataUpdated.Narrative is emitted by the data sidebar list
         // after it has fetched and updated its data. Not the best of
         // triggers that the ws has changed, not the worst.
         $(document).on('dataUpdated.Narrative', function () {
-            // Tell each cell that the workspace has been updated.
-            // This is what is interesting, no?
-            // we can just broadcast this on the runtime bus
-//                    runtime.bus().send({
-//                        type: 'workspace-changed'
-//                    });
-            // console.log('sending workspace changed event');
-            // runtime.bus().send('workspace-changed');
             runtime.bus().emit('workspace-changed');
-            // widgets.paramsInputWidget.bus.emit('workspace-changed');
-            //widgets.paramsDisplayWidget.bus.send('workspace-changed');
         });
 
         // Set the notebook environment.
@@ -525,8 +553,8 @@ define([
                 // If the cell has been set with the metadata key kbase.type === 'app'
                 // we have a app cell.
                 $([Jupyter.events]).on('inserted.Cell', function (event, data) {
-                    if (data.kbase && data.kbase.type === 'app') {
-                        upgradeToAppCell(data.cell, data.kbase.appSpec, data.kbase.appTag)
+                    if (data.kbase && data.kbase.type === 'view') {
+                        upgradeToViewCell(data.cell, data.kbase.appSpec, data.kbase.appTag)
                             .then(function () {
                                 // console.log('Cell created?');
                             })
@@ -572,5 +600,5 @@ define([
             // These are kbase api calls
     };
 }, function (err) {
-    console.log('ERROR loading appCell main', err);
+    console.log('ERROR loading viewCell main', err);
 });

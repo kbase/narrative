@@ -155,7 +155,7 @@ class AppManager(object):
             # raise
             print("Error while trying to start your app!\n-------------------------------------\n" + str(e))
 
-    def _run_local_app_internal(self, app_id, tag="release", version=None, cell_id=None, run_id=None, **kwargs):
+    def _run_local_app_internal(self, app_id, tag, version, cell_id, run_id, **kwargs):
         self._send_comm_message('run_status', {
             'event': 'validating_app',
             'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
@@ -291,7 +291,7 @@ class AppManager(object):
 
         return (params, ws_input_refs)
 
-    def run_app(self, *args, **kwargs):
+    def run_app(self, app_id, tag="release", version=None, cell_id=None, run_id=None, **kwargs):
         """
         Attempts to run the app, returns a Job with the running app info.
         If this is given a cell_id, then returns None. If not, it returns the generated
@@ -314,7 +314,7 @@ class AppManager(object):
         run_app('MegaHit/run_megahit', version=">=1.0.0", read_library_name="My_PE_Library", output_contigset_name="My_Contig_Assembly")
         """
         try:
-            return self._run_app_internal(*args, **kwargs)
+            return self._run_app_internal(app_id, tag, version, cell_id, run_id, **kwargs)
         except Exception as e:
             cell_id = kwargs.get('cell_id', None)
             run_id = kwargs.get('run_id', None)
@@ -333,7 +333,7 @@ class AppManager(object):
             # raise
             print("Error while trying to start your app!\n-------------------------------------\n" + str(e))
 
-    def _run_app_internal(self, app_id, tag="release", version=None, cell_id=None, run_id=None, **kwargs):
+    def _run_app_internal(self, app_id, tag, version, cell_id, run_id, **kwargs):
         """
         Attemps to run the app, returns a Job with the running app info.
         Should *hopefully* also inject that app into the Narrative's metadata.

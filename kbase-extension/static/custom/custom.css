@@ -48,6 +48,8 @@ CSS should go in /kbase-extension/static/kbase/css/kbaseNarrative.css
 div.input_area {
     border: 1px solid #CECECE;
     border-radius: 0px;
+    /* a little padding to match the prompt */
+    padding-top: 4px;
 }
 
 div.text_cell_input {
@@ -182,8 +184,14 @@ span#notebook_name:hover {
     flex: auto;
 }
 
+.notebook_app .celltoolbar_container {
+    xheight: 60px;
+    border-bottom: 1px silver solid;
+}
+
 .notebook_app .prompt {
-    font-size: 12px;
+    /* font-size: 12px; */
+    padding-top: 0px;
     color: silver;
     width: 75px;
 }
@@ -281,4 +289,11 @@ span#notebook_name:hover {
 
 .cell.unselected .btn-default {
     color: #CCC;
+}
+
+.cell.unselected  .kb-cell-toolbar .title-container {
+    opacity: 0.5;
+}
+.cell.unselected  .kb-cell-toolbar .buttons-container {
+    opacity: 0.2;
 }

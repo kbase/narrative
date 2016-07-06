@@ -5,6 +5,62 @@ define([
 ], function () {
     'use strict';
 
+    // Static methods
+        function isArray(testValue) {
+            return (testValue instanceof Array);
+        }
+
+        function isNumber(testValue) {
+            return (typeof testValue === 'number');
+        }
+
+
+    function setDataItem(data, path, value) {
+        if (typeof path === 'string') {
+            path = path.split('.');
+        } else if (!isArray(path)) {
+            throw new TypeError('Invalid type for key: ' + (typeof path));
+        }
+        if (path.length === 0) {
+            return;
+        }
+        // pop off the last property for setting at the end.
+        var propKey = path.pop(),
+            key, temp = data;
+        // Walk the path, creating empty objects if need be.
+        while (path.length > 0) {
+            key = path.shift();
+            if (temp[key] === undefined) {
+                temp[key] = {};
+            }
+            temp = temp[key];
+        }
+        // Finally set the property.
+        temp[propKey] = value;
+        return value;
+    }
+
+    function getDataItem(data, path, defaultValue) {
+        if (typeof path === 'string') {
+            path = path.split('.');
+        } else if (!isArray(path)) {
+            throw new TypeError('Invalid type for key: ' + (typeof path));
+        }
+        var i, temp = data;
+        for (i = 0; i < path.length; i += 1) {
+            if ((temp === undefined) ||
+                (typeof temp !== 'object') ||
+                (temp === null)) {
+                return defaultValue;
+            }
+            temp = temp[path[i]];
+        }
+        if (temp === undefined) {
+            return defaultValue;
+        }
+        return temp;
+    }
+
     function factory(config) {
         if (!config) {
             config = {};
@@ -14,16 +70,8 @@ define([
             historyCount = 0,
             updateHandler = config.onUpdate,
             historyEnabled = updateHandler ? true : false,
-            lastValueSaved=false, timer, api;
-        
-        function isArray(testValue) {
-            return (testValue instanceof Array);
-        }
-        
-        function isNumber(testValue) {
-            return (typeof testValue === 'number');
-        }
-        
+            lastValueSaved = false, timer, api;
+
         /*
          * In enabled by setting an update handler via the onUpdate factory 
          * configuration property, this function should be run whenever the
@@ -38,7 +86,7 @@ define([
             if (timer) {
                 return;
             }
-            
+
             timer = window.setTimeout(function () {
                 try {
                     timer = null;
@@ -51,7 +99,7 @@ define([
                 }
             }, 0);
         }
-        
+
         function getHistoryCount() {
             if (!historyEnabled) {
                 return;
@@ -76,27 +124,11 @@ define([
             lastValueSaved = false;
         }
 
+
         function getItem(props, defaultValue) {
-            if (typeof props === 'string') {
-                props = props.split('.');
-            } else if (!isArray(props)) {
-                throw new TypeError('Invalid type for key: ' + (typeof props));
-            }
-            var i, temp = obj;
-            for (i = 0; i < props.length; i += 1) {
-                if ((temp === undefined) ||
-                    (typeof temp !== 'object') ||
-                    (temp === null)) {
-                    return defaultValue;
-                }
-                temp = temp[props[i]];
-            }
-            if (temp === undefined) {
-                return defaultValue;
-            }
-            return temp;
+            return getDataItem(obj, props, defaultValue);
         }
-        
+
         function copyItem(props, defaultValue) {
             var item = getItem(props, defaultValue);
             if (item !== undefined) {
@@ -123,29 +155,11 @@ define([
             return true;
         }
 
+
         function setItem(path, value) {
-            if (typeof path === 'string') {
-                path = path.split('.');
-            }
-            if (path.length === 0) {
-                return;
-            }
-            // pop off the last property for setting at the end.
-            var propKey = path.pop(),
-                key, temp = obj;
-            // Walk the path, creating empty objects if need be.
-            while (path.length > 0) {
-                key = path.shift();
-                if (temp[key] === undefined) {
-                    temp[key] = {};
-                }
-                temp = temp[key];
-            }
             ensureHistory();
-            // Finally set the property.
-            temp[propKey] = value;
+            setDataItem(obj, path, value);
             run();
-            return value;
         }
 
         function incrItem(path, increment) {
@@ -178,7 +192,7 @@ define([
             run();
             return temp[propKey];
         }
-        
+
         function pushItem(path, value) {
             if (typeof path === 'string') {
                 path = path.split('.');
@@ -200,11 +214,11 @@ define([
                 temp[propKey] = [value];
             } else {
                 if (temp[propKey])
-                if (isArray(temp[propKey])) {
-                    temp[propKey].push(value);
-                } else {
-                    throw new Error('Can only push onto an Array');
-                }
+                    if (isArray(temp[propKey])) {
+                        temp[propKey].push(value);
+                    } else {
+                        throw new Error('Can only push onto an Array');
+                    }
             }
             run();
             return temp[propKey];
@@ -254,6 +268,8 @@ define([
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
+        getDataItem: getDataItem,
+        setDataItem: setDataItem
     };
 });

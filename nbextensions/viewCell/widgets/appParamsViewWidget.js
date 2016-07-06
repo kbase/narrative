@@ -297,10 +297,7 @@ define([
 
         return {
             start: start,
-            stop: stop,
-            bus: function () {
-                return bus;
-            }
+            stop: stop
         };
     }
 

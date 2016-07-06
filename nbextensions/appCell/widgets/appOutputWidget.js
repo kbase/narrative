@@ -32,7 +32,8 @@ define([
 
         function findCellForId(id) {
             var matchingCells = Jupyter.notebook.get_cells().filter(function (cell) {
-                if (cell.metadata && cell.metadata.kbase) {
+                // console.log('REMOVING', JSON.parse(JSON.stringify(cell.metadata)));
+                if (cell.metadata && cell.metadata.kbase && cell.metadata.kbase.attributes) {
                     return (cell.metadata.kbase.attributes.id === id);
                 }
                 return false;
@@ -50,6 +51,8 @@ define([
             if (!confirmed) {
                 return;
             }
+            
+            
             // remove the output cell
             var output = model.outputs[index],
                 outputCell = findCellForId(output.cellId),

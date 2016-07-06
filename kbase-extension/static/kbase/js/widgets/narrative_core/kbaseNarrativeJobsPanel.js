@@ -262,33 +262,52 @@ define([
                         info = {},
                         content = msg.content.data.content;
                     for (var jobId in content) {
-
-                        this.jobStates[jobId] = content[jobId].state;
-                        this.jobStates[jobId].spec = content[jobId].spec;
-                        this.jobStates[jobId].widgetParameters = content[jobId].widget_info;
+                        var jobStateMessage = content[jobId];
+                        // We could just copy the entire message into the job
+                        // states cache, but referencing each individual property
+                        // is more explicity about the structure.
+                        this.jobStates[jobId] = {
+                            state: jobStateMessage.state,
+                            spec: jobStateMessage.spec,
+                            widgetParameters: jobStateMessage.widget_info
+                        }
 
                         // The job state includes both the job state info and the
                         // app spec. Not sure why...
                         // WJR - because the renderer needs info from the app spec
                         // like its name and such.
+                        // EAP - what i mean was why it is sent with each job state
+                        // message. I can see that given that job_status may be
+                        // issued at any arbitrary front end state, and the spec
+                        // will be useful on the first message received, it might 
+                        // be better to just bite the bullet and require that any
+                        // element which needs the app spec fetch that 
+                        // independently, or rather perhaps the appmanager could
+                        // arbitrate those requets.
                         this.sendJobMessage('job-status', jobId, {
                             jobId: jobId,
-                            jobState: content[jobId].state,
-                            widgetParameters: content[jobId].widget_info
+                            jobState: jobStateMessage.state,
+                            outputWidgetInfo: jobStateMessage.widget_info
                         });
                     }
-                    var jobsToDelete = [];
+                    
+                    // Remove jobs which are in the local cache but not in the 
+                    // job_status message.
                     Object.keys(this.jobStates).forEach(function (jobId) {
                         var jobState = this.jobStates[jobId];
-                        if (!jobState || !content[jobState.job_id]) {
-                            this.sendJobMessage('job-deleted', jobState.job_id, {
-                                jobId: jobState.job_id
+                        // HMM the first condition covers jobs in the cache
+                        // which have been set to falsy? Not sure how that
+                        // is possible. But if so, they could not be in the 
+                        // message anyway, since we just synced the cache
+                        // from the messages...
+                        //if (!jobState || !content[jobState.state.job_id]) {
+                        if (!content[jobState.state.job_id]) {
+                            this.sendJobMessage('job-deleted', jobState.state.job_id, {
+                                jobId: jobState.state.job_id
                             });
-                            jobsToDelete.push(jobState.job_id);
+                            // it is safe to delete properties here
+                            delete this.jobStates[jobId];
                         }
-                    }.bind(this));
-                    jobsToDelete.forEach(function (jobId) {
-                        delete this.jobStates[jobId];
                     }.bind(this));
                     this.populateJobsPanel(); //status, info, content);
                     break;
@@ -319,7 +338,7 @@ define([
                 case 'job_deleted':
                     var deletedId = msg.content.data.content.job_id;
                     this.sendJobMessage('job-deleted', deletedId, {jobId: deletedId});
-                    console.info('Deleted job ' + deletedId);
+                    // console.info('Deleted job ' + deletedId);
                     this.removeDeletedJob(deletedId);
                     break;
                 case 'job_logs':
@@ -382,16 +401,16 @@ define([
             // if (this.jobStates === null)
             //     this.initJobStates();
 
-            console.info('Jobs Panel: looking up comm info');
+            // console.info('Jobs Panel: looking up comm info');
             Jupyter.notebook.kernel.comm_info(this.COMM_NAME, function (msg) {
-                console.info('Jobs Panel: got info');
+                // console.info('Jobs Panel: got info');
                 // console.info(msg);
                 if (msg.content && msg.content.comms) {
                     // skim the reply for the right id
                     for (var id in msg.content.comms) {
                         if (msg.content.comms[id].target_name === this.COMM_NAME) {
-                            console.info('Jobs Panel: Found an existing channel!');
-                            console.info(msg);
+                            //console.info('Jobs Panel: Found an existing channel!');
+                            //console.info(msg);
                             this.comm = new JupyterComm.Comm(this.COMM_NAME, id);
                             Jupyter.notebook.kernel.comm_manager.register_comm(this.comm);
                             this.comm.on_msg(this.handleCommMessages.bind(this));
@@ -399,9 +418,9 @@ define([
                     }
                 }
                 if (this.comm === null) {
-                    console.info('Jobs Panel: setting up a new channel - ' + this.COMM_NAME);
+                    // console.info('Jobs Panel: setting up a new channel - ' + this.COMM_NAME);
                     Jupyter.notebook.kernel.comm_manager.register_target(this.COMM_NAME, function (comm, msg) {
-                        console.info('Jobs Panel: new channel set up - ', comm);
+                        // console.info('Jobs Panel: new channel set up - ', comm);
                         this.comm = comm;
                         comm.on_msg(this.handleCommMessages.bind(this));
                     }.bind(this));
@@ -585,8 +604,8 @@ define([
 //                }
                 var sortedJobIds = Object.keys(this.jobStates);
                 sortedJobIds.sort(function (a, b) {
-                    var aTime = this.jobStates[a].creation_time;
-                    var bTime = this.jobStates[b].creation_time;
+                    var aTime = this.jobStates[a].state.creation_time;
+                    var bTime = this.jobStates[b].state.creation_time;
                     // if we have timestamps for both, compare them
                     return aTime - bTime;
                 }.bind(this));
@@ -596,8 +615,8 @@ define([
 
                     // if the id shows up in the "render me!" list:
                     // only those we fetched might still be running.
-                    if (this.jobStates[jobId]) {
-                        if (this.jobIsIncomplete(this.jobStates[jobId].job_state))
+                    if (this.jobStates[jobId] && this.jobStates[jobId].state) {
+                        if (this.jobIsIncomplete(this.jobStates[jobId].state.job_state))
                             stillRunning++;
 
                           // this message is already sent in the core code which
@@ -661,8 +680,8 @@ define([
 
             var status = "Unknown";
             // if (jobState && jobState.status) {
-            if (job.job_state) {
-                status = job.job_state;
+            if (job.state.job_state) {
+                status = job.state.job_state;
                 status = status.charAt(0).toUpperCase() +
                          status.substring(1);
             }
@@ -691,8 +710,8 @@ define([
             var completedTime = null;
             var runTime = null;
             var startedTime = null;
-            if (job.creation_time) {
-                startedTime = TimeFormat.prettyTimestamp(job.creation_time);
+            if (job.state.creation_time) {
+                startedTime = TimeFormat.prettyTimestamp(job.state.creation_time);
             }
             if (job.finish_time) {
                 completedTime = TimeFormat.prettyTimestamp(job.finish_time);
@@ -743,15 +762,15 @@ define([
                 default:
                     break;
             }
-            if (job.position !== undefined &&
-                job.position !== null &&
-                job.position > 0) {
-                position = job.position;
+            if (job.state.position !== undefined &&
+                job.state.position !== null &&
+                job.state.position > 0) {
+                position = job.state.position;
             }
 
             var jobRenderObj = {
                 name: jobName,
-                hasCell: job.cell_id,
+                hasCell: job.state.cell_id,
                 jobId: jobId,
                 status: new Handlebars.SafeString(status),
                 runTime: runTime,
@@ -774,9 +793,9 @@ define([
                     this.triggerJobErrorButton(jobId, errorType);
                 }.bind(this));
             }
-            if (job.cell_id) {
+            if (job.state.cell_id) {
                 $jobDiv.find('span.fa-location-arrow').click(function (e) {
-                    var cell = Jupyter.narrative.getCellByKbaseId(job.cell_id);
+                    var cell = Jupyter.narrative.getCellByKbaseId(job.state.cell_id);
                     Jupyter.narrative.scrollToCell(cell, true);
                 });
             }

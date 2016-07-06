@@ -101,5 +101,9 @@ define([
         expect(propCopy.propA).toEqual(42);
         expect(props.getItem('prop1.propA')).toEqual(53);
     });
-    
+    it('Set and get a simple string property using data methods', function() {
+            var data = {};
+            Props.setDataItem(data, 'color', 'green');
+            expect(Props.getDataItem(data, 'color')).toEqual('green');
+        });
 });

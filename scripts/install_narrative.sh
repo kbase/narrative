@@ -32,10 +32,14 @@
 # 8. Done!
 
 JUPYTER_NOTEBOOK_INSTALL_DIR=jupyter_notebook
+JUPYTER_NOTEBOOK_REPO=https://github.com/eapearson/notebook
+JUPYTER_NOTEBOOK_TAG=4.2.0-kbase
+
+JUPYTER_NOTEBOOK_REPO=https://github.com/jupyter/notebook
 JUPYTER_NOTEBOOK_TAG=4.2.0
 
-IPYWIDGETS_INSTALL_DIR=ipywidgets
-IPYWIDGETS_TAG=5.0.0
+#IPYWIDGETS_INSTALL_DIR=ipywidgets
+#IPYWIDGETS_TAG=5.0.0
 
 PYTHON=python2.7
 
@@ -145,9 +149,11 @@ then
     # 1. Setup Jupyter Notebook inside virtualenv
     log "Installing Jupyter notebook using $PYTHON"
     console "Installing Jupyter notebook from directory '$JUPYTER_NOTEBOOK_INSTALL_DIR'"
-    git clone https://github.com/jupyter/notebook $JUPYTER_NOTEBOOK_INSTALL_DIR
+
+    # This will clone the specified tag or branch in single-branch mode
+    git clone --branch $JUPYTER_NOTEBOOK_TAG --single-branch $JUPYTER_NOTEBOOK_REPO $JUPYTER_NOTEBOOK_INSTALL_DIR
     cd $JUPYTER_NOTEBOOK_INSTALL_DIR
-    git checkout tags/$JUPYTER_NOTEBOOK_TAG
+    # git checkout tags/$JUPYTER_NOTEBOOK_TAG
     pip install --pre -e . >> ${logfile} 2>&1
     cd ..
 

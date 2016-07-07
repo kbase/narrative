@@ -458,7 +458,7 @@ define (
         },
 
         determineMethodCellType: function (spec) {
-            // An app will execute via the method described in the behavior. If 
+            // An app will execute via the method described in the behavior. If
             // such a method is not described, it is by definition not an
             // executing app.
             if ((spec.behavior.kb_service_method && spec.behavior.kb_service_name) ||
@@ -467,7 +467,7 @@ define (
             }
 
             // The category property is supposedly used to indicate that the app
-            // is a viewer, but this is not used very reliably. 
+            // is a viewer, but this is not used very reliably.
             // Still, we look at that here...
             if (spec.info.categories.some(function (category) {
                 return (category === 'viewers');
@@ -475,11 +475,11 @@ define (
                 return 'view';
             }
 
-            // ... while in reality, ANY app which does not execute is for now 
-            // considered a viewer. 
-            
+            // ... while in reality, ANY app which does not execute is for now
+            // considered a viewer.
+
             return 'view';
-            
+
 //            if (!spec.parameters.some(function (parameter) {
 //                return (parameter.ui_class === 'output');
 //            })) {
@@ -1949,31 +1949,36 @@ define (
 
 
         createViewerCell: function(cellIndex, data, widget) {
-            var cell = this.addOutputCell(cellIndex, widget, data.placement || 'below');
+            var placement = data.placement || 'below';
+            var cell;
+            if (placement === 'above') {
+                cell = Jupyter.notebook.insert_cell_above('code', cellIndex);
+            }
+            else {
+                cell = Jupyter.notebook.insert_cell_below('code', cellIndex);
+            }
             var title = "Data Viewer";
             var type = "viewer";
+            var cellText = ['from biokbase.narrative.widgetmanager import WidgetManager',
+                            'WidgetManager().show_output_widget(',
+                            '    "kbaseNarrativeDataCell",',
+                            '    check_widget=False,',
+                            '    title="Data Viewer",',
+                            '    type="viewer",',
+                            '    info=' + StringUtil.safeJSONStringify(data.info) + ',',
+                            ')'].join('\n');
 
-            var uuid = StringUtil.uuid();
-            var outCellId = 'kb-cell-out-' + uuid;
-            var outputData = '{"data":' + StringUtil.safeJSONStringify(data) + ', ' +
-                               '"type":"' + type + '", ' +
-                               '"widget":"' + widget + '", ' +
-                               '"cellId":"' + outCellId + '", ' +
-                               '"title":"' + title + '", ' +
-                               '"time":' + this.getTimestamp() + '}';
-            var cellText = '<div id="' + outCellId + '"></div>\n' +
-                           '<script>' +
-                           'require(["kbaseNarrativeOutputCell"], function(kbaseNarrativeOutputCell) {' +
-                           'new kbaseNarrativeOutputCell($("#' + outCellId + '"), ' + outputData + '); });' +
-                           '</script>';
-
-            // var cellText = '<div id="' + outCellId + '"></div>\n' +
-            //            '<script>' +
-            //            '$("#' + outCellId + '").kbaseNarrativeOutputCell(' + outputData + ');' +
-            //            '</script>';
             cell.set_text(cellText);
-            cell.rendered = false; // force a render
-            cell.render();
+            var meta = {
+                'kbase': {
+                    'attributes': {
+                        'status': 'new',
+                        'title': title
+                    }
+                }
+            };
+            cell.metadata = meta;
+            cell.execute();
         },
 
         /**

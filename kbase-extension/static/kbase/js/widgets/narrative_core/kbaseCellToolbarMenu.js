@@ -106,7 +106,7 @@ define([
         }
 
         function doDeleteCell() {
-            if (window.confirm('Delete cell?')) {                
+            if (window.confirm('Delete cell?')) {
                 $(cell.element).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(cell));
             }
         }
@@ -114,7 +114,7 @@ define([
         function getCellTitle(cell) {
             var title = getMeta(cell, 'attributes', 'title'),
                 showTitle = utils.getCellMeta(cell, 'kbase.cellState.showTitle', true);
-            
+
             if (showTitle) {
                 return title;
             } else {
@@ -124,6 +124,10 @@ define([
 
         function doToggleMinMaxCell() {
             cell.element.trigger('toggleMinMax.cell');
+        }
+
+        function doToggleCodeView() {
+            $(cell.element).find('.input_area').toggle();
         }
 
         function render() {
@@ -145,9 +149,9 @@ define([
                                 span({class: 'fa fa-exclamation-triangle', style: {color: 'rgb(255, 0, 0)', display: 'none'}}),
 //                                span({class: 'dropdown'}, [
 //                                    button({
-//                                        type: 'button', 
-//                                        class: 'btn btn-default btn-xs', 
-//                                        dataToggle: 'dropdown', 
+//                                        type: 'button',
+//                                        class: 'btn btn-default btn-xs',
+//                                        dataToggle: 'dropdown',
 //                                        ariaHaspopup: 'true'
 //                                    }, [
 //                                        span({class: 'fa fa-cog', style: {fontSize: '14pt'}})
@@ -162,7 +166,17 @@ define([
 //                                            // li(a({id: addEvent('click', doToggleCellType)}, [span({class: 'fa fa-terminal'}), ' Toggle Cell Type']))
 //                                    ])
 //                                ]),
-                               
+                                button({
+                                    type: 'button',
+                                    class: 'btn btn-default btn-xs',
+                                    dataToggle: 'tooltip',
+                                    dataPlacement: 'left',
+                                    title: true,
+                                    dataOriginalTitle: 'Toggle Code',
+                                    id: events.addEvent({type: 'click', handler: doToggleCodeView})
+                                }, [
+                                    span({class: 'fa fa-terminal', style: 'font-size: 14pt'})
+                                ]),
                                 button({
                                     type: 'button',
                                     class: 'btn btn-default btn-xs',
@@ -235,15 +249,16 @@ define([
                 cell = parentCell;
                 var rendered = render();
                 container.innerHTML = rendered.content;
+                $(container).find('button').tooltip();
                 rendered.events.attachEvents();
-                
+
 //                $(container).on('minimized.toolbar', function () {
-//                    
+//
 //                });
 //                $(container).on('maximized.toolbar', function () {
-//                    
+//
 //                });
-                
+
                 // renderToggleState();
             } catch (ex) {
                 console.error('ERROR in cell toolbar callback', ex);

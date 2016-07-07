@@ -192,7 +192,11 @@ class Job(object):
         Cancels a currently running job. Fails silently if there's no job running.
         (No way to cancel something started with run_job right now).
         """
-        clients.get('user_and_job_state').delete_job(self.job_id)
+        status = self.status()
+        if status in ['completed', 'error', 'suspend']:
+            clients.get('user_and_job_state').delete_job(self.job_id)
+        else:
+            raise Exception('Currently unable to cancel running jobs!')
 
     def is_finished(self):
         """

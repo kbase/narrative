@@ -200,7 +200,7 @@ define([
             }.bind(this));
 
             bus.on('request-job-removal', function (message) {
-                this.removeJob(message.jobId);
+                this.deleteJob(message.jobId);
             }.bind(this));
 
             bus.on('request-job-status', function (message) {
@@ -279,9 +279,9 @@ define([
                         // EAP - what i mean was why it is sent with each job state
                         // message. I can see that given that job_status may be
                         // issued at any arbitrary front end state, and the spec
-                        // will be useful on the first message received, it might 
+                        // will be useful on the first message received, it might
                         // be better to just bite the bullet and require that any
-                        // element which needs the app spec fetch that 
+                        // element which needs the app spec fetch that
                         // independently, or rather perhaps the appmanager could
                         // arbitrate those requets.
                         this.sendJobMessage('job-status', jobId, {
@@ -290,14 +290,14 @@ define([
                             outputWidgetInfo: jobStateMessage.widget_info
                         });
                     }
-                    
-                    // Remove jobs which are in the local cache but not in the 
+
+                    // Remove jobs which are in the local cache but not in the
                     // job_status message.
                     Object.keys(this.jobStates).forEach(function (jobId) {
                         var jobState = this.jobStates[jobId];
                         // HMM the first condition covers jobs in the cache
                         // which have been set to falsy? Not sure how that
-                        // is possible. But if so, they could not be in the 
+                        // is possible. But if so, they could not be in the
                         // message anyway, since we just synced the cache
                         // from the messages...
                         //if (!jobState || !content[jobState.state.job_id]) {
@@ -327,20 +327,20 @@ define([
                     this.sendCellMessage('run-status', msg.content.data.content.cell_id, msg.content.data.content);
                     break;
                 case 'job_err':
-
                     this.sendJobMessage('job-error', msg.content.job_id, {
                         jobId: msg.content.job_id,
                         message: msg.content.message
                     });
-
                     console.error('Job Error', msg);
                     break;
+
                 case 'job_deleted':
                     var deletedId = msg.content.data.content.job_id;
                     this.sendJobMessage('job-deleted', deletedId, {jobId: deletedId});
                     // console.info('Deleted job ' + deletedId);
                     this.removeDeletedJob(deletedId);
                     break;
+
                 case 'job_logs':
                     // console.log('GOT JOB LOGS', msg);
                     var jobId = msg.content.data.content.job_id;
@@ -351,12 +351,27 @@ define([
                         latest: msg.content.data.content.latest
                     });
                     break;
+
                 case 'job_comm_error':
                     var content = msg.content.data.content;
                     if (content) {
                         switch (content.request_type) {
                             case 'delete_job':
-                                alert('Job already deleted!');
+                                var modal = new BootstrapDialog({
+                                    title: 'Job Deletion Error',
+                                    body: $('<div>').append('<b>An error occurred while deleting your job:</b><br>' + content.message),
+                                    buttons: [
+                                        $('<a type="button" class="btn btn-default">')
+                                        .append("OK")
+                                        .click(function (event) {
+                                            modal.hide();
+                                        })
+                                    ]
+                                });
+                                modal.getElement().on('hidden.bs.modal', function() {
+                                    modal.destroy();
+                                });
+                                modal.show();
                                 break;
                             case 'job_logs':
                                 this.sendJobMessage('job-log-deleted', content.job_id, {jobId: content.job_id});
@@ -377,9 +392,6 @@ define([
                                     request: content.requestType
                                 });
                                 break;
-                        }
-                        if (content.request_type === 'delete_job') {
-                            alert('Job already deleted!');
                         }
                     }
                     console.error('Error from job comm:', msg);
@@ -491,14 +503,7 @@ define([
             // send the comm message.
             this.sendCommMessage(this.DELETE_JOB, jobId);
         },
-        removeJob: function (jobId) {
-            if (!jobId) {
-                return;
-            }
-            // send the comm message.
-            this.sendCommMessage(this.REMOVE_JOB, jobId);
-            this.removeDeletedJob(jobId);
-        },
+
         removeDeletedJob: function (jobId) {
             // remove the view widget
             if (this.jobWidgets[jobId]) {
@@ -815,6 +820,8 @@ define([
          */
         triggerJobErrorButton: function (jobId, errorType) {
             var jobState = this.jobStates[jobId];
+            var error = jobState.state.error;
+
             var removeText = "Deleting this job will remove it from your Narrative. Any generated data will be retained. Continue?";
             var headText = "An error has been detected in this job!";
             var errorText = "The KBase servers are reporting an error for this job:";
@@ -831,9 +838,9 @@ define([
                 errorText = "You do not have permission to view information about this job.";
             } else if (errorType === 'Network Error') {
                 errorText = "An error occurred while looking up job information. Please refresh the jobs panel to try again.";
-            } else if (jobState.error) {
-                errorText = new Handlebars.SafeString('<div class="kb-jobs-error-modal">' + jobState.error.message + '</div>');
-                errorType = jobState.error.name;
+            } else if (error) {
+                errorText = new Handlebars.SafeString('<div class="kb-jobs-error-modal">' + error.message + '</div>');
+                errorType = error.name;
                 // if (jobState.state.error === 'awe_error')
                 //     errorType = 'AWE Error';
             }
@@ -842,18 +849,19 @@ define([
                 jobId: jobId,
                 errorType: errorType,
                 errorText: errorText,
-                hasTraceback: jobState.error.error ? true : false
+                hasTraceback: error.error ? true : false
             }));
 
-            if (jobState.error.error) {
+            if (error && error.error) {
                 new kbaseAccordion($modalBody.find('div#kb-job-err-trace'), {
                     elements: [{
                         title: 'Detailed Error Information',
-                        body: $('<pre style="max-height:300px; overflow-y: auto">').append(jobState.error.error)
+                        body: $('<pre style="max-height:300px; overflow-y: auto">').append(error.error)
                     }]
                 });
             }
             this.jobsModal.setBody($modalBody);
+            this.jobsModal.setTitle('Job Error');
             this.jobsModal.show();
         }
     });

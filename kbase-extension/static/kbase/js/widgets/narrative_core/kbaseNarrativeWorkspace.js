@@ -1963,7 +1963,7 @@ define (
                             'WidgetManager().show_output_widget(',
                             '    "kbaseNarrativeDataCell",',
                             '    check_widget=False,',
-                            '    title="Data Viewer",',
+                            '    title="' + title + '",',
                             '    type="viewer",',
                             '    info=' + StringUtil.safeJSONStringify(data.info) + ',',
                             ')'].join('\n');

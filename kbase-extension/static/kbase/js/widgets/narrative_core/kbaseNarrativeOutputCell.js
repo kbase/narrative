@@ -28,16 +28,13 @@ define([
 
             this.data = this.options.data;
             this.options.type = this.options.type.toLowerCase();
+            this.cell = Jupyter.narrative.getCellByKbaseId(this.$elem.attr('id'));
             if (this.options.widget.toLowerCase() === "null")
                 this.options.widget = 'kbaseDefaultNarrativeOutput';
 
             this.render();
 
-            if (Jupyter.narrative)
-                Jupyter.narrative.registerWidget(this, this.options.cellId);
-
             this.hideInputArea();
-
             return this;
         },
         hideInputArea: function () {
@@ -112,9 +109,28 @@ define([
 //                .closest('.cell')
 //                .trigger('set-label', [$label.html()]);
 
-            this.$elem
-                .closest('.cell')
-                .trigger('set-title', [title]);
+            // this.$elem
+            //     .closest('.cell')
+            //     .trigger('set-title', [title]);
+
+            if (!this.cell) {
+                console.info("no fucking cell.");
+            }
+            else if (!this.cell.metadata) {
+                console.info("no fucking metadata.");
+            }
+
+            if (!(this.cell.metadata.kbase)) {
+                this.cell.metadata.kbase = {
+                    'attributes': {
+                    }
+                };
+            }
+            var meta = this.cell.metadata;
+            meta.kbase.attributes.title = title;
+
+            this.cell.metadata = meta;
+
 
             var widgetData = this.options.data;
             if (widget === 'kbaseDefaultNarrativeOutput')

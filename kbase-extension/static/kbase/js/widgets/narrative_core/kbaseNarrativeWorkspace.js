@@ -1957,8 +1957,8 @@ define (
             else {
                 cell = Jupyter.notebook.insert_cell_below('code', cellIndex);
             }
-            var title = "Data Viewer";
-            var type = "viewer";
+            var title = (data.info && data.info.name) ? data.info.name : 'Data Viewer';
+            var type = 'viewer';
             var cellText = ['from biokbase.narrative.widgetmanager import WidgetManager',
                             'WidgetManager().show_output_widget(',
                             '    "kbaseNarrativeDataCell",',

@@ -358,8 +358,8 @@ define([
                         switch (content.request_type) {
                             case 'delete_job':
                                 var modal = new BootstrapDialog({
-                                    title: 'foo bar.',
-                                    body: $('<div>').append(content.message),
+                                    title: 'Job Deletion Error',
+                                    body: $('<div>').append('<b>An error occurred while deleting your job:</b><br>' + content.message),
                                     buttons: [
                                         $('<a type="button" class="btn btn-default">')
                                         .append("OK")
@@ -372,18 +372,6 @@ define([
                                     modal.destroy();
                                 });
                                 modal.show();
-
-
-                                // var currentButtons = this.jobsModal.getButtons();
-                                // this.jobsModal.setButtons([
-                                //     $('<a type="button" class="btn btn-default">')
-                                //     .append("OK")
-                                //     .click(function (event) {
-                                //         this.jobsModal.hide();
-                                //         this.jobsModal.setButtons(currentButtons);
-                                //     }.bind(this))]);
-                                // this.jobsModal.setBody($('<div>').append(content.message));
-                                // this.jobsModal.show();
                                 break;
                             case 'job_logs':
                                 this.sendJobMessage('job-log-deleted', content.job_id, {jobId: content.job_id});

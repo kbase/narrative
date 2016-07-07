@@ -327,20 +327,20 @@ define([
                     this.sendCellMessage('run-status', msg.content.data.content.cell_id, msg.content.data.content);
                     break;
                 case 'job_err':
-
                     this.sendJobMessage('job-error', msg.content.job_id, {
                         jobId: msg.content.job_id,
                         message: msg.content.message
                     });
-
                     console.error('Job Error', msg);
                     break;
+
                 case 'job_deleted':
                     var deletedId = msg.content.data.content.job_id;
                     this.sendJobMessage('job-deleted', deletedId, {jobId: deletedId});
                     // console.info('Deleted job ' + deletedId);
                     this.removeDeletedJob(deletedId);
                     break;
+
                 case 'job_logs':
                     // console.log('GOT JOB LOGS', msg);
                     var jobId = msg.content.data.content.job_id;
@@ -351,12 +351,39 @@ define([
                         latest: msg.content.data.content.latest
                     });
                     break;
+
                 case 'job_comm_error':
                     var content = msg.content.data.content;
                     if (content) {
                         switch (content.request_type) {
                             case 'delete_job':
-                                alert('Job already deleted!');
+                                var modal = new BootstrapDialog({
+                                    title: 'foo bar.',
+                                    body: $('<div>').append(content.message),
+                                    buttons: [
+                                        $('<a type="button" class="btn btn-default">')
+                                        .append("OK")
+                                        .click(function (event) {
+                                            modal.hide();
+                                        })
+                                    ]
+                                });
+                                modal.getElement().on('hidden.bs.modal', function() {
+                                    modal.destroy();
+                                });
+                                modal.show();
+
+
+                                // var currentButtons = this.jobsModal.getButtons();
+                                // this.jobsModal.setButtons([
+                                //     $('<a type="button" class="btn btn-default">')
+                                //     .append("OK")
+                                //     .click(function (event) {
+                                //         this.jobsModal.hide();
+                                //         this.jobsModal.setButtons(currentButtons);
+                                //     }.bind(this))]);
+                                // this.jobsModal.setBody($('<div>').append(content.message));
+                                // this.jobsModal.show();
                                 break;
                             case 'job_logs':
                                 this.sendJobMessage('job-log-deleted', content.job_id, {jobId: content.job_id});
@@ -377,9 +404,6 @@ define([
                                     request: content.requestType
                                 });
                                 break;
-                        }
-                        if (content.request_type === 'delete_job') {
-                            alert('Job already deleted!');
                         }
                     }
                     console.error('Error from job comm:', msg);
@@ -849,6 +873,7 @@ define([
                 });
             }
             this.jobsModal.setBody($modalBody);
+            this.jobsModal.setTitle('Job Error');
             this.jobsModal.show();
         }
     });

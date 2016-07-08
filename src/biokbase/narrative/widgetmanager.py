@@ -281,7 +281,7 @@ class WidgetManager(object):
                     constants[p] = params[p]["allowed_values"][0]
         return constants
 
-    def show_output_widget(self, widget_name, tag="release", **kwargs):
+    def show_output_widget(self, widget_name, tag="release", title="", type="method", check_widget=True, **kwargs):
         """
         Renders a widget using the generic kbaseNarrativeOutputWidget container.
 
@@ -291,16 +291,25 @@ class WidgetManager(object):
             The name of the widget to print the widgets for.
         tag : string, default="release"
             The version tag to use when looking up widget information.
+        type : string, default="method"
+            The type of output widget to show (options = method,app,viewer)
+        check_widget: boolean, default=True
+            If True, checks for the presense of the widget_name and get its known constants from
+            the various app specs that invoke it. Raises a ValueError if the widget isn't found.
+            If False, skip that step.
         **kwargs:
             These vary, based on the widget. Look up required variable names
             with WidgetManager.print_widget_inputs()
         """
-        check_tag(tag, raise_exception=True)
 
-        if widget_name not in self.widget_info[tag]:
-            raise ValueError("Widget %s not found with %s tag!" % (widget_name, tag))
+        input_data = dict()
 
-        input_data = self.get_widget_constants(widget_name, tag)
+        if check_widget:
+            check_tag(tag, raise_exception=True)
+            if widget_name not in self.widget_info[tag]:
+                raise ValueError("Widget %s not found with %s tag!" % (widget_name, tag))
+            input_data = self.get_widget_constants(widget_name, tag)
+
         # Let the kwargs override constants
         input_data.update(kwargs)
 
@@ -309,7 +318,7 @@ class WidgetManager(object):
 
         require(['kbaseNarrativeOutputCell'], function(KBaseNarrativeOutputCell) {
             var w = new KBaseNarrativeOutputCell($('#{{input_id}}'), {"data": {{input_data}},
-                "type":"method",
+                "type":"{{output_type}}",
                 "widget":"{{widget_name}}",
                 "cellId":"{{input_id}}",
                 "title":"{{cell_title}}",
@@ -319,9 +328,10 @@ class WidgetManager(object):
         """
 
         js = Template(input_template).render(input_id=self._cell_id_prefix + str(uuid.uuid4()),
+                                             output_type=type,
                                              widget_name=widget_name,
                                              input_data=json.dumps(input_data),
-                                             cell_title="Title Goes Here",
+                                             cell_title=title,
                                              timestamp=int(round(time.time()*1000)))
         return Javascript(data=js, lib=None, css=None)
 

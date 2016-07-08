@@ -94,6 +94,7 @@
 define([
     'jquery',
     'base/js/namespace',
+    'base/js/security',
     'base/js/utils',
     'base/js/page',
     'notebook/js/codecell',
@@ -111,6 +112,7 @@ define([
 ], function (
     $,
     Jupyter,
+    security,
     nbUtils,
     page,
     codeCell,
@@ -228,6 +230,15 @@ define([
 
     // Patch the security mechanisms to allow any JavaScript to run for now.
     // TODO: update this so only the few KBase commands run.
+    security.sanitize_html = function (html, allow_css) {
+        return html;
+    };
+    security.sanitize_css = function (css, tagPolicy) {
+        return css;
+    };
+    security.sanitize_stylesheets = function (html, tagPolicy) {
+        return html;
+    };
 
     // TODO: refactor
     function cellType(cell) {
@@ -264,11 +275,11 @@ define([
 //        cellToolbar.CellToolbar.prototype.renderToggleState = function () {
 //            var toggleState = this.cell.getCellState('toggleState', 'unknown');
 //            // Test to see if the kbaseNarrativeCellMenu is attached to this toolbar.
-//            // 
+//            //
 //            //var elemData = $(this.inner_element).find('.button_container').data();
 //            //if (elemData && elemData['kbaseNarrativeCellMenu'])
 //            //   $(this.inner_element).find('.button_container').kbaseNarrativeCellMenu('toggleState', toggleState);
-//            //   
+//            //
 //            // TODO: rewire the rendering of togglestate to just go through the
 //            // natural cell toolbar refresh which occurs when the cell metadata
 //            // is updated (cell.metadata = {what:'ever'};).
@@ -333,8 +344,8 @@ define([
                     break;
             }
 
-            // NB namespacing is important with jquery messages because they 
-            // propagate through nodes like DOM messages (i.e. the toolbar, being 
+            // NB namespacing is important with jquery messages because they
+            // propagate through nodes like DOM messages (i.e. the toolbar, being
             // contained within the cell, propagates the event upwards, after
             // which it continues to the cell (and perhaps beyond). So using
             // the same event name will lead to an infinite loop.
@@ -398,7 +409,7 @@ define([
             utils.setCellMeta(this, 'kbase.cellState.showTitle', false);
         };
 
-        // We need this method because the layout of each type of cell and 
+        // We need this method because the layout of each type of cell and
         // interactions with min/max can be complex.
         p.renderPrompt = function () {
             var prompt = this.element[0].querySelector('.input_prompt');
@@ -406,7 +417,7 @@ define([
                 return;
             }
             prompt.innerHTML = '';
-            
+
 //            var prompt = this.element[0].querySelector('.input_prompt'),
 //                iconType = utils.getCellMeta(this, 'kbase.attributes.icon', 'file-o'),
 //                icon = span({
@@ -418,7 +429,7 @@ define([
 //            }
 //
 //            prompt.innerHTML = div({
-//                style: {textAlign: 'center'}                
+//                style: {textAlign: 'center'}
 //            }, [
 //                icon
 //            ]);
@@ -638,7 +649,7 @@ define([
             outputArea.removeClass('hidden');
         };
 
-        // We need this method because the layout of each type of cell and 
+        // We need this method because the layout of each type of cell and
         // interactions with min/max can be complex.
         p.renderIcon = function () {
             var prompt = this.element.querySelector('.input_prompt');

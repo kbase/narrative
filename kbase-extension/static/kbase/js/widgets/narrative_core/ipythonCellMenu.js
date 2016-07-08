@@ -12,7 +12,7 @@ define([
     'kbaseCellToolbarMenu'
 ], function ($, celltoolbar, Jupyter, html, KBaseNarrativeCellMenu, KBaseMenu) {
     "use strict";
-    
+
     var t = html.tag,
         span = html.tag('span');
 
@@ -35,9 +35,9 @@ define([
     }
     function setMeta(cell, group, name, value) {
         /*
-         * This funny business is because the trigger on setting the metadata 
-         * property (via setter and getter in core Cell object) is only invoked 
-         * when the metadata preoperty is actually set -- doesn't count if 
+         * This funny business is because the trigger on setting the metadata
+         * property (via setter and getter in core Cell object) is only invoked
+         * when the metadata preoperty is actually set -- doesn't count if
          * properties of it are.
          */
         var temp = cell.metadata;
@@ -85,7 +85,7 @@ define([
             content = span({style: {fontWeight: 'bold'}}, status);
         toolbarDiv.append(span({style: {padding: '4px'}}, content));
     }
-    
+
     function jobStatus(toolbarDiv, cell) {
         var jobStatus = getMeta(cell, 'attributes', 'jobStatus'),
             content = span({style: {fontWeight: 'bold'}}, jobStatus);
@@ -93,7 +93,7 @@ define([
     }
 
     var register = function (notebook) {
-       
+
         celltoolbar.CellToolbar.register_callback('kbase.menu', makeKBaseMenux);
         celltoolbar.CellToolbar.register_callback('kbase-status', status);
         celltoolbar.CellToolbar.register_callback('kbase-job-status', jobStatus);

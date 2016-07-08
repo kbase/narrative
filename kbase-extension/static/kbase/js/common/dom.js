@@ -190,19 +190,22 @@ define([
             var collapseId = html.genId(),
                 type = args.type || 'primary',                
                 classes = ['panel', 'panel-' + type],
-                collapseClasses = ['panel-collapse collapse'];
+                collapseClasses = ['panel-collapse collapse'],
+                toggleClasses = [];
             if (args.hidden) {
                 classes.push('hidden');
                 // style.display = 'none';
             }
             if (!args.collapsed) {
                 collapseClasses.push('in');
+            } else {
+                toggleClasses.push('collapsed');
             }
 
             return div({class: classes.join(' '), dataElement: args.name}, [
                 div({class: 'panel-heading'}, [
                     div({class: 'panel-title'}, span({
-                        xclass: 'collapsed',
+                        class: toggleClasses.join(' '),
                         dataToggle: 'collapse',
                         dataTarget: '#' + collapseId,
                         style: {cursor: 'pointer'}

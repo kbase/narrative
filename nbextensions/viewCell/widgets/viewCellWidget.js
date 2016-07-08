@@ -620,7 +620,7 @@ define([
                                     ]
                                 }),
                                 ui.buildCollapsiblePanel({
-                                    title: 'Input ' + span({class: 'fa fa-arrow-left'}),
+                                    title: 'Input ' + span({class: 'fa fa-arrow-right'}),
                                     name: 'parameters-group',
                                     hidden: false,
                                     type: 'default',

@@ -913,8 +913,8 @@ define([
                                         ])
                                     ]
                                 }),
-                                dom.buildPanel({
-                                    title: 'Input ' + span({class: 'fa fa-arrow-left'}),
+                                dom.buildCollapsiblePanel({
+                                    title: 'Input ' + span({class: 'fa fa-arrow-right'}),
                                     name: 'parameters-group',
                                     hidden: false,
                                     type: 'default',
@@ -934,8 +934,8 @@ define([
                                     type: 'default',
                                     body: div({dataElement: 'widget'})
                                 }),
-                                dom.buildPanel({
-                                    title: 'Output ' + span({class: 'fa fa-arrow-right'}),
+                                dom.buildCollapsiblePanel({
+                                    title: 'Output ' + span({class: 'fa fa-arrow-left'}),
                                     name: 'output-group',
                                     hidden: true,
                                     type: 'default',

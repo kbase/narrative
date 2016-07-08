@@ -113,21 +113,17 @@ define([
             //     .closest('.cell')
             //     .trigger('set-title', [title]);
 
-            if (!this.cell) {
-                console.info("no fucking cell.");
-            }
-            else if (!this.cell.metadata) {
-                console.info("no fucking metadata.");
-            }
-
             if (!(this.cell.metadata.kbase)) {
                 this.cell.metadata.kbase = {
                     'attributes': {
-                    }
+                    },
+                    'type': 'output'
                 };
             }
             var meta = this.cell.metadata;
-            meta.kbase.attributes.title = title;
+            if (meta.kbase.type && meta.kbase.type === 'output') {
+                meta.kbase.attributes.title = title;
+            }
 
             this.cell.metadata = meta;
 

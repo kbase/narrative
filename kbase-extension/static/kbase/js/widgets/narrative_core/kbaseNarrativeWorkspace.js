@@ -1974,7 +1974,8 @@ define (
                     'attributes': {
                         'status': 'new',
                         'title': title
-                    }
+                    },
+                    'type': 'output'
                 }
             };
             cell.metadata = meta;

@@ -338,7 +338,7 @@ define([
                 cellStuff.bus.emit('reset-to-defaults');
             });
     }
-    
+
     function makeIcon(appSpec) {
         // icon is in the spec ...
         var t = html.tag,
@@ -360,7 +360,7 @@ define([
             ])
         ]);
     }
-    
+
     function makeIcon(appSpec) {
         // icon is in the spec ...
         var t = html.tag,
@@ -382,14 +382,14 @@ define([
             ])
         ]);
     }
-    
+
     function horribleHackToHideElement(cell, selector, tries) {
         var prompt = cell.element.find(selector);
         if (prompt.length > 0) {
             prompt.css('visibility', 'hidden');
             return;
         }
-            
+
         if (tries > 0) {
             tries -= 1;
             window.setTimeout(function () {
@@ -399,32 +399,32 @@ define([
             console.warn('Could not hide the prompt, sorry');
         }
     }
-    
+
     function hidePrompts(cell) {
         // Hide the code input area.
         cell.input.find('.input_area').addClass('hidden');
         utils.setCellMeta(cell, 'kbase.widgetCell.user-settings.showCodeInputArea', false);
-        
+
         // Hide the prompt...
         cell.input.find('.input_prompt').hide();
         cell.element.find('.output_area > div:nth-child(1)').css('visibility', 'hidden');
         // horribleHackToHideElement(cell, '.output_prompt', 10);
     }
-    
+
     function addPrompt(cell) {
         var prompt = document.createElement('div');
         prompt.innerHTML = div({dataElement: 'prompt', class: 'prompt'});
         cell.input.find('.input_prompt').after($(prompt));
         cell.renderIcon();
     }
-    
+
     function specializeCell(cell) {
         cell.minimize = function () {
             var inputArea = this.input.find('.input_area'),
                 outputArea = this.element.find('.output_wrapper'),
                 viewInputArea = this.element.find('[data-subarea-type="view-cell-input"]'),
                 showCode = utils.getCellMeta(cell, 'kbase.appCell.user-settings.showCodeInputArea');
-            
+
             if (showCode) {
                 inputArea.addClass('hidden');
             }
@@ -437,14 +437,14 @@ define([
                 outputArea = this.element.find('.output_wrapper'),
                 viewInputArea = this.element.find('[data-subarea-type="view-cell-input"]'),
                 showCode = utils.getCellMeta(cell, 'kbase.appCell.user-settings.showCodeInputArea');
-            
+
             if (showCode) {
                 inputArea.removeClass('hidden');
             }
             outputArea.removeClass('hidden');
             viewInputArea.removeClass('hidden');
         };
-         cell.renderIcon = function () {
+        cell.renderIcon = function () {
             var inputPrompt = this.element[0].querySelector('[data-element="prompt"]');
 
             if (inputPrompt) {
@@ -504,10 +504,10 @@ define([
             cell.input.after($(kbaseNode));
             cell.kbase.node = kbaseNode;
             cell.kbase.$node = $(kbaseNode);
-            
+
             hidePrompts(cell);
             addPrompt(cell);
-            
+
             return viewCellWidget.init()
                 .then(function () {
                     return viewCellWidget.attach(kbaseNode);

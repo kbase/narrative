@@ -309,7 +309,23 @@ define([
         p.renderMinMax = function () {
             var $cellNode = $(this.element),
                 metaToggleMode = utils.getCellMeta(this, 'kbase.cellState.toggleMinMax'),
-                toggleMode = $cellNode.data('toggleMinMax') || metaToggleMode || 'maximized';
+                toggleMode = $cellNode.data('toggleMinMax');
+            
+            if (metaToggleMode) {
+                if (!toggleMode) {                    
+                    // The first time an existing cell is rendered after loading a
+                    // notebook, the node data for toggleMinMax
+                    // will be empty, so we need to initialize it. This is an auto-initialize.
+                    toggleMode = metaToggleMode;
+                    $cellNode.data('toggleMinMax', toggleMode);                    
+                }
+            } else if (!toggleMode) {
+                // If there is neither a data attribute on the node nor a metadata
+                // property, then this is a new cell, and it will be maximized.
+                toggleMode = 'maximized';
+                $cellNode.data('toggleMinMax', toggleMode);                
+            }
+            
             switch (toggleMode) {
                 case 'maximized':
                     this.maximize();
@@ -323,6 +339,8 @@ define([
         p.toggleMinMax = function () {
             var $cellNode = $(this.element),
                 toggleMode = $cellNode.data('toggleMinMax') || 'maximized';
+
+            console.log('TOGGLE MIN MAX', $cellNode.data('toggleMinMax'), toggleMode);
 
             switch (toggleMode) {
                 case 'maximized':

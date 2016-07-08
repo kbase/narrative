@@ -83,6 +83,7 @@ define([
             this.input.find('.input_prompt').hide();
             utils.horribleHackToHideElement(this, '.output_prompt', 10);
         };
+        
     }
     
     // This is the python/kernel driven version
@@ -114,7 +115,6 @@ define([
 
         cell.renderMinMax();
         
-
         return {
             widget: null
         };

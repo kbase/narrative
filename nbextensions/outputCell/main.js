@@ -74,6 +74,14 @@ define([
             this.input.find('.input_prompt').hide();
             utils.horribleHackToHideElement(this, '.output_prompt', 10);
         };
+        cell.toggleCodeInputArea = function() {
+            console.log('TOGGLING 2...');
+            var codeInputArea = this.input.find('.input_area')[0];
+            console.log('TOGGLING 3', codeInputArea);
+            if (codeInputArea) {
+                codeInputArea.classList.toggle('hidden');
+            }
+        }
     }
     
     function setupCell(cell) {

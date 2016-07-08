@@ -1757,6 +1757,10 @@ define([
                 /*
                  * listeners for the local input cell message bus
                  */
+                
+                cell.element.on('toggleCodeArea.cell', function () {
+                    toggleCodeInputArea(cell);
+                });
 
                 bus.on('toggle-code-view', function () {
                     var showing = toggleCodeInputArea(),

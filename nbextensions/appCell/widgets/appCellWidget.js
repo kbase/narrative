@@ -921,9 +921,10 @@ define([
                                     body: div({dataElement: 'widget'})
                                 }),
                                 dom.buildCollapsiblePanel({
-                                    title: 'Parameters Display',
+                                    title: 'Parameters (display)',
                                     name: 'parameters-display-group',
                                     hidden: false,
+                                    collapsed: true,
                                     type: 'default',
                                     body: div({dataElement: 'widget'})
                                 }),

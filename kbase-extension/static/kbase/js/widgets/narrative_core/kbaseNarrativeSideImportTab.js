@@ -15,7 +15,8 @@ define (
 		'select2',
 		'json!kbase/config/upload_config.json',
 		'util/string',
-        'base/js/namespace'
+        'base/js/namespace',
+        'common/pythonInterop'
 	], function(
         KBWidget,
         bootstrap,
@@ -25,7 +26,8 @@ define (
         select2,
         transformConfig,
         StringUtil,
-        Jupyter
+        Jupyter,
+        PythonInterop
 	) {
     'use strict';
     return KBWidget({
@@ -184,13 +186,13 @@ define (
                             }
                         }
                     }
-                    self.methClient.get_method_full_info({ 'ids' : methodIds },
+                    self.methClient.get_method_full_info({ 'ids' : methodIds, 'tag' : 'dev' },
                         $.proxy(function(fullInfoList) {
                             self.methodFullInfo = {};
                             for (var i in fullInfoList) {
                                 self.methodFullInfo[fullInfoList[i].id] = fullInfoList[i];
                             }
-                            self.methClient.get_method_spec({ 'ids' : methodIds },
+                            self.methClient.get_method_spec({ 'ids' : methodIds, 'tag' : 'dev' },
                                 $.proxy(function(specs) {
                                     self.methods = {};
                                     for (var i in specs) {
@@ -621,62 +623,80 @@ define (
             var self = this;
             var methodId = self.getSelectedTabId();
             var methodSpec = self.methods[methodId];
-
-	    /*
-	     * Invoke the runImport method on all parameters that have it.
-	     * Each returns a promise; when all are resolved, proceed to
-	     * process the import transform.
-	     */
-
-	    self.fileUploadInProgress = true;
-	    var promise = this.getInputWidget().runImport();
-	    self.showInfo("Transferring files...", true);
-	    promise.then(function(value) {
-
-		self.fileUploadInProgress = false;
-		self.showInfo("Files transferred. Creating transform job.", true);
-
-		var paramValueArray = self.getInputWidget().getParameters();
-		var params = {};
-
-		for (var i in methodSpec.parameters) {
+            
+            if (methodId.indexOf('/') > 0) {
+                console.log(methodSpec);
+                var paramValueArray = self.getInputWidget().getParameters();
+                var params = {};
+                for (var i in methodSpec.parameters) {
                     var paramId = methodSpec.parameters[i].id;
                     var paramValue = paramValueArray[i];
                     params[paramId] = paramValue;
-		}
+                }
+                //var ver = methodSpec.info.git_commit_hash;
+                var pythonCode = PythonInterop.buildAppRunner(null, null, 
+                        {tag: 'dev', version: null, id: methodId}, params);
+                console.log(pythonCode);
+                Jupyter.notebook.kernel.execute(pythonCode);
+                self.showInfo("Your import job was submitted and accessible in \"Jobs\" tab");
+                callback(true);
+                return;
+            }
+            /*
+             * Invoke the runImport method on all parameters that have it.
+             * Each returns a promise; when all are resolved, proceed to
+             * process the import transform.
+             */
 
-		var args = null;
+            self.fileUploadInProgress = true;
+            var promise = this.getInputWidget().runImport();
+            self.showInfo("Transferring files...", true);
+            promise.then(function(value) {
 
-		try {
+                self.fileUploadInProgress = false;
+                self.showInfo("Files transferred. Creating transform job.", true);
+
+                var paramValueArray = self.getInputWidget().getParameters();
+                var params = {};
+
+                for (var i in methodSpec.parameters) {
+                    var paramId = methodSpec.parameters[i].id;
+                    var paramValue = paramValueArray[i];
+                    params[paramId] = paramValue;
+                }
+
+                var args = null;
+
+                try {
                     var args = self.buildTransformParameters(self.selectedType, methodId, params);
                     var uploaderClient = new Transform(self.uploaderURL, {'token': self.token});
 
                     if (args) {
-			console.log("Data to be sent to transform service:");
-			console.log(args);
+                        console.log("Data to be sent to transform service:");
+                        console.log(args);
 
-			self.showInfo("Submitting transform request...", true);
-			uploaderClient.upload(args,
-					      $.proxy(function(data) {
-						  console.log(data);
-						  self.waitForJob(data[1], callback);
-					      }, self),
-					      $.proxy(function(error) {
-						  self.showError(error);
-						  callback(false);
-					      }, self)
-					     );
+                        self.showInfo("Submitting transform request...", true);
+                        uploaderClient.upload(args,
+                                $.proxy(function(data) {
+                                    console.log(data);
+                                    self.waitForJob(data[1], callback);
+                                }, self),
+                                $.proxy(function(error) {
+                                    self.showError(error);
+                                    callback(false);
+                                }, self)
+                        );
                     } else {
-			callback(false);
+                        callback(false);
                     }
-		}
-		catch (error) {
+                }
+                catch (error) {
                     self.showError(error);
-		}
-	    }, function (reason) {
-		self.showError("File transfer failed: " + reason);
-		self.fileUploadInProgress = false;
-	    });
+                }
+            }, function (reason) {
+                self.showError("File transfer failed: " + reason);
+                self.fileUploadInProgress = false;
+            });
         },
 
         asBool: function(val) {

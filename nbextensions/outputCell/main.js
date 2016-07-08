@@ -5,14 +5,26 @@ define([
     'bluebird',
     'jquery',
     'base/js/namespace',
-    'common/utils'
+    'common/utils',
+    'common/appUtils',
+    'common/Props',
+    'common/cellUtils',
+    'common/pythonInterop',
+    'kb_common/html'
 ], function (
     Promise,
     $,
     Jupyter,
-    utils
+    utils,
+    AppUtils,
+    Props,
+    cellUtils,
+    PythonInterop,
+    html
     ) {
     'use strict';
+    
+    var t = html.tag, div = t('div');
 
     function specializeCell(cell) {
         cell.minimize = function () {
@@ -36,8 +48,34 @@ define([
             }
             outputArea.removeClass('hidden');
         };
-    }
+        cell.renderIcon = function () {            
+            var inputPrompt = this.element[0].querySelector('[data-element="icon"]');
 
+            if (inputPrompt) {
+                inputPrompt.innerHTML = div({
+                    style: {textAlign: 'center'}
+                }, [
+                    AppUtils.makeGenericIcon('arrow-left')
+                ]);
+            }
+        };
+        cell.hidePrompts = function () {
+            // Hide the code input area.
+            this.input.find('.input_area').addClass('hidden');
+            utils.setCellMeta(this, 'kbase.outputCell.user-settings.showCodeInputArea', false);
+            
+            // And add our own!
+            var prompt = document.createElement('div');
+            prompt.innerHTML = div({dataElement: 'icon', class: 'prompt'});
+            cell.input.find('.input_prompt').after($(prompt));
+
+
+            // Hide the prompt...
+            this.input.find('.input_prompt').hide();
+            utils.horribleHackToHideElement(this, '.output_prompt', 10);
+        };
+    }
+    
     function setupCell(cell) {
         if (cell.cell_type !== 'code') {
             return;
@@ -48,7 +86,7 @@ define([
         if (cell.metadata.kbase.type !== 'output') {
             return;
         }
-
+        
         specializeCell(cell);
 
         // The kbase property is only used for managing runtime state of the cell
@@ -58,30 +96,65 @@ define([
 
         // Update metadata.
         utils.setMeta(cell, 'attributes', 'lastLoaded', (new Date()).toUTCString());
-
-
+        
         // The output cell just needs to inhibit the input area.
         // The input code and associated output (a widget) is already
         // to be found in this cell (during insertion).
-
+        
+        cell.hidePrompts();
         cell.renderMinMax();
+        cell.renderIcon();
     }
 
-    function upgradeCell(cell) {
-        // all we do for now is set up the input area
-        cell.input.find('.input_area').addClass('hidden');
-        utils.setCellMeta(cell, 'kbase.outputCell.user-settings.showCodeInputArea', false);
-        setupCell(cell);
+    function upgradeCell(data) {
+        return Promise.try(function () {
+            var cell = data.cell,
+                meta = cell.metadata,
+                outputCode, parentTitle;
+
+            // Set the initial metadata for the output cell.
+            meta.kbase = {
+                type: 'output',
+                attributes: {
+                    id: data.kbase.cellId,
+                    status: 'new',
+                    created: new Date().toGMTString(),
+                    lastLoaded: new Date().toGMTString(),
+                    icon: 'arrow-right',
+                    title: 'Output Cell'
+                },
+                outputCell: {
+                    jobId: data.kbase.jobId,
+                    parentCellId: data.kbase.parentCellId,
+                    widget: data.kbase.widget
+                }
+            };
+            cell.metadata = meta;
+
+            // We just need to generate, set, and execute the output 
+            // the first time (for now).
+            outputCode = PythonInterop.buildOutputRunner(data.kbase.widget.name, data.kbase.widget.tag, data.kbase.widget.params);
+            cell.set_text(outputCode);
+            cell.execute();
+
+            // all we do for now is set up the input area
+            cell.input.find('.input_area').addClass('hidden');
+            utils.setCellMeta(cell, 'kbase.outputCell.user-settings.showCodeInputArea', false);
+
+            // Get the title of the app which generated this output...
+            parentTitle = cellUtils.getTitle(Props.getDataItem(cell.metadata, 'kbase.outputCell.parentCellId'));
+            if (parentTitle) {
+                Props.setDataItem(cell.metadata, 'kbase.attributes.title', 'Output from ' + parentTitle);
+            }
+
+            setupCell(cell);
+        });
     }
 
     function load() {
         $([Jupyter.events]).on('inserted.Cell', function (event, data) {
             if (data.kbase && data.kbase.type === 'output') {
-                upgradeCell(data.cell)
-                    .then(function () {
-                        
-                        console.log('OUTPUT: Cell created?');
-                    })
+                upgradeCell(data)
                     .catch(function (err) {
                         console.error('ERROR creating cell', err);
                         // delete cell.

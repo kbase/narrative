@@ -10,8 +10,8 @@ define([
     'common/runtime',
     'common/dom',
     'common/props',
+    'common/appUtils',
     'kb_common/html',
-    './widgets/widgetInvoker',
     'common/pythonInterop'
 ], function (
     Promise,
@@ -22,37 +22,14 @@ define([
     Runtime,
     UI,
     Props,
+    AppUtils,
     html,
-    Invoker,
     PythonInterop
     ) {
     'use strict';
 
     var t = html.tag,
-        div = t('div'), span = t('span'), img = t('img');
-        
-        
-    function makeIcon(appSpec) {
-        // icon is in the spec ...
-        var t = html.tag,
-            span = t('span'), img = t('img'),
-            runtime = Runtime.make(),
-            nmsBase = runtime.config('services.narrative_method_store.image_url'),
-            iconUrl = Props.getDataItem(appSpec, 'info.icon.url');
-
-        if (iconUrl) {
-            return span({class: 'fa-stack fa-2x', style: {padding: '0 3px 3px 3px'}}, [
-                img({src: nmsBase + iconUrl, style: {maxWidth: '50px', maxHeight: '50px', margin: '0x'}})
-            ]);
-        }
-
-        return span({style: ''}, [
-            span({class: 'fa-stack fa-2x', style: {textAlign: 'center', color: 'rgb(103,58,183)'}}, [
-                span({class: 'fa fa-square fa-stack-2x', style: {color: 'rgb(103,58,183)'}}),
-                span({class: 'fa fa-inverse fa-stack-1x fa-cube'})
-            ])
-        ]);
-    }
+        div = t('div');
 
     function specializeCell(cell) {
         cell.minimize = function () {
@@ -87,39 +64,27 @@ define([
                 inputPrompt.innerHTML = div({
                     style: {textAlign: 'center'}
                 }, [
-                    makeIcon(utils.getCellMeta(cell, 'kbase.widgetCell.app.spec'))
+                    AppUtils.makeAppIcon(utils.getCellMeta(cell, 'kbase.widgetCell.app.spec'))
                 ]);
             }
         };
-    }
-    
-    function horribleHackToHideElement(cell, selector, tries) {
-        var prompt = cell.element.find(selector);
-        if (prompt.length > 0) {
-            prompt.css('visibility', 'hidden');
-            return;
-        }
+        cell.hidePrompts = function () {
+            // Hide the code input area.
+            this.input.find('.input_area').addClass('hidden');
+            utils.setCellMeta(this, 'kbase.widgetCell.user-settings.showCodeInputArea', false);
             
-        if (tries > 0) {
-            tries -= 1;
-            window.setTimeout(function () {
-                horribleHackToHideElement(cell, tries);
-            }, 100);
-        } else {
-            console.warn('Could not hide the prompt, sorry');
-        }
+            // And add our own!
+            var prompt = document.createElement('div');
+            prompt.innerHTML = div({dataElement: 'icon', class: 'prompt'});
+            cell.input.find('.input_prompt').after($(prompt));
+
+
+            // Hide the prompt...
+            this.input.find('.input_prompt').hide();
+            utils.horribleHackToHideElement(this, '.output_prompt', 10);
+        };
     }
     
-    function hidePrompts(cell) {
-        // Hide the code input area.
-        cell.input.find('.input_area').addClass('hidden');
-        utils.setCellMeta(cell, 'kbase.widgetCell.user-settings.showCodeInputArea', false);
-        
-        // Hide the prompt...
-        cell.input.find('.input_prompt').hide();
-        horribleHackToHideElement(cell, '.output_prompt', 10);
-    }
-
     // This is the python/kernel driven version
     // 
     function setupCell(cell) {
@@ -143,18 +108,8 @@ define([
         // Update metadata.
         utils.setMeta(cell, 'attributes', 'lastLoaded', (new Date()).toUTCString());
 
-        hidePrompts(cell);
+        cell.hidePrompts();
 
-//        cell.element.find('.output_wrapper .prompt').css('visibility', 'hidden');
-//        cell.element.find('.output .prompt').css('visibility', 'hidden');
-//        
-//        console.log('PROMPT?', cell.element.find('.output .prompt'));
-//        console.log('PROMPT?', cell.element.find('.output_wrapper .prompt'));
-        
-        // And add our own!
-        var prompt = document.createElement('div');
-        prompt.innerHTML = div({dataElement: 'icon', class: 'prompt'});
-        cell.input.find('.input_prompt').after($(prompt));
         cell.renderIcon();
 
         cell.renderMinMax();

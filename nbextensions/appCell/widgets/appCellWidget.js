@@ -18,6 +18,7 @@ define([
     'common/utils',
     'common/dom',
     'common/fsm',
+    'common/cellUtils',
     'google-code-prettify/prettify',
     'css!google-code-prettify/prettify.css',
     'css!font-awesome.css'
@@ -38,6 +39,7 @@ define([
     utils,
     Dom,
     Fsm,
+    CellUtils,
     PR
     ) {
     'use strict';
@@ -1673,38 +1675,20 @@ define([
 
         function createOutputCell(jobId) {
             var cellId = utils.getMeta(cell, 'attributes', 'id'),
-                // cellIndex = Jupyter.narrative.getCellByKbaseId(cellId),
                 cellIndex = Jupyter.notebook.find_cell_index(cell),
-                newCell = Jupyter.notebook.insert_cell_below('code', cellIndex),
                 newCellId = new Uuid(4).format(),
-                widgetName = model.getItem('exec.outputWidgetInfo.name'),
-                widgetTag = model.getItem('exec.outputWidgetInfo.tag'),
-                widgetParams = model.getItem('exec.outputWidgetInfo.params'),
-                outputCode = PythonInterop.buildOutputRunner(widgetName, widgetTag, widgetParams);
-
-            newCell.metadata = {
+                newCell = Jupyter.notebook.insert_cell_below('code', cellIndex);
+            
+            $([Jupyter.events]).trigger('inserted.Cell', {
+                cell: newCell,
                 kbase: {
                     type: 'output',
-                    attributes: {
-                        id: newCellId,
-                        status: 'new',
-                        created: new Date().toGMTString(),
-                        lastLoaded: new Date().toGMTString(),
-                        icon: 'arrow-right',
-                        title: 'Output Cell'
-                    },
-                    output: {
-                        jobId: jobId,
-                        parentCellId: cellId
-                    }
+                    cellId: newCellId,
+                    parentCellId: cellId,
+                    jobId: jobId,
+                    widget: model.getItem('exec.outputWidgetInfo')
                 }
-            };
-                            
-            newCell.set_text(outputCode);
-
-            // newCell.set_text('JobManager().get_job("' + jobId + '").output_viewer()');
-
-            newCell.execute();
+            });
 
             return newCellId;
         }
@@ -1718,22 +1702,6 @@ define([
             if (textNode) {
                 textNode.innerHTML = '';
             }
-        }
-
-        function findCellForId(id) {
-            var matchingCells = Jupyter.notebook.get_cells().filter(function (cell) {
-                if (cell.metadata && cell.metadata.kbase) {
-                    return (cell.metadata.kbase.attributes.id === id);
-                }
-                return false;
-            });
-            if (matchingCells.length === 1) {
-                return matchingCells[0];
-            }
-            if (matchingCells.length > 1) {
-                addNotification('Too many cells matched the given id: ' + id);
-            }
-            return null;
         }
 
         function doOnSuccess() {
@@ -1754,7 +1722,7 @@ define([
 
             // If so, is the cell still there?
             if (outputCellId) {
-                outputCell = findCellForId(outputCellId);
+                outputCell = cellUtils.findById(outputCellId);
                 if (outputCell) {
                     return;
                 }

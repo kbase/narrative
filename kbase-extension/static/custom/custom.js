@@ -340,8 +340,6 @@ define([
             var $cellNode = $(this.element),
                 toggleMode = $cellNode.data('toggleMinMax') || 'maximized';
 
-            console.log('TOGGLE MIN MAX', $cellNode.data('toggleMinMax'), toggleMode);
-
             switch (toggleMode) {
                 case 'maximized':
                     toggleMode = 'minimized';

@@ -29,6 +29,7 @@ define([
     'common/clock',
     'common/dom',
     'common/props',
+    'common/appUtils',
 //    './widgets/codeCellRunWidget',
     'kb_service/utils',
     'kb_service/client/workspace',
@@ -47,6 +48,7 @@ define([
     Clock,
     Dom,
     Props,
+    AppUtils,
     serviceUtils,
     Workspace
     ) {
@@ -332,45 +334,6 @@ define([
             });
     }
 
-    function makeIcon(appSpec) {
-        // icon is in the spec ...
-        var t = html.tag,
-            span = t('span'), img = t('img'),
-            runtime = Runtime.make(),
-            nmsBase = runtime.config('services.narrative_method_store.image_url'),
-            iconUrl = Props.getDataItem(appSpec, 'info.icon.url');
-
-        if (iconUrl) {
-            return span({class: 'fa-stack fa-2x', style: {padding: '0 3px 3px 3px'}}, [
-                img({src: nmsBase + iconUrl, style: {maxWidth: '50px', maxHeight: '50px', margin: '0x'}})
-            ]);
-        }
-
-        return span({style: ''}, [
-            span({class: 'fa-stack fa-2x', style: {textAlign: 'center', color: 'rgb(103,58,183)'}}, [
-                span({class: 'fa fa-square fa-stack-2x', style: {color: 'rgb(103,58,183)'}}),
-                span({class: 'fa fa-inverse fa-stack-1x fa-cube'})
-            ])
-        ]);
-    }
-    
-    function horribleHackToHideElement(cell, selector, tries) {
-        var prompt = cell.element.find(selector);
-        if (prompt.length > 0) {
-            prompt.css('visibility', 'hidden');
-            return;
-        }
-            
-        if (tries > 0) {
-            tries -= 1;
-            window.setTimeout(function () {
-                horribleHackToHideElement(cell, tries);
-            }, 100);
-        } else {
-            console.warn('Could not hide the prompt, sorry');
-        }
-    }
-    
     function hidePrompts(cell) {
         // Hide the code input area.
         cell.input.find('.input_area').addClass('hidden');
@@ -378,7 +341,7 @@ define([
         
         // Hide the prompt...
         cell.input.find('.input_prompt').hide();
-        horribleHackToHideElement(cell, '.output_prompt', 10);
+        utils.horribleHackToHideElement(cell, '.output_prompt', 10);
     }
     
     function addPrompt(cell) {
@@ -421,7 +384,7 @@ define([
                 inputPrompt.innerHTML = div({
                     style: {textAlign: 'center'}
                 }, [
-                    makeIcon(utils.getCellMeta(cell, 'kbase.widgetCell.app.spec'))
+                    AppUtils.makeAppIcon(utils.getCellMeta(cell, 'kbase.widgetCell.app.spec'))
                 ]);
             }
         };

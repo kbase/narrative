@@ -297,3 +297,14 @@ span#notebook_name:hover {
 .cell.unselected  .kb-cell-toolbar .buttons-container {
     opacity: 0.2;
 }
+
+.kb-btn-icon {
+    padding: 4px;
+}
+.kb-btn-icon .fa {
+    opacity: 0.5
+}
+
+.kb-btn-icon:hover .fa {
+    opacity: 1.0
+}

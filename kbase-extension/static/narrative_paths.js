@@ -404,7 +404,8 @@ require.config({
 
 
 function addCdnModules() {
-    var baseUrl = 'https://narrative-dev.kbase.us/cdn',
+    var // baseUrl = 'https://narrative-dev.kbase.us/cdn',
+        baseUrl = 'http://cdn.kbase.us/cdn',
         modules = {
             kb_common: 'kbase-common-js/1.7.0/',
             kb_service: 'kbase-service-clients-js/1.4.0/',

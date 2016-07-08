@@ -1280,7 +1280,7 @@ define([
                 var value = params[key],
                     paramSpec = env.parameterMap[key];
 
-                console.log('param spec', paramSpec);
+                // console.log('param spec', paramSpec);
                 if (paramSpec.spec.field_type === 'textsubdata') {
                     if (value) {
                         value = value.join(',');
@@ -1495,7 +1495,7 @@ define([
                     showAppSpec();
                     PR.prettyPrint(null, container);
                     renderUI();
-                    renderIcon();
+                    // renderIcon();
                 })
                 .then(function () {
                     // if we start out in 'new' state, then we need to promote to

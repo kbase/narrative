@@ -9,9 +9,9 @@ define([
     KBWidget,
     Jupyter
     ) {
-    "use strict";
+    'use strict';
     return KBWidget({
-        name: 'kbaseNarrativeOutputCell',
+        name: 'kbaseAppOutputCell',
         version: '1.0.0',
         options: {
             widget: 'kbaseDefaultNarrativeOutput',
@@ -28,64 +28,26 @@ define([
 
             this.data = this.options.data;
             this.options.type = this.options.type.toLowerCase();
-            if (this.options.widget.toLowerCase() === "null")
+            if (this.options.widget.toLowerCase() === "null") {
                 this.options.widget = 'kbaseDefaultNarrativeOutput';
+            }
 
             this.render();
 
-            if (Jupyter.narrative)
+            if (Jupyter.narrative) {
                 Jupyter.narrative.registerWidget(this, this.options.cellId);
-
-            // this.hideInputArea();
+            }
 
             return this;
         },
-        hideInputArea: function () {
-            if (!this.options.cellId)
-                return;
-            $('#' + this.options.cellId).closest('.cell').find('.inner_cell .input_area').hide();
-        },
         render: function () {
-            var icon;
-            switch (this.options.type) {
-                case 'method':
-                    this.renderMethodOutputCell();
-                    break;
-                case 'app':
-                    this.renderAppOutputCell();
-                    break;
-                case 'error':
-                    this.renderErrorOutputCell();
-                    break;
-                case 'viewer':
-                    this.renderViewerCell();
-                    break;
-                default:
-                    this.renderErrorOutputCell();
-                    break;
-            }
-
+            this.renderAppOutputCell();
         },
-        renderViewerCell: function () {
-            require(['kbaseNarrativeDataCell'], $.proxy(function () {
-                var $label = $('<span>').addClass('label label-info').append('Viewer');
-                this.renderCell('kb-cell-output', 'panel-default', 'kb-out-desc', $label, 'data viewer');
-                var $cell = this.$elem.closest('.cell');
-                $cell.trigger('set-icon.cell', ['<i class="fa fa-2x fa-table data-viewer-icon"></i>']);
-            }, this));
-        },
-        renderMethodOutputCell: function () {
-            var $label = $('<span>').addClass('label label-info').append('Output');
-            this.renderCell('kb-cell-output', 'panel-default', 'kb-out-desc', $label, 'method output');
-            var $cell = this.$elem.closest('.cell');
-            $cell.trigger('set-icon.cell', ['<i class="fa fa-2x fa-file-o method-output-icon"></i>']);
-        },
-        // same as method for now
         renderAppOutputCell: function () {
             var $label = $('<span>').addClass('label label-info').append('Output');
             this.renderCell('kb-cell-output', 'panel-default', 'kb-out-desc', $label, 'app output');
             var $cell = this.$elem.closest('.cell');
-            $cell.trigger('set-icon.cell', ['<i class="fa fa-2x fa-file-o app-output-icon"></i>']);
+            $cell.trigger('set-icon.cell', ['<i class="fa fa-2x fa-file-o method-output-icon"></i>']);
         },
         renderErrorOutputCell: function () {
             require(['kbaseNarrativeError'], $.proxy(function () {
@@ -106,11 +68,6 @@ define([
             if (titleSuffix) {
                 title += ' (' + titleSuffix + ')';
             }
-
-// TODO: a label which can appear above or instaead of the icon in the prmopt area.
-//            this.$elem
-//                .closest('.cell')
-//                .trigger('set-label', [$label.html()]);
 
             this.$elem
                 .closest('.cell')
@@ -245,6 +202,5 @@ define([
 
             return hours + ":" + minutes + ":" + seconds + ", " + month + "/" + day + "/" + year;
         }
-
     });
 });

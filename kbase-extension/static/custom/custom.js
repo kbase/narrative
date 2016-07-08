@@ -621,8 +621,7 @@ define([
             originalMethod;
 
         p.minimize = function () {
-            var $cellNode = $(this.element),
-                inputArea = this.input.find('.input_area'),
+            var inputArea = this.input.find('.input_area'),
                 outputArea = this.element.find('.output_wrapper');
 
             inputArea.addClass('hidden');
@@ -630,8 +629,7 @@ define([
         };
 
         p.maximize = function () {
-            var $cellNode = $(this.element),
-                inputArea = this.input.find('.input_area'),
+            var inputArea = this.input.find('.input_area'),
                 outputArea = this.element.find('.output_wrapper');
 
             inputArea.removeClass('hidden');

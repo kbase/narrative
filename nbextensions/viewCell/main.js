@@ -28,6 +28,7 @@ define([
     'common/utils',
     'common/clock',
     'common/dom',
+    'common/props',
 //    './widgets/codeCellRunWidget',
     'kb_service/utils',
     'kb_service/client/workspace',
@@ -45,6 +46,7 @@ define([
     utils,
     Clock,
     Dom,
+    Props,
     serviceUtils,
     Workspace
     ) {
@@ -305,7 +307,8 @@ define([
                         id: appSpec.info.id,
                         gitCommitHash: appSpec.info.git_commit_hash,
                         version: appSpec.info.ver,
-                        tag: appTag
+                        tag: appTag,
+                        appSpec: appSpec
                     },
                     state: {
                         edit: 'editing',
@@ -336,40 +339,88 @@ define([
             });
     }
     
-    function specializeCell(cell) {
-        cell.minimize = function () {
-            var $cellNode = $(this.element),
-                inputArea = this.input.find('.input_area'),
-                outputArea = this.element.find('.output_wrapper'),
-                viewInputArea = this.element.find('[data-subarea-type="app-cell-input"]'),
-                showCode = utils.getCellMeta(cell, 'kbase.appCell.user-settings.showCodeInputArea');
-            
-            if (showCode) {
-                inputArea.addClass('hidden');
-            }
-            outputArea.addClass('hidden');
-            viewInputArea.addClass('hidden');
-        };
+    function makeIcon(appSpec) {
+        // icon is in the spec ...
+        var t = html.tag,
+            span = t('span'), img = t('img'),
+            runtime = Runtime.make(),
+            nmsBase = runtime.config('services.narrative_method_store.image_url'),
+            iconUrl = Props.getDataItem(appSpec, 'info.icon.url');
 
-        cell.maximize = function () {
-            var $cellNode = $(this.element),
-                inputArea = this.input.find('.input_area'),
-                outputArea = this.element.find('.output_wrapper'),
-                viewInputArea = this.element.find('[data-subarea-type="app-cell-input"]'),
-                showCode = utils.getCellMeta(cell, 'kbase.appCell.user-settings.showCodeInputArea');
+        if (iconUrl) {
+            return span({class: 'fa-stack fa-2x', style: {padding: '0 3px 3px 3px'}}, [
+                img({src: nmsBase + iconUrl, style: {maxWidth: '50px', maxHeight: '50px', margin: '0x'}})
+            ]);
+        }
+
+        return span({style: ''}, [
+            span({class: 'fa-stack fa-2x', style: {textAlign: 'center', color: 'rgb(103,58,183)'}}, [
+                span({class: 'fa fa-square fa-stack-2x', style: {color: 'rgb(103,58,183)'}}),
+                span({class: 'fa fa-inverse fa-stack-1x fa-cube'})
+            ])
+        ]);
+    }
+    
+    function makeIcon(appSpec) {
+        // icon is in the spec ...
+        var t = html.tag,
+            span = t('span'), img = t('img'),
+            runtime = Runtime.make(),
+            nmsBase = runtime.config('services.narrative_method_store.image_url'),
+            iconUrl = Props.getDataItem(appSpec, 'info.icon.url');
+
+        if (iconUrl) {
+            return span({class: 'fa-stack fa-2x', style: {padding: '0 3px 3px 3px'}}, [
+                img({src: nmsBase + iconUrl, style: {maxWidth: '50px', maxHeight: '50px', margin: '0x'}})
+            ]);
+        }
+
+        return span({style: ''}, [
+            span({class: 'fa-stack fa-2x', style: {textAlign: 'center', color: 'rgb(103,58,183)'}}, [
+                span({class: 'fa fa-square fa-stack-2x', style: {color: 'rgb(103,58,183)'}}),
+                span({class: 'fa fa-inverse fa-stack-1x fa-cube'})
+            ])
+        ]);
+    }
+    
+    function horribleHackToHideElement(cell, selector, tries) {
+        var prompt = cell.element.find(selector);
+        if (prompt.length > 0) {
+            prompt.css('visibility', 'hidden');
+            return;
+        }
             
-            if (showCode) {
-                inputArea.removeClass('hidden');
-            }
-            outputArea.removeClass('hidden');
-            viewInputArea.removeClass('hidden');
-        };
+        if (tries > 0) {
+            tries -= 1;
+            window.setTimeout(function () {
+                horribleHackToHideElement(cell, tries);
+            }, 100);
+        } else {
+            console.warn('Could not hide the prompt, sorry');
+        }
+    }
+    
+    function hidePrompts(cell) {
+        // Hide the code input area.
+        cell.input.find('.input_area').addClass('hidden');
+        utils.setCellMeta(cell, 'kbase.widgetCell.user-settings.showCodeInputArea', false);
+        
+        // Hide the prompt...
+        cell.input.find('.input_prompt').hide();
+        cell.element.find('.output_area > div:nth-child(1)').css('visibility', 'hidden');
+        // horribleHackToHideElement(cell, '.output_prompt', 10);
+    }
+    
+    function addPrompt(cell) {
+        var prompt = document.createElement('div');
+        prompt.innerHTML = div({dataElement: 'prompt', class: 'prompt'});
+        cell.input.find('.input_prompt').after($(prompt));
+        cell.renderIcon();
     }
     
     function specializeCell(cell) {
         cell.minimize = function () {
-            var $cellNode = $(this.element),
-                inputArea = this.input.find('.input_area'),
+            var inputArea = this.input.find('.input_area'),
                 outputArea = this.element.find('.output_wrapper'),
                 viewInputArea = this.element.find('[data-subarea-type="view-cell-input"]'),
                 showCode = utils.getCellMeta(cell, 'kbase.appCell.user-settings.showCodeInputArea');
@@ -382,8 +433,7 @@ define([
         };
 
         cell.maximize = function () {
-            var $cellNode = $(this.element),
-                inputArea = this.input.find('.input_area'),
+            var inputArea = this.input.find('.input_area'),
                 outputArea = this.element.find('.output_wrapper'),
                 viewInputArea = this.element.find('[data-subarea-type="view-cell-input"]'),
                 showCode = utils.getCellMeta(cell, 'kbase.appCell.user-settings.showCodeInputArea');
@@ -394,14 +444,23 @@ define([
             outputArea.removeClass('hidden');
             viewInputArea.removeClass('hidden');
         };
-        
-        
+         cell.renderIcon = function () {
+            var inputPrompt = this.element[0].querySelector('[data-element="prompt"]');
 
+            if (inputPrompt) {
+                inputPrompt.innerHTML = div({
+                    style: {textAlign: 'center'}
+                }, [
+                    makeIcon(utils.getCellMeta(cell, 'kbase.widgetCell.app.spec'))
+                ]);
+            }
+        };
     }
 
     function setupCell(cell) {
         return Promise.try(function () {
             // Only handle kbase cells.
+
             if (cell.cell_type !== 'code') {
                 // console.log('not a code cell!');
                 return;
@@ -445,7 +504,10 @@ define([
             cell.input.after($(kbaseNode));
             cell.kbase.node = kbaseNode;
             cell.kbase.$node = $(kbaseNode);
-
+            
+            hidePrompts(cell);
+            addPrompt(cell);
+            
             return viewCellWidget.init()
                 .then(function () {
                     return viewCellWidget.attach(kbaseNode);

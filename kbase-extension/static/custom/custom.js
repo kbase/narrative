@@ -107,6 +107,8 @@ define([
     'notebook/js/cell',
     'common/utils',
     'kb_common/html',
+    'narrativeConfig',
+    
     'components/requirejs/require',
     'narrative_paths'
 ], function (
@@ -124,7 +126,8 @@ define([
     keyboard,
     cell,
     utils,
-    html
+    html,
+    narrativeConfig
     ) {
     'use strict';
 
@@ -809,5 +812,6 @@ define([
         });
     };
 
+    console.log('CONFIG', narrativeConfig);
 
 });

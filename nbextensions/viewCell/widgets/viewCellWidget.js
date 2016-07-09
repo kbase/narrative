@@ -10,13 +10,13 @@ define([
     'common/parameterSpec',
     'common/runtime',
     'common/events',
-    'kb_common/html',
+    'common/html',
     'common/props',
     'kb_service/client/narrativeMethodStore',
     'kb_service/client/workspace',
     'common/pythonInterop',
     'common/utils',
-    'common/dom',
+    'common/ui',
     'common/fsm',
     'google-code-prettify/prettify',
     'css!google-code-prettify/prettify.css',
@@ -53,7 +53,7 @@ define([
                 ui: {
                     buttons: {
                         enabled: [],
-                        disabled: ['run-app', 'remove', 're-run-app']
+                        disabled: ['run-app']
                     },
                     elements: {
                         show: [],
@@ -77,7 +77,7 @@ define([
                 ui: {
                     buttons: {
                         enabled: [],
-                        disabled: ['run-app', 'remove', 're-run-app']
+                        disabled: ['run-app']
                     },
                     elements: {
                         show: ['fatal-error'],
@@ -94,8 +94,8 @@ define([
                 },
                 ui: {
                     buttons: {
-                        enabled: ['remove'],
-                        disabled: ['run-app', 're-run-app']
+                        enabled: [],
+                        disabled: ['run-app']
                     },
                     elements: {
                         show: ['parameters-group', 'output-group'],
@@ -122,8 +122,8 @@ define([
                 },
                 ui: {
                     buttons: {
-                        enabled: ['run-app', 'remove'],
-                        disabled: ['re-run-app']
+                        enabled: ['run-app'],
+                        disabled: []
                     },
                     elements: {
                         show: ['parameters-group', 'output-group'],
@@ -178,7 +178,7 @@ define([
                 },
                 ui: {
                     buttons: {
-                        enabled: ['re-run-app', 'remove'],
+                        enabled: [],
                         disabled: ['run-app']
                     },
                     elements: {
@@ -212,7 +212,7 @@ define([
                 },
                 ui: {
                     buttons: {
-                        enabled: ['re-run-app', 'remove'],
+                        enabled: [],
                         disabled: ['run-app']
                     },
                     elements: {
@@ -265,19 +265,22 @@ define([
                     defaultValue: true,
                     type: 'toggle',
                     element: 'about-app'
-                },
-                showDeveloper: {
-                    label: 'Show developer features',
-                    defaultValue: false,
-                    type: 'toggle',
-                    element: 'developer-options'
-                }
+                } 
             },
         widgets = {},
             inputBusses = [],
             inputBusMap = {},
             fsm,
             saveMaxFrequency = config.saveMaxFrequency || 5000;
+        
+        if (runtime.config('features.advanced')) {
+            settings.showDeveloper = {
+                label: 'Show developer features',
+                defaultValue: false,
+                type: 'toggle',
+                element: 'developer-options'
+            };
+        }
 
         // DATA API
 
@@ -347,15 +350,11 @@ define([
 
 
         function renderAppSpec() {
-//            if (!env.appSpec) {
-//                return;
-//            }
-//            var specText = JSON.stringify(env.appSpec, false, 3),
-//                 fixedText = specText.replace(/</g, '&lt;').replace(/>/g, '&gt;');
             return pre({
                 dataElement: 'spec',
                 class: 'prettyprint lang-json',
-                style: {fontSize: '80%'}});
+                style: {fontSize: '80%'}
+            });
         }
 
         function renderAppSummary() {
@@ -364,10 +363,12 @@ define([
                     th('Name'),
                     td({dataElement: 'name'})
                 ]),
-                tr([
-                    th('Module'),
-                    td({dataElement: 'module'})
-                ]),
+                ui.ifAdvanced(function () {
+                    tr([
+                        th('Module'),
+                        td({dataElement: 'module'})
+                    ])
+                }),
                 tr([
                     th('Id'),
                     td({dataElement: 'id'})
@@ -384,10 +385,12 @@ define([
                     th('Authors'),
                     td({dataElement: 'authors'})
                 ]),
-                tr([
-                    th('Git commit hash'),
-                    td({dataElement: 'git-commit-hash'})
-                ]),
+                ui.ifAdvanced(function () {
+                    tr([
+                        th('Git commit hash'),
+                        td({dataElement: 'git-commit-hash'})
+                    ])
+                }),
                 tr([
                     th('More info'),
                     td({dataElement: 'catalog-link'})
@@ -403,11 +406,13 @@ define([
                         name: 'summary',
                         content: renderAppSummary()
                     },
-                    {
-                        label: 'Spec',
-                        name: 'spec',
-                        content: renderAppSpec()
-                    }
+                    ui.ifAdvanced(function () {
+                        return {
+                            label: 'Spec',
+                            name: 'spec',
+                            content: renderAppSpec()
+                        };
+                    })
                 ]
             });
         }
@@ -465,7 +470,7 @@ define([
             var events = Events.make({node: container}),
                 content = Object.keys(settings).map(function (key) {
                 var setting = settings[key],
-                    settingsValue = model.getItem(['user-settings', key]) || setting.defaultValue;
+                    settingsValue = model.getItem(['user-settings', key], setting.defaultValue);
                 return div({}, [
                     input({
                         type: 'checkbox',
@@ -550,12 +555,12 @@ define([
                                             div({class: 'btn-group'}, [
                                                 ui.makeButton('View', 'run-app', {events: events, type: 'primary'})
                                             ]),
-                                            div({class: 'btn-group'}, [
-                                                ui.makeButton('View Again', 're-run-app', {events: events, type: 'primary'})
-                                            ]),
-                                            div({class: 'btn-group'}, [
-                                                ui.makeButton('Remove', 'remove', {events: events, type: 'danger'})
-                                            ]),
+//                                            div({class: 'btn-group'}, [
+//                                                ui.makeButton('View Again', 're-run-app', {events: events, type: 'primary'})
+//                                            ]),
+//                                            div({class: 'btn-group'}, [
+//                                                ui.makeButton('Remove', 'remove', {events: events, type: 'danger'})
+//                                            ]),
                                             div({class: 'btn-group'}, [
                                                 ui.makeButton(span({class: 'fa fa-cog '}), 'toggle-settings', {events: events})
                                             ])
@@ -1172,12 +1177,12 @@ define([
                 bus.on('run-app', function () {
                     doRun();
                 });
-                bus.on('re-run-app', function () {
-                    doRerun();
-                });
-                bus.on('remove', function () {
-                    doRemove();
-                });
+//                bus.on('re-run-app', function () {
+//                    doRerun();
+//                });
+//                bus.on('remove', function () {
+//                    doRemove();
+//                });
 
                 bus.on('on-success', function () {
                     doOnSuccess();

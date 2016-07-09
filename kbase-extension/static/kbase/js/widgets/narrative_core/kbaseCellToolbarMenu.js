@@ -5,8 +5,9 @@ define([
     'kb_common/html',
     'common/events',
     'base/js/namespace',
-    'common/utils'
-], function ($, html, Events, Jupyter, utils) {
+    'common/utils',
+    'common/runtime'
+], function ($, html, Events, Jupyter, utils, Runtime) {
     'use strict';
 
     var t = html.tag,
@@ -125,22 +126,26 @@ define([
         function doToggleMinMaxCell() {
             cell.element.trigger('toggleMinMax.cell');
         }
-        
+
         function doToggleCodeView() {
             cell.element.trigger('toggleCodeArea.cell');
             // $(cell.element).find('.input_area').toggle();
         }
 
         function renderToggleCodeView(events) {
-            // Only render if actually a code cell.
-            
+            var runtime = Runtime.make();
+            // Only render if actually a code cell and in dev mode.
             // TODO: add cell extension to toggle code view, since this may 
             // depend on cell state (or subtype)
             if (cell.cell_type !== 'code') {
                 return;
             }
+            if (!runtime.config('features.developer')) {
+                return;
+            }
             
-            
+
+
             return button({
                 type: 'button',
                 class: 'btn btn-default btn-xs',
@@ -180,8 +185,8 @@ define([
 //                                    }, [
 //                                        span({class: 'fa fa-cog', style: {fontSize: '14pt'}})
 //                                    ]),
-                                    // TODO: spacing on menu items is .. funky .. need a gap between the icon and the text. Rather the
-                                    // icon should take up a fixed width so that the menu item text aligns left.
+                                // TODO: spacing on menu items is .. funky .. need a gap between the icon and the text. Rather the
+                                // icon should take up a fixed width so that the menu item text aligns left.
 //                                    ul({class: 'dropdown-menu dropdown-menu-right'}, [
 //                                        // li(a({id: attachEvent('click', doViewJobSubmission)}, [span({class: 'fa fa-code'}), ' View Job Submission'])),
 //                                        li(a({id: events.addEvent({type: 'click', handler: doInsertCellAbove})}, [span({class: 'fa fa-caret-square-o-up'}), ' Insert Cell Above'])),

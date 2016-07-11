@@ -6,13 +6,14 @@ define([
     'common/events',
     'base/js/namespace',
     'common/utils',
-    'common/runtime'
-], function ($, html, Events, Jupyter, utils, Runtime) {
+    'common/runtime',
+    'common/ui'
+], function ($, html, Events, Jupyter, utils, Runtime, UI) {
     'use strict';
 
     var t = html.tag,
         div = t('div'), a = t('a'),
-        button = t('button'), ul = t('ul'), li = t('li'),
+        button = t('button'), p = t('p'),
         span = t('span');
 
     function getMeta(cell, group, name) {
@@ -29,7 +30,8 @@ define([
     }
     function factory(config) {
         var container,
-            cell;
+            cell,
+            ui;
 
 //        function attachEvent(event, fun) {
 //            var id = html.genId(),
@@ -107,9 +109,29 @@ define([
         }
 
         function doDeleteCell() {
-            if (window.confirm('Delete cell?')) {
-                $(cell.element).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(cell));
-            }
+            //if (window.confirm('Delete cell?')) {
+            //    $(cell.element).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(cell));
+            //} 
+            var content = div([
+                p([
+                    'Deleting this cell will not remove any output cells or data objects it may have created. ', 
+                    'Any input parameters or other configuration of this cell will be lost.'
+                ]),
+                p([
+                    'Note: It is not possible to "undo" the deletion of a cell, ', 
+                    'but if the cell has not been saved you can refresh the page ',
+                    'to load it from a previous state.'
+                ]),
+                p('Continue to delete this cell?')
+            ]);
+            ui.showConfirmDialog('Confirm Cell Deletion', content, 'Yes', 'No')
+                .then(function (answer) {
+                    if (answer) {
+                        $(cell.element).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(cell));
+                    } else {
+                        // alert('Ok, will not delete the cell.');
+                    }
+                });
         }
 
         function getCellTitle(cell) {
@@ -265,6 +287,7 @@ define([
         function callback(toolbarDiv, parentCell) {
             try {
                 container = toolbarDiv[0];
+                ui = UI.make({node: container});
                 cell = parentCell;
                 var rendered = render();
                 container.innerHTML = rendered.content;

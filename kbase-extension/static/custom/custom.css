@@ -308,3 +308,12 @@ span#notebook_name:hover {
 .kb-btn-icon:hover .fa {
     opacity: 1.0
 }
+
+
+/* 
+  For some reason Jupyter removes the bottom margin. This causes problems with 
+   bootstrap, since bootstrap removes the top margin!
+*/
+p {
+    margin-bottom: 9px;
+}

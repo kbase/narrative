@@ -2,13 +2,17 @@
 /*jslint white:true,browser:true*/
 
 define([
+    // please use jquery with discretion.
+    'jquery',
+    'bluebird',
     'kb_common/html',
-    './runtime'
-], function (html, Runtime) {
+    './runtime',
+    './events'
+], function ($, Promise, html, Runtime, Events) {
     'use strict';
     var t = html.tag,
-        div = t('div'), span = t('span'),
-        button = t('button');        
+        div = t('div'), span = t('span'), h4 = t('h4'),
+        button = t('button');
 
     function factory(config) {
         var container = config.node,
@@ -37,7 +41,7 @@ define([
             }
             var selector = '[data-button="' + name + '"]',
                 buttonNode = container.querySelector(selector);
-            
+
             if (!buttonNode) {
                 throw new Error('Button ' + name + ' not found');
             }
@@ -55,8 +59,77 @@ define([
             return container.querySelector(selector);
         }
 
-        function confirmDialog(prompt) {
+        function confirmDialog(prompt, yesLabel, noLabel) {
             return window.confirm(prompt);
+        }
+
+        function renderConfirmDialog(title, content, yesLabel, noLabel) {
+           var dialog =
+                div({class: 'modal fade', tabindex: '-1', role: 'dialog'}, [
+                    div({class: 'modal-dialog'}, [
+                        div({class: 'modal-content'}, [
+                            div({class: 'modal-header'}, [
+                                button({type: 'button', class: 'close', dataDismiss: 'modal', ariaLabel: noLabel}, [
+                                    span({ariaHidden: 'true'}, '&times;')
+                                ]),
+                                h4({class: 'modal-title'}, title)
+                            ]),
+                            div({class: 'modal-body'}, [
+                                content
+                            ]),
+                            div({class: 'modal-footer'}, [
+                                button({type: 'button', class: 'btn btn-default', dataDismiss: 'modal', dataElement: 'no'}, noLabel),
+                                button({type: 'button', class: 'btn btn-primary', dataElement: 'yes'}, yesLabel)
+                            ])
+                        ])
+                    ])
+                ]);
+            return dialog;
+        }
+        function showConfirmDialog(title, content, yesLabel, noLabel) {
+            var dialog = renderConfirmDialog(title, content, yesLabel, noLabel),
+                dialogId = html.genId(),
+                confirmNode = document.createElement('div'),
+                kbaseNode, modalNode, modalDialogNode;
+
+            confirmNode.id = dialogId;
+            confirmNode.innerHTML = dialog;
+            
+            // top level element for kbase usage
+            kbaseNode = document.querySelector('[data-element="kbase"]');
+            if (!kbaseNode) {
+                kbaseNode = document.createElement('div');
+                kbaseNode.setAttribute('data-element', 'kbase');
+                document.body.appendChild(kbaseNode);
+            }
+            
+            // a node uponwhich to place Bootstrap modals.
+            modalNode = kbaseNode.querySelector('[data-element="modal"]');
+            if (!modalNode) {
+                modalNode = document.createElement('div');
+                modalNode.setAttribute('data-element', 'modal');
+                kbaseNode.appendChild(modalNode);
+            }
+
+            modalNode.appendChild(confirmNode);
+            
+            modalDialogNode = modalNode.querySelector('.modal');
+            $(modalDialogNode).modal('show');
+            return new Promise(function (resolve) {
+                modalDialogNode.querySelector('[data-element="yes"]').addEventListener('click', function (e) {
+                    $(modalDialogNode).modal('hide');
+                    confirmNode.parentElement.removeChild(confirmNode);
+                    resolve(true);
+                });
+                modalDialogNode.querySelector('[data-element="no"]').addEventListener('click', function (e) {
+                    confirmNode.parentElement.removeChild(confirmNode);
+                    resolve(false);
+                });
+                modalDialogNode.addEventListener('hide.bs.modal', function (e) {
+                    resolve(false);
+                });
+            });
+
         }
 
         function addButtonClickEvent(events, eventName) {
@@ -90,7 +163,7 @@ define([
         function setButtonLabel(name, label) {
             getButton(name).innerHTML = label;
         }
-        
+
         // Hmm, something like this, but need to think it through more.
 //        function setButton(name, options) {            
 //            var buttonNode = getButton(name);
@@ -153,12 +226,12 @@ define([
                 // style.display = 'none';
             }
             return  div({class: classes.join(' '), dataElement: args.name}, [
-                (function () { 
+                (function () {
                     if (args.title) {
                         return div({class: 'panel-heading'}, [
                             div({class: 'panel-title'}, args.title)
                         ]);
-                    }                    
+                    }
                 }()),
                 div({class: 'panel-body'}, [
                     args.body
@@ -190,7 +263,7 @@ define([
 
         function buildCollapsiblePanel(args) {
             var collapseId = html.genId(),
-                type = args.type || 'primary',                
+                type = args.type || 'primary',
                 classes = ['panel', 'panel-' + type],
                 collapseClasses = ['panel-collapse collapse'],
                 toggleClasses = [];
@@ -222,7 +295,7 @@ define([
                     )
             ]);
         }
-        
+
         function collapsePanel(path) {
             var node = getElement(path);
             if (!node) {
@@ -231,7 +304,7 @@ define([
             var collapseToggle = node.querySelector('[data-toggle="collapse"]'),
                 targetSelector = collapseToggle.getAttribute('data-target'),
                 collapseTarget = node.querySelector(targetSelector);
-            
+
             collapseToggle.classList.add('collapsed');
             collapseToggle.setAttribute('aria-expanded', 'false');
             collapseTarget.classList.remove('in');
@@ -245,7 +318,7 @@ define([
             var collapseToggle = node.querySelector('[data-toggle="collapse"]'),
                 targetSelector = collapseToggle.getAttribute('data-target'),
                 collapseTarget = node.querySelector(targetSelector);
-            
+
             collapseToggle.classList.remove('collapsed');
             collapseToggle.setAttribute('aria-expanded', 'true');
             collapseTarget.classList.add('in');
@@ -268,7 +341,7 @@ define([
         function na() {
             return span({style: {fontStyle: 'italic', color: 'orange'}}, 'NA');
         }
-        
+
         function ifAdvanced(fun) {
             if (runtime.config('features.advanced')) {
                 return fun();
@@ -304,7 +377,8 @@ define([
             setContent: setContent,
             na: na,
             ifAdvanced: ifAdvanced,
-            ifDeveloper: ifDeveloper
+            ifDeveloper: ifDeveloper,
+            showConfirmDialog: showConfirmDialog
         };
     }
 

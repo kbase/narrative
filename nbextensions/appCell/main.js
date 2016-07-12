@@ -28,6 +28,8 @@ define([
     'common/utils',
     'common/clock',
     'common/dom',
+    'common/props',
+    'common/appUtils',
 //    './widgets/codeCellRunWidget',
     'kb_service/utils',
     'kb_service/client/workspace',
@@ -45,6 +47,8 @@ define([
     utils,
     Clock,
     Dom,
+    Props,
+    AppUtils,
     serviceUtils,
     Workspace
     ) {
@@ -59,7 +63,7 @@ define([
      * Dealing with metadata
      */
 
-   // This is copied out of jupyter code.
+    // This is copied out of jupyter code.
     function activateToolbar() {
         var toolbarName = 'KBase';
         Jupyter.CellToolbar.global_show();
@@ -298,7 +302,8 @@ define([
                         id: appSpec.info.id,
                         gitCommitHash: appSpec.info.git_commit_hash,
                         version: appSpec.info.ver,
-                        tag: appTag
+                        tag: appTag,
+                        spec: appSpec
                     },
                     state: {
                         edit: 'editing',
@@ -328,15 +333,31 @@ define([
                 cellStuff.bus.emit('reset-to-defaults');
             });
     }
+
+    function hidePrompts(cell) {
+        // Hide the code input area.
+        cell.input.find('.input_area').addClass('hidden');
+        utils.setCellMeta(cell, 'kbase.widgetCell.user-settings.showCodeInputArea', false);
+        
+        // Hide the prompt...
+        cell.input.find('.input_prompt').hide();
+        utils.horribleHackToHideElement(cell, '.output_prompt', 10);
+    }
     
- function specializeCell(cell) {
+    function addPrompt(cell) {
+        var prompt = document.createElement('div');
+        prompt.innerHTML = div({dataElement: 'prompt', class: 'prompt'});
+        cell.input.find('.input_prompt').after($(prompt));
+        cell.renderIcon();
+    }
+
+    function specializeCell(cell) {
         cell.minimize = function () {
-            var $cellNode = $(this.element),
-                inputArea = this.input.find('.input_area'),
+            var inputArea = this.input.find('.input_area'),
                 outputArea = this.element.find('.output_wrapper'),
                 viewInputArea = this.element.find('[data-subarea-type="app-cell-input"]'),
                 showCode = utils.getCellMeta(cell, 'kbase.appCell.user-settings.showCodeInputArea');
-            
+
             if (showCode) {
                 inputArea.addClass('hidden');
             }
@@ -345,17 +366,27 @@ define([
         };
 
         cell.maximize = function () {
-            var $cellNode = $(this.element),
-                inputArea = this.input.find('.input_area'),
+            var inputArea = this.input.find('.input_area'),
                 outputArea = this.element.find('.output_wrapper'),
                 viewInputArea = this.element.find('[data-subarea-type="app-cell-input"]'),
                 showCode = utils.getCellMeta(cell, 'kbase.appCell.user-settings.showCodeInputArea');
-            
+
             if (showCode) {
                 inputArea.removeClass('hidden');
             }
             outputArea.removeClass('hidden');
             viewInputArea.removeClass('hidden');
+        };
+        cell.renderIcon = function () {
+            var inputPrompt = this.element[0].querySelector('[data-element="prompt"]');
+
+            if (inputPrompt) {
+                inputPrompt.innerHTML = div({
+                    style: {textAlign: 'center'}
+                }, [
+                    AppUtils.makeAppIcon(utils.getCellMeta(cell, 'kbase.widgetCell.app.spec'))
+                ]);
+            }
         };
     }
 
@@ -406,6 +437,15 @@ define([
             cell.kbase.node = kbaseNode;
             cell.kbase.$node = $(kbaseNode);
             
+            
+            // Hide the prompt...
+            hidePrompts(cell);
+
+            // And add our own!
+            addPrompt(cell);
+
+
+            // console.log('APP EXEC CODE HIDDEN?', cell.input.find('.input_area'));
             return appCellWidget.init()
                 .then(function () {
                     return appCellWidget.attach(kbaseNode);
@@ -423,6 +463,7 @@ define([
                 .then(function () {
                     // AppCellController.start();
                     cell.renderMinMax();
+
                     return {
                         widget: appCellWidget,
                         bus: cellBus

@@ -135,7 +135,23 @@ define([
             return format.niceElapsedTime(time);
         }
     }
-
+    function horribleHackToHideElement(cell, selector, tries) {
+        var prompt = cell.element.find(selector);
+        if (prompt.length > 0) {
+            prompt.css('visibility', 'hidden');
+            return;
+        }
+            
+        if (tries > 0) {
+            tries -= 1;
+            window.setTimeout(function () {
+                horribleHackToHideElement(cell, tries);
+            }, 100);
+        } else {
+            console.warn('Could not hide the prompt, sorry');
+        }
+    }
+    
     return {
         makePanel: makePanel,
         buildPanel: buildPanel,
@@ -147,7 +163,8 @@ define([
         setCellMeta: setCellMeta,
         pushMeta: pushMeta,
         formatElapsedTime: formatElapsedTime,
-        formatTime: formatTime
+        formatTime: formatTime,
+        horribleHackToHideElement: horribleHackToHideElement
     };
 
 });

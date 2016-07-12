@@ -6,17 +6,11 @@
  white: true
  */
 define([
-    'underscore'
-], function (underscore) {
+    'underscore',
+    'uuid'
+], function (underscore, Uuid) {
     'use strict';
     return (function () {
-        
-        // fake uuid for now
-        var uuidState = 0;
-        function uuid() {
-            uuidState += 1;
-            return 'fake_uuid_' + (new Date()).getTime() + '_' + uuidState();
-        }
 
         function jsonToHTML(node) {
             var nodeType = typeof node,
@@ -296,7 +290,7 @@ define([
             return tagFun;
         }
         function genId() {
-            return 'kb_html_' + uuid();
+            return 'kb_html_' + (new Uuid(4)).format();
         }
         function makeTable(arg) {
             var table = tag('table'),
@@ -663,38 +657,60 @@ define([
          * @param {type} arg
          * @returns {unresolved}
          */
+        function reverse(arr) {
+            var newArray = [], i, len = arr.length;
+            for (i = len-1; i >= 0; i -= 1) {
+                newArray.push(arr[i]);
+            }
+            return newArray;
+        }
+        
         function makeTabs(arg) {
             var ul = tag('ul'),
                 li = tag('li'),
                 a = tag('a'),
                 div = tag('div'),
                 tabsId = arg.id,
-                tabsAttribs = {};
+                tabsAttribs = {},
+                tabClasses = ['nav', 'nav-tabs'],
+                tabStyle = {}, activeIndex, tabTabs,
+                tabs = arg.tabs.filter(function (tab) {
+                    return (tab ? true : false);
+                });
 
             if (tabsId) {
                 tabsAttribs.id = tabsId;
             }
-            arg.tabs.forEach(function (tab) {
+            tabs.forEach(function (tab) {
                 tab.id = genId();
             });
+            if (arg.alignRight) {
+                tabTabs = reverse(tabs);
+                tabStyle.float = 'right';
+                activeIndex = tabs.length - 1;
+            } else {
+                tabTabs = tabs;
+                activeIndex = 0;
+            }
             return div(tabsAttribs, [
-                ul({class: 'nav nav-tabs', role: 'tablist'},
-                    arg.tabs.map(function (tab, index) {
+                ul({class: tabClasses.join(' '), role: 'tablist'},
+                    tabTabs.map(function (tab, index) {
                         var attribs = {
                             role: 'presentation'
                         };
-                        if (index === 0) {
+                        if (index === activeIndex) {
                             attribs.class = 'active';
                         }
+                        attribs.style = tabStyle;
                         return li(attribs, a({
                             href: '#' + tab.id,
-                            'aria-controls': 'home',
+                            ariaControls: 'home',
                             role: 'tab',
-                            'data-toggle': 'tab'
+                            dataToggle: 'tab'
                         }, tab.label));
                     })),
                 div({class: 'tab-content'},
-                    arg.tabs.map(function (tab, index) {
+                    tabs.map(function (tab, index) {
                         var attribs = {
                             role: 'tabpanel',
                             class: 'tab-pane',

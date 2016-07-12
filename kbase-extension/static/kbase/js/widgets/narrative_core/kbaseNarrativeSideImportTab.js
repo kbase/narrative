@@ -624,13 +624,32 @@ define (
             return args;
         },
 
+        createImportStatusCell: function(methodName, jobId) {
+            var cellIndex = Jupyter.notebook.get_selected_index();
+            var cell = Jupyter.notebook.insert_cell_below('code', cellIndex);
+            var title = 'Import job status for ' + methodName;
+            var cellText = ['from biokbase.narrative.jobs import JobManager',
+                            'JobManager().get_job(' + jobId + ')'].join('\n');
+            cell.set_text(cellText);
+            var meta = {
+                    'kbase': {
+                        'attributes': {
+                            'status': 'new',
+                            'title': title
+                        },
+                        'type': 'output'
+                    }
+            };
+            cell.metadata = meta;
+            cell.execute();
+        },
+        
         runImport: function(callback) {
             var self = this;
             var methodId = self.getSelectedTabId();
             var methodSpec = self.methods[methodId];
             
             if (methodId.indexOf('/') > 0) {
-                console.log(methodSpec);
                 var paramValueArray = self.getInputWidget().getParameters();
                 var params = {};
                 for (var i in methodSpec.parameters) {
@@ -641,9 +660,34 @@ define (
                 //var ver = methodSpec.info.git_commit_hash;
                 var pythonCode = PythonInterop.buildAppRunner(null, null, 
                         {tag: 'dev', version: null, id: methodId}, params);
-                console.log(pythonCode);
-                Jupyter.notebook.kernel.execute(pythonCode);
-                self.showInfo("Your import job was submitted and accessible in \"Jobs\" tab");
+                pythonCode += ".job_id.encode('ascii','ignore')";
+                var callbacks = {
+                        shell: {
+                            reply: function(content) {},
+                            payload: { set_next_input: function(content) {} }
+                        },
+                        iopub: {
+                            output: function(ret) {
+                                var data = ret.content.data;
+                                if (!data)
+                                    return;
+                                var session = ret.header.session;
+                                var jobId = data['text/plain'];
+                                var methodName = methodSpec.info.name;
+                                self.createImportStatusCell(methodName, jobId);
+                            },
+                            clear_output: function(content) {}
+                        },
+                        input: function(content) {}
+                };
+                var executeOptions = {
+                        silent: false,
+                        user_expressions: {},
+                        allow_stdin: false,
+                        store_history: false
+                };
+                Jupyter.notebook.kernel.execute(pythonCode, callbacks, executeOptions);
+                self.showInfo("Your import job is submitted and accessible in \"Jobs\" tab");
                 callback(true);
                 return;
             }

@@ -180,9 +180,14 @@ define (
                         }
                         if (aTypes[key]["import_method_ids"].length > 0) {
                             self.types[key] = aTypes[key];
-                            for (var methodPos in aTypes[key]["import_method_ids"]) {
-                                var methodId = aTypes[key]["import_method_ids"][methodPos];
+                            var methodIdList = aTypes[key]["import_method_ids"];
+                            aTypes[key]["import_method_ids"] = []
+                            for (var methodPos in methodIdList) {
+                                var methodId = methodIdList[methodPos];
+                                if (methodId.indexOf("/") > 0)
+                                    continue;
                                 methodIds.push(methodId);
+                                aTypes[key]["import_method_ids"].push(methodId);
                             }
                         }
                     }

@@ -489,7 +489,8 @@ class AppManager(object):
             # value first!
             p_value = None
             if 'input_parameter' in p:
-                p_value = params.get(p['input_parameter'], None)
+                param_name = p['input_parameter'];
+                p_value = params.get(param_name, None)
             elif 'narrative_system_variable' in p:
                 p_value = system_variable(p['narrative_system_variable'])
             if 'constant_value' in p and p_value is None:
@@ -504,7 +505,29 @@ class AppManager(object):
             target_prop = p.get('target_property', None)
             if target_prop is not None:
                 final_input = inputs_dict.get(arg_position, dict())
-                final_input[target_prop] = p_value
+                if '/' in target_prop:
+                    ## This is case when slashes in target_prop separeate elements in nested maps.
+                    ## We ignore escaped slashes (separate backslashes should be escaped as well).
+                    bck_slash = u"\u244A"
+                    fwd_slash = u"\u20EB"
+                    temp_string = target_prop.replace("\\\\", bck_slash).replace("\\/", fwd_slash)
+                    temp_path = []
+                    for part in temp_string.split("/"):
+                        part = part.replace(bck_slash, "\\").replace(fwd_slash, "/")
+                        temp_path.append(part.encode('ascii','ignore'))
+                    temp_map = final_input
+                    temp_key = None
+                    ## We're going along the path and creating intermediate dictionaries.
+                    for temp_path_item in temp_path:
+                        if temp_key:
+                            if temp_key not in temp_map:
+                                temp_map[temp_key] = {}
+                            temp_map = temp_map[temp_key]
+                        temp_key = temp_path_item
+                    ## temp_map points to deepest nested map now, temp_key is last item in path
+                    temp_map[temp_key] = p_value
+                else:
+                    final_input[target_prop] = p_value
                 inputs_dict[arg_position] = final_input
             else:
                 inputs_dict[arg_position] = p_value

@@ -5,7 +5,7 @@ __author__ = "Bill Riehl <wjriehl@lbl.gov>, Roman Sutormin <rsutormin@lbl.gov>"
 
 import os
 import re
-import biokbase.narrative.clients as clients
+import .clients as clients
 
 app_version_tags = ['release', 'beta', 'dev']
 _ws_client = clients.get('workspace')

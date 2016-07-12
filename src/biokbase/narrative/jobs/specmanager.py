@@ -1,5 +1,5 @@
 import biokbase.narrative.clients as clients
-from .app_util import (
+from biokbase.narrative.app_util import (
     app_version_tags,
     check_tag
 )

@@ -5,7 +5,7 @@ __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
 import biokbase.narrative.clients as clients
 from .specmanager import SpecManager
-from .app_util import (
+from biokbase.narrative.app_util import (
     system_variable,
     map_inputs_from_job,
     map_outputs_from_state

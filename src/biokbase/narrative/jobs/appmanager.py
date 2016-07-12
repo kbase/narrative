@@ -589,8 +589,7 @@ class AppManager(object):
             # value first!
             p_value = None
             if 'input_parameter' in p:
-                param_name = p['input_parameter'];
-                p_value = params.get(param_name, None)
+                p_value = params.get(p['input_parameter'], None)
             elif 'narrative_system_variable' in p:
                 p_value = system_variable(p['narrative_system_variable'])
             if 'constant_value' in p and p_value is None:

@@ -8,7 +8,6 @@ KBase JavaScript widgets.
 """
 __author__ = 'Bill Riehl <wjriehl@lbl.gov>'
 
-
 from biokbase.narrative.common.url_config import URLS
 from biokbase.workspace.client import Workspace
 from biokbase.narrative.app_util import (

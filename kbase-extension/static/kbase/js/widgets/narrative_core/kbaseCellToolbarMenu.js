@@ -162,7 +162,7 @@ define([
             if (cell.cell_type !== 'code') {
                 return;
             }
-            if (!runtime.config('features.developer')) {
+            if (!ui.isDeveloper()) {
                 return;
             }
             

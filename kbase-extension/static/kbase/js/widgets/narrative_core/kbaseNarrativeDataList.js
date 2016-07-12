@@ -1,43 +1,43 @@
 /*global define,Jupyter*/
 /*jslint white: true*/
 /**
-* @author Michael Sneddon <mwsneddon@lbl.gov>
-* @public
-*/
-define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery',
-		'underscore',
-		'bluebird',
-		'narrativeConfig',
-		'util/string',
-		'util/display',
-		'util/timeFormat',
-		'kbase-client-api',
-		'jquery-nearest',
-		'kbaseAuthenticatedWidget',
-		'kbaseNarrativeDownloadPanel'
-	], function(
-		KBWidget,
-		bootstrap,
-		$,
-		_,
-		Promise,
-		Config,
-		StringUtil,
-		DisplayUtil,
-		TimeFormat,
-		kbase_client_api,
-		jquery_nearest,
-		kbaseAuthenticatedWidget,
-		kbaseNarrativeDownloadPanel
-	) {
+ * @author Michael Sneddon <mwsneddon@lbl.gov>
+ * @public
+ */
+define([
+    'kbwidget',
+    'jquery',
+    'underscore',
+    'bluebird',
+    'narrativeConfig',
+    'util/string',
+    'util/display',
+    'util/timeFormat',
+    'kbase-client-api',
+    'kbaseAuthenticatedWidget',
+    'kbaseNarrativeDownloadPanel',
+    'common/runtime',
+    
+    'bootstrap',
+    'jquery-nearest'
+], function (
+    KBWidget,
+    $,
+    _,
+    Promise,
+    Config,
+    StringUtil,
+    DisplayUtil,
+    TimeFormat,
+    kbase_client_api,
+    kbaseAuthenticatedWidget,
+    kbaseNarrativeDownloadPanel,
+    Runtime
+    ) {
     'use strict';
     return KBWidget({
         name: 'kbaseNarrativeDataList',
-        parent : kbaseAuthenticatedWidget,
+        parent: kbaseAuthenticatedWidget,
         version: '1.0.0',
         options: {
             ws_name: null, // must be the WS name, not the WS Numeric ID
@@ -45,10 +45,8 @@ define (
             ws_url: Config.url('workspace'),
             lp_url: Config.url('landing_pages'),
             profile_page_url: Config.url('profile_page'),
-
             loadingImage: Config.get('loading_gif'),
             methodStoreURL: Config.url('narrative_method_store'),
-
             ws_chunk_size: 10000, // this is the limit of the number of objects to retrieve from the ws on each pass
             ws_max_objs_to_fetch: 75000, // this is the total limit of the number of objects before we stop trying to get more
             // note that if there are more objects than this, then sorts/search filters may
@@ -67,7 +65,6 @@ define (
             max_name_length: 33,
             refresh_interval: 10000,
             parentControlPanel: null,
-
             slideTime: 400
         },
         // private variables
@@ -151,17 +148,15 @@ define (
 
             return this;
         },
-
-        setListHeight: function(height, animate) {
-            if(this.$mainListDiv) {
-                if(animate) {
-                    this.$mainListDiv.animate({'height':height},this.options.slideTime);
+        setListHeight: function (height, animate) {
+            if (this.$mainListDiv) {
+                if (animate) {
+                    this.$mainListDiv.animate({'height': height}, this.options.slideTime);
                 } else {
-                    this.$mainListDiv.css({'height':height});
+                    this.$mainListDiv.css({'height': height});
                 }
             }
         },
-
         /**
          * @method loggedInCallback
          * This is associated with the login widget (through the kbaseAuthenticatedWidget parent) and
@@ -176,7 +171,6 @@ define (
             this.refresh();
             return this;
         },
-
         /**
          * @method loggedOutCallback
          * Like the loggedInCallback, this is triggered during a logout event (through the login widget).
@@ -189,18 +183,15 @@ define (
             this.my_user_id = null;
             return this;
         },
-
-        showLoading: function(caption) {
+        showLoading: function (caption) {
             this.$mainListDiv.hide();
             this.loadingDiv.setText(caption || '');
             this.loadingDiv.div.show();
         },
-
-        hideLoading: function() {
+        hideLoading: function () {
             this.loadingDiv.div.hide();
             this.$mainListDiv.show();
         },
-
         refresh: function (showError) {
             // Set the refresh timer on the first refresh. From  here, it'll refresh itself
             // every this.options.refresh_interval (30000) ms
@@ -220,26 +211,24 @@ define (
             Promise.resolve(this.ws.get_workspace_info({
                 workspace: this.ws_name
             }))
-            .then(function(wsInfo) {
-                if (this.wsLastUpdateTimestamp !== wsInfo[3]) {
-                    this.wsLastUpdateTimestamp = wsInfo[3];
-                    this.maxWsObjId = wsInfo[4];
-                    this.showLoading('Fetching data...');
-                    this.reloadWsData();
-                }
-                else {
-                    this.refreshTimeStrings();
-                    // this.hideLoading();
-                }
-            }.bind(this))
-            .catch(function(error) {
-                console.error('DataList: when checking for updates:', error);
-                if (showError) {
-                    this.showBlockingError('Error: Unable to connect to KBase data.');
-                }
-            }.bind(this));
+                .then(function (wsInfo) {
+                    if (this.wsLastUpdateTimestamp !== wsInfo[3]) {
+                        this.wsLastUpdateTimestamp = wsInfo[3];
+                        this.maxWsObjId = wsInfo[4];
+                        this.showLoading('Fetching data...');
+                        this.reloadWsData();
+                    } else {
+                        this.refreshTimeStrings();
+                        // this.hideLoading();
+                    }
+                }.bind(this))
+                .catch(function (error) {
+                    console.error('DataList: when checking for updates:', error);
+                    if (showError) {
+                        this.showBlockingError('Error: Unable to connect to KBase data.');
+                    }
+                }.bind(this));
         },
-
         refreshTimeStrings: function () {
             var self = this;
             var newTime;
@@ -253,40 +242,54 @@ define (
                 }
             }
         },
-
-        reloadWsData: function() {
+        reloadWsData: function () {
             // empty the existing object list first
             this.objectList = [];
             this.objData = {};
             this.availableTypes = {};
 
             this.fetchWorkspaceData()
-            .then(function() {
-                this.showLoading('Rendering data...');
-                if (this.objectList.length > this.options.maxObjsToPreventFilterAsYouTypeInSearch) {
-                    this.$searchInput.off('input');
-                }
-
-                if (this.objectList.length <= this.options.max_objs_to_prevent_initial_sort) {
-                    this.objectList.sort(function (a, b) {
-                        if (a.info[3] > b.info[3])
-                            return -1; // sort by date
-                        if (a.info[3] < b.info[3])
-                            return 1;  // sort by date
-                        return 0;
+                .then(function () {
+                    // Signal all data channel listeners that we have new data.
+                    // TODO: only signal if there are actual changes
+                    // TODO: data fetch and sychronization should live as a ui 
+                    // service, not in a widget.
+                    var runtime = Runtime.make();
+                    runtime.bus().send({
+                        data: JSON.parse(JSON.stringify(this.objectList.map(function (item) {
+                            return item.info;
+                        })))
+                    }, {
+                        channel: 'data',
+                        key: {
+                            type: 'workspace-data-updated'
+                        }
                     });
-                    this.$elem.find('#nar-data-list-default-sort-label').addClass('active');
-                    this.$elem.find('#nar-data-list-default-sort-option').attr('checked');
-                }
+                }.bind(this))
+                .then(function () {
+                    this.showLoading('Rendering data...');
+                    if (this.objectList.length > this.options.maxObjsToPreventFilterAsYouTypeInSearch) {
+                        this.$searchInput.off('input');
+                    }
 
-                this.populateAvailableTypes();
-                this.renderList();
-                this.hideLoading();
-                this.trigger('dataUpdated.Narrative');
-            }.bind(this));
+                    if (this.objectList.length <= this.options.max_objs_to_prevent_initial_sort) {
+                        this.objectList.sort(function (a, b) {
+                            if (a.info[3] > b.info[3])
+                                return -1; // sort by date
+                            if (a.info[3] < b.info[3])
+                                return 1;  // sort by date
+                            return 0;
+                        });
+                        this.$elem.find('#nar-data-list-default-sort-label').addClass('active');
+                        this.$elem.find('#nar-data-list-default-sort-option').attr('checked');
+                    }
+
+                    this.populateAvailableTypes();
+                    this.renderList();
+                    this.hideLoading();
+                    this.trigger('dataUpdated.Narrative');
+                }.bind(this));
         },
-
-
         /**
          * @method
          * @param {string} error - the error string to show
@@ -294,20 +297,19 @@ define (
          * This empties out the main data div and injects an error into it.
          * Used mainly when lookups fail.
          */
-        showBlockingError: function(error) {
+        showBlockingError: function (error) {
             this.$mainListDiv.empty();
             this.$mainListDiv.append(
                 $('<div>').css({'color': '#F44336', 'margin': '10px'})
-                          .append(error)
-            );
+                .append(error)
+                );
             this.loadingDiv.div.hide();
             this.$mainListDiv.show();
         },
-
         fetchWorkspaceData: function () {
             var dataChunkNum = 1;
-            return new Promise(function(resolve, reject) {
-                var getDataChunk = function(minId) {
+            return new Promise(function (resolve, reject) {
+                var getDataChunk = function (minId) {
                     this.showLoading('Fetching data chunk ' + dataChunkNum + '...');
                     return Promise.resolve(this.ws.list_objects({
                         workspaces: [this.ws_name],
@@ -315,76 +317,75 @@ define (
                         minObjectID: minId,
                         maxObjectID: minId + this.options.ws_chunk_size
                     }))
-                    .then(function(infoList) {
-                        // object_info:
-                        // [0] : obj_id objid
-                        // [1] : obj_name name
-                        // [2] : type_string type
-                        // [3] : timestamp save_date
-                        // [4] : int version
-                        // [5] : username saved_by
-                        // [6] : ws_id wsid
-                        // [7] : ws_name workspace
-                        // [8] : string chsum
-                        // [9] : int size
-                        // [10] : usermeta meta
-                        for (var i=0; i<infoList.length; i++) {
-                            // skip narrative objects
-                            if (infoList[i][2].indexOf('KBaseNarrative') === 0) {
-                                continue;
-                            }
-                            this.objectList.push({
-                                key: StringUtil.uuid(), // always generate the DnD key
-                                $div: null,
-                                info: infoList[i],
-                                attached: false
-                            });
-                            // type is formatted like this: Module.Type-1.0
-                            // typeKey = Module.Type
-                            // typeName = Type
-                            var typeKey = infoList[i][2].split('-')[0];
-                            if (!(typeKey in this.objData)) {
-                                this.objData[typeKey] = [];
-                            }
-                            this.objData[typeKey].push(infoList[i]);
+                        .then(function (infoList) {
+                            // object_info:
+                            // [0] : obj_id objid
+                            // [1] : obj_name name
+                            // [2] : type_string type
+                            // [3] : timestamp save_date
+                            // [4] : int version
+                            // [5] : username saved_by
+                            // [6] : ws_id wsid
+                            // [7] : ws_name workspace
+                            // [8] : string chsum
+                            // [9] : int size
+                            // [10] : usermeta meta
+                            for (var i = 0; i < infoList.length; i++) {
+                                // skip narrative objects
+                                if (infoList[i][2].indexOf('KBaseNarrative') === 0) {
+                                    continue;
+                                }
+                                this.objectList.push({
+                                    key: StringUtil.uuid(), // always generate the DnD key
+                                    $div: null,
+                                    info: infoList[i],
+                                    attached: false
+                                });
+                                // type is formatted like this: Module.Type-1.0
+                                // typeKey = Module.Type
+                                // typeName = Type
+                                var typeKey = infoList[i][2].split('-')[0];
+                                if (!(typeKey in this.objData)) {
+                                    this.objData[typeKey] = [];
+                                }
+                                this.objData[typeKey].push(infoList[i]);
 
-                            var typeName = typeKey.split('.')[1];
-                            if (!(typeName in this.availableTypes)) {
-                                this.availableTypes[typeName] = {
-                                    type: typeName,
-                                    count: 0
-                                };
+                                var typeName = typeKey.split('.')[1];
+                                if (!(typeName in this.availableTypes)) {
+                                    this.availableTypes[typeName] = {
+                                        type: typeName,
+                                        count: 0
+                                    };
+                                }
+                                this.availableTypes[typeName].count++;
                             }
-                            this.availableTypes[typeName].count++;
-                        }
 
-                        /* Do another lookup if all of these conditions are met:
-                         * 1. total object list length < max objs allowed to fetch/render
-                         * 2. theres > 0 objects seen.
-                         * 3. our search space hasn't hit the max object id.
-                         * There's no guarantee that we'll ever see the object with
-                         * max id (it could have been deleted), so keep rolling until
-                         * we either meet how many we're allowed to fetch, or we get
-                         * a query with no objects.
-                         */
-                        if (minId + this.options.ws_chunk_size < this.maxWsObjId &&
-                            this.objectList.length < this.options.ws_max_objs_to_fetch &&
-                            infoList.length > 0) {
-                            dataChunkNum++;
-                            return getDataChunk(minId + 1 + this.options.ws_chunk_size);
-                        }
-                    }.bind(this));
+                            /* Do another lookup if all of these conditions are met:
+                             * 1. total object list length < max objs allowed to fetch/render
+                             * 2. theres > 0 objects seen.
+                             * 3. our search space hasn't hit the max object id.
+                             * There's no guarantee that we'll ever see the object with
+                             * max id (it could have been deleted), so keep rolling until
+                             * we either meet how many we're allowed to fetch, or we get
+                             * a query with no objects.
+                             */
+                            if (minId + this.options.ws_chunk_size < this.maxWsObjId &&
+                                this.objectList.length < this.options.ws_max_objs_to_fetch &&
+                                infoList.length > 0) {
+                                dataChunkNum++;
+                                return getDataChunk(minId + 1 + this.options.ws_chunk_size);
+                            }
+                        }.bind(this));
                 }.bind(this);
 
                 getDataChunk(0).then(resolve);
             }.bind(this))
-            .catch(function(error) {
-                this.showBlockingError(error);
-                console.error(error);
-                KBError("kbaseNarrativeDataList.getNextDataChunk", error.error.message);
-            }.bind(this));
+                .catch(function (error) {
+                    this.showBlockingError(error);
+                    console.error(error);
+                    KBError("kbaseNarrativeDataList.getNextDataChunk", error.error.message);
+                }.bind(this));
         },
-
         getObjData: function (type, ignoreVersion) {
             if (type) {
                 var dataSet = {};
@@ -608,7 +609,7 @@ define (
                     var objId = object_info[1];
                     var downloadPanel = $('<div>');
                     $alertContainer.append(downloadPanel);
-                     new kbaseNarrativeDownloadPanel(downloadPanel, {token: self._attributes.auth.token, type: type, wsId: wsId, objId: objId});
+                    new kbaseNarrativeDownloadPanel(downloadPanel, {token: self._attributes.auth.token, type: type, wsId: wsId, objId: objId});
                 });
 
             var $rename = $('<span>')
@@ -716,7 +717,7 @@ define (
 
             if (!Jupyter.narrative.readonly) {
                 $btnToolbar.append($filterMethodInput)
-                           .append($filterMethodOutput);
+                    .append($filterMethodOutput);
             }
             $btnToolbar.append($openLandingPage);
             if (!Jupyter.narrative.readonly)
@@ -943,7 +944,7 @@ define (
                     info: info,
                     key: key
                 },
-                dataString = JSON.stringify(data),
+            dataString = JSON.stringify(data),
                 self = this;
 
             node.setAttribute('draggable', true);
@@ -957,7 +958,7 @@ define (
                 var container = document.querySelector('#notebook-container');
                 for (var i = 0; i < targetCells.length; i += 1) {
                     self.addDropZone(container, targetCells.item(i));
-                    if (i  === targetCells.length - 1) {
+                    if (i === targetCells.length - 1) {
                         self.addDropZone(container, targetCells.item(i), true);
                     }
                 }
@@ -1120,8 +1121,7 @@ define (
                 }
                 if (Jupyter.narrative.readonly) {
                     this.$addDataButton.hide();
-                }
-                else {
+                } else {
                     this.$addDataButton.show();
                 }
             } else {
@@ -1141,7 +1141,6 @@ define (
                 self.$mainListDiv.append($noDataDiv);
             }
         },
-
         renderController: function () {
             var self = this;
 
@@ -1295,10 +1294,10 @@ define (
                         Jupyter.narrative.enableKeyboardManager();
                     }
                 })
-                .on('input change blur', function(e) {
+                .on('input change blur', function (e) {
                     this.search();
                 }.bind(this))
-                .on('keyup', function(e) {
+                .on('keyup', function (e) {
                     if (e.keyCode === 27) {
                         this.search();
                     }
@@ -1362,7 +1361,6 @@ define (
 
             self.$controllerDiv.append($header).append($filterDiv);
         },
-
         /**
          * Populates the filter set of available types.
          */

@@ -28,6 +28,8 @@ define([
     'common/utils',
     'common/clock',
     'common/dom',
+    'common/props',
+    'common/appUtils',
 //    './widgets/codeCellRunWidget',
     'kb_service/utils',
     'kb_service/client/workspace',
@@ -45,6 +47,8 @@ define([
     utils,
     Clock,
     Dom,
+    Props,
+    AppUtils,
     serviceUtils,
     Workspace
     ) {
@@ -305,7 +309,8 @@ define([
                         id: appSpec.info.id,
                         gitCommitHash: appSpec.info.git_commit_hash,
                         version: appSpec.info.ver,
-                        tag: appTag
+                        tag: appTag,
+                        appSpec: appSpec
                     },
                     state: {
                         edit: 'editing',
@@ -335,45 +340,32 @@ define([
                 cellStuff.bus.emit('reset-to-defaults');
             });
     }
-    
-    function specializeCell(cell) {
-        cell.minimize = function () {
-            var $cellNode = $(this.element),
-                inputArea = this.input.find('.input_area'),
-                outputArea = this.element.find('.output_wrapper'),
-                viewInputArea = this.element.find('[data-subarea-type="app-cell-input"]'),
-                showCode = utils.getCellMeta(cell, 'kbase.appCell.user-settings.showCodeInputArea');
-            
-            if (showCode) {
-                inputArea.addClass('hidden');
-            }
-            outputArea.addClass('hidden');
-            viewInputArea.addClass('hidden');
-        };
 
-        cell.maximize = function () {
-            var $cellNode = $(this.element),
-                inputArea = this.input.find('.input_area'),
-                outputArea = this.element.find('.output_wrapper'),
-                viewInputArea = this.element.find('[data-subarea-type="app-cell-input"]'),
-                showCode = utils.getCellMeta(cell, 'kbase.appCell.user-settings.showCodeInputArea');
-            
-            if (showCode) {
-                inputArea.removeClass('hidden');
-            }
-            outputArea.removeClass('hidden');
-            viewInputArea.removeClass('hidden');
-        };
+    function hidePrompts(cell) {
+        // Hide the code input area.
+        cell.input.find('.input_area').addClass('hidden');
+        utils.setCellMeta(cell, 'kbase.widgetCell.user-settings.showCodeInputArea', false);
+
+        // Hide the prompt...
+        cell.input.find('.input_prompt').hide();
+        cell.element.find('.output_area > div:nth-child(1)').css('visibility', 'hidden');
+        // horribleHackToHideElement(cell, '.output_prompt', 10);
     }
-    
+
+    function addPrompt(cell) {
+        var prompt = document.createElement('div');
+        prompt.innerHTML = div({dataElement: 'prompt', class: 'prompt'});
+        cell.input.find('.input_prompt').after($(prompt));
+        cell.renderIcon();
+    }
+
     function specializeCell(cell) {
         cell.minimize = function () {
-            var $cellNode = $(this.element),
-                inputArea = this.input.find('.input_area'),
+            var inputArea = this.input.find('.input_area'),
                 outputArea = this.element.find('.output_wrapper'),
                 viewInputArea = this.element.find('[data-subarea-type="view-cell-input"]'),
                 showCode = utils.getCellMeta(cell, 'kbase.appCell.user-settings.showCodeInputArea');
-            
+
             if (showCode) {
                 inputArea.addClass('hidden');
             }
@@ -382,26 +374,34 @@ define([
         };
 
         cell.maximize = function () {
-            var $cellNode = $(this.element),
-                inputArea = this.input.find('.input_area'),
+            var inputArea = this.input.find('.input_area'),
                 outputArea = this.element.find('.output_wrapper'),
                 viewInputArea = this.element.find('[data-subarea-type="view-cell-input"]'),
                 showCode = utils.getCellMeta(cell, 'kbase.appCell.user-settings.showCodeInputArea');
-            
+
             if (showCode) {
                 inputArea.removeClass('hidden');
             }
             outputArea.removeClass('hidden');
             viewInputArea.removeClass('hidden');
         };
-        
-        
+        cell.renderIcon = function () {
+            var inputPrompt = this.element[0].querySelector('[data-element="prompt"]');
 
+            if (inputPrompt) {
+                inputPrompt.innerHTML = div({
+                    style: {textAlign: 'center'}
+                }, [
+                    AppUtils.makeAppIcon(utils.getCellMeta(cell, 'kbase.widgetCell.app.spec'))
+                ]);
+            }
+        };
     }
 
     function setupCell(cell) {
         return Promise.try(function () {
             // Only handle kbase cells.
+
             if (cell.cell_type !== 'code') {
                 // console.log('not a code cell!');
                 return;
@@ -445,6 +445,9 @@ define([
             cell.input.after($(kbaseNode));
             cell.kbase.node = kbaseNode;
             cell.kbase.$node = $(kbaseNode);
+
+            hidePrompts(cell);
+            addPrompt(cell);
 
             return viewCellWidget.init()
                 .then(function () {
@@ -517,7 +520,7 @@ define([
      * the notebook or cells.
      * The work is carried out asynchronously through an orphan promise.
      */
-    function load_ipython_extension() {
+    function load() {
         // Listen for interesting narrative jquery events...
         // dataUpdated.Narrative is emitted by the data sidebar list
         // after it has fetched and updated its data. Not the best of
@@ -553,6 +556,8 @@ define([
                 // If the cell has been set with the metadata key kbase.type === 'app'
                 // we have a app cell.
                 $([Jupyter.events]).on('inserted.Cell', function (event, data) {
+                                console.log('VIEW inserted?', data);
+
                     if (data.kbase && data.kbase.type === 'view') {
                         upgradeToViewCell(data.cell, data.kbase.appSpec, data.kbase.appTag)
                             .then(function () {
@@ -596,7 +601,7 @@ define([
 
     return {
         // This is the sole ipython/jupyter api call
-        load_ipython_extension: load_ipython_extension
+        load_ipython_extension: load
             // These are kbase api calls
     };
 }, function (err) {

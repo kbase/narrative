@@ -20,3 +20,10 @@ jupyter nbextension enable appCell/main --sys-prefix
 #jupyter nbextension uninstall ${dir}/methodViewCell --sys-prefix
 jupyter nbextension install ${dir}/viewCell --symlink --sys-prefix
 jupyter nbextension enable viewCell/main --sys-prefix
+
+
+jupyter nbextension install ${dir}/outputCell --symlink --sys-prefix
+jupyter nbextension enable outputCell/main --sys-prefix
+
+jupyter nbextension install ${dir}/widgetCell --symlink --sys-prefix
+jupyter nbextension enable widgetCell/main --sys-prefix

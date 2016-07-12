@@ -139,99 +139,6 @@ define([
             });
         }
 
-        function renderJobStatus() {
-            var labelStyle = {
-                textAlign: 'right',
-                border: '1px transparent solid',
-                padding: '4px'
-            },
-                dataStyle = {
-                    border: '1px silver solid',
-                    padding: '4px',
-                    display: 'inline-block',
-                    minWidth: '20px',
-                    backgroundColor: 'gray',
-                    color: '#FFF'
-                };
-            return dom.buildPanel({
-                title: 'Run Status',
-                name: 'runStatus',
-                hidden: false,
-                type: 'primary',
-                body: [
-                    div({class: 'row'}, [
-                        div({class: 'col-md-4'}, [
-                            div({class: 'row'}, [
-                                div({class: 'col-md-4', style: labelStyle}, 'State'),
-                                div({class: 'col-md-8', dataElement: 'state', style: dataStyle})
-                            ])
-//                            div({class: 'row'}, [
-//                                div({class: 'col-md-4', style: labelStyle}, 'Phase'),
-//                                div({class: 'col-md-8', dataElement: 'temporalState', style: dataStyle}),
-//                            ]),
-//                            div({class: 'row'}, [
-//                                div({class: 'col-md-4', style: labelStyle}, 'Exec'),
-//                                div({class: 'col-md-8', dataElement: 'executionState', style: dataStyle}),
-//                            ]),
-//                            div({class: 'row', dataElement: 'completed'}, [
-//                                div({class: 'col-md-4', style: labelStyle}, 'Success'),
-//                                div({class: 'col-md-8', dataElement: 'success', style: dataStyle}, span({dataElement: 'flag'})),
-//                            ]),
-//                            div({class: 'row', dataElement: 'completed'}, [
-//                                div({class: 'col-md-4', style: labelStyle}, 'Error'),
-//                                div({class: 'col-md-8', dataElement: 'error', style: dataStyle}, span({dataElement: 'flag'}))
-//
-//                            ]),
-                        ]),
-                        div({class: 'col-md-4'}, [
-                            div({class: 'row', dataElement: 'launch-time'}, [
-                                div({class: 'col-md-4', style: labelStyle}, 'Launch'),
-                                div({class: 'col-md-8', dataElement: 'elapsed', style: dataStyle})
-                            ]),
-                            div({class: 'row', dataElement: 'queue-time'}, [
-                                div({class: 'col-md-4', style: labelStyle}, 'Queue'),
-                                div({class: 'col-md-8', dataElement: 'elapsed', style: dataStyle})
-                            ]),
-                            div({class: 'row', dataElement: 'run-time'}, [
-                                div({class: 'col-md-4', style: labelStyle}, 'Run'),
-                                div({class: 'col-md-8', dataElement: 'elapsed', style: dataStyle})
-                            ]),
-                            div({class: 'row', dataElement: 'completed'}, [
-                                div({class: 'col-md-4', style: labelStyle}, 'Completed'),
-                                div({class: 'col-md-8', dataElement: 'completedAt', style: dataStyle})
-                            ])
-                        ]),
-                        div({class: 'col-md-4'}, [
-//                            div({class: 'row'}, [
-//                                div({class: 'col-md-4', style: labelStyle}, 'Updated'),
-//                                div({class: 'col-md-8', dataElement: 'last-updated-at', style: dataStyle})
-//                            ])
-//                            div({class: 'row'}, [
-//                                div({class: 'col-md-4', style: labelStyle}, 'Run Id'),
-//                                div({class: 'col-md-8', dataElement: 'run-id', style: dataStyle})
-//                            ]),
-//                            div({class: 'row'}, [
-//                                div({class: 'col-md-4', style: labelStyle}, 'Job Id'),
-//                                div({class: 'col-md-8', dataElement: 'job-id', style: dataStyle})
-//                            ]),
-                        ])
-                    ])
-//                    div({dataElement: 'error-group'}, [
-//                        dom.buildPanel({
-//                            title: 'Error',
-//                            name: 'error',
-//                            hidden: false,
-//                            type: 'danger',
-//                            body: [
-//                                div({dataElement: 'title'}),
-//                                div({dataElement: 'message'})
-//                            ]
-//                        })
-//                    ])
-                ]
-            });
-        }
-
         function renderExecStatus() {
             var labelStyle = {
                 textAlign: 'right',
@@ -374,7 +281,6 @@ define([
                         ]
                     }),
                     // replaced with
-                    // renderJobStatus(),
                     renderExecStatus(),
                     renderJobError(),
                     renderJobReport(),
@@ -387,9 +293,7 @@ define([
             events.attachEvents();
         }
 
-
         // DATA FETCH
-
 
         // TODO: corral in the async requests! We don't want them to overlap,
         // that's for sure.
@@ -526,123 +430,7 @@ define([
                 dom.disableButton('toggle-job-log');
             }
         }
-        function renderRunStatex() {
-            var state = model.getItem('runState');
 
-            if (!state) {
-                return;
-            }
-
-            dom.setContent(['runStatus', 'last-updated-at'], utils.formatTime(state.lastUpdatedTime));
-            dom.setContent(['runStatus', 'state'], state.canonicalState);
-            dom.setContent(['runStatus', 'temporalState'], state.temporalState);
-            dom.setContent(['runStatus', 'executionState'], state.executionState);
-
-            dom.setContent(['runStatus', 'run-id'], state.runId);
-            dom.setContent(['runStatus', 'job-id'], state.jobId);
-
-            if (state.elapsedLaunchTime) {
-                (function () {
-                    dom.showElement(['runStatus', 'launch-time']);
-                    var label;
-                    if (state.elapsedLaunchTime) {
-                        label = 'Launched';
-                    } else {
-                        label = 'Launching';
-                    }
-                    dom.setContent(['runStatus', 'launch-time', 'label'], label);
-                    dom.setContent(['runStatus', 'launch-time', 'elapsed'], utils.formatElapsedTime(state.elapsedLaunchTime) || '');
-                }());
-            } else {
-                dom.hideElement(['runStatus', 'launch-time']);
-            }
-
-//            if (state.elapsedPreparationTime) {
-//                (function () {
-//                    dom.showElement(['runStatus', 'preparation-time']);
-//                    var label;
-//                    if (state.elapsedQueueTime) {
-//                        label = 'Prepared';
-//                    } else {
-//                        label = 'Preparing';
-//                    }
-//                    dom.setContent(['runStatus', 'preparation-time', 'label'], label);
-//                    dom.setContent(['runStatus', 'preparation-time', 'elapsed'], utils.formatElapsedTime(state.elapsedPreparationTime) || '');
-//                }());
-//            } else {
-//                dom.hideElement(['runStatus', 'preparation-time']);
-//            }
-
-            if (state.elapsedQueueTime) {
-                (function () {
-                    dom.showElement(['runStatus', 'queue-time']);
-                    var label;
-                    if (state.elapsedRunTime) {
-                        label = 'Was queued for';
-                    } else {
-                        label = 'Has been queueing for';
-                    }
-                    dom.setContent(['runStatus', 'queue-time', 'label'], label);
-                    dom.setContent(['runStatus', 'queue-time', 'elapsed'], utils.formatElapsedTime(state.elapsedQueueTime) || '');
-                }());
-            } else {
-                dom.hideElement(['runStatus', 'queue-time']);
-            }
-
-            if (state.elapsedRunTime) {
-                (function () {
-                    dom.showElement(['runStatus', 'run-time']);
-                    var label;
-                    if (state.completedTime) {
-                        label = 'Ran in';
-                    } else {
-                        label = 'Has been running for';
-                    }
-                    dom.setContent(['runStatus', 'run-time', 'label'], label);
-                    dom.setContent(['runStatus', 'run-time', 'elapsed'], utils.formatElapsedTime(state.elapsedRunTime) || '');
-                }());
-            } else {
-                dom.hideElement(['runStatus', 'run-time']);
-            }
-
-            if (state.completedTime) {
-                dom.showElement(['runStatus', 'completed']);
-                dom.setContent(['runStatus', 'completed', 'completedAt'], format.niceElapsedTime(state.completedTime));
-            } else {
-                dom.hideElement(['runStatus', 'completed']);
-            }
-
-            if (state.success) {
-                dom.showElement(['runStatus', 'success']);
-                dom.setContent(['runStatus', 'success', 'flag'], state.success ? 'yes' : '');
-                // dom.showElement('job-report');
-                // showJobReport();
-                showJobResult();
-            } else {
-                dom.hideElement(['runStatus', 'success']);
-                // dom.hideElement('job-report');
-            }
-
-            if (state.error) {
-                dom.showElement(['runStatus', 'error']);
-                dom.setContent(['runStatus', 'error', 'flag'], 'yes');
-                dom.showElement(['run-error']);
-                dom.setContent(['run-error', 'location'], state.error.location);
-                dom.setContent(['run-error', 'type'], state.error.type);
-                dom.setContent(['run-error', 'message'], state.error.message);
-                dom.setContent(['run-error', 'detail'], state.error.detail);
-                // console.log('ERROR', state.error);
-            } else {
-                dom.hideElement(['run-error']);
-            }
-
-            // Now be more stateful here...
-            if (state.jobId) {
-                dom.enableButton('toggle-job-log');
-            } else {
-                dom.disableButton('toggle-job-log');
-            }
-        }
          function renderExecState() {
             var state = model.getItem('runState');
 
@@ -1434,7 +1222,8 @@ define([
                 teardown();
             });
             bus.on('reset', function (message) {
-                console.log('I should reset right about now.');
+                // console.log('I should reset right about now.');
+                
             });
         }
 

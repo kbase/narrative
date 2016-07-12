@@ -114,7 +114,7 @@ define([
         }
 
         function rawSpec(spec) {
-            var specText = JSON.stringify(spec, false, 3),
+            var specText = JSON.stringify(spec.spec, false, 3),
                 fixedSpec = specText.replace(/</g, '&lt;').replace(/>/g, '&gt;');
             return pre({class: 'prettyprint lang-json', style: {fontSize: '80%'}}, fixedSpec);
         }

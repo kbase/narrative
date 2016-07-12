@@ -5,13 +5,15 @@ define([
     'kb_common/html',
     'common/events',
     'base/js/namespace',
-    'common/utils'
-], function ($, html, Events, Jupyter, utils) {
+    'common/utils',
+    'common/runtime',
+    'common/ui'
+], function ($, html, Events, Jupyter, utils, Runtime, UI) {
     'use strict';
 
     var t = html.tag,
         div = t('div'), a = t('a'),
-        button = t('button'), ul = t('ul'), li = t('li'),
+        button = t('button'), p = t('p'),
         span = t('span');
 
     function getMeta(cell, group, name) {
@@ -28,7 +30,8 @@ define([
     }
     function factory(config) {
         var container,
-            cell;
+            cell,
+            ui;
 
 //        function attachEvent(event, fun) {
 //            var id = html.genId(),
@@ -106,9 +109,29 @@ define([
         }
 
         function doDeleteCell() {
-            if (window.confirm('Delete cell?')) {
-                $(cell.element).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(cell));
-            }
+            //if (window.confirm('Delete cell?')) {
+            //    $(cell.element).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(cell));
+            //} 
+            var content = div([
+                p([
+                    'Deleting this cell will not remove any output cells or data objects it may have created. ', 
+                    'Any input parameters or other configuration of this cell will be lost.'
+                ]),
+                p([
+                    'Note: It is not possible to "undo" the deletion of a cell, ', 
+                    'but if the cell has not been saved you can refresh the page ',
+                    'to load it from a previous state.'
+                ]),
+                p('Continue to delete this cell?')
+            ]);
+            ui.showConfirmDialog('Confirm Cell Deletion', content, 'Yes', 'No')
+                .then(function (answer) {
+                    if (answer) {
+                        $(cell.element).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(cell));
+                    } else {
+                        // alert('Ok, will not delete the cell.');
+                    }
+                });
         }
 
         function getCellTitle(cell) {
@@ -127,7 +150,35 @@ define([
         }
 
         function doToggleCodeView() {
-            $(cell.element).find('.input_area').toggle();
+            cell.element.trigger('toggleCodeArea.cell');
+            // $(cell.element).find('.input_area').toggle();
+        }
+
+        function renderToggleCodeView(events) {
+            var runtime = Runtime.make();
+            // Only render if actually a code cell and in dev mode.
+            // TODO: add cell extension to toggle code view, since this may 
+            // depend on cell state (or subtype)
+            if (cell.cell_type !== 'code') {
+                return;
+            }
+            if (!ui.isDeveloper()) {
+                return;
+            }
+            
+
+
+            return button({
+                type: 'button',
+                class: 'btn btn-default btn-xs',
+                dataToggle: 'tooltip',
+                dataPlacement: 'left',
+                title: true,
+                dataOriginalTitle: 'Toggle Code',
+                id: events.addEvent({type: 'click', handler: doToggleCodeView})
+            }, [
+                span({class: 'fa fa-terminal', style: 'font-size: 14pt'})
+            ]);
         }
 
         function render() {
@@ -156,8 +207,8 @@ define([
 //                                    }, [
 //                                        span({class: 'fa fa-cog', style: {fontSize: '14pt'}})
 //                                    ]),
-                                    // TODO: spacing on menu items is .. funky .. need a gap between the icon and the text. Rather the
-                                    // icon should take up a fixed width so that the menu item text aligns left.
+                                // TODO: spacing on menu items is .. funky .. need a gap between the icon and the text. Rather the
+                                // icon should take up a fixed width so that the menu item text aligns left.
 //                                    ul({class: 'dropdown-menu dropdown-menu-right'}, [
 //                                        // li(a({id: attachEvent('click', doViewJobSubmission)}, [span({class: 'fa fa-code'}), ' View Job Submission'])),
 //                                        li(a({id: events.addEvent({type: 'click', handler: doInsertCellAbove})}, [span({class: 'fa fa-caret-square-o-up'}), ' Insert Cell Above'])),
@@ -166,17 +217,7 @@ define([
 //                                            // li(a({id: addEvent('click', doToggleCellType)}, [span({class: 'fa fa-terminal'}), ' Toggle Cell Type']))
 //                                    ])
 //                                ]),
-                                button({
-                                    type: 'button',
-                                    class: 'btn btn-default btn-xs',
-                                    dataToggle: 'tooltip',
-                                    dataPlacement: 'left',
-                                    title: true,
-                                    dataOriginalTitle: 'Toggle Code',
-                                    id: events.addEvent({type: 'click', handler: doToggleCodeView})
-                                }, [
-                                    span({class: 'fa fa-terminal', style: 'font-size: 14pt'})
-                                ]),
+                                renderToggleCodeView(events),
                                 button({
                                     type: 'button',
                                     class: 'btn btn-default btn-xs',
@@ -246,6 +287,7 @@ define([
         function callback(toolbarDiv, parentCell) {
             try {
                 container = toolbarDiv[0];
+                ui = UI.make({node: container});
                 cell = parentCell;
                 var rendered = render();
                 container.innerHTML = rendered.content;

@@ -45,7 +45,7 @@ define([
         }
     }
 
-    function pythonifyParams(params) {
+    function objectToNamedArgs(params) {
         return Object.keys(params).map(function (name) {
             var value = params[name];
             // This allows a non-sparse map of params, in which a param key may
@@ -67,11 +67,11 @@ define([
     }
 
     function buildAppRunner(cellId, runId, app, params) {
-        var paramArgs = pythonifyParams(params),
+        var paramArgs = objectToNamedArgs(params),
             positionalArgs = [
                 pythonifyValue(app.id)
             ],
-            namedArgs = pythonifyParams({
+            namedArgs = objectToNamedArgs({
                 tag: app.tag,
                 version: app.version,
                 cell_id: cellId,
@@ -87,11 +87,11 @@ define([
     }
 
     function buildViewRunner(cellId, runId, app, params) {
-        var paramArgs = pythonifyParams(params),
+        var paramArgs = objectToNamedArgs(params),
             positionalArgs = [
                 pythonifyValue(app.id)
             ],
-            namedArgs = pythonifyParams({
+            namedArgs = objectToNamedArgs({
                 tag: app.tag,
                 version: app.version,
                 cell_id: cellId,
@@ -107,7 +107,7 @@ define([
     }
 
     function buildOutputRunner(jqueryWidgetName, widgetTag, params) {
-        var paramArgs = pythonifyParams(params),
+        var paramArgs = objectToNamedArgs(params),
             positionalArgs = [
                 pythonifyValue(jqueryWidgetName),
                 pythonifyValue(widgetTag)
@@ -121,11 +121,31 @@ define([
         return pythonCode;
     }
 
+    function buildCustomWidgetRunner(appId, appVersion, appTag, cellId, runId) {
+        var positionalArgs = [appId].map(function (arg) {
+                return pythonifyValue(arg);
+            }),
+            namedArgs = objectToNamedArgs({
+                version: appVersion,
+                tag: appTag,
+                cell_id: cellId,
+                run_id: runId
+            }),
+            args = positionalArgs.concat(namedArgs),
+            pythonCode = [
+                'from biokbase.narrative.jobs import AppManager',
+                'AppManager().run_widget_app(' + buildNiceArgsList(args) + ')'
+            ].join('\n');
+
+        return pythonCode;
+    }
+
     return {
-        pythonifyParams: pythonifyParams,
+        objectToNamedArgs: objectToNamedArgs,
         pythonifyValue: pythonifyValue,
         buildAppRunner: buildAppRunner,
         buildViewRunner: buildViewRunner,
-        buildOutputRunner: buildOutputRunner
+        buildOutputRunner: buildOutputRunner,
+        buildCustomWidgetRunner: buildCustomWidgetRunner
     };
 });

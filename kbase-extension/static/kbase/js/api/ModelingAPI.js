@@ -11,18 +11,17 @@
  *  - Could make separate api methods for each service
  */
 
-define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery',
-		'narrativeConfig'
-	], function(
-		KBWidget,
-		bootstrap,
-		$,
-		config
-	) {
+define([
+    'kbwidget',
+    'bootstrap',
+    'jquery',
+    'narrativeConfig'
+], function (
+    KBWidget,
+    bootstrap,
+    $,
+    config
+    ) {
 
     function ModelingAPI(token) {
         var self = this;
@@ -32,14 +31,14 @@ define (
         // Used for ModelSEED/Patric Biochem
         var SOLR_ENDPOINT = 'https://www.patricbrc.org/api/';
 
-        this.api = function(service, method, params) {
+        this.api = function (service, method, params) {
             var url, method;
             if (service == 'ws') {
                 url = config.url('workspace');
-                method = 'Workspace.'+method;
+                method = 'Workspace.' + method;
             } else if (service == 'fba') {
                 url = config.url('fba')
-                method = 'fbaModelServices.'+method;
+                method = 'fbaModelServices.' + method;
             }
 
             var rpc = {
@@ -58,7 +57,7 @@ define (
                     if (self.token)
                         xhr.setRequestHeader("Authorization", self.token);
                 }
-            }).then(function(data) {
+            }).then(function (data) {
                 return data.result[0];
             })
 
@@ -80,13 +79,13 @@ define (
             // row selection
             if (select) {
                 if (Array.isArray(select))
-                    url += '&select('+String(select)+')';
+                    url += '&select(' + String(select) + ')';
                 else
-                    url += '&select('+select+')';
+                    url += '&select(' + select + ')';
             }
 
             // pagination
-            url += '&limit('+opts.length+','+opts.start+')';
+            url += '&limit(' + opts.length + ',' + opts.start + ')';
 
             // sorting (assume single sort)
             var sort = opts.order[0],
@@ -94,54 +93,56 @@ define (
                 dir = sort.dir == 'asc' ? '+' : '-';
 
             var colName = opts.columns[colIndex].data;
-            url += '&sort('+dir+colName+')';
+            url += '&sort(' + dir + colName + ')';
 
             // search
             var q = opts.search.value;
-            url += q ? '&keyword('+q+')' : '&keyword(*)';
+            url += q ? '&keyword(' + q + ')' : '&keyword(*)';
 
             // let's do this
             return $.ajax({
                 url: url,
                 type: 'GET'
-            }).then(function(res) {
+            }).then(function (res) {
                 return res.response;
             });
         }
 
         // This is a temporary helper function for media data, which will be removed.
         // DO NOT USE ELSEWHERE.  You've been warned :)
-        this.getCpds = function(id, opts) {
-            var url = SOLR_ENDPOINT+'model_compound/?http_accept=application/json';
+        this.getCpds = function (id, opts) {
+            var url = SOLR_ENDPOINT + 'model_compound/?http_accept=application/json';
 
             if (opts && 'select' in opts) {
-                if (Array.isArray(opts.select)) url += '&select('+String(opts.select)+')';
-                else                            url += '&select('+opts.select+')';
+                if (Array.isArray(opts.select))
+                    url += '&select(' + String(opts.select) + ')';
+                else
+                    url += '&select(' + opts.select + ')';
             }
 
             if (Array.isArray(id) && id.length)
-                url += '&in(id,('+String(id)+'))&limit('+id.length+')';
+                url += '&in(id,(' + String(id) + '))&limit(' + id.length + ')';
             else if (id.length)
-                url += '&eq(id,'+id+')'
+                url += '&eq(id,' + id + ')'
 
 
             //url += "&sort(id)"
 
-            return $.get(url).done(function(res) {
+            return $.get(url).done(function (res) {
                 return Array.isArray(id) ? res.data : res.data[0];
             })
         }
 
-        this.notice = function(container, text, duration) {
+        this.notice = function (container, text, duration) {
             container.css('position', 'relative');
-            var notice = $('<div class="kb-notify kb-notify-success">'+text+'</div>');
+            var notice = $('<div class="kb-notify kb-notify-success">' + text + '</div>');
             notice.css({
                 'position': 'absolute',
                 'bottom': '10px',
                 'left': 0
             });
             notice.delay(duration ? duration : 3000)
-                .fadeOut(function() {
+                .fadeOut(function () {
                     $(this).remove();
                 });
             container.append(notice);

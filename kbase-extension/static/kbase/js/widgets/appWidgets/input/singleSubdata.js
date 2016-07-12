@@ -55,11 +55,9 @@ define([
             subdataOptions = spec.spec.textsubdata_options,
             parent,
             container,
-            $container,
             workspaceId = config.workspaceId,
             subdata = spec.textsubdata_options,
             bus = config.bus,
-            runCount = 0,
             model,
             //model = {
             //    referenceObjectName: null,
@@ -117,7 +115,7 @@ define([
             }
             var re = new RegExp(filter);
             return items.filter(function (item) {
-                if (item.label.match(re, 'i')) {
+                if (item.label && item.label.match(re, 'i')) {
                     return true;
                 }
                 return false;
@@ -127,11 +125,11 @@ define([
         function doFilterItems() {
             var items = model.getItem('availableValues', []),
                 filteredItems = filterItems(items, model.getItem('filter'));
-            
-            
+
+
             // for now we just reset the from/to range to the beginning.
             model.setItem('filteredAvailableItems', filteredItems);
-            
+
             doFirstPage();
         }
 
@@ -170,7 +168,7 @@ define([
 //                newSelectedItems = selectedItems.filter(function (selectedItem) {
 //                    return (selectedItem.id !== itemToRemove);
 //                });
-                
+
             delete selectedItems[indexOfitemToRemove];
 
             model.setItem('selectedItems', selectedItems);
@@ -183,23 +181,48 @@ define([
                 to = model.getItem('showTo'),
                 itemsToShow = items.slice(from, to),
                 content = itemsToShow.map(function (item, index) {
-                    return div({style: {border: '1px green dashed'}}, [
-                        table({style: {width: '100%'}}, tr([
-                            td({style: {width: '10px', padding: '2px', backgroundColor: 'gray', color: 'white'}}, String(from + index + 1)),
-                            td({style: {whiteSpace: 'normal'}}, item.label),
-                            td({style: {width: '40px'}}, [
-                                button({
-                                    class: 'btn btn-default',
-                                    type: 'button',
-                                    dataItemId: item.id,
-                                    id: events.addEvent({
-                                        type: 'click',
-                                        handler: function () {
-                                            doAddItem(item.id);
-                                        }
-                                    })}, '&gt;')
-                            ])
-                        ]))
+                    return div({style: {border: '1px silver dashed'}}, [
+                        div({
+                            style: {
+                                display: 'inline-block',
+                                width: '20%',
+                                verticalAlign: 'top',
+                                padding: '2px',
+                                backgroundColor: 'gray',
+                                color: 'white',
+                                textAlign: 'right',
+                                paddingRight: '4px',
+                                fontFamily: 'monospace'
+                            }
+                        }, String(from + index + 1)),
+                        div({
+                            style: {
+                                display: 'inline-block',
+                                width: '70%',
+                                padding: '2px',
+                                overflowY: 'auto'
+                            }
+                        }, item.label),
+                        div({style: {
+                                display: 'inline-block',
+                                width: '10%',
+                                //minWidth: '5em',
+                                padding: '2px',
+                                textAlign: 'right',
+                                verticalAlign: 'top'
+                            }
+                        }, [
+                            span({
+                                class: 'kb-btn-icon',
+                                type: 'button',
+                                dataItemId: item.id,
+                                id: events.addEvent({
+                                    type: 'click',
+                                    handler: function () {
+                                        doAddItem(item.id);
+                                    }
+                                })}, span({class: 'fa fa-plus-circle', style: {color: 'green', fontSize: '200%'}}))
+                        ])
                     ]);
                 })
                 .join('\n');
@@ -214,22 +237,37 @@ define([
                 valuesMap = model.getItem('availableValuesMap', {}),
                 content = selectedItems.map(function (itemId, index) {
                     var item = valuesMap[itemId];
-                    return div({style: {border: '1px blue dashed'}}, [
-                        table({style: {width: '100%'}}, tr([
-                            td({style: {width: '40px'}}, [
-                                button({
-                                    class: 'btn btn-default',
-                                    type: 'button',
-                                    id: events.addEvent({
-                                        type: 'click',
-                                        handler: function () {
-                                            doRemoveSelectedItem(index);
-                                        }
-                                    })
-                                }, '&lt;')
-                            ]),
-                            td(item.label)
-                        ]))
+
+                    return div({style: {border: '1px silver dashed'}}, [
+                        div({
+                            style: {
+                                display: 'inline-block',
+                                width: '90%',
+                                padding: '2px',
+                                overflowY: 'auto'
+                            }
+                        }, item.label),
+                        div({style: {
+                                display: 'inline-block',
+                                width: '10%',
+                                //minWidth: '6em',
+                                //maxWidth: '6em',
+                                padding: '2px',
+                                textAlign: 'right',
+                                verticalAlign: 'top'
+                            }
+                        }, [
+                            span({
+                                class: 'kb-btn-icon',
+                                type: 'button',
+                                id: events.addEvent({
+                                    type: 'click',
+                                    handler: function () {
+                                        doRemoveSelectedItem(index);
+                                    }
+                                })
+                            }, span({class: 'fa fa-minus-circle', style: {color: 'red', fontSize: '200%'}}))
+                        ])
                     ]);
                 }).join('\n');
             dom.setContent('selected-items', content);
@@ -307,11 +345,11 @@ define([
             }
             if (!availableValues) {
                 return p({
-                    class: 'form-control-static', 
+                    class: 'form-control-static',
                     style: {
-                        fontStyle: 'italic', 
-                        whiteSpace: 'normal', 
-                        padding: '3px', 
+                        fontStyle: 'italic',
+                        whiteSpace: 'normal',
+                        padding: '3px',
                         border: '1px silver solid'
                     }
                 }, 'Items will be available after selecting a value for ' + subdataOptions.subdata_selection.parameter_id);
@@ -324,139 +362,171 @@ define([
 
             return div([
                 div({class: 'row'}, [
-                    div({class: 'col-md-6'}, [
-                        'Available Features'
+                    div({class: 'col-md-6', style: {paddingBottom: '6px'}}, [
+                        div({style: {fontWeight: 'bold', textDecoration: 'underline',  textAlign: 'center'}}, 'Available Features')
                     ]),
                     div({class: 'col-md-6'}, [
-                        'Selected'
-                    ])
+                        div({style: {fontWeight: 'bold', textDecoration: 'underline', textAlign: 'center'}}, 'Selected')
+                    ]),
                 ]),
-                div({class: 'row'}, [
-                    div({class: 'col-md-3'}, [
-                        div({class: ''}, [
-                            input({
-                                class: 'form-contol',
-                                style: {width: '100%'},
-                                placeholder: 'search',
-                                value: model.getItem('filter') || '',
-                                id: events.addEvent({
-                                    type: 'keyup',
-                                    handler: function (e) {
-                                        doSearchKeyUp(e);
-                                    }
+//                 div({class: 'row'}, [
+//                     div({class: 'col-md-6'}, [
+//                         div({class: 'row'}, [
+//                             div({class: 'col-md-6'}, 'col 1'),
+//                             div({class: 'col-md-6'}, 'col 1')
+//                         ])
+//                    ]),
+//                    div({class: 'col-md-6'}, [
+//                    ])
+//                ]),
+                div({class: 'row'},
+                (function () {
+                    if (availableValues.length === 0) {
+                        return [div({class: 'col-md-6'}, '')];
+                    }
+                    return  [
+                        div({class: 'col-md-3'}, [
+                            div({class: ''}, [
+                                input({
+                                    class: 'form-contol',
+                                    style: {width: '100%'},
+                                    placeholder: 'search',
+                                    value: model.getItem('filter') || '',
+                                    id: events.addEvent({
+                                        type: 'keyup',
+                                        handler: function (e) {
+                                            doSearchKeyUp(e);
+                                        }
+                                    })
                                 })
-                            })
+                            ])
+                        ]),
+                        div({class: 'col-md-3', style: {textAlign: 'center'}}, [
+                            span({dataElement: 'filtered-items-count'}), ' of ',
+                            span({dataElement: 'available-items-count'})
                         ])
-                    ]),
-                    div({class: 'col-md-3', style: {textAlign: 'center'}}, [
-                        span({dataElement: 'filtered-items-count'}), ' filtered, ',
-                        span({dataElement: 'available-items-count'}), ' elements'
-                    ]),
-                    div({class: 'col-md-6'}, [
-                    ])
+                    ];
+                }()).concat([
+                    div({class: 'col-md-6'}, '')
+                ])),
+                div({class: 'row'}, [
+                    (function () {
+                        if (availableValues.length === 0) {
+                            return [div({class: 'col-md-6'}, '')];
+                        }
+                        return [
+                            div({class: 'col-md-6'}, [
+                                div([
+                                    button({
+                                        type: 'button',
+                                        class: 'btn btn-default',
+                                        style: {xwidth: '100%'},
+                                        id: events.addEvent({
+                                            type: 'click',
+                                            handler: function () {
+                                                doFirstPage();
+                                            }
+                                        })
+                                    }, 'top'),
+                                    button({
+                                        class: 'btn btn-default',
+                                        type: 'button',
+                                        style: {xwidth: '50%'},
+                                        id: events.addEvent({
+                                            type: 'click',
+                                            handler: function () {
+                                                doPreviousPage();
+                                            }
+                                        })
+                                    }, '^'),
+                                    button({
+                                        class: 'btn btn-default',
+                                        type: 'button',
+                                        style: {xwidth: '100%'},
+                                        id: events.addEvent({
+                                            type: 'click',
+                                            handler: function () {
+                                                doNextPage();
+                                            }
+                                        })
+                                    }, 'v'),
+                                    button({
+                                        type: 'button',
+                                        class: 'btn btn-default',
+                                        style: {xwidth: '100%'},
+                                        id: events.addEvent({
+                                            type: 'click',
+                                            handler: function () {
+                                                doLastPage();
+                                            }
+                                        })
+                                    }, 'bottom')
+                                ])
+                            ])
+                        ];
+                    }()).concat([div({class: 'col-md-6'}, '')])
                 ]),
                 div({class: 'row'}, [
-                    div({class: 'col-md-6'}, [
-                        div([
-                            button({
-                                type: 'button',
-                                class: 'btn btn-default',
-                                style: {xwidth: '100%'},
-                                id: events.addEvent({
-                                    type: 'click',
-                                    handler: function () {
-                                        doFirstPage();
-                                    }
-                                })
-                            }, 'top'),
-                            button({
-                                class: 'btn btn-default',
-                                type: 'button',
-                                style: {xwidth: '50%'},
-                                id: events.addEvent({
-                                    type: 'click',
-                                    handler: function () {
-                                        doPreviousPage();
-                                    }
-                                })
-                            }, '^'),
-                            button({
-                                class: 'btn btn-default',
-                                type: 'button',
-                                style: {xwidth: '100%'},
-                                id: events.addEvent({
-                                    type: 'click',
-                                    handler: function () {
-                                        doNextPage();
-                                    }
-                                })
-                            }, 'v'),
-                            button({
-                                type: 'button',
-                                class: 'btn btn-default',
-                                style: {xwidth: '100%'},
-                                id: events.addEvent({
-                                    type: 'click',
-                                    handler: function () {
-                                        doLastPage();
-                                    }
-                                })
-                            }, 'bottom')
-                        ])
-                    ]),
-                    div({class: 'col-md-6'}, [
-                    ])
-                ]),
-                div({class: 'row'}, [
-                    div({class: 'col-md-6'}, [
-                        div({style: {border: '1px red solid', xheight: '100px'}, dataElement: 'available-items'})
-                    ]),
-                    div({class: 'col-md-6'}, [
-                        div({
+                    div({class: 'col-md-6'},
+                    (function () {
+                        if (availableValues.length === 0) {
+                            return div({style: {textAlign: 'center'}}, 'no available values');
+                        }
+                        return div({
+                            style: {border: '1px silver solid', xheight: '100px'},
+                            dataElement: 'available-items'
+                        });
+                    }())),
+                    div({class: 'col-md-6'},
+                    (function () {
+                        if (value.length === 0) {
+                            return div({style: {textAlign: 'center'}}, 'no selected values');
+                        }
+                        return div({
                             style: {
-                                border: '1px red solid', xheight: '100px'
+                                border: 'silverpx red solid', xheight: '100px'
                             },
                             dataElement: 'selected-items'
-                        })
-                    ])
+                        });
+                    }()))
                 ])
             ]);
 
             // CONTROL
-            return div({style: {border: '1px silver solid'}}, [
-                div({style: {fontStyle: 'italic'}, dataElement: 'count'}, buildCount()),
-                select({
-                    id: events.addEvent({
-                        type: 'change',
-                        handler: function (e) {
-                            validate()
-                                .then(function (result) {
-                                    if (result.isValid) {
-                                        model.setItem('value', result.value);
-                                        updateInputControl('value');
-                                        bus.emit('changed', {
-                                            newValue: result.value
-                                        });
-                                    } else if (result.diagnosis === 'required-missing') {
-                                        model.setItem('value', result.value);
-                                        updateInputControl('value');
-                                        bus.emit('changed', {
-                                            newValue: result.value
-                                        });
-                                    }
-                                    bus.emit('validation', {
-                                        errorMessage: result.errorMessage,
-                                        diagnosis: result.diagnosis
-                                    });
-                                });
-                        }
-                    }),
-                    size: size,
-                    multiple: multiple,
-                    class: 'form-control',
-                    dataElement: 'input'
-                }, selectOptions)
-            ]);
+//            return div({style: {border: '1px silver solid'}}, [
+//                div({style: {fontStyle: 'italic'}, dataElement: 'count'}, buildCount()),
+//                select({
+//                    id: events.addEvent({
+//                        type: 'change',
+//                        handler: function (e) {
+//                            validate()
+//                                .then(function (result) {
+//                                    if (result.isValid) {
+//                                        model.setItem('value', result.value);
+//                                        updateInputControl('value');
+//                                        bus.emit('changed', {
+//                                            newValue: result.value
+//                                        });
+//                                    } else if (result.diagnosis === 'required-missing') {
+//                                        model.setItem('value', result.value);
+//                                        updateInputControl('value');
+//                                        bus.emit('changed', {
+//                                            newValue: result.value
+//                                        });
+//                                    }
+//                                    bus.emit('validation', {
+//                                        errorMessage: result.errorMessage,
+//                                        diagnosis: result.diagnosis
+//                                    });
+//                                });
+//                        }
+//                    }),
+//                    size: size,
+//                    multiple: multiple,
+//                    class: 'form-control',
+//                    dataElement: 'input'
+//                }, selectOptions)
+//            ]);
         }
 
         /*
@@ -569,27 +639,30 @@ define([
         // safe, but ugly.
 
         function makeLabel(item, showSourceObjectName) {
-            return span({style: {wordWrap: 'break-word'}}, [
-                span({style: {fontWeight: 'bold'}}, item.id),
+            return div({style: {wordWrap: 'break-word'}}, [
+                div({style: {fontWeight: 'bold', xOverflow: 'auto'}}, item.id),
                 item.desc,
                 (function () {
                     if (showSourceObjectName && item.objectName) {
-                        return div({style: {padding: '4em', fontStyle: 'italic'}}, item.objectName);
+                        return div({style: {padding: '0px', fontStyle: 'italic'}}, item.objectName);
                     }
-                })
+                }())
             ]);
         }
 
         function fetchData() {
-            if (!model.getItem('referenceObjectName')) {
-                return [];
+            var referenceObjectName = model.getItem('referenceObjectName'),
+                referenceObjectRef = spec.spec.textsubdata_options.subdata_selection.constant_ref;
+
+            if (!referenceObjectRef) {
+                referenceObjectRef = workspaceId + '/' + referenceObjectName;
             }
             var workspace = new Workspace(runtime.config('services.workspace.url'), {
                 token: runtime.authToken()
             }),
                 options = spec.spec.textsubdata_options,
                 subObjectIdentity = {
-                    ref: workspaceId + '/' + model.getItem('referenceObjectName'),
+                    ref: referenceObjectRef,
                     included: options.subdata_selection.subdata_included
                 };
             return workspace.get_object_subset([
@@ -696,19 +769,19 @@ define([
                     // - a set of selected ids
                     // - a set of filtered ids
                     model.setItem('availableValues', data);
-                    
+
                     // TODO: generate all of this in the fetchData -- it will be a bit faster.
                     var map = {};
                     data.forEach(function (datum) {
                         map[datum.id] = datum;
                     });
-                    
+
                     //var availableIds = data.map(function (datum) {
                     //    return datum.id;
                     //});
-                    
+
                     model.setItem('availableValuesMap', map);
-                    
+
                     doFilterItems();
                 });
         }
@@ -897,7 +970,6 @@ define([
                 bus.on('run', function (message) {
                     parent = message.node;
                     container = parent.appendChild(document.createElement('div'));
-                    $container = $(container);
                     dom = Dom.make({
                         node: container
                     });
@@ -949,7 +1021,6 @@ define([
                             })
                     ])
                         .spread(function (paramValue, referencedParamValue) {
-                            console.log('Got them!', paramValue.value, referencedParamValue.value);
                             // hmm, the default value of a subdata is null, but that does 
                             // not play nice with the model props defaulting mechanism which 
                             // works with absent or undefined (null being considered an actual value, which
@@ -961,7 +1032,10 @@ define([
                             }
                             updateInputControl('value');
 
-                            model.setItem('referenceObjectName', referencedParamValue.value);
+                            if (referencedParamValue) {
+                                model.setItem('referenceObjectName', referencedParamValue.value);
+                            }
+                            console.log('syncing...');
                             return syncAvailableValues()
                                 .then(function () {
                                     updateInputControl('availableValues');

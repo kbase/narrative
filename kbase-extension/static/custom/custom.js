@@ -107,6 +107,8 @@ define([
     'notebook/js/cell',
     'common/utils',
     'kb_common/html',
+    'narrativeConfig',
+    
     'components/requirejs/require',
     'narrative_paths'
 ], function (
@@ -124,7 +126,8 @@ define([
     keyboard,
     cell,
     utils,
-    html
+    html,
+    narrativeConfig
     ) {
     'use strict';
 
@@ -320,7 +323,23 @@ define([
         p.renderMinMax = function () {
             var $cellNode = $(this.element),
                 metaToggleMode = utils.getCellMeta(this, 'kbase.cellState.toggleMinMax'),
-                toggleMode = $cellNode.data('toggleMinMax') || metaToggleMode || 'maximized';
+                toggleMode = $cellNode.data('toggleMinMax');
+            
+            if (metaToggleMode) {
+                if (!toggleMode) {                    
+                    // The first time an existing cell is rendered after loading a
+                    // notebook, the node data for toggleMinMax
+                    // will be empty, so we need to initialize it. This is an auto-initialize.
+                    toggleMode = metaToggleMode;
+                    $cellNode.data('toggleMinMax', toggleMode);                    
+                }
+            } else if (!toggleMode) {
+                // If there is neither a data attribute on the node nor a metadata
+                // property, then this is a new cell, and it will be maximized.
+                toggleMode = 'maximized';
+                $cellNode.data('toggleMinMax', toggleMode);                
+            }
+            
             switch (toggleMode) {
                 case 'maximized':
                     this.maximize();
@@ -632,8 +651,7 @@ define([
             originalMethod;
 
         p.minimize = function () {
-            var $cellNode = $(this.element),
-                inputArea = this.input.find('.input_area'),
+            var inputArea = this.input.find('.input_area'),
                 outputArea = this.element.find('.output_wrapper');
 
             inputArea.addClass('hidden');
@@ -641,8 +659,7 @@ define([
         };
 
         p.maximize = function () {
-            var $cellNode = $(this.element),
-                inputArea = this.input.find('.input_area'),
+            var inputArea = this.input.find('.input_area'),
                 outputArea = this.element.find('.output_wrapper');
 
             inputArea.removeClass('hidden');
@@ -683,7 +700,21 @@ define([
                 utils.setCellMeta(cell, 'kbase.cellState.selected', true);
                 $menu.trigger('selected.toolbar');
             });
+            
+            
+            $cellNode.on('toggleCodeArea.cell', function () {
+                console.log('TOGGLING?');
+                thisCell.toggleCodeInputArea();
+            });
         };
+        
+        p.toggleCodeInputArea = function() {
+            console.log('TOGGLING...');
+            var codeInputArea = this.input.find('.input_area')[0];
+            if (codeInputArea) {
+                codeInputArea.classList.toggle('hidden');
+            }
+        }
     }());
 
     /*
@@ -781,5 +812,6 @@ define([
         });
     };
 
+    console.log('CONFIG', narrativeConfig);
 
 });

@@ -6,13 +6,13 @@ define([
     'use strict';
 
     // Static methods
-        function isArray(testValue) {
-            return (testValue instanceof Array);
-        }
+    function isArray(testValue) {
+        return (testValue instanceof Array);
+    }
 
-        function isNumber(testValue) {
-            return (typeof testValue === 'number');
-        }
+    function isNumber(testValue) {
+        return (typeof testValue === 'number');
+    }
 
 
     function setDataItem(data, path, value) {

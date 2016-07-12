@@ -22,6 +22,7 @@
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseEditor.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseNotify.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/methodCell.css") }}" type="text/css" />
+    <link rel="stylesheet" href="{{ static_url("kbase/css/bootstrapHelper.css") }}" type="text/css" />
 
     <script src="{{ static_url("ext_components/bowser/bowser.min.js") }}" type="text/javascript" charset="utf-8"></script>
     <script>
@@ -75,7 +76,7 @@
             moment: 'components/moment/moment',
             codemirror: 'components/codemirror',
             termjs: 'components/term.js/src/term',
-            typeahead: 'components/jquery-typeahead/dist/jquery.typeahead',
+            typeahead: 'components/jquery-typeahead/dist/jquery.typeahead'
           },
           shim: {
             underscore: {
@@ -205,6 +206,10 @@
                     <a id="kb-share-btn" tabindex="0" role="button" class="btn btn-default navbar-btn kb-nav-btn">
                       <div class="fa fa-share-alt"></div>
                       <div class="kb-nav-btn-txt">share</div>
+                    </a>
+                    <a id="kb-settings-btn" tabindex="0" role="button" class="btn btn-default navbar-btn kb-nav-btn">
+                      <div class="fa fa-cog"></div>
+                      <div class="kb-nav-btn-txt">settings</div>
                     </a>
                     <button id="kb-save-btn" class="btn btn-default navbar-btn kb-nav-btn">
                         <div class="fa fa-save"></div>

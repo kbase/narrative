@@ -4,13 +4,13 @@
 define([
     'common/runtime',
     'common/events',
-    'common/dom',
+    'common/ui',
     'kb_common/html',
     'base/js/namespace'
 ], function (
     Runtime,
     Events,
-    Dom,
+    UI,
     html,
     Jupyter
     ) {
@@ -18,17 +18,18 @@ define([
 
     var t = html.tag,
         div = t('div'), button = t('button'),
-        table = t('table'), tr = t('tr'), th = t('td'), td = t('td');
+        table = t('table'), tr = t('tr'), th = t('td'), td = t('td'), p = t('p');
 
     function factory(config) {
         var runtime = Runtime.make(),
             bus = runtime.bus().makeChannelBus(null, 'Output Widget Bus'),
             cellId = config.cellId,
-            root, container, dom,
+            root, container, ui,
             model = {
                 currentJobState: null,
                 outputs: null
-            };
+            },
+            api;
 
         function findCellForId(id) {
             var matchingCells = Jupyter.notebook.get_cells().filter(function (cell) {
@@ -46,86 +47,49 @@ define([
             }
             return null;
         }
-        function doRemoveOutput(index) {
-            var confirmed = dom.confirmDialog('Are you sure you want to remove the output cell? This is not reversable. (Any associated data will remain in your narrative, and may be found in the Data panel.)', 'Yes', 'No');
-            if (!confirmed) {
-                return;
-            }
-            
-            
-            // remove the output cell
-            var output = model.outputs[index],
-                outputCell = findCellForId(output.cellId),
-                cellIndex;
-
-            if (outputCell) {
-                //alert('Could not find this cell');
-                //return;
-                cellIndex = Jupyter.notebook.find_cell_index(outputCell);
-                Jupyter.notebook.delete_cell(cellIndex);
-            }
-
-            // send a message on the cell bus bus, parent should pick it up, remove the 
-            // output from the model, and update us.
-            bus.bus().send({
-                jobId: output.jobId
-            }, {
-                channel: {
-                    cell: cellId
-                },
-                key: {
-                    type: 'output-cell-removed'
-                }
-            });
-            bus.bus().send({
-                jobId: output.jobId
-            }, {
-                channel: {
-                    cell: cellId
-                },
-                key: {
-                    type: 'delete-job'
-                }
-            });
-
-        }
+        
         function doRemoveOutputCell(index) {
-            var confirmed = dom.confirmDialog('This will remove the output cell from the Narrative, as well as this output record. This action is not reversable. Any associated data will remain in your narrative, and may be found in the Data panel.\n\nAre you sure you want to remove the output cell?', 'Yes', 'No');
-            if (!confirmed) {
-                return;
-            }
-            // remove the output cell
-            var output = model.outputs[index],
-                outputCell = findCellForId(output.cellId),
-                cellIndex;
+            var content = div([
+                p('This will remove the output cell from the Narrative, as well as this output record. This action is not reversable. Any associated data will remain in your narrative, and may be found in the Data panel.'),
+                p('Are you sure you want to remove the output cell?')
+            ]);
+            ui.showConfirmDialog('Confirm Deletion of Cell Output', content, 'Yes', 'No')
+                .then(function (answer) {
+                    if (!answer) {
+                        return;
+                    }
+                // remove the output cell
+                var output = model.outputs[index],
+                    outputCell = findCellForId(output.cellId),
+                    cellIndex;
 
-            if (outputCell) {
-                //alert('Could not find this cell');
-                //return;
-                cellIndex = Jupyter.notebook.find_cell_index(outputCell);
-                Jupyter.notebook.delete_cell(cellIndex);
-            }
-
-            // send a message on the cell bus bus, parent should pick it up, remove the 
-            // output from the model, and update us.
-            bus.bus().send({
-                jobId: output.jobId
-            }, {
-                channel: {
-                    cell: cellId
-                },
-                key: {
-                    type: 'output-cell-removed'
+                if (outputCell) {
+                    //alert('Could not find this cell');
+                    //return;
+                    cellIndex = Jupyter.notebook.find_cell_index(outputCell);
+                    Jupyter.notebook.delete_cell(cellIndex);
                 }
-            });
-            bus.bus().send({
-                jobId: output.jobId
-            }, {
-                key: {
-                    type: 'request-job-deletion'
-                }
-            });
 
+                // send a message on the cell bus bus, parent should pick it up, remove the 
+                // output from the model, and update us.
+                bus.bus().send({
+                    jobId: output.jobId
+                }, {
+                    channel: {
+                        cell: cellId
+                    },
+                    key: {
+                        type: 'output-cell-removed'
+                    }
+                });
+                bus.bus().send({
+                    jobId: output.jobId
+                }, {
+                    key: {
+                        type: 'request-job-deletion'
+                    }
+                });
+            });
         }
 
         function render() {
@@ -153,7 +117,7 @@ define([
                         // console.log('JOB MATCH?', output.jobId, model.currentJobState);
                         if (model.currentJobState && output.jobId === model.currentJobState.job_id) {
                             rowStyle.border = '2px blue solid';
-                            message = 'This is the most recent output for this app.'
+                            message = 'This is the most recent output for this app.';
                         }
                         return div({class: 'row', style: rowStyle}, [
                             div({class: 'col-md-8'}, [
@@ -218,7 +182,7 @@ define([
             bus.on('run', function (message) {
                 root = message.node;
                 container = root.appendChild(document.createElement('div'));
-                dom = Dom.make({node: container});
+                ui = UI.make({node: container});
                 model.currentJobState = message.jobState;
                 if (message.output) {
                     importModel(message.output);
@@ -238,7 +202,7 @@ define([
             return bus;
         }
 
-        var api = Object.freeze({
+        api = Object.freeze({
             start: start,
             bus: getBus
         });

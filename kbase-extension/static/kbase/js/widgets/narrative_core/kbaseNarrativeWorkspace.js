@@ -474,6 +474,12 @@ define (
             })) {
                 return 'view';
             }
+            
+            // A very small class of methods are just non-app-calling widgets.
+            switch (spec.info.id) {
+                case 'edit_media':
+                    return 'widget';
+            }
 
             // ... while in reality, ANY app which does not execute is for now
             // considered a viewer.

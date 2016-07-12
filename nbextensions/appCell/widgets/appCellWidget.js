@@ -16,9 +16,11 @@ define([
     'kb_service/client/workspace',
     'common/pythonInterop',
     'common/utils',
-    'common/dom',
+    'common/ui',
     'common/fsm',
+    'common/cellUtils',
     'google-code-prettify/prettify',
+    'narrativeConfig',
     'css!google-code-prettify/prettify.css',
     'css!font-awesome.css'
 ], function (
@@ -36,15 +38,17 @@ define([
     Workspace,
     PythonInterop,
     utils,
-    Dom,
+    UI,
     Fsm,
-    PR
+    CellUtils,
+    PR,
+    narrativeConfig
     ) {
     'use strict';
     var t = html.tag,
         div = t('div'), span = t('span'), a = t('a'),
         table = t('table'), tr = t('tr'), th = t('th'), td = t('td'),
-        pre = t('pre'), input = t('input'), img = t('img'),
+        pre = t('pre'), input = t('input'), img = t('img'), p = t('p'),
         appStates = [
             {
                 state: {
@@ -59,7 +63,7 @@ define([
                         show: [],
                         hide: ['fatal-error', 'parameters-group', 'output-group', 'parameters-display-group', 'exec-group']
                     }
-                },                
+                },
                 next: [
                     {
                         mode: 'fatal-error'
@@ -72,7 +76,7 @@ define([
             },
             {
                 state: {
-                    mode: 'fatal-error',                
+                    mode: 'fatal-error'
                 },
                 ui: {
                     buttons: {
@@ -183,8 +187,8 @@ define([
                         disabled: ['run-app', 're-run-app']
                     },
                     elements: {
-                        show: ['parameters-display-group', 'exec-group'],
-                        hide: ['parameters-group', 'output-group']
+                        show: ['parameters-display-group', 'exec-group', 'output-group'],
+                        hide: ['parameters-group']
                     },
                     messages: [
                         {
@@ -252,8 +256,8 @@ define([
                         disabled: ['run-app', 're-run-app']
                     },
                     elements: {
-                        show: ['parameters-display-group', 'exec-group'],
-                        hide: ['parameters-group', 'output-group']
+                        show: ['parameters-display-group', 'exec-group', 'output-group'],
+                        hide: ['parameters-group']
                     }
                 },
                 next: [
@@ -290,8 +294,8 @@ define([
                         disabled: ['run-app', 're-run-app']
                     },
                     elements: {
-                        show: ['parameters-display-group', 'exec-group'],
-                        hide: ['parameters-group', 'output-group']
+                        show: ['parameters-display-group', 'exec-group', 'output-group'],
+                        hide: ['parameters-group']
                     }
                 },
                 next: [
@@ -459,7 +463,7 @@ define([
         ];
 
     function factory(config) {
-        var container, places, dom,
+        var container, places, ui,
             workspaceInfo = config.workspaceInfo,
             runtime = Runtime.make(),
             cell = config.cell,
@@ -490,12 +494,6 @@ define([
                     defaultValue: true,
                     type: 'toggle',
                     element: 'about-app'
-                },
-                showDeveloper: {
-                    label: 'Show developer features',
-                    defaultValue: false,
-                    type: 'toggle',
-                    element: 'developer-options'
                 }
             },
         widgets = {},
@@ -503,6 +501,8 @@ define([
             inputBusMap = {},
             fsm,
             saveMaxFrequency = config.saveMaxFrequency || 5000;
+
+        
 
         // DATA API
 
@@ -596,14 +596,14 @@ define([
                 ])
             ]);
         }
-        
+
         function syncFatalError() {
-            dom.setContent('fatal-error.title', model.getItem('fatalError.title'));
-            dom.setContent('fatal-error.message', model.getItem('fatalError.message'));
+            ui.setContent('fatal-error.title', model.getItem('fatalError.title'));
+            ui.setContent('fatal-error.message', model.getItem('fatalError.message'));
         }
-        
+
         function showFatalError(arg) {
-            dom.showElement('fatal-error');
+            ui.showElement('fatal-error');
         }
 
         function showFsmBar() {
@@ -616,7 +616,7 @@ define([
                 ]);
             }).join('  ');
 
-            dom.setContent('fsm-display.content', content);
+            ui.setContent('fsm-display.content', content);
         }
 
 
@@ -639,10 +639,12 @@ define([
                     th('Name'),
                     td({dataElement: 'name'})
                 ]),
-                tr([
-                    th('Module'),
-                    td({dataElement: 'module'})
-                ]),
+                ui.ifAdvanced(function () {
+                    return tr([
+                        th('Module'),
+                        td({dataElement: 'module'})
+                    ]);
+                }),
                 tr([
                     th('Id'),
                     td({dataElement: 'id'})
@@ -659,10 +661,12 @@ define([
                     th('Authors'),
                     td({dataElement: 'authors'})
                 ]),
-                tr([
-                    th('Git commit hash'),
-                    td({dataElement: 'git-commit-hash'})
-                ]),
+                ui.ifAdvanced(function () {
+                    return tr([
+                        th('Git commit hash'),
+                        td({dataElement: 'git-commit-hash'})
+                    ]);
+                }),
                 tr([
                     th('More info'),
                     td({dataElement: 'catalog-link'})
@@ -671,24 +675,26 @@ define([
         }
 
         function renderAboutApp() {
+            var aboutTabs = [{
+                    label: 'Summary',
+                    name: 'summary',
+                    content: renderAppSummary()
+                }];
+            if (ui.isDeveloper()) {
+                aboutTabs.push({
+                    label: 'Spec',
+                    name: 'spec',
+                    content: renderAppSpec()
+                });
+            }
+
             return html.makeTabs({
-                tabs: [
-                    {
-                        label: 'Summary',
-                        name: 'summary',
-                        content: renderAppSummary()
-                    },
-                    {
-                        label: 'Spec',
-                        name: 'spec',
-                        content: renderAppSpec()
-                    }
-                ]
+                tabs: aboutTabs
             });
         }
 
 //        function toggleElement(name) {
-//            var node = dom.getElement(name);
+//            var node = ui.getElement(name);
 //            if (!node) {
 //                return;
 //            }
@@ -700,7 +706,7 @@ define([
 //        }
 
         function showElement(name) {
-            var node = dom.getElement(name);
+            var node = ui.getElement(name);
             if (!node) {
                 return;
             }
@@ -708,7 +714,7 @@ define([
             node.classList.remove('hidden');
         }
         function hideElement(name) {
-            var node = dom.getElement(name);
+            var node = ui.getElement(name);
             if (!node) {
                 return;
             }
@@ -771,7 +777,7 @@ define([
                     span({style: {marginLeft: '4px', fontStyle: 'italic'}}, setting.label)
                 ]);
             }).join('\n');
-            dom.setContent('settings.content', content);
+            ui.setContent('settings.content', content);
             events.attachEvents();
 
             //Ensure that the settings are reflected in the UI.
@@ -789,21 +795,21 @@ define([
 
         function showAboutApp() {
             var appSpec = env.appSpec;
-            dom.setContent('about-app.name', appSpec.info.name);
-            dom.setContent('about-app.module', appSpec.info.namespace || dom.na());
-            dom.setContent('about-app.id', appSpec.info.id);
-            dom.setContent('about-app.summary', appSpec.info.subtitle);
-            dom.setContent('about-app.version', appSpec.info.ver);
-            dom.setContent('about-app.git-commit-hash', appSpec.info.git_commit_hash || dom.na());
-            dom.setContent('about-app.authors', (function () {
+            ui.setContent('about-app.name', appSpec.info.name);
+            ui.setContent('about-app.module', appSpec.info.namespace || ui.na());
+            ui.setContent('about-app.id', appSpec.info.id);
+            ui.setContent('about-app.summary', appSpec.info.subtitle);
+            ui.setContent('about-app.version', appSpec.info.ver);
+            ui.setContent('about-app.git-commit-hash', appSpec.info.git_commit_hash || ui.na());
+            ui.setContent('about-app.authors', (function () {
                 if (appSpec.info.authors && appSpec.info.authors.length > 0) {
                     return appSpec.info.authors.join('<br>');
                 }
-                return dom.na();
+                return ui.na();
             }()));
             var appRef = [appSpec.info.namespace || 'l.m', appSpec.info.id].filter(toBoolean).join('/'),
                 link = a({href: '/#appcatalog/app/' + appRef, target: '_blank'}, 'Catalog Page');
-            dom.setContent('about-app.catalog-link', link);
+            ui.setContent('about-app.catalog-link', link);
         }
 
         function showAppSpec() {
@@ -813,7 +819,7 @@ define([
             var specText = JSON.stringify(env.appSpec, false, 3),
                 fixedText = specText.replace(/</g, '&lt;').replace(/>/g, '&gt;'),
                 content = pre({class: 'prettyprint lang-json', style: {fontSize: '80%'}}, fixedText);
-            dom.setContent('about-app.spec', content);
+            ui.setContent('about-app.spec', content);
         }
 
         function renderLayout() {
@@ -829,7 +835,7 @@ define([
                     }, [
                         div({dataElement: 'widget', style: {display: 'block', width: '100%'}}, [
                             div({class: 'container-fluid'}, [
-                                dom.buildPanel({
+                                ui.buildPanel({
                                     title: null,
                                     name: 'availableActions',
                                     hidden: false,
@@ -837,24 +843,24 @@ define([
                                     body: [
                                         div({class: 'btn-toolbar'}, [
                                             div({class: 'btn-group'}, [
-                                                dom.makeButton('Run', 'run-app', {events: events, type: 'primary'})
+                                                ui.makeButton('Run', 'run-app', {events: events, type: 'primary'})
                                             ]),
                                             div({class: 'btn-group'}, [
-                                                dom.makeButton('Cancel', 'cancel', {events: events, type: 'danger'})
+                                                ui.makeButton('Cancel', 'cancel', {events: events, type: 'danger'})
                                             ]),
                                             div({class: 'btn-group'}, [
-                                                dom.makeButton('Run Again', 're-run-app', {events: events, type: 'primary'})
+                                                ui.makeButton('Run Again', 're-run-app', {events: events, type: 'primary'})
                                             ]),
                                             div({class: 'btn-group'}, [
-                                                dom.makeButton('Remove', 'remove', {events: events, type: 'danger'})
+                                                ui.makeButton('Remove', 'remove', {events: events, type: 'danger'})
                                             ]),
                                             div({class: 'btn-group'}, [
-                                                dom.makeButton(span({class: 'fa fa-cog '}), 'toggle-settings', {events: events})
+                                                ui.makeButton(span({class: 'fa fa-cog '}), 'toggle-settings', {events: events})
                                             ])
                                         ])
                                     ]
                                 }),
-                                dom.buildPanel({
+                                ui.buildPanel({
                                     title: 'Error',
                                     name: 'fatal-error',
                                     hidden: true,
@@ -868,14 +874,14 @@ define([
                                         ])
                                     ])
                                 }),
-                                dom.buildPanel({
+                                ui.buildPanel({
                                     title: 'App Cell Settings',
                                     name: 'settings',
                                     hidden: true,
                                     type: 'default',
                                     body: div({dataElement: 'content'})
                                 }),
-                                dom.buildCollapsiblePanel({
+                                ui.buildCollapsiblePanel({
                                     title: 'Notifications',
                                     name: 'notifications',
                                     hidden: true,
@@ -884,7 +890,7 @@ define([
                                         div({dataElement: 'content'})
                                     ]
                                 }),
-                                dom.buildCollapsiblePanel({
+                                ui.buildCollapsiblePanel({
                                     title: 'About',
                                     name: 'about-app',
                                     hidden: false,
@@ -894,46 +900,52 @@ define([
                                         div({dataElement: 'about-app'}, renderAboutApp())
                                     ]
                                 }),
-                                dom.buildCollapsiblePanel({
-                                    title: 'Dev',
-                                    name: 'developer-options',
-                                    hidden: true,
-                                    type: 'default',
-                                    body: [
-                                        div({dataElement: 'fsm-display', style: {marginBottom: '4px'}}, [
-                                            span({style: {marginRight: '4px'}}, 'FSM'),
-                                            span({dataElement: 'content'})
-                                        ]),
-                                        div([
-                                            dom.makeButton('Show Code', 'toggle-code-view', {events: events}),
-                                            dom.makeButton('Edit Metadata', 'edit-cell-metadata', {events: events}),
-                                            dom.makeButton('Edit Notebook Metadata', 'edit-notebook-metadata', {events: events})
-                                        ])
-                                    ]
-                                }),
-                                dom.buildPanel({
-                                    title: 'Input ' + span({class: 'fa fa-arrow-left'}),
+                                (function () {
+                                    if (ui.isDeveloper()) {
+                                        return;
+                                    }
+                                    return ui.buildCollapsiblePanel({
+                                        title: 'Dev',
+                                        name: 'developer-options',
+                                        hidden: true,
+                                        type: 'default',
+                                        body: [
+                                            div({dataElement: 'fsm-display', style: {marginBottom: '4px'}}, [
+                                                span({style: {marginRight: '4px'}}, 'FSM'),
+                                                span({dataElement: 'content'})
+                                            ]),
+                                            div([
+                                                ui.makeButton('Show Code', 'toggle-code-view', {events: events}),
+                                                ui.makeButton('Edit Metadata', 'edit-cell-metadata', {events: events}),
+                                                ui.makeButton('Edit Notebook Metadata', 'edit-notebook-metadata', {events: events})
+                                            ])
+                                        ]
+                                    })
+                                }()),
+                                ui.buildCollapsiblePanel({
+                                    title: 'Input ' + span({class: 'fa fa-arrow-right'}),
                                     name: 'parameters-group',
                                     hidden: false,
                                     type: 'default',
                                     body: div({dataElement: 'widget'})
                                 }),
-                                dom.buildCollapsiblePanel({
-                                    title: 'Parameters Display',
+                                ui.buildCollapsiblePanel({
+                                    title: 'Parameters (display)',
                                     name: 'parameters-display-group',
                                     hidden: false,
+                                    collapsed: true,
                                     type: 'default',
                                     body: div({dataElement: 'widget'})
                                 }),
-                                dom.buildPanel({
+                                ui.buildPanel({
                                     title: 'App Execution ' + span({class: 'fa fa-bolt'}),
                                     name: 'exec-group',
                                     hidden: false,
                                     type: 'default',
                                     body: div({dataElement: 'widget'})
                                 }),
-                                dom.buildPanel({
-                                    title: 'Output ' + span({class: 'fa fa-arrow-right'}),
+                                ui.buildCollapsiblePanel({
+                                    title: 'Output ' + span({class: 'fa fa-arrow-left'}),
                                     name: 'output-group',
                                     hidden: true,
                                     type: 'default',
@@ -995,7 +1007,7 @@ define([
                 errors: errors
             };
         }
-        
+
         // TODO: we need to determine the proper forms for a app identifier, and
         // who creates this canonical identifier. E.g. the method panel supplies
         // the app id to the cell, but it gets it from the kernel, which gets it
@@ -1003,20 +1015,19 @@ define([
         // for a beta or release tag ...
         function fixApp(app) {
             switch (app.tag) {
-                case 'release': {
+                case 'release':
                     return {
                         id: app.id,
                         tag: app.tag,
                         version: app.version
                     };
-                }
                 case 'beta':
                 case 'dev':
                     return {
                         id: app.id,
                         tag: app.tag
-                    }
-                default: 
+                    };
+                default:
                     throw new Error('Invalid tag for app ' + app.id);
             }
         }
@@ -1103,10 +1114,8 @@ define([
             var codeInputArea = cell.input.find('.input_area');
             if (model.getItem('user-settings.showCodeInputArea')) {
                 codeInputArea.removeClass('hidden');
-                // codeInputArea.css('display', cell.kbase.inputAreaDisplayStyle);
             } else {
                 codeInputArea.addClass('hidden');
-                // codeInputArea.css('display', 'none');
             }
         }
 
@@ -1123,7 +1132,7 @@ define([
         function toggleSettings(cell) {
             var name = 'showSettings',
                 selector = 'settings',
-                node = dom.getElement(selector),
+                node = ui.getElement(selector),
                 showing = model.getItem(['user-settings', name]);
             if (showing) {
                 model.setItem(['user-settings', name], false);
@@ -1134,9 +1143,7 @@ define([
             showing = model.getItem(['user-settings', name]);
             if (showing) {
                 node.classList.remove('hidden');
-                //node.style.display = 'block';
             } else {
-                //node.style.display = 'none';
                 node.classList.add('hidden');
             }
             return showing;
@@ -1168,7 +1175,7 @@ define([
                         ]))
                     ]);
                 }).join('\n');
-            dom.setContent('notifications.content', content);
+            ui.setContent('notifications.content', content);
             events.attachEvents(container);
         }
 
@@ -1231,7 +1238,7 @@ define([
             };
             widget.start();
             bus.emit('attach', {
-                node: dom.getElement(path)
+                node: ui.getElement(path)
             });
         }
 
@@ -1247,19 +1254,19 @@ define([
 
             // Button state
             state.ui.buttons.enabled.forEach(function (button) {
-                dom.enableButton(button);
+                ui.enableButton(button);
             });
             state.ui.buttons.disabled.forEach(function (button) {
-                dom.disableButton(button);
+                ui.disableButton(button);
             });
 
 
             // Element state
             state.ui.elements.show.forEach(function (element) {
-                dom.showElement(element);
+                ui.showElement(element);
             });
             state.ui.elements.hide.forEach(function (element) {
-                dom.hideElement(element);
+                ui.hideElement(element);
             });
 
             // Emit messages for this state.
@@ -1329,52 +1336,64 @@ define([
         }
 
         function doRerun() {
-            var confirmed = dom.confirmDialog('This will clear the App Execution area, and re-display the Input parameters. You may then change inputs and run the app again. (Any output you have already produced will be left intact.)\n\nProceed to prepare the app to Run Again?', 'Yes', 'No');
-            if (!confirmed) {
-                return;
-            }
+            var confirmationMessage = div([
+                p('This will clear the App Execution area, and re-display the Input parameters. You may then change inputs and run the app again. (Any output you have already produced will be left intact.)'),
+                p('Proceed to prepare the app to Run Again?')
+            ]);
+            ui.showConfirmDialog('Re-Run App?', confirmationMessage, 'Yes', 'No')
+                .then(function (confirmed) {
+                    if (!confirmed) {
+                        return;
+                    }
 
-            var jobState = model.getItem('exec.jobState');
-            if (jobState) {
-                cancelJob(jobState.job_id);
-                // the job will be deleted form the notebook when the job cancellation
-                // event is received.
-            }
+                    var jobState = model.getItem('exec.jobState');
+                    if (jobState) {
+                        cancelJob(jobState.job_id);
+                        // the job will be deleted form the notebook when the job cancellation
+                        // event is received.
+                    }
 
-            // Remove all of the execution state when we reset the app.
-            model.deleteItem('exec');
+                    // Remove all of the execution state when we reset the app.
+                    model.deleteItem('exec');
 
-            // Also ensure that the exec widget is reset
-            // widgets.execWidget.bus.emit('reset');
+                    // Also ensure that the exec widget is reset
+                    // widgets.execWidget.bus.emit('reset');
+                    reloadExecutionWidget();
 
-            // TODO: evaluate the params again before we do this.
-            fsm.newState({mode: 'editing', params: 'complete', code: 'built'});
+                    // TODO: evaluate the params again before we do this.
+                    fsm.newState({mode: 'editing', params: 'complete', code: 'built'});
 
-            clearOutput();
+                    clearOutput();
 
-            renderUI();
+                    renderUI();
+                });
         }
 
         function doRemove() {
-            var confirmed = dom.confirmDialog('Are you sure you want to remove this app cell? It will also remove any pending jobs, but will leave generated output intact', 'Yes', 'No way, dude');
-            if (!confirmed) {
-                return;
-            }
+            var confirmationMessage = div([
+                p('Removing this cell will also remove any pending jobs, but will leave generated output intact'),
+                p('Continue to remove this app cell?')
+            ]);
+            ui.showConfirmDialog('Remove Cell?', confirmationMessage, 'Yes', 'No')
+                .then(function (confirmed) {
+                    if (!confirmed) {
+                        return;
+                    }
+                    var jobState = model.getItem('exec.jobState');
+                    if (jobState) {
+                        cancelJob(jobState.job_id);
+                        // the job will be deleted form the notebook when the job cancellation
+                        // event is received.
+                    }
+                    
+                    // tear down all the sub widgets.
+                    Object.keys(widgets).forEach(function (widgetId) {
+                        var widget = widgets[widgetId];
+                        widget.instance.bus().send('stop');
+                    });
 
-            var jobState = model.getItem('exec.jobState');
-            if (jobState) {
-                cancelJob(jobState.job_id);
-                // the job will be deleted form the notebook when the job cancellation
-                // event is received.
-            }
-            
-            // tear down all the sub widgets.
-            Object.keys(widgets).forEach(function (widgetId) {
-                var widget = widgets[widgetId];
-                widget.instance.bus().send('stop');
-            });
-
-            $(document).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(cell));
+                    $(document).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(cell));
+                });
         }
 
         /*
@@ -1382,25 +1401,33 @@ define([
          *
          */
         function doCancel() {
-            var confirmed = dom.confirmDialog('Are you sure you want to Cancel the running job?', 'Yes', 'No way, dude');
-            if (!confirmed) {
-                return;
-            }
+            var confirmationMessage = div([
+                p('Canelling the job will halt the job processing and remove it from the job queue.'),
+                p('Continue to Cancel the running job?')
+            ]);
+            ui.showConfirmDialog('Cancel Job?', confirmationMessage, 'Yes', 'No')
+                .then(function (confirmed) {
+                    if (!confirmed) {
+                        return;
+                    }
 
-            var jobState = model.getItem('exec.jobState');
-            if (jobState) {
-                cancelJob(jobState.job_id);
-                // the job will be deleted form the notebook when the job cancellation
-                // event is received.
-            }
+                    var jobState = model.getItem('exec.jobState');
+                    if (jobState) {
+                        cancelJob(jobState.job_id);
+                        // the job will be deleted form the notebook when the job cancellation
+                        // event is received.
+                    }
+                    
+                    // Remove all of the execution state when we reset the app.
+                    model.deleteItem('exec');
+                    
+                    reloadExecutionWidget();
 
-            // Remove all of the execution state when we reset the app.
-            model.deleteItem('exec');
+                    // TODO: evaluate the params again before we do this.
+                    fsm.newState({mode: 'editing', params: 'complete', code: 'built'});
 
-            // TODO: evaluate the params again before we do this.
-            fsm.newState({mode: 'editing', params: 'complete', code: 'built'});
-
-            renderUI();
+                    renderUI();
+                });
         }
 
         function updateFromLaunchEvent(message) {
@@ -1477,10 +1504,21 @@ define([
         function attach(node) {
             return Promise.try(function () {
                 container = node;
-                dom = Dom.make({
+                ui = UI.make({
                     node: container,
                     bus: bus
                 });
+                
+                // TODO: better place/way to do this:
+                if (ui.isDeveloper()) {
+                    settings.showDeveloper = {
+                        label: 'Show developer features',
+                        defaultValue: false,
+                        type: 'toggle',
+                        element: 'developer-options'
+                    };
+                }
+                
                 var layout = renderLayout();
                 container.innerHTML = layout.content;
                 layout.events.attachEvents(container);
@@ -1677,40 +1715,20 @@ define([
 
         function createOutputCell(jobId) {
             var cellId = utils.getMeta(cell, 'attributes', 'id'),
-                // cellIndex = Jupyter.narrative.getCellByKbaseId(cellId),
                 cellIndex = Jupyter.notebook.find_cell_index(cell),
-                newCell = Jupyter.notebook.insert_cell_below('code', cellIndex),
                 newCellId = new Uuid(4).format(),
-                widgetName = model.getItem('exec.outputWidgetInfo.name'),
-                widgetTag = model.getItem('exec.outputWidgetInfo.tag'),
-                widgetParams = model.getItem('exec.outputWidgetInfo.params'),
-                outputCode = PythonInterop.buildOutputRunner(widgetName, widgetTag, widgetParams);
+                newCell = Jupyter.notebook.insert_cell_below('code', cellIndex);
 
-            newCell.metadata = {
+            $([Jupyter.events]).trigger('inserted.Cell', {
+                cell: newCell,
                 kbase: {
                     type: 'output',
-                    attributes: {
-                        id: newCellId,
-                        status: 'new',
-                        created: new Date().toGMTString(),
-                        lastLoaded: new Date().toGMTString(),
-                        icon: 'arrow-right',
-                        title: 'Output Cell'
-                    },
-                    output: {
-                        jobId: jobId,
-                        parentCellId: cellId
-                    }
+                    cellId: newCellId,
+                    parentCellId: cellId,
+                    jobId: jobId,
+                    widget: model.getItem('exec.outputWidgetInfo')
                 }
-            };
-                            
-            var params = 
-                            
-            newCell.set_text(outputCode);
-
-            // newCell.set_text('JobManager().get_job("' + jobId + '").output_viewer()');
-
-            newCell.execute();
+            });
 
             return newCellId;
         }
@@ -1724,22 +1742,6 @@ define([
             if (textNode) {
                 textNode.innerHTML = '';
             }
-        }
-
-        function findCellForId(id) {
-            var matchingCells = Jupyter.notebook.get_cells().filter(function (cell) {
-                if (cell.metadata && cell.metadata.kbase) {
-                    return (cell.metadata.kbase.attributes.id === id);
-                }
-                return false;
-            });
-            if (matchingCells.length === 1) {
-                return matchingCells[0];
-            }
-            if (matchingCells.length > 1) {
-                addNotification('Too many cells matched the given id: ' + id);
-            }
-            return null;
         }
 
         function doOnSuccess() {
@@ -1760,7 +1762,7 @@ define([
 
             // If so, is the cell still there?
             if (outputCellId) {
-                outputCell = findCellForId(outputCellId);
+                outputCell = cellUtils.findById(outputCellId);
                 if (outputCell) {
                     return;
                 }
@@ -1795,10 +1797,14 @@ define([
                  * listeners for the local input cell message bus
                  */
 
+                cell.element.on('toggleCodeArea.cell', function () {
+                    toggleCodeInputArea(cell);
+                });
+
                 bus.on('toggle-code-view', function () {
                     var showing = toggleCodeInputArea(),
                         label = showing ? 'Hide Code' : 'Show Code';
-                    dom.setButtonLabel('toggle-code-view', label);
+                    ui.setButtonLabel('toggle-code-view', label);
                 });
                 bus.on('show-notifications', function () {
                     doShowNotifications();
@@ -1812,7 +1818,7 @@ define([
                 bus.on('toggle-settings', function () {
                     var showing = toggleSettings(cell),
                         label = span({class: 'fa fa-cog '}),
-                        buttonNode = dom.getButton('toggle-settings');
+                        buttonNode = ui.getButton('toggle-settings');
                     buttonNode.innerHTML = label;
                     if (showing) {
                         buttonNode.classList.add('active');
@@ -1914,7 +1920,7 @@ define([
                         }
                     });
                     model.setItem('exec.log', execLog);
-                    
+
                     cellBus.emit('launch-status', {
                         launchState: message
                     });
@@ -2106,7 +2112,7 @@ define([
                         instance: widget
                     };
                     bus.emit('run', {
-                        node: dom.getElement(['parameters-group', 'widget']),
+                        node: ui.getElement(['parameters-group', 'widget']),
                         parameters: env.parameters
                     });
                     bus.on('parameter-sync', function (message) {
@@ -2223,7 +2229,7 @@ define([
                     });
                     widget.start();
                     bus.emit('run', {
-                        node: dom.getElement(['parameters-display-group', 'widget']),
+                        node: ui.getElement(['parameters-display-group', 'widget']),
                         parameters: env.parameters
                     });
 
@@ -2233,6 +2239,14 @@ define([
                     reject(err);
                 });
             });
+        }
+
+        function reloadExecutionWidget() {
+            widgets.execWidget.instance.bus().emit('stop');
+            loadExecutionWidget()
+                .catch(function (err) {
+                    console.error('ERROR reloading execution widget', err);
+                });
         }
 
         function loadExecutionWidget() {
@@ -2246,12 +2260,11 @@ define([
                     });
                     widgets.execWidget = {
                         path: ['exec-group', 'widget'],
-                        
                         instance: widget
                     };
                     widget.start();
                     widget.bus().emit('run', {
-                        node: dom.getElement('exec-group.widget'),
+                        node: ui.getElement('exec-group.widget'),
                         launchState: model.getItem('exec.launchState'),
                         jobState: model.getItem('exec.jobState')
                     });
@@ -2262,6 +2275,7 @@ define([
                 });
             });
         }
+
 
         function loadOutputWidget() {
             return new Promise(function (resolve, reject) {
@@ -2277,7 +2291,7 @@ define([
                     };
                     widget.start();
                     widget.bus().emit('run', {
-                        node: dom.getElement('output-group.widget'),
+                        node: ui.getElement('output-group.widget'),
                         jobState: model.getItem('exec.jobState'),
                         output: model.getItem('output')
                     });
@@ -2287,19 +2301,19 @@ define([
                 });
             });
         }
-        
+
         function makeIcon() {
             // icon is in the spec ...
             var appSpec = env.appSpec,
                 nmsBase = runtime.config('services.narrative_method_store.image_url'),
                 iconUrl = Props.getDataItem(appSpec, 'info.icon.url');
-            
+
             if (iconUrl) {
                 return span({class: 'fa-stack fa-2x', style: {padding: '0 3px 3px 3px'}}, [
                     img({src: nmsBase + iconUrl, style: {maxWidth: '50px', maxHeight: '50px', margin: '0x'}})
                 ]);
             }
-                
+
             return span({style: ''}, [
                 span({class: 'fa-stack fa-2x', style: {textAlign: 'center', color: 'rgb(103,58,183)'}}, [
                     span({class: 'fa fa-square fa-stack-2x', style: {color: 'rgb(103,58,183)'}}),
@@ -2310,18 +2324,18 @@ define([
 
         function renderIcon() {
             var prompt = cell.element[0].querySelector('.input_prompt');
-                
+
             if (!prompt) {
                 return;
             }
 
             prompt.innerHTML = div({
-                style: {textAlign: 'center'}                
+                style: {textAlign: 'center'}
             }, [
                 makeIcon()
             ]);
         }
-        
+
         function run(params) {
             // First get the app specs, which is stashed in the model,
             // with the parameters returned.
@@ -2341,7 +2355,7 @@ define([
                     showAppSpec();
                     PR.prettyPrint(null, container);
                     renderUI();
-                    renderIcon();
+                    // renderIcon();
                 })
                 .then(function () {
                     // if we start out in 'new' state, then we need to promote to
@@ -2360,7 +2374,7 @@ define([
                     });
                     syncFatalError();
                     fsm.newState({mode: 'fatal-error'});
-                    renderUI();                    
+                    renderUI();
                 });
         }
 

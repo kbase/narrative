@@ -27,13 +27,27 @@ def update_narrative(narrative):
         return narrative
 
     updated_cells = list()
-    for idx, cell in enumerate(narrative['cells']):
+
+    if 'worksheets' in narrative:
+        cells = narrative['worksheets'][0]['cells']
+    else:
+        cells = narrative['cells']
+
+    for idx, cell in enumerate(cells):
         updated_cells.append(update_cell(cell))
         # cell = update_cell(cell)
         # if cell.get('metadata', {}).get('kbase', {}).get('updated', False):
         #     updated_cells.add(idx)
-    narrative['cells'] = updated_cells
-    narrative['metadata'] = update_metadata(narrative['metadata'])
+
+    updated_metadata = update_metadata(narrative['metadata'])
+    if 'worksheets' in narrative:
+        narrative['worksheets'][0] = {
+            'cells': updated_cells,
+            'metadata': updated_metadata
+        }
+    else:
+        narrative['cells'] = updated_cells
+        narrative['metadata'] = updated_metadata
     return narrative
 
 def update_cell(cell):

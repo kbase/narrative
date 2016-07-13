@@ -3,6 +3,24 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v4.1.0 (more notes will follow).
 
+### Version 3.0.0
+__Major Updates__
+- Apps and Methods not made as part of KBase SDK modules are now obsolete and will no longer run. Those apps have been replaced with Markdown cells that note their obsolescence, but still give the name and set of parameters used in the apps for reference.
+- The distinction between "App" and "Method" has been removed. All cells that execute KBase jobs are now referred to as Apps.
+- All app cells are now based on Jupyter code cells (previously they were based on heavily modified Markdown cells). This means that they generate code that gets executed in the same way that any other code does. This also introduces a KBase Jobs API that gives programmatic access to running Apps. See docs/developer/job_api.md for details.
+- All output and viewer cells are now code cells as well. Existing viewers are still based on Markdown cells, and should work as previously.
+- All visualization widgets had their initialization code slightly modified. See docs/developer/narrative_widgets.md for details.
+
+__Other Changes__
+- Update Jupyter to version 4.2.1.
+- Update IPython kernel to version 5.0.0.
+- Adds a settings menu for editing user options (prototype).
+- App cells tightly validate each input before generating runnable code - until all required inputs are valid, no code can be run.
+- The Jobs panel gets its information pushed from the kernel, and that from communicating with back end servies. Job information is no longer stored in Narrative objects.
+- Running Jobs are associated directly with a Narrative, and inherit its view permissions accordingly; if you can view a Narrative, you can view its running jobs.
+- Copying a shared Narrative no longer copies its Jobs - copying a Narrative with running Jobs will not copy the results.
+- Updated the job log widget to no longer fetch all lines of a running log. It has a limit of 100 lines at a time, with buttons to navigate around the log.
+
 ### Version 2.0.9
 __Changes__
 - Small changes to viewer widgets - esp. genome viewer and expression data viewer.

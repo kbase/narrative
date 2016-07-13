@@ -1,7 +1,8 @@
 {
     "config": "ci",
     "name": "KBase Narrative",
-    "version": "2.0.9","dev_mode": true,
+    "version": "3.0.0a",
+    "dev_mode": true,
     "git_commit_hash": "9554d90",
     "git_commit_time": "Thu Mar 3 15:44:21 2016 -0800",
     "features": {
@@ -18,6 +19,7 @@
     "appdev": {
         "awe": "https://appdev.kbase.us/services/awe-api",
         "catalog": "https://appdev.kbase.us/services/catalog",
+        "cdn": "https://appdev.kbase.us/cdn",
         "data_import_export": "https://appdev.kbase.us/services/data_import_export",
         "data_panel_sources": "/data_source_config.json",
         "fba": "https://appdev.kbase.us/services/KBaseFBAModeling/",
@@ -52,6 +54,7 @@
     "ci": {
         "awe": "https://ci.kbase.us/services/awe-api",
         "catalog": "https://ci.kbase.us/services/catalog",
+        "cdn": "https://narrative-dev.kbase.us/cdn",
         "data_import_export": "https://ci.kbase.us/services/data_import_export",
         "data_panel_sources": "/data_source_config.json",
         "fba": "https://ci.kbase.us/services/KBaseFBAModeling/",
@@ -88,6 +91,7 @@
         "awe": "http://140.221.67.185:7080",
         "catalog": "https://ci.kbase.us/services/catalog",
         "cdmi": "https://kbase.us/services/cdmi_api/",
+        "cdn": "https://ci.kbase.us/cdn",
         "data_import_export": "https://kbase.us/services/data_import_export",
         "data_panel_sources": "/data_source_config.json",
         "fba": "https://kbase.us/services/KBaseFBAModeling/",
@@ -120,10 +124,11 @@
         "workspace": "http://dev04.berkeley.kbase.us:7058",
         "ws_browser": "http://narrative.kbase.us/#ws"
     },
-    
+
     "next": {
         "awe": "https://next.kbase.us/services/awe-api",
         "catalog": "https://next.kbase.us/services/catalog",
+        "cdn": "https://next.kbase.us/cdn",
         "data_import_export": "https://next.kbase.us/services/data_import_export",
         "data_panel_sources": "/data_source_config.json",
         "fba": "https://next.kbase.us/services/KBaseFBAModeling/",
@@ -159,6 +164,7 @@
     "prod": {
         "awe": "https://kbase.us/services/awe-api",
         "catalog": "https://kbase.us/services/catalog",
+        "cdn": "https://kbase.us/cdn",
         "data_import_export": "https://kbase.us/services/data_import_export",
         "data_panel_sources": "/data_source_config.json",
         "fba": "https://kbase.us/services/KBaseFBAModeling/",

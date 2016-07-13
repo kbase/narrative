@@ -50,7 +50,7 @@ define([
             var value = params[name];
             // This allows a non-sparse map of params, in which a param key may
             // be set as undefined, e.g. in the case of an optional param which
-            // simply has not been set. This simplifies calling code because it 
+            // simply has not been set. This simplifies calling code because it
             // does not have to filter these out.
             if (value !== undefined) {
                 return name + '=' + pythonifyValue(value);
@@ -79,7 +79,7 @@ define([
             }),
             args = positionalArgs.concat(namedArgs).concat(paramArgs),
             pythonCode = [
-                'from biokbase.narrative.jobs import AppManager',
+                'from biokbase.narrative.jobs.appmanager import AppManager',
                 'AppManager().run_app(' + buildNiceArgsList(args) + ')'
             ].join('\n');
 
@@ -99,7 +99,7 @@ define([
             }),
             args = positionalArgs.concat(namedArgs).concat(paramArgs),
             pythonCode = [
-                'from biokbase.narrative.jobs import AppManager',
+                'from biokbase.narrative.jobs.appmanager import AppManager',
                 'AppManager().run_local_app(' + buildNiceArgsList(args) + ')'
             ].join('\n');
 
@@ -133,7 +133,7 @@ define([
             }),
             args = positionalArgs.concat(namedArgs),
             pythonCode = [
-                'from biokbase.narrative.jobs import AppManager',
+                'from biokbase.narrative.jobs.appmanager import AppManager',
                 'AppManager().run_widget_app(' + buildNiceArgsList(args) + ')'
             ].join('\n');
 

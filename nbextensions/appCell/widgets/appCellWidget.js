@@ -901,7 +901,7 @@ define([
                                     ]
                                 }),
                                 (function () {
-                                    if (ui.isDeveloper()) {
+                                    if (!ui.isDeveloper()) {
                                         return;
                                     }
                                     return ui.buildCollapsiblePanel({

@@ -603,6 +603,7 @@ define(
         window.scrollTo(0, 0);
 
         this.authToken = NarrativeLogin.loginWidget($('#signin-button')).token();
+        this.userId = NarrativeLogin.loginWidget($('#signin-button')).userId();
 
         /* Clever extension to $.event from StackOverflow
          * Lets us watch DOM nodes and catch when a widget's node gets nuked.

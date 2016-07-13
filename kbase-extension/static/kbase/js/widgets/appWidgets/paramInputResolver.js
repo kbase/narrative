@@ -17,7 +17,8 @@ define([
     './input/singleCustomSubdata',
     './input/singleTextareaInput',
     './input/multiFloatInput',
-    './input/multiSelectInput'
+    './input/multiSelectInput',
+    './input/singleFileInput'
 ], function (
     SingleTextInputWidget,
     MultiTextInputWidget,
@@ -34,7 +35,8 @@ define([
     SingleCustomSubdataWidget,
     SingleTextareaInputWidget,
     MultiFloatInputWidget,
-    MultiSelectInputWidget
+    MultiSelectInputWidget,
+    SingleFileInputWidget
     ) {
     'use strict';
 
@@ -183,7 +185,9 @@ define([
                         case 'dropdown':
                             return SingleSelectInputWidget;
                         case 'textarea':
-                            return SingleTextareaInputWidget;                            
+                            return SingleTextareaInputWidget;
+                        case 'file':
+                            return SingleFileInputWidget;
                         default:
                             return UndefinedInputWidget;
                     }
@@ -274,7 +278,10 @@ define([
                             }
                             return SingleSubdataWidget;
                         case 'file':
-                            throw new Error('"file" parameter type is not supported');
+                            if (parameterSpec.multipleItems()) {
+                                throw new Error('multiple item "file" parameter type is not currently supported');
+                            }
+                            return SingleFileInputWidget;
                         case 'custom_textsubdata':
                             console.log('CUSTOM_TEXTSUBDATA', parameterSpec);
                             if (parameterSpec.multipleItems()) {

@@ -57,7 +57,8 @@ define([
                 ui: {
                     buttons: {
                         enabled: [],
-                        disabled: ['run-app', 'remove', 'cancel', 're-run-app']
+                        disabled: ['run-app'],
+                        hidden: ['re-run-app', 'cancel']
                     },
                     elements: {
                         show: [],
@@ -81,7 +82,8 @@ define([
                 ui: {
                     buttons: {
                         enabled: [],
-                        disabled: ['run-app', 'remove', 'cancel', 're-run-app']
+                        disabled: ['run-app'],
+                        hidden: ['re-run-app', 'cancel']
                     },
                     elements: {
                         show: ['fatal-error'],
@@ -98,8 +100,9 @@ define([
                 },
                 ui: {
                     buttons: {
-                        enabled: ['remove'],
-                        disabled: ['run-app', 'cancel', 're-run-app']
+                        enabled: [],
+                        disabled: ['run-app'],
+                        hidden: ['re-run-app', 'cancel']
                     },
                     elements: {
                         show: ['parameters-group', 'output-group'],
@@ -126,8 +129,9 @@ define([
                 },
                 ui: {
                     buttons: {
-                        enabled: ['run-app', 'remove'],
-                        disabled: ['cancel', 're-run-app']
+                        enabled: ['run-app'],
+                        disabled: [],
+                        hidden: ['re-run-app', 'cancel']
                     },
                     elements: {
                         show: ['parameters-group', 'output-group'],
@@ -183,8 +187,9 @@ define([
                 },
                 ui: {
                     buttons: {
-                        enabled: ['cancel', 'remove'],
-                        disabled: ['run-app', 're-run-app']
+                        enabled: ['cancel'],
+                        disabled: [],
+                        hidden: ['run-app', 're-run-app'],
                     },
                     elements: {
                         show: ['parameters-display-group', 'exec-group', 'output-group'],
@@ -252,8 +257,9 @@ define([
                 },
                 ui: {
                     buttons: {
-                        enabled: ['cancel', 'remove'],
-                        disabled: ['run-app', 're-run-app']
+                        enabled: ['cancel'],
+                        disabled: [],
+                        hidden: ['run-app', 're-run-app']
                     },
                     elements: {
                         show: ['parameters-display-group', 'exec-group', 'output-group'],
@@ -290,8 +296,9 @@ define([
                 },
                 ui: {
                     buttons: {
-                        enabled: ['cancel', 'remove'],
-                        disabled: ['run-app', 're-run-app']
+                        enabled: ['cancel'],
+                        disabled: [],
+                        hidden: ['run-app', 're-run-app']
                     },
                     elements: {
                         show: ['parameters-display-group', 'exec-group', 'output-group'],
@@ -323,8 +330,9 @@ define([
                 },
                 ui: {
                     buttons: {
-                        enabled: ['re-run-app', 'remove'],
-                        disabled: ['run-app', 'cancel']
+                        enabled: ['re-run-app'],
+                        disabled: [],
+                        hidden: ['run-app', 'cancel']
                     },
                     elements: {
                         show: ['parameters-display-group', 'exec-group', 'output-group'],
@@ -358,8 +366,9 @@ define([
                 },
                 ui: {
                     buttons: {
-                        enabled: ['re-run-app', 'remove'],
-                        disabled: ['run-app', 'cancel']
+                        enabled: ['re-run-app'],
+                        disabled: [],
+                        hidden: ['run-app', 'cancel']
                     },
                     elements: {
                         show: ['parameters-display-group', 'exec-group', 'output-group'],
@@ -386,8 +395,9 @@ define([
                 },
                 ui: {
                     buttons: {
-                        enabled: ['re-run-app', 'remove'],
-                        disabled: ['run-app', 'cancel']
+                        enabled: ['re-run-app'],
+                        disabled: [],
+                        hidden: ['run-app', 'cancel']
                     },
                     elements: {
                         show: ['parameters-display-group', 'exec-group', 'output-group'],
@@ -414,8 +424,9 @@ define([
                 },
                 ui: {
                     buttons: {
-                        enabled: ['re-run-app', 'remove'],
-                        disabled: ['run-app', 'cancel']
+                        enabled: ['re-run-app'],
+                        disabled: [],
+                        hidden: ['run-app', 'cancel']
                     },
                     elements: {
                         show: ['parameters-display-group', 'exec-group', 'output-group'],
@@ -441,8 +452,9 @@ define([
                 },
                 ui: {
                     buttons: {
-                        enabled: ['re-run-app', 'remove'],
-                        disabled: ['run-app', 'cancel']
+                        enabled: ['re-run-app'],
+                        disabled: [],
+                        hidden: ['run-app', 'cancel']
                     },
                     elements: {
                         show: ['parameters-display-group', 'exec-group', 'output-group'],
@@ -491,7 +503,7 @@ define([
                 },
                 showAboutApp: {
                     label: 'Show the About App panel',
-                    defaultValue: true,
+                    defaultValue: false,
                     type: 'toggle',
                     element: 'about-app'
                 }
@@ -835,36 +847,13 @@ define([
                     }, [
                         div({dataElement: 'widget', style: {display: 'block', width: '100%'}}, [
                             div({class: 'container-fluid'}, [
-                                ui.buildPanel({
-                                    title: null,
-                                    name: 'availableActions',
-                                    hidden: false,
-                                    type: 'default',
-                                    body: [
-                                        div({class: 'btn-toolbar'}, [
-                                            div({class: 'btn-group'}, [
-                                                ui.makeButton('Run', 'run-app', {events: events, type: 'primary'})
-                                            ]),
-                                            div({class: 'btn-group'}, [
-                                                ui.makeButton('Cancel', 'cancel', {events: events, type: 'danger'})
-                                            ]),
-                                            div({class: 'btn-group'}, [
-                                                ui.makeButton('Run Again', 're-run-app', {events: events, type: 'primary'})
-                                            ]),
-                                            div({class: 'btn-group'}, [
-                                                ui.makeButton('Remove', 'remove', {events: events, type: 'danger'})
-                                            ]),
-                                            div({class: 'btn-group'}, [
-                                                ui.makeButton(span({class: 'fa fa-cog '}), 'toggle-settings', {events: events})
-                                            ])
-                                        ])
-                                    ]
-                                }),
+                                
                                 ui.buildPanel({
                                     title: 'Error',
                                     name: 'fatal-error',
                                     hidden: true,
-                                    type: 'default',
+                                    type: 'danger',
+                                    classes: ['kb-panel-container'],
                                     body: div([
                                         table({class: 'table table-striped'}, [
                                             tr([
@@ -879,6 +868,7 @@ define([
                                     name: 'settings',
                                     hidden: true,
                                     type: 'default',
+                                    classes: ['kb-panel-container'],
                                     body: div({dataElement: 'content'})
                                 }),
                                 ui.buildCollapsiblePanel({
@@ -886,6 +876,7 @@ define([
                                     name: 'notifications',
                                     hidden: true,
                                     type: 'default',
+                                    classes: ['kb-panel-container'],
                                     body: [
                                         div({dataElement: 'content'})
                                     ]
@@ -893,15 +884,16 @@ define([
                                 ui.buildCollapsiblePanel({
                                     title: 'About',
                                     name: 'about-app',
-                                    hidden: false,
+                                    hidden: true,
                                     collapsed: true,
                                     type: 'default',
+                                    classes: ['kb-panel-container'],
                                     body: [
                                         div({dataElement: 'about-app'}, renderAboutApp())
                                     ]
                                 }),
                                 (function () {
-                                    if (ui.isDeveloper()) {
+                                    if (!ui.isDeveloper()) {
                                         return;
                                     }
                                     return ui.buildCollapsiblePanel({
@@ -909,6 +901,7 @@ define([
                                         name: 'developer-options',
                                         hidden: true,
                                         type: 'default',
+                                    classes: ['kb-panel-container'],
                                         body: [
                                             div({dataElement: 'fsm-display', style: {marginBottom: '4px'}}, [
                                                 span({style: {marginRight: '4px'}}, 'FSM'),
@@ -920,13 +913,14 @@ define([
                                                 ui.makeButton('Edit Notebook Metadata', 'edit-notebook-metadata', {events: events})
                                             ])
                                         ]
-                                    })
+                                    });
                                 }()),
                                 ui.buildCollapsiblePanel({
                                     title: 'Input ' + span({class: 'fa fa-arrow-right'}),
                                     name: 'parameters-group',
                                     hidden: false,
                                     type: 'default',
+                                    classes: ['kb-panel-container'],
                                     body: div({dataElement: 'widget'})
                                 }),
                                 ui.buildCollapsiblePanel({
@@ -935,13 +929,26 @@ define([
                                     hidden: false,
                                     collapsed: true,
                                     type: 'default',
+                                    classes: ['kb-panel-container'],
                                     body: div({dataElement: 'widget'})
                                 }),
+                               
+                                div({class: 'btn-toolbar kb-btn-toolbar-cell-widget'}, [
+                                    div({class: 'btn-group'}, [
+                                        ui.makeButton('Run', 'run-app', {events: events, type: 'primary'}),
+                                        ui.makeButton('Cancel', 'cancel', {events: events, type: 'danger'}),
+                                        ui.makeButton('Edit and Re-Run', 're-run-app', {events: events, type: 'primary'})
+                                    ])
+                                    //div({class: 'btn-group'}, [
+                                    //    ui.makeButton('Remove', 'remove', {events: events, type: 'danger'})
+                                    //])
+                                ]),
                                 ui.buildPanel({
                                     title: 'App Execution ' + span({class: 'fa fa-bolt'}),
                                     name: 'exec-group',
                                     hidden: false,
                                     type: 'default',
+                                    classes: ['kb-panel-container'],
                                     body: div({dataElement: 'widget'})
                                 }),
                                 ui.buildCollapsiblePanel({
@@ -949,6 +956,7 @@ define([
                                     name: 'output-group',
                                     hidden: true,
                                     type: 'default',
+                                    classes: ['kb-panel-container'],
                                     body: div({dataElement: 'widget'})
                                 })
                             ])
@@ -1259,6 +1267,9 @@ define([
             state.ui.buttons.disabled.forEach(function (button) {
                 ui.disableButton(button);
             });
+            state.ui.buttons.hidden.forEach(function (button) {
+                ui.hideButton(button);
+            });
 
 
             // Element state
@@ -1337,10 +1348,10 @@ define([
 
         function doRerun() {
             var confirmationMessage = div([
-                p('This will clear the App Execution area, and re-display the Input parameters. You may then change inputs and run the app again. (Any output you have already produced will be left intact.)'),
-                p('Proceed to prepare the app to Run Again?')
+                p('This action will clear the App Execution area and restore the Input Area to edit mode. You may then change inputs and run the app again. (Any output you have already produced will be left intact.)'),
+                p('Proceed to Resume Editing?')
             ]);
-            ui.showConfirmDialog('Re-Run App?', confirmationMessage, 'Yes', 'No')
+            ui.showConfirmDialog('Edit and Re-Run?', confirmationMessage, 'Yes', 'No')
                 .then(function (confirmed) {
                     if (!confirmed) {
                         return;
@@ -1814,6 +1825,20 @@ define([
                 });
                 bus.on('edit-notebook-metadata', function () {
                     doEditNotebookMetadata();
+                });
+                
+                // the settings toggle is now emitted from the toolbar, which 
+                // doesn't have a reference to the bus (yet).
+                cell.element.on('toggleCellSettings.cell', function () {
+                    var showing = toggleSettings(cell),
+                        label = span({class: 'fa fa-cog '}),
+                        buttonNode = ui.getButton('toggle-settings');
+                    buttonNode.innerHTML = label;
+                    if (showing) {
+                        buttonNode.classList.add('active');
+                    } else {
+                        buttonNode.classList.remove('active');
+                    }
                 });
                 bus.on('toggle-settings', function () {
                     var showing = toggleSettings(cell),
@@ -2342,6 +2367,7 @@ define([
             return syncAppSpec(params.appId, params.appTag)
                 .then(function () {
                     utils.setCellMeta(cell, 'kbase.attributes.title', env.appSpec.info.name);
+                    utils.setCellMeta(cell, 'kbase.attributes.subtitle', env.appSpec.info.subtitle);
                     return Promise.all([
                         loadInputWidget(),
                         loadInputViewWidget(),

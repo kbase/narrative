@@ -6,14 +6,14 @@ define([
     'common/props',
     'common/utils',
     'common/jobs',
-    'common/dom',
+    'common/ui',
     'common/runtime',
     'common/events',
     'kb_common/format',
     'kb_common/html',
     'kb_service/client/workspace',
     './jobLogViewer'
-], function (Uuid, Props, utils, Jobs, Dom, Runtime, Events, format, html, Workspace, LogViewer) {
+], function (Uuid, Props, utils, Jobs, UI, Runtime, Events, format, html, Workspace, LogViewer) {
     'use strict';
 
     var t = html.tag,
@@ -30,7 +30,7 @@ define([
             container,
             listeners = [],
             model,
-            dom,
+            ui,
             widgets = {},
             togglesDb,
             toggles = [
@@ -86,11 +86,12 @@ define([
         // VIEW BUILDING
 
         function renderJobReport() {
-            return dom.buildPanel({
+            return ui.buildPanel({
                 title: 'Job Report',
                 name: 'job-report',
                 hidden: false,
                 type: 'primary',
+                classes: 'kb-panel-light',
                 body: table({class: 'table table-striped'}, [
                     tr([th('Objects Created'), td({dataElement: 'objects-created'})]),
                     tr([th('Message'), td({dataElement: 'message'})]),
@@ -100,21 +101,23 @@ define([
         }
 
         function renderJobResult() {
-            return dom.buildPanel({
+            return ui.buildPanel({
                 title: 'Job Result',
                 name: 'job-result',
                 hidden: false,
-                type: 'primary',
+                type: 'primary', 
+                classes: 'kb-panel-light',               
                 body: div({style: {fontFamily: 'monospace', whiteSpace: 'pre'}, dataElement: 'content'})
             });
         }
 
         function renderJobError() {
-            return dom.buildPanel({
+            return ui.buildPanel({
                 title: 'Job Error',
                 name: 'run-error',
                 hidden: false,
                 type: 'danger',
+                classes: 'kb-panel-light',
                 body: [
                     table({class: 'table table-striped', style: {tableLayout: 'fixed'}}, [
                         tr([th({style: {width: '15%'}}, 'Error in'), td({dataElement: 'location', style: {width: '85%'}})]),
@@ -127,11 +130,12 @@ define([
         }
 
         function renderJobLog() {
-            return dom.buildPanel({
+            return ui.buildPanel({
                 title: 'Job Log',
                 name: 'job-log',
                 hidden: false,
                 type: 'primary',
+                classes: 'kb-panel-light',
                 xbody: [
                     textarea({class: 'form-control', dataElement: 'logs'})
                 ],
@@ -153,12 +157,13 @@ define([
                     backgroundColor: 'gray',
                     color: '#FFF'
                 };
-            return dom.buildPanel({
+            return ui.buildPanel({
                 title: 'Execution Status',
                 name: 'execStatus',
                 hidden: false,
                 type: 'primary',
-                body: [
+                classes: ['kb-panel-light'],
+                body: div({style: {paddingTop: '6px'}}, [
                     div({class: 'row', dataElement: 'launch'}, [
                         div({class: 'col-md-2', style: labelStyle}, span({dataElement: 'label'}, 'Launch')),
                         div({class: 'col-md-2', style: dataStyle}, span({dataElement: 'elapsed'}))
@@ -179,16 +184,17 @@ define([
                         div({class: 'col-md-2', style: labelStyle}, 'When'),
                         div({class: 'col-md-2', style: dataStyle}, span({dataElement: 'finishedAt'}))
                     ])
-                ]
+                ])
             });
         }
 
         function renderJobDetails() {
-            return dom.buildPanel({
+            return ui.buildPanel({
                 title: 'Job Details',
                 name: 'job-details',
                 hidden: false,
                 type: 'primary',
+                classes: ['kb-panel-light'],
                 body: [
                     table({class: 'table table-striped'}, [
                         tr([th('Job Id'), td({dataElement: 'id'})]),
@@ -210,7 +216,7 @@ define([
             if (details) {
                 Object.keys(details).forEach(function (key) {
                     var value = details[key],
-                        el = dom.getElement(['job-details', key]);
+                        el = ui.getElement(['job-details', key]);
                     if (el) {
                         el.innerHTML = value || '';
                     }
@@ -233,9 +239,9 @@ define([
                     return li(object);
                 }).join('\n'));
             }
-            dom.getElement(['job-report', 'objects-created']).innerHTML = objectsCreated;
+            ui.getElement(['job-report', 'objects-created']).innerHTML = objectsCreated;
 
-            dom.getElement(['job-report', 'message']).innerHTML = report.text_message || ' no message';
+            ui.getElement(['job-report', 'message']).innerHTML = report.text_message || ' no message';
 
             if (report.warnings.length === 0) {
                 warnings = 'no warnings';
@@ -244,7 +250,7 @@ define([
                     return li(object);
                 }).join('\n'));
             }
-            dom.getElement(['job-report', 'warnings']).innerHTML = warnings;
+            ui.getElement(['job-report', 'warnings']).innerHTML = warnings;
         }
 
         function showJobResult() {
@@ -255,12 +261,12 @@ define([
 
             // Just spit out json ...
             var content = JSON.stringify(result, null, 2);
-            dom.setContent('job-result.content', content);
+            ui.setContent('job-result.content', content);
         }
 
         function showJobError() {
             var error = model.getItem('runState.error.message'),
-                node = dom.getElement(['run-error', 'message']);
+                node = ui.getElement(['run-error', 'message']);
 
             if (error) {
                 node.innerHTML = error;
@@ -269,17 +275,15 @@ define([
 
         function render() {
             var events = Events.make({node: container}),
-                content = div({style: {margin: '-15px -15px -15px -15px'}}, [
-                    dom.buildPanel({
-                        title: null,
-                        type: 'default',
-                        body: [
-                            dom.makeButton('Show Details', 'toggle-job-details', {events: events}),
-                            dom.makeButton('Show Report', 'toggle-job-report', {events: events}),
-                            dom.makeButton('Show Result', 'toggle-job-result', {events: events}),
-                            dom.makeButton('Show Log', 'toggle-job-log', {events: events})
-                        ]
-                    }),
+                content = div({}, [
+                   div({class: 'btn-toolbar'}, [
+                        div({class: 'btn-group'}, [
+                            ui.makeButton('Show Details', 'toggle-job-details', {events: events}),
+                            ui.makeButton('Show Report', 'toggle-job-report', {events: events}),
+                            ui.makeButton('Show Result', 'toggle-job-result', {events: events}),
+                            ui.makeButton('Show Log', 'toggle-job-log', {events: events})
+                        ])
+                    ]),
                     // replaced with
                     renderExecStatus(),
                     renderJobError(),
@@ -304,7 +308,7 @@ define([
                 })
                 .catch(function (err) {
                     console.error('Error getting log lines', err);
-                    dom.dom.getElement(['job-log', 'logs']).innerHTML = 'ERROR:\n' +
+                    ui.getElement(['job-log', 'logs']).innerHTML = 'ERROR:\n' +
                         err.remoteStacktrace.join('\n');
                 });
         }
@@ -399,35 +403,35 @@ define([
                 return;
             }
 
-            dom.setContent(['runStatus', 'last-updated-at'], utils.formatTime(state.lastUpdatedTime));
-            dom.setContent(['runStatus', 'state'], state.canonicalState);
-            dom.setContent(['runStatus', 'temporalState'], state.temporalState);
-            dom.setContent(['runStatus', 'executionState'], state.executionState);
+            ui.setContent(['runStatus', 'last-updated-at'], utils.formatTime(state.lastUpdatedTime));
+            ui.setContent(['runStatus', 'state'], state.canonicalState);
+            ui.setContent(['runStatus', 'temporalState'], state.temporalState);
+            ui.setContent(['runStatus', 'executionState'], state.executionState);
 
-            dom.setContent(['runStatus', 'run-id'], state.runId);
-            dom.setContent(['runStatus', 'job-id'], state.jobId);
+            ui.setContent(['runStatus', 'run-id'], state.runId);
+            ui.setContent(['runStatus', 'job-id'], state.jobId);
 
             if (state.success) {
                 showJobResult();
-                // dom.hideElement('job-report');
+                // ui.hideElement('job-report');
             }
 
             if (state.error) {
-                dom.showElement(['run-error']);
-                dom.setContent(['run-error', 'location'], state.error.location);
-                dom.setContent(['run-error', 'type'], state.error.type);
-                dom.setContent(['run-error', 'message'], state.error.message);
-                dom.setContent(['run-error', 'detail'], state.error.detail);
+                ui.showElement(['run-error']);
+                ui.setContent(['run-error', 'location'], state.error.location);
+                ui.setContent(['run-error', 'type'], state.error.type);
+                ui.setContent(['run-error', 'message'], state.error.message);
+                ui.setContent(['run-error', 'detail'], state.error.detail);
                 // console.log('ERROR', state.error);
             } else {
-                dom.hideElement(['run-error']);
+                ui.hideElement(['run-error']);
             }
 
             // Now be more stateful here...
             if (state.jobId) {
-                dom.enableButton('toggle-job-log');
+                ui.enableButton('toggle-job-log');
             } else {
-                dom.disableButton('toggle-job-log');
+                ui.disableButton('toggle-job-log');
             }
         }
 
@@ -439,38 +443,38 @@ define([
             }
 
             // Prepare
-//            dom.setContent(['execStatus', 'last-updated-at'], utils.formatTime(state.lastUpdatedTime));
-//            dom.setContent(['execStatus', 'state'], state.canonicalState);
-//            dom.setContent(['execStatus', 'temporalState'], state.temporalState);
-//            dom.setContent(['execStatus', 'executionState'], state.executionState);
+//            ui.setContent(['execStatus', 'last-updated-at'], utils.formatTime(state.lastUpdatedTime));
+//            ui.setContent(['execStatus', 'state'], state.canonicalState);
+//            ui.setContent(['execStatus', 'temporalState'], state.temporalState);
+//            ui.setContent(['execStatus', 'executionState'], state.executionState);
 //
-//            dom.setContent(['execStatus', 'run-id'], state.runId);
-//            dom.setContent(['execStatus', 'job-id'], state.jobId);
+//            ui.setContent(['execStatus', 'run-id'], state.runId);
+//            ui.setContent(['execStatus', 'job-id'], state.jobId);
 
 
 
             // LAUNCH
              if (state.elapsedLaunchTime) {
                 (function () {
-                    // dom.showElement(['execStatus', 'launch-time']);
+                    // ui.showElement(['execStatus', 'launch-time']);
                     var label;
                     if (state.temporalState === 'launching') {
                         label = 'Launching';
                     } else {
                         label = 'Launching';
                     }
-                    dom.setContent(['execStatus', 'launch', 'label'], label);
-                    dom.setContent(['execStatus', 'launch', 'elapsed'], utils.formatElapsedTime(state.elapsedLaunchTime) || '');
+                    ui.setContent(['execStatus', 'launch', 'label'], label);
+                    ui.setContent(['execStatus', 'launch', 'elapsed'], utils.formatElapsedTime(state.elapsedLaunchTime) || '');
                 }());
             } else {
-                // dom.hideElement(['execStatus', 'launch-time']);
-                dom.setContent(['execStatus', 'launch', 'elapsed'], '-');
+                // ui.hideElement(['execStatus', 'launch-time']);
+                ui.setContent(['execStatus', 'launch', 'elapsed'], '-');
             }
 
             // QUEUE
              if (state.elapsedQueueTime) {
                 (function () {
-                    //dom.showElement(['execStatus', 'queue']);
+                    //ui.showElement(['execStatus', 'queue']);
                     var label;
                     if (state.elapsedRunTime) {
                         label = 'Was Queued for';
@@ -479,65 +483,65 @@ define([
                     }
                     // console.log('POSITION', JSON.parse(JSON.stringify(state)));
                     if (state.jobState.position !== undefined) {
-                        dom.setContent(['execStatus', 'queue', 'position'], state.jobState.position);
+                        ui.setContent(['execStatus', 'queue', 'position'], state.jobState.position);
                     } else {
-                        dom.setContent(['execStatus', 'queue', 'position'], '-');
+                        ui.setContent(['execStatus', 'queue', 'position'], '-');
                     }
-                    dom.setContent(['execStatus', 'queue', 'label'], label);
-                    dom.setContent(['execStatus', 'queue', 'elapsed'], utils.formatElapsedTime(state.elapsedQueueTime) || '');
+                    ui.setContent(['execStatus', 'queue', 'label'], label);
+                    ui.setContent(['execStatus', 'queue', 'elapsed'], utils.formatElapsedTime(state.elapsedQueueTime) || '');
                 }());
             } else {
-                //dom.hideElement(['execStatus', 'queue']);
-                dom.setContent(['execStatus', 'queue', 'position'], '-');
-                dom.setContent(['execStatus', 'queue', 'elapsed'], '-');
+                //ui.hideElement(['execStatus', 'queue']);
+                ui.setContent(['execStatus', 'queue', 'position'], '-');
+                ui.setContent(['execStatus', 'queue', 'elapsed'], '-');
             }
 
             // RUN
              if (state.elapsedRunTime) {
                 (function () {
-                    //dom.showElement(['runStatus', 'run-time']);
+                    //ui.showElement(['runStatus', 'run-time']);
                     var label;
                     if (state.completedTime) {
                         label = 'Ran In';
                     } else {
                         label = 'Running For';
                     }
-                    dom.setContent(['execStatus', 'run', 'label'], label);
-                    dom.setContent(['execStatus', 'run', 'elapsed'], utils.formatElapsedTime(state.elapsedRunTime) || '');
+                    ui.setContent(['execStatus', 'run', 'label'], label);
+                    ui.setContent(['execStatus', 'run', 'elapsed'], utils.formatElapsedTime(state.elapsedRunTime) || '');
                 }());
             } else {
-                //dom.hideElement(['execStatus', 'run-time']);
-                dom.setContent(['execStatus', 'run', 'elapsed'], '-');
+                //ui.hideElement(['execStatus', 'run-time']);
+                ui.setContent(['execStatus', 'run', 'elapsed'], '-');
             }
 
             // console.error('WHAT?', state);
             if (state.success) {
-                // dom.showElement(['execStatus', 'finish', 'success']);
-                dom.setContent(['execStatus', 'finish', 'state'], 'success');
-                dom.setContent(['execStatus', 'finish', 'finishedAt'], format.niceElapsedTime(state.completedTime));
-                // dom.showElement('job-report');
+                // ui.showElement(['execStatus', 'finish', 'success']);
+                ui.setContent(['execStatus', 'finish', 'state'], 'success');
+                ui.setContent(['execStatus', 'finish', 'finishedAt'], format.niceElapsedTime(state.completedTime));
+                // ui.showElement('job-report');
                 // showJobReport();
                 showJobResult();
             } else if (state.error) {
-                // dom.setContent(['execStatus', 'finish', 'finishedAt'], format.niceElapsedTime(state.completedTime));
-                dom.setContent(['execStatus', 'finish', 'finishedAt'], format.niceElapsedTime(state.completedTime));
-                dom.setContent(['execStatus', 'finish', 'state'], 'error');
-                dom.showElement(['run-error']);
-                dom.setContent(['run-error', 'location'], state.error.location);
-                dom.setContent(['run-error', 'type'], state.error.type);
-                dom.setContent(['run-error', 'message'], state.error.message);
-                dom.setContent(['run-error', 'detail'], state.error.detail);
+                // ui.setContent(['execStatus', 'finish', 'finishedAt'], format.niceElapsedTime(state.completedTime));
+                ui.setContent(['execStatus', 'finish', 'finishedAt'], format.niceElapsedTime(state.completedTime));
+                ui.setContent(['execStatus', 'finish', 'state'], 'error');
+                ui.showElement(['run-error']);
+                ui.setContent(['run-error', 'location'], state.error.location);
+                ui.setContent(['run-error', 'type'], state.error.type);
+                ui.setContent(['run-error', 'message'], state.error.message);
+                ui.setContent(['run-error', 'detail'], state.error.detail);
                 // console.error('ERROR', state.error);
             } else {
-                //dom.hideElement(['run-error']);
-                dom.setContent(['execStatus', 'finish', 'state'], '-');
+                //ui.hideElement(['run-error']);
+                ui.setContent(['execStatus', 'finish', 'state'], '-');
             }
 
             // Now be more stateful here...
             //if (state.jobId) {
-            //    dom.enableButton('toggle-job-log');
+            //    ui.enableButton('toggle-job-log');
             //} else {
-            //    dom.disableButton('toggle-job-log');
+            //    ui.disableButton('toggle-job-log');
             // }
         }
 
@@ -1072,29 +1076,29 @@ define([
             var toggle = model.getItem(['user-settings', 'toggle-state', name]),
                 label = toggle.showing ? 'Hide ' + toggle.label : 'Show ' + toggle.label;
             if (toggle.showing) {
-                dom.showElement(name);
+                ui.showElement(name);
                 if (togglesDb[name].onOpen) {
                     try {
                         togglesDb[name].onOpen({
-                            node: dom.getElement([name, 'mount'])
+                            node: ui.getElement([name, 'mount'])
                         });
                     } catch (ex) {
                         console.error('Error running onOpen for ' + name, ex);
                     }
                 }
             } else {
-                dom.hideElement(name);
+                ui.hideElement(name);
                 if (togglesDb[name].onClose) {
                     try {
                         togglesDb[name].onClose({
-                            node: dom.getElement([name, 'mount'])
+                            node: ui.getElement([name, 'mount'])
                         });
                     } catch (ex) {
                         console.error('Error running onClose for ' + name, ex);
                     }
                 }
             }
-            dom.setButtonLabel('toggle-' + toggle.name, label);
+            ui.setButtonLabel('toggle-' + toggle.name, label);
             return toggle.showing;
         }
 
@@ -1201,7 +1205,7 @@ define([
         function start() {
             bus.on('run', function (message) {
                 container = message.node;
-                dom = Dom.make({
+                ui = UI.make({
                     node: container,
                     bus: bus
                 });

@@ -1,12 +1,8 @@
 define (
 	[
-		'kbwidget',
-		'bootstrap',
 		'jquery',
 		'narrativeLogin'
 	], function(
-		KBWidget,
-		bootstrap,
 		$,
 		Login
 	) {

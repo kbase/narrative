@@ -437,4 +437,5 @@ function addCdnModules(baseUrl) {
         paths: paths
     });
 }
+console.log('HERE!');
 // addCdnModules();

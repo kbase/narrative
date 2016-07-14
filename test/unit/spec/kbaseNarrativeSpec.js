@@ -5,17 +5,13 @@
 /*jslint white: true*/
 
 define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery',
-		'narrativeLogin'
-	], function(
-		KBWidget,
-		bootstrap,
-		$,
-		KBWidget
-	) {
+    [
+        'narrativeConfig',
+        'kbaseNarrative'
+    ], function(
+        Config,
+        Narrative
+    ) {
     describe('Test the kbaseNarrative module', function() {
         it('Should do things', function() {
 

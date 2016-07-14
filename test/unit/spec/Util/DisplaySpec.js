@@ -6,18 +6,14 @@
 
 define (
 	[
-		'kbwidget',
-		'bootstrap',
 		'jquery',
 		'util/display'
 	], function(
-		KBWidget,
-		bootstrap,
 		$,
 		DisplayUtil
 	) {
     'use strict';
-    
+
     describe('KBase Display Utility function module', function() {
 
 

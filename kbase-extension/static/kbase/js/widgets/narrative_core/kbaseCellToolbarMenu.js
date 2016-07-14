@@ -176,6 +176,26 @@ define([
                 span({class: 'fa fa-terminal', style: 'font-size: 14pt'})
             ]);
         }
+        
+        function renderToggleCellSettings(events) {
+            // Only kbase cells have cell settings.
+            if (!cell.metadata || !cell.metadata.kbase || !cell.metadata.kbase.type) {
+                return
+            }
+            
+            
+            return button({
+                type: 'button',
+                class: 'btn btn-default btn-xs',
+                dataToggle: 'tooltip',
+                dataPlacement: 'left',
+                title: true,
+                dataOriginalTitle: 'Cell Settings',
+                id: events.addEvent({type: 'click', handler: doToggleCellSettings})
+            }, [
+                span({class: 'fa fa-cog', style: 'font-size: 14pt'})
+            ]);
+        }
 
         function render() {
             var events = Events.make({node: container}),
@@ -214,17 +234,8 @@ define([
 //                                    ])
 //                                ]),
                                 renderToggleCodeView(events),
-                                button({
-                                    type: 'button',
-                                    class: 'btn btn-default btn-xs',
-                                    dataToggle: 'tooltip',
-                                    dataPlacement: 'left',
-                                    title: true,
-                                    dataOriginalTitle: 'Cell Settings',
-                                    id: events.addEvent({type: 'click', handler: doToggleCellSettings})
-                                }, [
-                                    span({class: 'fa fa-cog', style: 'font-size: 14pt'})
-                                ]),
+                                renderToggleCellSettings(events),
+                                
                                 button({
                                     type: 'button',
                                     class: 'btn btn-default btn-xs',

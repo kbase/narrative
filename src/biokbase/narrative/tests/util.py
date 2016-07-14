@@ -1,7 +1,7 @@
 from biokbase.narrative.contents.narrativeio import PermissionsError
 import json
 
-def read_narrative_file(path):
+def read_json_file(path):
     """
     Generically reads in any JSON file and returns it as a dict.
     Especially intended for reading a Narrative file.
@@ -10,4 +10,3 @@ def read_narrative_file(path):
         narr = json.loads(f.read())
         f.close()
         return narr
-

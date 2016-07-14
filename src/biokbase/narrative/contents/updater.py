@@ -10,8 +10,10 @@ It should be noted here that if an update occurs, job ids will no longer be avai
 import uuid
 import json
 import re
+import os
 import datetime
 import biokbase.narrative.clients as clients
+from biokbase.narrative.jobs.specmanager import SpecManager
 
 def update_needed(narrative):
     # simple enough - if there's a "kbase" block
@@ -27,13 +29,27 @@ def update_narrative(narrative):
         return narrative
 
     updated_cells = list()
-    for idx, cell in enumerate(narrative['cells']):
+
+    if 'worksheets' in narrative:
+        cells = narrative['worksheets'][0]['cells']
+    else:
+        cells = narrative['cells']
+
+    for idx, cell in enumerate(cells):
         updated_cells.append(update_cell(cell))
         # cell = update_cell(cell)
         # if cell.get('metadata', {}).get('kbase', {}).get('updated', False):
         #     updated_cells.add(idx)
-    narrative['cells'] = updated_cells
-    narrative['metadata'] = update_metadata(narrative['metadata'])
+
+    updated_metadata = update_metadata(narrative['metadata'])
+    if 'worksheets' in narrative:
+        narrative['worksheets'][0] = {
+            'cells': updated_cells,
+            'metadata': updated_metadata
+        }
+    else:
+        narrative['cells'] = updated_cells
+        narrative['metadata'] = updated_metadata
     return narrative
 
 def update_cell(cell):
@@ -127,7 +143,7 @@ def update_method_cell(cell):
     module_name = method_behavior.get('kb_service_name', None)
     tag = None
     # now we get the version, if it exists.
-    print("{}/{}".format(module_name, git_hash))
+    # print("{}/{}".format(module_name, git_hash))
     # Suddenly, this is very complex...
     # Need git_hash and module_name to look up the version.
     # if lookup succeeds -
@@ -141,7 +157,7 @@ def update_method_cell(cell):
         cat = clients.get('catalog')
         tag_pref_order = ['release', 'beta', 'dev']
         try:
-            print('looking up ' + module_name + ' hash ' + git_hash)
+            # print('looking up ' + module_name + ' hash ' + git_hash)
             version_info = cat.get_module_version({'module_name': module_name, 'version': git_hash})
             if 'release_tags' in version_info:
                 tags = version_info['release_tags']
@@ -153,9 +169,9 @@ def update_method_cell(cell):
                 if tag is None:
                     raise Exception("No release tag found!")
         except Exception as e:
-            print("Exception found: {}".format(str(e)))
+            # print("Exception found: {}".format(str(e)))
             try:
-                print("Searching for module info...")
+                # print("Searching for module info...")
                 mod_info = cat.get_module_info({'module_name': module_name})
                 # look for most recent (R > B > D) release tag with the app.
                 for tag_pref in tag_pref_order:
@@ -163,12 +179,13 @@ def update_method_cell(cell):
                     if tag_info is not None and app_name in tag_info.get('narrative_methods', []):
                         tag = tag_pref
                         break
-                print("tag set to {}".format(tag))
+                # print("tag set to {}".format(tag))
             except Exception as e2:
                 print("Exception found: {}".format(e2))
+
     else:
         # it's not an SDK method! do something else!
-        return obsolete_method_cell(cell, method_info.get('name'), method_params)
+        return obsolete_method_cell(cell, method_info.get('id'), method_info.get('name'), meta['method'], method_params)
 
     new_meta = {
         'type': 'app',
@@ -213,28 +230,41 @@ def update_method_cell(cell):
     cell['source'] = u''
     return cell
 
-def obsolete_method_cell(cell, app_name, params):
+def obsolete_method_cell(cell, app_id, app_name, app_spec, params):
     cell['cell_type'] = 'markdown'
-    format_params = '<ul>' + '\n'.join(['<li>{} - {}</li>'.format(p, params[p]) for p in params]) + '</ul>'
     base_source = """<div style="border:1px solid #CECECE; padding: 5px">
-    <div style="font-size: 120%; font-family: 'OxygenBold', Arial, sans-serif; color:#2e618d;">Obsolete App!</div>
+    <div style="font-size: 120%; font-family: 'OxygenBold', Arial, sans-serif; color:#2e618d;">{}</div>
     <div style="font-family: 'OxygenBold', Arial, sans-serif;">
-    {}
+    Obsolete App!
     </div>
-    Sorry, this app is obsolete and can no longer function. But don't worry! Any outputs of this method have been retained.
-    <br>Parameters:
+    Sorry, this app is obsolete and can no longer function. But don't worry! Any results produced by running this app have been retained.
+    <br><b>Parameters:</b>
     {}
-    </div>"""
+    <br><b>Suggested Replacements:</b><br>
+    {}
+</div>"""
 
-    cell['source'] = unicode(base_source.format(app_name, format_params))
+    if len(params) == 0:
+        format_params = "<br>No saved parameters found<br><br>"
+    else:
+        format_params = '<ul>\n'
+        p_name_map = dict()
+        for p in app_spec['parameters']:
+            p_name_map[p.get('id', 'none')] = p.get('ui_name', p.get('id', 'none')).rstrip()
 
-    # cell['source'] = unicode('\n'.join([
-    #     "### Obsolete Cell!",
-    #     "Sorry, this cell\'s app is obsolete. Any outputs of this method have been retained.  ",
-    #     "**" + app_name + "**  ",
-    #     "Parameters:  ",
-    #     format_params
-    # ]))
+        for p in params:
+            p_name = p_name_map.get(p, p)
+            format_params = format_params + '<li>{} - {}</li>\n'.format(p_name, params[p])
+        # format_params = '<ul>' + '\n'.join(['<li>{} - {}</li>'.format(p, params[p]) for p in params]) + '</ul>'
+        format_params = format_params + '</ul>'
+
+    suggestions = suggest_apps(app_id)
+    if len(suggestions) == 0:
+        format_sug = "Sorry, no suggested apps found."
+    else:
+        format_sug = 'The following replacement apps might help and are available in the Apps menu:<br><ul>' + '\n'.join(['<li>{}</li>'.format(s['spec']['info']['name']) for s in suggestions]) + '</ul>'
+
+    cell['source'] = unicode(base_source.format(app_name, format_params, format_sug))
     del cell['metadata']['kb-cell']
     return cell
 
@@ -244,9 +274,69 @@ def update_app_cell(cell):
     """
     meta = cell['metadata']['kb-cell']
     app_name = meta.get('app', {}).get('info', {}).get('name', 'Unknown app') + " (multi-step app)"
-    cell = obsolete_method_cell(cell, app_name, {})
+    app_id = meta.get('app', {}).get('info', {}).get('id', None)
+
+    params = dict()
+    if len(meta.get('widget_state')):
+        try:
+            params = meta['widget_state'][0]['state']['step']
+        except:
+            pass
+    cell = obsolete_app_cell(cell, app_id, app_name, meta.get('app', {}), params)
     cell['metadata']['kbase'] = {'old_app': True, 'info': meta}
     return cell
+
+def obsolete_app_cell(cell, app_id, app_name, app_spec, params):
+    cell['cell_type'] = 'markdown'
+    base_source = """<div style="border:1px solid #CECECE; padding: 5px">
+    <div style="font-size: 120%; font-family: 'OxygenBold', Arial, sans-serif; color:#2e618d;">{}</div>
+    <div style="font-family: 'OxygenBold', Arial, sans-serif;">
+    Obsolete App!
+    </div>
+    Sorry, this app is obsolete and can no longer function. But don't worry! Any results produced by running this app have been retained.
+    <br><b>Parameters:</b>
+    {}
+    <br><b>Suggested Replacements:</b><br>
+    {}
+</div>"""
+
+    if len(params) == 0:
+        format_params = "<br>No saved parameters found<br><br>"
+    else:
+        format_params = '<ol>\n'
+        for step in app_spec.get('steps', []):
+            step_id = step.get('step_id', None)
+            if step_id is not None:
+                step_name = step.get('method_id', None)
+                step_params = params.get(step_id, {}).get('inputState', {})
+                if step_name is not None:
+                    format_params += '<li>' + step_name
+                    if len(step_params):
+                        format_params += '<ul>' + ''.join(['<li>{} - {}</li>'.format(p, step_params[p]) for p in step_params]) + '</ul>'
+                    format_params += '\n'
+        format_params += '</ol>'
+
+    suggestions = list()
+    for idx, step in enumerate(app_spec.get('steps', [])):
+        sug_list = suggest_apps(step.get('method_id', ''))
+        orig_step = step.get('method_id', 'Step {}'.format(idx))
+        if len(sug_list) == 0:
+            suggestions.append(dict(orig_step=orig_step, sug=['No suggestions found']))
+        else:
+            suggestions.append(dict(orig_step=orig_step, sug=[s['spec']['info']['name'] for s in sug_list]))
+    if len(suggestions) == 0:
+        format_sug = "Sorry, no suggested apps found."
+    else:
+        format_sug = "The following replacement apps might help and are available in the Apps menu:<br><ol>"
+        for idx, s_list in enumerate(suggestions):
+            format_sug += '<li>{}<ul>'.format(s_list['orig_step'])
+            format_sug += ''.join(['<li>{}</li>'.format(s) for s in s_list['sug']]) + '</ul></li>'
+        format_sug += '</ol>'
+
+    cell['source'] = unicode(base_source.format(app_name, format_params, format_sug))
+    del cell['metadata']['kb-cell']
+    return cell
+
 
 def update_output_cell(cell):
     """
@@ -274,3 +364,27 @@ def update_metadata(metadata):
         # delete the old here, but we'll do that later once the rest
         # of the system supports that.
     return metadata
+
+def find_app_info(app_id):
+    sm = SpecManager()
+    for tag in ['release', 'beta', 'dev']:
+        if app_id in sm.app_specs[tag]:
+            return {'tag': tag, 'spec': sm.app_specs[tag][app_id]}
+    return None
+
+def suggest_apps(obsolete_id):
+    suggest = obsolete_apps.get(obsolete_id, None)
+    suggestions = list()
+    if suggest is not None:
+        for new_id in suggest:
+            new_spec = find_app_info(new_id)
+            if new_spec is not None:
+                suggestions.append(new_spec)
+    return suggestions
+
+try:
+    nar_path = os.environ["NARRATIVE_DIR"]
+    obsolete_json = open(os.path.join(nar_path, "src", "obsolete_app_mapping.json"))
+    obsolete_apps = json.loads(obsolete_json.read())
+except:
+    obsolete_apps = dict()

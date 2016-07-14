@@ -5,7 +5,7 @@ __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
 import biokbase.narrative.clients as clients
 from .specmanager import SpecManager
-from .app_util import (
+from biokbase.narrative.app_util import (
     system_variable,
     map_inputs_from_job,
     map_outputs_from_state
@@ -193,10 +193,9 @@ class Job(object):
         (No way to cancel something started with run_job right now).
         """
         status = self.status()
-        if status in ['completed', 'error', 'suspend']:
-            clients.get('user_and_job_state').delete_job(self.job_id)
-        else:
-            raise Exception('Currently unable to cancel running jobs!')
+        if status not in ['completed', 'error', 'suspend', 'cancelled']:
+            clients.get('job_service').cancel_job({'job_id': self.job_id})
+        clients.get('user_and_job_state').delete_job(self.job_id)
 
     def is_finished(self):
         """

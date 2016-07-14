@@ -1,17 +1,17 @@
 """
-Tests for Mixin class that handles IO between the 
+Tests for Mixin class that handles IO between the
 Narrative and workspace service.
 """
 __author__ = 'Bill Riehl <wjriehl@lbl.gov>'
 
 import unittest
 from getpass import getpass
-from biokbase.narrative.narrativeio import (
-    KBaseWSManagerMixin, 
+from biokbase.narrative.contents.narrativeio import (
+    KBaseWSManagerMixin,
     PermissionsError
 )
 from biokbase.workspace.client import (
-    Workspace, 
+    Workspace,
     ServerError
 )
 import biokbase.auth
@@ -22,8 +22,8 @@ import biokbase.narrative.common.service as service
 import ConfigParser
 import narrative_test_helper as test_util
 
-metadata_fields = set(['objid', 'name', 'type', 'save_date', 'ver', 
-                       'saved_by', 'wsid', 'workspace', 'chsum', 
+metadata_fields = set(['objid', 'name', 'type', 'save_date', 'ver',
+                       'saved_by', 'wsid', 'workspace', 'chsum',
                        'size', 'meta'])
 
 class NarrIOTestCase(unittest.TestCase):
@@ -87,14 +87,14 @@ class NarrIOTestCase(unittest.TestCase):
         ws_client = self.mixin.ws_client()
         # it's anon if the header doesn't have an AUTHORIZATION field, or
         # that has a None value
-        self.assertTrue('AUTHORIZATION' not in ws_client._headers or 
+        self.assertTrue('AUTHORIZATION' not in ws_client._headers or
                         ws_client._headers['AUTHORIZATION'] is None)
 
     # test we get a ws client when logged in, and it's authorized
     def test_get_wsclient_auth(self):
         self.login()
         ws_client = self.mixin.ws_client()
-        self.assertTrue('AUTHORIZATION' in ws_client._headers and 
+        self.assertTrue('AUTHORIZATION' in ws_client._headers and
                         ws_client._headers['AUTHORIZATION'] is not None)
         self.logout()
 
@@ -133,11 +133,11 @@ class NarrIOTestCase(unittest.TestCase):
         self.assertIsNotNone(err)
 
     ##### test KBaseWSManagerMixin.read_narrative #####
- 
+
     def validate_narrative(self, nar, with_content, with_meta):
         """
         Validates a narrative object's overall structure.
-        We're just making sure that the right elements are expected 
+        We're just making sure that the right elements are expected
         to be here - we leave the Jupyter Notebook validation part to
         the Jupyter test suite.
         """
@@ -149,7 +149,7 @@ class NarrIOTestCase(unittest.TestCase):
         # expected keys:
         exp_keys = set(['info'])
         if with_content:
-            exp_keys.update(['created', 'refs', 'provenance', 'creator', 
+            exp_keys.update(['created', 'refs', 'provenance', 'creator',
                              'copy_source_inaccessible', 'data', 'extracted_ids'])
         missing_keys = exp_keys - set(nar.keys())
         if missing_keys:
@@ -253,7 +253,7 @@ class NarrIOTestCase(unittest.TestCase):
             self.mixin.write_narrative(self.private_nar['ref'], {'not':'a narrative'}, self.test_user)
         self.assertEquals(err.exception.status_code, 400)
         self.logout()
-        
+
 
     ##### test KBaseWSManagerMixin.rename_narrative #####
 
@@ -280,7 +280,7 @@ class NarrIOTestCase(unittest.TestCase):
         with self.assertRaises(PermissionsError) as err:
             self.mixin.rename_narrative(self.unauth_nar['ref'], self.test_user, 'new_name')
         self.assertIsNotNone(err)
-        self.logout() 
+        self.logout()
 
     def test_rename_narrative_invalid(self):
         with self.assertRaises(ServerError) as err:

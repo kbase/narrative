@@ -8,12 +8,9 @@ KBase JavaScript widgets.
 """
 __author__ = 'Bill Riehl <wjriehl@lbl.gov>'
 
-
-from biokbase.NarrativeJobService.Client import NarrativeJobService
 from biokbase.narrative.common.url_config import URLS
 from biokbase.workspace.client import Workspace
-from biokbase.narrative_method_store.client import NarrativeMethodStore
-from biokbase.narrative.jobs.app_util import (
+from biokbase.narrative.app_util import (
     check_tag,
     system_variable
 )
@@ -26,7 +23,7 @@ from jinja2 import Template
 import uuid
 import time
 from pprint import pprint
-from biokbase.narrative.jobs import SpecManager
+from biokbase.narrative.jobs.specmanager import SpecManager
 
 class WidgetManager(object):
     """
@@ -100,8 +97,6 @@ class WidgetManager(object):
         """
         check_tag(tag, raise_exception=True)
 
-        nms = NarrativeMethodStore(URLS.narrative_method_store)
-        # methods = nms.list_methods_spec({'tag': tag})
         methods = self._sm.app_specs[tag].values()
         all_widgets = dict()
 

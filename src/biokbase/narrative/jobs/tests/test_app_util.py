@@ -4,7 +4,7 @@ Tests for the app_util module
 __author__ = 'Bill Riehl <wjriehl@lbl.gov>'
 
 import unittest
-from biokbase.narrative.jobs.app_util import (
+from biokbase.narrative.app_util import (
     check_tag,
     system_variable
 )

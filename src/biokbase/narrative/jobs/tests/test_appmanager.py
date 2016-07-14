@@ -1,7 +1,7 @@
 """
 Tests for the app manager.
 """
-from biokbase.narrative.jobs import AppManager
+from biokbase.narrative.jobs.appmanager import AppManager
 from IPython.display import HTML
 import unittest
 import mock

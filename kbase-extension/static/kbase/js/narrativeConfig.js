@@ -12,6 +12,7 @@
  * @static
  */
 define([
+    'narrative_paths',
     'jquery',
     'bluebird',
     'json!kbase/config/config.json',
@@ -19,6 +20,7 @@ define([
     'json!kbase/config/cdn-service-config.json',
     'require'
 ], function (
+    paths,
     $,
     Promise,
     configSet,
@@ -59,12 +61,15 @@ define([
     debug = config.mode === "debug";
     config.debug = debug;
 
+    addCdnModules(config.urls['cdn']);
+
     // Add a remote UI-common to the Require.js config
     require.config({
         paths: {
             uiCommonPaths: config.urls.ui_common_root + 'widget-paths'
         }
     });
+
     window.kbconfig = config;
 
     Object.keys(serviceSet).forEach(function (key) {
@@ -111,40 +116,40 @@ define([
                 resolve(config);
             }
         })
-            .then(function (config) {
-                console.log('Config: fetching remote data configuration.');
-                return Promise.resolve($.getJSON(config.urls.data_panel_sources));
-            })
-            .then(function (dataCategories) {
-                console.log('Config: processing remote data configuration.');
-                config.publicCategories = dataCategories[config.environment].publicData;
-                config.exampleData = dataCategories[config.environment].exampleData;
-                return Promise.try(function () {
-                    return config;
-                });
-            })
-            .catch(function (error) {
-                console.error('Config: unable to process remote data configuration options. Searching locally.');
-                // hate embedding this stuff, but it seems the only good way.
-                // the filename is the last step of that url path (after the last /)
-                var path = config.urls.data_panel_sources.split('/');
-
-                return Promise.resolve($.getJSON('static/kbase/config/' + path[path.length - 1]))
-                    .then(function (dataCategories) {
-                        console.log('Config: processing local data configuration.');
-                        config.publicCategories = dataCategories[config.environment].publicData;
-                        config.exampleData = dataCategories[config.environment].exampleData;
-                        return Promise.try(function () {
-                            return config;
-                        });
-                    })
-                    .catch(function (error) {
-                        console.error('Config: unable to process local configuration options, too! Public and Example data unavailable!');
-                        return Promise.try(function () {
-                            return config;
-                        });
-                    });
+        .then(function (config) {
+            console.log('Config: fetching remote data configuration.');
+            return Promise.resolve($.getJSON(config.urls.data_panel_sources));
+        })
+        .then(function (dataCategories) {
+            console.log('Config: processing remote data configuration.');
+            config.publicCategories = dataCategories[config.environment].publicData;
+            config.exampleData = dataCategories[config.environment].exampleData;
+            return Promise.try(function () {
+                return config;
             });
+        })
+        .catch(function (error) {
+            console.error('Config: unable to process remote data configuration options. Searching locally.');
+            // hate embedding this stuff, but it seems the only good way.
+            // the filename is the last step of that url path (after the last /)
+            var path = config.urls.data_panel_sources.split('/');
+
+            return Promise.resolve($.getJSON('static/kbase/config/' + path[path.length - 1]))
+                .then(function (dataCategories) {
+                    console.log('Config: processing local data configuration.');
+                    config.publicCategories = dataCategories[config.environment].publicData;
+                    config.exampleData = dataCategories[config.environment].exampleData;
+                    return Promise.try(function () {
+                        return config;
+                    });
+                })
+                .catch(function (error) {
+                    console.error('Config: unable to process local configuration options, too! Public and Example data unavailable!');
+                    return Promise.try(function () {
+                        return config;
+                    });
+                });
+        });
     }
 
     /**

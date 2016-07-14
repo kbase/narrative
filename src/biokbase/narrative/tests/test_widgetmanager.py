@@ -1,5 +1,4 @@
 from __future__ import print_function
-
 """
 Tests for the WidgetManager class
 """
@@ -9,13 +8,20 @@ import unittest
 from biokbase.narrative.widgetmanager import WidgetManager
 import IPython
 import mock
-from biokbase.narrative.tests.util import read_narrative_file
+import os
+from util import read_json_file
 
 class WidgetManagerTestCase(unittest.TestCase):
     @classmethod
-    @mock.patch('biokbase.narrative.widgetmanager.NarrativeMethodStore')
-    def setUpClass(self, mock_njs):
-        mock_njs.return_value.list_methods_spec.return_value = read_narrative_file('data/specs.json')
+    @mock.patch('biokbase.narrative.widgetmanager.SpecManager')
+    def setUpClass(self, mock_sm):
+        os.environ['KB_WORKSPACE_ID'] = '12345'  # That's the same workspace as my luggage!
+        specs_list = read_json_file('data/specs.json')
+        specs_dict = dict()
+        for s in specs_list:
+            specs_dict[s['info']['id']] = s
+        mock_sm.return_value.app_specs = {'release': specs_dict, 'beta': specs_dict, 'dev': specs_dict}
+        # mock_njs.return_value.list_methods_spec.return_value = read_narrative_file('data/specs.json')
         self.wm = WidgetManager()
         self.good_widget = "kbaseTabTable"
         self.bad_widget = "notAWidget"
@@ -37,7 +43,6 @@ class WidgetManagerTestCase(unittest.TestCase):
 
     def test_widget_constants(self):
         constants = self.wm.get_widget_constants(self.good_widget)
-        print(self.wm.widget_info['release'][self.good_widget])
         self.assertTrue('ws' in constants)
 
     def test_widget_constants_bad(self):

@@ -69,4 +69,16 @@ cd kbase-extension/static/nbextensions
 
 jupyter nbextension install $(pwd)/appCell --symlink --sys-prefix
 jupyter nbextension enable appCell/main --sys-prefix
+
+jupyter nbextension install $(pwd)/viewCell --symlink --sys-prefix
+jupyter nbextension enable viewCell/main --sys-prefix
+
+jupyter nbextension install $(pwd)/outputCell --symlink --sys-prefix
+jupyter nbextension enable outputCell/main --sys-prefix
+
+jupyter nbextension install $(pwd)/widgetCell --symlink --sys-prefix
+jupyter nbextension enable widgetCell/main --sys-prefix
+
+jupyter nbextension enable --py --sys-prefix widgetsnbextension
+
 console "Done installing nbextension"

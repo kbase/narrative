@@ -119,7 +119,7 @@ def map_inputs_from_job(job_inputs, app_spec):
     return input_dict
 
 def _untransform(transform_type, value):
-    if transform_type == 'ref' and value is not None:
+    if transform_type == 'ref' and isinstance(value, basestring):
         # shear off everything before the first '/' - there should just be one.
         slash = value.find('/')
         if slash == -1:

@@ -10,6 +10,7 @@ It should be noted here that if an update occurs, job ids will no longer be avai
 import uuid
 import json
 import re
+import os
 import datetime
 import biokbase.narrative.clients as clients
 
@@ -288,3 +289,10 @@ def update_metadata(metadata):
         # delete the old here, but we'll do that later once the rest
         # of the system supports that.
     return metadata
+
+try:
+    nar_path = os.environ["NARRATIVE_DIR"]
+    obsolete_json = open(os.path.join(nar_path, "src", "obsolete_app_mapping.json"))
+    obsolete_apps = json.loads(obsolete_json.read())
+except:
+    obsolete_apps = dict()

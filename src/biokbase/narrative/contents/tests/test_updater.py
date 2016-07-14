@@ -1,6 +1,8 @@
 import unittest
 from biokbase.narrative.contents.updater import (
-    update_narrative
+    update_narrative,
+    find_app_info,
+    suggest_apps
 )
 import json
 from ConfigParser import ConfigParser
@@ -104,7 +106,7 @@ class UpdaterTestCase(unittest.TestCase):
                 if 'app' in cell['metadata']['kbase']:
                     return True
                 elif 'appCell' in cell['metadata']['kbase']:
-                    print(cell['metadata']['kbase']['appCell']['app']['tag'])
+                    # print(cell['metadata']['kbase']['appCell']['app']['tag'])
                     return True
                 if 'old_app' not in cell['metadata']['kbase'] and cell['cell_type'] != 'code':
                     raise ValueError('KBase method can no longer be Markdown cells!')
@@ -122,6 +124,17 @@ class UpdaterTestCase(unittest.TestCase):
     def test_update_narrative_poplar(self):
         nar_update = update_narrative(self.test_nar_poplar)
         self.assertTrue(self.validate_narrative(nar_update))
+
+    def test_find_app(self):
+        info = find_app_info('NarrativeTest/test_input_params')
+        self.assertTrue(isinstance(info, dict))
+
+    def test_find_bad_app(self):
+        self.assertIsNone(find_app_info('NotAnAppModule'))
+
+    # def test_suggest_app(self):
+    #     suggestions =
+
 
 if __name__ == "__main__":
     unittest.main()

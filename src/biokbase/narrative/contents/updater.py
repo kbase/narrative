@@ -13,6 +13,7 @@ import re
 import os
 import datetime
 import biokbase.narrative.clients as clients
+from biokbase.narrative.jobs.specmanager import SpecManager
 
 def update_needed(narrative):
     # simple enough - if there's a "kbase" block
@@ -142,7 +143,7 @@ def update_method_cell(cell):
     module_name = method_behavior.get('kb_service_name', None)
     tag = None
     # now we get the version, if it exists.
-    print("{}/{}".format(module_name, git_hash))
+    # print("{}/{}".format(module_name, git_hash))
     # Suddenly, this is very complex...
     # Need git_hash and module_name to look up the version.
     # if lookup succeeds -
@@ -156,7 +157,7 @@ def update_method_cell(cell):
         cat = clients.get('catalog')
         tag_pref_order = ['release', 'beta', 'dev']
         try:
-            print('looking up ' + module_name + ' hash ' + git_hash)
+            # print('looking up ' + module_name + ' hash ' + git_hash)
             version_info = cat.get_module_version({'module_name': module_name, 'version': git_hash})
             if 'release_tags' in version_info:
                 tags = version_info['release_tags']
@@ -168,9 +169,9 @@ def update_method_cell(cell):
                 if tag is None:
                     raise Exception("No release tag found!")
         except Exception as e:
-            print("Exception found: {}".format(str(e)))
+            # print("Exception found: {}".format(str(e)))
             try:
-                print("Searching for module info...")
+                # print("Searching for module info...")
                 mod_info = cat.get_module_info({'module_name': module_name})
                 # look for most recent (R > B > D) release tag with the app.
                 for tag_pref in tag_pref_order:
@@ -178,9 +179,10 @@ def update_method_cell(cell):
                     if tag_info is not None and app_name in tag_info.get('narrative_methods', []):
                         tag = tag_pref
                         break
-                print("tag set to {}".format(tag))
+                # print("tag set to {}".format(tag))
             except Exception as e2:
                 print("Exception found: {}".format(e2))
+
     else:
         # it's not an SDK method! do something else!
         return obsolete_method_cell(cell, method_info.get('name'), method_params)
@@ -289,6 +291,23 @@ def update_metadata(metadata):
         # delete the old here, but we'll do that later once the rest
         # of the system supports that.
     return metadata
+
+def find_app_info(app_id):
+    sm = SpecManager()
+    for tag in ['release', 'beta', 'dev']:
+        if app_id in sm.app_specs[tag]:
+            return {'tag': tag, 'spec': sm.app_specs[tag][app_id]}
+    return None
+
+def suggest_apps(obsolete_id):
+    suggest = obsolete_apps.get(obsolete, None)
+    suggestions = list()
+    if suggest is not None:
+        for new_id in suggest:
+            new_spec = find_app_info(new_id)
+            if new_spec is not None:
+                suggestions.append(new_spec)
+    return suggestions
 
 try:
     nar_path = os.environ["NARRATIVE_DIR"]

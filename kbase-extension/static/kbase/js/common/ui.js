@@ -249,6 +249,17 @@ define([
             }, label);
         }
 
+        function buildButton(arg) {
+            var klass = arg.type || 'default',
+                events = arg.events;
+            return button({
+                type: 'button',
+                class: ['btn', 'btn-' + klass].join(' '),
+                dataButton: arg.name,
+                id: addButtonClickEvent(events, arg.eventType || name)
+            }, arg.label);
+        }
+
         function enableButton(name) {
             getButton(name).classList.remove('hidden');
             getButton(name).classList.remove('disabled');
@@ -510,6 +521,7 @@ define([
             // setButton: setButton,
             getNode: getNode,
             makeButton: makeButton,
+            buildButton: buildButton,
             enableButton: enableButton,
             disableButton: disableButton,
             hideButton: hideButton,

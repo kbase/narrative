@@ -11,6 +11,7 @@ for (var file in window.__karma__.files) {
         }
     }
 }
+console.log('starting...');
 
 requirejs.config({
     baseUrl: '/narrative/static/',
@@ -18,6 +19,11 @@ requirejs.config({
     paths: {
         moment: 'components/moment/moment',
         codemirror: 'components/codemirror',
+    },
+    map: {
+      '*':{
+        'jquery-ui': 'jqueryui'
+      }
     },
 
     deps: tests,

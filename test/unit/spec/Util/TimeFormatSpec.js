@@ -6,12 +6,10 @@
 
 define (
 	[
-		'kbwidget',
 		'bootstrap',
 		'jquery',
 		'util/timeFormat'
 	], function(
-		KBWidget,
 		bootstrap,
 		$,
 		TF

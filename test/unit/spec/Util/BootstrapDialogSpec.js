@@ -5,17 +5,13 @@
 /*jslint white: true*/
 
 define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery',
-		'util/bootstrapDialog'
-	], function(
-		KBWidget,
-		bootstrap,
-		$,
-		bootstrap
-	) {
+    [
+        'jquery',
+        'util/bootstrapDialog'
+    ], function(
+        $,
+        Dialog
+    ) {
     var $simpleBody = $('<div>').append('This is a body text');
     var simpleTitle = 'Title';
     var simpleButtons = [
@@ -33,8 +29,8 @@ define (
 
     beforeEach(function() {
         simpleDialog = new Dialog({
-            title: simpleTitle, 
-            body: $simpleBody, 
+            title: simpleTitle,
+            body: $simpleBody,
             buttons: simpleButtons
         });
         // simpleDialog.getElement().appendTo('body');

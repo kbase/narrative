@@ -6,16 +6,12 @@
 
 define (
 	[
-		'kbwidget',
-		'bootstrap',
 		'util/string'
 	], function(
-		KBWidget,
-		bootstrap,
 		StringUtil
 	) {
     'use strict';
-    
+
     describe('KBase String Utility function module', function() {
         it('uuid() should create a uuid', function() {
             var uuid = StringUtil.uuid();
@@ -35,7 +31,7 @@ define (
             };
 
             var jsonified = StringUtil.safeJSONStringify(plainObj);
-            // by the JSON spec, we can't count on the order - 
+            // by the JSON spec, we can't count on the order -
             // so look for keys individually
             expect(jsonified).toContain('"a":1');
             expect(jsonified).toContain('"b":"a string"');

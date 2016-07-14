@@ -6,12 +6,8 @@
 
 define (
 	[
-		'kbwidget',
-		'bootstrap',
 		'narrativeViewers'
 	], function(
-		KBWidget,
-		bootstrap,
 		Viewers
 	) {
     'use strict';

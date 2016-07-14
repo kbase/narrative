@@ -6,13 +6,9 @@
 
 define (
 	[
-		'kbwidget',
-		'bootstrap',
 		'narrativeConfig',
 		'bluebird'
 	], function(
-		KBWidget,
-		bootstrap,
 		Config,
 		Promise
 	) {

@@ -413,7 +413,7 @@ require.config({
 
 function addCdnModules(baseUrl) {
     if (!baseUrl) {
-        baseUrl = 'https://narrative-dev.kbase.us/cdn';
+        baseUrl = 'https://ci.kbase.us/cdn/files';
         // baseUrl = 'http://cdn.kbase.us/cdn',
     }
     var modules = {

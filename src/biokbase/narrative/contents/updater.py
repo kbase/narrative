@@ -185,7 +185,7 @@ def update_method_cell(cell):
 
     else:
         # it's not an SDK method! do something else!
-        return obsolete_method_cell(cell, method_info.get('id'), method_info.get('name'), method_params)
+        return obsolete_method_cell(cell, method_info.get('id'), method_info.get('name'), meta['method'], method_params)
 
     new_meta = {
         'type': 'app',
@@ -230,28 +230,41 @@ def update_method_cell(cell):
     cell['source'] = u''
     return cell
 
-def obsolete_method_cell(cell, app_id, app_name, params):
+def obsolete_method_cell(cell, app_id, app_name, app_spec, params):
     cell['cell_type'] = 'markdown'
-    format_params = '<ul>' + '\n'.join(['<li>{} - {}</li>'.format(p, params[p]) for p in params]) + '</ul>'
     base_source = """<div style="border:1px solid #CECECE; padding: 5px">
-    <div style="font-size: 120%; font-family: 'OxygenBold', Arial, sans-serif; color:#2e618d;">Obsolete App!</div>
+    <div style="font-size: 120%; font-family: 'OxygenBold', Arial, sans-serif; color:#2e618d;">{}</div>
     <div style="font-family: 'OxygenBold', Arial, sans-serif;">
-    {}
+    Obsolete App!
     </div>
-    Sorry, this app is obsolete and can no longer function. But don't worry! Any outputs of this method have been retained.
-    <br>Parameters:
+    Sorry, this app is obsolete and can no longer function. But don't worry! Any results produced by running this app have been retained.
+    <br><b>Parameters:</b>
     {}
-    </div>"""
+    <br><b>Suggested Replacements:</b><br>
+    {}
+</div>"""
 
-    cell['source'] = unicode(base_source.format(app_name, format_params))
+    if len(params) == 0:
+        format_params = "<br>No saved parameters found<br><br>"
+    else:
+        format_params = '<ul>\n'
+        p_name_map = dict()
+        for p in app_spec['parameters']:
+            p_name_map[p.get('id', 'none')] = p.get('ui_name', p.get('id', 'none')).rstrip()
 
-    # cell['source'] = unicode('\n'.join([
-    #     "### Obsolete Cell!",
-    #     "Sorry, this cell\'s app is obsolete. Any outputs of this method have been retained.  ",
-    #     "**" + app_name + "**  ",
-    #     "Parameters:  ",
-    #     format_params
-    # ]))
+        for p in params:
+            p_name = p_name_map.get(p, p)
+            format_params = format_params + '<li>{} - {}</li>\n'.format(p_name, params[p])
+        # format_params = '<ul>' + '\n'.join(['<li>{} - {}</li>'.format(p, params[p]) for p in params]) + '</ul>'
+        format_params = format_params + '</ul>'
+
+    suggestions = suggest_apps(app_id)
+    if len(suggestions) == 0:
+        format_sug = "Sorry, no suggested apps found."
+    else:
+        format_sug = 'The following replacement apps might help and are accessible in the Apps menu:<br><ul>' + '\n'.join(['<li>{}</li>'.format(s['spec']['info']['name']) for s in suggestions]) + '</ul>'
+
+    cell['source'] = unicode(base_source.format(app_name, format_params, format_sug))
     del cell['metadata']['kb-cell']
     return cell
 
@@ -262,9 +275,68 @@ def update_app_cell(cell):
     meta = cell['metadata']['kb-cell']
     app_name = meta.get('app', {}).get('info', {}).get('name', 'Unknown app') + " (multi-step app)"
     app_id = meta.get('app', {}).get('info', {}).get('id', None)
-    cell = obsolete_method_cell(cell, app_id, app_name, {})
+
+    params = dict()
+    if len(meta.get('widget_state')):
+        try:
+            params = meta['widget_state'][0]['state']['step']
+        except:
+            pass
+    cell = obsolete_app_cell(cell, app_id, app_name, meta.get('app', {}), params)
     cell['metadata']['kbase'] = {'old_app': True, 'info': meta}
     return cell
+
+def obsolete_app_cell(cell, app_id, app_name, app_spec, params):
+    cell['cell_type'] = 'markdown'
+    base_source = """<div style="border:1px solid #CECECE; padding: 5px">
+    <div style="font-size: 120%; font-family: 'OxygenBold', Arial, sans-serif; color:#2e618d;">{}</div>
+    <div style="font-family: 'OxygenBold', Arial, sans-serif;">
+    Obsolete App!
+    </div>
+    Sorry, this app is obsolete and can no longer function. But don't worry! Any results produced by running this app have been retained.
+    <br><b>Parameters:</b>
+    {}
+    <br><b>Suggested Replacements:</b><br>
+    {}
+</div>"""
+
+    if len(params) == 0:
+        format_params = "<br>No saved parameters found<br><br>"
+    else:
+        format_params = '<ol>\n'
+        for step in app_spec.get('steps', []):
+            step_id = step.get('step_id', None)
+            if step_id is not None:
+                step_name = step.get('method_id', None)
+                step_params = params.get(step_id, {}).get('inputState', {})
+                if step_name is not None:
+                    format_params += '<li>' + step_name
+                    if len(step_params):
+                        format_params += '<ul>' + ''.join(['<li>{} - {}</li>'.format(p, step_params[p]) for p in step_params]) + '</ul>'
+                    format_params += '\n'
+        format_params += '</ol>'
+
+    suggestions = list()
+    for idx, step in enumerate(app_spec.get('steps', [])):
+        sug_list = suggest_apps(step.get('method_id', ''))
+        orig_step = step.get('method_id', 'Step {}'.format(idx))
+        if len(sug_list) == 0:
+            suggestions.append(dict(orig_step=orig_step, sug=['No suggestions found']))
+        else:
+            suggestions.append(dict(orig_step=orig_step, sug=[s['spec']['info']['name'] for s in sug_list]))
+    if len(suggestions) == 0:
+        format_sug = "Sorry, no suggested apps found."
+    else:
+        format_sug = "The following replacement apps might help and are accessible in the Apps menu:<br><ol>"
+        for idx, s_list in enumerate(suggestions):
+            format_sug += '<li>{}<ul>'.format(s_list['orig_step'])
+            format_sug += ''.join(['<li>{}</li>'.format(s) for s in s_list['sug']]) + '</ul></li>'
+        format_sug += '</ol>'
+
+    cell['source'] = unicode(base_source.format(app_name, format_params, format_sug))
+    del cell['metadata']['kb-cell']
+    return cell
+
 
 def update_output_cell(cell):
     """

@@ -177,14 +177,16 @@ define([
             };
         }
 
-        function renderAdvanced() {
-            var advancedInputs = container.querySelectorAll('[data-advanced-parameter]');
+        function renderAdvanced(area) {
+            // area is either "input" or "parameter"
+            var areaElement = area + '-area',
+                areaSelector = '[data-element="' + areaElement + '"]',
+                advancedInputs = container.querySelectorAll(areaSelector + ' [data-advanced-parameter]');
             if (advancedInputs.length === 0) {
-                ui.setContent('advanced-hidden-message', '');
-                ui.disableButton('toggle-advanced');
+                ui.setContent([areaElement, 'advanced-hidden-message'], '');
                 return;
             }
-            ui.enableButton('toggle-advanced');
+            
             var removeClass = (settings.showAdvanced ? 'advanced-parameter-hidden' : 'advanced-parameter-showing'),
                 addClass = (settings.showAdvanced ? 'advanced-parameter-showing' : 'advanced-parameter-hidden');
             for (var i = 0; i < advancedInputs.length; i += 1) {
@@ -192,25 +194,48 @@ define([
                 input.classList.remove(removeClass);
                 input.classList.add(addClass);
             }
-
-            // How many advanaced?
-
-            // Also update the button
-            var button = container.querySelector('[data-button="toggle-advanced"]');
-            button.innerHTML = (settings.showAdvanced ? 'Hide Advanced' : 'Show Advanced (' + advancedInputs.length + ' hidden)');
+//
+//            // How many advanaced?
+//
+//            // Also update the button
 
             // Also update the count in the paramters.
+            var events = Events.make({node: container});
+            
             var message;
             if (settings.showAdvanced) {
-                ui.setContent('advanced-hidden-message', '');
+                if (advancedInputs.length > 1) {
+                    message = String(advancedInputs.length) + ' advanced parameters showing';
+                } else {
+                    message = String(advancedInputs.length) + ' advanced parameter showing';
+                }
+                var showAdvancedButton = ui.buildButton({
+                    label: 'hide advanced',
+                    type: 'link',
+                    name: 'advanced-parameters-toggler',
+                    eventType: 'toggle-advanced',
+                    events: events
+                });
+                
+                ui.setContent([areaElement, 'advanced-hidden-message'], '(' + message + ') ' + showAdvancedButton);
             } else {
                 if (advancedInputs.length > 1) {
                     message = String(advancedInputs.length) + ' advanced parameters hidden';
                 } else {
                     message = String(advancedInputs.length) + ' advanced parameter hidden';
                 }
-                ui.setContent('advanced-hidden-message', '(' + message + ')');
+                var showAdvancedButton = ui.buildButton({
+                    label: 'show advanced',
+                    type: 'link',
+                    name: 'advanced-parameters-toggler',
+                    eventType: 'toggle-advanced',
+                    events: events
+                });
+                
+                ui.setContent([areaElement, 'advanced-hidden-message'], '(' + message + ') ' + showAdvancedButton);
             }
+            
+            events.attachEvents();
         }
 
         function renderLayout() {
@@ -220,17 +245,19 @@ define([
                         type: 'default',
                         classes: ['kb-panel-light'],
                         body: [
-                            ui.makeButton('Show Advanced', 'toggle-advanced', {events: events}),
+                            // ui.makeButton('Show Advanced', 'toggle-advanced', {events: events}),
                             ui.makeButton('Reset to Defaults', 'reset-to-defaults', {events: events})
                         ]
                     }),
                     ui.buildPanel({
-                        title: 'Input Objects',
+                        title: span(['Input Objects', span({dataElement: 'advanced-hidden-message', style: {marginLeft: '6px', fontStyle: 'italic'}})]), 
+                        name: 'input-objects-area',
                         body: div({dataElement: 'input-fields'}),
                         classes: ['kb-panel-light']
                     }),
                     ui.buildPanel({
                         title: span(['Parameters', span({dataElement: 'advanced-hidden-message', style: {marginLeft: '6px', fontStyle: 'italic'}})]), 
+                        name: 'parameters-area',
                         body: div({dataElement: 'parameter-fields'}),
                         classes: ['kb-panel-light']
                     })
@@ -277,7 +304,8 @@ define([
                 //    });
                 //});
                 settings.showAdvanced = !settings.showAdvanced;
-                renderAdvanced();
+                renderAdvanced('input-objects');
+                renderAdvanced('parameters');
             });
             runtime.bus().on('workspace-changed', function () {
                 // tell each input widget about this amazing event!
@@ -397,7 +425,8 @@ define([
                         }));
                     })
                     .then(function () {
-                        renderAdvanced();
+                        renderAdvanced('input-objects');
+                        renderAdvanced('parameters');
                     });
             });
         }

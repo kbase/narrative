@@ -262,7 +262,7 @@ def obsolete_method_cell(cell, app_id, app_name, app_spec, params):
     if len(suggestions) == 0:
         format_sug = "Sorry, no suggested apps found."
     else:
-        format_sug = 'The following replacement apps might help and are accessible in the Apps menu:<br><ul>' + '\n'.join(['<li>{}</li>'.format(s['spec']['info']['name']) for s in suggestions]) + '</ul>'
+        format_sug = 'The following replacement apps might help and are available in the Apps menu:<br><ul>' + '\n'.join(['<li>{}</li>'.format(s['spec']['info']['name']) for s in suggestions]) + '</ul>'
 
     cell['source'] = unicode(base_source.format(app_name, format_params, format_sug))
     del cell['metadata']['kb-cell']
@@ -327,7 +327,7 @@ def obsolete_app_cell(cell, app_id, app_name, app_spec, params):
     if len(suggestions) == 0:
         format_sug = "Sorry, no suggested apps found."
     else:
-        format_sug = "The following replacement apps might help and are accessible in the Apps menu:<br><ol>"
+        format_sug = "The following replacement apps might help and are available in the Apps menu:<br><ol>"
         for idx, s_list in enumerate(suggestions):
             format_sug += '<li>{}<ul>'.format(s_list['orig_step'])
             format_sug += ''.join(['<li>{}</li>'.format(s) for s in s_list['sug']]) + '</ul></li>'

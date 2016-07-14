@@ -6,7 +6,7 @@ define([
     // CDN
     'kb_common/html',
     // LOCAL
-    'common/dom',
+    'common/ui',
     'common/runtime',
     'common/events',
     'common/props',
@@ -19,7 +19,7 @@ define([
 ], function (
     Promise,
     html,
-    Dom,
+    UI,
     Runtime,
     Events,
     Props,
@@ -31,7 +31,7 @@ define([
     'use strict';
 
     var t = html.tag,
-        form = t('form'), span = t('span');
+        form = t('form'), span = t('span'), div = t('div');
 
     function factory(config) {
         var runtime = Runtime.make(),
@@ -39,7 +39,7 @@ define([
             cellId = config.cellId,
             workspaceInfo = config.workspaceInfo,
             container,
-            dom,
+            ui,
             bus,
             places,
             model = Props.make(),
@@ -134,16 +134,28 @@ define([
         function renderLayout() {
             var events = Events.make(),
                 content = form({dataElement: 'input-widget-form'}, [
-                    dom.buildPanel({
-                        title: 'Options',
+                    ui.buildPanel({
                         type: 'default',
+                        classes: 'kb-panel-light',
                         body: [
-                            dom.makeButton('Show Advanced', 'toggle-advanced', {events: events}),
+                            ui.makeButton('Show Advanced', 'toggle-advanced', {events: events})
                         ]
                     }),
-                    dom.makePanel('Inputs', 'input-fields'),
-                    dom.makePanel(span(['Parameters', span({dataElement: 'advanced-hidden'})]), 'parameter-fields'),
-                    dom.makePanel('Outputs', 'output-fields')
+                    ui.buildPanel({
+                        title: 'Inputs',
+                        body: div({dataElement: 'input-fields'}),
+                        classes: ['kb-panel-container']
+                    }),
+                    ui.buildPanel({
+                        title: span(['Parameters', span({dataElement: 'advanced-hidden'})]), 
+                        body: div({dataElement: 'parameter-fields'}),
+                        classes: ['kb-panel-container']
+                    }),
+                    ui.buildPanel({
+                        title: 'Outputs', 
+                        body: div({dataElement: 'output-fields'}),
+                        classes: ['kb-panel-container']
+                    })
                 ]);
 
             return {
@@ -156,7 +168,7 @@ define([
 
         function doAttach(node) {
             container = node;
-            dom = Dom.make({
+            ui = UI.make({
                 node: container,
                 bus: bus
             });
@@ -164,10 +176,10 @@ define([
             container.innerHTML = layout.content;
             layout.events.attachEvents(container);
             places = {
-                inputFields: dom.getElement('input-fields'),
-                outputFields: dom.getElement('output-fields'),
-                parameterFields: dom.getElement('parameter-fields'),
-                advancedParameterFields: dom.getElement('advanced-parameter-fields')
+                inputFields: ui.getElement('input-fields'),
+                outputFields: ui.getElement('output-fields'),
+                parameterFields: ui.getElement('parameter-fields'),
+                advancedParameterFields: ui.getElement('advanced-parameter-fields')
             };
         }
 

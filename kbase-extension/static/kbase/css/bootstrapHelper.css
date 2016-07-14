@@ -31,3 +31,46 @@
 .modal input[type="checkbox"] {
     margin-top: 1px;
 }
+
+.panel.kb-panel-light {
+    border: none;
+}
+.panel.kb-panel-light > .panel-heading {
+    background-color: transparent;
+    font-weight: bold;
+    color: #666;
+    padding-left: 0;
+    padding-bottom: 2px;
+    border-bottom: 1px #CCC solid;
+}
+.panel.kb-panel-light .panel-body {
+    padding-top: 0;
+}
+
+.panel.kb-panel-container {
+    border: none;
+}
+.panel.kb-panel-container > .panel-heading {
+    background-color: transparent;
+    font-weight: bold;
+    color: #2e618d;
+    padding-left: 0;
+    padding-bottom: 2px;
+    border-bottom: 2px #CCC solid;
+    margin-bottom: 10px;
+}
+.panel.kb-panel-container .panel-body {
+    padding-top: 0;
+}
+
+/*
+  The button bar in a cell widgetis located at the bottom of the inputs, but 
+  above any outputs.
+  These styles attempt to help the button toolbar, which represents the actions
+  the user can take, be visually distinct from the other bits surrounding it.
+*/
+.btn-toolbar.kb-btn-toolbar-cell-widget {
+    margin-bottom: 20px;
+    background-color: #EEE;
+    padding: 6px;
+}

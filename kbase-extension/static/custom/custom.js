@@ -294,7 +294,7 @@ define([
     };
 
     // CELL
-
+    
     (function () {
         var p = cell.Cell.prototype;
 
@@ -342,6 +342,9 @@ define([
             
             switch (toggleMode) {
                 case 'maximized':
+                    if (!this.maximize) {
+                        console.log('HELP', this);
+                    }
                     this.maximize();
                     break;
                 case 'minimized':
@@ -405,6 +408,144 @@ define([
             };
         }());
 
+    }());
+    
+    
+    // RAW CELL
+    
+     (function () {
+        var p = textCell.RawCell.prototype;
+
+        p.minimize = function () {
+            var $cellNode = $(this.element);
+            $cellNode.find('.inner_cell > div:nth-child(2)').addClass('hidden');
+            $cellNode.find('.inner_cell > div:nth-child(3)').addClass('hidden');
+            utils.setCellMeta(this, 'kbase.cellState.showTitle', true);
+        };
+
+        p.maximize = function () {
+            var $cellNode = $(this.element);
+            $cellNode.find('.inner_cell > div:nth-child(2)').removeClass('hidden');
+            $cellNode.find('.inner_cell > div:nth-child(3)').removeClass('hidden');
+            utils.setCellMeta(this, 'kbase.cellState.showTitle', false);
+        };
+
+        // We need this method because the layout of each type of cell and
+        // interactions with min/max can be complex.
+        p.renderPrompt = function () {
+            var prompt = this.element[0].querySelector('.input_prompt');
+            if (!prompt) {
+                return;
+            }
+            prompt.innerHTML = '';
+        };
+
+        /** @method bind_events **/
+        p.bind_events = function () {
+            textCell.TextCell.prototype.bind_events.apply(this);
+
+            var cell = this,
+                $cellNode = $(this.element);
+
+            this.element.dblclick(function () {
+                var cont = cell.unrender();
+                if (cont) {
+                    cell.focus_editor();
+                }
+            });
+
+            /*
+             * This is the trick to get the markdown to render, and the edit area
+             * to disappear, when the user clicks out of the edit area.
+             */
+            this.code_mirror.on('blur', function () {
+                cell.render();
+            });
+
+
+            /*
+             * The cell toolbar buttons area knows how to set the title and
+             * icon for itself. But we store the title and icon here in case
+             * the celltoolbar is not fully built yet. In that case, it will
+             * look at the containing cell to see if it has been set yet, and if
+             * so will use that (of course listening for these events too.)
+             */
+            $cellNode.on('set-title.cell', function (e, title) {
+                if (title === undefined) {
+                    return;
+                }
+                // cell.setCellState('title', title);
+                utils.setCellMeta(cell, 'kbase.cellState.title', title);
+                var $menu = $(cell.celltoolbar.element).find('.button_container');
+                $menu.trigger('set-title.toolbar', [title || '']);
+                if (cellType(cell) !== undefined) {
+                    $(cell.element).trigger('show-title.cell');
+                }
+            });
+
+            $cellNode.on('hide-title.cell', function (e) {
+                var $menu = $(cell.celltoolbar.element).find('.button_container');
+                $menu.trigger('hide-title.toolbar');
+            });
+
+            $cellNode.on('show-title.cell', function (e) {
+                var $menu = $(cell.celltoolbar.element).find('.button_container');
+                $menu.trigger('show-title.toolbar');
+            });
+
+            $cellNode.on('set-icon.cell', function (e, icon) {
+                // cell.setCellState('icon', icon);
+                utils.setCellMeta(cell, 'kbase.cellState.icon', icon);
+                var $menu = $(cell.celltoolbar.element).find('.button_container');
+                $menu.trigger('set-icon.toolbar', [icon]);
+            });
+
+            /*
+             * This is how the cell propagates the select/unselect events to
+             * the child "widget" -- the celltoolbar in this case.
+             * But, of course, it is a hack.
+             * - we should be able to add it as a behavior on the cell prototype
+             * - we should be able to propagate it to the celltoolbar itself, we
+             *   are talking to the button area, because that is what we are able
+             *   to control inside the celltoolbar
+             */
+            // this.events
+            $cellNode.on('unselected.cell', function () {
+                var $menu = $(cell.celltoolbar.element).find('.button_container');
+                // cell.setCellState('selected', false);
+                utils.setCellMeta(cell, 'kbase.cellState.selected', false);
+                $menu.trigger('unselected.toolbar');
+            });
+
+            // this.events
+            $cellNode.on('selected.cell', function () {
+                var $menu = $(cell.celltoolbar.element).find('.button_container');
+                utils.setCellMeta(cell, 'kbase.cellState.selected', true);
+                // cell.setCellState('selected', true);
+                $menu.trigger('selected.toolbar');
+            });
+
+            // Note - this event needs to be subscribed to in each cell interested.
+            // This is really the kick-off for the narrative, since the
+            // presets on the celltoobar are loaded via event calls,
+            // so are not part of the synchronous process
+            // which builds the UI.
+            this.events.on('preset_activated.CellToolbar', function (e, data) {
+                if (data.name === 'KBase') {
+                    // ensure the icon is set?
+                    utils.setCellMeta(this, 'kbase.attributes.icon', 'font');
+                    // Set up the toolbar based on the state.
+                    // TODO: refactor in general -- reconcile cellState and attributes
+
+                    //$cellNode.trigger('set-title.cell', [cell.getCellState('title', '')]);
+                    //$cellNode.trigger('set-icon.cell', [cell.getCellState('icon', '')]);
+
+                    // DISABLED: toggling
+                    // TODO: re-enable!
+                    // cell.renderToggleState();
+                }
+            }.bind(this));
+        };
     }());
 
 

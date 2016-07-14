@@ -59,7 +59,7 @@ define([
                         show: [],
                         hide: ['fatal-error', 'parameters-group', 'output-group', 'parameters-display-group', 'exec-group']
                     }
-                },                
+                },
                 next: [
                     {
                         mode: 'fatal-error'
@@ -72,7 +72,7 @@ define([
             },
             {
                 state: {
-                    mode: 'fatal-error'           
+                    mode: 'fatal-error'
                 },
                 ui: {
                     buttons: {
@@ -265,14 +265,14 @@ define([
                     defaultValue: true,
                     type: 'toggle',
                     element: 'about-app'
-                } 
+                }
             },
         widgets = {},
             inputBusses = [],
             inputBusMap = {},
             fsm,
             saveMaxFrequency = config.saveMaxFrequency || 5000;
-        
+
         if (runtime.config('features.advanced')) {
             settings.showDeveloper = {
                 label: 'Show developer features',
@@ -329,7 +329,7 @@ define([
             ui.setContent('fatal-error.title', model.getItem('fatalError.title'));
             ui.setContent('fatal-error.message', model.getItem('fatalError.message'));
         }
-        
+
         function showFatalError(arg) {
             ui.showElement('fatal-error');
         }
@@ -364,7 +364,7 @@ define([
                     td({dataElement: 'name'})
                 ]),
                 ui.ifAdvanced(function () {
-                    tr([
+                    return tr([
                         th('Module'),
                         td({dataElement: 'module'})
                     ])
@@ -386,7 +386,7 @@ define([
                     td({dataElement: 'authors'})
                 ]),
                 ui.ifAdvanced(function () {
-                    tr([
+                    return tr([
                         th('Git commit hash'),
                         td({dataElement: 'git-commit-hash'})
                     ])
@@ -535,7 +535,7 @@ define([
         function renderLayout() {
             var events = Events.make(),
                 content = div({class: 'kbase-extension kb-app-cell', style: {display: 'flex', alignItems: 'stretch'}}, [
-                    div({class: 'prompt', dataElement: 'prompt', style: {display: 'flex', alignItems: 'stretch',  flexDirection: 'column'}}, [
+                    div({class: 'prompt', dataElement: 'prompt', style: {display: 'flex', alignItems: 'stretch', flexDirection: 'column'}}, [
                         div({dataElement: 'status'})
                     ]),
                     div({
@@ -546,32 +546,11 @@ define([
                         div({dataElement: 'widget', style: {display: 'block', width: '100%'}}, [
                             div({class: 'container-fluid'}, [
                                 ui.buildPanel({
-                                    title: null,
-                                    name: 'availableActions',
-                                    hidden: false,
-                                    type: 'default',
-                                    body: [
-                                        div({class: 'btn-toolbar'}, [
-                                            div({class: 'btn-group'}, [
-                                                ui.makeButton('View', 'run-app', {events: events, type: 'primary'})
-                                            ]),
-//                                            div({class: 'btn-group'}, [
-//                                                ui.makeButton('View Again', 're-run-app', {events: events, type: 'primary'})
-//                                            ]),
-//                                            div({class: 'btn-group'}, [
-//                                                ui.makeButton('Remove', 'remove', {events: events, type: 'danger'})
-//                                            ]),
-                                            div({class: 'btn-group'}, [
-                                                ui.makeButton(span({class: 'fa fa-cog '}), 'toggle-settings', {events: events})
-                                            ])
-                                        ])
-                                    ]
-                                }),
-                                ui.buildPanel({
                                     title: 'Error',
                                     name: 'fatal-error',
                                     hidden: true,
-                                    type: 'default',
+                                    type: 'danger',
+                                    classes: ['kb-panel-container'],
                                     body: div([
                                         table({class: 'table table-striped'}, [
                                             tr([
@@ -582,10 +561,11 @@ define([
                                     ])
                                 }),
                                 ui.buildPanel({
-                                    title: 'View Cell Settings',
+                                    title: 'Cell Settings',
                                     name: 'settings',
                                     hidden: true,
                                     type: 'default',
+                                    classes: ['kb-panel-container'],
                                     body: div({dataElement: 'content'})
                                 }),
                                 ui.buildCollapsiblePanel({
@@ -593,6 +573,7 @@ define([
                                     name: 'notifications',
                                     hidden: true,
                                     type: 'default',
+                                    classes: ['kb-panel-container'],
                                     body: [
                                         div({dataElement: 'content'})
                                     ]
@@ -603,6 +584,7 @@ define([
                                     hidden: false,
                                     collapsed: true,
                                     type: 'default',
+                                    classes: ['kb-panel-container'],
                                     body: [
                                         div({dataElement: 'about-app'}, renderAboutApp())
                                     ]
@@ -612,6 +594,7 @@ define([
                                     name: 'developer-options',
                                     hidden: true,
                                     type: 'default',
+                                    classes: ['kb-panel-container'],
                                     body: [
                                         div({dataElement: 'fsm-display', style: {marginBottom: '4px'}}, [
                                             span({style: {marginRight: '4px'}}, 'FSM'),
@@ -629,6 +612,7 @@ define([
                                     name: 'parameters-group',
                                     hidden: false,
                                     type: 'default',
+                                    classes: ['kb-panel-container'],
                                     body: div({dataElement: 'widget'})
                                 }),
                                 ui.buildCollapsiblePanel({
@@ -636,8 +620,18 @@ define([
                                     name: 'parameters-display-group',
                                     hidden: false,
                                     type: 'default',
+                                    classes: ['kb-panel-container'],
                                     body: div({dataElement: 'widget'})
-                                })
+                                }),
+                                div({
+                                    dataElement: 'availableActions'
+                                }, [
+                                    div({class: 'btn-toolbar kb-btn-toolbar-cell-widget'}, [
+                                        div({class: 'btn-group'}, [
+                                            ui.makeButton('View', 'run-app', {events: events, type: 'primary'})
+                                        ])
+                                    ])
+                                ]),
                             ])
                         ])
                     ])
@@ -694,7 +688,7 @@ define([
                 errors: errors
             };
         }
-        
+
         // TODO: we need to determine the proper forms for a app identifier, and
         // who creates this canonical identifier. E.g. the method panel supplies
         // the app id to the cell, but it gets it from the kernel, which gets it
@@ -702,7 +696,8 @@ define([
         // for a beta or release tag ...
         function fixApp(app) {
             switch (app.tag) {
-                case 'release': {
+                case 'release':
+                {
                     return {
                         id: app.id,
                         tag: app.tag,
@@ -715,7 +710,7 @@ define([
                         id: app.id,
                         tag: app.tag
                     }
-                default: 
+                default:
                     throw new Error('Invalid tag for app ' + app.id);
             }
         }
@@ -787,7 +782,7 @@ define([
             });
         }
 
-       function initCodeInputArea() {
+        function initCodeInputArea() {
             // var codeInputArea = cell.input[0];
             //if (!cell.kbase.inputAreaDisplayStyle) {
             //    cell.kbase.inputAreaDisplayStyle = codeInputArea.css('display');
@@ -1163,6 +1158,17 @@ define([
                 bus.on('edit-notebook-metadata', function () {
                     doEditNotebookMetadata();
                 });
+                cell.element.on('toggleCellSettings.cell', function () {
+                    var showing = toggleSettings(cell),
+                        label = span({class: 'fa fa-cog '}),
+                        buttonNode = ui.getButton('toggle-settings');
+                    buttonNode.innerHTML = label;
+                    if (showing) {
+                        buttonNode.classList.add('active');
+                    } else {
+                        buttonNode.classList.remove('active');
+                    }
+                });
                 bus.on('toggle-settings', function () {
                     var showing = toggleSettings(cell),
                         label = span({class: 'fa fa-cog '}),
@@ -1455,13 +1461,13 @@ define([
             var appSpec = env.appSpec,
                 nmsBase = runtime.config('services.narrative_method_store.image_url'),
                 iconUrl = Props.getDataItem(appSpec, 'info.icon.url');
-            
+
             if (iconUrl) {
                 return span({class: 'fa-stack fa-2x', style: {padding: '2px'}}, [
                     img({src: nmsBase + iconUrl, style: {maxWidth: '46px', maxHeight: '46px', margin: '2px'}})
                 ]);
             }
-                
+
             return span({style: ''}, [
                 span({class: 'fa-stack fa-2x', style: {textAlign: 'center', color: 'rgb(103,58,183)'}}, [
                     span({class: 'fa fa-square fa-stack-2x', style: {color: 'rgb(103,58,183)'}}),
@@ -1472,13 +1478,13 @@ define([
 
         function renderIcon() {
             var prompt = cell.element[0].querySelector('.input_prompt');
-                
+
             if (!prompt) {
                 return;
             }
 
             prompt.innerHTML = div({
-                style: {textAlign: 'center'}                
+                style: {textAlign: 'center'}
             }, [
                 makeIcon()
             ]);
@@ -1489,6 +1495,7 @@ define([
             return syncAppSpec(params.appId, params.appTag)
                 .then(function () {
                     utils.setCellMeta(cell, 'kbase.attributes.title', env.appSpec.info.name);
+                    utils.setCellMeta(cell, 'kbase.attributes.subtitle', env.appSpec.info.subtitle);
                     return Promise.all([
                         loadInputWidget(),
                         loadInputViewWidget()
@@ -1519,7 +1526,7 @@ define([
                     });
                     syncFatalError();
                     fsm.newState({mode: 'fatal-error'});
-                    renderUI();                    
+                    renderUI();
                 });
         }
 

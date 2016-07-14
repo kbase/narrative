@@ -82,6 +82,7 @@ define (
         		if (self.loaded)
         			return;
         		var data = data[0].data;
+
         		self.cacheGeneFunctions(data.genome_refs, function() {
         			buildTable(data);
         		});
@@ -107,7 +108,7 @@ define (
         		var tabStat = $("<div/>");
     			tabWidget.addTab({tab: 'Overview', content: tabStat, canDelete : false, show: showOverview});
         		var tableOver = $('<table class="table table-striped table-bordered" '+
-        				'style="margin-left: auto; margin-right: auto;" id="'+self.pref+'overview-table"/>');
+        				'style="margin-left: auto; margin-right: auto;" id="'+self.pref+'overview-table">');
         		tabStat.append(tableOver);
         		tableOver.append('<tr><td>Pan-genome object ID</td><td>'+self.options.name+'</td></tr>');
 
@@ -202,14 +203,14 @@ define (
         		var tabShared = $("<div/>");
     			tabWidget.addTab({tab: 'Shared homolog families', content: tabShared, canDelete : false, show: false});
         		var tableShared = $('<table class="table table-striped table-bordered" '+
-        				'style="margin-left: auto; margin-right: auto;" id="'+self.pref+'shared-table"/>');
+        				'style="margin-left: auto; margin-right: auto;" id="'+self.pref+'shared-table">');
         		tabShared.append(tableShared);
         		var header = "";
         		for (var genomePos in genomeOrder) {
             		var genomeNum = genomeOrder[genomePos][2];
         			header += '<td width="40"><center><b>G' + genomeNum + '</b></center></td>';
         		}
-        		tableShared.append('<tr>'+header+'<td/></tr>');
+        		tableShared.append('<tr>'+header+'</td></tr>');
         		for (var genomePos in genomeOrder) {
         			var genomeRef = genomeOrder[genomePos][0];
             		var row = "";
@@ -232,7 +233,7 @@ define (
         		///////////////////////////////////// Orthologs /////////////////////////////////////////////
         		var tableOrth = $('<table cellpadding="0" cellspacing="0" border="0" class="table table-bordered ' +
         				'table-striped" style="width: 100%; margin-left: 0px; margin-right: 0px;">');
-        		var tabOrth = $("<div/>");
+        		var tabOrth = $("<div>");
         		if (self.options.withExport) {
         			tabOrth.append("<p><b>Please choose homolog family and push 'Export' "+
         						"button on opened ortholog tab.</b></p><br>");
@@ -249,7 +250,7 @@ define (
     				for (var genomeRef in orthologStat[orth.id][1]) {
     					genome_count++;
     				}
-    				orth_data.push({func: orth['function'], id: id_text, len: orth.orthologs.length, genomes: genome_count});
+    				orth_data.push({func: orth['function'], id: id_text, len: orth.orthologs.length, genomes: genome_count, genome_ids : orthologStat[orth.id][1]});
     			}
 
         		var tableSettings = {
@@ -301,6 +302,128 @@ define (
         				}
         			}
         		}
+
+            var venn = {};
+            var venn_map = ['c1', 'c2', 'c3'];
+            var venn_keys = {};
+
+            var selected_regions = {};
+
+            var $vennTableDiv = $.jqElem('div');
+
+            $.each(
+              data.orthologs,
+              function (i, family) {
+                var unique = {};
+                $.each(
+                  family.orthologs,
+                  function (i, o) {
+                    var key = venn_keys[o[2]];
+                    if (key == undefined) {
+                      key = venn_keys[o[2]] = venn_map.shift()
+                    }
+                    if (unique[o[2]] == undefined) {
+                      unique[o[2]] = 0;
+                    }
+                    unique[o[2]]++;
+                  }
+                )
+
+                var key_string = Object.keys(unique).map(function(v) { return venn_keys[v] } ).sort().join('');
+                var select_string = Object.keys(unique).sort().join(',');
+
+                if (venn[key_string] == undefined) {
+                  venn[key_string] = {
+                    value   : 0,
+                    key : key_string,
+                    unique : unique,
+                    label : Object.keys(unique).map(function(v) { return self.genomeNames[v] } ).sort().join(' , '),
+                    action : function($venn, d) {
+                      if (this.active) {
+                        this.active = false;
+                        d3.select(this)
+                          .attr('stroke', $venn.options.strokeColor(0, d.data))
+                          .attr('stroke-width', $venn.options.strokeWidth)
+                        ;
+                        delete selected_regions[select_string];
+                      }
+                      else {
+                        this.active = true;
+                        d3.select(this)
+                          .attr('stroke', 'yellow')
+                          .attr('stroke-width', $venn.options.strokeWidth + 4)
+                        ;
+
+                        selected_regions[select_string] = 1;
+                      }
+console.log("UNQ IS ", unique, selected_regions);
+                      var table_data = [];
+                      $.each(
+                        orth_data,
+                        function (i, v) {
+
+                          var func_key = Object.keys(v.genome_ids).sort().join(',');
+
+                          if (selected_regions[func_key] != undefined) {
+                            table_data.push(v);
+                          }
+                        }
+                      );
+
+
+                      /*var $tt = $rna.dataset().parsed_read_samples.DataTable({
+                          columns: [
+                              {title: 'Reads'},
+                              {title: 'Treatment Labels'}
+                          ]
+                      });
+
+                      $tt.rows.add(sample_id_data).draw();*/
+
+                      $vennTableDiv.empty();
+                      var $table = $.jqElem('table').css({width : '100%'});
+                      $vennTableDiv.append($table);
+                      var $tt = $table.DataTable({
+                        "pagingType": "full_numbers",
+                        "displayLength": 10,
+                        columns : [
+                          { "title": "Function", 'data': 'func'},
+                          { "title": "ID", 'data': 'id'},
+                          { "title": "Protein Count", 'data': 'len'},
+                          { "title": "Genome Count", 'data': 'genomes'}
+                        ]
+                      });
+
+                      $tt.rows.add(table_data).draw();
+
+                      //$vennTableDiv.append(Object.keys(selected_regions).filter(function(v) { return selected_regions[v] > 0 } ).sort().join(', '));
+
+
+                    }
+                  }
+
+
+                }
+                venn[key_string].value++;
+              }
+            );
+
+            venn.c1.ldy = '-1em';
+            venn.c1.vdy = '0.5em';
+            venn.c2.ldy = '1.5em';
+            venn.c2.vdy = '3.0em';
+
+            var $vennDiag = $.jqElem('div').css({width : '600px', height : '600px'}).attr('align', 'center');
+            $vennDiag.kbaseVenndiagram({dataset : venn, labels : true, intersectFontSize : '16pt', circleFontSize : '16pt'});
+
+
+            var $vennContent = $.jqElem('div')
+              .append($.jqElem('div').attr('align', 'center').append($vennDiag))
+              .append($vennTableDiv)
+            ;
+
+            tabPane.kbaseTabs('addTab', {tab: 'Venn diagram', content: $vennContent, canDelete : false, show: !showOverview});
+
         	}
 
         	return this;
@@ -377,7 +500,7 @@ define (
     		if (self.options.withExport) {
     			tab.append('<p><b>Name of feature set object:</b>&nbsp;'+
     					'<input type="text" id="input_'+pref2+'" '+
-    					'value="'+self.options.name+'.'+orth_id+'.featureset" style="width: 350px;"/>'+
+    					'value="'+self.options.name+'.'+orth_id+'.featureset" style="width: 350px;">'+
     					'&nbsp;<button id="btn_'+pref2+'">Export</button><br>'+
     					'<font size="-1">(only features with protein translations will be exported)</font></p><br>'
     			);
@@ -389,15 +512,15 @@ define (
         			"aaData": genes,
         			"aaSorting": [[0, "asc"], [ 1, "asc" ]],
         			"aoColumns": [
-        			              { "sTitle": "Genome name", 'mData': function(d) {
+        			              { "sTitle": "Genome name", 'data': function(d) {
         			            	  return '<a class="show-genomes_'+pref2+'" data-id="'+d.ref+'">'+
         			            	  '<span style="white-space: nowrap;">'+d.genome+'</span></a>'
         			              }},
-        			              { "sTitle": "Feature ID", 'mData': function(d) {
+        			              { "sTitle": "Feature ID", 'data': function(d) {
         			            	  return '<a class="show-genes_'+pref2+'" data-id="'+d.ref+"/"+d.id+'">'+d.id+'</a>'
         			              }},
-        			              { "sTitle": "Function", 'mData': 'func'},
-        			              { "sTitle": "Protein sequence length", 'mData': 'len'},
+        			              { "sTitle": "Function", 'data': 'func'},
+        			              { "sTitle": "Protein sequence length", 'data': 'len'},
         			              ],
         			              "oLanguage": {
         			            	  "sEmptyTable": "No objects in workspace",

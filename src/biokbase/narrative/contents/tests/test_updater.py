@@ -112,7 +112,6 @@ class UpdaterTestCase(unittest.TestCase):
                     raise ValueError('KBase method can no longer be Markdown cells!')
         return True
 
-
     def test_update_narrative(self):
         nar_update = update_narrative(self.test_nar)
         self.assertTrue(self.validate_narrative(nar_update))
@@ -132,9 +131,16 @@ class UpdaterTestCase(unittest.TestCase):
     def test_find_bad_app(self):
         self.assertIsNone(find_app_info('NotAnAppModule'))
 
-    # def test_suggest_app(self):
-    #     suggestions =
+    def test_suggest_apps(self):
+        obsolete_id = 'build_a_metabolic_model'
+        suggestions = suggest_apps(obsolete_id)
+        self.assertTrue(isinstance(suggestions, list))
+        self.assertEquals(suggestions[0]['spec']['info']['id'], 'fba_tools/build_metabolic_model')
 
+    def test_suggest_apps_none(self):
+        suggestions = suggest_apps('NotAnAppModule')
+        self.assertTrue(isinstance(suggestions, list))
+        self.assertEquals(len(suggestions), 0)
 
 if __name__ == "__main__":
     unittest.main()

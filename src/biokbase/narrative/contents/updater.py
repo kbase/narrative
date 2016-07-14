@@ -185,7 +185,7 @@ def update_method_cell(cell):
 
     else:
         # it's not an SDK method! do something else!
-        return obsolete_method_cell(cell, method_info.get('name'), method_params)
+        return obsolete_method_cell(cell, method_info.get('id'), method_info.get('name'), method_params)
 
     new_meta = {
         'type': 'app',
@@ -230,7 +230,7 @@ def update_method_cell(cell):
     cell['source'] = u''
     return cell
 
-def obsolete_method_cell(cell, app_name, params):
+def obsolete_method_cell(cell, app_id, app_name, params):
     cell['cell_type'] = 'markdown'
     format_params = '<ul>' + '\n'.join(['<li>{} - {}</li>'.format(p, params[p]) for p in params]) + '</ul>'
     base_source = """<div style="border:1px solid #CECECE; padding: 5px">
@@ -261,7 +261,8 @@ def update_app_cell(cell):
     """
     meta = cell['metadata']['kb-cell']
     app_name = meta.get('app', {}).get('info', {}).get('name', 'Unknown app') + " (multi-step app)"
-    cell = obsolete_method_cell(cell, app_name, {})
+    app_id = meta.get('app', {}).get('info', {}).get('id', None)
+    cell = obsolete_method_cell(cell, app_id, app_name, {})
     cell['metadata']['kbase'] = {'old_app': True, 'info': meta}
     return cell
 
@@ -300,7 +301,7 @@ def find_app_info(app_id):
     return None
 
 def suggest_apps(obsolete_id):
-    suggest = obsolete_apps.get(obsolete, None)
+    suggest = obsolete_apps.get(obsolete_id, None)
     suggestions = list()
     if suggest is not None:
         for new_id in suggest:

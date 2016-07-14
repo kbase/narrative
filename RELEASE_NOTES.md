@@ -1,11 +1,11 @@
 ### OVERVIEW
 The Narrative Interface allows users to craft KBase Narratives using a combination of GUI-based commands, Python and R scripts, and graphical output elements.
 
-This is built on the Jupyter Notebook v4.1.0 (more notes will follow).
+This is built on the Jupyter Notebook v4.2.1 (more notes will follow).
 
-### Version 3.0.0
+### Version 3.0.0-alpha-1
 __Major Updates__
-- Apps and Methods not made as part of KBase SDK modules are now obsolete and will no longer run. Those apps have been replaced with Markdown cells that note their obsolescence, but still give the name and set of parameters used in the apps for reference.
+- Apps and Methods not made as part of KBase SDK modules are now obsolete and will no longer run. Those apps have been replaced with Markdown cells that note their obsolescence, but still give the name and set of parameters used in the apps for reference. This also gives suggestions for updated apps (that will be available in production eventually...)
 - The distinction between "App" and "Method" has been removed. All cells that execute KBase jobs are now referred to as Apps.
 - All app cells are now based on Jupyter code cells (previously they were based on heavily modified Markdown cells). This means that they generate code that gets executed in the same way that any other code does. This also introduces a KBase Jobs API that gives programmatic access to running Apps. See docs/developer/job_api.md for details.
 - All output and viewer cells are now code cells as well. Existing viewers are still based on Markdown cells, and should work as previously.

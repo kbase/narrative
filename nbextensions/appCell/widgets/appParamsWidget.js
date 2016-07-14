@@ -241,8 +241,6 @@ define([
                     events: events
                 });
                 
-                console.log('DEBUG', areaElement, ui.getElement([areaElement]), ui.getElement([areaElement, 'advanced-hidden-message']))
-                
                 ui.setContent([areaElement, 'advanced-hidden-message'], '(' + message + ') ' + showAdvancedButton);
             }
             

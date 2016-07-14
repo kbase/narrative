@@ -8,11 +8,12 @@ define([
     'base/js/namespace',
     'common/utils',
     'common/runtime',
-    'common/dom',
+    'common/ui',
     'common/props',
     'common/appUtils',
     'kb_common/html',
-    'common/pythonInterop'
+    'common/pythonInterop',
+    './widgets/widgetCellWidget'
 ], function (
     Promise,
     $,
@@ -24,7 +25,8 @@ define([
     Props,
     AppUtils,
     html,
-    PythonInterop
+    PythonInterop,
+    WidgetCellWidget
     ) {
     'use strict';
 
@@ -108,6 +110,22 @@ define([
 
         // Update metadata.
         utils.setMeta(cell, 'attributes', 'lastLoaded', (new Date()).toUTCString());
+        
+        var appId = utils.getMeta(cell, 'widgetCell', 'app').id,
+            appTag = utils.getMeta(cell, 'widgetCell', 'app').tag,
+            widgetCellWidget = WidgetCellWidget.make({
+                cell: cell,
+                // workspaceInfo: workspaceInfo
+            }),
+            ui = UI.make({node: cell.input[0]}),
+            kbaseNode = ui.createNode(div({
+                dataSubareaType: 'widget-cell-input'
+            }));
+
+        // Create (above) and place the main container for the input cell.
+        cell.input.after($(kbaseNode));
+        cell.kbase.node = kbaseNode;
+        cell.kbase.$node = $(kbaseNode);
 
         cell.hidePrompts();
 
@@ -115,9 +133,30 @@ define([
 
         cell.renderMinMax();
         
-        return {
-            widget: null
-        };
+        return widgetCellWidget.init()
+                .then(function () {
+                    return widgetCellWidget.attach(kbaseNode);
+                })
+                .then(function () {
+                    return widgetCellWidget.start();
+                })
+                .then(function () {
+                    return widgetCellWidget.run({
+                        appId: appId,
+                        appTag: appTag
+                    });
+                })
+                .then(function () {
+                    // AppCellController.start();
+                    cell.renderMinMax();
+                    return {
+                        widget: widgetCellWidget
+                    };
+                })
+                .catch(function (err) {
+                    console.error('ERROR starting app cell', err);
+                    alert('Error starting app cell');
+                });
     }
 
     function upgradeCell(cell, appSpec, appTag) {
@@ -136,7 +175,8 @@ define([
                     created: (new Date()).toUTCString(),
                     defaultIcon: 'bar-chart',
                     iconUrl: appSpec.info.icon.url,
-                    title: appSpec.info.name
+                    title: appSpec.info.name,
+                    subtitle: appSpec.info.subtitle
                 },
                 cellState: {
                 },

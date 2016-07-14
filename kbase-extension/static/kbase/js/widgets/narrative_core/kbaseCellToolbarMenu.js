@@ -44,22 +44,6 @@ define([
 //            return id;
 //        }
 
-        function doViewJobSubmission(e) {
-            var metadata = this.options.cell.metadata,
-                stackTrace = [],
-                newCell = Jupyter.narrative.insertAndSelectCell('code', 'below', Jupyter.notebook.find_cell_index(this.options.cell));
-            if (metadata['kb-cell'] && metadata['kb-cell'].stackTrace) {
-                stackTrace = metadata['kb-cell'].stackTrace;
-            }
-            console.log(stackTrace);
-            if (stackTrace instanceof Array) {
-                newCell.set_text('job_info=' + stackTrace[stackTrace.length - 1] + '\njob_info');
-                newCell.execute();
-            } else {
-                newCell.set_text('job_info=' + stackTrace);
-            }
-        }
-
         function doMoveCellUp(e) {
             Jupyter.notebook.move_cell_up();
         }
@@ -140,9 +124,19 @@ define([
 
             if (showTitle) {
                 return title;
-            } else {
-                return '';
             }
+            return '';
+        }
+
+        function getCellSubtitle(cell) {
+            var subTitle = getMeta(cell, 'attributes', 'subtitle'),
+                showTitle = utils.getCellMeta(cell, 'kbase.cellState.showTitle', true),
+                showSubtitle = utils.getCellMeta(cell, 'kbase.cellState.showSubtitle', true);
+
+            if (showTitle) {
+                return subTitle;
+            }
+            return '';
         }
 
         function doToggleMinMaxCell() {
@@ -152,6 +146,10 @@ define([
         function doToggleCodeView() {
             cell.element.trigger('toggleCodeArea.cell');
             // $(cell.element).find('.input_area').toggle();
+        }
+        
+        function doToggleCellSettings() {
+            cell.element.trigger('toggleCellSettings.cell');
         }
 
         function renderToggleCodeView(events) {
@@ -165,8 +163,6 @@ define([
             if (!ui.isDeveloper()) {
                 return;
             }
-            
-
 
             return button({
                 type: 'button',
@@ -190,7 +186,7 @@ define([
                         div({class: 'col-sm-8 title-container'}, [
                             div({class: 'title', style: {display: 'inline-block'}}, [
                                 div({dataElement: 'title', class: 'title'}, [getCellTitle(cell)]),
-                                div({dataElement: 'subtitle', class: 'subtitle', style: {display: 'none'}})
+                                div({dataElement: 'subtitle', class: 'subtitle'}, [getCellSubtitle(cell)])
                             ])
                         ]),
                         div({class: 'col-sm-4 buttons-container'}, [
@@ -218,6 +214,17 @@ define([
 //                                    ])
 //                                ]),
                                 renderToggleCodeView(events),
+                                button({
+                                    type: 'button',
+                                    class: 'btn btn-default btn-xs',
+                                    dataToggle: 'tooltip',
+                                    dataPlacement: 'left',
+                                    title: true,
+                                    dataOriginalTitle: 'Cell Settings',
+                                    id: events.addEvent({type: 'click', handler: doToggleCellSettings})
+                                }, [
+                                    span({class: 'fa fa-cog', style: 'font-size: 14pt'})
+                                ]),
                                 button({
                                     type: 'button',
                                     class: 'btn btn-default btn-xs',

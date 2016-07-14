@@ -5,31 +5,31 @@
  *
  * @author Bill Riehl wjriehl@lbl.gov
  */
-define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery',
-		'bluebird',
-		'narrativeConfig',
-		'util/timeFormat',
-		'kbase-client-api'
-	], function(
-		KBWidget,
-		bootstrap,
-		$,
-		Promise,
-		Config,
-		TimeFormat,
-		kbase_client_api
-	) {
+define(
+    [
+        'kbwidget',
+        'bootstrap',
+        'jquery',
+        'bluebird',
+        'narrativeConfig',
+        'util/timeFormat',
+        'kbase-client-api'
+    ], function (
+    KBWidget,
+    bootstrap,
+    $,
+    Promise,
+    Config,
+    TimeFormat,
+    kbase_client_api
+    ) {
     'use strict';
 
     var profileClient = new UserProfile(Config.url('user_profile'));
     var profilePageUrl = Config.url('profile_page');
     var cachedUserIds = {};
 
-    function lookupUserProfile (username) {
+    function lookupUserProfile(username) {
         if (!cachedUserIds[username]) {
             cachedUserIds[username] = Promise.resolve(profileClient.get_user_profile([username]));
         }
@@ -40,8 +40,8 @@ define (
      * @method
      * displayRealName
      */
-    function displayRealName (username, $target) {
-        lookupUserProfile(username).then(function(profile) {
+    function displayRealName(username, $target) {
+        lookupUserProfile(username).then(function (profile) {
             var usernameLink = '<a href="' + profilePageUrl + username + '" target="_blank">' + username + '</a>';
 
             if (profile && profile[0] && profile[0].user) {
@@ -51,7 +51,9 @@ define (
             }
             $target.html(usernameLink);
         })
-        .catch(function(err) { console.log(err); });
+            .catch(function (err) {
+                console.log(err);
+            });
     }
 
     /**
@@ -61,7 +63,7 @@ define (
      * This node is a div with the usual loading gif centered, with the (optional)
      * caption centered below.
      */
-    function loadingSpinner (caption) {
+    function loadingSpinner(caption) {
         var spinner = '<span class="fa fa-spinner fa-pulse fa-2x fa-fw">';
         if (caption) {
             spinner += caption + '... &nbsp; &nbsp;'
@@ -70,12 +72,12 @@ define (
         return spinner;
     }
 
-    function loadingDiv (caption) {
+    function loadingDiv(caption) {
         var $caption = $('<span>');
         var $loader = $('<div>').addClass('kb-data-loading')
-                                .append('<img src="' + Config.get('loading_gif') + '">')
-                                .append('<br>')
-                                .append($caption);
+            .append('<img src="' + Config.get('loading_gif') + '">')
+            .append('<br>')
+            .append($caption);
         if (caption)
             setText(caption);
 
@@ -109,19 +111,25 @@ define (
     function getAppIcon(params) {
 
         var cursor = 'default';
-        if(params.cursor) { cursor = params.cursor; }
+        if (params.cursor) {
+            cursor = params.cursor;
+        }
 
-        if(params.url) {
+        if (params.url) {
             var size = '50px';
-            if(params.size) { size = params.size; }
-            return $('<img src="'+params.url+'">').css({'max-width':size,'max-height':size, 'cursor':cursor});
+            if (params.size) {
+                size = params.size;
+            }
+            return $('<img src="' + params.url + '">').css({'max-width': size, 'max-height': size, 'cursor': cursor});
         }
 
         // no url, so show default
         var icons = Config.get('icons'); // icon default parameters are set in a config
 
         var isApp = false;
-        if(params['isApp']) { isApp = params['isApp']; }
+        if (params['isApp']) {
+            isApp = params['isApp'];
+        }
 
         var name = isApp ? "app" : "method";
         var icon_color = isApp ? icons.colors[9] : icons.colors[5];
@@ -132,7 +140,9 @@ define (
         // background
         $icon.addClass("fa-stack fa-2x").css({'cursor': cursor});
         var $i = $('<i>').addClass('fa fa-square fa-stack-2x ' + icon_class);
-        if(params.setColor) { $i.css({color: icon_color}); }
+        if (params.setColor) {
+            $i.css({color: icon_color});
+        }
         $icon.append($i);
         // add stack of font-awesome icons
         _.each(icon, function (cls) {

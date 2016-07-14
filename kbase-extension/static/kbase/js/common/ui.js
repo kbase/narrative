@@ -250,11 +250,17 @@ define([
         }
 
         function enableButton(name) {
+            getButton(name).classList.remove('hidden');
             getButton(name).classList.remove('disabled');
         }
 
         function disableButton(name) {
+            getButton(name).classList.remove('hidden');
             getButton(name).classList.add('disabled');
+        }
+        function hideButton(name) {
+            getButton(name).classList.remove('disabled');
+            getButton(name).classList.add('hidden');
         }
 
         function setButtonLabel(name, label) {
@@ -322,6 +328,9 @@ define([
                 classes.push('hidden');
                 // style.display = 'none';
             }
+            if (args.classes) {
+                classes = classes.concat(args.classes);
+            }
             return  div({class: classes.join(' '), dataElement: args.name}, [
                 (function () {
                     if (args.title) {
@@ -373,6 +382,9 @@ define([
             } else {
                 toggleClasses.push('collapsed');
             }
+            if (args.classes) {
+                classes = classes.concat(args.classes);
+            }
 
             return div({class: classes.join(' '), dataElement: args.name}, [
                 div({class: 'panel-heading'}, [
@@ -420,6 +432,16 @@ define([
             collapseToggle.setAttribute('aria-expanded', 'true');
             collapseTarget.classList.add('in');
             collapseTarget.setAttribute('aria-expanded', 'true');
+        }
+        
+        function buildButtonToolbar(arg) {
+            return div({
+                class: ['btn-toolbar'].concat(arg.classes || [])
+            }, [
+               div({
+                   class: 'btn-group'
+               }, arg.buttons)
+            ]);
         }
 
         function createNode(markup) {
@@ -490,6 +512,7 @@ define([
             makeButton: makeButton,
             enableButton: enableButton,
             disableButton: disableButton,
+            hideButton: hideButton,
             setButtonLabel: setButtonLabel,
             confirmDialog: confirmDialog,
             hideElement: hideElement,
@@ -508,7 +531,8 @@ define([
             isAdvanced: isAdvanced,
             isDeveloper: isDeveloper,
             showConfirmDialog: showConfirmDialog,
-            showDialog: showDialog
+            showDialog: showDialog,
+            buildButtonToolbar: buildButtonToolbar
         };
     }
 

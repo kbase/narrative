@@ -6,7 +6,7 @@ define([
     // CDN
     'kb_common/html',
     // LOCAL
-    'common/dom',
+    'common/ui',
     'common/events',
     'common/props',
     // Wrapper for inputs
@@ -19,7 +19,7 @@ define([
 ], function (
     Promise,
     html,
-    Dom,
+    UI,
     Events,
     Props,
     //Wrappers
@@ -40,7 +40,7 @@ define([
             parentBus = config.bus,
             workspaceInfo = config.workspaceInfo,
             container,
-            dom,
+            ui,
             bus,
             places,
             model = Props.make(),
@@ -180,11 +180,11 @@ define([
         function renderAdvanced() {
             var advancedInputs = container.querySelectorAll('[data-advanced-parameter]');
             if (advancedInputs.length === 0) {
-                dom.setContent('advanced-hidden-message', '');
-                dom.disableButton('toggle-advanced');
+                ui.setContent('advanced-hidden-message', '');
+                ui.disableButton('toggle-advanced');
                 return;
             }
-            dom.enableButton('toggle-advanced');
+            ui.enableButton('toggle-advanced');
             var removeClass = (settings.showAdvanced ? 'advanced-parameter-hidden' : 'advanced-parameter-showing'),
                 addClass = (settings.showAdvanced ? 'advanced-parameter-showing' : 'advanced-parameter-hidden');
             for (var i = 0; i < advancedInputs.length; i += 1) {
@@ -202,29 +202,38 @@ define([
             // Also update the count in the paramters.
             var message;
             if (settings.showAdvanced) {
-                dom.setContent('advanced-hidden-message', '');
+                ui.setContent('advanced-hidden-message', '');
             } else {
                 if (advancedInputs.length > 1) {
                     message = String(advancedInputs.length) + ' advanced parameters hidden';
                 } else {
                     message = String(advancedInputs.length) + ' advanced parameter hidden';
                 }
-                dom.setContent('advanced-hidden-message', '(' + message + ')');
+                ui.setContent('advanced-hidden-message', '(' + message + ')');
             }
         }
 
         function renderLayout() {
             var events = Events.make(),
                 content = form({dataElement: 'input-widget-form'}, [
-                    dom.buildPanel({
+                    ui.buildPanel({
                         type: 'default',
+                        classes: ['kb-panel-light'],
                         body: [
-                            dom.makeButton('Show Advanced', 'toggle-advanced', {events: events}),
-                            dom.makeButton('Reset to Defaults', 'reset-to-defaults', {events: events})
+                            ui.makeButton('Show Advanced', 'toggle-advanced', {events: events}),
+                            ui.makeButton('Reset to Defaults', 'reset-to-defaults', {events: events})
                         ]
                     }),
-                    dom.makePanel('Input Objects', 'input-fields'),
-                    dom.makePanel(span(['Parameters', span({dataElement: 'advanced-hidden-message', style: {marginLeft: '6px', fontStyle: 'italic'}})]), 'parameter-fields')
+                    ui.buildPanel({
+                        title: 'Input Objects',
+                        body: div({dataElement: 'input-fields'}),
+                        classes: ['kb-panel-light']
+                    }),
+                    ui.buildPanel({
+                        title: span(['Parameters', span({dataElement: 'advanced-hidden-message', style: {marginLeft: '6px', fontStyle: 'italic'}})]), 
+                        body: div({dataElement: 'parameter-fields'}),
+                        classes: ['kb-panel-light']
+                    })
                 ]);
 
             return {
@@ -237,7 +246,7 @@ define([
 
         function doAttach(node) {
             container = node;
-            dom = Dom.make({
+            ui = UI.make({
                 node: container,
                 bus: bus
             });
@@ -245,9 +254,9 @@ define([
             container.innerHTML = layout.content;
             layout.events.attachEvents(container);
             places = {
-                inputFields: dom.getElement('input-fields'),
-                parameterFields: dom.getElement('parameter-fields'),
-                advancedParameterFields: dom.getElement('advanced-parameter-fields')
+                inputFields: ui.getElement('input-fields'),
+                parameterFields: ui.getElement('parameter-fields'),
+                advancedParameterFields: ui.getElement('advanced-parameter-fields')
             };
         }
 
@@ -340,7 +349,7 @@ define([
                                     var errorDisplay = div({style: {border: '1px red solid'}}, [
                                         ex.message
                                     ]);
-                                    places.inputFields.appendChild(dom.createNode(errorDisplay));
+                                    places.inputFields.appendChild(ui.createNode(errorDisplay));
                                 }
                             }));
                         }
@@ -354,7 +363,7 @@ define([
                     })
                     .then(function () {
                         if (parameterParams.length === 0) {
-                            dom.setContent('parameter-fields', 'No parameters for this app');
+                            ui.setContent('parameter-fields', 'No parameters for this app');
                         } else {
                             return Promise.all(parameterParams.map(function (spec) {
                                 try {
@@ -372,7 +381,7 @@ define([
                                     var errorDisplay = div({style: {border: '1px red solid'}}, [
                                         ex.message
                                     ]);
-                                    places.parameterFields.appendChild(dom.createNode(errorDisplay));
+                                    places.parameterFields.appendChild(ui.createNode(errorDisplay));
                                 }
                             }));
                         }

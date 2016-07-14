@@ -32,14 +32,14 @@
 # 8. Done!
 
 JUPYTER_NOTEBOOK_INSTALL_DIR=jupyter_notebook
-JUPYTER_NOTEBOOK_REPO=https://github.com/eapearson/notebook
-JUPYTER_NOTEBOOK_TAG=4.2.0-kbase
+# JUPYTER_NOTEBOOK_REPO=https://github.com/eapearson/notebook
+# JUPYTER_NOTEBOOK_TAG=4.2.0-kbase
 
 JUPYTER_NOTEBOOK_REPO=https://github.com/jupyter/notebook
-JUPYTER_NOTEBOOK_TAG=4.2.0
+JUPYTER_NOTEBOOK_TAG=4.2.1
 
-#IPYWIDGETS_INSTALL_DIR=ipywidgets
-#IPYWIDGETS_TAG=5.0.0
+# IPYWIDGETS_INSTALL_DIR=ipywidgets
+# IPYWIDGETS_TAG=5.0.0
 
 PYTHON=python2.7
 
@@ -163,7 +163,8 @@ then
     # git clone https://github.com/ipython/ipywidgets
     # cd ipywidgets
     # git checkout tags/$IPYWIDGETS_TAG
-    pip install ipywidgets==$IPYWIDGETS_TAG >> ${logfile} 2>&1
+    # pip install ipywidgets==$IPYWIDGETS_TAG >> ${logfile} 2>&1
+    pip install ipywidgets >> ${logfile} 2>&1
     # pip install -e . >> ${logfile} 2>&1
 fi
 

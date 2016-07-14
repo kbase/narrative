@@ -1,4 +1,4 @@
-from biokbase.narrative.jobs import SpecManager
+from biokbase.narrative.jobs.specmanager import SpecManager
 import unittest
 import mock
 

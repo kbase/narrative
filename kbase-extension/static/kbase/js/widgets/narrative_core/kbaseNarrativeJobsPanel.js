@@ -445,7 +445,7 @@ define([
         },
 
         getJobInitCode: function () {
-            return ["from biokbase.narrative.jobs import JobManager",
+            return ["from biokbase.narrative.jobs.jobmanager import JobManager",
                     "JobManager().initialize_jobs()"].join('\n');
         },
 

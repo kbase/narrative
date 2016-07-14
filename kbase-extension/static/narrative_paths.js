@@ -411,11 +411,12 @@ require.config({
 });
 
 
-function addCdnModules() {
-    var // baseUrl = 'https://narrative-dev.kbase.us/cdn',
+function addCdnModules(baseUrl) {
+    if (!baseUrl) {
+        baseUrl = 'https://ci.kbase.us/cdn/files';
         // baseUrl = 'http://cdn.kbase.us/cdn',
-        baseUrl = 'https://ci.kbase.us/cdn/files',
-        modules = {
+    }
+    var modules = {
             kb_common: 'kbase-common-js/1.7.0/',
             kb_service: 'kbase-service-clients-js/2.9.1/',
             uuid: 'pure-uuid/1.3.0/uuid',
@@ -436,5 +437,4 @@ function addCdnModules() {
         paths: paths
     });
 }
-addCdnModules();
-
+// addCdnModules();

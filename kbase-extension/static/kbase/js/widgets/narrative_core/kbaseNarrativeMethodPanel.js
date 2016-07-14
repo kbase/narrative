@@ -26,7 +26,7 @@ define (
                 'base/js/namespace',
                 'kb_service/client/narrativeMethodStore',
                 'uuid',
-                
+
 		'narrative_core/catalog/kbaseCatalogBrowser',
 		'kbaseNarrative',
 		'catalog-client-api',
@@ -55,7 +55,7 @@ define (
         options: {
             loadingImage: Config.get('loading_gif'),
             autopopulate: true,
-            title: 'Apps & Methods',
+            title: 'Apps',
             methodStoreURL: Config.url('narrative_method_store'),
             catalogURL: Config.url('catalog'),
             moduleLink: '/#appcatalog/module/',
@@ -250,7 +250,7 @@ define (
                            .addClass('btn btn-xs btn-default')
                            .append('<span class="fa fa-search"></span>')
                            .tooltip({
-                                title: 'Search for Apps & Methods',
+                                title: 'Search for Apps',
                                 container: 'body',
                                 delay: {
                                     show: Config.get('tooltip').showDelay,

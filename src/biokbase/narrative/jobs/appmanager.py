@@ -4,14 +4,13 @@ A module for managing apps, specs, requirements, and for starting jobs.
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
 from .job import Job
-from .viewer_job import ViewerJob
 import biokbase.narrative.clients as clients
 from biokbase.narrative.widgetmanager import WidgetManager
 from .jobmanager import JobManager
 from .specmanager import SpecManager
 import os
 import biokbase.auth
-from .app_util import (
+from biokbase.narrative.app_util import (
     app_version_tags,
     check_tag,
     system_variable,
@@ -471,7 +470,8 @@ class AppManager(object):
         self.spec_manager.check_app(app_id, tag, raise_exception=True)
 
         if version is not None and tag != "release":
-            raise ValueError("App versions only apply to released app modules!")
+            if re.match(version, '\d+\.\d+\.\d+') is not None:
+                raise ValueError("Semantic versions only apply to released app modules. You can use a Git commit hash instead to specify a version.")
 
         # Get the spec & params
         spec = self.spec_manager.get_spec(app_id, tag)
@@ -509,6 +509,10 @@ class AppManager(object):
         service_name = spec['behavior']['kb_service_name']
         service_ver = spec['behavior'].get('kb_service_version', None)
         service_url = spec['behavior']['kb_service_url']
+
+        # Let the given version override the spec's version.
+        if version is not None:
+            service_ver = version
 
         # This is what calls the function in the back end - Module.method
         # This isn't the same as the app spec id.

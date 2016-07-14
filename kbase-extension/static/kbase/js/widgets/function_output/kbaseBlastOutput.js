@@ -1,15 +1,28 @@
-define(['jquery',
-    'util/string',
-    'd3',
-    'kbwidget',
-    'kbaseAuthenticatedWidget',
-    'kbaseTabs',
-    'jquery-dataTables',
-    'jquery-dataTables-bootstrap'],
-function ($, StringUtil) {
-    $.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'util/string',
+		'd3',
+		'kbaseAuthenticatedWidget',
+		'kbaseTabs',
+		'jquery-dataTables',
+		'jquery-dataTables-bootstrap'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		StringUtil,
+		d3,
+		kbaseAuthenticatedWidget,
+		kbaseTabs,
+		jquery_dataTables,
+		bootstrap
+	) {
+    return KBWidget({
         name: "kbaseBlastOutput",
-        parent: "kbaseAuthenticatedWidget",
+        parent : kbaseAuthenticatedWidget,
         version: "1.0.0",
         ws_id: null,
         ws_name: null,
@@ -58,7 +71,7 @@ function ($, StringUtil) {
                 data = data[0].data;
                 var tabPane = $('<div id="' + pref + 'tab-content">');
                 container.append(tabPane);
-                tabPane.kbaseTabs({canDelete: true, tabs: []});
+                var tabWidget = new kbaseTabs(tabPane, {canDelete: true, tabs: []});
 
                 var tabData = self.tabData();
                 var tabNames = tabData.names;
@@ -66,7 +79,7 @@ function ($, StringUtil) {
 
                 tabIds.forEach(function (tabId, i) {
                     var tabDiv = $('<div id="' + pref + tabId + '"> ');
-                    tabPane.kbaseTabs('addTab', {
+                    tabWidget.addTab({
                         tab: tabNames[i],
                         content: tabDiv,
                         canDelete: false,

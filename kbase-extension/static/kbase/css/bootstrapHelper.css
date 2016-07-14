@@ -1,0 +1,76 @@
+/*
+    Styles to help with bootstrap files.
+    Fix styles broken by other styles
+    Make bootstrap work better
+    Customize bootstrap styles
+*/
+
+/*
+  Bs recommends h4 for the modal title, but this is overridden by the general 
+  purpose kbase h4 style. Generally, I (Erik) do not like using semantic tags
+  in bootstrap anyway, especially header tags which inherently imply a specific
+  document structure which modal dialogs in no way can represent!)
+*/
+
+.modal .modal-title {
+    font-family: "Oxygen", Arial, sans-serif;
+    font-size: 130%;
+    font-weight: bold;
+    color: #2e618d;
+}
+
+/*
+    The BS checkbox appears too low, due to the top margin, when used with a label
+    in the recommended manner. 
+    Note: I don't understand why BS handles checkbox styling as they do, turning
+    the checkbox into relatively posiioned and then pushing the label to checkbox
+    to the left and down (at the same time given the container extra margin to
+    accomodate this.) Anyway, we roll with it but try to patch up the styling
+    as it breaks.
+*/
+.modal input[type="checkbox"] {
+    margin-top: 1px;
+}
+
+.panel.kb-panel-light {
+    border: none;
+}
+.panel.kb-panel-light > .panel-heading {
+    background-color: transparent;
+    font-weight: bold;
+    color: #666;
+    padding-left: 0;
+    padding-bottom: 2px;
+    border-bottom: 1px #CCC solid;
+}
+.panel.kb-panel-light .panel-body {
+    padding-top: 0;
+}
+
+.panel.kb-panel-container {
+    border: none;
+}
+.panel.kb-panel-container > .panel-heading {
+    background-color: transparent;
+    font-weight: bold;
+    color: #2e618d;
+    padding-left: 0;
+    padding-bottom: 2px;
+    border-bottom: 2px #CCC solid;
+    margin-bottom: 10px;
+}
+.panel.kb-panel-container .panel-body {
+    padding-top: 0;
+}
+
+/*
+  The button bar in a cell widgetis located at the bottom of the inputs, but 
+  above any outputs.
+  These styles attempt to help the button toolbar, which represents the actions
+  the user can take, be visually distinct from the other bits surrounding it.
+*/
+.btn-toolbar.kb-btn-toolbar-cell-widget {
+    margin-bottom: 20px;
+    background-color: #EEE;
+    padding: 6px;
+}

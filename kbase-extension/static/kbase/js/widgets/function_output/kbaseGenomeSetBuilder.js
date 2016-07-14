@@ -4,11 +4,23 @@
  * @public
  */
 
-define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbasePrompt'], 
-    function($) {
-    $.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'kbaseAuthenticatedWidget',
+		'kbasePrompt'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		kbaseAuthenticatedWidget,
+		kbasePrompt
+	) {
+    return KBWidget({
         name: "kbaseGenomeSetBuilder",
-        parent: "kbaseAuthenticatedWidget",
+        parent : kbaseAuthenticatedWidget,
         version: "1.0.0",
         options: {
         	loadExisting: null,
@@ -309,7 +321,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbasePrompt'],
         },
         
         showInfo: function(message) {
-        	$('<div/>').kbasePrompt({title : 'Information', body : message}).openPrompt();
+        	 new kbasePrompt($('<div/>'), {title : 'Information', body : message}).openPrompt();
         }
     });
 });

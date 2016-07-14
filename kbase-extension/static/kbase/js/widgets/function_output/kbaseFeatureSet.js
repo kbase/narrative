@@ -5,19 +5,31 @@
  */
 'use strict';
 
-define(['jquery',
-        'narrativeConfig',
-        'kbwidget',
-        'kbaseAuthenticatedWidget', 
-        'jquery-dataTables',
-        'jquery-dataTables-bootstrap',
-        'knhx', 
-        'widgetMaxWidthCorrection'], 
-function($, 
-         Config) {
-    $.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'narrativeConfig',
+		'kbaseAuthenticatedWidget',
+		'jquery-dataTables',
+		'jquery-dataTables-bootstrap',
+		'knhx',
+		'widgetMaxWidthCorrection'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Config,
+		kbaseAuthenticatedWidget,
+		jquery_dataTables,
+		bootstrap,
+		knhx,
+		widgetMaxWidthCorrection
+	) {
+    return KBWidget({
         name: 'kbaseFeatureSet',
-        parent: 'kbaseAuthenticatedWidget',
+        parent : kbaseAuthenticatedWidget,
         version: '0.0.1',
         options: {
             featureset_name: null,

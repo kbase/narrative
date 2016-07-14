@@ -4,22 +4,33 @@
  * @public
  */
 
-define(['jquery',
-        'narrativeConfig',
-        'util/string',
-        'kbwidget',
-        'kbaseAuthenticatedWidget',
-        'kbaseTabs',
-        'kbasePrompt',
-        'jquery-dataTables',
-        'jquery-dataTables-bootstrap',
-        'kbaseVenndiagram',],
-function($,
-         Config,
-         StringUtil) {
-    $.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'narrativeConfig',
+		'util/string',
+		'kbaseAuthenticatedWidget',
+		'kbaseTabs',
+		'kbasePrompt',
+		'jquery-dataTables',
+		'jquery-dataTables-bootstrap'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Config,
+		StringUtil,
+		kbaseAuthenticatedWidget,
+		kbaseTabs,
+		kbasePrompt,
+		jquery_dataTables,
+		bootstrap
+	) {
+    return KBWidget({
         name: "kbasePanGenome",
-        parent: "kbaseAuthenticatedWidget",
+        parent : kbaseAuthenticatedWidget,
         version: "1.0.0",
         options: {
         	ws: null,
@@ -88,14 +99,14 @@ function($,
         		container.empty();
         		var tabPane = $('<div id="'+self.pref+'tab-content">');
         		container.append(tabPane);
-        		tabPane.kbaseTabs({canDelete : true, tabs : []});
+        		var tabWidget = new kbaseTabs(tabPane, {canDelete : true, tabs : []});
 
         		var showOverview = true;
         		if (self.options.withExport)
         			showOverview = false;
         		///////////////////////////////////// Statistics ////////////////////////////////////////////
-        		var tabStat = $("<div>");
-    			tabPane.kbaseTabs('addTab', {tab: 'Overview', content: tabStat, canDelete : false, show: showOverview});
+        		var tabStat = $("<div/>");
+    			tabWidget.addTab({tab: 'Overview', content: tabStat, canDelete : false, show: showOverview});
         		var tableOver = $('<table class="table table-striped table-bordered" '+
         				'style="margin-left: auto; margin-right: auto;" id="'+self.pref+'overview-table">');
         		tabStat.append(tableOver);
@@ -189,8 +200,8 @@ function($,
         		}
 
         		///////////////////////////////////// Shared orthologs ////////////////////////////////////////////
-        		var tabShared = $("<div>");
-    			tabPane.kbaseTabs('addTab', {tab: 'Shared homolog families', content: tabShared, canDelete : false, show: false});
+        		var tabShared = $("<div/>");
+    			tabWidget.addTab({tab: 'Shared homolog families', content: tabShared, canDelete : false, show: false});
         		var tableShared = $('<table class="table table-striped table-bordered" '+
         				'style="margin-left: auto; margin-right: auto;" id="'+self.pref+'shared-table">');
         		tabShared.append(tableShared);
@@ -229,7 +240,7 @@ function($,
         		}
         		tabOrth.append(tableOrth);
 
-    			tabPane.kbaseTabs('addTab', {tab: 'Protein families', content: tabOrth, canDelete : false, show: !showOverview});
+    			tabWidget.addTab({tab: 'Protein families', content: tabOrth, canDelete : false, show: !showOverview});
 
     			var orth_data = [];
     			for (var i in data.orthologs) {
@@ -275,7 +286,7 @@ function($,
             			}
         				var ortholog = getOrthologInfo(id);
         				var tabContent = self.buildOrthoTable(id, ortholog);
-        				tabPane.kbaseTabs('addTab', {tab: id, content: tabContent, canDelete : true, show: true});
+        				tabWidget.addTab({tab: id, content: tabContent, canDelete : true, show: true});
         			})
         		}
 
@@ -440,10 +451,10 @@ console.log("UNQ IS ", unique, selected_regions);
         		callback();
         	}).fail(function(e){
         		//console.log("Error caching genes: " + e.error.message);
-        		container.empty();
-        		container.append('<div class="alert alert-danger">'+
+        		this.$elem.empty();
+        		this.$elem.append('<div class="alert alert-danger">'+
         				e.error.message+'</div>');
-        	});
+        	}.bind(this));
         },
 
         buildOrthoTable: function(orth_id, ortholog) {
@@ -590,7 +601,7 @@ console.log("UNQ IS ", unique, selected_regions);
         },
 
         showInfo: function(message) {
-        	$('</div>').kbasePrompt({title : 'Information', body : message}).openPrompt();
+        	 new kbasePrompt($('<div/>'), {title : 'Information', body : message}).openPrompt();
         }
     });
 

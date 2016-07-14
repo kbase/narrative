@@ -4,26 +4,35 @@
  * @public
  */
 
-define(['jquery',
+define (
+    [
+        'kbwidget',
+        'bootstrap',
+        'jquery',
         'bluebird',
         'narrativeConfig',
         'ContigBrowserPanel',
         'util/string',
-        'kbwidget',
         'kbaseAuthenticatedWidget',
         'kbaseTabs',
-        'kbaseOntologyDictionary',
-        'kbaseOntologyTranslation',
         'jquery-dataTables',
-        'jquery-dataTables-bootstrap'],
-function($,
-         Promise,
-         Config,
-         ContigBrowserPanel,
-         StringUtil) {
-    $.KBWidget({
+        'jquery-dataTables-bootstrap'
+    ], function(
+        KBWidget,
+        bootstrap,
+        $,
+        Promise,
+        Config,
+        ContigBrowserPanel,
+        StringUtil,
+        kbaseAuthenticatedWidget,
+        kbaseTabs,
+        jquery_dataTables,
+        bootstrap
+    ) {
+    return KBWidget({
         name: "kbaseGenomeView",
-        parent: "kbaseAuthenticatedWidget",
+        parent : kbaseAuthenticatedWidget,
         version: "1.0.0",
         ws_id: null,
         ws_name: null,
@@ -130,22 +139,22 @@ function($,
 
         render: function() {
             var self = this;
-        	var pref = StringUtil.uuid();
+            var pref = StringUtil.uuid();
 
             var container = this.$elem;
             if (self.token == null) {
-            	container.empty();
-            	container.append("<div>[Error] You're not logged in</div>");
-            	return;
+                container.empty();
+                container.append("<div>[Error] You're not logged in</div>");
+                return;
             }
 
             var kbws = new Workspace(self.wsUrl, {'token': self.token});
 
             var ready = function(gnm, ctg) {
-            		container.empty();
-            		var tabPane = $('<div id="'+pref+'tab-content">');
-            		container.append(tabPane);
-            		tabPane.kbaseTabs({canDelete : true, tabs : []});
+                    container.empty();
+                    var tabPane = $('<div id="'+pref+'tab-content">');
+                    container.append(tabPane);
+                    var tabObj = new kbaseTabs(tabPane, {canDelete : true, tabs : []});
 
                     var genomeType = self.genomeType(gnm);
 
@@ -167,7 +176,7 @@ function($,
 
                     for (var i=0; i<tabIds.length; i++) {
                       var tabDiv = $('<div id="'+pref+tabIds[i]+'"> ');
-                      tabPane.kbaseTabs('addTab', {tab: tabNames[i], content: tabDiv, canDelete : false, show: (i == 0)});
+                      tabObj.addTab({tab: tabNames[i], content: tabDiv, canDelete : false, show: (i == 0)});
                     }
 
                     var contigCount = 0;
@@ -278,7 +287,7 @@ function($,
                               $linkCell.append($.jqElem('a')
                                         .on('click', function(e) {
                                           var $tabDiv = $.jqElem('div').kbaseOntologyDictionary({ term_id : k});
-                                          tabPane.kbaseTabs('addTab', {tab: k, content: $tabDiv.$elem, canDelete : true, show: true});
+                                          tabObj.addTab({tab: k, content: $tabDiv.$elem, canDelete : true, show: true});
                                         })
                                         .append(k));
 
@@ -354,7 +363,7 @@ function($,
                             aElem.on('click', function() {
                                 if (!genesAreShown) {
                                     genesAreShown = true;
-                                    self.prepareGenesAndContigs(pref, kbws, gnm, tabPane);
+                                    self.prepareGenesAndContigs(pref, kbws, gnm, tabObj);
                                 }
                             });
                         }
@@ -627,14 +636,14 @@ function($,
                 var lastElemTabNum = 0;
 
                 function openTabGetId(tabName) {
-                    if (tabPane.kbaseTabs('hasTab', tabName))
+                    if (tabPane.hasTab(tabName))
                         return null;
                     lastElemTabNum++;
                     var tabId = '' + pref + 'elem' + lastElemTabNum;
                     var tabDiv = $('<div id="'+tabId+'"> ');
-                    tabPane.kbaseTabs('addTab', {tab: tabName, content: tabDiv, canDelete : true, show: true, deleteCallback: function(name) {
-                        tabPane.kbaseTabs('removeTab', name);
-                        tabPane.kbaseTabs('showTab', tabPane.kbaseTabs('activeTab'));
+                    tabPane.addTab({tab: tabName, content: tabDiv, canDelete : true, show: true, deleteCallback: function(name) {
+                        tabPane.removeTab(name);
+                        tabPane.showTab(tabPane.activeTab());
                     }});
                     return tabId;
                 }
@@ -642,7 +651,7 @@ function($,
                 function showGene(geneId) {
                     var tabId = openTabGetId(geneId);
                     if (tabId == null) {
-                        tabPane.kbaseTabs('showTab', geneId);
+                        tabPane.showTab(geneId);
                         return;
                     }
                     var gene = geneMap[geneId];
@@ -701,13 +710,13 @@ function($,
                     $('.'+tabId+'-click2').click(function() {
                         showContig($(this).data('contigname'));
                     });
-                    tabPane.kbaseTabs('showTab', geneId);
+                    tabPane.showTab(geneId);
                 }
 
                 function showContig(contigName) {
                     var tabId = openTabGetId(contigName);
                     if (tabId == null) {
-                        tabPane.kbaseTabs('showTab', contigName);
+                        tabPane.showTab(contigName);
                         return;
                     }
                     var contig = contigMap[contigName];
@@ -732,7 +741,7 @@ function($,
                     });
                     $('#'+tabId).append(cgb.data.$elem);
                     cgb.data.init();
-                    tabPane.kbaseTabs('showTab', contigName);
+                    tabPane.showTab(contigName);
                 }
             }, function(data) {
                 container.empty();

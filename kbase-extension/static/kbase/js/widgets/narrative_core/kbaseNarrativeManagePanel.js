@@ -21,10 +21,10 @@ function($,
          KBWidget,
          ControlPanel,
          NewWorkspace) {
-    'use strict',
-    $.KBWidget({
+    'use strict';
+    return new KBWidget({
         name: "kbaseNarrativeManagePanel",
-        parent: "kbaseNarrativeControlPanel",
+        parent : ControlPanel,
         version: "1.0.0",
         wsClient: null,
         table: null,
@@ -936,7 +936,7 @@ function($,
 
                         var $sharingDiv = $('<div>');
                         self.setInteractionPanel($interactionPanel, 'Share Settings', $sharingDiv);
-                        $sharingDiv.kbaseNarrativeSharePanel({
+                         new kbaseNarrativeSharePanel($sharingDiv, {
                             ws_name_or_id: data.ws_info[0],
                             max_list_height: 'none',
                             add_user_input_width: '280px'

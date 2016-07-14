@@ -1,8 +1,21 @@
 /**
  * KBase widget to display table of BIOM data
  */
-define(['jquery', 'kbwidget', 'RGBColor', 'kbStandaloneGraph'], function($) {
-    $.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'RGBColor',
+		'kbStandaloneGraph'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		RGBColor,
+		kbStandaloneGraph
+	) {
+    return KBWidget({
             name: 'RankAbundancePlot',
             version: '1.0.0',
             options: {

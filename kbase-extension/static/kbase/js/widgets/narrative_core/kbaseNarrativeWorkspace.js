@@ -20,30 +20,48 @@
  * @public
  */
 
-define(['jquery',
-        'underscore',
-        'bluebird',
-        'narrativeConfig',
-        'util/bootstrapDialog',
-        'util/string',
-        'jquery-nearest',
-        'kbwidget',
-        'bootstrap',
-        'kbaseDefaultNarrativeOutput',
-        'kbaseDefaultNarrativeInput',
-        'kbaseNarrativeAppCell',
-        'kbaseNarrativeMethodCell',
-        'kbaseNarrativeSidePanel',
-        'kbaseNarrativeDataPanel'],
-function($,
-         _,
-         Promise,
-         Config,
-         BootstrapDialog,
-         StringUtil) {
-    $.KBWidget({
+define (
+	[
+        'base/js/namespace',
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'underscore',
+		'bluebird',
+		'narrativeConfig',
+		'util/bootstrapDialog',
+		'util/string',
+		'kbaseDefaultNarrativeOutput',
+		'kbaseDefaultNarrativeInput',
+		'kbaseNarrativeAppCell',
+		'kbaseNarrativeMethodCell',
+		'kbaseNarrativeSidePanel',
+		'kbaseNarrativeDataPanel',
+        'kbaseNarrativeOutputCell',
+        'kbaseTabs'
+	], function(
+        Jupyter,
+		KBWidget,
+		bootstrap,
+		$,
+		_,
+		Promise,
+		Config,
+		BootstrapDialog,
+		StringUtil,
+		kbaseDefaultNarrativeOutput,
+		kbaseDefaultNarrativeInput,
+		kbaseNarrativeAppCell,
+		kbaseNarrativeMethodCell,
+		kbaseNarrativeSidePanel,
+		kbaseNarrativeDataPanel,
+        kbaseNarrativeOutputCell,
+        kbaseTabs
+	) {
+
+    return KBWidget({
         name: 'kbaseNarrativeWorkspace',
-        parent: 'kbaseWidget',
+
         version: '1.0.0',
         options: {
             loadingImage: Config.get('loading_gif'),
@@ -60,7 +78,7 @@ function($,
         connectable: {},
 
         inputsRendered: false,
-        maxSavedStates: 2,      // limit the states saved to 2 for now.
+        maxSavedStates: 1,      // limit the states saved to 1 for now.
         nextOutputCellId: '',
 
         // constant strings.
@@ -124,22 +142,17 @@ function($,
                         // but without some heavy rewiring, it's difficult
                         // to track when some event occurred.
                         // So, dirty bit it is.
-                        this.refreshFunctionInputs(!this.inputsRendered);
-                        if (!this.inputsRendered) {
-                            this.loadAllRecentCellStates();
-                            this.trigger('refreshJobs.Narrative');
+                        try {
+                            this.refreshFunctionInputs(!this.inputsRendered);
+                            if (!this.inputsRendered) {
+                                this.loadAllRecentCellStates();
+                                this.trigger('refreshJobs.Narrative');
+                            }
+                        } catch (ex) {
+                            console.error('Error handling dataUpdated', ex);
                         }
 
                         this.inputsRendered = true;
-                    }
-                }.bind(this)
-            );
-
-            $(document).on('narrativeDataQuery.Narrative',
-                function(e, callback) {
-                    var objList = this.getNarrativeDependencies();
-                    if (callback) {
-                        callback(objList);
                     }
                 }.bind(this)
             );
@@ -158,16 +171,16 @@ function($,
             // );
 
             $(document).on('methodClicked.Narrative',
-                function(event, method) {
-                    this.buildMethodCell(method);
+                function(event, method, tag) {
+                    this.buildAppCodeCell(method, tag);
                 }.bind(this)
             );
 
-            $(document).on('appClicked.Narrative',
-                function(event, appInfo) {
-                    this.buildAppCell(appInfo);
-                }.bind(this)
-            );
+            // $(document).on('appClicked.Narrative',
+            //     function(event, appInfo) {
+            //         this.buildAppCell(appInfo);
+            //     }.bind(this)
+            // );
 
             $(document).on('deleteCell.Narrative',
                 function(event, index) {
@@ -175,17 +188,17 @@ function($,
                 }.bind(this)
             );
 
-            $(document).on('runCell.Narrative',
-                function(event, data) {
-                    this.runMethodCell(data);
-                }.bind(this)
-            );
+            // $(document).on('runCell.Narrative',
+            //     function(event, data) {
+            //         this.runMethodCell(data);
+            //     }.bind(this)
+            // );
 
-            $(document).on('runApp.Narrative',
-                function(event, data) {
-                    this.runAppCell(data);
-                }.bind(this)
-            );
+            // $(document).on('runApp.Narrative',
+            //     function(event, data) {
+            //         this.runAppCell(data);
+            //     }.bind(this)
+            // );
 
             $(document).on('createOutputCell.Narrative',
                 function(event, data) {
@@ -401,12 +414,95 @@ function($,
             }
         },
 
+        buildAppCodeCell: function(spec, tag) {
+            var methodName = "Unknown method";
+            if (!spec || !spec.info) {
+                console.error('ERROR build method code cell: ', spec, tag);
+                alert('Sorry, could not find this method');
+                return;
+            }
+
+            // For now, dispatch on the type of method cell here. This is really
+            // just a handler for the event emitted when a user clicks on
+            // a method in the side panel, so there is no processing of anything
+            // yet, really.
+            // An alternative is that the event emitted could be specialized based on the
+            // type of method.
+
+            // To boot, there does not appear to be a spec property dedicated to
+            // defining the "type" of method.
+            // So, for kicks, we are using the presence of the word "view" in the
+            // spec name, as well as the absence of any output paramters.
+
+            // console.log('SPEC', spec);
+            var cellType = this.determineMethodCellType(spec);
+            //if (cellType === 'view') {
+            //    alert('Sorry, view cells are not yet supported');
+           // }
+
+            // This will also trigger the create.Cell event, which is not very
+            // useful for us really since we haven't been able to set the
+            // metadata yet. Don't worry, I checked, the Jupyter api does not
+            // provide a way to set the cell metadata as it is being created.
+            var cell = Jupyter.narrative.insertAndSelectCellBelow('code');
+
+            // Now we need to invent a way of triggering the cell to set itself up.
+            $([Jupyter.events]).trigger('inserted.Cell', {
+                cell: cell,
+                kbase: {
+                    type: cellType,
+                    appTag: tag,
+                    appSpec: spec
+                }
+            });
+        },
+
+        determineMethodCellType: function (spec) {
+            // An app will execute via the method described in the behavior. If
+            // such a method is not described, it is by definition not an
+            // executing app.
+            if ((spec.behavior.kb_service_method && spec.behavior.kb_service_name) ||
+                (spec.behavior.script_module && spec.behavior.script_name)) {
+                return 'app';
+            }
+
+            // The category property is supposedly used to indicate that the app
+            // is a viewer, but this is not used very reliably.
+            // Still, we look at that here...
+            if (spec.info.categories.some(function (category) {
+                return (category === 'viewers');
+            })) {
+                return 'view';
+            }
+            
+            // A very small class of methods are just non-app-calling widgets.
+            switch (spec.info.id) {
+                case 'edit_media':
+                    return 'widget';
+            }
+
+            // ... while in reality, ANY app which does not execute is for now
+            // considered a viewer.
+
+            return 'view';
+
+//            if (!spec.parameters.some(function (parameter) {
+//                return (parameter.ui_class === 'output');
+//            })) {
+//                return 'app';
+//            };
+//
+//            console.error('ERROR - could not determine cell type', spec);
+//            throw new Error('Could not determine cell type');
+        },
+
+
         /**
-         * @method buildMethodCell
+         * @method buildAppCell
          * @param {Object} method -
          * @public
          */
-        buildMethodCell: function(method) {
+        buildAppCell: function(method) {
             var cell = Jupyter.narrative.insertAndSelectCellBelow('markdown');
             // cell.celltoolbar.hide();
 
@@ -425,7 +521,9 @@ function($,
             // Yeah, I know it's ugly, but that's how it goes.
             var cellContent = "<div id='" + cellId + "'></div>" +
                               "\n<script>" +
-                              "$('#" + cellId + "').kbaseNarrativeMethodCell({'method' : '" + StringUtil.safeJSONStringify(method) + "', 'cellId' : '" + cellId + "'});" +
+                              "require(['kbaseNarrativeMethodCell'], function(kbaseNarrativeMethodCell) {" +
+                              "var w = new kbaseNarrativeMethodCell($('#" + cellId + "'), {'method' : '" + StringUtil.safeJSONStringify(method) + "', 'cellId' : '" + cellId + "'});" +
+                              "});" +
                               "</script>";
 
             cell.set_text(cellContent);
@@ -436,160 +534,158 @@ function($,
             this.removeCellEditFunction(cell);
         },
 
-        runMethodCell: function(data) {
-            if (!data || !data.cell || !data.method || !data.parameters) {
-                // do some erroring later.
-                return;
-            }
-            this.saveCellState(data.cell);
-            this.updateNarrativeDependencies();
-            var self = this;
-            var code = '';
-            var showOutput = true;
+        // runMethodCell: function(data) {
+        //     if (!data || !data.cell || !data.method || !data.parameters) {
+        //         // do some erroring later.
+        //         return;
+        //     }
+        //     this.saveCellState(data.cell);
+        //     var self = this;
+        //     var code = '';
+        //     var showOutput = true;
 
-            // Three cases to NOT show immediately:
-            // 1. method.job_id_output_field is not null    -- long running (via UJS)
-            // 2. method.behavior.kb_service_method is not null && method.behavior.kb_service_url IS null    -- long running service call (via NJS)
-            // 3. method.behavior.script_module is not null -- AWE script backend (via NJS)
+        //     // Three cases to NOT show immediately:
+        //     // 1. method.job_id_output_field is not null    -- long running (via UJS)
+        //     // 2. method.behavior.kb_service_method is not null && method.behavior.kb_service_url IS null    -- long running service call (via NJS)
+        //     // 3. method.behavior.script_module is not null -- AWE script backend (via NJS)
 
-            // if there's a job_id_output_field in the method, then it's long-running, and we shouldn't show an output cell right away.
-            // ...or maybe show a temporary one?
-            if ((data.method.job_id_output_field && data.method.job_id_output_field != null) ||
-                (data.method.behavior.kb_service_method && (!data.method.behavior.kb_service_url || data.method.behavior.kb_service_url.length === 0)) ||
-                (data.method.behavior.script_module)) {
-                showOutput = false;
-            }
-            // old, pre-njs style where the methods were all living in Jupyter-land
-            if (data.method.behavior.python_class && data.method.behavior.python_function) {
-                code = this.buildRunCommand(data.method.behavior.python_class, data.method.behavior.python_function, data.parameters);
-            }
-            // newer, njs/njs-mock style where methods get farmed out
-            else if ((data.method.behavior.kb_service_method && data.method.behavior.kb_service_name) ||
-                     (data.method.behavior.script_module && data.method.behavior.script_name)) {
-                code = this.buildGenericRunCommand(data);
-            }
-            else {
-                // something else!
-                // do the standard for now.
-                code = this.buildGenericRunCommand(data);
-            }
-            // var callbacks = {
-            //     'execute_reply' : function(content) { self.handleExecuteReply(data.cell, content); },
-            //     'output' : function(msgType, content) { self.handleOutput(data.cell, msgType, content, showOutput); },
-            //     'clear_output' : function(content) { self.handleClearOutput(data.cell, content); },
-            //     'set_next_input' : function(text) { self.handleSetNextInput(data.cell, content); },
-            //     'input_request' : function(content) { self.handleInputRequest(data.cell, content); }
-            // };
+        //     // if there's a job_id_output_field in the method, then it's long-running, and we shouldn't show an output cell right away.
+        //     // ...or maybe show a temporary one?
+        //     if ((data.method.job_id_output_field && data.method.job_id_output_field != null) ||
+        //         (data.method.behavior.kb_service_method && (!data.method.behavior.kb_service_url || data.method.behavior.kb_service_url.length === 0)) ||
+        //         (data.method.behavior.script_module)) {
+        //         showOutput = false;
+        //     }
+        //     // old, pre-njs style where the methods were all living in Jupyter-land
+        //     if (data.method.behavior.python_class && data.method.behavior.python_function) {
+        //         code = this.buildRunCommand(data.method.behavior.python_class, data.method.behavior.python_function, data.parameters);
+        //     }
+        //     // newer, njs/njs-mock style where methods get farmed out
+        //     else if ((data.method.behavior.kb_service_method && data.method.behavior.kb_service_name) ||
+        //              (data.method.behavior.script_module && data.method.behavior.script_name)) {
+        //         code = this.buildGenericRunCommand(data);
+        //     }
+        //     else {
+        //         // something else!
+        //         // do the standard for now.
+        //         code = this.buildGenericRunCommand(data);
+        //     }
+        //     // var callbacks = {
+        //     //     'execute_reply' : function(content) { self.handleExecuteReply(data.cell, content); },
+        //     //     'output' : function(msgType, content) { self.handleOutput(data.cell, msgType, content, showOutput); },
+        //     //     'clear_output' : function(content) { self.handleClearOutput(data.cell, content); },
+        //     //     'set_next_input' : function(text) { self.handleSetNextInput(data.cell, content); },
+        //     //     'input_request' : function(content) { self.handleInputRequest(data.cell, content); }
+        //     // };
 
-            var handleError = function() {
-                if(data.widget) {
-                    if(data.widget.changeState)
-                        data.widget.changeState('error');
-                }
-            };
+        //     var handleError = function() {
+        //         if(data.widget) {
+        //             if(data.widget.changeState)
+        //                 data.widget.changeState('error');
+        //         }
+        //     };
 
-            var callbacks = {
-                shell: {
-                    reply: function(content) { self.handleExecuteReply(data.cell, content); },
-                    payload: {
-                        set_next_input: function(content) { self.handleSetNextInput(data.cell, content); },
-                    },
-                },
-                iopub: {
-                    output: function(content) { self.handleOutput(data.cell, content, showOutput, handleError, data.widget); },
-                    clear_output: function(content) { self.handleClearOutput(data.cell, content); },
-                },
-                input: function(content) { self.handleInputRequest(data.cell, content); }
-            };
+        //     var callbacks = {
+        //         shell: {
+        //             reply: function(content) { self.handleExecuteReply(data.cell, content); },
+        //             payload: {
+        //                 set_next_input: function(content) { self.handleSetNextInput(data.cell, content); },
+        //             },
+        //         },
+        //         iopub: {
+        //             output: function(content) { self.handleOutput(data.cell, content, showOutput, handleError, data.widget); },
+        //             clear_output: function(content) { self.handleClearOutput(data.cell, content); },
+        //         },
+        //         input: function(content) { self.handleInputRequest(data.cell, content); }
+        //     };
 
-            var executeOptions = {
-                silent: true,
-                user_expressions: {},
-                allow_stdin: false,
-                store_history: false
-            };
+        //     var executeOptions = {
+        //         silent: true,
+        //         user_expressions: {},
+        //         allow_stdin: false,
+        //         store_history: false
+        //     };
 
-            $(data.cell.element).find('#kb-func-progress').css({'display': 'block'});
-            Jupyter.notebook.kernel.execute(code, callbacks, executeOptions);
-        },
+        //     $(data.cell.element).find('#kb-func-progress').css({'display': 'block'});
+        //     Jupyter.notebook.kernel.execute(code, callbacks, executeOptions);
+        // },
 
-        buildAppCell: function(appSpec) {
-            var cell = Jupyter.narrative.insertAndSelectCellBelow('markdown');
-            // cell.celltoolbar.hide();
-            this.removeCellEditFunction(cell);
+        // buildAppCell: function(appSpec) {
+        //     var cell = Jupyter.narrative.insertAndSelectCellBelow('markdown');
+        //     // cell.celltoolbar.hide();
+        //     this.removeCellEditFunction(cell);
 
-            var tempContent = '<img src="' + this.options.loadingImage + '">';
-            cell.set_text(tempContent);
-            cell.rendered = false;
-            cell.render();
+        //     var tempContent = '<img src="' + this.options.loadingImage + '">';
+        //     cell.set_text(tempContent);
+        //     cell.rendered = false;
+        //     cell.render();
 
-            this.setAppCell(cell, appSpec);
-            var cellIndex = Jupyter.notebook.ncells() - 1;
-            var cellId = 'kb-cell-' + cellIndex + '-' + StringUtil.uuid();
+        //     this.setAppCell(cell, appSpec);
+        //     var cellIndex = Jupyter.notebook.ncells() - 1;
+        //     var cellId = 'kb-cell-' + cellIndex + '-' + StringUtil.uuid();
 
-            // The various components are HTML STRINGS, not jQuery objects.
-            // This is because the cell expects a text input, not a jQuery input.
-            // Yeah, I know it's ugly, but that's how it goes.
-            var cellContent = "<div id='" + cellId + "'></div>" +
-                              "\n<script>" +
-                              "$('#" + cellId + "').kbaseNarrativeAppCell({'appSpec' : '" + StringUtil.safeJSONStringify(appSpec) + "', 'cellId' : '" + cellId + "'});" +
-                              "</script>";
-            cell.set_text(cellContent);
-            cell.rendered = false;
-            cell.render();
-        },
+        //     // The various components are HTML STRINGS, not jQuery objects.
+        //     // This is because the cell expects a text input, not a jQuery input.
+        //     // Yeah, I know it's ugly, but that's how it goes.
+        //     var cellContent = "<div id='" + cellId + "'></div>" +
+        //                       "\n<script>" +
+        //                        "new kbaseNarrativeAppCell($('#" + cellId + "'), {'appSpec' : '" + StringUtil.safeJSONStringify(appSpec) + "', 'cellId' : '" + cellId + "'});" +
+        //                       "</script>";
+        //     cell.set_text(cellContent);
+        //     cell.rendered = false;
+        //     cell.render();
+        // },
 
-        runAppCell: function(data) {
-            if (!data || !data.cell || !data.appSpec || !data.methodSpecs || !data.parameters) {
-                // error out.
-                return;
-            }
-            this.saveCellState(data.cell);
-            this.updateNarrativeDependencies();
-            var self = this;
-            var callbacks = {
-                shell: {
-                    reply: function(content) { self.handleExecuteReply(data.cell, content); },
-                    payload: {
-                        set_next_input: function(content) { self.handleSetNextInput(data.cell, content); },
-                    },
-                },
-                iopub: {
-                    output: function(content) { self.handleOutput(data.cell, content, "app"); },
-                    clear_output: function(content) { self.handleClearOutput(data.cell, content); },
-                },
-                input: function(content) { self.handleInputRequest(data.cell, content); }
-            };
+        // runAppCell: function(data) {
+        //     if (!data || !data.cell || !data.appSpec || !data.methodSpecs || !data.parameters) {
+        //         // error out.
+        //         return;
+        //     }
+        //     this.saveCellState(data.cell);
+        //     var self = this;
+        //     var callbacks = {
+        //         shell: {
+        //             reply: function(content) { self.handleExecuteReply(data.cell, content); },
+        //             payload: {
+        //                 set_next_input: function(content) { self.handleSetNextInput(data.cell, content); },
+        //             },
+        //         },
+        //         iopub: {
+        //             output: function(content) { self.handleOutput(data.cell, content, "app"); },
+        //             clear_output: function(content) { self.handleClearOutput(data.cell, content); },
+        //         },
+        //         input: function(content) { self.handleInputRequest(data.cell, content); }
+        //     };
 
-            var executeOptions = {
-                silent: true,
-                user_expressions: {},
-                allow_stdin: false,
-                store_history: false
-            };
+        //     var executeOptions = {
+        //         silent: true,
+        //         user_expressions: {},
+        //         allow_stdin: false,
+        //         store_history: false
+        //     };
 
-            // var callbacks = {
-            //     'execute_reply' : function(content) { self.handleExecuteReply(data.cell, content); },
-            //     'output' : function(msgType, content) { self.handleOutput(data.cell, msgType, content, "app"); },
-            //     'clear_output' : function(content) { self.handleClearOutput(data.cell, content); },
-            //     'set_next_input' : function(text) { self.handleSetNextInput(data.cell, content); },
-            //     'input_request' : function(content) { self.handleInputRequest(data.cell, content); }
-            // };
+        //     // var callbacks = {
+        //     //     'execute_reply' : function(content) { self.handleExecuteReply(data.cell, content); },
+        //     //     'output' : function(msgType, content) { self.handleOutput(data.cell, msgType, content, "app"); },
+        //     //     'clear_output' : function(content) { self.handleClearOutput(data.cell, content); },
+        //     //     'set_next_input' : function(text) { self.handleSetNextInput(data.cell, content); },
+        //     //     'input_request' : function(content) { self.handleInputRequest(data.cell, content); }
+        //     // };
 
-            var code = this.buildAppCommand(data.appSpec, data.methodSpecs, data.parameters);
-            Jupyter.notebook.kernel.execute(code, callbacks, executeOptions);
-        },
+        //     var code = this.buildAppCommand(data.appSpec, data.methodSpecs, data.parameters);
+        //     Jupyter.notebook.kernel.execute(code, callbacks, executeOptions);
+        // },
 
-        buildAppCommand: function(appSpec, methodSpecs, parameters) {
-            // console.log([appSpec, methodSpecs, parameters]);
-            var appSpecJSON = StringUtil.safeJSONStringify(appSpec);
-            var methodSpecJSON = StringUtil.safeJSONStringify(methodSpecs);
-            var paramsJSON = StringUtil.safeJSONStringify(parameters);
+        // buildAppCommand: function(appSpec, methodSpecs, parameters) {
+        //     // console.log([appSpec, methodSpecs, parameters]);
+        //     var appSpecJSON = StringUtil.safeJSONStringify(appSpec);
+        //     var methodSpecJSON = StringUtil.safeJSONStringify(methodSpecs);
+        //     var paramsJSON = StringUtil.safeJSONStringify(parameters);
 
-            return "import biokbase.narrative.common.service as Service\n" +
-                   "method = Service.get_service('app_service').get_method('app_call')\n" +
-                   "method('" + appSpecJSON + "', '" + methodSpecJSON + "', '" + paramsJSON + "')";
-        },
+        //     return "import biokbase.narrative.common.service as Service\n" +
+        //            "method = Service.get_service('app_service').get_method('app_call')\n" +
+        //            "method('" + appSpecJSON + "', '" + methodSpecJSON + "', '" + paramsJSON + "')";
+        // },
 
         /**
          * A TEMPORARY FUNCTION that should refresh and update the given cell's metadata to the new(er) version,
@@ -927,7 +1023,8 @@ function($,
             _.map(this.getReadOnlySelectors(), function (id) {$(id).hide()});
             this.toggleRunButtons(false);
             this.toggleSelectBoxes(false);
-            $('#kb-side-panel').kbaseNarrativeSidePanel('setReadOnlyMode', true);
+
+            Jupyter.narrative.sidePanel.setReadOnlyMode(true);
 
             if (this.narrativeIsReadOnly) {
                 $('#kb-view-only-msg').popover({
@@ -972,11 +1069,11 @@ function($,
                 delay = 0;
 
             if (this.narrativeIsReadOnly) {
-                $('#kb-side-panel').kbaseNarrativeSidePanel('setReadOnlyMode', true, this.hideControlPanels);
+                Jupyter.narrative.sidePanel.setReadOnlyMode(true, this.hideControlPanels);
             }
 
             else {
-                $('#kb-side-panel').kbaseNarrativeSidePanel('setReadOnlyMode', false);
+                Jupyter.narrative.sidePanel.setReadOnlyMode(false);
                 $('#kb-view-only-msg').addClass('hidden');
                 $('#kb-view-only-copy').addClass('hidden');
 
@@ -1148,166 +1245,6 @@ function($,
                    cell.metadata[this.KB_CELL][this.KB_TYPE] === type;
         },
 
-        getMethodCellDependencies: function(cell, paramValues) {
-            if (!this.isFunctionCell(cell))
-                return;
-            paramValues = $(cell.element).find('div[id^=kb-cell-]').kbaseNarrativeMethodCell('getParameters') || [];
-            var params = cell.metadata[this.KB_CELL].method.parameters;
-
-            var data = [];
-
-            // paramValues and method.properties.parameters should be parallel, but check anyway.
-            // assume that those elements between the parameters list and method's params that
-            var cellDeps = [];
-            var types = [];
-            var typesHash = {};
-
-            // note - it's method.parameters.param##
-            for (var i=0; i<params.length; i++) {
-                var p = params[i];
-
-                /* fields: default, description, type, ui_name */
-                if (p.text_options) {
-                    if (p.text_options.valid_ws_types) {
-                        var type = p.text_options.valid_ws_types[0];
-                        if (type && !this.ignoredDataTypes[type.toLowerCase()] && paramValues[i]) {
-                            cellDeps.push([type, paramValues[i]]);
-                            if (!typesHash[type]) {
-                                typesHash[type] = 1;
-                                types.push(type);
-                            }
-                        }
-                    }
-                }
-
-            }
-
-            // look up the deps in the data panel.
-            // Cheating for now - needs to be a synchronous call, though! There's no reason for it not to be, if the data's already loaded!
-            var objList = $('#kb-ws').kbaseNarrativeDataPanel('getLoadedData', types);
-
-            // Man, now what. N^2 searching? What a drag.
-            for (var i=0; i<cellDeps.length; i++) {
-                var type = cellDeps[i][0];
-                var found = false;
-                if (objList[type] && objList[type].length > 0) {
-                    for (var j=0; j<objList[type].length; j++) {
-                        if (objList[type][j][1] === cellDeps[i][1]) {
-                            data.push(objList[type][j][6] + '/' + objList[type][j][0] + '/' + objList[type][j][4]);
-                            found = true;
-                            break;
-                        }
-                    }
-                }
-            }
-            return data;
-
-        },
-
-        /**
-         * @method
-         * Returns a list of Workspace object dependencies for a single cell.
-         * These dependencies are returned as workspace object references of the format:
-         * X/Y/Z
-         * X = workspace number
-         * Y = object number
-         * Z = version number
-         * @private
-         */
-        getCellDependencies: function(cell, paramValues) {
-            if (!this.isFunctionCell(cell))
-                return;
-
-            var data = [];
-            var target = '#inputs';
-            // get a 'handle' (really just the invocable name) of the input widget
-            var inputWidget = cell.metadata[this.KB_CELL].method.properties.widgets.input || this.defaultInputWidget;
-            var params = cell.metadata[this.KB_CELL]['method'].properties.parameters;
-
-            if (!paramValues) {
-                paramValues = $(cell.element).find('#inputs')[inputWidget]('getParameters') || [];
-            }
-
-            // paramValues and method.properties.parameters should be parallel, but check anyway.
-            // assume that those elements between the parameters list and method's params that
-            var cellDeps = [];
-            var types = [];
-            var typesHash = {};
-
-            // note - it's method.parameters.param##
-            for (var i=0; i<Object.keys(params).length; i++) {
-                var pid = 'param' + i;
-                var p = params[pid];  // this is the param object itself.
-
-                /* fields: default, description, type, ui_name */
-                var type = p.type;
-                if (!this.ignoredDataTypes[type.toLowerCase()] && paramValues[i]) {
-                    cellDeps.push([type, paramValues[i]]);
-                    if (!typesHash[type]) {
-                        typesHash[type] = 1;
-                        types.push(type);
-                    }
-                }
-            }
-
-            // look up the deps in the data panel.
-            // Cheating for now - needs to be a synchronous call, though! There's no reason for it not to be, if the data's already loaded!
-            var objList = $('#kb-ws').kbaseNarrativeDataPanel('getLoadedData', types);
-
-            // Man, now what. N^2 searching? What a drag.
-            for (var i=0; i<cellDeps.length; i++) {
-                var type = cellDeps[i][0];
-                var found = false;
-                if (objList[type] && objList[type].length > 0) {
-                    for (var j=0; j<objList[type].length; j++) {
-                        if (objList[type][j][1] === cellDeps[i][1]) {
-                            data.push(objList[type][j][6] + '/' + objList[type][j][0] + '/' + objList[type][j][4]);
-                            found = true;
-                            break;
-                        }
-                    }
-                }
-            }
-            return data;
-        },
-
-        /**
-         * @method
-         * @return a list containing all dependencies as WS references.
-         * @public
-         */
-        getNarrativeDependencies: function() {
-            var cells = Jupyter.notebook.get_cells();
-            var deps = {};
-            // For each cell in the Notebook
-            $.each(cells, $.proxy(function(idx, cell) {
-                // Get its dependencies (it'll skip non-input cells)
-                if (this.isFunctionCell(cell)) {
-                    var cellDeps = [];
-                    if (cell.metadata[this.KB_CELL].method.properties) {
-                        cellDeps = this.getCellDependencies(cell);
-                    }
-                    else {
-                        cellDeps = this.getMethodCellDependencies(cell);
-                    }
-                    // Shove them in the Object as properties to uniquify them.
-                    for (var i=0; i<cellDeps.length; i++) {
-                        deps[cellDeps[i]] = 1;
-                    }
-                }
-            }, this));
-            // Return the final, unique list (cleaner than looping over every returned hit)
-            return Object.keys(deps);
-        },
-
-        /**
-         * @method
-         * @private
-         */
-        updateNarrativeDependencies: function() {
-            var deps = this.getNarrativeDependencies();
-            Jupyter.notebook.metadata.data_dependencies = deps;
-        },
 
         /**
          * Saves a cell's state into its metadata.
@@ -1342,6 +1279,7 @@ function($,
             }
             else if (this.isOutputCell(cell)) {
                 // do output widget stuff.
+
                 widget = 'kbaseNarrativeOutputCell';
             }
             else if (this.isAppCell(cell)) {
@@ -1350,16 +1288,22 @@ function($,
 
             try {
                 var state;
-                if (widget && $(cell.element).find(target)[widget](['prototype'])['getState']) {
-                    // if that widget can save state, do it!
-                    state = $(cell.element).find(target)[widget]('getState');
-                }
+                /** wjriehl - 6:20pm,Fri,15apr2016
+                 * SAVE STATE DISABLED
+                 * changes to the kbwidget API have caused this to embed the actual cell object into the
+                 * state, making it all circular when it tries to serialize.
+                 * so, disabled for now.
+                 */
+                // if (widget && $(cell.element).find(target)[widget](['prototype'])['getState']) {
+                //     // if that widget can save state, do it!
+                //     state = $(cell.element).find(target)[widget]('getState');
+                // }
 
-                var timestamp = this.getTimestamp();
-                cell.metadata[this.KB_CELL][this.KB_STATE].unshift({ 'time' : timestamp, 'state' : state });
-                while (this.maxSavedStates && cell.metadata[this.KB_CELL][this.KB_STATE].length > this.maxSavedStates) {
-                    cell.metadata[this.KB_CELL][this.KB_STATE].pop();
-                }
+                // var timestamp = this.getTimestamp();
+                // cell.metadata[this.KB_CELL][this.KB_STATE].unshift({ 'time' : timestamp, 'state' : state });
+                // while (this.maxSavedStates && cell.metadata[this.KB_CELL][this.KB_STATE].length > this.maxSavedStates) {
+                //     cell.metadata[this.KB_CELL][this.KB_STATE].pop();
+                // }
             }
             catch(error) {
                 this.dbg('Unable to save state for cell:');
@@ -1375,6 +1319,7 @@ function($,
          * @private
          */
         loadRecentCellState: function(cell) {
+
             var state = this.getRecentState(cell);
             if (state) {
                 var target = 'div[id^=kb-cell-]';
@@ -1419,8 +1364,14 @@ function($,
                 // it might not be either! if we don't have both a target and widget, don't do anything!
                 if (target && widget) {
                     try {
-                        if ($(cell.element).find(target)[widget](['prototype'])['loadState']) {
-                            $(cell.element).find(target)[widget]('loadState', state.state);
+                        var widget_mapping = {
+                            'kbaseNarrativeOutputCell' : kbaseNarrativeOutputCell,
+                            'kbaseTabs' : kbaseTabs
+                        };
+
+                        var $widget = new widget_mapping[widget] ( $(cell.element).find(target) ) ;
+                        if ($widget.prototype.loadState) {
+                            $widget.loadState(state.state);
                             // later, do something with the timestamp.
                         }
                     } catch(err) {
@@ -1509,7 +1460,6 @@ function($,
                     // get the list of parameters and save the state in the cell's metadata
                     var paramList = $(cell.element).find("#inputs")[inputWidget]('getParameters');
                     self.saveCellState(cell);
-                    self.updateNarrativeDependencies();
 
                     // var state = $(cell.element).find("#inputs")[inputWidget]('getState');
                     // cell.metadata[self.KB_CELL][self.KB_STATE] = state;
@@ -2005,26 +1955,37 @@ function($,
 
 
         createViewerCell: function(cellIndex, data, widget) {
-            var cell = this.addOutputCell(cellIndex, widget, data.placement || 'below');
-            var title = "Data Viewer";
-            var type = "viewer";
+            var placement = data.placement || 'below';
+            var cell;
+            if (placement === 'above') {
+                cell = Jupyter.notebook.insert_cell_above('code', cellIndex);
+            }
+            else {
+                cell = Jupyter.notebook.insert_cell_below('code', cellIndex);
+            }
+            var title = (data.info && data.info.name) ? data.info.name : 'Data Viewer';
+            var type = 'viewer';
+            var cellText = ['from biokbase.narrative.widgetmanager import WidgetManager',
+                            'WidgetManager().show_output_widget(',
+                            '    "kbaseNarrativeDataCell",',
+                            '    check_widget=False,',
+                            '    title="' + title + '",',
+                            '    type="viewer",',
+                            '    info=' + StringUtil.safeJSONStringify(data.info) + ',',
+                            ')'].join('\n');
 
-            var uuid = StringUtil.uuid();
-            var outCellId = 'kb-cell-out-' + uuid;
-            var outputData = '{"data":' + StringUtil.safeJSONStringify(data) + ', ' +
-                               '"type":"' + type + '", ' +
-                               '"widget":"' + widget + '", ' +
-                               '"cellId":"' + outCellId + '", ' +
-                               '"title":"' + title + '", ' +
-                               '"time":' + this.getTimestamp() + '}';
-
-            var cellText = '<div id="' + outCellId + '"></div>\n' +
-                       '<script>' +
-                       '$("#' + outCellId + '").kbaseNarrativeOutputCell(' + outputData + ');' +
-                       '</script>';
             cell.set_text(cellText);
-            cell.rendered = false; // force a render
-            cell.render();
+            var meta = {
+                'kbase': {
+                    'attributes': {
+                        'status': 'new',
+                        'title': title
+                    },
+                    'type': 'output'
+                }
+            };
+            cell.metadata = meta;
+            cell.execute();
         },
 
         /**
@@ -2123,7 +2084,8 @@ function($,
 
             cellText = '<div id="' + outCellId + '"></div>\n' +
                        '<script>' +
-                       '$("#' + outCellId + '").kbaseNarrativeOutputCell(' + outputData + ');' +
+                       'require(["kbaseNarrativeOutputCell"], function(kbaseNarrativeOutputCell) {' +
+                       'new kbaseNarrativeOutputCell($("#' + outCellId + '"), ' + outputData + '); });' +
                        '</script>';
             outputCell.set_text(cellText);
             outputCell.rendered = false; // force a render
@@ -2504,6 +2466,5 @@ function($,
             for (var i = 0; i < type.length; code += type.charCodeAt(i++));
             return this.icon_colors[code % this.icon_colors.length];
         }
-
     });
 });

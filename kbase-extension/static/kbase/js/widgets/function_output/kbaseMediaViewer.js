@@ -6,9 +6,9 @@
  */
 
 (function( $, undefined ) {
-    $.KBWidget({
+    return KBWidget({
         name: "kbaseMediaViewer", 
-        parent: "kbaseWidget",
+        
         version: "1.0.0",
         options: {
             loadingImage: window.kbconfig.loading_gif,

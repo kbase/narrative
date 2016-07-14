@@ -1,11 +1,29 @@
 /**
  * KBase widget to display a Metagenome
  */
-define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseTabs', 'RGBColor',
-        'kbStandaloneTable', 'kbStandaloneGraph'], function($) {
-    $.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'kbaseAuthenticatedWidget',
+		'kbaseTabs',
+		'RGBColor',
+		'kbStandaloneTable',
+		'kbStandaloneGraph'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		kbaseAuthenticatedWidget,
+		kbaseTabs,
+		RGBColor,
+		kbStandaloneTable,
+		kbStandaloneGraph
+	) {
+    return KBWidget({
         name: 'MetagenomeView',
-        parent: "kbaseAuthenticatedWidget",
+        parent : kbaseAuthenticatedWidget,
         version: '1.0.0',
         token: null,
         options: {
@@ -14,12 +32,12 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseTabs', 'RGBColor
         },
 	    ws_url: window.kbconfig.urls.workspace,
 	    loading_image: window.kbconfig.loading_gif,
-        
+
 	    init: function(options) {
             this._super(options);
             return this;
         },
-	
+
         render: function() {
 	        var self = this;
 	        var pref = this.uuidv4();
@@ -40,9 +58,9 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseTabs', 'RGBColor
 		            var msg = "[Error] Object "+self.options.id+" does not exist in workspace "+self.options.ws;
 		            container.append('<div><p>'+msg+'>/p></div>');
 		        } else {
-				    // parse data		            
+				    // parse data
 				    var d = data[0]['data'];
-                    
+
 				    // get base numbers
         		    var stats  = d.statistics.sequence_stats;
         		    var is_rna = (d.sequence_type == 'Amplicon') ? 1 : 0;
@@ -54,7 +72,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseTabs', 'RGBColor
         		    var r_clust_seq = ('clustered_sequence_count_processed_rna' in stats) ? parseFloat(stats.clustered_sequence_count_processed_rna) : 0;
         		    var ann_reads   = ('read_count_annotated' in stats) ? parseFloat(stats.read_count_annotated) : 0;
         		    var aa_reads    = ('read_count_processed_aa' in stats) ? parseFloat(stats.read_count_processed_aa) : 0;
-        
+
 				    // first round math
         		    var qc_fail_seqs  = raw_seqs - qc_seqs;
         		    var ann_rna_reads = rna_sims ? (rna_sims - r_clusts) + r_clust_seq : 0;
@@ -87,15 +105,15 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseTabs', 'RGBColor
       	        		    ann_rna_reads = (diff > ann_rna_reads) ? 0 : ann_rna_reads - diff;
             		    }
         		    }
-                
+
                     // set tabs
                     var tabPane = $('<div id="'+pref+'tab-content">');
         		    container.append(tabPane);
-        		    tabPane.kbaseTabs({canDelete : false, tabs : []});
-                
+        		    var tabWidget = new kbaseTabs(tabPane, {canDelete : false, tabs : []});
+
                     // overview tab
                     var oTabDiv = $('<div id="'+pref+'overview">');
-                    tabPane.kbaseTabs('addTab', {tab: 'Overview', content: oTabDiv, canDelete : false, show: true});
+                    tabWidget.addTab({tab: 'Overview', content: oTabDiv, canDelete : false, show: true});
 				    var html = '<h4>Info</h4>';
 				    html += '<p><table class="table table-striped table-bordered" style="width: 50%;">';
 				    html += '<tr><td style="padding-right: 25px; width: 165px;"><b>Metagenome ID</b></td><td>'+d.id+'</td></tr>';
@@ -112,10 +130,10 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseTabs', 'RGBColor
         		    var ftext  = " "+unknown_all+" sequences ("+(unknown_all / raw_seqs * 100).toFixed(2)+"%) have no rRNA genes"+(is_rna ? '.' : " or predicted proteins");
 				    html += '<p>'+qc_fail_seqs+' sequences ('+(qc_fail_seqs / raw_seqs * 100).toFixed(2)+'%) failed to pass the QC pipeline. Of the sequences that passed QC, '+ann_rna_reads+' sequences ('+(ann_rna_reads / raw_seqs * 100).toFixed(2)+'%) containe ribosomal RNA genes.'+(is_rna ? '' : ptext)+ftext+'</p>';
                     $('#'+pref+'overview').append(html);
-                
+
                     // metadata tab
                     var mTabDiv = $('<div id="'+pref+'metadata" style="width: 95%;">');
-                    tabPane.kbaseTabs('addTab', {tab: 'Metadata', content: mTabDiv, canDelete : false, show: true});
+                    tabWidget.addTab({tab: 'Metadata', content: mTabDiv, canDelete : false, show: true});
                     var tlen = 0;
     		        if (window.hasOwnProperty('rendererTable') && rendererTable.length) {
 			            tlen = rendererTable.length;
@@ -139,10 +157,10 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseTabs', 'RGBColor
 		            tableMeta.settings.filter_autodetect = true;
 		            tableMeta.settings.hide_options = false;
 		            tableMeta.render(tlen);
-                    
+
                     // seq stats tab
                     var oTabDiv = $('<div id="'+pref+'stats">');
-                    tabPane.kbaseTabs('addTab', {tab: 'Statistics', content: oTabDiv, canDelete : false, show: false});
+                    tabWidget.addTab({tab: 'Statistics', content: oTabDiv, canDelete : false, show: false});
                     html = '<p><table class="table table-striped table-bordered" style="width: 65%;">';
                     html += '<tr><td style="padding-right: 25px; width: 325px;"><b>Upload: bp Count</b></td><td>'+stats.bp_count_raw+' bp</td></tr>';
                     html += '<tr><td style="padding-right: 25px; width: 325px;"><b>Upload: Sequences Count</b></td><td>'+stats.sequence_count_raw+'</td></tr>';
@@ -160,13 +178,13 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseTabs', 'RGBColor
                     html += '<tr><td style="padding-right: 25px; width: 325px;"><b>Annotation: Identified Functional Categories</b></td><td>'+stats.sequence_count_ontology+'</td></tr>';
                     html += '</table></p>';
                     $('#'+pref+'stats').append(html);
-                    
+
 		            // drisee tab
 		            var drisee_cols = d.statistics.qc.drisee.percents.columns;
 		            var drisee_data = d.statistics.qc.drisee.percents.data;
 		            if ((! is_rna) && drisee_cols && drisee_data && (drisee_cols.length > 0) && (drisee_data.length > 0)) {
 		                var dTabDiv = $('<div id="'+pref+'drisee" style="width: 95%;">');
-                        tabPane.kbaseTabs('addTab', {tab: 'DRISEE', content: dTabDiv, canDelete : false, show: true});
+                        tabWidget.addTab({tab: 'DRISEE', content: dTabDiv, canDelete : false, show: true});
 		                var dlen = 0;
     		            if (window.hasOwnProperty('rendererPlot') && rendererPlot.length) {
 			                dlen = rendererPlot.length;
@@ -216,12 +234,12 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseTabs', 'RGBColor
                         plotDrisee.settings.height = height+45;
 		                plotDrisee.render(dlen);
 		            }
-		            
+
 		            // kmer tab
 		            var kmer_data = d.statistics.qc.kmer['15_mer']['data'];
 		            if ((! is_rna) && kmer_data && (kmer_data.length > 0)) {
 		                var kTabDiv = $('<div id="'+pref+'kmer" style="width: 95%;">');
-                        tabPane.kbaseTabs('addTab', {tab: 'Kmer Profile', content: kTabDiv, canDelete : false, show: true});
+                        tabWidget.addTab({tab: 'Kmer Profile', content: kTabDiv, canDelete : false, show: true});
 		                var klen = 0;
     		            if (window.hasOwnProperty('rendererPlot') && rendererPlot.length) {
 			                klen = rendererPlot.length;
@@ -262,12 +280,12 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseTabs', 'RGBColor
                         plotKmer.settings.height = pheight+45;
                         plotKmer.render(klen);
 	                }
-	                
+
 	                // bp data
 	                var bp_cols = d.statistics.qc.bp_profile.percents.columns;
 	                var bp_data = d.statistics.qc.bp_profile.percents.data;
 	                var gTabDiv = $('<div id="'+pref+'bp_plot" style="width: 95%;">');
-                    tabPane.kbaseTabs('addTab', {tab: 'Nucleotide Histogram', content: gTabDiv, canDelete : false, show: true});
+                    tabWidget.addTab({tab: 'Nucleotide Histogram', content: gTabDiv, canDelete : false, show: true});
 	                var glen = 0;
                     if (window.hasOwnProperty('rendererGraph') && rendererGraph.length) {
                         glen = rendererGraph.length;
@@ -303,9 +321,9 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseTabs', 'RGBColor
 		            graphBP.settings.width = width+40;
 		            graphBP.settings.height = height+45;
 		            graphBP.render(glen);
-		            
+
 		            // set active
-		            tabPane.kbaseTabs('showTab', 'Overview');
+		            tabWidget.showTab('Overview');
 		        }
 	        }, function(data) {
 		        container.empty();
@@ -329,7 +347,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseTabs', 'RGBColor
             this.render();
             return this;
         },
-        
+
         uuidv4: function(a,b) {
 	        for (b=a=''; a++<36; b+=a*51&52?(a^15?8^Math.random()*(a^20?16:4):4).toString(16):'-');
 	        return b;

@@ -88,7 +88,7 @@
             }
         }
     },
-    
+
     "KBaseGenomes.ContigSet" : {
         "import_contigset_fasta_file" : {
             "external_type" : "FASTA.DNA.Assembly",
@@ -395,7 +395,7 @@
                     "format_type" : {
                         "type" : "string",
                         "value" : "Simple",
-                        "optional" : false                        
+                        "optional" : false
                     },
                     "fill_missing_values" : {
                         "type" : "int",

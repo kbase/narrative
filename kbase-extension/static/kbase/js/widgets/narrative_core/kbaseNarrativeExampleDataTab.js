@@ -4,19 +4,28 @@
  * @author Michael Sneddon <mwsneddon@lbl.gov>
  * @public
  */
-define(['jquery',
-        'bluebird',
-        'narrativeConfig',
-        'kbwidget',
-        'kbaseAuthenticatedWidget',
-        'kbaseNarrative'],
-function($,
-         Promise,
-         Config) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'bluebird',
+		'narrativeConfig',
+		'kbaseAuthenticatedWidget',
+		'kbaseNarrative'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Promise,
+		Config,
+		kbaseAuthenticatedWidget,
+		kbaseNarrative
+	) {
     'use strict';
-    $.KBWidget({
+    return KBWidget({
         name: 'kbaseNarrativeExampleDataTab',
-        parent: 'kbaseAuthenticatedWidget',
+        parent : kbaseAuthenticatedWidget,
         version: '1.0.0',
         options: {
             ws_name: null, // must be the WS name, not the WS Numeric ID

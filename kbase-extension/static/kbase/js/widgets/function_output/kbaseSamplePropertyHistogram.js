@@ -1,11 +1,20 @@
-define(['jquery', 
-        'plotly',        
-        'kbwidget', 
-        'kbaseSamplePropertyMatrixAbstract',
-        ], function($, Plotly) {
-    $.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'plotly',
+		'kbaseSamplePropertyMatrixAbstract'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Plotly,
+		kbaseSamplePropertyMatrixAbstract
+	) {
+    return KBWidget({
         name: 'kbaseSamplePropertyHistogram',
-        parent: 'kbaseSamplePropertyMatrixAbstract',
+        parent : kbaseSamplePropertyMatrixAbstract,
         version: '1.0.0',
         options: {
             sampleIds: [],

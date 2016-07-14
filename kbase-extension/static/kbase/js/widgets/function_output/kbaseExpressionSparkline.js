@@ -5,14 +5,23 @@
  * @public
  */
 
- define([
-        'jquery', 
-        'kbaseExpressionGenesetBaseWidget',      
-        'kbaseLinechart'
-        ], function($) {
-    $.KBWidget({
+ define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'kbaseExpressionGenesetBaseWidget',
+		'kbaseLinechart'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		kbaseExpressionGenesetBaseWidget,
+		kbaseLinechart
+	) {
+    return KBWidget({
         name: 'kbaseExpressionSparkline',
-        parent: 'kbaseExpressionGenesetBaseWidget',
+        parent : kbaseExpressionGenesetBaseWidget,
         version: '1.0.0',
 
         // To be overriden to specify additional parameters
@@ -65,8 +74,7 @@
             $containerDiv.append($lineChartDiv);
             $containerDiv.append("<div style = 'width : 5px; height : 5px'></div>");
 
-            $lineChartDiv.kbaseLinechart(
-                {
+             new kbaseLinechart($lineChartDiv, {
                     scaleAxes       : true,
                     hGrid           : true,
                     xLabel          : 'Conditions',

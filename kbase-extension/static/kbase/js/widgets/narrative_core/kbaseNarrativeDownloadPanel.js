@@ -5,14 +5,22 @@
  * @author Roman Sutormin <rsutormin@lbl.gov>
  * @public
  */
-define(['jquery',
-        'narrativeConfig',
-        'kbwidget'],
-function($, Config) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'narrativeConfig'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Config
+	) {
     'use strict';
-    $.KBWidget({
+    return KBWidget({
         name: "kbaseNarrativeDownloadPanel",
-        parent: "kbaseWidget",
+        
         version: "1.0.0",
         options: {
         	token: null,

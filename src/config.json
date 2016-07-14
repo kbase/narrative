@@ -1,7 +1,25 @@
 {
+    "config": "ci",
+    "name": "KBase Narrative",
+    "version": "3.0.0-alpha-1",
+    "dev_mode": true,
+    "git_commit_hash": "9554d90",
+    "git_commit_time": "Thu Mar 3 15:44:21 2016 -0800",
+    "features": {
+        "advanced": false,
+        "developer": false
+    },
+    "release_notes": "https://github.com/kbase/narrative/blob/staging/RELEASE_NOTES.md",
+    "tooltip": {
+        "hideDelay": 0,
+        "showDelay": 750
+    },
+    "use_local_widgets": true,
+    "loading_gif": "/narrative/static/kbase/images/ajax-loader.gif",
     "appdev": {
         "awe": "https://appdev.kbase.us/services/awe-api",
         "catalog": "https://appdev.kbase.us/services/catalog",
+        "cdn": "https://appdev.kbase.us/cdn/files",
         "data_import_export": "https://appdev.kbase.us/services/data_import_export",
         "data_panel_sources": "/data_source_config.json",
         "fba": "https://appdev.kbase.us/services/KBaseFBAModeling/",
@@ -36,6 +54,7 @@
     "ci": {
         "awe": "https://ci.kbase.us/services/awe-api",
         "catalog": "https://ci.kbase.us/services/catalog",
+        "cdn": "https://ci.kbase.us/cdn/files",
         "data_import_export": "https://ci.kbase.us/services/data_import_export",
         "data_panel_sources": "/data_source_config.json",
         "fba": "https://ci.kbase.us/services/KBaseFBAModeling/",
@@ -68,11 +87,11 @@
         "workspace": "https://ci.kbase.us/services/ws",
         "ws_browser": "https://narrative.kbase.us/#ws"
     },
-    "config": "ci",
     "dev": {
         "awe": "http://140.221.67.185:7080",
         "catalog": "https://ci.kbase.us/services/catalog",
         "cdmi": "https://kbase.us/services/cdmi_api/",
+        "cdn": "https://ci.kbase.us/cdn/files",
         "data_import_export": "https://kbase.us/services/data_import_export",
         "data_panel_sources": "/data_source_config.json",
         "fba": "https://kbase.us/services/KBaseFBAModeling/",
@@ -105,14 +124,11 @@
         "workspace": "http://dev04.berkeley.kbase.us:7058",
         "ws_browser": "http://narrative.kbase.us/#ws"
     },
-    "dev_mode": true,
-    "git_commit_hash": "9554d90",
-    "git_commit_time": "Thu Mar 3 15:44:21 2016 -0800",
-    "loading_gif": "/narrative/static/kbase/images/ajax-loader.gif",
-    "name": "KBase Narrative",
+
     "next": {
         "awe": "https://next.kbase.us/services/awe-api",
         "catalog": "https://next.kbase.us/services/catalog",
+        "cdn": "https://next.kbase.us/cdn/files",
         "data_import_export": "https://next.kbase.us/services/data_import_export",
         "data_panel_sources": "/data_source_config.json",
         "fba": "https://next.kbase.us/services/KBaseFBAModeling/",
@@ -148,6 +164,7 @@
     "prod": {
         "awe": "https://kbase.us/services/awe-api",
         "catalog": "https://kbase.us/services/catalog",
+        "cdn": "https://kbase.us/cdn/files",
         "data_import_export": "https://kbase.us/services/data_import_export",
         "data_panel_sources": "/data_source_config.json",
         "fba": "https://kbase.us/services/KBaseFBAModeling/",
@@ -179,12 +196,5 @@
         "version_check": "/narrative_version",
         "workspace": "https://kbase.us/services/ws",
         "ws_browser": "https://narrative.kbase.us/#ws"
-    },
-    "release_notes": "https://github.com/kbase/narrative/blob/staging/RELEASE_NOTES.md",
-    "tooltip": {
-        "hideDelay": 0,
-        "showDelay": 750
-    },
-    "use_local_widgets": true,
-    "version": "2.0.9"
+    }
 }

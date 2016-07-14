@@ -5,7 +5,7 @@
 (function( $, undefined ) {
 
 
-    $.KBWidget({
+    return KBWidget({
 
 		  name: "kbaseAuthenticatedWidget",
 

@@ -1,33 +1,36 @@
+/*global define*/
+/*jslint white:true,browser:true*/
+
 /*
-
+ 
  KBase Bootstrap plugin to handle all login/session related stuff.
-
+ 
  Set up a container on your HTML page. It can be whatever you'd like. For example.
-
+ 
  <div id = 'fizzlefazzle'></div>
-
+ 
  You don't need to give it that ID. I just populated it with junk because I don't want to
  encourage people to use something generic like 'login', since there's no need. You don't need
  an ID at all, just some way to select it.
-
+ 
  Later, in your jquery initialization, do this:
-
+ 
  $(function() {
  ...
-
+ 
  $(#"fizzlefaszzle").login();
-
+ 
  }
-
+ 
  And that, my friends, is Jenga. You're done. Sit back and enjoy the fruits of your labor.
-
+ 
  There are a couple of useful things to know about. You can extract the user_id and kbase_sessionid:
-
+ 
  $(#"fizzlefazzle").login('session', 'user_id');
  $(#"fizzlefazzle").login('session', 'kbase_sessionid');
-
+ 
  When you're setting it up, you have a few options:
-
+ 
  $('#fizzlefazzle').login(
  {
  style : (button|slim|micro|hidden) // try 'em all out! button is the default.
@@ -38,26 +41,35 @@
  user_id : a string with which to pre-populate the user_id on the forms.
  }
  );
-
+ 
  You can also completely inline it.
-
+ 
  var $login_doodad = $('<span></span>').login({style : 'hidden'});
  $login_doodad.login('login', 'username', 'password', function (args) {
  console.log("Tried to log in and got back: "); console.log(args);
  });
-
+ 
  */
 
 define([
+    'kbwidget',
+    'bootstrap',
     'jquery',
     'narrativeConfig',
     'kbase-client-api',
     'jqueryCookie',
-    'kbwidget',
-    'kbasePrompt',
-    'bootstrap'
-], function ($, Config) {
-    $.KBWidget({
+    'kbasePrompt'
+], function (
+    KBWidget,
+    bootstrap,
+    $,
+    Config,
+    kbase_client_api,
+    jqueryCookie,
+    kbasePrompt
+    ) {
+    'use strict';
+    return KBWidget({
         name: "kbaseLogin",
         version: "1.0.0",
         options: {
@@ -73,7 +85,6 @@ define([
             }
 
             var chips = this.decodeCookie($.cookie(this.cookieName));
-
             return field === undefined ? chips : chips[field];
         },
         /**
@@ -110,6 +121,9 @@ define([
         token: function () {
             return this.get_kbase_cookie('token');
         },
+        userId: function () {
+            return this.get_kbase_cookie('user_id');
+        },
         /**
          * Token validity is tested by the 'expiry' tag in the token.
          * That tag is followed by the number of seconds in the time when it expires.
@@ -128,13 +142,9 @@ define([
         },
         init: function (options) {
             this._super(options);
-
             var kbaseCookie = this.get_kbase_cookie();
-
             this.$elem.empty();
-
             var style = '_' + this.options.style + 'Style';
-
             this.ui = this[style]();
             if (this.ui) {
                 this.$elem.append(this.ui);
@@ -175,18 +185,15 @@ define([
                     callback(cookie);
                 }
             }, this));
-
             $(document).on('promptForLogin.kbase', $.proxy(function (e, args) {
                 if (args.user_id) {
                     this.data('passed_user_id', args.user_id);
                 }
                 this.openDialog();
             }, this));
-
             $(document).on('logout.kbase', $.proxy(function (e, rePrompt) {
                 this.logout(rePrompt);
             }, this));
-
             return this;
         },
         registerLoginFunc: function () {
@@ -210,7 +217,6 @@ define([
             }
 
             var session = this.data('_session');
-
             if (arguments.length === 2) {
                 session[key] = value;
             }
@@ -231,22 +237,16 @@ define([
         openDialog: function () {
             if (this.data('loginDialog')) {
                 var $ld = this.data('loginDialog');
-
                 $('form', $ld.dialogModal()).get(0).reset();
-
                 $ld.dialogModal().data("user_id").val(this.session('user_id') || this.data('passed_user_id') || this.options.user_id);
-
                 delete this.options.user_id;
                 this.session('user_id', undefined);
-
                 $ld.dialogModal().trigger('clearMessages');
-
                 this.data('loginDialog').openPrompt();
             }
         },
         _textStyle: function () {
             this._createLoginDialog();
-
             var $prompt = $('<span></span>')
                 .append(
                     $('<a></a>')
@@ -312,31 +312,28 @@ define([
                                         this.logout();
                                     }, this)
                                     )))));
-
             this._rewireIds($prompt, this);
-
             this.registerLogin =
                 function (args) {
-                    var setUsernameField = function(name, id) {
+                    var setUsernameField = function (name, id) {
                         this.data('loggedinuser_id').text(name)
                             .attr('href', '/#people/' + id)
                             .click();
                     }.bind(this);
-
                     if (args.success) {
+                        // TODO: this is terrible, but it is just for a few days.
                         this.data("loginlink").hide();
                         if (args.name) {
                             setUsernameField(args.name, args.user_id);
-                        }
-                        else {
+                        } else {
                             var profileClient = new UserProfile(Config.url('user_profile'));
                             profileClient.get_user_profile([args.user_id])
-                            .done(function(users) {
-                                setUsernameField(users[0].user.realname, args.user_id);
-                            }.bind(this))
-                            .fail(function(error) {
-                                setUsernameField(args.user_id, args.user_id);
-                            }.bind(this));
+                                .done(function (users) {
+                                    setUsernameField(users[0].user.realname, args.user_id);
+                                }.bind(this))
+                                .fail(function (error) {
+                                    setUsernameField(args.user_id, args.user_id);
+                                }.bind(this));
                         }
                         this.data('userdisplay').show();
                         this.data('loginDialog').closePrompt();
@@ -344,187 +341,175 @@ define([
                         this.data('loginDialog').dialogModal().trigger('error', args.message);
                     }
                 };
-
             this.specificLogout = function (args) {
                 this.data("userdisplay").hide();
                 this.data("loginlink").show();
             };
-
             return $prompt;
-
         },
-
         _createLoginDialog: function () {
             var $elem = this.$elem;
+            var $ld = new kbasePrompt($('<div></div'), {
+                title: 'Login to KBase',
+                controls: [
+                    'cancelButton',
+                    {
+                        name: 'Login',
+                        type: 'primary',
+                        id: 'loginbutton',
+                        callback: $.proxy(function (e) {
+                            var user_id = this.data('loginDialog').dialogModal().data('user_id').val();
+                            var password = this.data('loginDialog').dialogModal().data('password').val();
+                            this.data('loginDialog').dialogModal().trigger('message', user_id);
+                            this.login(user_id, password, function (args) {
 
-            var $ld = $('<div></div').kbasePrompt(
-                {
-                    title: 'Login to KBase',
-                    controls: [
-                        'cancelButton',
-                        {
-                            name: 'Login',
-                            type: 'primary',
-                            id: 'loginbutton',
-                            callback: $.proxy(function (e) {
-                                var user_id = this.data('loginDialog').dialogModal().data('user_id').val();
-                                var password = this.data('loginDialog').dialogModal().data('password').val();
+                                if (this.registerLogin) {
+                                    this.registerLogin(args);
+                                }
 
-                                this.data('loginDialog').dialogModal().trigger('message', user_id);
-
-                                this.login(user_id, password, function (args) {
-
-                                    if (this.registerLogin) {
-                                        this.registerLogin(args);
-                                    }
-
-                                    if (this.options.login_callback) {
-                                        this.options.login_callback.call(this, args);
-                                    }
-                                });
-
-                            }, this)
-                        }
-                    ],
-                    body:
-                        $('<p></p>')
+                                if (this.options.login_callback) {
+                                    this.options.login_callback.call(this, args);
+                                }
+                            });
+                        }, this)
+                    }
+                ],
+                body:
+                    $('<p></p>')
+                    .append(
+                        $('<form></form>')
+                        .attr('name', 'form')
+                        .attr('id', 'form')
+                        .addClass('form-horizontal')
                         .append(
-                            $('<form></form>')
-                            .attr('name', 'form')
-                            .attr('id', 'form')
-                            .addClass('form-horizontal')
+                            $('<fieldset></fieldset>')
                             .append(
-                                $('<fieldset></fieldset>')
+                                $('<div></div>')
+                                .attr('class', 'alert alert-error')
+                                .attr('id', 'error')
+                                .attr('style', 'display : none')
                                 .append(
                                     $('<div></div>')
-                                    .attr('class', 'alert alert-error')
-                                    .attr('id', 'error')
-                                    .attr('style', 'display : none')
+                                    .append(
+                                        $('<div></div>')
+                                        .addClass('pull-left')
+                                        .append(
+                                            $('<i></i>')
+                                            .addClass('icon-warning-sign')
+                                            .attr('style', 'float: left; margin-right: .3em;')
+                                            )
+                                        )
                                     .append(
                                         $('<div></div>')
                                         .append(
-                                            $('<div></div>')
-                                            .addClass('pull-left')
-                                            .append(
-                                                $('<i></i>')
-                                                .addClass('icon-warning-sign')
-                                                .attr('style', 'float: left; margin-right: .3em;')
-                                                )
+                                            $('<strong></strong>')
+                                            .append('Error:\n')
                                             )
                                         .append(
-                                            $('<div></div>')
-                                            .append(
-                                                $('<strong></strong>')
-                                                .append('Error:\n')
-                                                )
-                                            .append(
-                                                $('<span></span>')
-                                                .attr('id', 'errormsg')
-                                                )
-                                            )
-                                        )
-                                    )
-                                .append(
-                                    $('<div></div>')
-                                    .attr('class', 'alert alert-success')
-                                    .attr('id', 'pending')
-                                    .attr('style', 'display : none')
-                                    .append(
-                                        $('<div></div>')
-                                        /*.append(
-                                         $('<div></div>')
-                                         .addClass('pull-left')
-                                         .append(
-                                         $('<i></i>')
-                                         .addClass('icon-info-sign')
-                                         .attr('style', 'float: left; margin-right: .3em;')
-                                         )
-                                         )*/
-                                        .append(
-                                            $('<div></div>')
-                                            .append(
-                                                $('<strong></strong>')
-                                                .append('Logging in as:\n')
-                                                )
-                                            .append(
-                                                $('<span></span>')
-                                                .attr('id', 'pendinguser')
-                                                )
-                                            )
-                                        )
-                                    )
-                                .append(
-                                    $('<div></div>')
-                                    .attr('class', 'form-group')
-                                    .append(
-                                        $('<label></label>')
-                                        .addClass('control-label')
-                                        .addClass('col-lg-2')
-                                        .attr('for', 'user_id')
-                                        .css('margin-right', '10px')
-                                        .append('Username:\n')
-                                        )
-                                    .append(
-                                        $.jqElem('div')
-                                        .addClass('col-lg-9')
-                                        .append(
-                                            $('<input>')
-                                            .addClass('form-control')
-                                            .attr('type', 'text')
-                                            .attr('name', 'user_id')
-                                            .attr('id', 'user_id')
-                                            .attr('size', '20')
-                                            )
-                                        )
-                                    )
-                                .append(
-                                    $('<div></div>')
-                                    .attr('class', 'form-group')
-                                    .append(
-                                        $('<label></label>')
-                                        .addClass('control-label')
-                                        .addClass('col-lg-2')
-                                        .attr('for', 'password')
-                                        .css('margin-right', '10px')
-                                        .append('Password:\n')
-                                        )
-                                    .append(
-                                        $.jqElem('div')
-                                        .addClass('col-lg-9')
-                                        .append(
-                                            $('<input>')
-                                            .addClass('form-control')
-                                            .attr('type', 'password')
-                                            .attr('name', 'password')
-                                            .attr('id', 'password')
-                                            .attr('size', '20')
+                                            $('<span></span>')
+                                            .attr('id', 'errormsg')
                                             )
                                         )
                                     )
                                 )
+                            .append(
+                                $('<div></div>')
+                                .attr('class', 'alert alert-success')
+                                .attr('id', 'pending')
+                                .attr('style', 'display : none')
+                                .append(
+                                    $('<div></div>')
+                                    /*.append(
+                                     $('<div></div>')
+                                     .addClass('pull-left')
+                                     .append(
+                                     $('<i></i>')
+                                     .addClass('icon-info-sign')
+                                     .attr('style', 'float: left; margin-right: .3em;')
+                                     )
+                                     )*/
+                                    .append(
+                                        $('<div></div>')
+                                        .append(
+                                            $('<strong></strong>')
+                                            .append('Logging in as:\n')
+                                            )
+                                        .append(
+                                            $('<span></span>')
+                                            .attr('id', 'pendinguser')
+                                            )
+                                        )
+                                    )
+                                )
+                            .append(
+                                $('<div></div>')
+                                .attr('class', 'form-group')
+                                .append(
+                                    $('<label></label>')
+                                    .addClass('control-label')
+                                    .addClass('col-lg-2')
+                                    .attr('for', 'user_id')
+                                    .css('margin-right', '10px')
+                                    .append('Username:\n')
+                                    )
+                                .append(
+                                    $.jqElem('div')
+                                    .addClass('col-lg-9')
+                                    .append(
+                                        $('<input>')
+                                        .addClass('form-control')
+                                        .attr('type', 'text')
+                                        .attr('name', 'user_id')
+                                        .attr('id', 'user_id')
+                                        .attr('size', '20')
+                                        )
+                                    )
+                                )
+                            .append(
+                                $('<div></div>')
+                                .attr('class', 'form-group')
+                                .append(
+                                    $('<label></label>')
+                                    .addClass('control-label')
+                                    .addClass('col-lg-2')
+                                    .attr('for', 'password')
+                                    .css('margin-right', '10px')
+                                    .append('Password:\n')
+                                    )
+                                .append(
+                                    $.jqElem('div')
+                                    .addClass('col-lg-9')
+                                    .append(
+                                        $('<input>')
+                                        .addClass('form-control')
+                                        .attr('type', 'password')
+                                        .attr('name', 'password')
+                                        .attr('id', 'password')
+                                        .attr('size', '20')
+                                        )
+                                    )
+                                )
                             )
-                    , //body
-                    footer: $('<span></span')
-                        .append(
-                            $('<a></a>')
-                            .attr('href', 'https://gologin.kbase.us/ResetPassword')
-                            .attr('target', '_blank')
-                            .text('Forgot password?')
-                            )
-                        .append('&nbsp;|&nbsp;')
-                        .append(
-                            $('<a></a>')
-                            .attr('href', ' https://gologin.kbase.us/OAuth?response_type=code&step=SignUp&redirect_uri=' + encodeURIComponent(location.href))
-                            .attr('target', '_blank')
-                            .text('Sign up')
-                            )
-                }
+                        )
+                , //body
+                footer: $('<span></span')
+                    .append(
+                        $('<a></a>')
+                        .attr('href', 'https://gologin.kbase.us/ResetPassword')
+                        .attr('target', '_blank')
+                        .text('Forgot password?')
+                        )
+                    .append('&nbsp;|&nbsp;')
+                    .append(
+                        $('<a></a>')
+                        .attr('href', ' https://gologin.kbase.us/OAuth?response_type=code&step=SignUp&redirect_uri=' + encodeURIComponent(location.href))
+                        .attr('target', '_blank')
+                        .text('Sign up')
+                        )
+            }
             );
-
             this._rewireIds($ld.dialogModal(), $ld.dialogModal());
-
             this.data('loginDialog', $ld);
-
             $ld.dialogModal().bind('error',
                 function (event, msg) {
                     $(this).trigger('clearMessages');
@@ -532,7 +517,6 @@ define([
                     $(this).data("errormsg").html(msg);
                 }
             );
-
             $ld.dialogModal().bind('message',
                 function (event, msg) {
                     $(this).trigger('clearMessages');
@@ -540,14 +524,12 @@ define([
                     $(this).data("pendinguser").html(msg);
                 }
             );
-
             $ld.dialogModal().bind('clearMessages',
                 function (event) {
                     $(this).data("error").hide();
                     $(this).data("pending").hide();
                 }
             );
-
             $ld.dialogModal().on('shown.bs.modal',
                 function (e) {
 
@@ -558,14 +540,11 @@ define([
                     }
                 }
             );
-
             return $ld;
-
         },
         login: function (user_id, password, callback) {
 
             var args = {user_id: user_id, status: 1};
-
             // here's a couple of simple cases that need to be handled somewhere. Figured I'd just toss 'em into this function
             // to keep 'em all in one place.
             if (user_id.length === 0) {
@@ -582,7 +561,6 @@ define([
                 args.password = password;
                 args.cookie = 1;
                 args.fields = this.options.fields.join(',');
-
                 $.support.cors = true;
                 $.ajax(
                     {
@@ -618,26 +596,21 @@ define([
 
                                     // var cookieArray = [];
 
-                                    var args = {success: 1};//this.get_kbase_cookie();
+                                    var args = {success: 1}; //this.get_kbase_cookie();
                                     var fields = this.options.fields;
-
                                     for (var i = 0; i < fields.length; i++) {
                                         var value = data[fields[i]];
                                         args[fields[i]] = value;
                                     }
                                     var jsonARGS = JSON.stringify(args);
-
                                     localStorage.setItem('kbase_session', jsonARGS);
                                     this.populateLoginInfo(args);
                                     this.trigger('loggedIn', this.get_kbase_cookie());
-
                                     callback.call(this, args);
                                 } else {
                                     localStorage.removeItem('kbase_session');
                                     this.populateLoginInfo({});
-
                                     callback.call(this, {status: 0, message: data.error_msg});
-
                                     this.trigger('loggedInFailure', {status: 0, message: data.error_msg});
                                 }
 
@@ -683,7 +656,6 @@ define([
             }
 
             var session_id = this.get_kbase_cookie('kbase_sessionid');
-
             if (session_id === undefined) {
                 return;
             }
@@ -691,7 +663,6 @@ define([
             localStorage.removeItem('kbase_session');
             $.removeCookie(this.cookieName, {path: '/'});
             $.removeCookie(this.cookieName, {path: '/', domain: 'kbase.us'});
-
             // the rest of this is just housekeeping.
 
             if (this.specificLogout) {
@@ -699,19 +670,16 @@ define([
             }
 
             this.populateLoginInfo({});
-
             //automatically prompt to log in again
             if (this.data('loginDialog') !== undefined && rePrompt) {
                 this.openDialog();
             }
 
             this.trigger('loggedOut');
-
             if (this.options.logout_callback) {
                 this.options.logout_callback.call(this);
             }
         }
 
     });
-
 });

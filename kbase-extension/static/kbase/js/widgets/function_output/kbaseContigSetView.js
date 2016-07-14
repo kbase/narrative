@@ -4,15 +4,27 @@
  * @public
  */
 
-define(['jquery', 
-        'kbwidget', 
-        'kbaseAuthenticatedWidget', 
-        'kbaseTabs', 
-        'jquery-dataTables',
-        'jquery-dataTables-bootstrap'], function($) {
-    $.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'kbaseAuthenticatedWidget',
+		'kbaseTabs',
+		'jquery-dataTables',
+		'jquery-dataTables-bootstrap'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		kbaseAuthenticatedWidget,
+		kbaseTabs,
+		jquery_dataTables,
+		bootstrap
+	) {
+    return KBWidget({
         name: "kbaseContigSetView",
-        parent: "kbaseAuthenticatedWidget",
+        parent : kbaseAuthenticatedWidget,
         version: "1.0.0",
         ws_id: null,
         ws_name: null,
@@ -37,7 +49,7 @@ define(['jquery',
             }
             return this;
         },
-        
+
         render: function() {
             var self = this;
         	var pref = this.uuid();
@@ -50,7 +62,7 @@ define(['jquery',
             }
 
             var kbws = new Workspace(self.wsUrl, {'token': self.token});
-            
+
             var ready = function() {
             	container.empty();
             	container.append("<div><img src=\""+self.loadingImage+"\">&nbsp;&nbsp;loading genome data...</div>");
@@ -61,12 +73,12 @@ define(['jquery',
             		console.log(cs);
             		var tabPane = $('<div id="'+pref+'tab-content">');
             		container.append(tabPane);
-            		tabPane.kbaseTabs({canDelete : true, tabs : []});
+            		var tabWidget = new kbaseTabs(tabPane, {canDelete : true, tabs : []});
             		var tabNames = ['Overview', 'Contigs'];
             		var tabIds = ['overview', 'contigs'];
             		for (var i=0; i<tabIds.length; i++) {
             			var tabDiv = $('<div id="'+pref+tabIds[i]+'"> ');
-            			tabPane.kbaseTabs('addTab', {tab: tabNames[i], content: tabDiv, canDelete : false, show: (i == 0)});
+            			tabWidget.addTab({tab: tabNames[i], content: tabDiv, canDelete : false, show: (i == 0)});
             		}
 
             		////////////////////////////// Overview Tab //////////////////////////////
@@ -109,12 +121,12 @@ define(['jquery',
             	}, function(data) {
             		container.empty();
             		container.append('<p>[Error] ' + data.error.message + '</p>');
-            	});            	
+            	});
             };
             ready();
             return this;
         },
-        
+
         getData: function() {
         	return {
         		type: "NarrativeTempCard",
@@ -135,9 +147,9 @@ define(['jquery',
             this.render();
             return this;
         },
-        
+
         uuid: function() {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, 
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,
                 function(c) {
                     var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
                     return v.toString(16);

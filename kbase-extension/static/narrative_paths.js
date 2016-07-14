@@ -13,8 +13,8 @@ require.config({
         configPath                              : 'kbase',
         narrativeViewers                        : 'kbase/js/widgets/narrative_core/narrativeViewers',
         domReady                                : 'ext_components/requirejs/domReady',
-        json                                    : 'ext_components/requirejs-json/json',
-        text                                    : 'ext_components/requirejs-text/text',
+        json                                    : 'ext_components/requirejs-plugins/src/json',
+        text                                    : 'ext_components/requirejs-plugins/lib/text',
         jquery                                  : 'components/jquery/jquery.min',
         jqueryui                                : 'components/jquery-ui/ui/minified/jquery-ui.min',
         'jquery-svg'                            : 'ext_components/jquery-extensions/js/jquery.svg',
@@ -45,6 +45,22 @@ require.config({
         'kbase-generic-client-api'              : 'kbase/js/api/GenericClient',
         'catalog-client-api'                    : 'kbase/js/api/Catalog',
         'njs-wrapper-client-api'                : 'kbase/js/api/NarrativeJobServiceWrapper',
+        kbaseNarrativeJobStatus                 : 'kbase/js/widgets/narrative_core/kbaseNarrativeJobStatus',
+        kbaseCellToolbarMenu                    : 'kbase/js/widgets/narrative_core/kbaseCellToolbarMenu',
+
+        /**
+         * New Test Runtime and Widget Framework
+         */
+        runtimeManager : 'kbase/js/widgetApi/runtimeManager',
+        messageManager : 'kbase/js/widgetApi/messageManager',
+        narrativeDataWidget: 'kbase/js/widgetApi/narrativeDataWidget',
+        narrativeDataWidgetIFrame: 'kbase/js/widgetApi/narrativeDataWidgetIFrame',
+        widgetService2: 'kbase/js/widgetApi/widgetService2',
+
+
+        common: 'kbase/js/common/',
+        widgets: 'kbase/js/widgets',
+
 
         /***
          * CORE NARRATIVE WIDGETS
@@ -147,7 +163,6 @@ require.config({
         'ModelingAPI'                           : 'kbase/js/api/ModelingAPI',
         'KBModeling'                            : 'kbase/js/revised-widgets/src/widgets/modeling/KBModeling', // to be deprecated!
         'kbaseTabTable'                         : 'kbase/js/revised-widgets/src/widgets/modeling/kbaseTabTable',
-        'KBModeling'                            : 'kbase/js/revised-widgets/src/widgets/modeling/KBModeling',
         'KBaseFBA.FBAModel'                     : 'kbase/js/revised-widgets/src/widgets/modeling/KBaseFBA.FBAModel',
         'KBaseFBA.FBAModelSet'                  : 'kbase/js/revised-widgets/src/widgets/modeling/KBaseFBA.FBAModelSet',
         'KBaseFBA.FBA'                          : 'kbase/js/revised-widgets/src/widgets/modeling/KBaseFBA.FBA',
@@ -233,23 +248,23 @@ require.config({
         'kbasePiechart'                         : 'kbase/js/ui-common/src/widgets/vis/kbasePiechart',
         'kbaseTreechart'                        : 'kbase/js/ui-common/src/widgets/vis/kbaseTreechart',
         'kbaseRNASeqPie'                        : 'kbase/js/ui-common/src/widgets/kbaseRNASeqPie',
-        'kbaseRNASeqPieNew'                        : 'kbase/js/ui-common/src/widgets/kbaseRNASeqPieNew',
-        'kbaseRNASeqAnalysis'                        : 'kbase/js/ui-common/src/widgets/kbaseRNASeqAnalysis',
-        'kbaseRNASeqAnalysisNew'                        : 'kbase/js/ui-common/src/widgets/kbaseRNASeqAnalysisNew',
-        'kbaseRNASeqSample'                        : 'kbase/js/ui-common/src/widgets/kbaseRNASeqSample',
-        'kbaseButtonControls'                        : 'kbase/js/ui-common/src/widgets/kbaseButtonControls',
-        'kbaseSearchControls'                        : 'kbase/js/ui-common/src/widgets/kbaseSearchControls',
-        'kbaseRNASeqHistogram'                        : 'kbase/js/ui-common/src/widgets/kbaseRNASeqHistogram',
-        'kbaseExpressionMatrixHeatmap'                        : 'kbase/js/ui-common/src/widgets/kbaseExpressionMatrixHeatmap',
-        'kbaseFigureObjectHeatmap'                        : 'kbase/js/ui-common/src/widgets/kbaseFigureObjectHeatmap',
-        'kbaseCummerbundPlot'                        : 'kbase/js/ui-common/src/widgets/kbaseCummerbundPlot',
-        'kbaseExpressionSampleTable'                        : 'kbase/js/ui-common/src/widgets/kbaseExpressionSampleTable',
-        'kbaseExpressionSampleTableNew'                        : 'kbase/js/ui-common/src/widgets/kbaseExpressionSampleTableNew',
-        'kbasePValueHistogram'                        : 'kbase/js/ui-common/src/widgets/kbasePValueHistogram',
-        'kbasePMIBarchart'                        : 'kbase/js/ui-common/src/widgets/vis/plants/kbasePMIBarchart',
+        'kbaseRNASeqPieNew'                     : 'kbase/js/ui-common/src/widgets/kbaseRNASeqPieNew',
+        'kbaseRNASeqAnalysis'                   : 'kbase/js/ui-common/src/widgets/kbaseRNASeqAnalysis',
+        'kbaseRNASeqAnalysisNew'                : 'kbase/js/ui-common/src/widgets/kbaseRNASeqAnalysisNew',
+        'kbaseRNASeqSample'                     : 'kbase/js/ui-common/src/widgets/kbaseRNASeqSample',
+        'kbaseButtonControls'                   : 'kbase/js/ui-common/src/widgets/kbaseButtonControls',
+        'kbaseSearchControls'                   : 'kbase/js/ui-common/src/widgets/kbaseSearchControls',
+        'kbaseRNASeqHistogram'                  : 'kbase/js/ui-common/src/widgets/kbaseRNASeqHistogram',
+        'kbaseExpressionMatrixHeatmap'          : 'kbase/js/ui-common/src/widgets/kbaseExpressionMatrixHeatmap',
+        'kbaseFigureObjectHeatmap'              : 'kbase/js/ui-common/src/widgets/kbaseFigureObjectHeatmap',
+        'kbaseCummerbundPlot'                   : 'kbase/js/ui-common/src/widgets/kbaseCummerbundPlot',
+        'kbaseExpressionSampleTable'            : 'kbase/js/ui-common/src/widgets/kbaseExpressionSampleTable',
+        'kbaseExpressionSampleTableNew'         : 'kbase/js/ui-common/src/widgets/kbaseExpressionSampleTableNew',
+        'kbasePValueHistogram'                  : 'kbase/js/ui-common/src/widgets/kbasePValueHistogram',
+        'kbasePMIBarchart'                      : 'kbase/js/ui-common/src/widgets/vis/plants/kbasePMIBarchart',
         'kbaseVenndiagram'                      : 'kbase/js/ui-common/src/widgets/vis/kbaseVenndiagram',
-        'kbaseOntologyDictionary'                      : 'kbase/js/ui-common/src/widgets/kbaseOntologyDictionary',
-        'kbaseOntologyTranslation'                      : 'kbase/js/ui-common/src/widgets/kbaseOntologyTranslation',
+        'kbaseOntologyDictionary'               : 'kbase/js/ui-common/src/widgets/kbaseOntologyDictionary',
+        'kbaseOntologyTranslation'              : 'kbase/js/ui-common/src/widgets/kbaseOntologyTranslation',
         'kbaseBlastOutput'                      : 'kbase/js/widgets/function_output/kbaseBlastOutput',
 
         'kbaseRegisterRepoState'                : 'kbase/js/widgets/function_output/kbaseRegisterRepoState',
@@ -276,6 +291,9 @@ require.config({
     shim : {
         underscore : {
             exports: '_'
+        },
+        jquery: {
+            exports: '$'
         },
         jqueryCookie : {
             deps : ['jquery']
@@ -306,6 +324,9 @@ require.config({
             // could be removed once code is repackaged and require.js-ified
             'deps' : ['KBaseFBA.FBAModel', 'kbaseTabTableTabs']
         },
+        'KBModeling' : {
+            'deps': ['jquery']
+        },
         'KBaseFBA.FBAModel' : {
             'deps' : ['KBModeling']
         },
@@ -330,8 +351,11 @@ require.config({
         'KBaseSearch.GenomeSet' : {
             'deps' : ['KBModeling']
         },
+        'kbaseTabTableTabs': {
+            'exports': 'kbaseTabTableTabs'
+        },
         'kbaseTabTable' : {
-            'deps' : ['jquery',
+            'deps' : ['jquery', 'kbwidget',
                       'jquery-dataTables',
                       'jquery-dataTables-bootstrap',
                       'bootstrap',
@@ -364,12 +388,13 @@ require.config({
                       'modelSeedVizConfig',
                       'd3']
         },
-        'kbaseTabTableTabs' : {
-            'deps' : ['jquery',
-                      'jquery-dataTables',
-                      'jquery-dataTables-bootstrap',
-                      'bootstrap']
-        },
+        // 'kbaseTabTableTabs' : {
+        //     'deps' : ['jquery',
+        //               'jqueryui',
+        //               'jquery-dataTables',
+        //               'jquery-dataTables-bootstrap',
+        //               'bootstrap']
+        // },
         kbapi : {
             deps : ['jquery', 'bootstrap', 'kbase-client-api']
         },
@@ -381,6 +406,36 @@ require.config({
         },
         bootstrap : {
             deps : ['jquery', 'jqueryui']
-        },
+        }
     }
 });
+
+
+function addCdnModules(baseUrl) {
+    if (!baseUrl) {
+        baseUrl = 'https://ci.kbase.us/cdn/files';
+        // baseUrl = 'http://cdn.kbase.us/cdn',
+    }
+    var modules = {
+            kb_common: 'kbase-common-js/1.7.0/',
+            kb_service: 'kbase-service-clients-js/2.9.1/',
+            uuid: 'pure-uuid/1.3.0/uuid',
+            // TODO: we need to reconcile Jupyter and KBase external deps
+            // text:  'requirejs-text/2.0.14/text',
+            css: 'require-css/0.1.8/css',
+            'font-awesome': 'font-awesome/4.3.0/css/font-awesome',
+            handlebars: 'handlebars/4.0.5/handlebars',
+            'google-code-prettify': 'google-code-prettify/1.2.0/'
+        },
+        paths = {};
+
+    Object.keys(modules).forEach(function (key) {
+        paths[key] = [baseUrl, modules[key]].join('/');
+    });
+
+    require.config({
+        paths: paths
+    });
+}
+console.log('HERE!');
+// addCdnModules();

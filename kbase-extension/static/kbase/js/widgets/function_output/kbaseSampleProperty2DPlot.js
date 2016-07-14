@@ -1,14 +1,26 @@
-define(['jquery', 
-        'plotly',        
-        'kbwidget', 
-        'kbaseSamplePropertyMatrix', 
-        'kbaseTabs',
-        'jquery-dataTables',
-        'jquery-dataTables-bootstrap'    
-        ], function($, Plotly) {
-    $.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'plotly',
+		'kbaseSamplePropertyMatrix',
+		'kbaseTabs',
+		'jquery-dataTables',
+		'jquery-dataTables-bootstrap'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Plotly,
+		kbaseSamplePropertyMatrix,
+		kbaseTabs,
+		jquery_dataTables,
+		bootstrap
+	) {
+    return KBWidget({
         name: 'kbaseSampleProperty2DPlot',
-        parent: 'kbaseSamplePropertyMatrix',
+        parent : kbaseSamplePropertyMatrix,
         version: '1.0.0',
         options: {
             propertySeriesX: null,

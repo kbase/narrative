@@ -7,16 +7,24 @@
  * will adapt this to work with the KBase SEED annotations
  */
 
-define(['jquery',
-        'narrativeConfig',
-        'kbwidget',
-        'd3'],
-function($,
-         Config) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'narrativeConfig',
+		'd3'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Config,
+		d3
+	) {
 
-    $.KBWidget({
+    return KBWidget({
         name: "KBaseSEEDFunctions",
-        parent: "kbaseAuthenticatedWidget",
+        parent : kbaseAuthenticatedWidget,
         version: "1.0.0",
 
         wsUrl: Config.url('workspace'),

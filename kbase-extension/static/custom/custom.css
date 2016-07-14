@@ -48,6 +48,8 @@ CSS should go in /kbase-extension/static/kbase/css/kbaseNarrative.css
 div.input_area {
     border: 1px solid #CECECE;
     border-radius: 0px;
+    /* a little padding to match the prompt */
+    padding-top: 4px;
 }
 
 div.text_cell_input {
@@ -173,12 +175,23 @@ span#notebook_name:hover {
     background-color: #FFF;
 }
 */
+
 .notebook_app .celltoolbar > .button_container {
-    width: 100%;
+    flex: 0 auto;
+}
+
+.notebook_app .celltoolbar > .button_container:nth-child(1) {
+    flex: auto;
+}
+
+.notebook_app .celltoolbar_container {
+    xheight: 60px;
+    border-bottom: 1px silver solid;
 }
 
 .notebook_app .prompt {
-    font-size: 12px;
+    /* font-size: 12px; */
+    padding-top: 0px;
     color: silver;
     width: 75px;
 }
@@ -276,4 +289,31 @@ span#notebook_name:hover {
 
 .cell.unselected .btn-default {
     color: #CCC;
+}
+
+.cell.unselected  .kb-cell-toolbar .title-container {
+    opacity: 0.5;
+}
+.cell.unselected  .kb-cell-toolbar .buttons-container {
+    opacity: 0.2;
+}
+
+.kb-btn-icon {
+    padding: 4px;
+}
+.kb-btn-icon .fa {
+    opacity: 0.5
+}
+
+.kb-btn-icon:hover .fa {
+    opacity: 1.0
+}
+
+
+/* 
+  For some reason Jupyter removes the bottom margin. This causes problems with 
+   bootstrap, since bootstrap removes the top margin!
+*/
+p {
+    margin-bottom: 9px;
 }

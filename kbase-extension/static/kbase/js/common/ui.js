@@ -514,6 +514,27 @@ define([
             }
             return false;
         }
+        
+        function buildIcon(arg) {
+            var klasses = ['fa'];
+            klasses.push('fa-' + arg.name);
+            if (arg.rotate) {
+                klasses.push('fa-rotate-' + String(arg.rotate));
+            }
+            if (arg.flip) {
+                klasses.push('fa-flip-' + arg.flip);
+            }
+            if (arg.size) {
+                if (typeof arg.size === 'number') {
+                    klasses.push('fa-' + String(arg.size) + 'x');
+                } else {
+                    klasses.push('fa-' + arg.size)
+                }
+            }
+            return span({
+                class: klasses.join(' ')
+            });
+        }
 
         return {
             getElement: getElement,
@@ -544,7 +565,8 @@ define([
             isDeveloper: isDeveloper,
             showConfirmDialog: showConfirmDialog,
             showDialog: showDialog,
-            buildButtonToolbar: buildButtonToolbar
+            buildButtonToolbar: buildButtonToolbar,
+            buildIcon: buildIcon
         };
     }
 

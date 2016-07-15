@@ -282,8 +282,8 @@ define (
         			$('.show-orthologs_'+self.pref).unbind('click');
         			$('.show-orthologs_'+self.pref).click(function() {
         				var id = $(this).data('id');
-            			if (tabPane.kbaseTabs('hasTab', id)) {
-            				tabPane.kbaseTabs('showTab', id);
+            			if (tabWidget.hasTab(id)) {
+            				tabWidget.showTab(id);
             				return;
             			}
         				var ortholog = getOrthologInfo(id);
@@ -424,7 +424,7 @@ console.log("UNQ IS ", unique, selected_regions);
               .append($vennTableDiv)
             ;
 
-            tabPane.kbaseTabs('addTab', {tab: 'Venn diagram', content: $vennContent, canDelete : false, show: !showOverview});
+            tabWidget.addTab({tab: 'Venn diagram', content: $vennContent, canDelete : false, show: !showOverview});
 
         	}
 

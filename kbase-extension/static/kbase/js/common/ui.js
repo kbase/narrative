@@ -249,6 +249,17 @@ define([
             }, label);
         }
 
+        function buildButton(arg) {
+            var klass = arg.type || 'default',
+                events = arg.events;
+            return button({
+                type: 'button',
+                class: ['btn', 'btn-' + klass].join(' '),
+                dataButton: arg.name,
+                id: addButtonClickEvent(events, arg.eventType || name)
+            }, arg.label);
+        }
+
         function enableButton(name) {
             getButton(name).classList.remove('hidden');
             getButton(name).classList.remove('disabled');
@@ -503,6 +514,27 @@ define([
             }
             return false;
         }
+        
+        function buildIcon(arg) {
+            var klasses = ['fa'];
+            klasses.push('fa-' + arg.name);
+            if (arg.rotate) {
+                klasses.push('fa-rotate-' + String(arg.rotate));
+            }
+            if (arg.flip) {
+                klasses.push('fa-flip-' + arg.flip);
+            }
+            if (arg.size) {
+                if (typeof arg.size === 'number') {
+                    klasses.push('fa-' + String(arg.size) + 'x');
+                } else {
+                    klasses.push('fa-' + arg.size)
+                }
+            }
+            return span({
+                class: klasses.join(' ')
+            });
+        }
 
         return {
             getElement: getElement,
@@ -510,6 +542,7 @@ define([
             // setButton: setButton,
             getNode: getNode,
             makeButton: makeButton,
+            buildButton: buildButton,
             enableButton: enableButton,
             disableButton: disableButton,
             hideButton: hideButton,
@@ -532,7 +565,8 @@ define([
             isDeveloper: isDeveloper,
             showConfirmDialog: showConfirmDialog,
             showDialog: showDialog,
-            buildButtonToolbar: buildButtonToolbar
+            buildButtonToolbar: buildButtonToolbar,
+            buildIcon: buildIcon
         };
     }
 

@@ -9,7 +9,7 @@ define([
     'common/validation',
     'common/events',
     'common/runtime',
-    'common/dom',
+    'common/ui',
     'common/props',
     'bootstrap',
     'css!font-awesome'
@@ -22,7 +22,7 @@ define([
     Validation,
     Events,
     Runtime,
-    Dom,
+    UI,
     Props
     ) {
     'use strict';
@@ -68,7 +68,7 @@ define([
                 objectSelectionPageSize: 20
             },
         runtime = Runtime.make(),
-            dom;
+            ui;
 
         // Validate configuration.
         if (!workspaceId) {
@@ -174,62 +174,98 @@ define([
             model.setItem('selectedItems', selectedItems);
             didChange();
         }
+        
+        function doRemoveSelectedAvailableItem(idToRemove) {
+            var selectedItems = model.getItem('selectedItems', []);
+            
+            model.setItem('selectedItems', selectedItems.filter(function (id) {
+                if (idToRemove === id) {
+                    return false;
+                }
+                return true;
+            }));
+            didChange();
+        }
 
         function renderAvailableItems(events) {
             var items = model.getItem('filteredAvailableItems', []),
+                selected = model.getItem('selectedItems', []),
                 from = model.getItem('showFrom'),
                 to = model.getItem('showTo'),
                 itemsToShow = items.slice(from, to),
                 content = itemsToShow.map(function (item, index) {
-                    return div({style: {border: '1px silver dashed'}}, [
+                    var isSelected = selected.some(function (id) {
+                        return (item.id === id);
+                    }),
+                        disabled = isSelected;
+                    return div({class: 'row', style: {border: '1px #CCC solid', width: '100%'}}, [
                         div({
+                            class: 'col-md-2',
                             style: {
-                                display: 'inline-block',
-                                width: '20%',
-                                verticalAlign: 'top',
+                                xdisplay: 'inline-block',
+                                xwidth: '20%',
+                                verticalAlign: 'middle',
+                                borderRadius: '3px',
                                 padding: '2px',
-                                backgroundColor: 'gray',
-                                color: 'white',
+                                backgroundColor: '#EEE',
+                                color: '#444',
                                 textAlign: 'right',
-                                paddingRight: '4px',
+                                paddingRight: '6px',
                                 fontFamily: 'monospace'
                             }
                         }, String(from + index + 1)),
                         div({
+                            class: 'col-md-7',
                             style: {
-                                display: 'inline-block',
-                                width: '70%',
+                                xdisplay: 'inline-block',
+                                xwidth: '70%',
                                 padding: '2px',
                                 overflowY: 'auto'
                             }
                         }, item.label),
-                        div({style: {
-                                display: 'inline-block',
-                                width: '10%',
+                        div({ class: 'col-md-3',
+                            style: {
+                                xdisplay: 'inline-block',                               
+                                xwidth: '10%',
                                 //minWidth: '5em',
                                 padding: '2px',
                                 textAlign: 'right',
                                 verticalAlign: 'top'
                             }
                         }, [
-                            span({
-                                class: 'kb-btn-icon',
-                                type: 'button',
-                                dataItemId: item.id,
-                                id: events.addEvent({
-                                    type: 'click',
-                                    handler: function () {
-                                        doAddItem(item.id);
-                                    }
-                                })}, span({class: 'fa fa-plus-circle', style: {color: 'green', fontSize: '200%'}}))
+                            (function () {
+                                if (disabled) {
+                                    return span({
+                                        class: 'kb-btn-icon',
+                                        type: 'button',
+                                        id: events.addEvent({
+                                            type: 'click',
+                                            handler: function () {
+                                                doRemoveSelectedAvailableItem(item.id);
+                                            }
+                                        })
+                                    }, span({class: 'fa fa-minus-circle', style: {color: 'red', fontSize: '200%'}}));
+                                }
+                                return span({
+                                    class: 'kb-btn-icon',
+                                    type: 'button',
+                                    dataItemId: item.id,
+                                    id: events.addEvent({
+                                        type: 'click',
+                                        handler: function () {
+                                            doAddItem(item.id);
+                                        }
+                                    })}, span({class: 'fa fa-plus-circle', style: {color: 'green', fontSize: '200%'}}));
+                            }())
+
                         ])
                     ]);
                 })
                 .join('\n');
 
-            dom.setContent('available-items-count', String(items.length));
-            dom.setContent('available-items', content);
-            dom.setContent('filtered-items-count', items.length);
+            ui.setContent('available-items-count', String(items.length));
+            ui.setContent('available-items', content);
+            ui.setContent('filtered-items-count', items.length);
         }
 
         function renderSelectedItems(events) {
@@ -238,18 +274,21 @@ define([
                 content = selectedItems.map(function (itemId, index) {
                     var item = valuesMap[itemId];
 
-                    return div({style: {border: '1px silver dashed'}}, [
+                    return div({class: 'row', style: {border: '1px #CCC solid', borderCollapse: 'collapse'}}, [
                         div({
+                            class: 'col-md-9',
                             style: {
-                                display: 'inline-block',
-                                width: '90%',
+                                xdisplay: 'inline-block',
+                                xwidth: '90%',
                                 padding: '2px',
                                 overflowY: 'auto'
                             }
                         }, item.label),
-                        div({style: {
-                                display: 'inline-block',
-                                width: '10%',
+                        div({
+                            class: 'col-md-3',
+                            style: {
+                                xdisplay: 'inline-block',
+                                xwidth: '10%',
                                 //minWidth: '6em',
                                 //maxWidth: '6em',
                                 padding: '2px',
@@ -270,7 +309,7 @@ define([
                         ])
                     ]);
                 }).join('\n');
-            dom.setContent('selected-items', content);
+            ui.setContent('selected-items', content);
         }
 
         function setPageStart(newFrom) {
@@ -363,10 +402,24 @@ define([
             return div([
                 div({class: 'row'}, [
                     div({class: 'col-md-6', style: {paddingBottom: '6px'}}, [
-                        div({style: {fontWeight: 'bold', textDecoration: 'underline',  textAlign: 'center'}}, 'Available Features')
+                        div({
+                            style: {
+                                fontWeight: 'bold', 
+                                textDecoration: 'underline',  
+                                fontStyle: 'italic', 
+                                textAlign: 'center'
+                            }
+                        }, 'Available')
                     ]),
                     div({class: 'col-md-6'}, [
-                        div({style: {fontWeight: 'bold', textDecoration: 'underline', textAlign: 'center'}}, 'Selected')
+                        div({
+                            style: {
+                                fontWeight: 'bold', 
+                                textDecoration: 'underline', 
+                                fontStyle: 'italic',
+                                textAlign: 'center'
+                            }
+                        }, 'Selected')
                     ]),
                 ]),
 //                 div({class: 'row'}, [
@@ -427,7 +480,7 @@ define([
                                                 doFirstPage();
                                             }
                                         })
-                                    }, 'top'),
+                                    }, ui.buildIcon({name: 'step-forward', rotate: 270})),
                                     button({
                                         class: 'btn btn-default',
                                         type: 'button',
@@ -438,7 +491,7 @@ define([
                                                 doPreviousPage();
                                             }
                                         })
-                                    }, '^'),
+                                    }, ui.buildIcon({name: 'caret-up'})),
                                     button({
                                         class: 'btn btn-default',
                                         type: 'button',
@@ -449,7 +502,7 @@ define([
                                                 doNextPage();
                                             }
                                         })
-                                    }, 'v'),
+                                    }, ui.buildIcon({name: 'caret-down'})),
                                     button({
                                         type: 'button',
                                         class: 'btn btn-default',
@@ -460,7 +513,7 @@ define([
                                                 doLastPage();
                                             }
                                         })
-                                    }, 'bottom')
+                                    }, ui.buildIcon({name: 'step-forward', rotate: 90}))
                                 ])
                             ])
                         ];
@@ -545,7 +598,7 @@ define([
                 case 'value':
                     // just change the selections.
                     var count = buildCount();
-                    dom.setContent('input-control.count', count);
+                    ui.setContent('input-control.count', count);
 
                     break;
                 case 'availableValues':
@@ -553,8 +606,8 @@ define([
                     // re-apply the selections from the value
                     var options = buildOptions(),
                         count = buildCount();
-                    dom.setContent('input-control.input', options);
-                    dom.setContent('input-control.count', count);
+                    ui.setContent('input-control.input', options);
+                    ui.setContent('input-control.count', count);
 
                     break;
                 case 'referenceObjectName':
@@ -576,7 +629,7 @@ define([
          * values.
          */
         function getInputValue() {
-//            var control = dom.getElement('input-container.input');
+//            var control = ui.getElement('input-container.input');
 //            if (!control) {
 //                return null;
 //            }
@@ -655,6 +708,9 @@ define([
                 referenceObjectRef = spec.spec.textsubdata_options.subdata_selection.constant_ref;
 
             if (!referenceObjectRef) {
+                if (!referenceObjectName) {
+                    return [];
+                }
                 referenceObjectRef = workspaceId + '/' + referenceObjectName;
             }
             var workspace = new Workspace(runtime.config('services.workspace.url'), {
@@ -688,7 +744,11 @@ define([
                         if (!result) {
                             return;
                         }
-                        var subdata = getProp(result.data, options.subdata_selection.path_to_subdata);
+                        var subdata = Props.getDataItem(result.data, options.subdata_selection.path_to_subdata);
+                        
+                        if (!subdata) {
+                            return;
+                        }
 
                         if (subdata instanceof Array) {
                             // For arrays we pluck off the "selectionId" property from
@@ -799,7 +859,7 @@ define([
 
         /*
          * Creates the markup
-         * Places it into the dom node
+         * Places it into the ui node
          * Hooks up event listeners
          */
         function render() {
@@ -813,7 +873,7 @@ define([
                         }
                     }, inputControl);
 
-                dom.setContent('input-container', content);
+                ui.setContent('input-container', content);
                 renderAvailableItems(events);
                 renderSelectedItems(events);
 
@@ -970,7 +1030,7 @@ define([
                 bus.on('run', function (message) {
                     parent = message.node;
                     container = parent.appendChild(document.createElement('div'));
-                    dom = Dom.make({
+                    ui = UI.make({
                         node: container
                     });
 

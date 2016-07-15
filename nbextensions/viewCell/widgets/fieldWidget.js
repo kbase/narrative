@@ -147,7 +147,7 @@ define([
                     ];
             }
         }
-        
+
         function parameterInfoRules(spec) {
             return table({class: 'table table-striped'}, [
                 tr([th('Required'), td(spec.required() ? 'yes' : 'no')]),
@@ -181,8 +181,8 @@ define([
             //    type = spec.dataType();
             //return mult + type;
         }
-        
-        
+
+
         function renderInfoTip() {
             var infoTipText;
             if (spec.description() && spec.hint() !== spec.description()) {
@@ -272,13 +272,16 @@ define([
                 advanced = '';
             }
 
-            var content = div({class: ['xform-horizontal', advanced].join(' '), dataAdvancedParameter: spec.isAdvanced(), style: {marginTop: '8px'}, id: fieldId}, [
+            var content = div({class: ['form-horizontal', advanced].join(' '), dataAdvancedParameter: spec.isAdvanced(), style: {marginTop: '8px'}, id: fieldId}, [
                 div({class: 'form-group', dataElement: 'field-panel'}, [
-                    label({class: 'xcol-md-12 xcontrol-label kb-app-parameter-name'}, [
-                        spec.label() || spec.id()
-                    ]),
+//                    label({class: 'xcol-md-12 xcontrol-label kb-app-parameter-name'}, [
+//                        spec.label() || spec.id()
+//                    ]),
                     div({class: 'xcol-md-12'}, div({class: 'kb-app-parameter-input'}, [
-                        div({class: 'input-group', style: {width: '100%'}}, [
+                        label({class: 'col-md-2 xcontrol-label kb-app-parameter-name control-label' }, [
+                            spec.label() || spec.id()
+                        ]),
+                        div({class: 'input-group col-md-10', style: {xwidth: '100%'}}, [
                             div({dataElement: 'input-control'}),
                             div({class: 'input-group-addon', style: {width: '30px', padding: '0'}}, [
                                 div({dataElement: 'feedback'})

@@ -262,7 +262,7 @@ define([
                 },
                 showAboutApp: {
                     label: 'Show the About App panel',
-                    defaultValue: true,
+                    defaultValue: false,
                     type: 'toggle',
                     element: 'about-app'
                 }

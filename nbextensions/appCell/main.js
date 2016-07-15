@@ -33,7 +33,8 @@ define([
 //    './widgets/codeCellRunWidget',
     'kb_service/utils',
     'kb_service/client/workspace',
-    'css!./styles/app-widget.css',
+    'css!kbase/css/appCell.css',
+    'css!./styles/main.css',
     'bootstrap'
 ], function (
     $,

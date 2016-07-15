@@ -33,9 +33,6 @@ define([
         // Validate configuration.
         // Nothing to do...
 
-        options.environment = config.isInSidePanel ? 'sidePanel' : 'standard';
-        options.multiple = spec.multipleItems();
-        options.required = spec.required();
         options.enabled = true;
 
 
@@ -107,6 +104,7 @@ define([
                         required: spec.required(),
                         shouldNotExist: true,
                         workspaceId: workspaceId,
+                        types: spec.spec.text_options.valid_ws_types,
                         authToken: runtime.authToken(),
                         workspaceServiceUrl: runtime.config('services.workspace.url')
                     };
@@ -114,13 +112,16 @@ define([
                 return Validation.validateWorkspaceObjectName(rawValue, validationOptions);
             })
                 .then(function (validationResult) {
-                    return {
-                        isValid: validationResult.isValid,
-                        validated: true,
-                        diagnosis: validationResult.diagnosis,
-                        errorMessage: validationResult.errorMessage,
-                        value: validationResult.parsedValue
-                    };
+                    // TODO: should pass the validation object through untouched...
+                    return validationResult;
+//                    return {
+//                        isValid: validationResult.isValid,
+//                        validated: true,
+//                        diagnosis: validationResult.diagnosis,
+//                        errorMessage: validationResult.errorMessage,
+//                        shortMessage: validationResult.shortMessage,
+//                        value: validationResult.parsedValue
+//                    };
                 });
         }
 
@@ -161,19 +162,17 @@ define([
                             handler: function () {
                                 validate()
                                     .then(function (result) {
+                                        console.log('VALIDATED', result);
                                         if (result.isValid) {
                                             bus.emit('changed', {
-                                                newValue: result.value
+                                                newValue: result.parsedValue
                                             });
                                         } else if (result.diagnosis === 'required-missing') {
                                             bus.emit('changed', {
-                                                newValue: result.value
+                                                newValue: result.parsedValue
                                             });
                                         }
-                                        bus.emit('validation', {
-                                            errorMessage: result.errorMessage,
-                                            diagnosis: result.diagnosis
-                                        });
+                                        bus.emit('validation', result);
                                     })
                                     .catch(function (err) {
                                         bus.emit('validation', {
@@ -230,10 +229,7 @@ define([
         function autoValidate() {
             return validate()
                 .then(function (result) {
-                    bus.emit('validation', {
-                        errorMessage: result.errorMessage,
-                        diagnosis: result.diagnosis
-                    });
+                    bus.emit('validation', result);
                 })
                 .catch(function (err) {
                     bus.emit('validation', {

@@ -15,9 +15,9 @@ define([
     'google-code-prettify/prettify',
     'kb_common/html',
     'common/events',
-    'common/dom',
+    'common/ui',
     'css!google-code-prettify/prettify.css'
-], function (Promise, $, PR, html, Events, Dom) {
+], function (Promise, $, PR, html, Events, UI) {
     'use strict';
     var t = html.tag,
         div = t('div'), span = t('span'), label = t('label'), button = t('button'),
@@ -38,7 +38,7 @@ define([
 
 
     function factory(config) {
-        var dom,
+        var ui,
             bus = config.bus,
             places, container,
             inputControlFactory = config.inputControlFactory,
@@ -59,28 +59,87 @@ define([
         options.enabled = true;
         options.classes = classSets.standard;
 
-
-        function setError(errorMessage) {
-            // places.$feedback.removeClass();
-            places.$field.addClass('kb-app-parameter-row-error');
-            places.$errorPanel.addClass('kb-app-parameter-row-error');
-            places.$error
-                .html(errorMessage);
-            places.$errorPanel
-                .show();
+        function showMessageDialog(id) {
+            ui.showInfoDialog({
+                title: 'MESSAGE TITLE',
+                body: 'Message id: ' + id
+            });
         }
 
+        function buildInputMessage(messageDef) {
+            var events = Events.make(),
+                content = div({
+                    class: 'alert alert-' + messageDef.type,
+                    role: 'alert'
+                }, [
+                    span({style: {fontWeight: 'bold'}}, messageDef.title),
+                    ': ',
+                    messageDef.message,
+                    ' ',
+                    button({
+                        type: 'button',
+                        class: 'btn btn-link alert-link',
+                        id: events.addEvent({
+                            type: 'click',
+                            handler: function () {
+                                showMessageDialog(messageDef.id);
+                            }
+                        })
+                    }, ui.buildIcon({name: 'info-circle'}))
+                ]);
+            return {
+                events: events,
+                content: content
+            };
+        }
+
+        function setError(error) {
+            console.log('SET ERROR', error);
+            var component = buildInputMessage({
+                title: 'ERROR',
+                type: 'danger',
+                message: error.message,
+                id: error.id
+            });
+            places.$messagePanel
+                .removeClass('hidden');
+            places.$message
+                .html(component.content)
+                .addClass('-error');
+            component.events.attachEvents(document.body);
+        }
+
+        function setWarning(warning) {
+            var component = buildInputMessage({
+                title: 'Warning',
+                type: 'warning', 
+                message: warning.message,
+                id: warning.id
+            });
+            places.$messagePanel
+                .removeClass('hidden');
+            places.$message
+                .html(component.content)
+                .addClass('-warning');
+            component.events.attachEvents(document.body);
+        }
+
+
         function clearError() {
-            places.$field.removeClass('kb-app-parameter-row-error');
-            places.$error
+            places.$field
+                .removeClass('-error')
+                .removeClass('-warning');
+            places.$message
+                .removeClass('-error')
+                .removeClass('-warning')
                 .html('');
-            places.$errorPanel
-                .hide();
+            places.$messagePanel
+                .addClass('hidden');
         }
 
         function hideError() {
-            places.$field.removeClass('kb-app-parameter-row-error');
-            places.$errorPanel.hide();
+            places.$field.removeClass('-error');
+            places.$messagePanel.addClass('hidden');
             places.$feedback.removeClass();
         }
 
@@ -147,7 +206,7 @@ define([
                     ];
             }
         }
-        
+
         function parameterInfoRules(spec) {
             return table({class: 'table table-striped'}, [
                 tr([th('Required'), td(spec.required() ? 'yes' : 'no')]),
@@ -181,8 +240,8 @@ define([
             //    type = spec.dataType();
             //return mult + type;
         }
-        
-        
+
+
         function renderInfoTip() {
             var infoTipText;
             if (spec.description() && spec.hint() !== spec.description()) {
@@ -272,67 +331,63 @@ define([
                 advanced = '';
             }
 
-            var content = div({class: ['form-horizontal', advanced].join(' '), dataAdvancedParameter: spec.isAdvanced(), style: {marginTop: '8px'}, id: fieldId}, [
-                div({class: 'form-group', dataElement: 'field-panel'}, [
+            var content = div({class: ['form-horizontal', 'kb-app-parameter-row', advanced].join(' '), dataAdvancedParameter: spec.isAdvanced(), style: {marginTop: '8px'}, id: fieldId}, [
+                div({class: 'form-group kb-app-parameter-input', dataElement: 'field-panel', style: {marginBottom: '0'}}, [
 //                    label({class: 'xcol-md-12 xcontrol-label kb-app-parameter-name'}, [
 //                        spec.label() || spec.id()
 //                    ]),
-                    div({class: 'xcol-md-12'}, div({class: 'kb-app-parameter-input'}, [
-                        label({class: 'col-md-3 xcontrol-label kb-app-parameter-name control-label' }, [
-                            spec.label() || spec.id()
+                    //div({class: 'xcol-md-12'}, div({class: ''}, [
+                    label({class: 'col-md-3 xcontrol-label kb-app-parameter-name control-label'}, [
+                        spec.label() || spec.id()
+                    ]),
+                    div({class: 'input-group col-md-9', style: {xwidth: '100%'}}, [
+                        div({dataElement: 'input-control'}),
+                        div({class: 'input-group-addon', style: {width: '30px', padding: '0'}}, [
+                            div({dataElement: 'feedback'})
                         ]),
-                        div({class: 'input-group col-md-9', style: {xwidth: '100%'}}, [
-                            div({dataElement: 'input-control'}),
-                            div({class: 'input-group-addon', style: {width: '30px', padding: '0'}}, [
-                                div({dataElement: 'feedback'})
-                            ]),
-                            div({class: 'input-group-addon', style: {width: '30px', padding: '0'}}, [
-                                div({dataElement: 'info'}, button({
-                                    class: 'btn btn-link btn-xs',
-                                    type: 'button',
-                                    id: events.addEvent({
-                                        type: 'click',
-                                        handler: function (e) {
-                                            var // info = document.getElementById(infoId),
-                                                // littleTip = container.querySelector('[data-element="little-tip"]'),
-                                                bigTip = container.querySelector('[data-element="big-tip"]');
-                                            // the info button is used to switch between two different
-                                            // displays -- a compact display of type and a
-                                            // tabview with richer info to explore.
-                                            if (bigTip.style.display === 'none') {
-                                                bigTip.style.display = 'block';
-                                                // littleTip.style.display = 'block';
-                                            } else {
-                                                bigTip.style.display = 'none';
-                                                // littleTip.style.display = 'none';
-                                            }
+                        div({class: 'input-group-addon', style: {width: '30px', padding: '0'}}, [
+                            div({dataElement: 'info'}, button({
+                                class: 'btn btn-link btn-xs',
+                                type: 'button',
+                                id: events.addEvent({
+                                    type: 'click',
+                                    handler: function (e) {
+                                        var // info = document.getElementById(infoId),
+                                            // littleTip = container.querySelector('[data-element="little-tip"]'),
+                                            bigTip = container.querySelector('[data-element="big-tip"]');
+                                        // the info button is used to switch between two different
+                                        // displays -- a compact display of type and a
+                                        // tabview with richer info to explore.
+                                        if (bigTip.style.display === 'none') {
+                                            bigTip.style.display = 'block';
+                                            // littleTip.style.display = 'block';
+                                        } else {
+                                            bigTip.style.display = 'none';
+                                            // littleTip.style.display = 'none';
                                         }
-                                    })
-                                },
-                                    span({class: 'fa fa-info-circle'})
-                                    ))
-                            ])
+                                    }
+                                })
+                            },
+                                span({class: 'fa fa-info-circle'})
+                                ))
                         ])
-                    ]))
+                    ])
+                        //]))
 
 
                 ]),
+                div({class: 'hidden', dataElement: 'message-panel'}, [
+                    div({class: 'col-md-3'}),
+                    div({class: 'col-md-9'}, div({
+                        class: 'message',
+                        dataElement: 'message'
+                    }))
+                ]),
                 div({class: 'row', dataElement: 'info-panel'}, [
-//                    label({class: 'col-md-3'}, [
-//                        renderLabelTip()
-//                    ]),
                     div({class: 'col-md-12', style: {paddingBottom: '10px'}}, div({id: infoId}, [
                         renderInfoTip()
                     ]))
 
-                ]),
-                div({class: 'form-group', dataElement: 'error-panel', style: {display: 'none'}}, [
-                    div({class: 'col-md-2'}),
-                    div({class: 'col-md-5'}, div({
-                        class: ['kb-app-parameter-error-message'].join(' '),
-                        dataElement: 'error-message'
-                    })),
-                    div({class: 'col-md-5'})
                 ])
             ]);
 
@@ -348,7 +403,7 @@ define([
                 container = node;
                 container.innerHTML = render(events);
                 events.attachEvents(container);
-                dom = Dom.make({node: container});
+                ui = UI.make({node: container});
                 // TODO: use the pattern in which the redner returns an object,
                 // which includes events and other functions to be run after
                 // content is added to the dom.
@@ -360,8 +415,8 @@ define([
                     $field: $container.find('#' + fieldId),
                     $fieldPanel: $container.find('[data-element="field-panel"]'),
                     $input: $container.find('[data-element="input"]'),
-                    $error: $container.find('[data-element="error-message"]'),
-                    $errorPanel: $container.find('[data-element="error-panel"]'),
+                    $message: $container.find('[data-element="message"]'),
+                    $messagePanel: $container.find('[data-element="message-panel"]'),
                     $feedback: $container.find('[data-element="feedback"]'),
                     $removalButton: $container.find('[data-element="removal-button"]')
                 };
@@ -381,12 +436,23 @@ define([
                             break;
                         case 'required-missing':
                             feedbackRequired();
-                            // setError(message.errorMessage, spec.label());
                             clearError();
+                            break;
+                        case 'suspect':
+                            feedbackOk();
+                            clearError();
+                            setWarning({
+                                message: message.shortMessage,
+                                id: message.messageId
+                            });
                             break;
                         case 'invalid':
                             feedbackError();
-                            setError(message.errorMessage, spec.label());
+                            clearError();
+                            setError({
+                                id: message.messageId,
+                                message: message.errorMessage
+                            });
                             break;
                         case 'optional-empty':
                             feedbackNone();
@@ -398,7 +464,7 @@ define([
                     return inputControl.start()
                         .then(function () {
                             bus.emit('run', {
-                                node: dom.getElement('input-control')
+                                node: ui.getElement('input-control')
                             });
                         });
                 }

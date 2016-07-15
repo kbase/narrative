@@ -344,8 +344,41 @@ def update_output_cell(cell):
     """
     # hoo-boy, here's the hard one.
     # Grab the source, parse it, build a new viewer for it,
-    # put that in a code cell, and execute it.
-    # ... maybe directly change the output area? Might be easier ...
+    # put that in a code cell, and put the result in the output area (since we already know what it is, just plop it in there).
+    code = cell['source']
+
+    m = re.search('<div id=\"(.+)\"></div>\s*<script>(\$\(.+\))\.(\w+)\((.+)\);\<\/script\>', code)
+    groups = m.groups()
+    if m is not None and len(m.groups()) == 4:
+        cell_id = groups[0]
+        cell_node = groups[1]
+        widget = groups[2]
+        widget_inputs=groups[3]
+        elem_output = '\n element.html("<div id=\'' + cell_id + '\' class=\'kb-vis-area\'></div>");\n\n require(["' + widget + '"], function(' + widget + ') { new ' + widget + '(' + cell_node + ', ' + widget_inputs + '); });'
+        new_source = "from IPython.display import Javascript\nJavascript(\"\"\"" + elem_output + "\"\"\")"
+        js_output = {
+            u'data': {
+                u'text/plain': u'<IPython.core.display.Javascript object>',
+                u'application/javascript': elem_output
+            },
+            u'execution_count': 1,
+            u'metadata': {},
+            u'output_type': u'execute_result'
+        }
+        # js_output['data'][u'application/javascript'] = elem_output
+        cell['outputs'] = [js_output]
+        cell['source'] = new_source
+        cell['cell_type'] = 'code'
+        cell['execution_count'] = 1
+        meta = cell['metadata']
+        meta['kbase'] = {
+            'attributes': {
+                'status': 'new',
+                'title': 'Data Viewer',
+            },
+            'type': 'output'
+        }
+        cell['metadata'] = meta
     return cell
 
 def update_metadata(metadata):

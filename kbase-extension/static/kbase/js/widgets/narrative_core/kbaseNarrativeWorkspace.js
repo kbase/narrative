@@ -474,7 +474,7 @@ define (
             })) {
                 return 'view';
             }
-            
+
             // A very small class of methods are just non-app-calling widgets.
             switch (spec.info.id) {
                 case 'edit_media':
@@ -813,6 +813,7 @@ define (
          * @private
          */
         removeCellEditFunction: function(cell) {
+            return;
             // remove its double-click and return functions. sneaky!
             $(cell.element).off('dblclick');
             $(cell.element).off('keydown');
@@ -1965,6 +1966,7 @@ define (
             }
             var title = (data.info && data.info.name) ? data.info.name : 'Data Viewer';
             var type = 'viewer';
+            // $(cell.element).trigger('toggleCodeArea.cell');
             var cellText = ['from biokbase.narrative.widgetmanager import WidgetManager',
                             'WidgetManager().show_output_widget(',
                             '    "kbaseNarrativeDataCell",',

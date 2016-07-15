@@ -95,14 +95,14 @@ define([
         function doDeleteCell() {
             //if (window.confirm('Delete cell?')) {
             //    $(cell.element).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(cell));
-            //} 
+            //}
             var content = div([
                 p([
-                    'Deleting this cell will not remove any output cells or data objects it may have created. ', 
+                    'Deleting this cell will not remove any output cells or data objects it may have created. ',
                     'Any input parameters or other configuration of this cell will be lost.'
                 ]),
                 p([
-                    'Note: It is not possible to "undo" the deletion of a cell, ', 
+                    'Note: It is not possible to "undo" the deletion of a cell, ',
                     'but if the cell has not been saved you can refresh the page ',
                     'to load it from a previous state.'
                 ]),
@@ -147,7 +147,7 @@ define([
             cell.element.trigger('toggleCodeArea.cell');
             // $(cell.element).find('.input_area').toggle();
         }
-        
+
         function doToggleCellSettings() {
             cell.element.trigger('toggleCellSettings.cell');
         }
@@ -155,14 +155,14 @@ define([
         function renderToggleCodeView(events) {
             var runtime = Runtime.make();
             // Only render if actually a code cell and in dev mode.
-            // TODO: add cell extension to toggle code view, since this may 
+            // TODO: add cell extension to toggle code view, since this may
             // depend on cell state (or subtype)
             if (cell.cell_type !== 'code') {
                 return;
             }
-            if (!ui.isDeveloper()) {
-                return;
-            }
+            // if (!ui.isDeveloper()) {
+            //     return;
+            // }
 
             return button({
                 type: 'button',

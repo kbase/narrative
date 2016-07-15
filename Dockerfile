@@ -19,6 +19,12 @@ EXPOSE 8888
 # Remove Debian's older Tornado package
 RUN DEBIAN_FRONTEND=noninteractive apt-get remove -y python-tornado
 
+# TEMPORARY!
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python-dev libffi-dev libssl-dev \
+    && pip install pyopenssl ndg-httpsclient pyasn1 \
+    && pip install requests --upgrade \
+    && pip install 'requests[security]' --upgrade
+
 # Copy in the narrative repo
 ADD ./ /kb/dev_container/narrative
 ADD ./kbase-logdb.conf /tmp/kbase-logdb.conf

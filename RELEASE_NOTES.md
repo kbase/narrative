@@ -3,6 +3,12 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v4.2.1 (more notes will follow).
 
+### Version 3.0.0-alpha-2
+__Changes__
+- Fix updater so that it updates the Markdown cell version of viewer cells into pre-executed code cells that generate viewers. (So, updated viewers should work again)
+- Fix Docker image so that it doesn't spam the annoying SSL errors in all cells.
+- Put code area toggle on all code cells at all times. (Just to give Erik and I something to argue about)
+
 ### Version 3.0.0-alpha-1
 __Major Updates__
 - Apps and Methods not made as part of KBase SDK modules are now obsolete and will no longer run. Those apps have been replaced with Markdown cells that note their obsolescence, but still give the name and set of parameters used in the apps for reference. This also gives suggestions for updated apps (that will be available in production eventually...)

@@ -34,7 +34,6 @@ define([
 
             this.render();
 
-            // this.hideInputArea();
             return this;
         },
         hideInputArea: function () {

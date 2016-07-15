@@ -416,7 +416,7 @@ console.log("UNQ IS ", unique, selected_regions);
             venn.c2.vdy = '3.0em';
 
             var $vennDiag = $.jqElem('div').css({width : '600px', height : '600px'}).attr('align', 'center');
-            kbaseVenndiagram($vennDiag, {dataset : venn, labels : true, intersectFontSize : '16pt', circleFontSize : '16pt'});
+            var $kbVenn = new kbaseVenndiagram($vennDiag, {dataset : venn, labels : true, intersectFontSize : '16pt', circleFontSize : '16pt'});
 
 
             var $vennContent = $.jqElem('div')

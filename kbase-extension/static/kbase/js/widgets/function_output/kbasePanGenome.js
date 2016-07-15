@@ -15,7 +15,8 @@ define (
 		'kbaseTabs',
 		'kbasePrompt',
 		'jquery-dataTables',
-		'jquery-dataTables-bootstrap'
+		'jquery-dataTables-bootstrap',
+		'kbaseVenndiagram'
 	], function(
 		KBWidget,
 		bootstrap,
@@ -26,7 +27,8 @@ define (
 		kbaseTabs,
 		kbasePrompt,
 		jquery_dataTables,
-		bootstrap
+		bootstrap,
+		kbaseVenndiagram
 	) {
     return KBWidget({
         name: "kbasePanGenome",
@@ -414,7 +416,7 @@ console.log("UNQ IS ", unique, selected_regions);
             venn.c2.vdy = '3.0em';
 
             var $vennDiag = $.jqElem('div').css({width : '600px', height : '600px'}).attr('align', 'center');
-            $vennDiag.kbaseVenndiagram({dataset : venn, labels : true, intersectFontSize : '16pt', circleFontSize : '16pt'});
+            kbaseVenndiagram($vennDiag, {dataset : venn, labels : true, intersectFontSize : '16pt', circleFontSize : '16pt'});
 
 
             var $vennContent = $.jqElem('div')

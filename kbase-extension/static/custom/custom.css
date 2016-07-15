@@ -35,7 +35,7 @@ CSS should go in /kbase-extension/static/kbase/css/kbaseNarrative.css
     background-color: #FFFFFF;
 }
 
-.btn * { color: black; }
+/* .btn * { color: black; } */
 
 .celltoolbar {
     height: auto;

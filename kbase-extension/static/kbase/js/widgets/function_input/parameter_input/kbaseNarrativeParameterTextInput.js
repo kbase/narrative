@@ -11,7 +11,7 @@ define([
     'narrativeConfig',
     'kbaseNarrativeParameterInput',
     'common/runtime',
-    
+    'base/js/namespace',
     'select2',
     'bootstrap'
 ], function (
@@ -19,7 +19,8 @@ define([
     $,
     Config,
     kbaseNarrativeParameterInput,
-    Runtime
+    Runtime,
+    Jupyter
     ) {
     'use strict';
     return KBWidget({
@@ -195,7 +196,7 @@ define([
                 ' value="' + defaultValue + '" type="text" style="width:100%"/>').addClass("form-control")
                 .on("input", function () {
                     self.isValid()
-                });
+                })
 
             if (spec.text_options) {
                 if (spec.text_options.valid_ws_types) {
@@ -209,6 +210,12 @@ define([
                     }
                 }
             }
+            $input.on('focus', function(e) {
+                Jupyter.narrative.disableKeyboardManager();
+            })
+            .on('blur', function(e) {
+                Jupyter.narrative.enableKeyboardManager();
+            });
 
             var $feedbackTip = $("<span>").removeClass();
             if (self.required && showHint) {  // it must be required, and it must be the first element (showHint is only added on first row)
@@ -291,7 +298,7 @@ define([
         },
         updateDataList: function (workspaceObjectInfo) {
             var lookupTypes = this.getLookupTypes();
-                
+
             this.validDataObjectList = workspaceObjectInfo
                 .filter(function (info) {
                     var type = info[2].split('-')[0];
@@ -335,7 +342,7 @@ define([
                 return;
             }
 
-            // update the validDataObjectList 
+            // update the validDataObjectList
             this.trigger('dataLoadedQuery.Narrative', [lookupTypes, this.IGNORE_VERSION, $.proxy(
                     function (objects) {
                         // we know from each parameter what each input type is.
@@ -484,16 +491,12 @@ define([
                 )
                 .on("select2-focus",
                     function (e) {
-                        if (Jupyter && Jupyter.notebook) {
-                            Jupyter.narrative.disableKeyboardManager();
-                        }
+                        Jupyter.narrative.disableKeyboardManager();
                     }
                 )
                 .on("select2-blur",
                     function (e) {
-                        if (Jupyter && Jupyter.notebook) {
-                            Jupyter.narrative.enableKeyboardManager();
-                        }
+                        Jupyter.narrative.enableKeyboardManager();
                     }
                 );
 

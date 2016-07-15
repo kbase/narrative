@@ -180,17 +180,28 @@ define (
                         }
                         if (aTypes[key]["import_method_ids"].length > 0) {
                             self.types[key] = aTypes[key];
-                            var methodIdList = aTypes[key]["import_method_ids"];
-                            aTypes[key]["import_method_ids"] = []
-                            for (var methodPos in methodIdList) {
-                                var methodId = methodIdList[methodPos];
-                                if (methodId.indexOf("/") > 0)
-                                    continue;
+                            for (var methodPos in aTypes[key]["import_method_ids"]) {
+                                var methodId = aTypes[key]["import_method_ids"][methodPos];
                                 methodIds.push(methodId);
-                                aTypes[key]["import_method_ids"].push(methodId);
                             }
                         }
                     }
+
+
+
+                    //     if (aTypes[key]["import_method_ids"].length > 0) {
+                    //         self.types[key] = aTypes[key];
+                    //         var methodIdList = aTypes[key]["import_method_ids"];
+                    //         aTypes[key]["import_method_ids"] = []
+                    //         for (var methodPos in methodIdList) {
+                    //             var methodId = methodIdList[methodPos];
+                    //             // if (methodId.indexOf("/") > 0)
+                    //             //     continue;
+                    //             methodIds.push(methodId);
+                    //             aTypes[key]["import_method_ids"].push(methodId);
+                    //         }
+                    //     }
+                    // }
                     self.methClient.get_method_full_info({ 'ids' : methodIds, 'tag' : 'dev' },
                         $.proxy(function(fullInfoList) {
                             self.methodFullInfo = {};
@@ -643,12 +654,12 @@ define (
             cell.metadata = meta;
             cell.execute();
         },
-        
+
         runImport: function(callback) {
             var self = this;
             var methodId = self.getSelectedTabId();
             var methodSpec = self.methods[methodId];
-            
+
             if (methodId.indexOf('/') > 0) {
                 var paramValueArray = self.getInputWidget().getParameters();
                 var params = {};
@@ -658,7 +669,7 @@ define (
                     params[paramId] = paramValue;
                 }
                 //var ver = methodSpec.info.git_commit_hash;
-                var pythonCode = PythonInterop.buildAppRunner(null, null, 
+                var pythonCode = PythonInterop.buildAppRunner(null, null,
                         {tag: 'dev', version: null, id: methodId}, params);
                 pythonCode += ".job_id.encode('ascii','ignore')";
                 var callbacks = {

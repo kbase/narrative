@@ -34,7 +34,7 @@ define([
 
             this.render();
 
-            // this.hideInputArea();
+            this.$elem.trigger('toggleCodeArea.cell');
             return this;
         },
         hideInputArea: function () {

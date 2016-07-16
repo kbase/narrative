@@ -7,7 +7,7 @@ define([
     'base/js/namespace',
     'common/utils',
     'common/appUtils',
-    'common/Props',
+    'common/props',
     'common/cellUtils',
     'common/pythonInterop',
     'kb_common/html'
@@ -23,7 +23,7 @@ define([
     html
     ) {
     'use strict';
-    
+
     var t = html.tag, div = t('div');
 
     function specializeCell(cell) {
@@ -48,7 +48,7 @@ define([
             }
             outputArea.removeClass('hidden');
         };
-        cell.renderIcon = function () {            
+        cell.renderIcon = function () {
             var inputPrompt = this.element[0].querySelector('[data-element="icon"]');
 
             if (inputPrompt) {
@@ -63,7 +63,7 @@ define([
             // Hide the code input area.
             this.input.find('.input_area').addClass('hidden');
             utils.setCellMeta(this, 'kbase.outputCell.user-settings.showCodeInputArea', false);
-            
+
             // And add our own!
             var prompt = document.createElement('div');
             prompt.innerHTML = div({dataElement: 'icon', class: 'prompt'});
@@ -83,7 +83,7 @@ define([
             }
         }
     }
-    
+
     function setupCell(cell) {
         if (cell.cell_type !== 'code') {
             return;
@@ -94,7 +94,7 @@ define([
         if (cell.metadata.kbase.type !== 'output') {
             return;
         }
-        
+
         specializeCell(cell);
 
         // The kbase property is only used for managing runtime state of the cell
@@ -104,11 +104,11 @@ define([
 
         // Update metadata.
         utils.setMeta(cell, 'attributes', 'lastLoaded', (new Date()).toUTCString());
-        
+
         // The output cell just needs to inhibit the input area.
         // The input code and associated output (a widget) is already
         // to be found in this cell (during insertion).
-        
+
         cell.hidePrompts();
         cell.renderMinMax();
         cell.renderIcon();
@@ -139,7 +139,7 @@ define([
             };
             cell.metadata = meta;
 
-            // We just need to generate, set, and execute the output 
+            // We just need to generate, set, and execute the output
             // the first time (for now).
             outputCode = PythonInterop.buildOutputRunner(data.kbase.widget.name, data.kbase.widget.tag, data.kbase.widget.params);
             cell.set_text(outputCode);
@@ -171,7 +171,7 @@ define([
                     });
             }
         });
-        
+
         Jupyter.notebook.get_cells().forEach(function (cell) {
             try {
                 setupCell(cell);

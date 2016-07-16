@@ -103,7 +103,7 @@ def map_inputs_from_job(job_inputs, app_spec):
         prop = param.get('target_property', None)
         value = job_inputs[position]
         if prop is not None:
-            value = value[prop]
+            value = value.get(prop, None)
 
         # that's the value. Now, if it was transformed, try to transform it back.
         if 'target_type_transform' in param:

@@ -51,7 +51,7 @@ define (
         var methodIds = [];
 
         var methodStoreClient = new NarrativeMethodStore(Config.url('narrative_method_store'));
-        
+
         return Promise.resolve(methodStoreClient.list_categories({
             load_methods: 1,
             load_apps: 0,
@@ -103,7 +103,7 @@ define (
      * createViewer(dataCell).then(function(result) {
      *    $('body').append(result.title).append(result.widget);
      * })
-     * 
+     *
      */
     function createViewer (dataCell) {
         var getParamValue = function (o, mapping) {
@@ -147,7 +147,7 @@ define (
         }
 
         return loadViewerInfo().then(function(viewerInfo) {
-            
+
             var o = dataCell.obj_info;
             var methodId = viewerInfo.viewers[o.bare_type];
             if (!methodId) {
@@ -190,14 +190,14 @@ define (
             try {
                 w = $elem[outputWidget](output);
             }
-            // If that fails, try to load with require. 
+            // If that fails, try to load with require.
             // If THAT fails, fail with an error (though the error should be improved)
             catch (err) {
                 require([outputWidget], function (W) {
                     w = new W($elem, output);
                     return w;
-                }, function () {
-                    console.error("error making widget: " + outputWidget);
+                }, function (reqErr) {
+                    console.error("errors occurred while making widget: " + outputWidget, {'firstTry': err, 'requireErr': reqErr});
                     $elem = defaultViewer(dataCell);
                     output.widgetTitle = 'Unknown Data Type';
                 });

@@ -375,7 +375,7 @@ define([
                 return Promise.resolve()
                     .then(function () {
                         if (inputParams.length === 0) {
-                            places.inputFields.innerHTML = 'No input objects for this app';
+                            places.inputFields.innerHTML = span({style: {fontStyle: 'italic'}}, 'No input objects for this app');
                         } else {
                             return Promise.all(inputParams.map(function (spec) {
                                 try {

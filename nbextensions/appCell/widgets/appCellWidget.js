@@ -2179,18 +2179,8 @@ define([
 //                        });
 //                    });
                     bus.on('parameter-changed', function (message) {
-                        console.log('got parameter changed...', message);
                         model.setItem(['params', message.parameter], message.newValue);
-                        var validationResult = validateModel();
-                        if (validationResult.isValid) {
-                            buildPython(cell, utils.getMeta(cell, 'attributes').id, model.getItem('app'), exportParams());
-                            fsm.newState({mode: 'editing', params: 'complete', code: 'built'});
-                            renderUI();
-                        } else {
-                            resetPython(cell);
-                            fsm.newState({mode: 'editing', params: 'incomplete'});
-                            renderUI();
-                        }
+                        evaluateAppState();
                     });
                     widget.start();
                     resolve();

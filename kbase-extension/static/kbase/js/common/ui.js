@@ -368,19 +368,14 @@ define([
             if (!el) {
                 return;
             }
-            //ensureOriginalDisplayStyle(el);
-            //el.style.display = 'none';
             el.classList.add('hidden');
         }
 
         function showElement(name) {
-            var el = getElement(name),
-                original;
+            var el = getElement(name);
             if (!el) {
                 return;
             }
-            //original = el.getAttribute('data-original-display-style');
-            //el.style.display = original;
             el.classList.remove('hidden');
         }
 

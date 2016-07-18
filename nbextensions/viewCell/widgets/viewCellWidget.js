@@ -273,7 +273,7 @@ define([
             fsm,
             saveMaxFrequency = config.saveMaxFrequency || 5000;
 
-        if (runtime.config('features.advanced')) {
+        if (runtime.config('features.developer')) {
             settings.showDeveloper = {
                 label: 'Show developer features',
                 defaultValue: false,
@@ -417,25 +417,6 @@ define([
             });
         }
 
-        function showElement(name) {
-            var node = ui.getElement(name);
-            if (!node) {
-                return;
-            }
-            // node.style.display = null;
-            node.classList.remove('hidden');
-        }
-        function hideElement(name) {
-            var node = ui.getElement(name);
-            if (!node) {
-                return;
-            }
-            //if (!node.getAttribute('data-original-display')) {
-            //    node.setAttribute('data-original-display', )
-            // }
-            // node.style.display = 'none';
-            node.classList.add('hidden');
-        }
 
         function renderSetting(settingName) {
             var setting = settings[settingName],
@@ -449,9 +430,9 @@ define([
             switch (setting.type) {
                 case 'toggle':
                     if (value) {
-                        showElement(setting.element);
+                        ui.showElement(setting.element);
                     } else {
-                        hideElement(setting.element);
+                        ui.hideElement(setting.element);
                     }
                     break;
             }
@@ -1000,9 +981,22 @@ define([
                     node: container,
                     bus: bus
                 });
+                
+                 if (ui.isDeveloper()) {
+                    settings.showDeveloper = {
+                        label: 'Show developer features',
+                        defaultValue: false,
+                        type: 'toggle',
+                        element: 'developer-options'
+                    };
+                }
+                
                 var layout = renderLayout();
                 container.innerHTML = layout.content;
                 layout.events.attachEvents(container);
+                
+                
+                
                 places = {
                     status: container.querySelector('[data-element="status"]'),
                     notifications: container.querySelector('[data-element="notifications"]'),
@@ -1159,15 +1153,7 @@ define([
                     doEditNotebookMetadata();
                 });
                 cell.element.on('toggleCellSettings.cell', function () {
-                    var showing = toggleSettings(cell),
-                        label = span({class: 'fa fa-cog '}),
-                        buttonNode = ui.getButton('toggle-settings');
-                    buttonNode.innerHTML = label;
-                    if (showing) {
-                        buttonNode.classList.add('active');
-                    } else {
-                        buttonNode.classList.remove('active');
-                    }
+                    toggleSettings(cell);
                 });
                 bus.on('toggle-settings', function () {
                     var showing = toggleSettings(cell),
@@ -1370,16 +1356,7 @@ define([
                     bus.on('parameter-changed', function (message) {
                         // We simply store the new value for the parameter.
                         model.setItem(['params', message.parameter], message.newValue);
-                        var validationResult = validateModel();
-                        if (validationResult.isValid) {
-                            buildPython(cell, utils.getMeta(cell, 'attributes').id, model.getItem('app'), exportParams());
-                            fsm.newState({mode: 'editing', params: 'complete', code: 'built'});
-                            renderUI();
-                        } else {
-                            resetPython(cell);
-                            fsm.newState({mode: 'editing', params: 'incomplete'});
-                            renderUI();
-                        }
+                        evaluateAppState();
                     });
                     widget.start();
                     resolve();
@@ -1489,6 +1466,21 @@ define([
                 makeIcon()
             ]);
         }
+        
+        function evaluateAppState() {
+            var validationResult = validateModel();
+            if (validationResult.isValid) {
+                buildPython(cell, utils.getMeta(cell, 'attributes').id, model.getItem('app'), exportParams());
+                fsm.newState({mode: 'editing', params: 'complete', code: 'built'});
+                renderUI();
+            } else {
+                resetPython(cell);
+                fsm.newState({mode: 'editing', params: 'incomplete'});
+                renderUI();
+            }
+        }
+        
+        
         function run(params) {
             // First get the app specs, which is stashed in the model,
             // with the parameters returned.
@@ -1514,6 +1506,7 @@ define([
                     // editing...
                     if (fsm.getCurrentState().state.mode === 'new') {
                         fsm.newState({mode: 'editing', params: 'incomplete'});
+                        evaluateAppState();
                     }
                     renderUI();
                 })

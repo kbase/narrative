@@ -181,7 +181,6 @@ define([
          * Messages sent directly to cells.
          */
         sendCellMessage: function (messageType, cellId, message) {
-            // console.log('Sending cell message ', messageType, cellId);
             var channelId = JSON.stringify({
                     cell: cellId
                 });
@@ -323,7 +322,6 @@ define([
 
                     // TODO: make sure we are catching these ... perhaps they need to be run-status...
                     // this.sendJobMessage('job-status', msg.content.data.content.job_id, msg.content.data.content);
-                    // console.log('have run status', msg.content.data.content);
                     this.sendCellMessage('run-status', msg.content.data.content.cell_id, msg.content.data.content);
                     break;
                 case 'job_err':
@@ -342,7 +340,6 @@ define([
                     break;
 
                 case 'job_logs':
-                    // console.log('GOT JOB LOGS', msg);
                     var jobId = msg.content.data.content.job_id;
 
                     this.sendJobMessage('job-logs', jobId, {
@@ -520,7 +517,6 @@ define([
 
             // clean this widget's internal state
             if (this.jobStates[jobId]) {
-                console.log('REMOVING JOB STATE', this.jobStates[jobId]);
                 // if it wasn't complete, we likely have an invalid number in the badge.
                 if (this.jobIsIncomplete(this.jobStates[jobId].job_state)) {
                     this.setJobCounter(Number(this.$jobCountBadge.html()) - 1);

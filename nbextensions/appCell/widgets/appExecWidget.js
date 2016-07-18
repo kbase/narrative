@@ -303,9 +303,6 @@ define([
         // that's for sure.
         function updateJobLog(data) {
             Jobs.getLogData(data.jobId, 0)
-                .then(function (logLines) {
-                    console.log('Got log lines!', logLines.length, logLines);
-                })
                 .catch(function (err) {
                     console.error('Error getting log lines', err);
                     ui.getElement(['job-log', 'logs']).innerHTML = 'ERROR:\n' +
@@ -422,7 +419,6 @@ define([
                 ui.setContent(['run-error', 'type'], state.error.type);
                 ui.setContent(['run-error', 'message'], state.error.message);
                 ui.setContent(['run-error', 'detail'], state.error.detail);
-                // console.log('ERROR', state.error);
             } else {
                 ui.hideElement(['run-error']);
             }
@@ -481,7 +477,6 @@ define([
                     } else {
                         label = 'In Queue';
                     }
-                    // console.log('POSITION', JSON.parse(JSON.stringify(state)));
                     if (state.jobState.position !== undefined) {
                         ui.setContent(['execStatus', 'queue', 'position'], state.jobState.position);
                     } else {
@@ -524,7 +519,9 @@ define([
                 showJobResult();
             } else if (state.error) {
                 // ui.setContent(['execStatus', 'finish', 'finishedAt'], format.niceElapsedTime(state.completedTime));
-                ui.setContent(['execStatus', 'finish', 'finishedAt'], format.niceElapsedTime(state.completedTime));
+                if (state.completedTime) {
+                    ui.setContent(['execStatus', 'finish', 'finishedAt'], format.niceElapsedTime(state.completedTime));
+                }
                 ui.setContent(['execStatus', 'finish', 'state'], 'error');
                 ui.showElement(['run-error']);
                 ui.setContent(['run-error', 'location'], state.error.location);
@@ -550,8 +547,6 @@ define([
                 error, now = new Date().getTime(),
                 launchStartTime = launchState.startTime,
                 elapsed = now - launchStartTime, newRunState;
-
-            // console.log('LAUNCH STATE UPDATE', launchState);
 
             switch (launchState.event) {
                 case 'validating_app':
@@ -736,7 +731,6 @@ define([
 //                    errorDetail = '';
 //                }
                 var errorId = new Uuid(4).format();
-                // console.log('EXEC ERROR', errorId, errorInfo);
 
                 var errorType, errorMessage, errorDetail;
                 if (errorInfo.error) {
@@ -852,7 +846,7 @@ define([
                             canonicalState = 'runError';
                             break;
                         default:
-                            console.log('INVAL EXEC STATE', jobState);
+                            console.error('INVAL EXEC STATE', jobState);
                             throw new Error('Invalid execution state ' + executionState + ' for temporal state ' + temporalState);
                     }
                     break;
@@ -1012,8 +1006,6 @@ define([
         function processNewLaunchState(launchEvent) {
             // we don't have to handle duplicates.
 
-            console.log('LAUNCH', launchEvent);
-
             model.setItem('lastLaunchEvent', launchEvent);
 
             var launchState = model.getItem('launchState');
@@ -1137,7 +1129,6 @@ define([
             bus.on('show-job-report', function (message) {
                 getJobReport(message.reportRef)
                     .then(function (jobReport) {
-                        // console.log('JOB REPORT', jobReport);
                         model.setItem('jobReport', jobReport);
                         showJobReport();
                     });
@@ -1156,7 +1147,6 @@ define([
              * bus itself...
              */
             ev = cellBus.on('launch-status', function (message) {
-                console.log('GOT LAUNCH STATUS', message);
                 processNewLaunchState(message.launchState);
             });
             listeners.push(ev);
@@ -1183,7 +1173,6 @@ define([
             ev = runtime.bus().on('clock-tick', function () {
                 // only update the ui on clock tick if we are currently running
                 // a job. TODO: the clock should be disconnected.
-                // console.log('tick');
                 // disable for now ... need to find a better way of processing clock ticks...
                 // return;
                 var runState = model.getItem('runState');

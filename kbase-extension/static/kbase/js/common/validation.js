@@ -2,8 +2,9 @@
 /*jslint white:true,browser:true*/
 define([
     'bluebird',
-    'kb_service/client/workspace'
-], function (Promise, Workspace) {
+    'kb_service/client/workspace',
+    'kb_service/utils'
+], function (Promise, Workspace, serviceUtils) {
     'use strict';
 
     function Validators() {
@@ -16,7 +17,7 @@ define([
                     }
                     return value;
                 case 'string':
-                    if (value.match(/^[\d]+$/)) {
+                    if (value.match(/^[-+]?[\d]+$/)) {
                         return parseInt(value, 10);
                     }
                     throw new Error('Invalid integer format');
@@ -134,6 +135,22 @@ define([
             };
         }
 
+        function getObjectInfo(workspaceId, objectName, authToken, serviceUrl) {
+            var workspace = new Workspace(serviceUrl, {
+                token: authToken
+            });
+
+            return workspace.get_object_info_new({
+                objects: [{wsid: workspaceId, name: objectName}],
+                ignoreErrors: 1
+            })
+                .then(function (data) {
+                    if (data[0]) {
+                        return serviceUtils.objectInfoToObject(data[0]);
+                    }
+                });
+        }
+
         function workspaceObjectExists(workspaceId, objectName, authToken, serviceUrl) {
             var workspace = new Workspace(serviceUrl, {
                 token: authToken
@@ -168,7 +185,7 @@ define([
 
         function validateWorkspaceObjectName(value, options) {
             var parsedValue,
-                errorMessage, diagnosis = 'valid';
+                messageId, shortMessage, errorMessage, diagnosis = 'valid';
 
             return Promise.try(function () {
                 if (typeof value !== 'string') {
@@ -178,26 +195,44 @@ define([
                     parsedValue = value.trim();
                     if (!parsedValue) {
                         if (options.required) {
+                            messageId = 'required-missing';
                             diagnosis = 'required-missing';
                             errorMessage = 'value is required';
                         } else {
                             diagnosis = 'optional-empty';
                         }
                     } else if (/\s/.test(parsedValue)) {
+                        messageId = 'obj-name-no-spaces';
                         diagnosis = 'invalid';
                         errorMessage = 'spaces are not allowed in data object names';
                     } else if (/^[\+\-]*\d+$/.test(parsedValue)) {
+                        messageId = 'obj-name-not-integer';
                         diagnosis = 'invalid';
                         errorMessage = 'data object names may not be in the form of an integer';
                     } else if (!/^[A-Za-z0-9|\.|\||_\-]+$/.test(parsedValue)) {
+                        messageId = 'obj-name-invalid-characters';
                         diagnosis = 'invalid';
-                        errorMessage = 'object names may only include the symbols _ - . |';
+                        errorMessage = 'object names may only include alphabetic characters, numbers, and the symbols "_",  "-",  ".",  "|"';
                     } else if (options.shouldNotExist) {
-                        return workspaceObjectExists(options.workspaceId, parsedValue, options.authToken, options.workspaceServiceUrl)
-                            .then(function (exists) {
-                                if (exists) {
-                                    errorMessage = 'an object already exists with this name';
-                                    diagnosis = 'invalid';
+                        return getObjectInfo(options.workspaceId, parsedValue, options.authToken, options.workspaceServiceUrl)
+                            .then(function (objectInfo) {
+                                if (objectInfo) {
+                                    var type = objectInfo.typeModule + '.' + objectInfo.typeName,
+                                        matchingType = options.types.some(function (typeId) {
+                                            if (typeId === type) {
+                                                return true;
+                                            }
+                                            return false;
+                                        });
+                                    if (!matchingType) {
+                                        messageId = 'obj-overwrite-diff-type';
+                                        errorMessage = 'an object already exists with this name and is not of the same type';
+                                        diagnosis = 'invalid';
+                                    } else {
+                                        messageId = 'obj-overwrite-warning';
+                                        shortMessage = 'an object already exists with this name';
+                                        diagnosis = 'suspect';
+                                    }
                                 }
                             });
                     }
@@ -206,7 +241,9 @@ define([
                 .then(function () {
                     return {
                         isValid: errorMessage ? false : true,
+                        messageId: messageId,
                         errorMessage: errorMessage,
+                        shortMessage: shortMessage,
                         diagnosis: diagnosis,
                         value: value,
                         parsedValue: parsedValue
@@ -216,36 +253,49 @@ define([
 
         function validateInteger(value, min, max) {
             if (max && max < value) {
-                return 'the maximum value for this parameter is ' + max;
+                return {
+                    id: 'int-above-maximum',
+                    message: 'the maximum value for this parameter is ' + max
+                };
             }
             if (min && min > value) {
-                return 'the minimum value for this parameter is ' + min;
+                return {
+                    id: 'int-below-minimum',
+                    message: 'the minimum value for this parameter is ' + min
+                };
             }
         }
 
         function validateIntString(value, options) {
             var plainValue,
                 parsedValue,
-                errorMessage, diagnosis = 'valid',
+                errorObject, messageId, errorMessage, diagnosis = 'valid',
                 min = options.min_int,
                 max = options.max_int;
 
             if (isEmptyString(value)) {
                 if (options.required) {
                     diagnosis = 'required-missing';
+                    messageId = 'required-missing';
                     errorMessage = 'value is required';
                 } else {
                     diagnosis = 'optional-empty';
                 }
             } else if (typeof value !== 'string') {
                 diagnosis = 'invalid';
+                messageId = 'incoming-value-not-string';
                 errorMessage = 'value must be a string (it is of type "' + (typeof value) + '")';
             } else {
                 plainValue = value.trim();
                 try {
                     parsedValue = toInteger(plainValue);
-                    errorMessage = validateInteger(parsedValue, min, max);
+                    errorObject = validateInteger(parsedValue, min, max);
+                    if (errorObject) {
+                        messageId = errorObject.id;
+                        errorMessage = errorObject.message;
+                    }
                 } catch (error) {
+                    messageId = 'internal-error';
                     errorMessage = error.message;
                 }
                 if (errorMessage) {
@@ -257,7 +307,9 @@ define([
 
             return {
                 isValid: errorMessage ? false : true,
+                messageId: messageId,
                 errorMessage: errorMessage,
+                message: errorMessage,
                 diagnosis: diagnosis,
                 value: value,
                 plainValue: plainValue,

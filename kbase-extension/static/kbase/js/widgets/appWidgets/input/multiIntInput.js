@@ -158,7 +158,8 @@ define([
                     // initialValue: config.initialValue,
                     parameterSpec: spec,
                     spec: spec,
-                    fieldSpec: config.fieldSpec
+                    fieldSpec: config.fieldSpec,
+                    showOwnMessages: true
                 }),
 //                displayWidget = SingleObjectDisplayWidget.make({
 //                    bus: inputBus,
@@ -243,7 +244,8 @@ define([
                     // initialValue: config.initialValue,
                     parameterSpec: spec,
                     spec: spec,
-                    fieldSpec: config.fieldSpec
+                    fieldSpec: config.fieldSpec,
+                    showOwnMessages: true
                 }),
                     errorRow,
                 placeholder = div({id: widgetId});

@@ -13,7 +13,7 @@ define([
 
     var t = html.tag,
         div = t('div'), a = t('a'),
-        button = t('button'), p = t('p'),
+        button = t('button'), p = t('p'), blockquote = t('blockquote'),
         span = t('span');
 
     function getMeta(cell, group, name) {
@@ -101,10 +101,10 @@ define([
                     'Deleting this cell will not remove any output cells or data objects it may have created. ',
                     'Any input parameters or other configuration of this cell will be lost.'
                 ]),
-                p([
+                blockquote([
                     'Note: It is not possible to "undo" the deletion of a cell, ',
-                    'but if the cell has not been saved you can refresh the page ',
-                    'to load it from a previous state.'
+                    'but if the Narrative has not been saved you can refresh the browser window ',
+                    'to load the Narrative from its previous state.'
                 ]),
                 p('Continue to delete this cell?')
             ]);

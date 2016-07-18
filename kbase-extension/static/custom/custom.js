@@ -844,13 +844,11 @@ define([
             
             
             $cellNode.on('toggleCodeArea.cell', function () {
-                console.log('TOGGLING?');
                 thisCell.toggleCodeInputArea();
             });
         };
         
         p.toggleCodeInputArea = function() {
-            console.log('TOGGLING...');
             var codeInputArea = this.input.find('.input_area')[0];
             if (codeInputArea) {
                 codeInputArea.classList.toggle('hidden');
@@ -952,7 +950,4 @@ define([
             }
         });
     };
-
-    console.log('CONFIG', narrativeConfig);
-
 });

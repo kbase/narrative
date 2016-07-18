@@ -133,6 +133,69 @@ define([
 
         }
         
+        function renderInfoDialog(title, content, okLabel) {
+           var dialog =
+                div({class: 'modal fade', tabindex: '-1', role: 'dialog'}, [
+                    div({class: 'modal-dialog'}, [
+                        div({class: 'modal-content'}, [
+                            div({class: 'modal-header'}, [
+                                button({type: 'button', class: 'close', dataDismiss: 'modal', ariaLabel: okLabel}, [
+                                    span({ariaHidden: 'true'}, '&times;')
+                                ]),
+                                span({class: 'modal-title'}, title)
+                            ]),
+                            div({class: 'modal-body'}, [
+                                content
+                            ]),
+                            div({class: 'modal-footer'}, [
+                                button({type: 'button', class: 'btn btn-default', dataDismiss: 'modal', dataElement: 'ok'}, okLabel)
+                            ])
+                        ])
+                    ])
+                ]);
+            return dialog;
+        }
+        function showInfoDialog(arg) {
+            var dialog = renderInfoDialog(arg.title, arg.body, arg.okLabel || 'OK'),
+                dialogId = html.genId(),
+                confirmNode = document.createElement('div'),
+                kbaseNode, modalNode, modalDialogNode;
+
+            confirmNode.id = dialogId;
+            confirmNode.innerHTML = dialog;
+            
+            // top level element for kbase usage
+            kbaseNode = document.querySelector('[data-element="kbase"]');
+            if (!kbaseNode) {
+                kbaseNode = document.createElement('div');
+                kbaseNode.setAttribute('data-element', 'kbase');
+                document.body.appendChild(kbaseNode);
+            }
+            
+            // a node uponwhich to place Bootstrap modals.
+            modalNode = kbaseNode.querySelector('[data-element="modal"]');
+            if (!modalNode) {
+                modalNode = document.createElement('div');
+                modalNode.setAttribute('data-element', 'modal');
+                kbaseNode.appendChild(modalNode);
+            }
+
+            modalNode.appendChild(confirmNode);
+            
+            modalDialogNode = modalNode.querySelector('.modal');
+            $(modalDialogNode).modal('show');
+            return new Promise(function (resolve) {
+                modalDialogNode.querySelector('[data-element="ok"]').addEventListener('click', function () {
+                    confirmNode.parentElement.removeChild(confirmNode);
+                    resolve(false);
+                });
+                modalDialogNode.addEventListener('hide.bs.modal', function () {
+                    resolve(false);
+                });
+            });
+
+        }
+        
         function renderDialog(title, content, cancelLabel, buttons) {
            var dialog =
                 div({class: 'modal fade', tabindex: '-1', role: 'dialog'}, [
@@ -305,19 +368,14 @@ define([
             if (!el) {
                 return;
             }
-            //ensureOriginalDisplayStyle(el);
-            //el.style.display = 'none';
             el.classList.add('hidden');
         }
 
         function showElement(name) {
-            var el = getElement(name),
-                original;
+            var el = getElement(name);
             if (!el) {
                 return;
             }
-            //original = el.getAttribute('data-original-display-style');
-            //el.style.display = original;
             el.classList.remove('hidden');
         }
 
@@ -564,6 +622,7 @@ define([
             isAdvanced: isAdvanced,
             isDeveloper: isDeveloper,
             showConfirmDialog: showConfirmDialog,
+            showInfoDialog: showInfoDialog,
             showDialog: showDialog,
             buildButtonToolbar: buildButtonToolbar,
             buildIcon: buildIcon

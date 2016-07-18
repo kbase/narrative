@@ -81,14 +81,8 @@ define([
                     validationResult = Validation.validateTextString(rawValue, {
                         required: options.required
                     });
-
-                return {
-                    isValid: validationResult.isValid,
-                    validated: true,
-                    diagnosis: validationResult.diagnosis,
-                    errorMessage: validationResult.errorMessage,
-                    value: validationResult.parsedValue
-                };
+                    
+                return validationResult;
             });
         }
 

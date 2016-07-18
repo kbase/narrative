@@ -514,7 +514,7 @@ define([
             fsm,
             saveMaxFrequency = config.saveMaxFrequency || 5000;
 
-        
+
 
         // DATA API
 
@@ -847,7 +847,7 @@ define([
                     }, [
                         div({dataElement: 'widget', style: {display: 'block', width: '100%'}}, [
                             div({class: 'container-fluid'}, [
-                                
+
                                 ui.buildPanel({
                                     title: 'Error',
                                     name: 'fatal-error',
@@ -932,7 +932,7 @@ define([
                                     classes: ['kb-panel-container'],
                                     body: div({dataElement: 'widget'})
                                 }),
-                               
+
                                 div({class: 'btn-toolbar kb-btn-toolbar-cell-widget'}, [
                                     div({class: 'btn-group'}, [
                                         ui.makeButton('Run', 'run-app', {events: events, type: 'primary'}),
@@ -1396,7 +1396,7 @@ define([
                         // the job will be deleted form the notebook when the job cancellation
                         // event is received.
                     }
-                    
+
                     // tear down all the sub widgets.
                     Object.keys(widgets).forEach(function (widgetId) {
                         var widget = widgets[widgetId];
@@ -1428,10 +1428,10 @@ define([
                         // the job will be deleted form the notebook when the job cancellation
                         // event is received.
                     }
-                    
+
                     // Remove all of the execution state when we reset the app.
                     model.deleteItem('exec');
-                    
+
                     reloadExecutionWidget();
 
                     // TODO: evaluate the params again before we do this.
@@ -1444,7 +1444,7 @@ define([
         function updateFromLaunchEvent(message) {
 
             // Update the exec state.
-            // NB we need to do this because the launch events are only 
+            // NB we need to do this because the launch events are only
             // sent once from the narrative back end.
 
             // Update FSM
@@ -1519,7 +1519,7 @@ define([
                     node: container,
                     bus: bus
                 });
-                
+
                 // TODO: better place/way to do this:
                 if (ui.isDeveloper()) {
                     settings.showDeveloper = {
@@ -1529,7 +1529,7 @@ define([
                         element: 'developer-options'
                     };
                 }
-                
+
                 var layout = renderLayout();
                 container.innerHTML = layout.content;
                 layout.events.attachEvents(container);
@@ -1762,6 +1762,9 @@ define([
                 outputCell, notification,
                 outputCreated = model.getItem(['exec', 'outputCreated']);
 
+            // widgets named 'no-display' are a trigger to skip the output cell process.
+            var skipOutputCell = model.getItem('exec.outputWidgetInfo.name') === 'no-display';
+
 
             // New app -- check the existing exec state, see if the
             // output has been created already, and if so just exit.
@@ -1784,16 +1787,18 @@ define([
                 return;
             }
 
-            // If not created yet, create it.
-            outputCellId = createOutputCell(jobId);
-            model.setItem(['output', 'byJob', jobId], {
-                cell: {
-                    id: outputCellId,
-                    created: true,
-                    createdAt: new Date().toGMTString()
-                },
-                params: model.copyItem('params')
-            });
+            if (!skipOutputCell) {
+                // If not created yet, create it.
+                outputCellId = createOutputCell(jobId);
+                model.setItem(['output', 'byJob', jobId], {
+                    cell: {
+                        id: outputCellId,
+                        created: true,
+                        createdAt: new Date().toGMTString()
+                    },
+                    params: model.copyItem('params')
+                });
+            }
 
             widgets.outputWidget.instance.bus().emit('update', {
                 jobState: model.getItem('exec.jobState'),
@@ -1826,8 +1831,8 @@ define([
                 bus.on('edit-notebook-metadata', function () {
                     doEditNotebookMetadata();
                 });
-                
-                // the settings toggle is now emitted from the toolbar, which 
+
+                // the settings toggle is now emitted from the toolbar, which
                 // doesn't have a reference to the bus (yet).
                 cell.element.on('toggleCellSettings.cell', function () {
                     var showing = toggleSettings(cell),
@@ -2350,7 +2355,7 @@ define([
                 makeIcon()
             ]);
         }
-        
+
         function evaluateAppState() {
             var validationResult = validateModel();
             if (validationResult.isValid) {
@@ -2389,11 +2394,11 @@ define([
                 .then(function () {
                     // if we start out in 'new' state, then we need to promote to
                     // editing...
-                    
+
                     if (fsm.getCurrentState().state.mode === 'new') {
                         fsm.newState({mode: 'editing', params: 'incomplete'});
                         evaluateAppState();
-                        // 
+                        //
                     } else {
                         renderUI();
                     }

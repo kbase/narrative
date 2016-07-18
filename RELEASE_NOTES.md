@@ -3,6 +3,12 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v4.2.1 (more notes will follow).
 
+### Version 3.0.0-alpha-5
+__Changes__
+- Fixed issue when starting SDK jobs from the upload panel with numeric parameters.
+- Fixed crash bug when trying to unpack a finished job that has incomplete inputs.
+- Shut off Jupyter command-mode quick keys when a text parameter input is focused.
+
 ### Version 3.0.0-alpha-4
 __Changes__
 - Improve error reporting when failing to load a viewer.

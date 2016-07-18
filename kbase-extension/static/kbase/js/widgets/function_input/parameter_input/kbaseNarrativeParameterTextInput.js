@@ -11,7 +11,7 @@ define([
     'narrativeConfig',
     'kbaseNarrativeParameterInput',
     'common/runtime',
-    
+    'base/js/namespace',
     'select2',
     'bootstrap'
 ], function (
@@ -19,7 +19,8 @@ define([
     $,
     Config,
     kbaseNarrativeParameterInput,
-    Runtime
+    Runtime,
+    Jupyter
     ) {
     'use strict';
     return KBWidget({
@@ -79,6 +80,10 @@ define([
 
             var spec = self.spec;
 
+            this.validateAs = "string";
+            if (spec.text_options && spec.text_options.validate_as) {
+                this.validateAs = spec.text_options.validate_as;
+            }
             // check if we need to allow multiple values
             self.allow_multiple = false;
             if (spec.allow_multiple) {
@@ -195,7 +200,7 @@ define([
                 ' value="' + defaultValue + '" type="text" style="width:100%"/>').addClass("form-control")
                 .on("input", function () {
                     self.isValid()
-                });
+                })
 
             if (spec.text_options) {
                 if (spec.text_options.valid_ws_types) {
@@ -209,6 +214,12 @@ define([
                     }
                 }
             }
+            $input.on('focus', function(e) {
+                Jupyter.narrative.disableKeyboardManager();
+            })
+            .on('blur', function(e) {
+                Jupyter.narrative.enableKeyboardManager();
+            });
 
             var $feedbackTip = $("<span>").removeClass();
             if (self.required && showHint) {  // it must be required, and it must be the first element (showHint is only added on first row)
@@ -291,7 +302,7 @@ define([
         },
         updateDataList: function (workspaceObjectInfo) {
             var lookupTypes = this.getLookupTypes();
-                
+
             this.validDataObjectList = workspaceObjectInfo
                 .filter(function (info) {
                     var type = info[2].split('-')[0];
@@ -335,7 +346,7 @@ define([
                 return;
             }
 
-            // update the validDataObjectList 
+            // update the validDataObjectList
             this.trigger('dataLoadedQuery.Narrative', [lookupTypes, this.IGNORE_VERSION, $.proxy(
                     function (objects) {
                         // we know from each parameter what each input type is.
@@ -484,16 +495,12 @@ define([
                 )
                 .on("select2-focus",
                     function (e) {
-                        if (Jupyter && Jupyter.notebook) {
-                            Jupyter.narrative.disableKeyboardManager();
-                        }
+                        Jupyter.narrative.disableKeyboardManager();
                     }
                 )
                 .on("select2-blur",
                     function (e) {
-                        if (Jupyter && Jupyter.notebook) {
-                            Jupyter.narrative.enableKeyboardManager();
-                        }
+                        Jupyter.narrative.enableKeyboardManager();
                     }
                 );
 
@@ -518,7 +525,7 @@ define([
             if (!self.enabled) {
                 return {isValid: true, errormssgs: []}; // do not validate if disabled
             }
-            var p = self.getParameterValue();
+            var p = self.getParameterValue(true);
             if (p === null) {
                 return {isValid: true, errormssgs: []};
             }
@@ -802,52 +809,65 @@ define([
          * values may be strings, numbers, objects, or lists, but must match what is declared
          * in the method spec.
          */
-        getParameterValue: function () {
-            // if this is an output, and there's only one row, and it's optional,
-            // but it's not filled out, then we need a random name.
-            if (this.spec.text_options &&
-                this.spec.text_options.is_output_name === 1 &&
-                this.rowInfo.length === 1 &&
-                this.rowInfo[0].$input.val().length === 0 &&
-                this.spec.optional === 1) {
-//                this.setParameterValue(this.generateRandomOutputString());
-            }
-
-            // if this is optional, and not filled out, then we return null
-            if (this.spec.optional === 1) {
-                if (this.rowInfo.length === 1) {
-                    if (this.rowInfo[0].$input.val().trim().length === 0) {
-                        return null; // return null since this is optional an no values are set
-                    }
-                    if (this.allow_multiple) {
-                        return [this.rowInfo[0].$input.val()];
-                    }
-                    return this.rowInfo[0].$input.val();
-                }
-                var value = [];
-                for (var i = 0; i < this.rowInfo.length; i++) {
-                    if (this.rowInfo[0].$input.val().trim().length > 0) {
-                        value.push(this.rowInfo[i].$input.val()); // only push the value if it is not empty
-                    }
-                }
-                if (value.length === 0) {
-                    return null;
-                } // return null since this is optional and nothing was set
-                return value;
-            }
-
-            if (this.rowInfo.length === 1) {
-                if (this.allow_multiple) {
-                    return [this.rowInfo[0].$input.val()];
-                }
-                return this.rowInfo[0].$input.val();
-            }
+        getParameterValue: function (ignoreType) {
             var value = [];
-            for (var i = 0; i < this.rowInfo.length; i++) {
-                value.push(this.rowInfo[i].$input.val());
+            var isOptional = this.spec.optional === 1 ? true : false;
+
+            /* Shove everything into an array.
+             * If we don't allow multiple, just take the first one.
+             * If we allow optional, then allow for returning nulls.
+             * If we're not ignoring the validate as type, then coerce the type into
+             *    what it's expected to validate as.
+             */
+            for (var i=0; i<this.rowInfo.length; i++) {
+                var val = this.rowInfo[i].$input.val().trim();
+                if (!isOptional || val.length > 0) {
+                    if (!ignoreType) {
+                        val = this.coerceType(val);
+                        if (val !== null) {
+                            value.push(val);
+                        }
+                    } else {
+                        value.push(val);
+                    }
+                }
+                else {
+                    if (val.length === 0) {
+                        value.push(null);
+                    }
+                }
+            }
+            if (!this.allow_multiple) {
+                if (value.length > 0) {
+                    return value[0];
+                }
+                else {
+                    return [];
+                }
             }
             return value;
         },
+
+        /**
+         * Expects to start with a string.
+         */
+        coerceType: function(value) {
+            if (value.length === 0) {
+                return value;
+            }
+            switch(this.validateAs) {
+                default:
+                    return value;
+                    break;
+                case "int":
+                    return Number(value);
+                    break;
+                case "float":
+                    return Number(value);
+                    break;
+            }
+        },
+
         // edited from: http://stackoverflow.com/questions/3177836/how-to-format-time-since-xxx-e-g-4-minutes-ago-similar-to-stack-exchange-site
         getTimeStampStr: function (objInfoTimeStamp) {
             var date = new Date(objInfoTimeStamp);

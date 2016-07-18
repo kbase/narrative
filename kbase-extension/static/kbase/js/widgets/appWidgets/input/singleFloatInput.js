@@ -136,18 +136,16 @@ define([
                                                         newValue: result.value
                                                     });
                                                 } else {
-                                                    console.log('INVALID', result, config);
                                                     if (config.showOwnMessages) {
                                                         // show error message -- new!
-                                                        var result = inputUtils.buildMessageAlert({
+                                                        var message = inputUtils.buildMessageAlert({
                                                             title: 'ERROR',
                                                             type: 'danger',
                                                             id: result.messageId,
                                                             message: result.errorMessage
                                                         });
-                                                        dom.setContent('input-container.message', result.content);
-                                                        var messageNode = dom.getElement('input-container.message');
-                                                        result.events.attachEvents();                                                        
+                                                        dom.setContent('input-container.message', message.content);
+                                                        message.events.attachEvents();                                                        
                                                     }
                                                 }
                                                 bus.emit('validation', {

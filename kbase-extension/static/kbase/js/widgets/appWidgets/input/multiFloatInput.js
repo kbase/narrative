@@ -158,7 +158,8 @@ define([
                     // initialValue: config.initialValue,
                     parameterSpec: spec,
                     spec: spec,
-                    fieldSpec: config.fieldSpec
+                    fieldSpec: config.fieldSpec,
+                    showOwnMessages: true
                 }),
 //                displayWidget = SingleObjectDisplayWidget.make({
 //                    bus: inputBus,
@@ -243,7 +244,8 @@ define([
                     // initialValue: config.initialValue,
                     parameterSpec: spec,
                     spec: spec,
-                    fieldSpec: config.fieldSpec
+                    fieldSpec: config.fieldSpec,
+                    showOwnMessages: true
                 }),
                     errorRow,
                 placeholder = div({id: widgetId});
@@ -288,16 +290,12 @@ define([
         }
 
         function makeInputControl(events, bus) {
-            console.log('MULTI FLOAT', 'making single?');
             var items = model.value.map(function (value, index) {
                 return makeSingleInputControl(value, index, events, bus);
             });
 
-            console.log('MULTI FLOAT', items);
 
             items = items.concat(makeNewInputControl('', events, bus));
-
-            console.log('MULTI FLOAT', items);
 
             var content = items.join('\n');
             return content;

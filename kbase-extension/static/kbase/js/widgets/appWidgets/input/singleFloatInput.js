@@ -8,9 +8,11 @@ define([
     'common/events',
     'common/dom',
     'common/props',
+    '../inputUtils',
+    
     'bootstrap',
     'css!font-awesome'
-], function (Promise, Jupyter, html, Validation, Events, Dom, Props) {
+], function (Promise, Jupyter, html, Validation, Events, Dom, Props, inputUtils) {
     'use strict';
 
     // Constants
@@ -86,14 +88,16 @@ define([
 
                 validationOptions.required = spec.required();
                 validationResult = Validation.validateFloatString(rawValue, validationOptions);
+                
+                return validationResult;
 
-                return {
-                    isValid: validationResult.isValid,
-                    validated: true,
-                    diagnosis: validationResult.diagnosis,
-                    errorMessage: validationResult.errorMessage,
-                    value: validationResult.parsedValue
-                };
+//                return {
+//                    isValid: validationResult.isValid,
+//                    validated: true,
+//                    diagnosis: validationResult.diagnosis,
+//                    errorMessage: validationResult.errorMessage,
+//                    value: validationResult.parsedValue
+//                };
             });
         }
 
@@ -132,8 +136,19 @@ define([
                                                         newValue: result.value
                                                     });
                                                 } else {
-                                                    // show error message -- new!
-                                                    dom.setContent('input-container.message', result.errorMessage);
+                                                    console.log('INVALID', result, config);
+                                                    if (config.showOwnMessages) {
+                                                        // show error message -- new!
+                                                        var result = inputUtils.buildMessageAlert({
+                                                            title: 'ERROR',
+                                                            type: 'danger',
+                                                            id: result.messageId,
+                                                            message: result.errorMessage
+                                                        });
+                                                        dom.setContent('input-container.message', result.content);
+                                                        var messageNode = dom.getElement('input-container.message');
+                                                        result.events.attachEvents();                                                        
+                                                    }
                                                 }
                                                 bus.emit('validation', {
                                                     errorMessage: result.errorMessage,

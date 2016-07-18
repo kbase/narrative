@@ -17,7 +17,7 @@ define([
                     }
                     return value;
                 case 'string':
-                    if (value.match(/^[\d]+$/)) {
+                    if (value.match(/^[-+]?[\d]+$/)) {
                         return parseInt(value, 10);
                     }
                     throw new Error('Invalid integer format');

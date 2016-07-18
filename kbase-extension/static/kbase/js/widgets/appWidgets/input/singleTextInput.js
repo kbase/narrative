@@ -7,9 +7,19 @@ define([
     'common/validation',
     'common/events',
     'common/dom',
+    '../inputUtils',
+
     'bootstrap',
     'css!font-awesome'
-], function (Promise, Jupyter, html, Validation, Events, Dom) {
+], function (
+    Promise,
+    Jupyter,
+    html,
+    Validation,
+    Events,
+    Dom,
+    inputUtils
+    ) {
     'use strict';
 
     // Constants
@@ -32,7 +42,7 @@ define([
         } else {
             constraints = config.constraints;
         }
-        
+
         // 
         // Validate configuration.
         // Nothing to do...
@@ -108,13 +118,7 @@ define([
                         required: constraints.required
                     });
 
-                return {
-                    isValid: validationResult.isValid,
-                    validated: true,
-                    diagnosis: validationResult.diagnosis,
-                    errorMessage: validationResult.errorMessage,
-                    value: validationResult.parsedValue
-                };
+                return validationResult;
             });
         }
 
@@ -162,22 +166,35 @@ define([
                                 validate()
                                     .then(function (result) {
                                         if (result.isValid) {
+                                            setModelValue(result.value);
                                             bus.emit('changed', {
                                                 newValue: result.value
                                             });
                                         } else if (result.diagnosis === 'required-missing') {
+                                            setModelValue(result.value);
                                             bus.emit('changed', {
                                                 newValue: result.value
                                             });
+                                        } else {
+                                            if (config.showOwnMessages) {
+                                                var message = inputUtils.buildMessageAlert({
+                                                    title: 'ERROR',
+                                                    type: 'danger',
+                                                    id: result.messageId,
+                                                    message: result.errorMessage
+                                                });
+                                                dom.setContent('input-container.message', message.content);
+                                                message.events.attachEvents();
+                                            }
                                         }
-                                        setModelValue(result.value);
+
                                         bus.emit('validation', {
                                             errorMessage: result.errorMessage,
                                             diagnosis: result.diagnosis
                                         });
                                     });
                             }
-                        }, 
+                        },
                         // changeOnPause(),
                         {
                             type: 'focus',
@@ -239,7 +256,7 @@ define([
         function start() {
             return Promise.try(function () {
                 bus.on('run', function (message) {
-                    
+
                     parent = message.node;
                     container = parent.appendChild(document.createElement('div'));
                     dom = Dom.make({node: message.node});
@@ -249,7 +266,7 @@ define([
 
                     container.innerHTML = theLayout.content;
                     events.attachEvents(container);
-                    
+
                     bus.on('reset-to-defaults', function (message) {
                         resetModelValue();
                     });

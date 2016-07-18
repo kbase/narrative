@@ -146,23 +146,16 @@ define([
                                                 } else {
                                                     // show error message -- new!
                                                     if (config.showOwnMessages) {
-                                                        
-                                                        
-                                                        var result = inputUtils.buildMessageAlert({
+                                                        var message = inputUtils.buildMessageAlert({
                                                             title: 'ERROR',
                                                             type: 'danger',
                                                             id: result.messageId,
                                                             message: result.errorMessage
                                                         });
-                                                        var messageNode = dom.getElement('input-container.message');
-                                                        messageNode.innerHTML = result.content;
-                                                        result.events.attachEvents();
-                                                        
-                                                        
-                                                        // dom.setContent('input-container.message', result.errorMessage);
+                                                        dom.setContent('input-container.message', message.content);
+                                                        message.events.attachEvents();
                                                     }
                                                 }
-                                                console.log('VALIDATION', result);
                                                 bus.emit('validation', result);
                                             });
                                     }

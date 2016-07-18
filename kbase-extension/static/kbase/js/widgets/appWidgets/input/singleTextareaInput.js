@@ -2,40 +2,47 @@
 /*jslint white:true,browser:true*/
 define([
     'bluebird',
-    'jquery',
     'base/js/namespace',
     'kb_common/html',
     'common/validation',
     'common/events',
+    'common/ui',
+    '../inputUtils',
     'bootstrap',
     'css!font-awesome'
-], function (Promise, $, Jupyter, html, Validation, Events) {
+], function (
+    Promise,
+    Jupyter,
+    html,
+    Validation,
+    Events,
+    UI,
+    inputUtils) {
     'use strict';
 
     // Constants
     var t = html.tag,
-        div = t('div'), input = t('input'), span = t('span'), button = t('button'),
-        textarea = t('textarea');
+        div = t('div'), textarea = t('textarea');
 
     function factory(config) {
         var options = {},
             spec = config.parameterSpec,
-            parent,
             container,
-            $container,
             bus = config.bus,
             model = {
                 value: undefined
-            };
-            
-        console.log('TEXTAREA', spec);
+            }, ui, constraints;
 
         // Validate configuration.
         // Nothing to do...
+        if (config.parameterSpec) {
+            constraints = config.parameterSpec.getConstraints();
+        } else {
+            constraints = config.constraints;
+        }
 
         options.enabled = true;
         options.nRows = spec.spec.textarea_options.n_rows;
-
 
         /*
          * If the parameter is optional, and is empty, return null.
@@ -47,7 +54,7 @@ define([
          */
 
         function getInputValue() {
-            return $container.find('[data-element="input-container"] [data-element="input"]').val();
+            return ui.getElement('input-container.input').value;
         }
 
         function setModelValue(value) {
@@ -105,13 +112,7 @@ define([
                         required: options.required
                     });
 
-                return {
-                    isValid: validationResult.isValid,
-                    validated: true,
-                    diagnosis: validationResult.diagnosis,
-                    errorMessage: validationResult.errorMessage,
-                    value: validationResult.parsedValue
-                };
+                return validationResult;
             });
         }
 
@@ -151,23 +152,33 @@ define([
                     events: [
                         {
                             type: 'change',
-                            handler: function (e) {
+                            handler: function () {
                                 validate()
                                     .then(function (result) {
                                         if (result.isValid) {
-                                            bus.send({
-                                                type: 'changed',
+                                            setModelValue(result.value);
+                                            bus.emit('changed', {
                                                 newValue: result.value
                                             });
                                         } else if (result.diagnosis === 'required-missing') {
-                                            bus.send({
-                                                type: 'changed',
+                                            setModelValue(result.value);
+                                            bus.emit('changed', {
                                                 newValue: result.value
                                             });
+                                        } else {
+                                            if (config.showOwnMessages) {
+                                                var message = inputUtils.buildMessageAlert({
+                                                    title: 'ERROR',
+                                                    type: 'danger',
+                                                    id: result.messageId,
+                                                    message: result.errorMessage
+                                                });
+                                                ui.setContent('input-container.message', message.content);
+                                                message.events.attachEvents();
+                                            }
                                         }
-                                        setModelValue(result.value);
-                                        bus.send({
-                                            type: 'validation',
+
+                                        bus.emit('validation', {
                                             errorMessage: result.errorMessage,
                                             diagnosis: result.diagnosis
                                         });
@@ -198,7 +209,7 @@ define([
                 var events = Events.make(),
                     inputControl = makeInputControl(model.value, events, bus);
 
-                $container.find('[data-element="input-container"]').html(inputControl);
+                ui.setContent('input-container', inputControl);
                 events.attachEvents(container);
             })
                 .then(function () {
@@ -221,8 +232,7 @@ define([
         function autoValidate() {
             return validate()
                 .then(function (result) {
-                    bus.send({
-                        type: 'validation',
+                    bus.emit('validation', {
                         errorMessage: result.errorMessage,
                         diagnosis: result.diagnosis
                     });
@@ -231,48 +241,36 @@ define([
 
 
         // LIFECYCLE API
-
-        function init() {
-        }
-
-        function attach(node) {
-            return Promise.try(function () {
-                parent = node;
-                container = node.appendChild(document.createElement('div'));
-                $container = $(container);
-
-                var events = Events.make(),
-                    theLayout = layout(events);
-
-                container.innerHTML = theLayout.content;
-                events.attachEvents(container);
-            });
-        }
-
         function start() {
             return Promise.try(function () {
-                bus.on('reset-to-defaults', function (message) {
-                    resetModelValue();
-                });
-                bus.on('update', function (message) {
-                    setModelValue(message.value);
-                });
-                bus.emit('sync');
-                return null;
-            });
-        }
+                bus.on('run', function (message) {
+                    // parent = message.node;
+                    container = message.node.appendChild(document.createElement('div'));
+                    ui = UI.make({node: container});
 
-        function run(params) {
-            return Promise.try(function () {
-                return setModelValue(params.value);
+                    var events = Events.make(),
+                        theLayout = layout(events);
+
+                    container.innerHTML = theLayout.content;
+                    events.attachEvents(container);
+                    setModelValue(message.value);
+
+                    bus.on('reset-to-defaults', function (message) {
+                        resetModelValue();
+                    });
+                    bus.on('update', function (message) {
+                        setModelValue(message.value);
+                    });
+                    bus.on('stop', function () {
+                        bus.stop();
+                    });
+                    bus.emit('sync');
+                });
             });
         }
 
         return {
-            init: init,
-            attach: attach,
-            start: start,
-            run: run
+            start: start
         };
     }
 

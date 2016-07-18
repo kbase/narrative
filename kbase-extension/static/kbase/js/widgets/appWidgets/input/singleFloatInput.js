@@ -126,28 +126,26 @@ define([
                                         validate()
                                             .then(function (result) {
                                                 if (result.isValid) {
-                                                    model.setItem('value', result.value);
+                                                    model.setItem('value', result.parsedValue);
                                                     bus.emit('changed', {
-                                                        newValue: result.value
+                                                        newValue: result.parsedValue
                                                     });
                                                 } else if (result.diagnosis === 'required-missing') {
-                                                    model.setItem('value', result.value);
+                                                    model.setItem('value', result.parsedValue);
                                                     bus.emit('changed', {
-                                                        newValue: result.value
+                                                        newValue: result.parsedValue
                                                     });
                                                 } else {
-                                                    console.log('INVALID', result, config);
                                                     if (config.showOwnMessages) {
                                                         // show error message -- new!
-                                                        var result = inputUtils.buildMessageAlert({
+                                                        var message = inputUtils.buildMessageAlert({
                                                             title: 'ERROR',
                                                             type: 'danger',
                                                             id: result.messageId,
                                                             message: result.errorMessage
                                                         });
-                                                        dom.setContent('input-container.message', result.content);
-                                                        var messageNode = dom.getElement('input-container.message');
-                                                        result.events.attachEvents();                                                        
+                                                        dom.setContent('input-container.message', message.content);
+                                                        message.events.attachEvents();                                                        
                                                     }
                                                 }
                                                 bus.emit('validation', {

@@ -594,6 +594,9 @@ class AppManager(object):
             p_value = None
             if 'input_parameter' in p:
                 p_value = params.get(p['input_parameter'], None)
+                # turn empty strings into None
+                if isinstance(p_value, basestring) and len(p_value) == 0:
+                    p_value = None
             elif 'narrative_system_variable' in p:
                 p_value = system_variable(p['narrative_system_variable'])
             if 'constant_value' in p and p_value is None:
@@ -759,8 +762,8 @@ class AppManager(object):
             return (ws_ref, None)
 
         # Also, for strings, last I heard, an empty string is the same as null/None
-        if param['type'] == 'string' and isinstance(value, basestring) and value == '':
-            return (ws_ref, '')
+        if param['type'] in ['string', 'dropdown'] and isinstance(value, basestring) and value == '':
+            return (ws_ref, None)
 
         # cases - value == list, int, float, others get rejected
         if not (isinstance(value, basestring) or

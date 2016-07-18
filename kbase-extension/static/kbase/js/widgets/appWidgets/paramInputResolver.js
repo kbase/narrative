@@ -18,7 +18,8 @@ define([
     './input/singleTextareaInput',
     './input/multiFloatInput',
     './input/multiSelectInput',
-    './input/singleFileInput'
+    './input/singleFileInput',
+    './input/multiTextareaInput'
 ], function (
     SingleTextInputWidget,
     MultiTextInputWidget,
@@ -36,7 +37,8 @@ define([
     SingleTextareaInputWidget,
     MultiFloatInputWidget,
     MultiSelectInputWidget,
-    SingleFileInputWidget
+    SingleFileInputWidget,
+    MultiTextareaInputWidget
     ) {
     'use strict';
 
@@ -116,6 +118,9 @@ define([
                 case '[]string':
                     switch (fieldType) {
                         case 'dropdown':
+                            return {                                
+                            };
+                        case 'textarea':
                             return {                                
                             };
                         default:
@@ -247,6 +252,8 @@ define([
                     switch (fieldType) {
                         case 'dropdown':
                             return MultiSelectInputWidget;
+                        case 'textarea':
+                            return MultiTextareaInputWidget;
                         default:
                             return MultiTextInputWidget;
                     }

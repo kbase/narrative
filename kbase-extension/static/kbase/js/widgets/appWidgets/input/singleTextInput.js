@@ -166,14 +166,14 @@ define([
                                 validate()
                                     .then(function (result) {
                                         if (result.isValid) {
-                                            setModelValue(result.value);
+                                            setModelValue(result.parsedValue);
                                             bus.emit('changed', {
-                                                newValue: result.value
+                                                newValue: result.parsedValue
                                             });
                                         } else if (result.diagnosis === 'required-missing') {
-                                            setModelValue(result.value);
+                                            setModelValue(result.parsedValue);
                                             bus.emit('changed', {
-                                                newValue: result.value
+                                                newValue: result.parsedValue
                                             });
                                         } else {
                                             if (config.showOwnMessages) {

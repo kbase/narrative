@@ -134,14 +134,14 @@ define([
                                         validate()
                                             .then(function (result) {
                                                 if (result.isValid) {
-                                                    model.setItem('value', result.value);
+                                                    model.setItem('value', result.parsedValue);
                                                     bus.emit('changed', {
-                                                        newValue: result.value
+                                                        newValue: result.parsedValue
                                                     });
                                                 } else if (result.diagnosis === 'required-missing') {
-                                                    model.setItem('value', result.value);
+                                                    model.setItem('value', result.parsedValue);
                                                     bus.emit('changed', {
-                                                        newValue: result.value
+                                                        newValue: result.parsedValue
                                                     });
                                                 } else {
                                                     // show error message -- new!

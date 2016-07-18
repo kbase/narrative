@@ -3,6 +3,17 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v4.2.1 (more notes will follow).
 
+### Version 3.0.0-alpha-6
+__Changes__
+- App parameter validation updates:
+  - Empty strings in either text fields or dropdowns get transformed to null before starting the app
+  - Empty strings in checkboxes get transformed to false
+- Log view in App cells has blocky whitespace removed
+- Multiple textarea inputs (currently unused?) has improved support
+- App cell layout has been updated to remove most excess whitespace
+- Improved error and warning handling for Apps. (e.g. pre-existing output object names can be overwritten again, but now there's a warning)
+- '-' characters are not allowed in App parameter ids. They must be representable as variable names (still up for debate, but that's how it is now)
+
 ### Version 3.0.0-alpha-5
 __Changes__
 - Fixed issue when starting SDK jobs from the upload panel with numeric parameters.

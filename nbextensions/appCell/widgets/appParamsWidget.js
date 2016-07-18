@@ -11,7 +11,7 @@ define([
     'common/props',
     // Wrapper for inputs
     './inputWrapperWidget',
-    './fieldWidget',
+    'widgets/appWidgets/fieldWidget',
     'widgets/appWidgets/paramInputResolver',
 
     'common/runtime'
@@ -375,7 +375,7 @@ define([
                 return Promise.resolve()
                     .then(function () {
                         if (inputParams.length === 0) {
-                            places.inputFields.innerHTML = 'No input objects for this app';
+                            places.inputFields.innerHTML = span({style: {fontStyle: 'italic'}}, 'No input objects for this app');
                         } else {
                             return Promise.all(inputParams.map(function (spec) {
                                 try {
@@ -402,7 +402,7 @@ define([
                     })
                     .then(function () {
                         if (outputParams.length === 0) {
-                            places.outputFields.innerHTML = 'No output objects for this app';
+                            places.outputFields.innerHTML = span({style: {fontStyle: 'italic'}}, 'No output objects for this app');
                         } else {
                             return Promise.all(outputParams.map(function (spec) {
                                 try {
@@ -435,7 +435,8 @@ define([
                     })
                     .then(function () {
                         if (parameterParams.length === 0) {
-                            ui.setContent('parameter-fields', 'No parameters for this app');
+                            // TODO: should be own node
+                            ui.setContent('parameter-fields', span({style: {fontStyle: 'italic'}}, 'No parameters for this app'));
                         } else {
                             return Promise.all(parameterParams.map(function (spec) {
                                 try {

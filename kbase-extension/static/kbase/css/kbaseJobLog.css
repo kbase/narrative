@@ -16,7 +16,7 @@
 .kblog-line {
     position: relative;
     display: block;
-    font-family: "Monaco", monospace;
+    font-family: monospace;
     font-size: 9pt;
 }
 

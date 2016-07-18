@@ -819,7 +819,7 @@ define([
                 }
                 return ui.na();
             }()));
-            var appRef = [appSpec.info.namespace || 'l.m', appSpec.info.id].filter(toBoolean).join('/'),
+            var appRef = [appSpec.info.id, model.getItem('app').tag].filter(toBoolean).join('/'),
                 link = a({href: '/#appcatalog/app/' + appRef, target: '_blank'}, 'Catalog Page');
             ui.setContent('about-app.catalog-link', link);
         }
@@ -1925,7 +1925,7 @@ define([
 
                 // TODO: only turn this on when we need it!
                 cellBus.on('run-status', function (message) {
-                    // console.log('have run statusx', message);
+                    console.log('RUN-STATUS', message);
                     updateFromLaunchEvent(message);
 
                     model.setItem('exec.launchState', message);
@@ -2179,18 +2179,8 @@ define([
 //                        });
 //                    });
                     bus.on('parameter-changed', function (message) {
-                        console.log('got parameter changed...', message);
                         model.setItem(['params', message.parameter], message.newValue);
-                        var validationResult = validateModel();
-                        if (validationResult.isValid) {
-                            buildPython(cell, utils.getMeta(cell, 'attributes').id, model.getItem('app'), exportParams());
-                            fsm.newState({mode: 'editing', params: 'complete', code: 'built'});
-                            renderUI();
-                        } else {
-                            resetPython(cell);
-                            fsm.newState({mode: 'editing', params: 'incomplete'});
-                            renderUI();
-                        }
+                        evaluateAppState();
                     });
                     widget.start();
                     resolve();
@@ -2360,6 +2350,19 @@ define([
                 makeIcon()
             ]);
         }
+        
+        function evaluateAppState() {
+            var validationResult = validateModel();
+            if (validationResult.isValid) {
+                buildPython(cell, utils.getMeta(cell, 'attributes').id, model.getItem('app'), exportParams());
+                fsm.newState({mode: 'editing', params: 'complete', code: 'built'});
+                renderUI();
+            } else {
+                resetPython(cell);
+                fsm.newState({mode: 'editing', params: 'incomplete'});
+                renderUI();
+            }
+        }
 
         function run(params) {
             // First get the app specs, which is stashed in the model,
@@ -2386,10 +2389,14 @@ define([
                 .then(function () {
                     // if we start out in 'new' state, then we need to promote to
                     // editing...
+                    
                     if (fsm.getCurrentState().state.mode === 'new') {
                         fsm.newState({mode: 'editing', params: 'incomplete'});
+                        evaluateAppState();
+                        // 
+                    } else {
+                        renderUI();
                     }
-                    renderUI();
                 })
                 .catch(function (err) {
                     console.error('ERROR loading main widgets', err);

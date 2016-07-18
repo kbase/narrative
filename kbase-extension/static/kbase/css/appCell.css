@@ -23,37 +23,47 @@
     background:#F9F9F9;
 }
 
-.kb-app-cell  .kb-app-parameter-row-error {
+.kb-app-cell  .kb-app-parameter-row .message.-error {
     background: #f2dede;
 }
-.kb-app-cell .kb-app-parameter-error-message {
-    padding:5px;
-    text-align:center;
-    font-family: 'OxygenBold', sans-serif;
-    font-weight: bold;
-    font-size: 9pt;
-    color:#F44336;
+.kb-app-cell  .kb-app-parameter-row .message.-warning {
+    xbackground: yellow;
+}
+.kb-app-cell .kb-app-parameter-row .message {
+    xpadding: 5px;
+    text-align: center;
+    font-family: 'Oxygen', sans-serif;
+    xfont-weight: bold;
+    /* font-size: 9pt; */
 }
 
+.kb-app-cell .kb-app-parameter-row .message.-error {
+    color: #F44336;
+}
+.kb-app-cell .kb-app-parameter-row .message.-warning {
+    xcolor: orange;
+}
 
 /* not sure how to get text in these divs to valign middle... */
 .kb-app-cell .kb-app-parameter-name {
-    font-family: 'OxygenBold', sans-serif;
-    color:#777;
-    text-align:left;
-    vertical-align:middle;
-    margin-top:3px;
+    font-family: 'Oxygen', sans-serif;
+    color: #777;
+    text-align: left;
+    vertical-align: bottom;
+    xmargin-top: 3px;
     padding-right: 4px;
-    padding-left:0px;
+    padding-left: 0px;
     white-space: normal;
+    xborder-bottom: 1px #ddd dotted;
 }
 .kb-app-cell .kb-app-parameter-input {
     vertical-align:middle;
     white-space: nowrap;
     xpadding-left:10px;
+    border-bottom: 1px #ccc dotted;
 }
 .kb-app-cell .kb-app-parameter-input input {
-    font-weight: bold;
+    xfont-weight: bold;
 }
 
 .kb-app-cell .kb-app-parameter-input select.form-control {
@@ -116,7 +126,8 @@ control with padding, and then scooting the icon back into its column.
 
 
 .kb-app-cell .kb-app-advanced-options-controller-inactive {
-    font-family: 'OxygenBold', sans-serif;
+    font-family: 'Oxygen', sans-serif;
+    font-weight: bold;
     font-style: italic;
     font-size: 10pt;
     line-height: 14px;
@@ -124,7 +135,8 @@ control with padding, and then scooting the icon back into its column.
     text-align: center;
 }
 .kb-app-cell .kb-app-advanced-options-controller {
-    font-family: 'OxygenBold', sans-serif;
+    font-family: 'Oxygen', sans-serif;
+    font-weight: bold;
     cursor:pointer;
     font-style: italic;
     font-size: 10pt;

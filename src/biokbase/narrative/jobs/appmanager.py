@@ -508,7 +508,7 @@ class AppManager(object):
         service_name = spec['behavior']['kb_service_name']
         service_ver = spec['behavior'].get('kb_service_version', None)
         service_url = spec['behavior']['kb_service_url']
-        
+
 
         # Let the given version override the spec's version.
         if version is not None:
@@ -762,10 +762,10 @@ class AppManager(object):
             return (ws_ref, None)
 
         # Also, for strings, last I heard, an empty string is the same as null/None
-        if param['type'] in ['string', 'dropdown'] and isinstance(value, basestring) and value == '':
+        if param['type'] in ['string', 'dropdown', 'checkbox'] and isinstance(value, basestring) and value == '':
             return (ws_ref, None)
 
-        # cases - value == list, int, float, others get rejected
+        # cases - value == list (checked by wrapping function, _check_parameter), int, float, others get rejected
         if not (isinstance(value, basestring) or
                 isinstance(value, int) or
                 isinstance(value, float)):

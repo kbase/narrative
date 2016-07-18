@@ -133,7 +133,6 @@ define (
             this.wsId = this.options.wsId;
             this.objId = this.options.objId;
             this.downloadSpecCache = options['downloadSpecCache'];
-            console.log(this.downloadSpecCache);
             var lastUpdateTime = this.downloadSpecCache['lastUpdateTime'];
             if (lastUpdateTime) {
                 this.render();
@@ -143,7 +142,6 @@ define (
                 var nms = new NarrativeMethodStore(this.nmsURL, { token: this.token });
                 nms.list_categories({'load_methods': 0, 'load_apps' : 0, 'load_types' : 1},
                         $.proxy(function(data) {
-                            console.log(data);
                             var aTypes = data[3];
                             var types = {};
                             for (var key in aTypes) {
@@ -156,7 +154,6 @@ define (
                             }
                             self.downloadSpecCache['types'] = types;
                             self.downloadSpecCache['lastUpdateTime'] = Date.now();
-                            console.log("2", self.downloadSpecCache);
                             self.render();
                         }, this),
                         $.proxy(function(error) {
@@ -241,7 +238,6 @@ define (
                     }
                 }
             }
-            console.log(ret);
             return ret;
         },
         
@@ -259,8 +255,10 @@ define (
                             service_ver: this.downloadSpecCache['tag']}], function(data){
                     var jobId = data[0];
                     console.log("Running " + descr.local_function + ", job ID: " + jobId);
+                    self.waitForSdkJob(jobId, wsObjectName);
                 },
                 function(error){
+                    console.error(error);
                     self.showError(error);
                 });
             } else {
@@ -276,7 +274,7 @@ define (
                         $.proxy(function(data) {
                             console.log(data);
                             var jobId = data[1];
-                            self.waitForJob(jobId, wsObjectName, descr.unzip);
+                            self.waitForTransformJob(jobId, wsObjectName, descr.unzip);
                         }, this),
                         $.proxy(function(data) {
                             console.log(data.error.error);
@@ -286,7 +284,7 @@ define (
             }
         },
 
-        waitForJob: function(jobId, wsObjectName, unzip) {
+        waitForTransformJob: function(jobId, wsObjectName, unzip) {
             var self = this;
             var jobSrv = new UserAndJobState(this.ujsURL, {token: this.token});
 			var timeLst = function(event) {
@@ -327,7 +325,66 @@ define (
 			self.timer = setInterval(timeLst, 5000);
 			timeLst();
         },
-        
+
+        waitForSdkJob: function(jobId, wsObjectName) {
+            var self = this;
+            var genericClient = new GenericClient(this.eeURL, { token: this.token }, null, false);
+            var skipLogLines = 0;
+            var lastLogLine = null;
+            var timeLst = function(event) {
+                genericClient.sync_call("NarrativeJobService.check_job", [jobId], function(data){
+                    var jobState = data[0];
+                    genericClient.sync_call("NarrativeJobService.get_job_logs",
+                            [{"job_id": jobId, "skip_lines": skipLogLines}], function(data2){
+                        var logLines = data2[0].lines;
+                        for (var i = 0; i < logLines.length; i++) {
+                            lastLogLine = logLines[i];
+                            if (lastLogLine.is_error) {
+                                console.error("Export logging: " + lastLogLine.line);
+                            } else {
+                                console.log("Export logging: " + lastLogLine.line);
+                            }
+                        }
+                        skipLogLines += logLines.length;
+                        var complete = jobState['finished'];
+                        var error = jobState['error'];
+                        if (complete) {
+                            self.stopTimer();
+                            if (error) {
+                                console.error(error);
+                                self.showError(error['message']);
+                            } else {
+                                console.log("Export is complete");
+                                // Starting download from Shock
+                                self.$statusDiv.hide();
+                                self.$elem.find('.kb-data-list-btn').prop('disabled', false);
+                                var result = jobState['result'];
+                                self.downloadUJSResults(result[0].shock_id, self.shockURL, 
+                                        wsObjectName);
+                            }
+                        } else {
+                            var status = skipLogLines == 0 ? jobState['job_state'] : 
+                                lastLogLine.line;
+                            if (skipLogLines == 0)
+                                console.log("Export status: " + status);
+                            self.showMessage('<img src="'+self.loadingImage+'" /> ' + 
+                                    'Export status: ' + status);
+                        }
+                    }, function(data) {
+                        self.stopTimer();
+                        console.log(data.error.message);
+                        self.showError(data.error.message);
+                    });
+                }, function(data) {
+                    self.stopTimer();
+                    console.log(data.error.message);
+                    self.showError(data.error.message);
+                });
+            };
+            self.timer = setInterval(timeLst, 5000);
+            timeLst();
+        },
+
         downloadUJSResults: function(shockNode, remoteShockUrl, wsObjectName, unzip) {
         	var self = this;
 			var elems = shockNode.split('/');
@@ -350,12 +407,6 @@ define (
     				url += '&url='+encodeURIComponent(remoteShockUrl);
     			self.downloadFile(url);
         	};
-        	/*shockClient.get_node(shockNode, function(data) {
-        		console.log(data);
-        		downloadShockNodeWithName(data.file.name);
-        	}, function(error) {
-        		console.log(error);
-        	});*/
         	downloadShockNodeWithName(wsObjectName + ".zip");
         },
         

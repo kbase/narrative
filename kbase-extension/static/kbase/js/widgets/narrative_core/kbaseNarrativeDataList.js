@@ -89,6 +89,7 @@ define([
         $loadingDiv: null,
         objList: [],
         objData: {}, // old style - type_name : info
+        downloadSpecCache: {tag: 'dev'},
 
         my_user_id: null,
         /**
@@ -609,7 +610,9 @@ define([
                     var objId = object_info[1];
                     var downloadPanel = $('<div>');
                     $alertContainer.append(downloadPanel);
-                    new kbaseNarrativeDownloadPanel(downloadPanel, {token: self._attributes.auth.token, type: type, wsId: wsId, objId: objId});
+                    new kbaseNarrativeDownloadPanel(downloadPanel, {
+                        token: self._attributes.auth.token, type: type, wsId: wsId, objId: objId,
+                        downloadSpecCache: self.downloadSpecCache});
                 });
 
             var $rename = $('<span>')

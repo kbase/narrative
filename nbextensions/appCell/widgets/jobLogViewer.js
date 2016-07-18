@@ -26,7 +26,7 @@ define([
             {
                 state: {
                     mode: 'new'
-                }, 
+                },
                 meta: {
                     description: 'Widget just created, do not yet know the state of the job'
                 },
@@ -82,7 +82,7 @@ define([
                     auto: false
                 },
                 meta: {
-                    description: 'The job is currently active, no automatic updates'                    
+                    description: 'The job is currently active, no automatic updates'
                 },
                 ui: {
                     buttons: {
@@ -105,23 +105,23 @@ define([
             },
             {
                 state: {
-                    mode: 'complete'                    
+                    mode: 'complete'
                 },
                 ui: {
                     buttons: {
                         enabled: ['top', 'back', 'forward', 'bottom'],
-                        disabled: ['play', 'stop']                        
+                        disabled: ['play', 'stop']
                     }
                 }
             },
             {
                 state: {
-                    mode: 'error'                    
+                    mode: 'error'
                 },
                 ui: {
                     buttons: {
                         enabled: ['top', 'back', 'forward', 'bottom'],
-                        disabled: ['play', 'stop']                        
+                        disabled: ['play', 'stop']
                     }
                 }
             }
@@ -167,7 +167,7 @@ define([
                 looping = true;
                 fsm.newState({mode: 'active', auto: true});
                 runtime.bus().emit('request-latest-job-log', {
-                    jobId: jobId, 
+                    jobId: jobId,
                     options: {
                         num_lines: linesPerPage
                     }
@@ -183,7 +183,7 @@ define([
         function doStopFetchingLogs() {
             stopAutoFetch();
         }
-        
+
         function requestJobLog(firstLine) {
             dom.showElement('spinner');
             runtime.bus().emit('request-job-log', {
@@ -194,167 +194,180 @@ define([
                 }
             });
         }
-        
+
         function requestLatestJobLog() {
             dom.showElement('spinner');
             runtime.bus().emit('request-latest-job-log', {
-                jobId: jobId, 
+                jobId: jobId,
                 options: {
                     num_lines: linesPerPage
                 }
             });
         }
-        
+
         function doFetchFirstLogChunk() {
             var currentLine = model.getItem('currentLine');
-            
+
             if (currentLine === 0) {
                 return;
             }
-            
+
             stopAutoFetch();
-            
+
             requestJobLog(0);
         }
-        
+
         function doFetchPreviousLogChunk() {
             var currentLine = model.getItem('currentLine'),
                 newFirstLine = currentLine - linesPerPage;
-            
+
             stopAutoFetch();
-            
+
             if (currentLine === 0) {
                 return;
             }
-            
+
             if (newFirstLine < 0) {
                 newFirstLine = 0;
             }
-            
+
             requestJobLog(newFirstLine);
         }
         function doFetchNextLogChunk() {
             var currentLine = model.getItem('currentLine'),
                 lastLine = model.getItem('lastLine'),
                 newFirstLine;
-            
-            stopAutoFetch()
-            
+
+            stopAutoFetch();
+
             // Get the current set of log lines again, since we don't have 
             // a full page. 
             // TODO: don't do this if the job state is completed
-            if ((lastLine - currentLine) < linesPerPage) {                
+            if ((lastLine - currentLine) < linesPerPage) {
                 newFirstLine = currentLine;
             } else {
+                // NB this is actually the next line after the end
                 newFirstLine = currentLine + linesPerPage;
             }
-            
+
             requestJobLog(newFirstLine);
         }
-        
+
         function doFetchLastLogChunk() {
             var firstLine,
                 lastLine = model.getItem('lastLine');
-            
-            stopAutoFetch()
-            
+
+            stopAutoFetch();
+
             if (!lastLine) {
                 requestLatestJobLog();
             } else {
                 firstLine = lastLine - (lastLine % linesPerPage);
-                
+
                 requestJobLog(firstLine);
             }
         }
 
         // VIEW
 
+        function renderControls(events) {
+            return div({dataElement: 'header', style: {margin: '0 0 10px 0'}}, [
+                button({
+                    class: 'btn btn-sm btn-default',
+                    dataButton: 'play',
+                    dataToggle: 'tooltip',
+                    dataPlacement: 'top',
+                    title: 'Start fetching logs',
+                    id: events.addEvent({
+                        type: 'click',
+                        handler: doStartFetchingLogs
+                    })
+                }, [
+                    span({class: 'fa fa-play'})
+                ]),
+                button({
+                    class: 'btn btn-sm btn-default',
+                    dataButton: 'stop',
+                    dataToggle: 'tooltip',
+                    dataPlacement: 'top',
+                    title: 'Stop fetching logs',
+                    id: events.addEvent({
+                        type: 'click',
+                        handler: doStopFetchingLogs
+                    })
+                }, [
+                    span({class: 'fa fa-stop'})
+                ]),
+                button({
+                    class: 'btn btn-sm btn-default',
+                    dataButton: 'top',
+                    dataToggle: 'tooltip',
+                    dataPlacement: 'top',
+                    title: 'Jump to the top',
+                    id: events.addEvent({
+                        type: 'click',
+                        handler: doFetchFirstLogChunk
+                    })
+                }, [
+                    span({class: 'fa fa-fast-backward'})
+                ]),
+                button({
+                    class: 'btn btn-sm btn-default',
+                    dataButton: 'back',
+                    dataToggle: 'tooltip',
+                    dataPlacement: 'top',
+                    title: 'Fetch previous log chunk',
+                    id: events.addEvent({
+                        type: 'click',
+                        handler: doFetchPreviousLogChunk
+                    })
+                }, [
+                    span({class: 'fa fa-backward'})
+                ]),
+                button({
+                    class: 'btn btn-sm btn-default',
+                    dataButton: 'forward',
+                    dataToggle: 'tooltip',
+                    dataPlacement: 'top',
+                    title: 'Fetch next log chunk',
+                    id: events.addEvent({
+                        type: 'click',
+                        handler: doFetchNextLogChunk
+                    })
+                }, [
+                    span({class: 'fa fa-forward'})
+                ]),
+                button({
+                    class: 'btn btn-sm btn-default',
+                    dataButton: 'bottom',
+                    dataToggle: 'tooltip',
+                    dataPlacement: 'top',
+                    title: 'Jump to the end',
+                    id: events.addEvent({
+                        type: 'click',
+                        handler: doFetchLastLogChunk
+                    })
+
+                }, [
+                    span({class: 'fa fa-fast-forward'})
+                ]),
+                // div({dataElement: 'fsm-debug'}),
+                div({dataElement: 'spinner', class: 'pull-right'}, [
+                    span({class: 'fa fa-spinner fa-pulse fa-ex fa-fw'})
+                ])
+            ]);
+        }
+
         function renderLayout() {
             var events = Events.make(),
-                content = div({dataElement: 'kb-log'}, [
-                    div({dataElement: 'header'}, [
-                        button({
-                            class: 'btn btn-sm btn-default',
-                            dataButton: 'play',
-                            dataToggle: 'tooltip',
-                            dataPlacement: 'top',
-                            title: 'Start fetching logs',
-                            id: events.addEvent({
-                                type: 'click',
-                                handler: doStartFetchingLogs
-                            })
-                        }, [
-                            span({class: 'fa fa-play'})
+                content = div({dataElement: 'kb-log', style: {marginTop: '10px'}}, [
+                    div({class: 'kblog-line'}, [
+                        div({class: 'kblog-num-wrapper'}, [
+                            div({class: 'kblog-line-num'}, [
+                            ])
                         ]),
-                        button({
-                            class: 'btn btn-sm btn-default',
-                            dataButton: 'stop',
-                            dataToggle: 'tooltip',
-                            dataPlacement: 'top',
-                            title: 'Stop fetching logs',
-                            id: events.addEvent({
-                                type: 'click',
-                                handler: doStopFetchingLogs
-                            })
-                        }, [
-                            span({class: 'fa fa-stop'})
-                        ]),
-                        button({
-                            class: 'btn btn-sm btn-default',
-                            dataButton: 'top',
-                            dataToggle: 'tooltip',
-                            dataPlacement: 'top',
-                            title: 'Jump to the top',
-                            id: events.addEvent({
-                                type: 'click',
-                                handler: doFetchFirstLogChunk
-                            })
-                        }, [
-                            span({class: 'fa fa-fast-backward'})
-                        ]),
-                        button({
-                            class: 'btn btn-sm btn-default',
-                            dataButton: 'back',
-                            dataToggle: 'tooltip',
-                            dataPlacement: 'top',
-                            title: 'Fetch previous log chunk',
-                            id: events.addEvent({
-                                type: 'click',
-                                handler: doFetchPreviousLogChunk
-                            })
-                        }, [
-                            span({class: 'fa fa-backward'})
-                        ]),
-                        button({
-                            class: 'btn btn-sm btn-default',
-                            dataButton: 'forward',
-                            dataToggle: 'tooltip',
-                            dataPlacement: 'top',
-                            title: 'Fetch next log chunk',
-                            id: events.addEvent({
-                                type: 'click',
-                                handler: doFetchNextLogChunk
-                            })
-                        }, [
-                            span({class: 'fa fa-forward'})
-                        ]),
-                        button({
-                            class: 'btn btn-sm btn-default',
-                            dataButton: 'bottom',
-                            dataToggle: 'tooltip',
-                            dataPlacement: 'top',
-                            title: 'Jump to the end',
-                            id: events.addEvent({
-                                type: 'click',
-                                handler: doFetchLastLogChunk
-                            })
-                            
-                        }, [
-                            span({class: 'fa fa-fast-forward'})
-                        ]),
-                        div({dataElement: 'fsm-debug'}),
-                        div({dataElement: 'spinner', class: 'pull-right'}, [
-                            span({class: 'fa fa-spinner fa-pulse fa-ex fa-fw'})
+                        div({class: 'kblog-text'}, [
+                            renderControls(events)
                         ])
                     ]),
                     div({dataElement: 'panel'}, [
@@ -367,6 +380,10 @@ define([
                 events: events
             };
         }
+        
+        function sanitize(text) {
+            return text;
+        }
 
         function renderLine(line) {
             var extraClass = line.isError ? ' kb-error' : '';
@@ -378,7 +395,7 @@ define([
                     ])
                 ]),
                 div({class: 'kblog-text'}, [
-                    pre(line.text)
+                    div({style: {marginBottom: '6px'}}, sanitize(line.text))
                 ])
             ]);
         }
@@ -394,13 +411,11 @@ define([
                 lines = model.getItem('lines'),
                 viewLines;
 
-            // console.log('IN RENDER', model.getItem('lines'));
-
             if (lines) {
                 if (lines.length === 0) {
                     dom.setContent('panel', 'Sorry, no log entries to show');
                     return;
-                } 
+                }
                 viewLines = lines.map(function (line, index) {
                     return {
                         text: line.line,
@@ -417,7 +432,7 @@ define([
         var externalEventListeners = [];
         function startEventListeners() {
             var ev;
-            
+
             ev = runtime.bus().listen({
                 channel: {
                     jobId: jobId
@@ -427,21 +442,29 @@ define([
                 },
                 handle: function (message) {
                     dom.hideElement('spinner');
-                    model.setItem('lines', message.logs.lines);
-                    model.setItem('currentLine', message.logs.first);
-                    model.setItem('latest', true);
-                    model.setItem('fetchedAt', new Date().toUTCString());
-                    // Detect end of log.
-                    var lastLine = model.getItem('lastLine'),
-                        batchLastLine = message.logs.first + message.logs.lines.length;
-                    if (!lastLine) {
-                        lastLine = batchLastLine;
-                    } else {
-                        if (batchLastLine > lastLine) {
-                            lastLine = batchLastLine;
+                    
+                    if (message.logs.lines.length === 0) {
+                        // TODO: add an alert area and show a dismissable alert.
+                        if (!looping) {
+                            alert('No log entries returned');
                         }
+                    } else {                    
+                        model.setItem('lines', message.logs.lines);
+                        model.setItem('currentLine', message.logs.first);
+                        model.setItem('latest', true);
+                        model.setItem('fetchedAt', new Date().toUTCString());
+                        // Detect end of log.
+                        var lastLine = model.getItem('lastLine'),
+                            batchLastLine = message.logs.first + message.logs.lines.length;
+                        if (!lastLine) {
+                            lastLine = batchLastLine;
+                        } else {
+                            if (batchLastLine > lastLine) {
+                                lastLine = batchLastLine;
+                            }
+                        }
+                        model.setItem('lastLine', lastLine);
                     }
-                    model.setItem('lastLine', lastLine);
                     if (looping) {
                         scheduleNextRequest();
                     }
@@ -459,7 +482,6 @@ define([
                 handle: function (message) {
                     // if the job is finished, we don't want to reflect
                     // this in the ui, and disable play/stop controls.
-                    // console.log('LOG JOB STATE', message);
                     var jobStatus = message.jobState.job_state,
                         mode = fsm.getCurrentState().state.mode,
                         newState;
@@ -487,7 +509,7 @@ define([
                                         mode: 'error'
                                     };
                                     break;
-                                default: 
+                                default:
                                     console.error('Unknown job status', jobStatus, message);
                                     throw new Error('Unknown job status ' + jobStatus);
                             }
@@ -508,7 +530,7 @@ define([
                                         mode: 'error'
                                     };
                                     break;
-                                default: 
+                                default:
                                     console.error('Unknown jog status', jobStatus, message);
                                     throw new Error('Unknown jog status ' + jobStatus);
                             }
@@ -519,7 +541,7 @@ define([
                                     return;
                                 default:
                                     // technically, an error, what to do?
-                                    return;                                    
+                                    return;
                             }
                         case 'error':
                             switch (jobStatus) {
@@ -529,7 +551,7 @@ define([
                                     return;
                                 default:
                                     // technically, an error, what to do?
-                                    return;                                    
+                                    return;
                             }
                         default:
                             throw new Error('Mode ' + mode + ' not yet implemented');
@@ -540,7 +562,7 @@ define([
                 }
             });
             externalEventListeners.push(ev);
-            
+
 
             ev = runtime.bus().listen({
                 channel: {
@@ -564,7 +586,7 @@ define([
         }
 
         // LIFECYCLE API
-        
+
         function renderFSM() {
             //showFsmBar();
             var state = fsm.getCurrentState();
@@ -597,11 +619,11 @@ define([
                     // widgets[message.widget].bus.send(message.message, message.address);
                 });
             }
-            
-            dom.setContent('fsm-debug', JSON.stringify(state.state) + ',' + jobId);
-            
+
+            // dom.setContent('fsm-debug', JSON.stringify(state.state) + ',' + jobId);
+
         }
-        
+
         function initializeFSM() {
             fsm = Fsm.make({
                 states: appStates,
@@ -610,13 +632,13 @@ define([
                 },
                 onNewState: function (fsm) {
                     // save the state?
-                    
+
                     renderFSM(fsm);
                 }
             });
             fsm.start();
         }
-        
+
 
 
         function start() {
@@ -630,7 +652,7 @@ define([
                 var layout = renderLayout();
                 container.innerHTML = layout.content;
                 layout.events.attachEvents(container);
-                
+
                 initializeFSM();
                 renderFSM();
 
@@ -642,7 +664,7 @@ define([
                 // OR should the lifetime of this widget just be assumed to
                 // intersect with the lifetime of the job?
                 startEventListeners();
-                
+
                 runtime.bus().emit('request-job-status', {
                     jobId: jobId
                 });
@@ -667,7 +689,7 @@ define([
                 currentLine: null,
                 lastLine: null,
                 linesPerPage: 10,
-                fetchedAt: null                
+                fetchedAt: null
             },
             onUpdate: function () {
                 render();

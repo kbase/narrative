@@ -344,8 +344,8 @@ class JobManager(object):
 
         first_line = 0
         if num_lines is not None and max_lines > num_lines:
-            first_line = max_lines - num_lines + 1
-            logs = logs[first_line-1:]
+            first_line = max_lines - num_lines
+            logs = logs[first_line:]
         self._send_comm_message('job_logs', {'job_id': job_id, 'first': first_line, 'max_lines': max_lines, 'lines': logs, 'latest': True})
 
 

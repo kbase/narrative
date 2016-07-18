@@ -151,7 +151,7 @@ class AppManager(object):
                 'error_stacktrace': e_trace
             })
             # raise
-            print("Error while trying to start your app!\n-------------------------------------\n" + str(e))
+            print("Error while trying to start your app (run_local_app)!\n-------------------------------------\n" + str(e))
 
     def _run_local_app_internal(self, app_id, tag, version, cell_id, run_id, **kwargs):
         self._send_comm_message('run_status', {
@@ -257,7 +257,7 @@ class AppManager(object):
                 'error_stacktrace': e_trace
             })
             # raise
-            print("Error while trying to start your app!\n-------------------------------------\n" + str(e))
+            print("Error while trying to start your app (run_widget_app)!\n-------------------------------------\n" + str(e))
 
     def _run_widget_app_internal(self, app_id, tag, version, cell_id, run_id):
         self._send_comm_message('run_status', {
@@ -415,8 +415,6 @@ class AppManager(object):
         try:
             return self._run_app_internal(app_id, tag, version, cell_id, run_id, **kwargs)
         except Exception as e:
-            cell_id = kwargs.get('cell_id', None)
-            run_id = kwargs.get('run_id', None)
             e_type = type(e).__name__
             e_message = str(e).replace('<', '&lt;').replace('>', '&gt;')
             e_trace = traceback.format_exc().replace('<', '&lt;').replace('>', '&gt;')
@@ -430,7 +428,8 @@ class AppManager(object):
                 'error_stacktrace': e_trace
             })
             # raise
-            print("Error while trying to start your app!\n-------------------------------------\n" + str(e))
+            print("Error while trying to start your app (run_app)!\n-------------------------------------\n" + str(e))
+            return
 
     def _run_app_internal(self, app_id, tag, version, cell_id, run_id, **kwargs):
         """
@@ -509,6 +508,7 @@ class AppManager(object):
         service_name = spec['behavior']['kb_service_name']
         service_ver = spec['behavior'].get('kb_service_version', None)
         service_url = spec['behavior']['kb_service_url']
+        
 
         # Let the given version override the spec's version.
         if version is not None:

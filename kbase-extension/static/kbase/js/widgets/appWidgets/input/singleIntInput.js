@@ -8,9 +8,19 @@ define([
     'common/events',
     'common/dom',
     'common/props',
+    '../inputUtils',
+    
     'bootstrap',
     'css!font-awesome'
-], function (Promise, Jupyter, html, Validation, Events, Dom, Props) {
+], function (
+    Promise,
+    Jupyter,
+    html,
+    Validation,
+    Events,
+    Dom,
+    Props,
+    inputUtils) {
     'use strict';
 
     // Constants
@@ -86,14 +96,16 @@ define([
 
                 validationOptions.required = spec.required();
                 validationResult = Validation.validateIntString(rawValue, validationOptions);
+                
+                return validationResult;
 
-                return {
-                    isValid: validationResult.isValid,
-                    validated: true,
-                    diagnosis: validationResult.diagnosis,
-                    errorMessage: validationResult.errorMessage,
-                    value: validationResult.parsedValue
-                };
+//                return {
+//                    isValid: validationResult.isValid,
+//                    validated: true,
+//                    diagnosis: validationResult.diagnosis,
+//                    errorMessage: validationResult.errorMessage,
+//                    value: validationResult.parsedValue
+//                };
             });
         }
 
@@ -133,12 +145,25 @@ define([
                                                     });
                                                 } else {
                                                     // show error message -- new!
-                                                    dom.setContent('input-container.message', result.errorMessage);
+                                                    if (config.showOwnMessages) {
+                                                        
+                                                        
+                                                        var result = inputUtils.buildMessageAlert({
+                                                            title: 'ERROR',
+                                                            type: 'danger',
+                                                            id: result.messageId,
+                                                            message: result.errorMessage
+                                                        });
+                                                        var messageNode = dom.getElement('input-container.message');
+                                                        messageNode.innerHTML = result.content;
+                                                        result.events.attachEvents();
+                                                        
+                                                        
+                                                        // dom.setContent('input-container.message', result.errorMessage);
+                                                    }
                                                 }
-                                                bus.emit('validation', {
-                                                    errorMessage: result.errorMessage,
-                                                    diagnosis: result.diagnosis
-                                                });
+                                                console.log('VALIDATION', result);
+                                                bus.emit('validation', result);
                                             });
                                     }
                                 },
@@ -207,7 +232,7 @@ define([
             return Promise.try(function () {
                 bus.on('run', function (message) {
                     parent = message.node;
-                    container = parent.appendChild(document.createElement('div'));                    
+                    container = parent.appendChild(document.createElement('div'));
                     dom = Dom.make({node: container});
 
                     var events = Events.make(),

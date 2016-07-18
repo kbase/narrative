@@ -186,22 +186,6 @@ define (
                             }
                         }
                     }
-
-
-
-                    //     if (aTypes[key]["import_method_ids"].length > 0) {
-                    //         self.types[key] = aTypes[key];
-                    //         var methodIdList = aTypes[key]["import_method_ids"];
-                    //         aTypes[key]["import_method_ids"] = []
-                    //         for (var methodPos in methodIdList) {
-                    //             var methodId = methodIdList[methodPos];
-                    //             // if (methodId.indexOf("/") > 0)
-                    //             //     continue;
-                    //             methodIds.push(methodId);
-                    //             aTypes[key]["import_method_ids"].push(methodId);
-                    //         }
-                    //     }
-                    // }
                     self.methClient.get_method_full_info({ 'ids' : methodIds, 'tag' : 'dev' },
                         $.proxy(function(fullInfoList) {
                             self.methodFullInfo = {};
@@ -409,6 +393,8 @@ define (
 
             var isShown = methodPos == 0;
             var tabName = methodSpec.info.name;
+            if (methodId.indexOf('/') > 0)
+                tabName += " (SDK)";
             var params = {tab: tabName,
                           content: tab,
                           canDelete : false,
@@ -639,7 +625,7 @@ define (
             var cellIndex = Jupyter.notebook.get_selected_index();
             var cell = Jupyter.notebook.insert_cell_below('code', cellIndex);
             var title = 'Import job status for ' + methodName;
-            var cellText = ['from biokbase.narrative.jobs import JobManager',
+            var cellText = ['from biokbase.narrative.jobs.jobmanager import JobManager',
                             'JobManager().get_job(' + jobId + ')'].join('\n');
             cell.set_text(cellText);
             var meta = {

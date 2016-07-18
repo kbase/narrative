@@ -277,7 +277,7 @@ define([
 //                    label({class: 'xcol-md-12 xcontrol-label kb-app-parameter-name'}, [
 //                        spec.label() || spec.id()
 //                    ]),
-                    div({class: 'xcol-md-12'}, div({class: 'kb-app-parameter-input'}, [
+                    div({class: 'col-md-12'}, div({class: 'row kb-app-parameter-input'}, [
                         label({class: 'col-md-2 xcontrol-label kb-app-parameter-name control-label' }, [
                             spec.label() || spec.id()
                         ]),

@@ -29,12 +29,12 @@ define([
             this.data = this.options.data;
             this.options.type = this.options.type.toLowerCase();
             this.cell = Jupyter.narrative.getCellByKbaseId(this.$elem.attr('id'));
-            if (this.options.widget.toLowerCase() === "null")
+            if (this.options.widget.toLowerCase() === "null") {
                 this.options.widget = 'kbaseDefaultNarrativeOutput';
+            }
 
             this.render();
 
-            this.$elem.trigger('toggleCodeArea.cell');
             return this;
         },
         hideInputArea: function () {

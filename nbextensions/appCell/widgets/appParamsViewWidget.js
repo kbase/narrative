@@ -12,7 +12,7 @@ define([
     'common/props',
     // Wrapper for inputs
     './inputWrapperWidget',
-    './fieldWidget',
+    'widgets/appWidgets/fieldWidget',
     // Display widgets
     'widgets/appWidgets/paramDisplayResolver'
 

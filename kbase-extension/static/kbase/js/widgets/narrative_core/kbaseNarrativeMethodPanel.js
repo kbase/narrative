@@ -516,19 +516,21 @@ define (
                                         if(methods[i].module_name) {
                                             var idTokens = methods[i].id.split('/');
                                             self.methodSpecs[idTokens[0].toLowerCase() + '/' + idTokens[1]] = {info:methods[i]};
-                                        } else {
-                                            self.methodSpecs[methods[i].id] = {info:methods[i]};
+                                        // EAP - don't even consider methods without a module, they are obsolete.
+                                        //} else {
+                                        //    self.methodSpecs[methods[i].id] = {info:methods[i]};
                                         }
                                     }
                                 }));
 
-            loadingCalls.push(self.methClient.list_apps_spec({})
-                                .then(function(apps) {
-                                    self.appSpecs = {};
-                                    for (var i=0; i<apps.length; i++) {
-                                        self.appSpecs[apps[i].info.id] = apps[i];
-                                    }
-                                }));
+            //loadingCalls.push(self.methClient.list_apps_spec({})
+            //                    .then(function(apps) {
+            //                        self.appSpecs = {};
+             //                       for (var i=0; i<apps.length; i++) {
+            //                            self.appSpecs[apps[i].info.id] = apps[i];
+            //                        }
+            //                    }));
+                                
             loadingCalls.push(self.methClient.list_categories({})
                                 .then(function(categories) {
                                     self.categories = categories[0];

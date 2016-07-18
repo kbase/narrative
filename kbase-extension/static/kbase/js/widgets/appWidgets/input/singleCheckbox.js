@@ -172,7 +172,7 @@ define([
                 checked = true;
                 booleanString = 'yes';
             }
-            return label({class: 'checkbox-inline'}, [
+            return label([
                 input({
                     id: events.addEvents({
                         events: [

@@ -253,6 +253,14 @@ define([
                         case 'dropdown':
                             return {
                             };
+                        case 'textarea':
+                            return {
+                                required: required(),
+                                defaultValue: defaultValue(),
+                                min:  spec.text_options ? spec.text_options.min_length : null,
+                                max:  spec.text_options ? spec.text_options.max_length : null,
+                                rows: spec.text_options ? spec.text_options.n_rows : null
+                            };
                         default:
                             throw new Error('Unknown text param field type');
                     }
@@ -320,6 +328,10 @@ define([
                             return {
                                 required: required()
                             };
+                        case 'textarea':
+                            return {
+                                required: required()
+                            }
                         default:
                             throw new Error('Unknown []string field type: ' + fieldType);
                     }

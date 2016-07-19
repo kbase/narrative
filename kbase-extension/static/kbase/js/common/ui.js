@@ -392,7 +392,7 @@ define([
 
         function buildPanel(args) {
             var type = args.type || 'primary',
-                classes = ['panel', 'panel-' + type];
+                classes = ['panel', 'panel-' + type], icon;
             if (args.hidden) {
                 classes.push('hidden');
                 // style.display = 'none';
@@ -400,11 +400,14 @@ define([
             if (args.classes) {
                 classes = classes.concat(args.classes);
             }
+            if (args.icon) {
+                icon = [' ', buildIcon(args.icon)];
+            }
             return  div({class: classes.join(' '), dataElement: args.name}, [
                 (function () {
                     if (args.title) {
                         return div({class: 'panel-heading'}, [
-                            div({class: 'panel-title'}, args.title)
+                            div({class: 'panel-title'}, [args.title, icon])
                         ]);
                     }
                 }()),
@@ -441,7 +444,7 @@ define([
                 type = args.type || 'primary',
                 classes = ['panel', 'panel-' + type],
                 collapseClasses = ['panel-collapse collapse'],
-                toggleClasses = [];
+                toggleClasses = [], icon;
             if (args.hidden) {
                 classes.push('hidden');
                 // style.display = 'none';
@@ -454,7 +457,9 @@ define([
             if (args.classes) {
                 classes = classes.concat(args.classes);
             }
-
+            if (args.icon) {
+                icon = [' ', buildIcon(args.icon)];
+            }
             return div({class: classes.join(' '), dataElement: args.name}, [
                 div({class: 'panel-heading'}, [
                     div({class: 'panel-title'}, span({
@@ -462,9 +467,7 @@ define([
                         dataToggle: 'collapse',
                         dataTarget: '#' + collapseId,
                         style: {cursor: 'pointer'}
-                    },
-                        args.title
-                        ))
+                    }, [args.title, icon] ))
                 ]),
                 div({id: collapseId, class: collapseClasses.join(' ')},
                     div({class: 'panel-body'}, [

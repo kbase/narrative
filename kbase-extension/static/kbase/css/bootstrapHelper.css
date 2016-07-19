@@ -35,6 +35,9 @@
 .panel.kb-panel-light {
     border: none;
 }
+.panel-danger.kb-panel-light .panel-title {
+    color: red;
+}
 .panel.kb-panel-light > .panel-heading {
     background-color: transparent;
     font-weight: bold;

@@ -116,6 +116,9 @@ define([
                 title: 'Job Error',
                 name: 'run-error',
                 hidden: false,
+                icon: {
+                    name: 'exclamation-triangle'
+                },
                 type: 'danger',
                 classes: 'kb-panel-light',
                 body: [

@@ -40,7 +40,7 @@ define([
     utils,
     UI,
     Fsm,
-    CellUtils,
+    cellUtils,
     PR,
     narrativeConfig
     ) {

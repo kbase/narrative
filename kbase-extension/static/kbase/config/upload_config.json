@@ -561,7 +561,19 @@
 		        "type": "string",
                         "param" : "tsvFile",
                         "optional": false
-		    }
+		    },
+		    {
+		    "dictionary_1" : {
+			"type" : "string",
+			"param" : "dict1",
+			"optional" : false
+		    },
+		    {
+		    "dictionary_2" : {
+		        "type" : "string",
+			"param" : "dict2",
+			"optional" : false
+		    }	
 		}
             },
             "url_mapping": {

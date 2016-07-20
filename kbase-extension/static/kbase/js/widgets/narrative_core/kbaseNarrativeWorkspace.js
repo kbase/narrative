@@ -38,7 +38,8 @@ define (
 		'kbaseNarrativeSidePanel',
 		'kbaseNarrativeDataPanel',
         'kbaseNarrativeOutputCell',
-        'kbaseTabs'
+        'kbaseTabs',
+        'common/pythonInterop'
 	], function(
         Jupyter,
 		KBWidget,
@@ -56,7 +57,8 @@ define (
 		kbaseNarrativeSidePanel,
 		kbaseNarrativeDataPanel,
         kbaseNarrativeOutputCell,
-        kbaseTabs
+        kbaseTabs,
+        PythonInterop
 	) {
 
     return KBWidget({
@@ -1967,13 +1969,14 @@ define (
             var title = (data.info && data.info.name) ? data.info.name : 'Data Viewer';
             var type = 'viewer';
             // $(cell.element).trigger('toggleCodeArea.cell');
+
             var cellText = ['from biokbase.narrative.widgetmanager import WidgetManager',
                             'WidgetManager().show_output_widget(',
                             '    "kbaseNarrativeDataCell",',
+                            '    {"info": ' + StringUtil.safeJSONStringify(data.info) + '},',
                             '    check_widget=False,',
                             '    title="' + title + '",',
                             '    type="viewer",',
-                            '    info=' + StringUtil.safeJSONStringify(data.info) + ',',
                             ')'].join('\n');
 
             cell.set_text(cellText);

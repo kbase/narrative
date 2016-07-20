@@ -1970,10 +1970,10 @@ define (
             var cellText = ['from biokbase.narrative.widgetmanager import WidgetManager',
                             'WidgetManager().show_output_widget(',
                             '    "kbaseNarrativeDataCell",',
+                            '    {"info": ' + StringUtil.safeJSONStringify(data.info) + '},',
                             '    check_widget=False,',
                             '    title="' + title + '",',
                             '    type="viewer",',
-                            '    info=' + StringUtil.safeJSONStringify(data.info) + ',',
                             ')'].join('\n');
 
             cell.set_text(cellText);

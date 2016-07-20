@@ -2,6 +2,7 @@
 /*jslint white:true,browser:true*/
 
 define([
+    'bluebird',
     'common/runtime',
     'common/props',
     'common/dom',
@@ -10,6 +11,7 @@ define([
     'kb_common/html',
     'css!kbase/css/kbaseJobLog.css'
 ], function (
+    Promise,
     Runtime,
     Props,
     Dom,
@@ -642,36 +644,38 @@ define([
 
 
         function start() {
-            bus.on('run', function (message) {
-                var root = message.node;
-                container = root.appendChild(document.createElement('div'));
-                dom = Dom.make({node: container});
+            return Promise.try(function () {
+                bus.on('run', function (message) {
+                    var root = message.node;
+                    container = root.appendChild(document.createElement('div'));
+                    dom = Dom.make({node: container});
 
-                jobId = message.jobId;
+                    jobId = message.jobId;
 
-                var layout = renderLayout();
-                container.innerHTML = layout.content;
-                layout.events.attachEvents(container);
+                    var layout = renderLayout();
+                    container.innerHTML = layout.content;
+                    layout.events.attachEvents(container);
 
-                initializeFSM();
-                renderFSM();
+                    initializeFSM();
+                    renderFSM();
 
-                // dom.disableButton('stop');
+                    // dom.disableButton('stop');
 
-                // We need to initially listen purely for the presence of a
-                // job id. We cannot assume we have it when we start, and 
-                // we also must be prepared for it to be deleted.
-                // OR should the lifetime of this widget just be assumed to
-                // intersect with the lifetime of the job?
-                startEventListeners();
+                    // We need to initially listen purely for the presence of a
+                    // job id. We cannot assume we have it when we start, and 
+                    // we also must be prepared for it to be deleted.
+                    // OR should the lifetime of this widget just be assumed to
+                    // intersect with the lifetime of the job?
+                    startEventListeners();
 
-                runtime.bus().emit('request-job-status', {
-                    jobId: jobId
+                    runtime.bus().emit('request-job-status', {
+                        jobId: jobId
+                    });
+
+
+                    // always start with the latest log entries, if any.
+                    // requestLatestLog();
                 });
-
-
-                // always start with the latest log entries, if any.
-                // requestLatestLog();
             });
         }
 

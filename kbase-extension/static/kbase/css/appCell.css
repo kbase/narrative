@@ -192,3 +192,10 @@ control with padding, and then scooting the icon back into its column.
 .kb-app-cell .advanced-parameter-hidden {
     display: none;
 }
+
+.kb-elapsed-time {
+    font-family: monospace;
+}
+.kb-elapsed-time.-active {
+    color: lime;
+}

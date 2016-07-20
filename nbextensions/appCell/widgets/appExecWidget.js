@@ -71,6 +71,25 @@ define([
                 body: div({style: {fontFamily: 'monospace', whiteSpace: 'pre'}, dataElement: 'content'})
             });
         }
+        
+        function renderJobResultIcon() {
+            var result = model.getItem('runState.success.result');
+            if (result) {
+                return ui.buildIcon({
+                    name: 'thumbs-up',
+                    color: 'green'
+                });
+            }
+
+            var error = model.getItem('runState.error');
+            if (error) {
+                var x = ui.buildIcon({
+                    name: 'thumbs-down',
+                    color: 'red'
+                });
+                return x;
+            }
+        }
 
         function renderJobErrorx() {
             return ui.buildPanel({
@@ -358,28 +377,40 @@ define([
             if (!result) {
                 return;
             }
+            
+            args.node.innerHTML = ui.buildPanel({
+                title: 'Success',
+                type: 'success',
+                classes: ['kb-panel-light'],
+                body: div({dataElement: 'content'})
+            });
 
             return ui.jsonBlockWidget.make().start({
-                node: args.node,
+                node: args.node.querySelector('[data-element="content"]'),
                 obj: result
             });
         }
         
         function renderJobError(args) {
-            var error = model.getItem('runState.error.message');
+            var error = model.getItem('runState.error');
 
             if (!error) {
                 return;
             }
 
             // TODO: show error style in the tab and tab panel
-
-            var content = table({class: 'table table-striped', style: {tableLayout: 'fixed'}}, [
-                tr([th({style: {width: '15%'}}, 'Error in'), td({style: {width: '85%'}}, error.location)]),
-                tr([th('Type'), td(error.type)]),
-                tr([th('Message'), td(error.message)]),
-                tr([th('Detail'), td([div({style: {overflowX: 'scroll', whiteSpace: 'pre'}}, error.detail)])])
-            ]);
+            
+            var content = ui.buildPanel({
+                title: 'Error',
+                type: 'danger',
+                classes: ['kb-panel-light'],
+                body: table({class: 'table table-striped', style: {tableLayout: 'fixed'}}, [
+                    tr([th({style: {width: '15%'}}, 'Error in'), td({style: {width: '85%'}}, error.location)]),
+                    tr([th('Type'), td(error.type)]),
+                    tr([th('Message'), td(error.message)]),
+                    tr([th('Detail'), td([div({style: {overflowX: 'scroll', whiteSpace: 'pre'}}, error.detail)])])
+                ])
+            });
 
             args.node.innerHTML = content;
         }
@@ -390,25 +421,18 @@ define([
          */
 
         function showJobResult(args) {
-//            var jobState = model.getItem('jobState');
-//            if (!jobState) {
-//                return;
-//            }
-//            if (!jobState.finished) {
-//                return 'Job is not yet finished';
-//            }
-
-            var result = model.getItem('runState.success.result');
-            if (result) {
-                return showJobSuccess(args);
+            var success = model.getItem('runState.success.result'),
+                error = model.getItem('runState.error');
+            if (success) {
+                showJobSuccess(args);
+            } else if (error) {
+                renderJobError(args);
+            } else {
+                args.node.innerHTML = ui.buildPanel({
+                    title: 'Unfinished',
+                    body: 'Job not finished yet'
+                });
             }
-
-            var error = model.getItem('runState.error.message');
-            if (error) {
-                return renderJobError(args);
-            }
-
-            args.node.innerHTML = 'Job not finished yet';
         }
 
 
@@ -454,6 +478,7 @@ define([
                         name: 'stats',
                         label: 'Stats',
                         content: renderExecStats(),
+                        icon: ui.buildIcon({name: 'clock-o'}),
                         events: [
                             {
                                 type: 'shown',
@@ -515,6 +540,7 @@ define([
                     {
                         label: 'Log',
                         content: renderJobLog(),
+                        icon: ui.buildIcon({name: 'list'}),
                         events: [
                             {
                                 type: 'shown',
@@ -540,6 +566,8 @@ define([
                     {
                         label: 'Result',
                         content: renderJobResult(),
+                        icon: renderJobResultIcon(),
+                        icon: ui.buildIcon({name: 'check'}),
                         events: [
                             {
                                 type: 'shown',
@@ -661,46 +689,7 @@ define([
          */
 
 
-        function renderRunState() {
-            var state = model.getItem('runState');
-
-            if (!state) {
-                return;
-            }
-
-            ui.setContent(['runStatus', 'last-updated-at'], utils.formatTime(state.lastUpdatedTime));
-            ui.setContent(['runStatus', 'state'], state.canonicalState);
-            ui.setContent(['runStatus', 'temporalState'], state.temporalState);
-            ui.setContent(['runStatus', 'executionState'], state.executionState);
-
-            ui.setContent(['runStatus', 'run-id'], state.runId);
-            ui.setContent(['runStatus', 'job-id'], state.jobId);
-
-            if (state.success) {
-                showJobResult();
-                // ui.hideElement('job-report');
-            }
-
-            if (state.error) {
-                ui.showElement(['run-error']);
-                ui.setContent(['run-error', 'location'], state.error.location);
-                ui.setContent(['run-error', 'type'], state.error.type);
-                ui.setContent(['run-error', 'message'], state.error.message);
-                ui.setContent(['run-error', 'detail'], state.error.detail);
-            } else {
-                ui.hideElement(['run-error']);
-            }
-
-            // Now be more stateful here...
-//            if (state.jobId) {
-//                ui.enableButton('toggle-job-log');
-//            } else {
-//                ui.disableButton('toggle-job-log');
-//            }
-        }
-
-        
-        
+       
         // RUN STATE UPDATERS
         
         /*

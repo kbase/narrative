@@ -50,11 +50,11 @@ class WidgetManagerTestCase(unittest.TestCase):
             self.wm.get_widget_constants(self.bad_widget)
 
     def test_show_output_widget(self):
-        self.assertIsInstance(self.wm.show_output_widget(self.good_widget, obj='TestObject'), IPython.core.display.Javascript)
+        self.assertIsInstance(self.wm.show_output_widget(self.good_widget, {'obj': 'TestObject'}), IPython.core.display.Javascript)
 
     def test_show_output_widget_bad(self):
         with self.assertRaises(ValueError) as err:
-            self.wm.show_output_widget(self.bad_widget)
+            self.wm.show_output_widget(self.bad_widget, {'bad': 'inputs'})
 
     def test_show_external_widget(self):
         widget = self.wm.show_external_widget('contigSet', 'My ContigSet View', {'objectRef': '6402/3/8'}, {})

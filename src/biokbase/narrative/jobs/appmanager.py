@@ -112,7 +112,7 @@ class AppManager(object):
         """
         return self.spec_manager.available_apps(tag)
 
-    def run_local_app(self, app_id, tag="release", version=None, cell_id=None, run_id=None, **kwargs):
+    def run_local_app(self, app_id, params, tag="release", version=None, cell_id=None, run_id=None, **kwargs):
         """
         Attempts to run a local app. These do not return a Job object, but just the result of the app.
         In most cases, this will be a Javascript display of the result, but could be anything.
@@ -124,6 +124,9 @@ class AppManager(object):
         Parameters:
         -----------
         app_id - should be from the app spec, e.g. 'view_expression_profile'
+        params - the dictionary of parameters for the app. Should be key-value
+                 pairs where they keys are strings. If any non-optional
+                 parameters are missing, an informative string will be printed.
         tag - optional, one of [release|beta|dev] (default=release)
         version - optional, a semantic version string. Only released modules have
                   versions, so if the tag is not 'release', and a version is given,
@@ -136,7 +139,9 @@ class AppManager(object):
         run_local_app('NarrativeViewers/view_expression_profile', version='0.0.1', input_expression_matrix="MyMatrix", input_gene_ids="1234")
         """
         try:
-            return self._run_local_app_internal(app_id, tag, version, cell_id, run_id, **kwargs)
+            if params is None:
+                params = dict()
+            return self._run_local_app_internal(app_id, params, tag, version, cell_id, run_id, **kwargs)
         except Exception as e:
             e_type = type(e).__name__
             e_message = str(e).replace('<', '&lt;').replace('>', '&gt;')
@@ -153,7 +158,7 @@ class AppManager(object):
             # raise
             print("Error while trying to start your app (run_local_app)!\n-------------------------------------\n" + str(e))
 
-    def _run_local_app_internal(self, app_id, tag, version, cell_id, run_id, **kwargs):
+    def _run_local_app_internal(self, params, app_id, tag, version, cell_id, run_id, **kwargs):
         self._send_comm_message('run_status', {
             'event': 'validating_app',
             'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
@@ -195,7 +200,7 @@ class AppManager(object):
         # First, validate.
         # Preflight check the params - all required ones are present, all values are the right type, all numerical values are in given ranges
         spec_params = self.spec_manager.app_params(spec)
-        (params, ws_refs) = self._validate_parameters(app_id, tag, spec_params, kwargs)
+        (params, ws_refs) = self._validate_parameters(app_id, tag, spec_params, params)
 
         # Log that we're trying to run a job...
         log_info = {
@@ -390,7 +395,7 @@ class AppManager(object):
 
         return (params, ws_input_refs)
 
-    def run_app(self, app_id, tag="release", version=None, cell_id=None, run_id=None, **kwargs):
+    def run_app(self, app_id, params, tag="release", version=None, cell_id=None, run_id=None, **kwargs):
         """
         Attempts to run the app, returns a Job with the running app info.
         If this is given a cell_id, then returns None. If not, it returns the generated
@@ -400,6 +405,9 @@ class AppManager(object):
         -----------
         app_id - should be from the app spec, e.g. 'build_a_metabolic_model'
                     or 'MegaHit/run_megahit'.
+        params - this is hte dictionary of parameters to tbe used with the app.
+                 They can be found by using the app_usage function. If any
+                 non-optional apps are missing, a ValueError will be raised.
         tag - optional, one of [release|beta|dev] (default=release)
         version - optional, a semantic version string. Only released modules have
                   versions, so if the tag is not 'release', and a version is given,
@@ -413,7 +421,9 @@ class AppManager(object):
         run_app('MegaHit/run_megahit', version=">=1.0.0", read_library_name="My_PE_Library", output_contigset_name="My_Contig_Assembly")
         """
         try:
-            return self._run_app_internal(app_id, tag, version, cell_id, run_id, **kwargs)
+            if params is None:
+                params = dict()
+            return self._run_app_internal(app_id, params, tag, version, cell_id, run_id, **kwargs)
         except Exception as e:
             e_type = type(e).__name__
             e_message = str(e).replace('<', '&lt;').replace('>', '&gt;')
@@ -431,7 +441,7 @@ class AppManager(object):
             print("Error while trying to start your app (run_app)!\n-------------------------------------\n" + str(e))
             return
 
-    def _run_app_internal(self, app_id, tag, version, cell_id, run_id, **kwargs):
+    def _run_app_internal(self, app_id, params, tag, version, cell_id, run_id, **kwargs):
         """
         Attemps to run the app, returns a Job with the running app info.
         Should *hopefully* also inject that app into the Narrative's metadata.
@@ -441,6 +451,7 @@ class AppManager(object):
         -----------
         app_id - should be from the app spec, e.g. 'build_a_metabolic_model'
                     or 'MegaHit/run_megahit'.
+        params - the dictionary of parameters.
         tag - optional, one of [release|beta|dev] (default=release)
         version - optional, a semantic version string. Only released modules have
                   versions, so if the tag is not 'release', and a version is given,
@@ -489,7 +500,7 @@ class AppManager(object):
         # Preflight check the params - all required ones are present, all values are the right type, all numerical values are in given ranges
         spec_params = self.spec_manager.app_params(spec)
 
-        (params, ws_input_refs) = self._validate_parameters(app_id, tag, spec_params, kwargs)
+        (params, ws_input_refs) = self._validate_parameters(app_id, tag, spec_params, params)
 
         self._send_comm_message('run_status', {
             'event': 'validated_app',

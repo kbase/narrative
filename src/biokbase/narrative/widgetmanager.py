@@ -276,7 +276,7 @@ class WidgetManager(object):
                     constants[p] = params[p]["allowed_values"][0]
         return constants
 
-    def show_output_widget(self, widget_name, tag="release", title="", type="method", check_widget=True, **kwargs):
+    def show_output_widget(self, widget_name, params, tag="release", title="", type="method", check_widget=True, **kwargs):
         """
         Renders a widget using the generic kbaseNarrativeOutputWidget container.
 
@@ -284,6 +284,8 @@ class WidgetManager(object):
         ----------
         widget_name : string
             The name of the widget to print the widgets for.
+        params : dict
+            The dictionary of parameters that gets fed into the widget.
         tag : string, default="release"
             The version tag to use when looking up widget information.
         type : string, default="method"
@@ -306,7 +308,7 @@ class WidgetManager(object):
             input_data = self.get_widget_constants(widget_name, tag)
 
         # Let the kwargs override constants
-        input_data.update(kwargs)
+        input_data.update(params)
 
         input_template = """
         element.html("<div id='{{input_id}}' class='kb-vis-area'></div>");
@@ -329,8 +331,8 @@ class WidgetManager(object):
                                              cell_title=title,
                                              timestamp=int(round(time.time()*1000)))
         return Javascript(data=js, lib=None, css=None)
-    
-    
+
+
     def show_custom_widget(self, widget_id, app_id, app_version, app_tag, spec):
         input_template = """
         element.html('<div id="{{widget_root_id}}" class="kb-custom-widget">');
@@ -370,9 +372,9 @@ class WidgetManager(object):
         #    widget_name = widget
 
         # Note: All Python->Javascript data flow is serialized as JSON strings.
-        
+
         widget_root_id = self._cell_id_prefix + str(uuid.uuid4())
-        
+
         widget_arg = {
             'app': {
                 'id': app_id,
@@ -387,7 +389,7 @@ class WidgetManager(object):
                 'rootId': widget_root_id
             }
         }
-        
+
         #widget_def = {
         #    'id': self._cell_id_prefix + str(uuid.uuid4()),
         #    'package': widget_package,
@@ -402,14 +404,14 @@ class WidgetManager(object):
 
         # context - Data for building the Javascript prior to insertion is provided
         # input_data - raw widget input data as provided by the caller
-        
+
         js = Template(input_template).render(widget_root_id=widget_root_id,
                                              widget_arg=json.dumps(widget_arg).replace('\\', '\\\\'))
-                                             
+
         # print(repr(js))
 
         return Javascript(data=js, lib=None, css=None)
-        
+
 
 
     def show_external_widget(self, widget, widget_title, objects, options, auth_required=True):

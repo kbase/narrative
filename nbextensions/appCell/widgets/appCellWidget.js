@@ -1345,6 +1345,21 @@ define([
                 jobId: jobId
             });
         }
+        
+        function resetToEditMode() {
+             model.deleteItem('exec');
+
+            // Also ensure that the exec widget is reset
+            // widgets.execWidget.bus.emit('reset');
+            reloadExecutionWidget();
+
+            // TODO: evaluate the params again before we do this.
+            fsm.newState({mode: 'editing', params: 'complete', code: 'built'});
+
+            clearOutput();
+
+            renderUI();
+        }
 
         function doRerun() {
             var confirmationMessage = div([
@@ -1367,18 +1382,7 @@ define([
                     //}
 
                     // Remove all of the execution state when we reset the app.
-                    model.deleteItem('exec');
-
-                    // Also ensure that the exec widget is reset
-                    // widgets.execWidget.bus.emit('reset');
-                    reloadExecutionWidget();
-
-                    // TODO: evaluate the params again before we do this.
-                    fsm.newState({mode: 'editing', params: 'complete', code: 'built'});
-
-                    clearOutput();
-
-                    renderUI();
+                   resetToEditMode();
                 });
         }
 
@@ -1483,11 +1487,11 @@ define([
                         case 'in-progress':
                             return {mode: 'processing', stage: 'running'};
                         case 'completed':
-                            stopListeningForJobMessages();
+                            // stopListeningForJobMessages();
                             return {mode: 'success'};
                         case 'suspend':
                         case 'error':
-                            stopListeningForJobMessages();
+                            // stopListeningForJobMessages();
                             if (currentState.state.stage) {
                                 return {mode: 'error', stage: currentState.state.stage};
                             }
@@ -1544,10 +1548,11 @@ define([
             });
         }
 
-        var jobListener = null;
+        var jobListeners = [];
         function startListeningForJobMessages(jobId) {
-            // console.log('Starting to listen for job messages', jobChannelId);
-            jobListener = runtime.bus().listen({
+            var ev;
+            
+            ev = runtime.bus().listen({
                 channel: {
                     jobId: jobId
                 },
@@ -1595,10 +1600,27 @@ define([
                     updateFromJobState(newJobState);
                 }
             });
+            jobListeners.push(ev);
+            
+            ev = runtime.bus().listen({
+                channel: {
+                    jobId: jobId
+                },
+                key: {
+                    type: 'job-deleted'
+                },
+                handle: function (message) {
+                    //  reset the cell into edit mode
+                    resetToEditMode();
+                }
+            });
         }
 
         function stopListeningForJobMessages() {
-            runtime.bus().removeListener(jobListener);
+            jobListeners.forEach(function (listener) {
+                runtime.bus().removeListener(listener);
+            });
+            jobListeners = [];
         }
 
         /*

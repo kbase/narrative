@@ -32,7 +32,8 @@ define([
             listeners = [],
             model,
             ui,
-            widgets = {};
+            widgets = {},
+            execStateListeners = {};
 
         // Sugar
 
@@ -40,9 +41,7 @@ define([
             listeners.push(cellBus.on(event, handler));
         }
 
-
         // RENDER
-
 
         // VIEW BUILDING
 
@@ -89,27 +88,6 @@ define([
                 });
                 return x;
             }
-        }
-
-        function renderJobErrorx() {
-            return ui.buildPanel({
-                title: 'Job Error',
-                name: 'run-error',
-                hidden: false,
-                icon: {
-                    name: 'exclamation-triangle'
-                },
-                type: 'danger',
-                classes: 'kb-panel-light',
-                body: [
-                    table({class: 'table table-striped', style: {tableLayout: 'fixed'}}, [
-                        tr([th({style: {width: '15%'}}, 'Error in'), td({dataElement: 'location', style: {width: '85%'}})]),
-                        tr([th('Type'), td({dataElement: 'type'})]),
-                        tr([th('Message'), td({dataElement: 'message'})]),
-                        tr([th('Detail'), td([div({dataElement: 'detail', style: {overflowX: 'scroll', whiteSpace: 'pre'}})])])
-                    ])
-                ]
-            });
         }
 
         function renderJobLog() {
@@ -465,7 +443,7 @@ define([
          * Add and remove listeners as tabs or other widgets become visible.
          * A map to make adding and removing easier...
          */
-        var execStateListeners = {};
+        
 
         function render() {
             var tabs = ui.buildTabs({
@@ -567,7 +545,7 @@ define([
                     {
                         label: 'Result',
                         content: renderJobResult(),
-                        icon: renderJobResultIcon(),
+                        // icon: renderJobResultIcon(),
                         icon: ui.buildIcon({name: 'check'}),
                         events: [
                             {
@@ -575,6 +553,9 @@ define([
                                 handler: function (e) {
                                     var panelId = e.target.getAttribute('data-panel-id'),
                                         panel = document.getElementById(panelId);
+                                    execStateListeners.result = function () {
+                                        showJobResult({node: panel});
+                                    };
                                     showJobResult({node: panel});
                                 }
                             },
@@ -583,7 +564,8 @@ define([
                                 handler: function (e) {
                                     var panelId = e.target.getAttribute('data-panel-id'),
                                         panel = document.getElementById(panelId);
-                                    showJobResult({node: panel});
+                                    panel.innerHTML = '';
+                                    delete execStateListeners.result;
                                 }
                             }
                         ]
@@ -845,7 +827,11 @@ define([
                 
                 // Need to adjust the launch time.
                 var launchState = model.getItem('launchState');
-                runState.elapsedLaunchTime = submitTime - launchState.startTime;
+                if (launchState && launchState.startTime) {
+                    runState.elapsedLaunchTime = submitTime - launchState.startTime;
+                } else {
+                    console.warn('STRANGE - no launchState', launchState);
+                }
                 
                 if (jobState.exec_start_time) {
                     startTime = jobState.exec_start_time;
@@ -1132,6 +1118,7 @@ define([
             showExecState();
         }
 
+
         function processNewJobState(jobState) {
             // Only update the job state if the job state is different.
             // How can we tell? Well for now we simply look at the job_state
@@ -1156,42 +1143,6 @@ define([
         /*
          * Name is the selector and model property name
          */
-
-//        function showToggleElement(name) {
-//            var toggle = model.getItem(['user-settings', 'toggle-state', name]),
-//                label = toggle.showing ? 'Hide ' + toggle.label : 'Show ' + toggle.label;
-//            if (toggle.showing) {
-//                ui.showElement(name);
-//                if (togglesDb[name].onOpen) {
-//                    try {
-//                        togglesDb[name].onOpen({
-//                            node: ui.getElement([name, 'mount'])
-//                        });
-//                    } catch (ex) {
-//                        console.error('Error running onOpen for ' + name, ex);
-//                    }
-//                }
-//            } else {
-//                ui.hideElement(name);
-//                if (togglesDb[name].onClose) {
-//                    try {
-//                        togglesDb[name].onClose({
-//                            node: ui.getElement([name, 'mount'])
-//                        });
-//                    } catch (ex) {
-//                        console.error('Error running onClose for ' + name, ex);
-//                    }
-//                }
-//            }
-//            ui.setButtonLabel('toggle-' + toggle.name, label);
-//            return toggle.showing;
-//        }
-//
-//        function toggleElement(name) {
-//            var toggle = model.getItem(['user-settings', 'toggle-state', name]);
-//            model.setItem(['user-settings', 'toggle-state', name, 'showing'], !toggle.showing);
-//            return showToggleElement(name);
-//        }
 
         // LIFECYCLE API
 
@@ -1258,6 +1209,7 @@ define([
                 showExecState();
             });
             listeners.push(ev);
+            
         }
 
         function teardown() {

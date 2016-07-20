@@ -29,6 +29,7 @@ define([
             this.data = this.options.data;
             this.options.type = this.options.type.toLowerCase();
             this.cell = Jupyter.narrative.getCellByKbaseId(this.$elem.attr('id'));
+            this.cell.element.trigger('hideCodeArea.cell');
             if (this.options.widget.toLowerCase() === "null") {
                 this.options.widget = 'kbaseDefaultNarrativeOutput';
             }
@@ -36,11 +37,6 @@ define([
             this.render();
 
             return this;
-        },
-        hideInputArea: function () {
-            if (!this.options.cellId)
-                return;
-            $('#' + this.options.cellId).closest('.cell').find('.inner_cell .input_area').hide();
         },
         render: function () {
             var icon;

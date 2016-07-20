@@ -108,7 +108,7 @@ define([
     'common/utils',
     'kb_common/html',
     'narrativeConfig',
-    
+
     'components/requirejs/require',
     'narrative_paths'
 ], function (
@@ -294,7 +294,7 @@ define([
     };
 
     // CELL
-    
+
     (function () {
         var p = cell.Cell.prototype;
 
@@ -324,22 +324,22 @@ define([
             var $cellNode = $(this.element),
                 metaToggleMode = utils.getCellMeta(this, 'kbase.cellState.toggleMinMax'),
                 toggleMode = $cellNode.data('toggleMinMax');
-            
+
             if (metaToggleMode) {
-                if (!toggleMode) {                    
+                if (!toggleMode) {
                     // The first time an existing cell is rendered after loading a
                     // notebook, the node data for toggleMinMax
                     // will be empty, so we need to initialize it. This is an auto-initialize.
                     toggleMode = metaToggleMode;
-                    $cellNode.data('toggleMinMax', toggleMode);                    
+                    $cellNode.data('toggleMinMax', toggleMode);
                 }
             } else if (!toggleMode) {
                 // If there is neither a data attribute on the node nor a metadata
                 // property, then this is a new cell, and it will be maximized.
                 toggleMode = 'maximized';
-                $cellNode.data('toggleMinMax', toggleMode);                
+                $cellNode.data('toggleMinMax', toggleMode);
             }
-            
+
             switch (toggleMode) {
                 case 'maximized':
                     if (!this.maximize) {
@@ -409,10 +409,10 @@ define([
         }());
 
     }());
-    
-    
+
+
     // RAW CELL
-    
+
      (function () {
         var p = textCell.RawCell.prototype;
 
@@ -841,13 +841,24 @@ define([
                 utils.setCellMeta(cell, 'kbase.cellState.selected', true);
                 $menu.trigger('selected.toolbar');
             });
-            
-            
+
+
             $cellNode.on('toggleCodeArea.cell', function () {
                 thisCell.toggleCodeInputArea();
             });
+
+            $cellNode.on('hideCodeArea.cell', function () {
+                thisCell.hideCodeInputArea();
+            });
         };
-        
+
+        p.hideCodeInputArea = function () {
+            var codeInputArea = this.input.find('.input_area')[0];
+            if (codeInputArea) {
+                codeInputArea.classList.add('hidden');
+            }
+        }
+
         p.toggleCodeInputArea = function() {
             var codeInputArea = this.input.find('.input_area')[0];
             if (codeInputArea) {

@@ -3,6 +3,16 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v4.2.1 (more notes will follow).
 
+### Version 3.0.0-alpha-8
+__Changes__
+- Fix various problems with subdata input widget - selecting multiple when only one should be allowed, pathway issues into data object, etc.
+- Convert execution area back to tabbed items.
+- Add catalog link back to toolbar.
+- Fix launch start time bug.
+- Remove millisecond counts from times.
+- Add icon to tab in tabset.
+- Make use of updated cancel job function in UJS (gonna need some iteration on this once the UJS change goes up)
+
 ### Version 3.0.0-alpha-7
 __Changes__
 - Updated invocation signatures for AppManage.run_app, .run_local_app, WidgetManager.show_output_widget -- inputs to apps (and widgets) must now be a map where the keys are the input ids and the values are the inputs themselves. See this PR for details: https://github.com/kbase/narrative/pull/679

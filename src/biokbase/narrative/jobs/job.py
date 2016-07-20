@@ -116,7 +116,7 @@ class Job(object):
         except Exception as e:
             raise Exception("Unable to fetch info for job {} - {}".format(self.job_id, e))
 
-    def output_viewer(self, state=None):
+    def show_output_widget(self, state=None):
         """
         For a complete job, returns the job results.
         An incomplete job throws an exception
@@ -126,7 +126,7 @@ class Job(object):
             state = self.state()
         if state['job_state'] == 'completed' and 'result' in state:
             (output_widget, widget_params) = self._get_output_info(state)
-            return WidgetManager().show_output_widget(output_widget, tag=self.tag, **widget_params)
+            return WidgetManager().show_output_widget(output_widget, widget_params, tag=self.tag)
         else:
             return "Job is incomplete! It has status '{}'".format(state['job_state'])
 
@@ -203,7 +203,7 @@ class Job(object):
         False if its running/queued.
         """
         status = self.status()
-        return status.lower() in ['completed', 'error', 'suspend']
+        return status.lower() in ['completed', 'error', 'suspend', 'cancelled']
 
     def __repr__(self):
         return u"KBase Narrative Job - " + unicode(self.job_id)

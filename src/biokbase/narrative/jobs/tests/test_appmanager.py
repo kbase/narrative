@@ -59,27 +59,23 @@ class AppManagerTestCase(unittest.TestCase):
     @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')
     def test_run_app_bad_id(self, m):
         m.return_value._send_comm_message.return_value = None
-        with self.assertRaises(ValueError) as err:
-            self.mm.run_app(self.bad_app_id)
+        self.assertIsNone(self.mm.run_app(self.bad_app_id, None))
 
     @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')
     def test_run_app_bad_tag(self, m):
         m.return_value._send_comm_message.return_value = None
-        with self.assertRaises(ValueError) as err:
-            self.mm.run_app(self.good_app_id, tag=self.bad_tag)
+        self.assertIsNone(self.mm.run_app(self.good_app_id, None, tag=self.bad_tag))
 
     @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')
     def test_run_app_bad_version_match(self, m):
         # fails because a non-release tag can't be versioned
         m.return_value._send_comm_message.return_value = None
-        with self.assertRaises(ValueError) as err:
-            self.mm.run_app(self.good_app_id, tag=self.good_tag, version=">0.0.1")
+        self.assertIsNone(self.mm.run_app(self.good_app_id, None, tag=self.good_tag, version=">0.0.1"))
 
     @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')
     def test_run_app_missing_inputs(self, m):
         m.return_value._send_comm_message.return_value = None
-        with self.assertRaises(ValueError) as err:
-            self.mm.run_app(self.good_app_id, tag=self.good_tag)
+        self.assertIsNone(self.mm.run_app(self.good_app_id, None, tag=self.good_tag))
 
     def test_app_description(self):
         desc = self.mm.app_description(self.good_app_id, tag=self.good_tag)

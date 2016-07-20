@@ -47,7 +47,7 @@ define([
             }
             return null;
         }
-        
+
         function doRemoveOutputCell(index) {
             var content = div([
                 p('This will remove the output cell from the Narrative, as well as this output record. This action is not reversable. Any associated data will remain in your narrative, and may be found in the Data panel.'),
@@ -70,7 +70,7 @@ define([
                     Jupyter.notebook.delete_cell(cellIndex);
                 }
 
-                // send a message on the cell bus bus, parent should pick it up, remove the 
+                // send a message on the cell bus bus, parent should pick it up, remove the
                 // output from the model, and update us.
                 bus.bus().send({
                     jobId: output.jobId
@@ -151,8 +151,8 @@ define([
                                         handler: function () {
                                             doRemoveOutputCell(index);
                                         }
-                                    })}, 'Remove Ouput Cell'),
-                                
+                                    })}, 'Remove Output Cell'),
+
                                 div({style: {marginTop: '20px'}, dataElement: 'message'}, message)
 
                             ])
@@ -197,7 +197,7 @@ define([
                 });
             });
         }
-        
+
         function getBus() {
             return bus;
         }

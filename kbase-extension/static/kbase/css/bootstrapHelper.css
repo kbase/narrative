@@ -35,8 +35,20 @@
 .panel.kb-panel-light {
     border: none;
 }
+/* colors copied shamelessly from peeking at bootstrap
+   http://getbootstrap.com/css/
+*/
 .panel-danger.kb-panel-light .panel-title {
-    color: red;
+    color: #a94442;
+}
+.panel-success.kb-panel-light .panel-title {
+    color: #3c763d;
+}
+.panel-warning.kb-panel-light .panel-title {
+    color: #8a6d3b;
+}
+.panel-info.kb-panel-light .panel-title {
+    color: blue;
 }
 .panel.kb-panel-light > .panel-heading {
     background-color: transparent;

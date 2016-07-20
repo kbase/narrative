@@ -430,6 +430,7 @@ define([
             } else {
                 args.node.innerHTML = ui.buildPanel({
                     title: 'Unfinished',
+                    classes: ['kb-panel-light'],
                     body: 'Job not finished yet'
                 });
             }

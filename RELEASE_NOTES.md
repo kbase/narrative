@@ -5,7 +5,7 @@ This is built on the Jupyter Notebook v4.2.1 (more notes will follow).
 
 ### Version 3.0.0-alpha-7
 __Changes__
-- Updated invocation signatures for AppManage.run_app, .run_local_app, WidgetManager.show_output_widget -- inputs to apps (and widgets) must now be a map where the keys are the input ids and the values are the inputs themselves.
+- Updated invocation signatures for AppManage.run_app, .run_local_app, WidgetManager.show_output_widget -- inputs to apps (and widgets) must now be a map where the keys are the input ids and the values are the inputs themselves. See this PR for details: https://github.com/kbase/narrative/pull/679
 - Newly generated output cells auto-hide their input areas (still not ideal, since it's the generated widget, but... it's a start).
 - Fixed a couple UI typos
 

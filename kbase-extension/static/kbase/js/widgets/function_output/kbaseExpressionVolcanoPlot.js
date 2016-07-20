@@ -1,20 +1,27 @@
 define(['jquery',
     'util/string',
     'd3',
+    'narrativeConfig',
     'kbwidget',
-    'css!ext_components/tipsy/src/stylesheets/tipsy.css',
-    'css!ext_components/bootstrap-slider/slider.css',
     'kbaseAuthenticatedWidget',
     'kbaseTabs',
+    'css!ext_components/tipsy/src/stylesheets/tipsy.css',
+    'css!ext_components/bootstrap-slider/slider.css',
     'bootstrap',
     'bootstrap-slider',
     'tipsy'
   /*  'jquery-dataTables-bootstrap,'*/
 ],
-    function ($, StringUtil) {
-      $.KBWidget({
+    function ($,
+              StringUtil,
+              d3,
+              Config,
+              KBWidget,
+              KBaseAuthenticatedWidget,
+              KBaseTabs) {
+    return KBWidget({
           name: "kbaseExpressionVolcanoPlot",
-          parent: "kbaseAuthenticatedWidget",
+          parent: KBaseAuthenticatedWidget,
           version: "1.0.0",
           ws_id: null,
           ws_name: null,
@@ -22,8 +29,8 @@ define(['jquery',
           sample1: null,
           sample2: null,
           width: 800,
-          wsUrl: window.kbconfig.urls.workspace,
-          loading_image: window.kbconfig.loading_gif,
+          wsUrl: Config.url('workspace'),
+          loading_image: Config.get('loading_gif'),
 
           options: {
               ws_id: null,
@@ -101,25 +108,25 @@ define(['jquery',
                     '<input id="' + pref + 'pvalue" type="text" class="span2" value="" data-slider-step="0.01" /> &nbsp; &nbsp;' +
                     '<b id="' + pref + 'pv2">1.0</b></td><td style="padding-left:20px;border-left: 1px solid #ccc;">' +
                     'Log2(Fold Change)<br/>' +
-                '<b id="' + pref + 'fc1">-1.4</b> &nbsp; &nbsp;' + 
+                '<b id="' + pref + 'fc1">-1.4</b> &nbsp; &nbsp;' +
                 '<input id="' + pref + 'fc" type="text" class="span2" value="" data-slider-step="0.01"  /> &nbsp; &nbsp;' +
                 '<b id="' + pref + 'fc2">1.1</b></td><td>' +
                '<button id="' + pref + 'showselectedgenes" class="btn btn-block btn-primary">Show Selected Genes</button>' +
                 '</td></tr></table>');
-                    
+
                 tabPane.append('<center><div class="fig"><div style="padding-top:10px;"><table id="' + 'info"><tr>' +
                 '<td ><b>Condition 1: &nbsp; </b> </td> <td> <div id="' + pref + 'cond1"></div></td>' +
                 '<td style="padding-left: 30px;"><b>Condition 2: &nbsp;  </b> </td> <td> <div id="' + pref + 'cond2"></div></td>' +
-                '</tr></table><br/></div><hr/>'); 
+                '</tr></table><br/></div><hr/>');
 
-                tabPane.append('<center><div class="chart" id="p' + pref + 'divchart" style="width:100%; border-bottom:1px solid #ccc;margin-bottom:30px;"> ' + 
+                tabPane.append('<center><div class="chart" id="p' + pref + 'divchart" style="width:100%; border-bottom:1px solid #ccc;margin-bottom:30px;"> ' +
                '</div><br/>-Log10( p-value ) = <b><span id="' +pref+ 'selpval"></span></b> &nbsp; &nbsp; &nbsp; | &nbsp; &nbsp; &nbsp;Log2(Fold Change) = <b><span id="' +pref+ 'selfc"></span></b> </center><br/></div> <br/><div id="' + pref + 'voltablediv" style="width:80%;margin-left:auto;margin-right:auto;text-align:center;" ><center>' +
                '<table class="table table-striped table-bordered" cellspacing="0" width="100%" id="' + pref + 'voltable" >' +
                '<thead><tr><th>Gene</th><th>Locus</th><th>Condition 1</th><th>Condition 2</th><th>Fold Change</th> <th>p value</th></tr>' +
                '</thead><tfoot><tr><th>Gene</th><th>Locus</th><th>Value1</th><th>Value2</th><th>Fold Change</th><th>p value</th> </tr></tfoot>' +
                '<tbody id="' + pref + 'voltablebody">' +
                '</tbody></table></center></div> </center></div></div></div></div></div> </div>');
-  
+
                 $(function(){
                   var pv,fc;
 
@@ -270,7 +277,7 @@ define(['jquery',
                     fc = $("#" + pref + "fc").val();
                     $('#' + pref + 'selfc').text(parseFloat(fc).toFixed(2));
                     svg.selectAll("circle")
-                      .attr("fill", function(d) { 
+                      .attr("fill", function(d) {
                         var cc = colorx(d.log2fc_fa, d.p_value_f);
                         if ( cc == "red" ) {
                           cnt = cnt + 1;
@@ -292,7 +299,7 @@ define(['jquery',
                     pv = $("#" + pref + "pvalue").val();
                     $('#' + pref + 'selpval').text(parseFloat(pv).toFixed(2));
                     svg.selectAll("circle")
-                      .attr("fill", function(d) { 
+                      .attr("fill", function(d) {
                         var cc = colorx(d.log2fc_fa, d.p_value_f);
                         if ( cc == "red" ) {
                           cnt = cnt + 1;

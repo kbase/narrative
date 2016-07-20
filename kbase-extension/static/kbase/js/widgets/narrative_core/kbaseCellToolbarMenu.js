@@ -138,6 +138,16 @@ define([
             }
             return '';
         }
+        
+        function getCellInfoLink(cell) {
+            var url = utils.getCellMeta(cell, 'kbase.attributes.info.url'),
+                label = utils.getCellMeta(cell, 'kbase.attributes.info.label');
+            
+            if (url) {
+                return a({href: url, target: '_blank'}, label || 'ref');
+            }
+            return '';
+        }
 
         function doToggleMinMaxCell() {
             cell.element.trigger('toggleMinMax.cell');
@@ -206,7 +216,8 @@ define([
                         div({class: 'col-sm-8 title-container'}, [
                             div({class: 'title', style: {display: 'inline-block'}}, [
                                 div({dataElement: 'title', class: 'title'}, [getCellTitle(cell)]),
-                                div({dataElement: 'subtitle', class: 'subtitle'}, [getCellSubtitle(cell)])
+                                div({dataElement: 'subtitle', class: 'subtitle'}, [getCellSubtitle(cell)]),
+                                div({dataElement: 'title', class: 'info-link'}, [getCellInfoLink(cell)])
                             ])
                         ]),
                         div({class: 'col-sm-4 buttons-container'}, [

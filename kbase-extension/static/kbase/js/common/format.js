@@ -49,7 +49,6 @@ define([
     }
     
     function niceTime(date) {
-        console.log('NICE', date);
         if (!date) {
             return '-';
         }

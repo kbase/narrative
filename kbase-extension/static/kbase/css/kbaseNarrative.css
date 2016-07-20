@@ -1369,6 +1369,13 @@ div#notebook_panel {
     color: #666;
 }
 
+.kb-cell-toolbar .info-link {
+    font-family: "Roboto", Arial, sans-serif;
+    font-size: 90%;
+    color: #666;
+}
+
+
 .kb-toolbar-open {
     border-bottom: 1px solid #CCC;
     border-radius: 0;

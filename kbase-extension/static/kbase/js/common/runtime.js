@@ -65,11 +65,25 @@ define([
 //            }
 //            return configRoot;
         }
+        
+         function getUserSetting(settingKey, defaultValue) {
+            var settings = Jupyter.notebook.metadata.kbase.userSettings,
+                setting;
+            if (!settings) {
+                return defaultValue;
+            }
+            setting = settings[settingKey];
+            if (setting === undefined) {
+                return defaultValue;
+            }
+            return setting;
+        }
 
         return {
             authToken: authToken,
             config: getConfig,
-            bus: bus
+            bus: bus,
+            getUserSetting: getUserSetting
         };
     }
 

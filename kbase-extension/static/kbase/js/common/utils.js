@@ -96,40 +96,6 @@ define([
     /*
      * Show elapsed time in a friendly fashion.
      */
-    function pad(string, width, char, right) {
-        if (!char) {
-            char = '0';
-        }
-        if (typeof string === 'number') {
-            string = String(string);
-        }
-        var padLen = width - string.length,
-            padding = '', i;
-        if (padLen <= 0) {
-            return string;
-        }
-        for (i = 0; i < padLen; i += 1) {
-            padding += char;
-        }
-        if (right) {
-            return string + padding;
-        }
-        return padding + string;
-    }
-    function formatElapsedTime(value, defaultValue) {
-        if (!value) {
-            return defaultValue;
-        }
-        var temp = value;
-
-        var units = [1000, 60, 60, 24].map(function (unit) {
-            var unitValue = temp % unit;
-            temp = (temp - unitValue) / unit;
-            return unitValue;
-        });
-
-        return [[pad(units[3], 2), pad(units[2], 2), pad(units[1], 2)].join(':'), pad(units[0], 3)].join('.');
-    }
     function formatTime(time) {
         if (time) {
             return format.niceElapsedTime(time);
@@ -162,7 +128,6 @@ define([
         getCellMeta: getCellMeta,
         setCellMeta: setCellMeta,
         pushMeta: pushMeta,
-        formatElapsedTime: formatElapsedTime,
         formatTime: formatTime,
         horribleHackToHideElement: horribleHackToHideElement
     };

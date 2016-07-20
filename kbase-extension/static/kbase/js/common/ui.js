@@ -8,12 +8,15 @@ define([
     'kb_common/html',
     'base/js/namespace',
     './runtime',
-    './events'
-], function ($, Promise, html, Jupyter, Runtime, Events) {
+    './events',
+    'google-code-prettify/prettify',
+    'css!google-code-prettify/prettify.css',
+], function ($, Promise, html, Jupyter, Runtime, Events, PR) {
     'use strict';
     var t = html.tag,
-        div = t('div'), span = t('span'), h4 = t('h4'),
-        button = t('button');
+        div = t('div'), span = t('span'), 
+        ul = t('ul'), li = t('li'), a = t('a'),
+        button = t('button'), pre = t('pre');
 
     function factory(config) {
         var container = config.node,
@@ -115,6 +118,7 @@ define([
             modalNode.appendChild(confirmNode);
             
             modalDialogNode = modalNode.querySelector('.modal');
+            
             $(modalDialogNode).modal('show');
             return new Promise(function (resolve) {
                 modalDialogNode.querySelector('[data-element="yes"]').addEventListener('click', function (e) {
@@ -392,7 +396,7 @@ define([
 
         function buildPanel(args) {
             var type = args.type || 'primary',
-                classes = ['panel', 'panel-' + type];
+                classes = ['panel', 'panel-' + type], icon;
             if (args.hidden) {
                 classes.push('hidden');
                 // style.display = 'none';
@@ -400,11 +404,14 @@ define([
             if (args.classes) {
                 classes = classes.concat(args.classes);
             }
+            if (args.icon) {
+                icon = [' ', buildIcon(args.icon)];
+            }
             return  div({class: classes.join(' '), dataElement: args.name}, [
                 (function () {
                     if (args.title) {
                         return div({class: 'panel-heading'}, [
-                            div({class: 'panel-title'}, args.title)
+                            div({class: 'panel-title'}, [args.title, icon])
                         ]);
                     }
                 }()),
@@ -441,7 +448,7 @@ define([
                 type = args.type || 'primary',
                 classes = ['panel', 'panel-' + type],
                 collapseClasses = ['panel-collapse collapse'],
-                toggleClasses = [];
+                toggleClasses = [], icon;
             if (args.hidden) {
                 classes.push('hidden');
                 // style.display = 'none';
@@ -454,7 +461,9 @@ define([
             if (args.classes) {
                 classes = classes.concat(args.classes);
             }
-
+            if (args.icon) {
+                icon = [' ', buildIcon(args.icon)];
+            }
             return div({class: classes.join(' '), dataElement: args.name}, [
                 div({class: 'panel-heading'}, [
                     div({class: 'panel-title'}, span({
@@ -462,9 +471,7 @@ define([
                         dataToggle: 'collapse',
                         dataTarget: '#' + collapseId,
                         style: {cursor: 'pointer'}
-                    },
-                        args.title
-                        ))
+                    }, [args.title, icon] ))
                 ]),
                 div({id: collapseId, class: collapseClasses.join(' ')},
                     div({class: 'panel-body'}, [
@@ -523,6 +530,21 @@ define([
             var node = getElement(path);
             if (node) {
                 node.innerHTML = content;
+            }
+        }
+        
+        function addClass(path, klass) {
+            var node = getElement(path);
+            if (node) {
+                if (!node.classList.contains(klass)) {
+                    node.classList.add(klass);
+                }
+            }
+        }
+        function removeClass(path, klass) {
+            var node = getElement(path);
+            if (node) {
+                node.classList.remove(klass);
             }
         }
 
@@ -586,12 +608,157 @@ define([
                 if (typeof arg.size === 'number') {
                     klasses.push('fa-' + String(arg.size) + 'x');
                 } else {
-                    klasses.push('fa-' + arg.size)
+                    klasses.push('fa-' + arg.size);
                 }
             }
             return span({
                 class: klasses.join(' ')
             });
+        }
+        function reverse(arr) {
+            var newArray = [], i, len = arr.length;
+            for (i = len-1; i >= 0; i -= 1) {
+                newArray.push(arr[i]);
+            }
+            return newArray;
+        }
+        function buildTabs(arg) {
+            var tabsId = arg.id,
+                tabsAttribs = {},
+                tabClasses = ['nav', 'nav-tabs'],
+                tabStyle = {}, activeIndex, tabTabs,
+                tabs = arg.tabs.filter(function (tab) {
+                    return (tab ? true : false);
+                }),
+                events = [], content,
+                selectInitialTab = false,
+                tabMap = {},
+                panelClasses = ['tab-pane'];
+            
+            if (arg.fade) {
+                panelClasses.push('fade');
+            }
+            
+            if (typeof arg.initialTab === 'number') {
+                selectInitialTab = true;
+            }
+
+            if (tabsId) {
+                tabsAttribs.id = tabsId;
+            }
+            
+            tabs.forEach(function (tab) {
+                tab.panelId = html.genId();
+                tab.tabId = html.genId();
+                if (tab.name) {
+                    tabMap[tab.name] = tab.tabId;
+                }
+                if (tab.events) {
+                    tab.events.forEach(function (event) {
+                        events.push({
+                            id: tab.tabId,
+                            jquery: true,
+                            type: event.type + '.bs.tab',
+                            handler: event.handler
+                        });
+                    });
+                }
+            });
+            if (arg.alignRight) {
+                tabTabs = reverse(tabs);
+                tabStyle.float = 'right';
+                if (selectInitialTab) {
+                    activeIndex = tabs.length - 1 - arg.initialTab;
+                }
+            } else {
+                tabTabs = tabs;
+                if (selectInitialTab) {
+                    activeIndex = arg.initialTab;
+                }
+            }
+            content = div(tabsAttribs, [
+                ul({class: tabClasses.join(' '), role: 'tablist'},
+                    tabTabs.map(function (tab, index) {
+                        var attribs = {
+                            role: 'presentation'
+                        };
+                        if (selectInitialTab) {
+                            if (index === activeIndex) {
+                                attribs.class = 'active';
+                            }
+                        }
+                        attribs.style = tabStyle;
+                        return li(attribs, a({
+                            href: '#' + tab.panelId,
+                            ariaControls: 'home',
+                            role: 'tab',
+                            id: tab.tabId,
+                            dataPanelId: tab.panelId,
+                            dataToggle: 'tab'
+                        }, [tab.icon, tab.label].join(' ')));
+                    })),
+                div({class: 'tab-content'},
+                    tabs.map(function (tab, index) {
+                        var attribs = {
+                            role: 'tabpanel',
+                            class: panelClasses.join(' '),
+                            id: tab.panelId,
+                            style: arg.style || {}
+                        };
+                        if (tab.name) {
+                            attribs['data-name'] = tab.name;
+                        }
+                        if (index === 0) {
+                            attribs.class += ' active';
+                        }
+                        return div(attribs, tab.content);
+                    }))
+            ]);
+            return {
+                content: content,
+                events: events,
+                map: tabMap
+            };
+        }
+        
+        // TURN THIS INTO A MINI WIDGET!
+        function jsonBlockWidget() {
+            function factory(config) {
+                var config = config || {},
+                    indent = config.indent || 3,
+                    fontSize = config.fontSize || 0.8;
+                
+                function render(obj) {
+                    var specText = JSON.stringify(obj, false, indent),
+                        fixedText = specText.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    return pre({
+                            class: 'prettyprint lang-json', 
+                            style: {
+                                fontSize: String(fontSize * 100) + '%'
+                            }
+                        }, fixedText);
+                }
+
+                function start(arg) {
+                    return Promise.try(function () {
+                        arg.node.innerHTML = render(arg.obj);
+                        PR.prettyPrint(null, arg.node);
+                    });
+                }
+                function stop() {
+                    return Promise.resolve;
+                }
+            
+                return {
+                    start: start,
+                    stop: stop
+                };
+            }
+            return {
+                make: function (config) {
+                    return factory(config);
+                }
+            };
         }
 
         return {
@@ -625,7 +792,11 @@ define([
             showInfoDialog: showInfoDialog,
             showDialog: showDialog,
             buildButtonToolbar: buildButtonToolbar,
-            buildIcon: buildIcon
+            buildIcon: buildIcon,
+            addClass: addClass,
+            removeClass: removeClass,
+            buildTabs: buildTabs,
+            jsonBlockWidget: jsonBlockWidget()
         };
     }
 

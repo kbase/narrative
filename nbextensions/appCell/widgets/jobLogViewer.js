@@ -71,6 +71,10 @@ define([
                         auto: false
                     },
                     {
+                        mode: 'active',
+                        auto: true
+                    },
+                    {
                         mode: 'complete'
                     },
                     {

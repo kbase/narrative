@@ -160,6 +160,13 @@ control with padding, and then scooting the icon back into its column.
     padding: 3px 5px;
 }
 
+.kb-app-cell .kb-app-subtitle {
+    background-color: #F5F5F5;
+    padding: 3px 5px;
+}
+
+
+
 
 .kb-app-cell .panel-title > [data-toggle="collapse"]::before {
     display: inline-block;
@@ -191,4 +198,11 @@ control with padding, and then scooting the icon back into its column.
 }
 .kb-app-cell .advanced-parameter-hidden {
     display: none;
+}
+
+.kb-elapsed-time {
+    font-family: monospace;
+}
+.kb-elapsed-time.-active {
+    color: lime;
 }

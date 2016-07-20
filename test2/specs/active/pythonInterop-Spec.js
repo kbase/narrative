@@ -60,19 +60,19 @@ define([
         });
         it('Pythonify a map of ints', function() {
             var jsValue = {one: 1, two: 2, three: 3},
-                pyValue = '{"one": 1, "two": 2, "three": 3}';
+                pyValue = '{\n    "one": 1,\n    "two": 2,\n    "three": 3\n}';
 
             expect(PythonInterop.pythonifyValue(jsValue)).toEqual(pyValue);
         });
         it('Pythonify a map of ints', function() {
             var jsValue = {one: 1.2, two: 2.3, three: 3.4},
-                pyValue = '{"one": 1.2, "two": 2.3, "three": 3.4}';
+                pyValue = '{\n    "one": 1.2,\n    "two": 2.3,\n    "three": 3.4\n}';
 
             expect(PythonInterop.pythonifyValue(jsValue)).toEqual(pyValue);
         });
         it('Pythonify a map of strings', function() {
             var jsValue = {one: 'one', two: 'two', three: 'three'},
-                pyValue = '{"one": "one", "two": "two", "three": "three"}';
+                pyValue = '{\n    "one": "one",\n    "two": "two",\n    "three": "three"\n}';
 
             expect(PythonInterop.pythonifyValue(jsValue)).toEqual(pyValue);
         });
@@ -84,7 +84,7 @@ define([
         });
         it('Pythonify an array of maps', function() {
             var jsValue = [{one: 1, two: 2, three: 3},{one: 1.2, two: 2.3, three: 3.4}, {one: 'one', two: 'two', three: 'three'}],
-                pyValue = '[{"one": 1, "two": 2, "three": 3}, {"one": 1.2, "two": 2.3, "three": 3.4}, {"one": "one", "two": "two", "three": "three"}]';
+                pyValue = '[{\n    "one": 1,\n    "two": 2,\n    "three": 3\n}, {\n    "one": 1.2,\n    "two": 2.3,\n    "three": 3.4\n}, {\n    "one": "one",\n    "two": "two",\n    "three": "three"\n}]';
 
             expect(PythonInterop.pythonifyValue(jsValue)).toEqual(pyValue);
         });
@@ -97,10 +97,12 @@ define([
                 code = 'from biokbase.narrative.widgetmanager import WidgetManager\n' +
                        'WidgetManager().show_output_widget(\n' +
                        '    "widget",\n' +
-                       '    "tag",\n' +
-                       '    arg1=1,\n' +
-                       '    arg2=2,\n' +
-                       '    arg3=3\n' +
+                       '    {\n' +
+                       '        "arg1": 1,\n' +
+                       '        "arg2": 2,\n' +
+                       '        "arg3": 3\n' +
+                       '    },\n' +
+                       '    tag="tag"\n' +
                        ')';
             expect(PythonInterop.buildOutputRunner('widget', 'tag', inputs)).toEqual(code);
 

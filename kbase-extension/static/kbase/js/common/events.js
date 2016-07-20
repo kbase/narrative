@@ -1,8 +1,9 @@
 /*global define,console*/
 /*jslint white:true,browser:true*/
 define([
+    'jquery',
     'kb_common/html'
-], function (html) {
+], function ($, html) {
     'use strict';
 
     function factory(config) {
@@ -24,6 +25,7 @@ define([
             events.push({
                 type: event.type,
                 selector: selector,
+                jquery: event.jquery,
                 handler: function (e) {
                     event.handler(e);
                 }
@@ -61,7 +63,11 @@ define([
                     console.error('could not find node for ' + event.selector);
                     throw new Error('could not find node for ' + event.selector);
                 }
-                node.addEventListener(event.type, event.handler);
+                if (event.jquery) {
+                    $(node).on(event.type, event.handler);
+                } else {
+                    node.addEventListener(event.type, event.handler);
+                }
             });
             events = [];
         }

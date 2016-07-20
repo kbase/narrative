@@ -1486,8 +1486,12 @@ define([
             // with the parameters returned.
             return syncAppSpec(params.appId, params.appTag)
                 .then(function () {
+                    var appRef = [model.getItem('app').id, model.getItem('app').tag].filter(toBoolean).join('/'),
+                        url = '/#appcatalog/app/' + appRef;
                     utils.setCellMeta(cell, 'kbase.attributes.title', env.appSpec.info.name);
                     utils.setCellMeta(cell, 'kbase.attributes.subtitle', env.appSpec.info.subtitle);
+                    utils.setCellMeta(cell, 'kbase.attributes.info.url', url);
+                    utils.setCellMeta(cell, 'kbase.attributes.info.label', 'app ref');
                     return Promise.all([
                         loadInputWidget(),
                         loadInputViewWidget()

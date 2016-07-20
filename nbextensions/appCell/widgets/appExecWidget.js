@@ -3,17 +3,18 @@
 
 define([
     'uuid',
+    'jquery',
     'common/props',
     'common/utils',
     'common/jobs',
     'common/ui',
     'common/runtime',
     'common/events',
-    'kb_common/format',
+    'common/format',
     'kb_common/html',
     'kb_service/client/workspace',
     './jobLogViewer'
-], function (Uuid, Props, utils, Jobs, UI, Runtime, Events, format, html, Workspace, LogViewer) {
+], function (Uuid, $, Props, utils, Jobs, UI, Runtime, Events, format, html, Workspace, LogViewer) {
     'use strict';
 
     var t = html.tag,
@@ -31,47 +32,7 @@ define([
             listeners = [],
             model,
             ui,
-            widgets = {},
-            togglesDb,
-            toggles = [
-                {
-                    name: 'job-details',
-                    label: 'Details',
-                    initialValue: false
-                },
-                {
-                    name: 'job-log',
-                    label: 'Log',
-                    initialValue: false,
-                    onOpen: function (arg) {
-                        arg.node.innerHTML = '';
-                        var logViewer = LogViewer.make();
-                        widgets.logViewer = logViewer;
-                        logViewer.start();
-                        logViewer.bus.emit('run', {
-                            node: arg.node,
-                            jobId: model.getItem('runState.jobId')
-                        });
-                    },
-                    onClose: function (arg) {
-                        if (widgets.logViewer) {
-                            widgets.logViewer.bus.emit('stop');
-                        }
-                        delete widgets.logViewer;
-                        arg.node.innerHTML = 'done';
-                    }
-                },
-                {
-                    name: 'job-report',
-                    label: 'Job Report',
-                    initialValue: false
-                },
-                {
-                    name: 'job-result',
-                    label: 'Job Result',
-                    initialValue: false
-                }
-            ];
+            widgets = {};
 
         // Sugar
 
@@ -105,17 +66,39 @@ define([
                 title: 'Job Result',
                 name: 'job-result',
                 hidden: false,
-                type: 'primary', 
-                classes: 'kb-panel-light',               
+                type: 'primary',
+                classes: 'kb-panel-light',
                 body: div({style: {fontFamily: 'monospace', whiteSpace: 'pre'}, dataElement: 'content'})
             });
         }
+        
+        function renderJobResultIcon() {
+            var result = model.getItem('runState.success.result');
+            if (result) {
+                return ui.buildIcon({
+                    name: 'thumbs-up',
+                    color: 'green'
+                });
+            }
 
-        function renderJobError() {
+            var error = model.getItem('runState.error');
+            if (error) {
+                var x = ui.buildIcon({
+                    name: 'thumbs-down',
+                    color: 'red'
+                });
+                return x;
+            }
+        }
+
+        function renderJobErrorx() {
             return ui.buildPanel({
                 title: 'Job Error',
                 name: 'run-error',
                 hidden: false,
+                icon: {
+                    name: 'exclamation-triangle'
+                },
                 type: 'danger',
                 classes: 'kb-panel-light',
                 body: [
@@ -143,22 +126,32 @@ define([
             });
         }
 
-        function renderExecStatus() {
+        /*
+         * The execution status, or summary, area ctonains basic stats on a 
+         * running job, indication the current state, the time running in the
+         * current and previous stats, and whether or not there is a final
+         * result.
+         * 
+         * This rendered content serves as a placeholder for the run status
+         * as it is updated. See showExecStatus() for that.
+         * 
+         */
+        function renderExecStats() {
             var labelStyle = {
                 textAlign: 'right',
                 border: '1px transparent solid',
                 padding: '4px'
             },
-                dataStyle = {
-                    border: '1px silver solid',
-                    padding: '4px',
-                    display: 'inline-block',
-                    minWidth: '20px',
-                    backgroundColor: 'gray',
-                    color: '#FFF'
-                };
+            dataStyle = {
+                border: '1px silver solid',
+                padding: '4px',
+                display: 'inline-block',
+                minWidth: '20px',
+                backgroundColor: 'gray',
+                color: '#FFF'
+            };
             return ui.buildPanel({
-                title: 'Execution Status',
+                // title: 'Execution Status',
                 name: 'execStatus',
                 hidden: false,
                 type: 'primary',
@@ -166,17 +159,17 @@ define([
                 body: div({style: {paddingTop: '6px'}}, [
                     div({class: 'row', dataElement: 'launch'}, [
                         div({class: 'col-md-2', style: labelStyle}, span({dataElement: 'label'}, 'Launch')),
-                        div({class: 'col-md-2', style: dataStyle}, span({dataElement: 'elapsed'}))
+                        div({class: 'col-md-2', style: dataStyle}, span({dataElement: 'elapsed', class: 'kb-elapsed-time'}))
                     ]),
                     div({class: 'row', dataElement: 'queue'}, [
                         div({class: 'col-md-2', style: labelStyle}, span({dataElement: 'label'}, 'Queue')),
-                        div({class: 'col-md-2', style: dataStyle}, span({dataElement: 'elapsed'})),
+                        div({class: 'col-md-2', style: dataStyle}, span({dataElement: 'elapsed', class: 'kb-elapsed-time'})),
                         div({class: 'col-md-2', style: labelStyle}, 'Position'),
                         div({class: 'col-md-2', style: dataStyle}, span({dataElement: 'position'}))
                     ]),
                     div({class: 'row', dataElement: 'run'}, [
                         div({class: 'col-md-2', style: labelStyle}, span({dataElement: 'label'}, 'Run')),
-                        div({class: 'col-md-2', style: dataStyle}, span({dataElement: 'elapsed'}))
+                        div({class: 'col-md-2', style: dataStyle}, span({dataElement: 'elapsed', class: 'kb-elapsed-time'}))
                     ]),
                     div({class: 'row', dataElement: 'finish'}, [
                         div({class: 'col-md-2', style: labelStyle}, 'Finish'),
@@ -187,10 +180,107 @@ define([
                 ])
             });
         }
+        
+        function showExecStats() {
+            var state = model.getItem('runState');
 
+            if (!state) {
+                return;
+            }
+
+            // LAUNCH
+            if (state.elapsedLaunchTime) {
+                (function () {
+                    var label;
+                    if (state.temporalState === 'launching') {
+                        label = 'Launching';
+                        ui.addClass(['execStatus', 'launch', 'elapsed'], '-active');
+                    } else {
+                        label = 'Launched in';
+                        ui.removeClass(['execStatus', 'launch', 'elapsed'], '-active');
+                    }
+                    ui.setContent(['execStatus', 'launch', 'label'], label);
+                    ui.setContent(['execStatus', 'launch', 'elapsed'], format.elapsedTime(state.elapsedLaunchTime) || '');
+                }());
+            } else {
+                ui.setContent(['execStatus', 'launch', 'elapsed'], '-');
+            }
+
+            // QUEUE
+            if (state.elapsedQueueTime) {
+                (function () {
+                    var label;
+                    if (state.elapsedRunTime) {
+                        ui.removeClass(['execStatus', 'queue', 'elapsed'], '-active');
+                        label = 'Was Queued for';
+                    } else {
+                        ui.addClass(['execStatus', 'queue', 'elapsed'], '-active');
+                        label = 'In Queue';
+                    }
+                    if (state.jobState.position !== undefined) {
+                        ui.setContent(['execStatus', 'queue', 'position'], state.jobState.position);
+                    } else {
+                        ui.setContent(['execStatus', 'queue', 'position'], '-');
+                    }
+                    ui.setContent(['execStatus', 'queue', 'label'], label);
+                    ui.setContent(['execStatus', 'queue', 'elapsed'], format.elapsedTime(state.elapsedQueueTime) || '');
+                }());
+            } else {
+                ui.setContent(['execStatus', 'queue', 'position'], '-');
+                ui.setContent(['execStatus', 'queue', 'elapsed'], '-');
+            }
+
+            // RUN
+            if (state.elapsedRunTime) {
+                (function () {
+                    var label;
+                    if (state.completedTime) {
+                        ui.removeClass(['execStatus', 'run', 'elapsed'], '-active');
+                        label = 'Ran In';
+                    } else {
+                        ui.addClass(['execStatus', 'run', 'elapsed'], '-active');
+                        label = 'Running For';
+                    }
+                    ui.setContent(['execStatus', 'run', 'label'], label);
+                    ui.setContent(['execStatus', 'run', 'elapsed'], format.elapsedTime(state.elapsedRunTime) || '');
+                }());
+            } else {
+                ui.setContent(['execStatus', 'run', 'elapsed'], '-');
+            }
+
+            if (state.success) {
+                ui.setContent(['execStatus', 'finish', 'state'], 'success');
+                ui.setContent(['execStatus', 'finish', 'finishedAt'], format.niceElapsedTime(state.completedTime));
+                // ui.showElement('job-report');
+                // showJobReport();
+                // showJobResult();
+            } else if (state.error) {
+                if (state.completedTime) {
+                    ui.setContent(['execStatus', 'finish', 'finishedAt'], format.niceElapsedTime(state.completedTime));
+                }
+                ui.setContent(['execStatus', 'finish', 'state'], 'error');
+                ui.showElement(['run-error']);
+                ui.setContent(['run-error', 'location'], state.error.location);
+                ui.setContent(['run-error', 'type'], state.error.type);
+                ui.setContent(['run-error', 'message'], state.error.message);
+                ui.setContent(['run-error', 'detail'], state.error.detail);
+                // console.error('ERROR', state.error);
+            } else {
+                ui.setContent(['execStatus', 'finish', 'state'], '-');
+                ui.setContent(['execStatus', 'finish', 'finishedAt'], '-');
+            }
+        }
+
+        /*
+         * The job details view essentially showsthe current job state, with little or
+         * no reformatting or interpretation.
+         * 
+         * It is updated by showJobDetails(), which is itself driven by 
+         * job events.
+         */
         function renderJobDetails() {
             return ui.buildPanel({
-                title: 'Job Details',
+                // title: 'Job Details',
                 name: 'job-details',
                 hidden: false,
                 type: 'primary',
@@ -207,9 +297,20 @@ define([
                 ]
             });
         }
-
-        // VIEW UPDATERS
-
+                
+        function updateJobDetails() {
+            var jobState = model.getItem('jobState'),
+                details = {
+                    id: jobState.job_id,
+                    status: jobState.job_state,
+                    deleted: jobState.is_deleted ? 'yes' : 'no',
+                    submitted: format.niceTime(jobState.creation_time ? new Date(jobState.creation_time) : null),
+                    started: format.niceTime(jobState.exec_start_time ? new Date(jobState.exec_start_time) : null),
+                    completed: format.niceTime(jobState.finish_time ? new Date(jobState.finish_time) : null),
+                };
+            model.setItem('jobDetails', details);
+        }
+        
         function showJobDetails() {
             //if (showToggleElement('job-details')) {
             var details = model.getItem('jobDetails');
@@ -224,6 +325,24 @@ define([
             }
             // }
         }
+
+        function renderRawJobState() {
+            return ui.buildPanel({
+                name: 'raw-job-state',
+                hidden: false,
+                type: 'primary',
+                classes: ['kb-panel-light'],
+                body: div({dataElement: 'content', style: {whiteSpace: 'pre', fontFamily: 'monospace'}})
+            });
+        }
+
+        function showRawJobState() {
+            var content = JSON.stringify(model.getItem('jobState'), null, 3);
+            ui.setContent('raw-job-state.content', content);
+        }
+
+        // VIEW UPDATERS
+
 
         function showJobReport() {
             var report = model.getItem('jobReport'),
@@ -253,48 +372,232 @@ define([
             ui.getElement(['job-report', 'warnings']).innerHTML = warnings;
         }
 
-        function showJobResult() {
+        function showJobSuccess(args) {
             var result = model.getItem('runState.success.result');
             if (!result) {
                 return;
             }
+            
+            args.node.innerHTML = ui.buildPanel({
+                title: 'Success',
+                type: 'success',
+                classes: ['kb-panel-light'],
+                body: div({dataElement: 'content'})
+            });
 
-            // Just spit out json ...
-            var content = JSON.stringify(result, null, 2);
-            ui.setContent('job-result.content', content);
+            return ui.jsonBlockWidget.make().start({
+                node: args.node.querySelector('[data-element="content"]'),
+                obj: result
+            });
+        }
+        
+        function renderJobError(args) {
+            var error = model.getItem('runState.error');
+
+            if (!error) {
+                return;
+            }
+
+            // TODO: show error style in the tab and tab panel
+            
+            var content = ui.buildPanel({
+                title: 'Error',
+                type: 'danger',
+                classes: ['kb-panel-light'],
+                body: table({class: 'table table-striped', style: {tableLayout: 'fixed'}}, [
+                    tr([th({style: {width: '15%'}}, 'Error in'), td({style: {width: '85%'}}, error.location)]),
+                    tr([th('Type'), td(error.type)]),
+                    tr([th('Message'), td(error.message)]),
+                    tr([th('Detail'), td([div({style: {overflowX: 'scroll', whiteSpace: 'pre'}}, error.detail)])])
+                ])
+            });
+
+            args.node.innerHTML = content;
         }
 
-        function showJobError() {
-            var error = model.getItem('runState.error.message'),
-                node = ui.getElement(['run-error', 'message']);
+        /*
+         * When the job is finished, we show the final result through this 
+         * mini widget.
+         */
 
-            if (error) {
-                node.innerHTML = error;
+        function showJobResult(args) {
+            var success = model.getItem('runState.success.result'),
+                error = model.getItem('runState.error');
+            if (success) {
+                showJobSuccess(args);
+            } else if (error) {
+                renderJobError(args);
+            } else {
+                args.node.innerHTML = ui.buildPanel({
+                    title: 'Unfinished',
+                    classes: ['kb-panel-light'],
+                    body: 'Job not finished yet'
+                });
             }
         }
 
-        function render() {
-            var events = Events.make({node: container}),
-                content = div({}, [
-                   div({class: 'btn-toolbar'}, [
-                        div({class: 'btn-group'}, [
-                            ui.makeButton('Show Details', 'toggle-job-details', {events: events}),
-                            ui.makeButton('Show Report', 'toggle-job-report', {events: events}),
-                            ui.makeButton('Show Result', 'toggle-job-result', {events: events}),
-                            ui.makeButton('Show Log', 'toggle-job-log', {events: events})
-                        ])
-                    ]),
-                    // replaced with
-                    renderExecStatus(),
-                    renderJobError(),
-                    renderJobReport(),
-                    renderJobResult(),
-                    renderJobDetails(),
-                    renderJobLog()
-                ]);
 
-            container.innerHTML = content;
+
+        // Job Logs
+
+        function showJobLog(args) {
+            var logViewer = LogViewer.make();
+            widgets.logViewer = logViewer;
+            logViewer.start()
+                .then(function () {
+                    logViewer.bus.emit('run', {
+                        node: args.node,
+                        jobId: model.getItem('runState.jobId')
+                    });
+                });
+        }
+
+        function hideJobLog(args) {
+            if (widgets.logViewer) {
+                widgets.logViewer.bus.emit('stop');
+                delete widgets.logViewer;
+            }
+            args.node.innerHTML = '';
+        }
+
+        /*
+         * These functions will be called when a run or job event comes in (or the app is started with initial job state).
+         * Add and remove listeners as tabs or other widgets become visible.
+         * A map to make adding and removing easier...
+         */
+        var execStateListeners = {};
+
+        function render() {
+            var tabs = ui.buildTabs({
+                id: html.genId(),
+                fade: true,
+                style: {
+                    padding: '10px 0 0 0'
+                },
+                tabs: [
+                    {
+                        name: 'stats',
+                        label: 'Stats',
+                        content: renderExecStats(),
+                        icon: ui.buildIcon({name: 'clock-o'}),
+                        events: [
+                            {
+                                type: 'shown',
+                                handler: function (e) {
+                                    execStateListeners.stats = showExecStats;
+                                    showExecState();
+                                }
+                            },
+                            {
+                                type: 'hidden',
+                                handler: function (e) {
+                                    delete execStateListeners.stats;
+                                }
+                            }
+                        ]
+                    },
+                    ui.ifAdvanced(function () {
+                        return {
+                            label: 'Details',
+                            content: renderJobDetails(),
+                            events: [
+                                {
+                                    type: 'shown',
+                                    handler: function (e) {
+                                        execStateListeners.detail = showJobDetails;
+                                        showExecState();
+                                    }
+                                },
+                                {
+                                    type: 'hidden',
+                                    handler: function (e) {
+                                        delete execStateListeners.detail;
+                                    }
+                                }
+                            ]
+                        };
+                    }),
+                    ui.ifAdvanced(function () {
+                        return {
+                            label: 'Raw',
+                            content: renderRawJobState(),
+                            events: [
+                                {
+                                    type: 'shown',
+                                    handler: function (e) {
+                                        execStateListeners.detail = showRawJobState;
+                                        showExecState();
+                                    }
+                                },
+                                {
+                                    type: 'hidden',
+                                    handler: function (e) {
+                                        delete execStateListeners.detail;
+                                    }
+                                }
+                            ]
+                        };
+                    }),
+                    {
+                        label: 'Log',
+                        content: renderJobLog(),
+                        icon: ui.buildIcon({name: 'list'}),
+                        events: [
+                            {
+                                type: 'shown',
+                                handler: function (e) {
+                                    var panelId = e.target.getAttribute('data-panel-id'),
+                                        panel = document.getElementById(panelId);
+                                    showJobLog({node: panel});
+                                    // execStateListeners.log = showJobLog;
+                                    // showExecState();
+                                }
+                            },
+                            {
+                                type: 'hidden',
+                                handler: function (e) {
+                                    var panelId = e.target.getAttribute('data-panel-id'),
+                                        panel = document.getElementById(panelId);
+                                    hideJobLog({node: panel});
+                                    // delete execStateListeners.log;
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        label: 'Result',
+                        content: renderJobResult(),
+                        icon: renderJobResultIcon(),
+                        icon: ui.buildIcon({name: 'check'}),
+                        events: [
+                            {
+                                type: 'shown',
+                                handler: function (e) {
+                                    var panelId = e.target.getAttribute('data-panel-id'),
+                                        panel = document.getElementById(panelId);
+                                    showJobResult({node: panel});
+                                }
+                            },
+                            {
+                                type: 'hidden',
+                                handler: function (e) {
+                                    var panelId = e.target.getAttribute('data-panel-id'),
+                                        panel = document.getElementById(panelId);
+                                    showJobResult({node: panel});
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }),
+                events = Events.make({node: container});
+
+            container.innerHTML = tabs.content;
+            tabs.events.forEach(function (event) {
+                events.addEvent(event);
+            });
             events.attachEvents();
+            $('#' + tabs.map['stats']).tab('show');
         }
 
         // DATA FETCH
@@ -380,167 +683,21 @@ define([
                     console.error('Error getting report', err);
                 });
         }
-        function updateJobDetails() {
-            var jobState = model.getItem('jobState'),
-                details = {
-                    id: jobState.job_id,
-                    status: jobState.job_state,
-                    deleted: jobState.is_deleted ? 'yes' : 'no',
-                    submitted: format.niceTime(new Date(jobState.creation_time)),
-                    started: format.niceTime(new Date(jobState.exec_start_time)),
-                    completed: format.niceTime(new Date(jobState.finish_time)),
-                };
-            model.setItem('jobDetails', details);
-        }
 
-        function renderRunState() {
-            var state = model.getItem('runState');
-
-            if (!state) {
-                return;
-            }
-
-            ui.setContent(['runStatus', 'last-updated-at'], utils.formatTime(state.lastUpdatedTime));
-            ui.setContent(['runStatus', 'state'], state.canonicalState);
-            ui.setContent(['runStatus', 'temporalState'], state.temporalState);
-            ui.setContent(['runStatus', 'executionState'], state.executionState);
-
-            ui.setContent(['runStatus', 'run-id'], state.runId);
-            ui.setContent(['runStatus', 'job-id'], state.jobId);
-
-            if (state.success) {
-                showJobResult();
-                // ui.hideElement('job-report');
-            }
-
-            if (state.error) {
-                ui.showElement(['run-error']);
-                ui.setContent(['run-error', 'location'], state.error.location);
-                ui.setContent(['run-error', 'type'], state.error.type);
-                ui.setContent(['run-error', 'message'], state.error.message);
-                ui.setContent(['run-error', 'detail'], state.error.detail);
-            } else {
-                ui.hideElement(['run-error']);
-            }
-
-            // Now be more stateful here...
-            if (state.jobId) {
-                ui.enableButton('toggle-job-log');
-            } else {
-                ui.disableButton('toggle-job-log');
-            }
-        }
-
-         function renderExecState() {
-            var state = model.getItem('runState');
-
-            if (!state) {
-                return;
-            }
-
-            // Prepare
-//            ui.setContent(['execStatus', 'last-updated-at'], utils.formatTime(state.lastUpdatedTime));
-//            ui.setContent(['execStatus', 'state'], state.canonicalState);
-//            ui.setContent(['execStatus', 'temporalState'], state.temporalState);
-//            ui.setContent(['execStatus', 'executionState'], state.executionState);
-//
-//            ui.setContent(['execStatus', 'run-id'], state.runId);
-//            ui.setContent(['execStatus', 'job-id'], state.jobId);
+        /*
+         * Updates the job details model view. This model view is essentially
+         * a parallel of the raw job state, but reformatted for display.
+         */
 
 
-
-            // LAUNCH
-             if (state.elapsedLaunchTime) {
-                (function () {
-                    // ui.showElement(['execStatus', 'launch-time']);
-                    var label;
-                    if (state.temporalState === 'launching') {
-                        label = 'Launching';
-                    } else {
-                        label = 'Launching';
-                    }
-                    ui.setContent(['execStatus', 'launch', 'label'], label);
-                    ui.setContent(['execStatus', 'launch', 'elapsed'], utils.formatElapsedTime(state.elapsedLaunchTime) || '');
-                }());
-            } else {
-                // ui.hideElement(['execStatus', 'launch-time']);
-                ui.setContent(['execStatus', 'launch', 'elapsed'], '-');
-            }
-
-            // QUEUE
-             if (state.elapsedQueueTime) {
-                (function () {
-                    //ui.showElement(['execStatus', 'queue']);
-                    var label;
-                    if (state.elapsedRunTime) {
-                        label = 'Was Queued for';
-                    } else {
-                        label = 'In Queue';
-                    }
-                    if (state.jobState.position !== undefined) {
-                        ui.setContent(['execStatus', 'queue', 'position'], state.jobState.position);
-                    } else {
-                        ui.setContent(['execStatus', 'queue', 'position'], '-');
-                    }
-                    ui.setContent(['execStatus', 'queue', 'label'], label);
-                    ui.setContent(['execStatus', 'queue', 'elapsed'], utils.formatElapsedTime(state.elapsedQueueTime) || '');
-                }());
-            } else {
-                //ui.hideElement(['execStatus', 'queue']);
-                ui.setContent(['execStatus', 'queue', 'position'], '-');
-                ui.setContent(['execStatus', 'queue', 'elapsed'], '-');
-            }
-
-            // RUN
-             if (state.elapsedRunTime) {
-                (function () {
-                    //ui.showElement(['runStatus', 'run-time']);
-                    var label;
-                    if (state.completedTime) {
-                        label = 'Ran In';
-                    } else {
-                        label = 'Running For';
-                    }
-                    ui.setContent(['execStatus', 'run', 'label'], label);
-                    ui.setContent(['execStatus', 'run', 'elapsed'], utils.formatElapsedTime(state.elapsedRunTime) || '');
-                }());
-            } else {
-                //ui.hideElement(['execStatus', 'run-time']);
-                ui.setContent(['execStatus', 'run', 'elapsed'], '-');
-            }
-
-            // console.error('WHAT?', state);
-            if (state.success) {
-                // ui.showElement(['execStatus', 'finish', 'success']);
-                ui.setContent(['execStatus', 'finish', 'state'], 'success');
-                ui.setContent(['execStatus', 'finish', 'finishedAt'], format.niceElapsedTime(state.completedTime));
-                // ui.showElement('job-report');
-                // showJobReport();
-                showJobResult();
-            } else if (state.error) {
-                // ui.setContent(['execStatus', 'finish', 'finishedAt'], format.niceElapsedTime(state.completedTime));
-                if (state.completedTime) {
-                    ui.setContent(['execStatus', 'finish', 'finishedAt'], format.niceElapsedTime(state.completedTime));
-                }
-                ui.setContent(['execStatus', 'finish', 'state'], 'error');
-                ui.showElement(['run-error']);
-                ui.setContent(['run-error', 'location'], state.error.location);
-                ui.setContent(['run-error', 'type'], state.error.type);
-                ui.setContent(['run-error', 'message'], state.error.message);
-                ui.setContent(['run-error', 'detail'], state.error.detail);
-                // console.error('ERROR', state.error);
-            } else {
-                //ui.hideElement(['run-error']);
-                ui.setContent(['execStatus', 'finish', 'state'], '-');
-            }
-
-            // Now be more stateful here...
-            //if (state.jobId) {
-            //    ui.enableButton('toggle-job-log');
-            //} else {
-            //    ui.disableButton('toggle-job-log');
-            // }
-        }
+       
+        // RUN STATE UPDATERS
+        
+        /*
+         * The "run state" is the combined state of all possible execution
+         * states, including initial button click, back end launch management,
+         * and actual job state.
+         */
 
         function updateRunStateFromLaunchState(launchState) {
             var temporalState, executionState, canonicalState,
@@ -663,7 +820,7 @@ define([
              position - position of the job in execution waiting queue;
              creation_time, exec_start_time and finish_time - time moments of submission, execution
              start and finish events in milliseconds since Unix Epoch.
-
+             
              typedef structure {
              string job_id;
              boolean finished;
@@ -685,6 +842,11 @@ define([
              */
             if (jobState.creation_time) {
                 submitTime = jobState.creation_time;
+                
+                // Need to adjust the launch time.
+                var launchState = model.getItem('launchState');
+                runState.elapsedLaunchTime = submitTime - launchState.startTime;
+                
                 if (jobState.exec_start_time) {
                     startTime = jobState.exec_start_time;
                     elapsedQueueTime = startTime - submitTime;
@@ -915,93 +1077,22 @@ define([
         }
 
         /*
-         *
-         * Job errors
+         * This is responsible for ensuring that the display (tabs) reflects
+         * the best view of the current execution state. 
+         * While launching and running, the stats would be the normal display,
+         * although in advanced mode the user may have selected details or raw.
+         * When finished the Result tab will be selected
          */
-//        function getJobError(jobState) {
-//            /*
-//             * If the job has not completed, there will be not outputs, so we
-//             * can just bail.
-//             */
-//            if (!jobState.step_errors || Object.keys(jobState.step_errors).length === 0) {
-//                return;
-//            }
-//
-//            var stepJobIds = jobState.step_job_ids,
-//                stepKey = Object.keys(stepJobIds)[0],
-//                stepError = jobState.step_errors[stepKey];
-//
-//            return stepError;
-//        }
-//
-//        function getJobError2(jobState) {
-//            /*
-//             * If the job has not completed, there will be not outputs, so we
-//             * can just bail.
-//             */
-//            if (!jobState.step_errors || Object.keys(jobState.step_errors).length === 0) {
-//                return;
-//            }
-//
-//            var stepKey = jobState.running_step_id,
-//                stepError = jobState.step_errors[stepKey];
-//
-//            return stepError;
-//        }
-
-//        function getJobReportRef(jobState) {
-//            /*
-//             * If the job has not completed, there will be not outputs, so we
-//             * can just bail.
-//             */
-//            if (!jobState.step_outputs || Object.keys(jobState.step_outputs).length === 0) {
-//                return;
-//            }
-//
-//            var stepJobIds = jobState.step_job_ids,
-//                stepKey = Object.keys(stepJobIds)[0],
-//                stepOutput = JSON.parse(jobState.step_outputs[stepKey]),
-//                reportRef = stepOutput[0].report_ref;
-//
-//            return reportRef;
-//        }
-
-//        function getJobReportRef(jobState) {
-//            /*
-//             * If the job has not completed, there will be not outputs, so we
-//             * can just bail.
-//             */
-//            if (!jobState.step_outputs || Object.keys(jobState.step_outputs).length === 0) {
-//                return;
-//            }
-//
-//            var stepJobIds = jobState.step_job_ids,
-//                stepKey = Object.keys(stepJobIds)[0],
-//                stepOutput = JSON.parse(jobState.step_outputs[stepKey]);
-//
-//            if (typeof stepOutput[0] === 'object') {
-//                return stepOutput[0].report_ref;
-//            }
-//        }
-//
-//        function getJobOutputs(jobState) {
-//            /*
-//             * If the job has not completed, there will be not outputs, so we
-//             * can just bail.
-//             */
-//            if (!jobState.step_outputs || Object.keys(jobState.step_outputs).length === 0) {
-//                return;
-//            }
-//
-//            var stepJobIds = jobState.step_job_ids,
-//                stepKey = Object.keys(stepJobIds)[0],
-//                stepOutput = JSON.parse(jobState.step_outputs[stepKey]);
-//
-//
-//            if (typeof stepOutput[0] === 'object' && stepOutput[0].report_ref === undefined) {
-//                return stepOutput[0];
-//            }
-//        }
+        function showExecState() {
+            Object.keys(execStateListeners).forEach(function (listenerKey) {
+                var listener = execStateListeners[listenerKey];
+                try {
+                    listener();
+                } catch (ex) {
+                    console.error('ERROR running exec state listener', ex);
+                }
+            });
+        }
 
         function processNewLaunchState(launchEvent) {
             // we don't have to handle duplicates.
@@ -1022,6 +1113,8 @@ define([
             }
             // These will or may be updated with new events.
             launchState.event = launchEvent.event;
+            // The job id will only be sent after the job is actually 
+            // started.
             if (!launchEvent.jobId) {
                 launchState.jobId = launchEvent.job_id;
             }
@@ -1036,7 +1129,7 @@ define([
 
             updateRunStateFromLaunchState(launchState);
             // renderRunState();
-            renderExecState();
+            showExecState();
         }
 
         function processNewJobState(jobState) {
@@ -1052,9 +1145,9 @@ define([
                 model.setItem('jobState', jobState);
                 updateRunStateFromJobState();
                 updateJobDetails();
-                showJobDetails();
-                renderRunState();
-                renderExecState();
+                // renderRunState();
+
+                showExecState();
             }
             // If any.
             // showJobError();
@@ -1064,41 +1157,41 @@ define([
          * Name is the selector and model property name
          */
 
-        function showToggleElement(name) {
-            var toggle = model.getItem(['user-settings', 'toggle-state', name]),
-                label = toggle.showing ? 'Hide ' + toggle.label : 'Show ' + toggle.label;
-            if (toggle.showing) {
-                ui.showElement(name);
-                if (togglesDb[name].onOpen) {
-                    try {
-                        togglesDb[name].onOpen({
-                            node: ui.getElement([name, 'mount'])
-                        });
-                    } catch (ex) {
-                        console.error('Error running onOpen for ' + name, ex);
-                    }
-                }
-            } else {
-                ui.hideElement(name);
-                if (togglesDb[name].onClose) {
-                    try {
-                        togglesDb[name].onClose({
-                            node: ui.getElement([name, 'mount'])
-                        });
-                    } catch (ex) {
-                        console.error('Error running onClose for ' + name, ex);
-                    }
-                }
-            }
-            ui.setButtonLabel('toggle-' + toggle.name, label);
-            return toggle.showing;
-        }
-
-        function toggleElement(name) {
-            var toggle = model.getItem(['user-settings', 'toggle-state', name]);
-            model.setItem(['user-settings', 'toggle-state', name, 'showing'], !toggle.showing);
-            return showToggleElement(name);
-        }
+//        function showToggleElement(name) {
+//            var toggle = model.getItem(['user-settings', 'toggle-state', name]),
+//                label = toggle.showing ? 'Hide ' + toggle.label : 'Show ' + toggle.label;
+//            if (toggle.showing) {
+//                ui.showElement(name);
+//                if (togglesDb[name].onOpen) {
+//                    try {
+//                        togglesDb[name].onOpen({
+//                            node: ui.getElement([name, 'mount'])
+//                        });
+//                    } catch (ex) {
+//                        console.error('Error running onOpen for ' + name, ex);
+//                    }
+//                }
+//            } else {
+//                ui.hideElement(name);
+//                if (togglesDb[name].onClose) {
+//                    try {
+//                        togglesDb[name].onClose({
+//                            node: ui.getElement([name, 'mount'])
+//                        });
+//                    } catch (ex) {
+//                        console.error('Error running onClose for ' + name, ex);
+//                    }
+//                }
+//            }
+//            ui.setButtonLabel('toggle-' + toggle.name, label);
+//            return toggle.showing;
+//        }
+//
+//        function toggleElement(name) {
+//            var toggle = model.getItem(['user-settings', 'toggle-state', name]);
+//            model.setItem(['user-settings', 'toggle-state', name, 'showing'], !toggle.showing);
+//            return showToggleElement(name);
+//        }
 
         // LIFECYCLE API
 
@@ -1107,22 +1200,6 @@ define([
 
             // Reset the state in case we are being re-run.
             model.deleteItem('runState');
-
-            togglesDb = {};
-            toggles.forEach(function (toggle) {
-                togglesDb[toggle.name] = toggle;
-                toggle.showing = toggle.initialValue;
-                model.setItem(['user-settings.toggle-state', toggle.name].join('.'), toggle);
-                // mapping for toggle event.
-
-                // universal handler for all toggle- events.
-                bus.on('toggle-' + toggle.name, function () {
-                    toggleElement(toggle.name);
-                });
-
-                // show toggled area initial state.
-                showToggleElement(toggle.name);
-            });
 
             // INTERNAL EVENTS
 
@@ -1133,8 +1210,6 @@ define([
                         showJobReport();
                     });
             });
-
-
 
             // CELL EVENTS
             /*
@@ -1179,12 +1254,12 @@ define([
                 if (runState && runState.executionState === 'processing') {
                     updateRunStateFromJobState();
                 }
-                renderRunState();
-                renderExecState();
+                // renderRunState();
+                showExecState();
             });
             listeners.push(ev);
         }
-        
+
         function teardown() {
             listeners.forEach(function (listener) {
                 runtime.bus().removeListener(listener);
@@ -1208,15 +1283,15 @@ define([
                 if (message.jobState) {
                     processNewJobState(message.jobState);
                 }
-                renderRunState();
-                renderExecState();
+                // renderRunState();
+                showExecState();
             });
             bus.on('stop', function (message) {
                 teardown();
             });
             bus.on('reset', function (message) {
                 // console.log('I should reset right about now.');
-                
+
             });
         }
 

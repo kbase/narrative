@@ -16,7 +16,7 @@ define([
         return stringValue.replace(delimiter, '\\"').replace(/\n/, '\\n');
     }
 
-    function pythonifyValue(value) {
+    function pythonifyValue(value, autoIndent) {
         switch (typeof value) {
             case 'number':
                 if (value === null) {
@@ -26,6 +26,7 @@ define([
             case 'string':
                 return '"' + escapeString(value) + '"';
             case 'object':
+                var indent = '    ';
                 if (value instanceof Array) {
                     return '[' + value.map(function (value) {
                         return pythonifyValue(value);
@@ -34,11 +35,15 @@ define([
                 if (value === null) {
                     return 'None';
                 }
-                return '{' +
+                return '{\n' +
                     Object.keys(value).map(function (key) {
-                    return pythonifyValue(key) + ': ' + pythonifyValue(value[key]);
-                }).join(', ') +
-                    '}';
+                        var prefix = indent;
+                        if (autoIndent) {
+                            prefix += indent;
+                        }
+                       return  prefix + pythonifyValue(key) + ': ' + pythonifyValue(value[key]);
+                    }).join(',\n') +
+                    '\n' + (autoIndent ? indent : '') + '}';
             default:
                 console.error('Unsupported parameter type ' + (typeof value), value);
                 throw new Error('Unsupported parameter type ' + (typeof value));
@@ -67,9 +72,9 @@ define([
     }
 
     function buildAppRunner(cellId, runId, app, params) {
-        var paramArgs = objectToNamedArgs(params),
-            positionalArgs = [
-                pythonifyValue(app.id)
+        var positionalArgs = [
+                pythonifyValue(app.id),
+                pythonifyValue(params, true)
             ],
             namedArgs = objectToNamedArgs({
                 tag: app.tag,
@@ -77,7 +82,7 @@ define([
                 cell_id: cellId,
                 run_id: runId
             }),
-            args = positionalArgs.concat(namedArgs).concat(paramArgs),
+            args = positionalArgs.concat(namedArgs),
             pythonCode = [
                 'from biokbase.narrative.jobs.appmanager import AppManager',
                 'AppManager().run_app(' + buildNiceArgsList(args) + ')'
@@ -87,9 +92,9 @@ define([
     }
 
     function buildViewRunner(cellId, runId, app, params) {
-        var paramArgs = objectToNamedArgs(params),
-            positionalArgs = [
-                pythonifyValue(app.id)
+        var positionalArgs = [
+                pythonifyValue(app.id),
+                pythonifyValue(params, true)
             ],
             namedArgs = objectToNamedArgs({
                 tag: app.tag,
@@ -97,7 +102,7 @@ define([
                 cell_id: cellId,
                 run_id: runId
             }),
-            args = positionalArgs.concat(namedArgs).concat(paramArgs),
+            args = positionalArgs.concat(namedArgs),
             pythonCode = [
                 'from biokbase.narrative.jobs.appmanager import AppManager',
                 'AppManager().run_local_app(' + buildNiceArgsList(args) + ')'
@@ -107,12 +112,14 @@ define([
     }
 
     function buildOutputRunner(jqueryWidgetName, widgetTag, params) {
-        var paramArgs = objectToNamedArgs(params),
-            positionalArgs = [
+        var positionalArgs = [
                 pythonifyValue(jqueryWidgetName),
-                pythonifyValue(widgetTag)
+                pythonifyValue(params, true)
             ],
-            args = positionalArgs.concat(paramArgs),
+            namedArgs = objectToNamedArgs({
+                tag: widgetTag
+            }),
+            args = positionalArgs.concat(namedArgs),
             pythonCode = [
                 'from biokbase.narrative.widgetmanager import WidgetManager',
                 'WidgetManager().show_output_widget(' + buildNiceArgsList(args) + ')'

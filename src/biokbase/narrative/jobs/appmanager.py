@@ -158,7 +158,7 @@ class AppManager(object):
             # raise
             print("Error while trying to start your app (run_local_app)!\n-------------------------------------\n" + str(e))
 
-    def _run_local_app_internal(self, params, app_id, tag, version, cell_id, run_id, **kwargs):
+    def _run_local_app_internal(self, app_id, params, tag, version, cell_id, run_id, **kwargs):
         self._send_comm_message('run_status', {
             'event': 'validating_app',
             'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
@@ -221,7 +221,7 @@ class AppManager(object):
 
         # now just map onto outputs.
         (output_widget, widget_params) = map_outputs_from_state([], params, spec)
-        return WidgetManager().show_output_widget(output_widget, tag=tag, **widget_params)
+        return WidgetManager().show_output_widget(output_widget, widget_params, tag=tag)
 
     def run_widget_app(self, app_id, tag="release", version=None, cell_id=None, run_id=None):
         """

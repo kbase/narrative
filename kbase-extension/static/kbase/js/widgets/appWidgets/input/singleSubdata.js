@@ -11,6 +11,7 @@ define([
     'common/runtime',
     'common/ui',
     'common/props',
+    'base/js/namespace',
     'bootstrap',
     'css!font-awesome'
 ], function (
@@ -23,7 +24,8 @@ define([
     Events,
     Runtime,
     UI,
-    Props
+    Props,
+    Jupyter
     ) {
     'use strict';
 
@@ -164,20 +166,25 @@ define([
         }
 
         function doRemoveSelectedItem(indexOfitemToRemove) {
-            var selectedItems = model.getItem('selectedItems', []);
-//                newSelectedItems = selectedItems.filter(function (selectedItem) {
-//                    return (selectedItem.id !== itemToRemove);
-//                });
+            var selectedItems = model.getItem('selectedItems', []),
+                prevAllowSelection = spec.spec.allow_multiple || selectedItems.length === 0;
+            selectedItems.splice(indexOfitemToRemove, 1);
 
-            delete selectedItems[indexOfitemToRemove];
+            var newAllowSelection = spec.spec.allow_multiple || selectedItems.length === 0;
+            if (newAllowSelection && !prevAllowSelection) {
+                // update text areas to have md-col-7 (from md-col-10)
+                $(ui.getElement('input-container')).find('.row > .col-md-10').switchClass('col-md-10', 'col-md-7');
+                $(ui.getElement('input-container')).find('.col-md-3.hidden').removeClass('hidden');
 
+                // update button areas to remove hidden class
+            }
             model.setItem('selectedItems', selectedItems);
             didChange();
         }
-        
+
         function doRemoveSelectedAvailableItem(idToRemove) {
             var selectedItems = model.getItem('selectedItems', []);
-            
+
             model.setItem('selectedItems', selectedItems.filter(function (id) {
                 if (idToRemove === id) {
                     return false;
@@ -188,8 +195,12 @@ define([
         }
 
         function renderAvailableItems(events) {
+            var selected = model.getItem('selectedItems', []);
+            if (!(selected instanceof Array)) {
+                selected = [ selected ];
+            }
+            var allowSelection = (spec.spec.allow_multiple || selected.length === 0);
             var items = model.getItem('filteredAvailableItems', []),
-                selected = model.getItem('selectedItems', []),
                 from = model.getItem('showFrom'),
                 to = model.getItem('showTo'),
                 itemsToShow = items.slice(from, to),
@@ -215,7 +226,7 @@ define([
                             }
                         }, String(from + index + 1)),
                         div({
-                            class: 'col-md-7',
+                            class: allowSelection ? 'col-md-7' : 'col-md-10',
                             style: {
                                 xdisplay: 'inline-block',
                                 xwidth: '70%',
@@ -223,9 +234,9 @@ define([
                                 overflowY: 'auto'
                             }
                         }, item.label),
-                        div({ class: 'col-md-3',
+                        div({ class: 'col-md-3' + (allowSelection ? '' : ' hidden'),
                             style: {
-                                xdisplay: 'inline-block',                               
+                                xdisplay: 'inline-block',
                                 xwidth: '10%',
                                 //minWidth: '5em',
                                 padding: '2px',
@@ -269,10 +280,18 @@ define([
         }
 
         function renderSelectedItems(events) {
-            var selectedItems = model.getItem('selectedItems', []),
-                valuesMap = model.getItem('availableValuesMap', {}),
+            var selectedItems = model.getItem('selectedItems', []);
+            if (!(selectedItems instanceof Array)) {
+                selectedItems = [selectedItems];
+            }
+            var valuesMap = model.getItem('availableValuesMap', {}),
                 content = selectedItems.map(function (itemId, index) {
                     var item = valuesMap[itemId];
+                    if (item === undefined || item === null) {
+                        item = {
+                            label: itemId
+                        };
+                    }
 
                     return div({class: 'row', style: {border: '1px #CCC solid', borderCollapse: 'collapse'}}, [
                         div({
@@ -404,9 +423,9 @@ define([
                     div({class: 'col-md-6', style: {paddingBottom: '6px'}}, [
                         div({
                             style: {
-                                fontWeight: 'bold', 
-                                textDecoration: 'underline',  
-                                fontStyle: 'italic', 
+                                fontWeight: 'bold',
+                                textDecoration: 'underline',
+                                fontStyle: 'italic',
                                 textAlign: 'center'
                             }
                         }, 'Available')
@@ -414,8 +433,8 @@ define([
                     div({class: 'col-md-6'}, [
                         div({
                             style: {
-                                fontWeight: 'bold', 
-                                textDecoration: 'underline', 
+                                fontWeight: 'bold',
+                                textDecoration: 'underline',
                                 fontStyle: 'italic',
                                 textAlign: 'center'
                             }
@@ -445,12 +464,31 @@ define([
                                     style: {width: '100%'},
                                     placeholder: 'search',
                                     value: model.getItem('filter') || '',
-                                    id: events.addEvent({
+                                    id: events.addEvents({ events : [{
                                         type: 'keyup',
                                         handler: function (e) {
                                             doSearchKeyUp(e);
                                         }
-                                    })
+                                    },
+                                    {
+                                        type: 'focus',
+                                        handler: function(e) {
+                                            Jupyter.narrative.disableKeyboardManager();
+                                        }
+                                    },
+                                    {
+                                        type: 'blur',
+                                        handler: function(e) {
+                                            console.log('SingleSubData Search BLUR');
+                                            // Jupyter.narrative.enableKeyboardManager();
+                                        }
+                                    },
+                                    {
+                                        type: 'click',
+                                        handler: function(e) {
+                                            Jupyter.narrative.disableKeyboardManager();
+                                        }
+                                    }]})
                                 })
                             ])
                         ]),
@@ -586,12 +624,12 @@ define([
          * Given an existing input control, and new model state, update the
          * control to suite the new data.
          * Cases:
-         * 
+         *
          * - change in source data - fetch new data, populate available values,
          *   reset selected values, remove existing options, add new options.
-         *   
+         *
          * - change in selected items - remove all selections, add new selections
-         * 
+         *
          */
         function updateInputControl(changedProperty) {
             switch (changedProperty) {
@@ -745,17 +783,39 @@ define([
                             return;
                         }
                         var subdata = Props.getDataItem(result.data, options.subdata_selection.path_to_subdata);
-                        
+
                         if (!subdata) {
                             return;
                         }
+
+                // if(subdata instanceof Array) {
+                //     for(var k=0; k<subdata.length; k++) {
+                //         var dname = datainfo[1];
+                //         if(includeWsId) { dname = datainfo[6] + '/' + datainfo[1]; }
+                //         var id = subdata[k]; // default id is just the value
+                //         // if the selection_id is set, and the object is an object of somekind, then use that value
+                //         if(selection_id && typeof id === 'object') {
+                //             id = subdata[k][selection_id];
+                //         }
+                //         var autofill = {
+                //             id: id,
+                //             desc: hb_template(subdata[k]),
+                //             dref: datainfo[6] + '/' + datainfo[0] + '/' + datainfo[4],
+                //             dname: dname
+                //         };
+                //         self.autofillData.push(autofill);
+                //     }
 
                         if (subdata instanceof Array) {
                             // For arrays we pluck off the "selectionId" property from
                             // each item.
                             subdata.forEach(function (datum) {
+                                var id = datum;
+                                if (selectionId && typeof id === 'object') {
+                                    id = datum[selectionId];
+                                }
                                 values.push({
-                                    id: datum[selectionId],
+                                    id: id,
                                     desc: descriptionTemplate(datum), // TODO
                                     objectRef: [result.info[6], result.info[0], result.info[4]].join('/'),
                                     objectName: result.info[1]
@@ -822,7 +882,7 @@ define([
             })
                 .then(function (data) {
                     // The data represents the total available subdata, with all
-                    // necessary fields for display. We build from that three 
+                    // necessary fields for display. We build from that three
                     // additional structures
                     // - a map of id to object
                     // - a set of available ids
@@ -864,6 +924,7 @@ define([
          */
         function render() {
             return Promise.try(function () {
+                // check to see if we have to render inputControl.
                 var events = Events.make(),
                     inputControl = makeInputControl(events, bus),
                     content = div({
@@ -879,12 +940,12 @@ define([
 
                 events.attachEvents(container);
             })
-                .then(function () {
-                    return autoValidate();
-                })
-                .catch(function (err) {
-                    console.error('ERROR in render', err);
-                });
+            .then(function () {
+                return autoValidate();
+            })
+            .catch(function (err) {
+                console.error('ERROR in render', err);
+            });
         }
 
         /*
@@ -945,10 +1006,10 @@ define([
             //bus.on('parameter-changed', function (message) {
             //    if (message.parameter === subdataOptions.subdata_selection.parameter_id) {
 
-            /* 
+            /*
              * Called when for an update to any param. This is necessary for
              * any parameter which has a dependency upon any other.
-             * 
+             *
              */
             // bus.on('parameter')
 
@@ -1038,20 +1099,20 @@ define([
                         theLayout = layout(events);
 
                     container.innerHTML = theLayout.content;
-//                    
+//
 //                    bus.request({
 //                        parameter: subdataOptions.subdata_selection.parameter_id
 //                    }, {
 //                        type: 'get-parameter'
 //                    })
-//                        .then(function (message) {                            
+//                        .then(function (message) {
 //                            model.setItem('referenceObjectName', message.value);
 //                            render();
 //                        })
 //                        .catch(function (err) {
 //                            console.error('ERROR getting parameter ' + subdataOptions.subdata_selection.parameter_id);
 //                        });
-//                    
+//
 
                     render();
 
@@ -1081,14 +1142,18 @@ define([
                             })
                     ])
                         .spread(function (paramValue, referencedParamValue) {
-                            // hmm, the default value of a subdata is null, but that does 
-                            // not play nice with the model props defaulting mechanism which 
+                            // hmm, the default value of a subdata is null, but that does
+                            // not play nice with the model props defaulting mechanism which
                             // works with absent or undefined (null being considered an actual value, which
                             // it is of course!)
                             if (paramValue.value === null) {
                                 model.setItem('selectedItems', []);
                             } else {
-                                model.setItem('selectedItems', paramValue.value);
+                                var selectedItems = paramValue.value;
+                                if (!(selectedItems instanceof Array)) {
+                                    selectedItems = [ selectedItems ];
+                                }
+                                model.setItem('selectedItems', selectedItems);
                             }
                             updateInputControl('value');
 

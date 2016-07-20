@@ -69,7 +69,8 @@ class JobManager(object):
 
         for info in nar_jobs:
             job_id = info[0]
-            job_meta = info[9]
+            user_info = info[1]
+            job_meta = info[10]
             job_info = clients.get('job_service').get_job_params(job_id)[0]
             try:
                 self._running_jobs[job_id] = {

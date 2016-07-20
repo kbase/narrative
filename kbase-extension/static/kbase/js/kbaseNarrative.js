@@ -222,7 +222,7 @@ define(
     function renderSettingsDialog(settings) {
         var t = html.tag,
             div = t('div'), input = t('input'), label = t('label'), p = t('p');
-            
+
         return  div([
             p({}, [
                 'These settings apply to and are saved with this Narrative. Changes ',
@@ -238,11 +238,11 @@ define(
                     div({class: 'col-md-8 checkbox'}, [
                         label([
                             input({
-                                type: 'checkbox', 
-                                name: 'advanced', 
-                                value: 'advanced', 
+                                type: 'checkbox',
+                                name: 'advanced',
+                                value: 'advanced',
                                 checked: settings.advanced
-                            }), 
+                            }),
                             'Use Advanced features'
                         ])
                     ]),
@@ -252,11 +252,11 @@ define(
                     div({class: 'col-md-8 checkbox'}, [
                         label([
                             input({
-                                type: 'checkbox', 
-                                name: 'developer', 
+                                type: 'checkbox',
+                                name: 'developer',
                                 value: 'developer',
                                 checked: settings.developer
-                            }), 
+                            }),
                             'Use Developer features'
                         ])
                     ]),
@@ -265,11 +265,11 @@ define(
             ])
         ]);
     }
-    
+
     /*
      * Given an inner node, which is probably a button, inspect the contents
      * of the submitted form.
-     * Note - this is a cheap implementation just to get something up 
+     * Note - this is a cheap implementation just to get something up
      * to play with.
      */
     // TODO: add matches to the mustard.js test
@@ -284,22 +284,22 @@ define(
     }
     function doCheckSettings(innerNode) {
         var dialogNode = findParent(innerNode, '.modal-dialog');
-        
+
         if (!dialogNode) {
             console.error('COULD NOT FIND PAREnT NOde');
             throw new Error('Could not find the parent node!');
         }
-        
+
         var settings = {};
         var advanced = dialogNode.querySelector('[name="advanced"]').checked;
         settings.advanced = advanced;
-        
+
         var developer = dialogNode.querySelector('[name="developer"]').checked;
         settings.developer = developer;
-        
+
         return settings;
     }
-    
+
     function doSaveSettings(settings) {
         var existingSettings = Jupyter.notebook.metadata.kbase.userSettings;
         Object.keys(settings).forEach(function (key) {
@@ -312,7 +312,7 @@ define(
     function showSettingsDialog() {
         var ui = UI.make({node: document.body}),
             existingSettings = Jupyter.notebook.metadata.kbase.userSettings;
-        
+
         if (!existingSettings) {
             existingSettings = {};
             Jupyter.notebook.metadata.kbase.userSettings = {};

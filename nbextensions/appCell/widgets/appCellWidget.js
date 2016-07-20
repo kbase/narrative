@@ -2132,7 +2132,7 @@ define([
                 console.log('param spec', paramSpec);
                 if (paramSpec.spec.field_type === 'textsubdata') {
                     console.log('GOT ITTT', value);
-                    if (value) {
+                    if (value && value instanceof Array) {
                         value = value.join(',');
                     }
                 }

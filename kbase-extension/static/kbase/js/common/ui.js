@@ -639,7 +639,6 @@ define([
                 panelClasses.push('fade');
             }
             
-            
             if (typeof arg.initialTab === 'number') {
                 selectInitialTab = true;
             }
@@ -647,6 +646,7 @@ define([
             if (tabsId) {
                 tabsAttribs.id = tabsId;
             }
+            
             tabs.forEach(function (tab) {
                 tab.panelId = html.genId();
                 tab.tabId = html.genId();
@@ -695,7 +695,7 @@ define([
                             id: tab.tabId,
                             dataPanelId: tab.panelId,
                             dataToggle: 'tab'
-                        }, tab.label));
+                        }, [tab.icon, tab.label].join(' ')));
                     })),
                 div({class: 'tab-content'},
                     tabs.map(function (tab, index) {

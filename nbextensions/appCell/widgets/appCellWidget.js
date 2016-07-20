@@ -1357,12 +1357,14 @@ define([
                         return;
                     }
 
-                    var jobState = model.getItem('exec.jobState');
-                    if (jobState) {
-                        cancelJob(jobState.job_id);
+                    // No longer delete job state. This will be done if/when 
+                    // the user deletes the ouput.
+                    //var jobState = model.getItem('exec.jobState');                    
+                    //if (jobState) {
+                    //    cancelJob(jobState.job_id);
                         // the job will be deleted form the notebook when the job cancellation
                         // event is received.
-                    }
+                    //}
 
                     // Remove all of the execution state when we reset the app.
                     model.deleteItem('exec');
@@ -2374,8 +2376,12 @@ define([
             // with the parameters returned.
             return syncAppSpec(params.appId, params.appTag)
                 .then(function () {
+                    var appRef = [model.getItem('app').id, model.getItem('app').tag].filter(toBoolean).join('/'),
+                        url = '/#appcatalog/app/' + appRef;
                     utils.setCellMeta(cell, 'kbase.attributes.title', env.appSpec.info.name);
                     utils.setCellMeta(cell, 'kbase.attributes.subtitle', env.appSpec.info.subtitle);
+                    utils.setCellMeta(cell, 'kbase.attributes.info.url', url);
+                    utils.setCellMeta(cell, 'kbase.attributes.info.label', 'app ref');
                     return Promise.all([
                         loadInputWidget(),
                         loadInputViewWidget(),

@@ -177,7 +177,7 @@ define([
                         label = 'Launching';
                         ui.addClass(['execStatus', 'launch', 'elapsed'], '-active');
                     } else {
-                        label = 'Launched';
+                        label = 'Launched in';
                         ui.removeClass(['execStatus', 'launch', 'elapsed'], '-active');
                     }
                     ui.setContent(['execStatus', 'launch', 'label'], label);
@@ -546,7 +546,6 @@ define([
                                 handler: function (e) {
                                     var panelId = e.target.getAttribute('data-panel-id'),
                                         panel = document.getElementById(panelId);
-                                    console.log('PANEL', panel);
                                     showJobResult({node: panel});
                                 }
                             },
@@ -569,7 +568,6 @@ define([
                 events.addEvent(event);
             });
             events.attachEvents();
-            // console.log('TAB', tabs.map['summary']);
             $('#' + tabs.map['stats']).tab('show');
         }
 
@@ -854,6 +852,11 @@ define([
              */
             if (jobState.creation_time) {
                 submitTime = jobState.creation_time;
+                
+                // Need to adjust the launch time.
+                var launchState = model.getItem('launchState');
+                runState.elapsedLaunchTime = submitTime - launchState.startTime;
+                
                 if (jobState.exec_start_time) {
                     startTime = jobState.exec_start_time;
                     elapsedQueueTime = startTime - submitTime;
@@ -1093,7 +1096,6 @@ define([
         function showExecState() {
             Object.keys(execStateListeners).forEach(function (listenerKey) {
                 var listener = execStateListeners[listenerKey];
-                // console.log('running ' + listenerKey, listener);
                 try {
                     listener();
                 } catch (ex) {
@@ -1165,41 +1167,41 @@ define([
          * Name is the selector and model property name
          */
 
-        function showToggleElement(name) {
-            var toggle = model.getItem(['user-settings', 'toggle-state', name]),
-                label = toggle.showing ? 'Hide ' + toggle.label : 'Show ' + toggle.label;
-            if (toggle.showing) {
-                ui.showElement(name);
-                if (togglesDb[name].onOpen) {
-                    try {
-                        togglesDb[name].onOpen({
-                            node: ui.getElement([name, 'mount'])
-                        });
-                    } catch (ex) {
-                        console.error('Error running onOpen for ' + name, ex);
-                    }
-                }
-            } else {
-                ui.hideElement(name);
-                if (togglesDb[name].onClose) {
-                    try {
-                        togglesDb[name].onClose({
-                            node: ui.getElement([name, 'mount'])
-                        });
-                    } catch (ex) {
-                        console.error('Error running onClose for ' + name, ex);
-                    }
-                }
-            }
-            ui.setButtonLabel('toggle-' + toggle.name, label);
-            return toggle.showing;
-        }
-
-        function toggleElement(name) {
-            var toggle = model.getItem(['user-settings', 'toggle-state', name]);
-            model.setItem(['user-settings', 'toggle-state', name, 'showing'], !toggle.showing);
-            return showToggleElement(name);
-        }
+//        function showToggleElement(name) {
+//            var toggle = model.getItem(['user-settings', 'toggle-state', name]),
+//                label = toggle.showing ? 'Hide ' + toggle.label : 'Show ' + toggle.label;
+//            if (toggle.showing) {
+//                ui.showElement(name);
+//                if (togglesDb[name].onOpen) {
+//                    try {
+//                        togglesDb[name].onOpen({
+//                            node: ui.getElement([name, 'mount'])
+//                        });
+//                    } catch (ex) {
+//                        console.error('Error running onOpen for ' + name, ex);
+//                    }
+//                }
+//            } else {
+//                ui.hideElement(name);
+//                if (togglesDb[name].onClose) {
+//                    try {
+//                        togglesDb[name].onClose({
+//                            node: ui.getElement([name, 'mount'])
+//                        });
+//                    } catch (ex) {
+//                        console.error('Error running onClose for ' + name, ex);
+//                    }
+//                }
+//            }
+//            ui.setButtonLabel('toggle-' + toggle.name, label);
+//            return toggle.showing;
+//        }
+//
+//        function toggleElement(name) {
+//            var toggle = model.getItem(['user-settings', 'toggle-state', name]);
+//            model.setItem(['user-settings', 'toggle-state', name, 'showing'], !toggle.showing);
+//            return showToggleElement(name);
+//        }
 
         // LIFECYCLE API
 

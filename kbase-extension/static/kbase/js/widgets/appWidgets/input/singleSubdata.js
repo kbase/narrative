@@ -166,13 +166,18 @@ define([
         }
 
         function doRemoveSelectedItem(indexOfitemToRemove) {
-            var selectedItems = model.getItem('selectedItems', []);
-//                newSelectedItems = selectedItems.filter(function (selectedItem) {
-//                    return (selectedItem.id !== itemToRemove);
-//                });
+            var selectedItems = model.getItem('selectedItems', []),
+                prevAllowSelection = spec.spec.allow_multiple || selectedItems.length === 0;
+            selectedItems.splice(indexOfitemToRemove, 1);
 
-            delete selectedItems[indexOfitemToRemove];
+            var newAllowSelection = spec.spec.allow_multiple || selectedItems.length === 0;
+            if (newAllowSelection && !prevAllowSelection) {
+                // update text areas to have md-col-7 (from md-col-10)
+                $(ui.getElement('input-container')).find('.row > .col-md-10').switchClass('col-md-10', 'col-md-7');
+                $(ui.getElement('input-container')).find('.col-md-3.hidden').removeClass('hidden');
 
+                // update button areas to remove hidden class
+            }
             model.setItem('selectedItems', selectedItems);
             didChange();
         }
@@ -194,6 +199,7 @@ define([
             if (!(selected instanceof Array)) {
                 selected = [ selected ];
             }
+            var allowSelection = (spec.spec.allow_multiple || selected.length === 0);
             var items = model.getItem('filteredAvailableItems', []),
                 from = model.getItem('showFrom'),
                 to = model.getItem('showTo'),
@@ -220,7 +226,7 @@ define([
                             }
                         }, String(from + index + 1)),
                         div({
-                            class: 'col-md-7',
+                            class: allowSelection ? 'col-md-7' : 'col-md-10',
                             style: {
                                 xdisplay: 'inline-block',
                                 xwidth: '70%',
@@ -228,7 +234,7 @@ define([
                                 overflowY: 'auto'
                             }
                         }, item.label),
-                        div({ class: 'col-md-3',
+                        div({ class: 'col-md-3' + (allowSelection ? '' : ' hidden'),
                             style: {
                                 xdisplay: 'inline-block',
                                 xwidth: '10%',
@@ -281,6 +287,11 @@ define([
             var valuesMap = model.getItem('availableValuesMap', {}),
                 content = selectedItems.map(function (itemId, index) {
                     var item = valuesMap[itemId];
+                    if (item === undefined || item === null) {
+                        item = {
+                            label: itemId
+                        };
+                    }
 
                     return div({class: 'row', style: {border: '1px #CCC solid', borderCollapse: 'collapse'}}, [
                         div({
@@ -468,7 +479,8 @@ define([
                                     {
                                         type: 'blur',
                                         handler: function(e) {
-                                            Jupyter.narrative.enableKeyboardManager();
+                                            console.log('SingleSubData Search BLUR');
+                                            // Jupyter.narrative.enableKeyboardManager();
                                         }
                                     },
                                     {
@@ -912,6 +924,7 @@ define([
          */
         function render() {
             return Promise.try(function () {
+                // check to see if we have to render inputControl.
                 var events = Events.make(),
                     inputControl = makeInputControl(events, bus),
                     content = div({
@@ -1136,7 +1149,11 @@ define([
                             if (paramValue.value === null) {
                                 model.setItem('selectedItems', []);
                             } else {
-                                model.setItem('selectedItems', paramValue.value);
+                                var selectedItems = paramValue.value;
+                                if (!(selectedItems instanceof Array)) {
+                                    selectedItems = [ selectedItems ];
+                                }
+                                model.setItem('selectedItems', selectedItems);
                             }
                             updateInputControl('value');
 

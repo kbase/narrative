@@ -13,7 +13,8 @@ define([
     'common/props',
     'base/js/namespace',
     'bootstrap',
-    'css!font-awesome'
+    'css!font-awesome',
+    'kbase-generic-client-api'
 ], function (
     $,
     Promise,
@@ -751,17 +752,27 @@ define([
                 }
                 referenceObjectRef = workspaceId + '/' + referenceObjectName;
             }
-            var workspace = new Workspace(runtime.config('services.workspace.url'), {
-                token: runtime.authToken()
-            }),
-                options = spec.spec.textsubdata_options,
-                subObjectIdentity = {
+            var options = spec.spec.textsubdata_options;
+            var subObjectIdentity = {
                     ref: referenceObjectRef,
                     included: options.subdata_selection.subdata_included
                 };
-            return workspace.get_object_subset([
-                subObjectIdentity
-            ])
+            var ret;
+            if (options.subdata_selection.service_function) {
+                var swUrl = runtime.config('services.workspace.url').replace("ws", "service_wizard");
+                var genericClient = new GenericClient(swUrl, {
+                    token: runtime.authToken()
+                });
+                ret = genericClient.sync_call(options.subdata_selection.service_function, 
+                        [[subObjectIdentity]], null, null, 
+                        options.subdata_selection.service_version);
+            } else {
+                var workspace = new Workspace(runtime.config('services.workspace.url'), {
+                    token: runtime.authToken()
+                });
+                ret = workspace.get_object_subset([subObjectIdentity]);
+            }
+            return ret
                 .then(function (results) {
                     // alert('done!');
                     // We have only one ref, so should just be one result.
@@ -782,6 +793,11 @@ define([
                         if (!result) {
                             return;
                         }
+                        
+                        // Check if some generic wrapping is used which wasn't unwrapped by GenericClient
+                        if (result.constructor === Array)
+                            result = result[0];
+                        
                         var subdata = Props.getDataItem(result.data, options.subdata_selection.path_to_subdata);
 
                         if (!subdata) {

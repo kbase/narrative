@@ -3,6 +3,13 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v4.2.1 (more notes will follow).
 
+### Version 3.0.0-alpha-9
+__Changes__
+- Restore app and viewer cell icons to their rightful place
+- Minor string tweaks
+- Minor CSS tweaks
+- First pass at setup for optionally using Dynamic services for getting widget subdata
+
 ### Version 3.0.0-alpha-8
 __Changes__
 - Fix various problems with subdata input widget - selecting multiple when only one should be allowed, pathway issues into data object, etc.

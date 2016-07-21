@@ -339,12 +339,12 @@ define([
         // Hide the code input area.
         cell.input.find('.input_area').addClass('hidden');
         utils.setCellMeta(cell, 'kbase.widgetCell.user-settings.showCodeInputArea', false);
-        
+
         // Hide the prompt...
         cell.input.find('.input_prompt').hide();
         utils.horribleHackToHideElement(cell, '.output_prompt', 10);
     }
-    
+
     function addPrompt(cell) {
         var prompt = document.createElement('div');
         prompt.innerHTML = div({dataElement: 'prompt', class: 'prompt'});
@@ -385,7 +385,8 @@ define([
                 inputPrompt.innerHTML = div({
                     style: {textAlign: 'center'}
                 }, [
-                    AppUtils.makeAppIcon(utils.getCellMeta(cell, 'kbase.widgetCell.app.spec'))
+                    // AppUtils.makeAppIcon(utils.getCellMeta(cell, 'kbase.widgetCell.app.spec'))
+                    AppUtils.makeAppIcon(utils.getCellMeta(cell, 'kbase.appCell.app.spec'))
                 ]);
             }
         };
@@ -437,8 +438,8 @@ define([
             cell.input.after($(kbaseNode));
             cell.kbase.node = kbaseNode;
             cell.kbase.$node = $(kbaseNode);
-            
-            
+
+
             // Hide the prompt...
             hidePrompts(cell);
 

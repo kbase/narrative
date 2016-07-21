@@ -393,7 +393,7 @@ define([
                 inputPrompt.innerHTML = div({
                     style: {textAlign: 'center'}
                 }, [
-                    AppUtils.makeAppIcon(utils.getCellMeta(cell, 'kbase.widgetCell.app.spec'))
+                    AppUtils.makeAppIcon(utils.getCellMeta(cell, 'kbase.viewCell.app.spec'))
                 ]);
             }
         };

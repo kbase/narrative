@@ -17,7 +17,7 @@ define([
     'kbaseAuthenticatedWidget',
     'kbaseNarrativeDownloadPanel',
     'common/runtime',
-    
+
     'bootstrap',
     'jquery-nearest'
 ], function (
@@ -253,7 +253,7 @@ define([
                 .then(function () {
                     // Signal all data channel listeners that we have new data.
                     // TODO: only signal if there are actual changes
-                    // TODO: data fetch and sychronization should live as a ui 
+                    // TODO: data fetch and sychronization should live as a ui
                     // service, not in a widget.
                     var runtime = Runtime.make();
                     runtime.bus().send({
@@ -1140,6 +1140,7 @@ define([
                             self.trigger('hideGalleryPanelOverlay.Narrative');
                             self.trigger('toggleSidePanelOverlay.Narrative', self.options.parentControlPanel.$overlayPanel);
                         }));
+                    self.$addDataButton.hide();
                 }
                 self.$mainListDiv.append($noDataDiv);
             }

@@ -4,13 +4,13 @@
  * @public
  */
 
-define(['jquery',
+define(['jquery', 
         'narrativeConfig',
         'util/string',
-        'kbwidget',
-        'kbaseAuthenticatedWidget',
-        'knhx',
-        'widgetMaxWidthCorrection'],
+        'kbwidget', 
+        'kbaseAuthenticatedWidget', 
+        'knhx', 
+        'widgetMaxWidthCorrection'], 
 function($,
          Config,
          StringUtil) {
@@ -65,7 +65,7 @@ function($,
             this.loading(false);
             this.loadTree();
         },
-
+        
         loadTree: function() {
             var prom;
             var objId = this.buildObjectIdentity(this.options.workspaceID, this.options.treeID, this.options.treeObjVer, null);
@@ -75,7 +75,7 @@ function($,
                 prom = this.wsClient.get_objects([objId]);
 
             var self = this;
-
+            
             $.when(prom).done($.proxy(function(objArr) {
                 self.$elem.empty();
 
@@ -83,7 +83,7 @@ function($,
                 self.canvasId = "knhx-canvas-" + self.pref;
                 self.$canvas = $('<div id="'+canvasDivId+'">')
                                .append($('<canvas id="' + self.canvasId + '">'));
-
+                
                 if (self.options.height) {
                     self.$canvas.css({'max-height':self.options.height, 'overflow':'scroll'});
                 }
@@ -115,7 +115,7 @@ function($,
                 	if ((!tree.ws_refs) || (!tree.ws_refs[node.id])) {
                 		var node_name = tree.default_node_labels[node.id];
                 		if (node_name.indexOf('/') > 0) {  // Gene label
-                    		var url = "/#genes/" + self.options.workspaceID + "/" + node_name;
+                    		var url = "/functional-site/#/genes/" + self.options.workspaceID + "/" + node_name;
                             window.open(url, '_blank');
                 		}
                 		return;
@@ -123,7 +123,7 @@ function($,
                 	var ref = tree.ws_refs[node.id]['g'][0];
                 	var objInfo = refToInfoMap[ref];
                 	if (objInfo) {
-                		var url = "/#dataview/" + objInfo[7] + "/" + objInfo[1];
+                		var url = "/functional-site/#/dataview/" + objInfo[7] + "/" + objInfo[1];
                         window.open(url, '_blank');
                 	}
                 }, function(node) {
@@ -142,7 +142,7 @@ function($,
                 errString = error;
             else if (error.error && error.error.message)
                 errString = error.error.message;
-
+            
             var $errorDiv = $("<div>")
                             .addClass("alert alert-danger")
                             .append("<b>Error:</b>")
@@ -175,7 +175,7 @@ function($,
             		obj['objid'] = objectID;
             	else
             		obj['name'] = objectID;
-
+            	
             	if (objectVer)
             		obj['ver'] = objectVer;
             }

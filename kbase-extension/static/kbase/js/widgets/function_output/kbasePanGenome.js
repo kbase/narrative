@@ -7,12 +7,12 @@
 define(['jquery',
         'narrativeConfig',
         'util/string',
-        'kbwidget', 
-        'kbaseAuthenticatedWidget', 
-        'kbaseTabs', 
+        'kbwidget',
+        'kbaseAuthenticatedWidget',
+        'kbaseTabs',
         'kbasePrompt',
         'jquery-dataTables',
-        'jquery-dataTables-bootstrap'], 
+        'jquery-dataTables-bootstrap'],
 function($,
          Config,
          StringUtil) {
@@ -35,7 +35,7 @@ function($,
         genomeNames: {}, // {genome_ref -> genome_name}
         genomeRefs: {},  // {genome_ref -> workspace/genome_object_name}
         loaded: false,
-        	
+
         init: function(options) {
             this._super(options);
             this.pref = StringUtil.uuid();
@@ -53,7 +53,7 @@ function($,
         render: function() {
         	var self = this;
         	var ws = this.options.ws;
-        	var name = this.options.name;            
+        	var name = this.options.name;
 
         	var container = this.$elem;
 
@@ -98,7 +98,7 @@ function($,
         				'style="margin-left: auto; margin-right: auto;" id="'+self.pref+'overview-table"/>');
         		tabStat.append(tableOver);
         		tableOver.append('<tr><td>Pan-genome object ID</td><td>'+self.options.name+'</td></tr>');
-        		
+
         		var genomeStat = {};  // genome_ref -> [ortholog_count,{ortholog_id -> count_of_genes_from_genome},genes_covered_by_homolog_fams, orphan_genes(1-member_orthologs)]
         		var orthologStat = {};  // ortholog_id -> {genome_ref -> gene_count(>0)}
         		var genesInHomFams = {};  // genome_ref/feature_id -> 0/1(depending_on_homology)
@@ -125,11 +125,11 @@ function($,
                 			if (orth_size > 1) {
                 				genomeStat[genomeRef][0]++;
                 			} else {
-                				genomeStat[genomeRef][3]++;                				
+                				genomeStat[genomeRef][3]++;
                 			}
                 		}
                 		genomeStat[genomeRef][1][orth_id]++;
-                		if (!orthologStat[orth_id][1][genomeRef]) 
+                		if (!orthologStat[orth_id][1][genomeRef])
                 			orthologStat[orth_id][1][genomeRef] = 0;
                 		orthologStat[orth_id][1][genomeRef]++;
                 		var geneKey = genomeRef + "/" + gene[0];
@@ -165,7 +165,7 @@ function($,
         				'are in singleton families</td></tr>');
         		tableOver.append('<tr><td>Total # of families</td><td><b>'+totalOrthologs+'</b> families, <b>'+
         				totalHomFamilies+'</b> homolog families, <b>'+(totalOrthologs-totalHomFamilies)+'</b> '+
-        				'singleton families</td></tr>');        		
+        				'singleton families</td></tr>');
         		for (var genomePos in genomeOrder) {
         			var genomeRef = genomeOrder[genomePos][0];
         			var genomeName = self.genomeNames[genomeRef];
@@ -185,7 +185,7 @@ function($,
             				genesInOrth+'</b> proteins are in <b>'+orthCount+'</b> homolog families, <b>'+
             				genesInSingle+'</b> proteins are in singleton families</td></tr>');
         		}
-        		
+
         		///////////////////////////////////// Shared orthologs ////////////////////////////////////////////
         		var tabShared = $("<div/>");
     			tabPane.kbaseTabs('addTab', {tab: 'Shared homolog families', content: tabShared, canDelete : false, show: false});
@@ -239,7 +239,7 @@ function($,
     				}
     				orth_data.push({func: orth['function'], id: id_text, len: orth.orthologs.length, genomes: genome_count});
     			}
-    			
+
         		var tableSettings = {
         				"sPaginationType": "full_numbers",
         				"iDisplayLength": 10,
@@ -405,18 +405,18 @@ function($,
     				}
     				self.exportFeatureSet(orth_id, target_obj_name, genes);
     			});
-    		}        	
+    		}
         	function events2() {
         		$('.show-genomes_'+pref2).unbind('click');
         		$('.show-genomes_'+pref2).click(function() {
         			var id = $(this).data('id');
-            		var url = "/functional-site/#/dataview/" + id;
+            		var url = "/#dataview/" + id;
                     window.open(url, '_blank');
         		})
         		$('.show-genes_'+pref2).unbind('click');
         		$('.show-genes_'+pref2).click(function() {
         			var id = $(this).data('id');
-            		var url = "/functional-site/#/genes/" + id;
+            		var url = "/#genes/" + id;
                     window.open(url, '_blank');
         		})
         	}
@@ -433,10 +433,10 @@ function($,
         			size++;
         		}
         	}
-        	var featureSet = {description: 'Feature set exported from pan-genome "' + 
+        	var featureSet = {description: 'Feature set exported from pan-genome "' +
         			this.options.name + '", otholog "' + orth_id + '"', elements: elements};
-        	this.kbws.save_objects({workspace: this.options.ws, objects: 
-        		[{type: "KBaseSearch.FeatureSet", name: target_obj_name, data: featureSet}]}, 
+        	this.kbws.save_objects({workspace: this.options.ws, objects:
+        		[{type: "KBaseSearch.FeatureSet", name: target_obj_name, data: featureSet}]},
         		function(data) {
         			self.trigger('updateData.Narrative');
         			self.showInfo("Feature set object containing " + size + " genes " +
@@ -447,7 +447,7 @@ function($,
         		}
         	);
         },
-        
+
         getData: function() {
         	return {title:"Pan-genome orthologs",id:this.options.name, workspace:this.options.ws};
         },
@@ -463,7 +463,7 @@ function($,
         	this.render();
         	return this;
         },
-        
+
         showInfo: function(message) {
         	$('<div/>').kbasePrompt({title : 'Information', body : message}).openPrompt();
         }

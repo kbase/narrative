@@ -452,7 +452,8 @@ define([
                     if (message.logs.lines.length === 0) {
                         // TODO: add an alert area and show a dismissable alert.
                         if (!looping) {
-                            alert('No log entries returned');
+                            // alert('No log entries returned');
+                            console.warn('No log entries returned', message);
                         }
                     } else {                    
                         model.setItem('lines', message.logs.lines);

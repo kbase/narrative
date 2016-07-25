@@ -50,7 +50,7 @@ define([
     var t = html.tag,
         div = t('div'), span = t('span'), a = t('a'),
         table = t('table'), tr = t('tr'), th = t('th'), td = t('td'),
-        pre = t('pre'), input = t('input'), img = t('img'), p = t('p'),
+        pre = t('pre'), input = t('input'), img = t('img'), p = t('p'), blockquote = t('blockquote'),
         appStates = [
             {
                 state: {
@@ -1319,7 +1319,7 @@ define([
 
                 // This is now fire and forget.
                 // TODO: close the loop on this.
-                runtime.bus().emit('request-job-removal', {
+                runtime.bus().emit('request-job-deletion', {
                     jobId: jobId
                 });
                 resolve();
@@ -1343,7 +1343,7 @@ define([
          * narrative metadata.
          */
         function cancelJob(jobId) {
-            runtime.bus().emit('request-job-removal', {
+            runtime.bus().emit('request-job-cancellation', {
                 jobId: jobId
             });
         }
@@ -1423,7 +1423,11 @@ define([
          */
         function doCancel() {
             var confirmationMessage = div([
-                p('Canelling the job will halt the job processing and remove it from the job queue.'),
+                p([
+                    'Cancelling the job will halt the job processing.',
+                    'Any output objects already created will remain in your narrative and can be removed from the Data panel.'
+                ]),
+                blockquote('Note that canceling the job will not delete the job, you will need to do that from the Jobs Panel.'),
                 p('Continue to Cancel the running job?')
             ]);
             ui.showConfirmDialog('Cancel Job?', confirmationMessage, 'Yes', 'No')
@@ -1564,7 +1568,6 @@ define([
                     type: 'job-status'
                 },
                 handle: function (message) {
-                    console.log('job-status', message);
                     var existingState = model.getItem('exec.jobState'),
                         newJobState = message.jobState,
                         outputWidgetInfo = message.outputWidgetInfo;
@@ -1968,7 +1971,7 @@ define([
                 // TODO: only turn this on when we need it!
                 cellBus.on('run-status', function (message) {
                     updateFromLaunchEvent(message);
-
+                    
                     model.setItem('exec.launchState', message);
 
                     // Save this to the exec state change log.
@@ -2141,9 +2144,7 @@ define([
                 var value = params[key],
                     paramSpec = env.parameterMap[key];
 
-                console.log('param spec', paramSpec);
                 if (paramSpec.spec.field_type === 'textsubdata') {
-                    console.log('GOT ITTT', value);
                     if (value && value instanceof Array) {
                         value = value.join(',');
                     }

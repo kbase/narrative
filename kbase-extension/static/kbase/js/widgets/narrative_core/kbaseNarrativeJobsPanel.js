@@ -198,10 +198,11 @@ define([
                 this.deleteJob(message.jobId);
             }.bind(this));
 
-            bus.on('request-job-removal', function (message) {
-                this.deleteJob(message.jobId);
+            bus.on('request-job-cancellation', function (message) {
+                // this.deleteJob(message.jobId);
+                alert('Job cancellation not yet support.');
             }.bind(this));
-
+            
             bus.on('request-job-status', function (message) {
                 this.sendCommMessage(this.JOB_STATUS, message.jobId);
             }.bind(this));
@@ -270,7 +271,7 @@ define([
                      * Ensure there is a locally cached copy of each job.
                      * 
                      */
-                    for (var jobId in content) {
+                    for (var jobId in incomingJobs) {
                         var jobStateMessage = incomingJobs[jobId];
                         // We could just copy the entire message into the job
                         // states cache, but referencing each individual property
@@ -312,7 +313,7 @@ define([
                      * Ensure there is a locally cached copy of each job.
                      * 
                      */
-                    for (var jobId in content) {
+                    for (var jobId in incomingJobs) {
                         var jobStateMessage = incomingJobs[jobId];
                         // We could just copy the entire message into the job
                         // states cache, but referencing each individual property

@@ -1343,14 +1343,12 @@ define([
          * narrative metadata.
          */
         function cancelJob(jobId) {
-            console.log('cancelling job', jobId);
             runtime.bus().emit('request-job-removal', {
                 jobId: jobId
             });
         }
         
         function resetToEditMode(source) {
-            console.log('Resetting to edit mode', source);
             // only do this if we are not editing.
             
              model.deleteItem('exec');

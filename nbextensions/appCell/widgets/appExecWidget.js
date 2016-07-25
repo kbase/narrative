@@ -881,70 +881,53 @@ define([
             /*
              * Determine the state of the job execution outcome.
              */
+            
             var executionState,
                 error, success,
-                // errorInfo1 = getJobError(jobState),
-                // errorInfo2 = getJobError2(jobState), errorMessage, errorDetail,
-                // errorInfo = errorInfo1 || errorInfo2,
-                // reportRef = getJobReportRef(jobState),
                 result = jobState.result,
                 errorInfo = jobState.error;
 
-            if (errorInfo) {
-                executionState = 'error';
-//                if (errorInfo.length > 50) {
-//                    errorDetail = errorInfo;
-//                    errorMessage = errorInfo.substring(0, 50) + '...';
-//                } else {
-//                    errorMessage = errorInfo;
-//                    errorDetail = '';
-//                }
-                var errorId = new Uuid(4).format();
 
-                var errorType, errorMessage, errorDetail;
-                if (errorInfo.error) {
-                    // Classic KBase rpc error message
-                    errorType = errorInfo.name;
-                    errorMessage = errorInfo.message;
-                    errorDetail = errorInfo.error;
-                } else if (errorInfo.name) {
-                    errorType = 'unknown';
-                    errorMessage = errorInfo.name + ' (code: ' + String(errorInfo.code) + ')';
-                    errorDetail = 'This error occurred during execution of the app job.';
-                } else {
-                    errorType = 'unknown';
-                    errorMessage = 'Unknown error (check console for ' + errorId + ')';
-                    errorDetail = 'There is no further information about this error';
+            if (jobState.finished === 1) {
+
+                switch (jobState.job_state) {
+                    case 'suspend':
+                    case 'error':
+                        executionState = 'error';
+                        var errorId = new Uuid(4).format();
+                        var errorType, errorMessage, errorDetail;
+                        if (errorInfo.error) {
+                            // Classic KBase rpc error message
+                            errorType = errorInfo.name;
+                            errorMessage = errorInfo.message;
+                            errorDetail = errorInfo.error;
+                        } else if (errorInfo.name) {
+                            errorType = 'unknown';
+                            errorMessage = errorInfo.name + ' (code: ' + String(errorInfo.code) + ')';
+                            errorDetail = 'This error occurred during execution of the app job.';
+                        } else {
+                            errorType = 'unknown';
+                            errorMessage = 'Unknown error (check console for ' + errorId + ')';
+                            errorDetail = 'There is no further information about this error';
+                        }
+
+                        error = {
+                            location: 'job execution',
+                            type: errorType,
+                            message: errorMessage,
+                            detail: errorDetail
+                        };
+                        break;
+                    case 'completed':
+                        executionState = 'success';
+                        success = {
+                            result: result
+                        };
+                        break;
+                    default:
+                        console.error('Invalid job state for finished job', jobState)
+                        throw new Error('Invalid job state for finished job: ' + jobState.job_state);
                 }
-
-                error = {
-                    location: 'job execution',
-                    type: errorType,
-                    message: errorMessage,
-                    detail: errorDetail
-                };
-//            } else if (reportRef) {
-//                executionState = 'success';
-//                success = {
-//                    reportRef: reportRef
-//                };
-//                // hmm, try this.
-//                bus.send('show-job-report', {
-//                    reportRef: reportRef
-//                });
-            } else if (result) {
-                executionState = 'success';
-                success = {
-                    result: result
-                };
-
-
-
-                // hmm, try this.
-                //bus.send('show-job-report', {
-                //     reportRef: reportRef
-                // });
-                //  console.warn('OUTPUTS', outputs);
             } else {
                 executionState = 'processing';
             }

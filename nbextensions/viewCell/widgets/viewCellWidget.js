@@ -981,7 +981,7 @@ define([
                     node: container,
                     bus: bus
                 });
-                
+
                  if (ui.isDeveloper()) {
                     settings.showDeveloper = {
                         label: 'Show developer features',
@@ -990,13 +990,13 @@ define([
                         element: 'developer-options'
                     };
                 }
-                
+
                 var layout = renderLayout();
                 container.innerHTML = layout.content;
                 layout.events.attachEvents(container);
-                
-                
-                
+
+
+
                 places = {
                     status: container.querySelector('[data-element="status"]'),
                     notifications: container.querySelector('[data-element="notifications"]'),
@@ -1466,7 +1466,7 @@ define([
                 makeIcon()
             ]);
         }
-        
+
         function evaluateAppState() {
             var validationResult = validateModel();
             if (validationResult.isValid) {
@@ -1479,8 +1479,8 @@ define([
                 renderUI();
             }
         }
-        
-        
+
+
         function run(params) {
             // First get the app specs, which is stashed in the model,
             // with the parameters returned.
@@ -1491,7 +1491,7 @@ define([
                     utils.setCellMeta(cell, 'kbase.attributes.title', env.appSpec.info.name);
                     utils.setCellMeta(cell, 'kbase.attributes.subtitle', env.appSpec.info.subtitle);
                     utils.setCellMeta(cell, 'kbase.attributes.info.url', url);
-                    utils.setCellMeta(cell, 'kbase.attributes.info.label', 'app ref');
+                    utils.setCellMeta(cell, 'kbase.attributes.info.label', 'more...');
                     return Promise.all([
                         loadInputWidget(),
                         loadInputViewWidget()

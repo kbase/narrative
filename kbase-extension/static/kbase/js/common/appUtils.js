@@ -7,10 +7,10 @@ define([
     'common/runtime'
 ], function (html, Props, Runtime) {
     'use strict';
-    
+
     var t = html.tag,
         span = t('span'), img = t('img');
-    
+
     function makeAppIcon(appSpec) {
         // icon is in the spec ...
         var runtime = Runtime.make(),
@@ -18,13 +18,13 @@ define([
             iconUrl = Props.getDataItem(appSpec, 'info.icon.url');
 
         if (iconUrl) {
-            return span({class: 'fa-stack fa-2x', style: {padding: '0 3px 3px 3px'}}, [
+            return span({class: 'fa-stack fa-2x', style: {padding: '2px 3px 3px 3px'}}, [
                 img({src: nmsBase + iconUrl, style: {maxWidth: '50px', maxHeight: '50px', margin: '0x'}})
             ]);
         }
 
         return span({style: ''}, [
-            span({class: 'fa-stack fa-2x', style: {textAlign: 'center', color: 'rgb(103,58,183)'}}, [
+            span({class: 'fa-stack fa-2x', style: {textAlign: 'center', color: 'rgb(103,58,183)', 'padding-top': '5px'}}, [
                 span({class: 'fa fa-square fa-stack-2x', style: {color: 'rgb(103,58,183)'}}),
                 span({class: 'fa fa-inverse fa-stack-1x fa-cube'})
             ])

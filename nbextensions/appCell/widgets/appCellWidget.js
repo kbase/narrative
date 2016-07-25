@@ -1376,9 +1376,9 @@ define([
                         return;
                     }
 
-                    // No longer delete job state. This will be done if/when 
+                    // No longer delete job state. This will be done if/when
                     // the user deletes the ouput.
-                    //var jobState = model.getItem('exec.jobState');                    
+                    //var jobState = model.getItem('exec.jobState');
                     //if (jobState) {
                     //    cancelJob(jobState.job_id);
                         // the job will be deleted form the notebook when the job cancellation
@@ -2415,7 +2415,7 @@ define([
                     utils.setCellMeta(cell, 'kbase.attributes.title', env.appSpec.info.name);
                     utils.setCellMeta(cell, 'kbase.attributes.subtitle', env.appSpec.info.subtitle);
                     utils.setCellMeta(cell, 'kbase.attributes.info.url', url);
-                    utils.setCellMeta(cell, 'kbase.attributes.info.label', 'app ref');
+                    utils.setCellMeta(cell, 'kbase.attributes.info.label', 'more...');
                     return Promise.all([
                         loadInputWidget(),
                         loadInputViewWidget(),

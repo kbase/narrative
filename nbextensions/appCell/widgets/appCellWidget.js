@@ -16,6 +16,7 @@ define([
     'kb_service/client/workspace',
     'common/pythonInterop',
     'common/utils',
+    'common/unodep',
     'common/ui',
     'common/fsm',
     'common/cellUtils',
@@ -38,6 +39,7 @@ define([
     Workspace,
     PythonInterop,
     utils,
+    utils2,
     UI,
     Fsm,
     cellUtils,
@@ -1341,12 +1343,16 @@ define([
          * narrative metadata.
          */
         function cancelJob(jobId) {
+            console.log('cancelling job', jobId);
             runtime.bus().emit('request-job-removal', {
                 jobId: jobId
             });
         }
         
-        function resetToEditMode() {
+        function resetToEditMode(source) {
+            console.log('Resetting to edit mode', source);
+            // only do this if we are not editing.
+            
              model.deleteItem('exec');
 
             // Also ensure that the exec widget is reset
@@ -1382,7 +1388,7 @@ define([
                     //}
 
                     // Remove all of the execution state when we reset the app.
-                   resetToEditMode();
+                   resetToEditMode('do rerun');
                 });
         }
 
@@ -1436,14 +1442,14 @@ define([
                     }
 
                     // Remove all of the execution state when we reset the app.
-                    model.deleteItem('exec');
+                    //model.deleteItem('exec');
 
-                    reloadExecutionWidget();
+                    //reloadExecutionWidget();
 
                     // TODO: evaluate the params again before we do this.
-                    fsm.newState({mode: 'editing', params: 'complete', code: 'built'});
+                    //fsm.newState({mode: 'editing', params: 'complete', code: 'built'});
 
-                    renderUI();
+                    //renderUI();
                 });
         }
 
@@ -1462,7 +1468,7 @@ define([
                         return {mode: 'processing', stage: 'launching'};
                     case 'launched_job':
                         // NEW: start listening for jobs.
-                        console.log('Starting to listen for job id', message);
+                        // console.log('Starting to listen for job id', message);
                         startListeningForJobMessages(message.job_id);
                         return {mode: 'processing', stage: 'launching'};
                     case 'error':
@@ -1487,11 +1493,11 @@ define([
                         case 'in-progress':
                             return {mode: 'processing', stage: 'running'};
                         case 'completed':
-                            // stopListeningForJobMessages();
+                            stopListeningForJobMessages();
                             return {mode: 'success'};
                         case 'suspend':
                         case 'error':
-                            // stopListeningForJobMessages();
+                            stopListeningForJobMessages();
                             if (currentState.state.stage) {
                                 return {mode: 'error', stage: currentState.state.stage};
                             }
@@ -1560,10 +1566,11 @@ define([
                     type: 'job-status'
                 },
                 handle: function (message) {
+                    console.log('job-status', message);
                     var existingState = model.getItem('exec.jobState'),
                         newJobState = message.jobState,
                         outputWidgetInfo = message.outputWidgetInfo;
-                    if (!existingState || existingState.job_state !== newJobState.job_state) {
+                    if (!existingState || !utils2.isEqual(existingState, newJobState) ) {
                         model.setItem('exec.jobState', newJobState);
                         if (outputWidgetInfo) {
                             model.setItem('exec.outputWidgetInfo', outputWidgetInfo);
@@ -1611,9 +1618,17 @@ define([
                 },
                 handle: function (message) {
                     //  reset the cell into edit mode
-                    resetToEditMode();
+                    var state = fsm.getCurrentState();
+                    if (state.state.mode === 'editing') {
+                        console.warn('in edit mode, so not resetting ui')
+                        return;
+                    }
+
+                    console.log('job deleted', message, fsm.getCurrentState());
+                    resetToEditMode('job-deleted');
                 }
             });
+            jobListeners.push(ev);
         }
 
         function stopListeningForJobMessages() {
@@ -1954,7 +1969,6 @@ define([
 
                 // TODO: only turn this on when we need it!
                 cellBus.on('run-status', function (message) {
-                    console.log('RUN-STATUS', message);
                     updateFromLaunchEvent(message);
 
                     model.setItem('exec.launchState', message);

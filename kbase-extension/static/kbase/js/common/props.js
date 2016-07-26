@@ -161,6 +161,12 @@ define([
             setDataItem(obj, path, value);
             run();
         }
+        
+        function reset() {
+            resetHistory();
+            obj = {};
+            run();
+        }
 
         function incrItem(path, increment) {
             if (typeof path === 'string') {
@@ -254,6 +260,7 @@ define([
             incrItem: incrItem,
             deleteItem: deleteItem,
             pushItem: pushItem,
+            reset: reset,
             getRawObject: function () {
                 return obj;
             },

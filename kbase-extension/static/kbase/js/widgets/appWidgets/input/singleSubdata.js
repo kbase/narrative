@@ -244,31 +244,52 @@ define([
                                     return span({
                                         class: 'kb-btn-icon',
                                         type: 'button',
+                                        dataToggle: 'tooltip',
+                                        title: 'Remove from selected',
                                         id: events.addEvent({
                                             type: 'click',
                                             handler: function () {
                                                 doRemoveSelectedAvailableItem(item.id);
                                             }
                                         })
-                                    }, span({class: 'fa fa-minus-circle', style: {color: 'red', fontSize: '200%'}}));
+                                    }, [
+                                        span({
+                                            class: 'fa fa-minus-circle',
+                                            style: {
+                                                color: 'red',
+                                                fontSize: '200%'
+                                            }
+                                        })
+                                    ]);
                                 }
                                 if (allowSelection) {
                                     return span({
                                         class: 'kb-btn-icon',
                                         type: 'button',
+                                        dataToggle: 'tooltip',
+                                        title: 'Add to selected',
                                         dataItemId: item.id,
                                         id: events.addEvent({
                                             type: 'click',
                                             handler: function () {
                                                 doAddItem(item.id);
                                             }
-                                        })}, span({class: 'fa fa-plus-circle', style: {color: 'green', fontSize: '200%'}}));
+                                        })}, [span({
+                                            class: 'fa fa-plus-circle',
+                                            style: {
+                                                color: 'green',
+                                                fontSize: '200%'
+                                            }
+                                        })
+                                    ]);
                                 }
                                 return span({
                                     class: 'kb-btn-icon',
                                     type: 'button',
+                                    dataToggle: 'tooltip',
+                                    title: 'Can\'t add - remove one first',
                                     dataItemId: item.id
-                                    }, span({class: 'fa fa-plus-circle', style: {color: 'silver', fontSize: '200%'}}));
+                                }, span({class: 'fa fa-ban', style: {color: 'silver', fontSize: '200%'}}));
                             }())
 
                         ])
@@ -279,6 +300,7 @@ define([
 
             ui.setContent('available-items', content);
             events.attachEvents();
+            ui.enableTooltips('available-items');
         }
 
         function renderSelectedItems() {
@@ -299,7 +321,7 @@ define([
                     }
 
                     return div({class: 'row', style: {border: '1px #CCC solid', borderCollapse: 'collapse', boxSizing: 'border-box'}}, [
-                         div({
+                        div({
                             class: 'col-md-2',
                             style: {
                                 xdisplay: 'inline-block',
@@ -337,6 +359,8 @@ define([
                             span({
                                 class: 'kb-btn-icon',
                                 type: 'button',
+                                dataToggle: 'tooltip',
+                                title: 'Remove from selected',
                                 id: events.addEvent({
                                     type: 'click',
                                     handler: function () {
@@ -350,6 +374,7 @@ define([
             }
             ui.setContent('selected-items', content);
             events.attachEvents();
+            ui.enableTooltips('selected-items');
         }
 
         function renderSearchBox() {
@@ -360,39 +385,39 @@ define([
             //if (items.length === 0) {
             //    content = '';
             //} else {
-                content = input({
-                    class: 'form-contol',
-                    style: {xwidth: '100%'},
-                    placeholder: 'search',
-                    value: model.getItem('filter') || '',
-                    id: events.addEvents({events: [
-                            {
-                                type: 'keyup',
-                                handler: function (e) {
-                                    doSearchKeyUp(e);
-                                }
-                            },
-                            {
-                                type: 'focus',
-                                handler: function () {
-                                    Jupyter.narrative.disableKeyboardManager();
-                                }
-                            },
-                            {
-                                type: 'blur',
-                                handler: function () {
-                                    console.log('SingleSubData Search BLUR');
-                                    // Jupyter.narrative.enableKeyboardManager();
-                                }
-                            },
-                            {
-                                type: 'click',
-                                handler: function () {
-                                    Jupyter.narrative.disableKeyboardManager();
-                                }
+            content = input({
+                class: 'form-contol',
+                style: {xwidth: '100%'},
+                placeholder: 'search',
+                value: model.getItem('filter') || '',
+                id: events.addEvents({events: [
+                        {
+                            type: 'keyup',
+                            handler: function (e) {
+                                doSearchKeyUp(e);
                             }
-                        ]})
-                });
+                        },
+                        {
+                            type: 'focus',
+                            handler: function () {
+                                Jupyter.narrative.disableKeyboardManager();
+                            }
+                        },
+                        {
+                            type: 'blur',
+                            handler: function () {
+                                console.log('SingleSubData Search BLUR');
+                                // Jupyter.narrative.enableKeyboardManager();
+                            }
+                        },
+                        {
+                            type: 'click',
+                            handler: function () {
+                                Jupyter.narrative.disableKeyboardManager();
+                            }
+                        }
+                    ]})
+            });
             //}
 
             ui.setContent('search-box', content);
@@ -405,17 +430,21 @@ define([
                 content;
 
             if (availableItems.length === 0) {
-                content = '';
+                content = span({style: {fontStyle: 'italic'}}, [
+                    ' - no available items'
+                ]);
             } else {
-                content = div([
-                    span({dataElement: 'filtered-items-count'}), ' of ',
-                    span({dataElement: 'available-items-count'})
+                content = span({style: {fontStyle: 'italic'}}, [
+                    ' - showing ',
+                    span([
+                        String(filteredItems.length),
+                        ' of ',
+                        String(availableItems.length)
+                    ])
                 ]);
             }
 
             ui.setContent('stats', content);
-            ui.setContent('available-items-count', String(availableItems.length));
-            ui.setContent('filtered-items-count', String(filteredItems.length));
         }
 
         function renderToolbar() {
@@ -585,72 +614,54 @@ define([
 //                        }, 'Selected')
 //                    ])
 //                ]),
-                div({class: 'row'}, [
-                    div({
-                        class: 'col-md-6'                        
-                    }, [
-                        'Search: ',
-                        span({dataElement: 'search-box'})
-                    ]),
-//                    div({
-//                        class: 'col-md-3',
-//                        style: {textAlign: 'center'},
-//                        dataElement: 'stats'
-//                    }),
-                    div({
-                        class: 'col-md-6',
-                        style: {textAlign: 'right'},
-                        dataElement: 'toolbar'
+                ui.buildCollapsiblePanel({
+                    title: span(['Available Items', span({dataElement: 'stats'})]),
+                    classes: ['kb-panel-light'],
+                    body: div({dataElement: 'available-items-area', style: {marginTop: '10px'}}, [
+                        div({class: 'row'}, [
+                            div({
+                                class: 'col-md-6'
+                            }, [
+                                span({dataElement: 'search-box'})
+                            ]),
+//                            div({
+//                                class: 'col-md-3'
+//                            }, [
+//                                span({
+//                                    dataElement: 'stats',
+//                                    style: {
+//                                        fontStyle: 'italic'
+//                                    }
+//                                })
+//                            ]),
+                            div({
+                                class: 'col-md-6',
+                                style: {textAlign: 'right'},
+                                dataElement: 'toolbar'
+                            })
+                        ]),
+                        div({class: 'row', style: {marginTop: '4px'}}, [
+                            div({class: 'col-md-12'},
+                                div({
+                                    style: {
+                                        border: '1px silver solid'
+                                    },
+                                    dataElement: 'available-items'
+                                }))
+                        ])
+                    ])
+                }),
+                ui.buildPanel({
+                    title: 'Selected Items',
+                    classes: ['kb-panel-light'],
+                    body: div({
+                        style: {
+                            border: '1px silver solid'
+                        },
+                        dataElement: 'selected-items'
                     })
-                ]),              
-                div({class: 'row', style: {marginTop: '20px'}}, [
-                    div({class: 'col-md-12', style: {
-                        textAlign: 'center'                            
-                    }}, [
-                        span({
-                            style: {
-                                fontWeight: 'bold',
-                                textDecoration: 'underline',
-                                fontStyle: 'italic'
-                            }
-                        }, 'Available'),
-                        ' ',
-                        span({
-                            dataElement: 'stats',
-                            style: {
-                                fontStyle: 'italic'
-                            }
-                        })
-                    ]),
-                    div({class: 'col-md-12'},
-                        div({
-                            style: {
-                                border: '1px silver solid'
-                            },
-                            dataElement: 'available-items'
-                        }))
-                ]),
-                div({class: 'row', style: {marginTop: '20px'}}, [
-                    div({class: 'col-md-12', style: {
-                        textAlign: 'center'
-                    }}, [
-                        span({
-                            style: {
-                                fontWeight: 'bold',
-                                textDecoration: 'underline',
-                                fontStyle: 'italic'
-                            }
-                        }, 'Selected')
-                    ]),
-                    div({class: 'col-md-12'},
-                        div({
-                            style: {
-                                border: '1px silver solid'
-                            },
-                            dataElement: 'selected-items'
-                        }))
-                ])               
-                
+                })
+
 //                div({class: 'row'}, [
 //                    div({class: 'col-md-6'},
 //                        div({
@@ -1050,13 +1061,13 @@ define([
                 model.setItem('availableValues', []);
                 model.setItem('referenceObjectName', null);
                 doFilterItems();
-                
+
                 renderSearchBox();
                 renderStats();
                 renderToolbar();
                 renderAvailableItems();
                 renderSelectedItems();
-                
+
                 // updateInputControl('availableValues');
                 // updateInputControl('value');
             });
@@ -1165,26 +1176,26 @@ define([
 
 
         }
-        
+
         // MODIFICATION EVENTS
-        
+
         /*
-        * More refinement of modifications. 
-        * 
-        * - initial run
-        * - reference data updated
-        *   - added "reset" method to props (model) to allow graceful zapping
-        *     of the model state.
-        * - item added to selected
-        * - item removed from selected
-        * - search term available
-        * - search term removed
-        * - filtered data updated
-        * 
-        */
-       
-       
-        
+         * More refinement of modifications. 
+         * 
+         * - initial run
+         * - reference data updated
+         *   - added "reset" method to props (model) to allow graceful zapping
+         *     of the model state.
+         * - item added to selected
+         * - item removed from selected
+         * - search term available
+         * - search term removed
+         * - filtered data updated
+         * 
+         */
+
+
+
 
         // LIFECYCLE API
 

@@ -226,7 +226,7 @@ define([
             listenerRegistry[id] = listener;
             return id;
         }
-
+        
         function removeListener(id) {
             var listenerToRemove = listenerRegistry[id],
                 channel, listeners, newListeners;
@@ -485,7 +485,7 @@ define([
             //     },
             //     handle: handler
             // });
-            listen({
+            return listen({
                 channel: channel,
                 key: JSON.stringify({type: type}),
                 handle: handler

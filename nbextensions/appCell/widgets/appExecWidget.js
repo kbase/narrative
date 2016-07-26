@@ -32,7 +32,8 @@ define([
             listeners = [],
             model,
             ui,
-            widgets = {};
+            widgets = {},
+            execStateListeners = {};
 
         // Sugar
 
@@ -40,9 +41,7 @@ define([
             listeners.push(cellBus.on(event, handler));
         }
 
-
         // RENDER
-
 
         // VIEW BUILDING
 
@@ -91,30 +90,9 @@ define([
             }
         }
 
-        function renderJobErrorx() {
-            return ui.buildPanel({
-                title: 'Job Error',
-                name: 'run-error',
-                hidden: false,
-                icon: {
-                    name: 'exclamation-triangle'
-                },
-                type: 'danger',
-                classes: 'kb-panel-light',
-                body: [
-                    table({class: 'table table-striped', style: {tableLayout: 'fixed'}}, [
-                        tr([th({style: {width: '15%'}}, 'Error in'), td({dataElement: 'location', style: {width: '85%'}})]),
-                        tr([th('Type'), td({dataElement: 'type'})]),
-                        tr([th('Message'), td({dataElement: 'message'})]),
-                        tr([th('Detail'), td([div({dataElement: 'detail', style: {overflowX: 'scroll', whiteSpace: 'pre'}})])])
-                    ])
-                ]
-            });
-        }
-
         function renderJobLog() {
             return ui.buildPanel({
-                title: 'Job Log',
+                // title: 'Job Log',
                 name: 'job-log',
                 hidden: false,
                 type: 'primary',
@@ -313,6 +291,7 @@ define([
         
         function showJobDetails() {
             //if (showToggleElement('job-details')) {
+            updateJobDetails();
             var details = model.getItem('jobDetails');
             if (details) {
                 Object.keys(details).forEach(function (key) {
@@ -465,139 +444,159 @@ define([
          * Add and remove listeners as tabs or other widgets become visible.
          * A map to make adding and removing easier...
          */
-        var execStateListeners = {};
+        
+        function renderSummaryWidget() {
+            return div({
+                style: {
+                    border: '1px silver solid',
+                    padding: '4px'
+                }
+            }, [
+                'summary widget here'
+            ]);
+        }
+        
 
         function render() {
-            var tabs = ui.buildTabs({
-                id: html.genId(),
-                fade: true,
-                style: {
-                    padding: '10px 0 0 0'
-                },
-                tabs: [
-                    {
-                        name: 'stats',
-                        label: 'Stats',
-                        content: renderExecStats(),
-                        icon: ui.buildIcon({name: 'clock-o'}),
-                        events: [
-                            {
-                                type: 'shown',
-                                handler: function (e) {
-                                    execStateListeners.stats = showExecStats;
-                                    showExecState();
-                                }
-                            },
-                            {
-                                type: 'hidden',
-                                handler: function (e) {
-                                    delete execStateListeners.stats;
-                                }
-                            }
-                        ]
+            var events = Events.make({node: container}),
+                tabs = ui.buildTabs({
+                    id: html.genId(),
+                    fade: true,
+                    style: {
+                        padding: '10px 0 0 0'
                     },
-                    ui.ifAdvanced(function () {
-                        return {
-                            label: 'Details',
-                            content: renderJobDetails(),
+                    tabs: [
+                        {
+                            name: 'stats',
+                            label: 'Stats',
+                            content: renderExecStats(),
+                            icon: ui.buildIcon({name: 'clock-o'}),
                             events: [
                                 {
                                     type: 'shown',
                                     handler: function (e) {
-                                        execStateListeners.detail = showJobDetails;
+                                        execStateListeners.stats = showExecStats;
                                         showExecState();
                                     }
                                 },
                                 {
                                     type: 'hidden',
                                     handler: function (e) {
-                                        delete execStateListeners.detail;
+                                        delete execStateListeners.stats;
                                     }
                                 }
                             ]
-                        };
-                    }),
-                    ui.ifAdvanced(function () {
-                        return {
-                            label: 'Raw',
-                            content: renderRawJobState(),
+                        },
+                        ui.ifAdvanced(function () {
+                            return {
+                                label: 'Details',
+                                content: renderJobDetails(),
+                                events: [
+                                    {
+                                        type: 'shown',
+                                        handler: function (e) {
+                                            execStateListeners.detail = showJobDetails;
+                                            showExecState();
+                                        }
+                                    },
+                                    {
+                                        type: 'hidden',
+                                        handler: function (e) {
+                                            delete execStateListeners.detail;
+                                        }
+                                    }
+                                ]
+                            };
+                        }),
+                        ui.ifAdvanced(function () {
+                            return {
+                                label: 'Raw',
+                                content: renderRawJobState(),
+                                events: [
+                                    {
+                                        type: 'shown',
+                                        handler: function (e) {
+                                            execStateListeners.detail = showRawJobState;
+                                            showExecState();
+                                        }
+                                    },
+                                    {
+                                        type: 'hidden',
+                                        handler: function (e) {
+                                            delete execStateListeners.detail;
+                                        }
+                                    }
+                                ]
+                            };
+                        }),
+                        {
+                            label: 'Log',
+                            content: renderJobLog(),
+                            icon: ui.buildIcon({name: 'list'}),
                             events: [
                                 {
                                     type: 'shown',
                                     handler: function (e) {
-                                        execStateListeners.detail = showRawJobState;
-                                        showExecState();
+                                        var panelId = e.target.getAttribute('data-panel-id'),
+                                            panel = document.getElementById(panelId);
+                                        showJobLog({node: panel});
+                                        // execStateListeners.log = showJobLog;
+                                        // showExecState();
                                     }
                                 },
                                 {
                                     type: 'hidden',
                                     handler: function (e) {
-                                        delete execStateListeners.detail;
+                                        var panelId = e.target.getAttribute('data-panel-id'),
+                                            panel = document.getElementById(panelId);
+                                        hideJobLog({node: panel});
+                                        // delete execStateListeners.log;
                                     }
                                 }
                             ]
-                        };
-                    }),
-                    {
-                        label: 'Log',
-                        content: renderJobLog(),
-                        icon: ui.buildIcon({name: 'list'}),
-                        events: [
-                            {
-                                type: 'shown',
-                                handler: function (e) {
-                                    var panelId = e.target.getAttribute('data-panel-id'),
-                                        panel = document.getElementById(panelId);
-                                    showJobLog({node: panel});
-                                    // execStateListeners.log = showJobLog;
-                                    // showExecState();
+                        },
+                        {
+                            label: 'Result',
+                            content: renderJobResult(),
+                            // icon: renderJobResultIcon(),
+                            icon: ui.buildIcon({name: 'check'}),
+                            events: [
+                                {
+                                    type: 'shown',
+                                    handler: function (e) {
+                                        var panelId = e.target.getAttribute('data-panel-id'),
+                                            panel = document.getElementById(panelId);
+                                        execStateListeners.result = function () {
+                                            showJobResult({node: panel});
+                                        };
+                                        showJobResult({node: panel});
+                                    }
+                                },
+                                {
+                                    type: 'hidden',
+                                    handler: function (e) {
+                                        var panelId = e.target.getAttribute('data-panel-id'),
+                                            panel = document.getElementById(panelId);
+                                        panel.innerHTML = '';
+                                        delete execStateListeners.result;
+                                    }
                                 }
-                            },
-                            {
-                                type: 'hidden',
-                                handler: function (e) {
-                                    var panelId = e.target.getAttribute('data-panel-id'),
-                                        panel = document.getElementById(panelId);
-                                    hideJobLog({node: panel});
-                                    // delete execStateListeners.log;
-                                }
-                            }
-                        ]
-                    },
-                    {
-                        label: 'Result',
-                        content: renderJobResult(),
-                        icon: renderJobResultIcon(),
-                        icon: ui.buildIcon({name: 'check'}),
-                        events: [
-                            {
-                                type: 'shown',
-                                handler: function (e) {
-                                    var panelId = e.target.getAttribute('data-panel-id'),
-                                        panel = document.getElementById(panelId);
-                                    showJobResult({node: panel});
-                                }
-                            },
-                            {
-                                type: 'hidden',
-                                handler: function (e) {
-                                    var panelId = e.target.getAttribute('data-panel-id'),
-                                        panel = document.getElementById(panelId);
-                                    showJobResult({node: panel});
-                                }
-                            }
-                        ]
-                    }
-                ]
-            }),
-                events = Events.make({node: container});
+                            ]
+                        }
+                    ]
+                });
 
-            container.innerHTML = tabs.content;
+            container.innerHTML = div({}, [                
+                div({style: {marginBottom: '4px'}}, [
+                    renderSummaryWidget()
+                ]),
+                tabs.content
+            ]);
             tabs.events.forEach(function (event) {
                 events.addEvent(event);
             });
             events.attachEvents();
-            $('#' + tabs.map['stats']).tab('show');
+            $('#' + tabs.map.stats).tab('show');
         }
 
         // DATA FETCH
@@ -756,17 +755,20 @@ define([
                 error: error,
                 success: null
             };
+
             model.setItem('runState', newRunState);
         }
 
-        function updateRunStateFromJobState() {
+        function updateRunStateFromJobState(source) {
             var jobState = model.getItem('jobState'),
                 runState = model.getItem('runState'),
                 now = new Date().getTime(),
                 newRunState,
                 temporalState,
                 submitTime, startTime, completedTime,
-                elapsedQueueTime, elapsedRunTime;
+                elapsedQueueTime, elapsedRunTime,
+                position;
+            
             if (!jobState) {
                 return;
             }
@@ -845,8 +847,13 @@ define([
                 
                 // Need to adjust the launch time.
                 var launchState = model.getItem('launchState');
-                runState.elapsedLaunchTime = submitTime - launchState.startTime;
+                if (launchState && launchState.startTime) {
+                    runState.elapsedLaunchTime = submitTime - launchState.startTime;
+                } else {
+                    console.warn('STRANGE - no launchState', launchState);
+                }
                 
+                position = jobState.position;
                 if (jobState.exec_start_time) {
                     startTime = jobState.exec_start_time;
                     elapsedQueueTime = startTime - submitTime;
@@ -874,70 +881,53 @@ define([
             /*
              * Determine the state of the job execution outcome.
              */
+            
             var executionState,
                 error, success,
-                // errorInfo1 = getJobError(jobState),
-                // errorInfo2 = getJobError2(jobState), errorMessage, errorDetail,
-                // errorInfo = errorInfo1 || errorInfo2,
-                // reportRef = getJobReportRef(jobState),
                 result = jobState.result,
                 errorInfo = jobState.error;
 
-            if (errorInfo) {
-                executionState = 'error';
-//                if (errorInfo.length > 50) {
-//                    errorDetail = errorInfo;
-//                    errorMessage = errorInfo.substring(0, 50) + '...';
-//                } else {
-//                    errorMessage = errorInfo;
-//                    errorDetail = '';
-//                }
-                var errorId = new Uuid(4).format();
 
-                var errorType, errorMessage, errorDetail;
-                if (errorInfo.error) {
-                    // Classic KBase rpc error message
-                    errorType = errorInfo.name;
-                    errorMessage = errorInfo.message;
-                    errorDetail = errorInfo.error;
-                } else if (errorInfo.name) {
-                    errorType = 'unknown';
-                    errorMessage = errorInfo.name + ' (code: ' + String(errorInfo.code) + ')';
-                    errorDetail = 'This error occurred during execution of the app job.';
-                } else {
-                    errorType = 'unknown';
-                    errorMessage = 'Unknown error (check console for ' + errorId + ')';
-                    errorDetail = 'There is no further information about this error';
+            if (jobState.finished === 1) {
+
+                switch (jobState.job_state) {
+                    case 'suspend':
+                    case 'error':
+                        executionState = 'error';
+                        var errorId = new Uuid(4).format();
+                        var errorType, errorMessage, errorDetail;
+                        if (errorInfo.error) {
+                            // Classic KBase rpc error message
+                            errorType = errorInfo.name;
+                            errorMessage = errorInfo.message;
+                            errorDetail = errorInfo.error;
+                        } else if (errorInfo.name) {
+                            errorType = 'unknown';
+                            errorMessage = errorInfo.name + ' (code: ' + String(errorInfo.code) + ')';
+                            errorDetail = 'This error occurred during execution of the app job.';
+                        } else {
+                            errorType = 'unknown';
+                            errorMessage = 'Unknown error (check console for ' + errorId + ')';
+                            errorDetail = 'There is no further information about this error';
+                        }
+
+                        error = {
+                            location: 'job execution',
+                            type: errorType,
+                            message: errorMessage,
+                            detail: errorDetail
+                        };
+                        break;
+                    case 'completed':
+                        executionState = 'success';
+                        success = {
+                            result: result
+                        };
+                        break;
+                    default:
+                        console.error('Invalid job state for finished job', jobState)
+                        throw new Error('Invalid job state for finished job: ' + jobState.job_state);
                 }
-
-                error = {
-                    location: 'job execution',
-                    type: errorType,
-                    message: errorMessage,
-                    detail: errorDetail
-                };
-//            } else if (reportRef) {
-//                executionState = 'success';
-//                success = {
-//                    reportRef: reportRef
-//                };
-//                // hmm, try this.
-//                bus.send('show-job-report', {
-//                    reportRef: reportRef
-//                });
-            } else if (result) {
-                executionState = 'success';
-                success = {
-                    result: result
-                };
-
-
-
-                // hmm, try this.
-                //bus.send('show-job-report', {
-                //     reportRef: reportRef
-                // });
-                //  console.warn('OUTPUTS', outputs);
             } else {
                 executionState = 'processing';
             }
@@ -1025,6 +1015,7 @@ define([
                 jobState: jobState,
                 elapsedLaunchTime: runState.elapsedLaunchTime,
                 elapsedQueueTime: elapsedQueueTime,
+                position: position,
                 elapsedRunTime: elapsedRunTime,
                 completedTime: completedTime,
                 error: error,
@@ -1132,6 +1123,7 @@ define([
             showExecState();
         }
 
+
         function processNewJobState(jobState) {
             // Only update the job state if the job state is different.
             // How can we tell? Well for now we simply look at the job_state
@@ -1140,15 +1132,15 @@ define([
             // TODO: the controller should meter this for us!
             model.setItem('jobStateLastUpdatedTime', new Date().getTime());
             var currentJobState = model.getItem('jobState');
-            if (!currentJobState || currentJobState.job_state !== jobState.job_state) {
+            //if (!currentJobState || currentJobState.job_state !== jobState.job_state) {
                 model.setItem('jobStateLastUpdatedTime', new Date().getTime());
                 model.setItem('jobState', jobState);
-                updateRunStateFromJobState();
-                updateJobDetails();
+                updateRunStateFromJobState('process new job state');
+                //updateJobDetails();
                 // renderRunState();
 
                 showExecState();
-            }
+            //}
             // If any.
             // showJobError();
         }
@@ -1156,42 +1148,6 @@ define([
         /*
          * Name is the selector and model property name
          */
-
-//        function showToggleElement(name) {
-//            var toggle = model.getItem(['user-settings', 'toggle-state', name]),
-//                label = toggle.showing ? 'Hide ' + toggle.label : 'Show ' + toggle.label;
-//            if (toggle.showing) {
-//                ui.showElement(name);
-//                if (togglesDb[name].onOpen) {
-//                    try {
-//                        togglesDb[name].onOpen({
-//                            node: ui.getElement([name, 'mount'])
-//                        });
-//                    } catch (ex) {
-//                        console.error('Error running onOpen for ' + name, ex);
-//                    }
-//                }
-//            } else {
-//                ui.hideElement(name);
-//                if (togglesDb[name].onClose) {
-//                    try {
-//                        togglesDb[name].onClose({
-//                            node: ui.getElement([name, 'mount'])
-//                        });
-//                    } catch (ex) {
-//                        console.error('Error running onClose for ' + name, ex);
-//                    }
-//                }
-//            }
-//            ui.setButtonLabel('toggle-' + toggle.name, label);
-//            return toggle.showing;
-//        }
-//
-//        function toggleElement(name) {
-//            var toggle = model.getItem(['user-settings', 'toggle-state', name]);
-//            model.setItem(['user-settings', 'toggle-state', name, 'showing'], !toggle.showing);
-//            return showToggleElement(name);
-//        }
 
         // LIFECYCLE API
 
@@ -1203,13 +1159,14 @@ define([
 
             // INTERNAL EVENTS
 
-            bus.on('show-job-report', function (message) {
+            ev = bus.on('show-job-report', function (message) {
                 getJobReport(message.reportRef)
                     .then(function (jobReport) {
                         model.setItem('jobReport', jobReport);
                         showJobReport();
                     });
             });
+            listeners.push(ev);
 
             // CELL EVENTS
             /*
@@ -1233,6 +1190,7 @@ define([
              * This was done, rather thanhave
              */
             ev = cellBus.on('job-state', function (message) {
+                console.log('NEW JOB STATE pos', message.jobState.position);
                 processNewJobState(message.jobState);
             });
             listeners.push(ev);
@@ -1252,12 +1210,13 @@ define([
                 // return;
                 var runState = model.getItem('runState');
                 if (runState && runState.executionState === 'processing') {
-                    updateRunStateFromJobState();
+                    updateRunStateFromJobState('clock');
                 }
                 // renderRunState();
                 showExecState();
             });
             listeners.push(ev);
+            
         }
 
         function teardown() {

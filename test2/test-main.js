@@ -19,8 +19,8 @@ require.config({
         'font-awesome': 'http://cdn.kbase.us/cdn/font-awesome/4.3.0/css/font-awesome',
         bluebird: 'http://cdn.kbase.us/cdn/bluebird/3.3.4/bluebird',
         jquery: 'http://cdn.kbase.us/cdn/jquery/2.2.2/jquery',
-        bootstrap: 'http://cdn.kbase.us/cdn/jquery/3.3.6/js/bootstrap',
-        bootstrap_css: 'http://cdn.kbase.us/cdn/jquery/3.3.6/css/bootstrap'
+        bootstrap: 'http://cdn.kbase.us/cdn/bootstrap/3.3.6/js/bootstrap',
+        bootstrap_css: 'http://cdn.kbase.us/cdn/bootstrap/3.3.6/css/bootstrap'
         
     },
     // dynamically load all test files

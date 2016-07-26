@@ -11,6 +11,7 @@ define([
     './events',
     'google-code-prettify/prettify',
     'css!google-code-prettify/prettify.css',
+    'bootstrap'
 ], function ($, Promise, html, Jupyter, Runtime, Events, PR) {
     'use strict';
     var t = html.tag,
@@ -35,6 +36,21 @@ define([
             }).join(' ');
 
             return container.querySelector(selector);
+        }
+        
+        function qsa(node, selector) {
+            return Array.prototype.slice.call(node.querySelectorAll(selector, 0));
+        }
+        
+        function getElements(names) {
+            if (typeof names === 'string') {
+                names = names.split('.');
+            }
+            var selector = names.map(function (name) {
+                return '[data-element="' + name + '"]';
+            }).join(' ');
+
+            return qsa(container, selector);
         }
 
         function getButton(name) {
@@ -527,10 +543,20 @@ define([
         }
 
         function setContent(path, content) {
-            var node = getElement(path);
-            if (node) {
+            var node = getElements(path);
+            node.forEach(function (node) {
                 node.innerHTML = content;
+            });
+        }
+        
+        function enableTooltips(path) {
+            var node = getElement(path);
+            if (!node) {
+                return;
             }
+            qsa(node, '[data-toggle="tooltip"]').forEach(function (node) {
+                $(node).tooltip();
+            });
         }
         
         function addClass(path, klass) {
@@ -796,7 +822,8 @@ define([
             addClass: addClass,
             removeClass: removeClass,
             buildTabs: buildTabs,
-            jsonBlockWidget: jsonBlockWidget()
+            jsonBlockWidget: jsonBlockWidget(),
+            enableTooltips: enableTooltips
         };
     }
 

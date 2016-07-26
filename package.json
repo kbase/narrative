@@ -22,7 +22,7 @@
     "karma-jasmine": "^0.3.6",
     "karma-phantomjs-launcher": "^0.2.0",
     "karma-requirejs": "^0.2.2",
-    "phantomjs": "^1.9.17",
+    "phantomjs-prebuilt": "^2.1.0",
     "bower": "*"
   },
   "scripts": {

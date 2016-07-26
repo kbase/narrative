@@ -92,19 +92,20 @@ class JobManager(object):
         try:
             status_set = list()
             for job_id in self._running_jobs:
-                job_state = self._running_jobs[job_id]['job'].state()
+                job = self._running_jobs[job_id]['job']
+                job_state = job.state()
+                job_params = job.parameters()
+                job_state['app_id'] = job_params[0].get('app_id', 'Unknown App')
                 status_set.append(job_state)
             if not len(status_set):
                 return "No running jobs!"
-            status_set = sorted(status_set, key=lambda s: dateutil.parser.parse(s['submit_time']))
+            status_set = sorted(status_set, key=lambda s: s['creation_time'])
             for i in range(len(status_set)):
-                status_set[i]['submit_time'] = datetime.datetime.strftime(dateutil.parser.parse(status_set[i]['submit_time']), "%Y-%m-%d %H:%M:%S")
-                meth_id = status_set[i]['original_app']['steps'][0]['method_spec_id']
-                stats = status_set[i]['step_stats'][meth_id]
-                exec_start = stats.get('exec_start_time', None)
+                status_set[i]['creation_time'] = datetime.datetime.strftime(datetime.datetime.fromtimestamp(status_set[i]['creation_time']/1000), "%Y-%m-%d %H:%M:%S")
+                exec_start = status_set[i].get('exec_start_time', None)
                 if 'complete_time' in status_set[i]:
-                    status_set[i]['complete_time'] = datetime.datetime.strftime(dateutil.parser.parse(status_set[i]['complete_time']), "%Y-%m-%d %H:%M:%S")
-                    finished = stats.get('finish_time', None)
+                    status_set[i]['complete_time'] = datetime.datetime.strftime(datetime.datetime.fromtimestamp(status_set[i]['complete_time']/1000), "%Y-%m-%d %H:%M:%S")
+                    finished = status_set[i].get('finish_time', None)
                     if finished and exec_start:
                         delta = datetime.datetime.fromtimestamp(finished/1000.0) - datetime.datetime.fromtimestamp(exec_start/1000.0)
                         delta = delta - datetime.timedelta(microseconds=delta.microseconds)
@@ -129,8 +130,8 @@ class JobManager(object):
                 {% for j in jobs %}
                 <tr>
                     <td>{{ j.job_id|e }}</td>
-                    <td>{{ j.original_app.steps[0].method_spec_id|e }}</td>
-                    <td>{{ j.submit_time|e }}</td>
+                    <td>{{ j.app_id|e }}</td>
+                    <td>{{ j.creation_time|e }}</td>
                     <td>{{ j.job_state|e }}</td>
                     <td>{{ j.run_time|e }}</td>
                     <td>{% if j.complete_time %}{{ j.complete_time|e }}{% else %}Incomplete{% endif %}</td>

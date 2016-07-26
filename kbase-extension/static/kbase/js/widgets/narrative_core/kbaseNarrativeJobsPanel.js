@@ -164,6 +164,8 @@ define([
             this.showMessage('Initializing...', true);
             this.handleBusMessages();
 
+            this.showCanceledJobs = false;
+
             return this;
         },
         sendJobMessage: function (msgType, jobId, message) {
@@ -202,7 +204,7 @@ define([
                 // this.deleteJob(message.jobId);
                 alert('Job cancellation not yet support.');
             }.bind(this));
-            
+
             bus.on('request-job-status', function (message) {
                 this.sendCommMessage(this.JOB_STATUS, message.jobId);
             }.bind(this));
@@ -252,7 +254,7 @@ define([
         handleCommMessages: function (msg) {
             var msgType = msg.content.data.msg_type,
                 bus = this.runtime.bus();
-            
+
             switch (msgType) {
                 case 'new_job':
                     // this.registerKernelJob(msg.content.data.content);
@@ -266,10 +268,10 @@ define([
                  */
                 case 'job_status':
                     var incomingJobs = msg.content.data.content;
-                    
+
                     /*
                      * Ensure there is a locally cached copy of each job.
-                     * 
+                     *
                      */
                     for (var jobId in incomingJobs) {
                         var jobStateMessage = incomingJobs[jobId];
@@ -299,19 +301,19 @@ define([
                  * The "job-deleted" logic, specifically, requires that the job
                  * actually not exist in the job service.
                  * NB there is logic in the job management back end to allow
-                 * job notification to be turned off per job -- this would 
+                 * job notification to be turned off per job -- this would
                  * be incompatible with the logic here and we should address
-                 * that. 
+                 * that.
                  * E.g. if that behavior is allowed, then deletion detection
                  * would need to move to the back end, since that is the only
                  * place that would truly know about all jobs for this narrative.
                  */
                 case 'job_status_all':
                     var incomingJobs = msg.content.data.content;
-                    
+
                     /*
                      * Ensure there is a locally cached copy of each job.
-                     * 
+                     *
                      */
                     for (var jobId in incomingJobs) {
                         var jobStateMessage = incomingJobs[jobId];
@@ -337,14 +339,14 @@ define([
                      * This is for maintenance of the local job state cache.
                      * This loop used to take care of the case in which a
                      * cached job is not found in the incoming notifications.
-                     * This would signal a "job-deleted" message. 
+                     * This would signal a "job-deleted" message.
                      * Although it could be the case that a+++
                      */
                     // NB: this implies that t
                     Object.keys(this.jobStates).forEach(function (jobId) {
                         if (!incomingJobs[jobId]) {
                             // If ths job is not found in the incoming list of all
-                            // jobs, then we must both delete it locally, and 
+                            // jobs, then we must both delete it locally, and
                             // notify any interested parties.
                             this.sendJobMessage('job-deleted', jobId, {
                                 jobId: jobId,
@@ -355,7 +357,7 @@ define([
                         }
                     }.bind(this));
                     this.populateJobsPanel(); //status, info, content);
-                    break;                    
+                    break;
                 case 'run_status':
                     // Send job status notifications on the default channel,
                     // with a key on the message type and the job id, sending
@@ -383,6 +385,9 @@ define([
                     this.sendJobMessage('job-deleted', deletedId, {jobId: deletedId, via: 'job_deleted'});
                     // console.info('Deleted job ' + deletedId);
                     this.removeDeletedJob(deletedId);
+                    break;
+
+                case 'job_canceled':
                     break;
 
                 case 'job_logs':
@@ -616,6 +621,7 @@ define([
             else
                 return true;
         },
+
         /**
          * @method
          * Here we go, the first part of the rendering routine.
@@ -681,8 +687,10 @@ define([
                         if (this.jobWidgets[jobId]) {
                             this.jobWidgets[jobId].remove();
                         }
-                        this.jobWidgets[jobId] = this.renderJob(jobId); //, jobInfo[jobId]);
-                        this.$jobsList.prepend(this.jobWidgets[jobId]);
+                        if (this.showCanceledJobs || (this.jobStates[jobId].state.job_state !== 'cancelled' && this.jobStates[jobId].state.job_state !== 'canceled')) {
+                            this.jobWidgets[jobId] = this.renderJob(jobId); //, jobInfo[jobId]);
+                            this.$jobsList.prepend(this.jobWidgets[jobId]);
+                        }
                     }
                 }
                 this.setJobCounter(stillRunning);

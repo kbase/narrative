@@ -70,7 +70,7 @@ define([
                 body: div({style: {fontFamily: 'monospace', whiteSpace: 'pre'}, dataElement: 'content'})
             });
         }
-        
+
         function renderJobResultIcon() {
             var result = model.getItem('runState.success.result');
             if (result) {
@@ -105,14 +105,14 @@ define([
         }
 
         /*
-         * The execution status, or summary, area ctonains basic stats on a 
+         * The execution status, or summary, area ctonains basic stats on a
          * running job, indication the current state, the time running in the
          * current and previous stats, and whether or not there is a final
          * result.
-         * 
+         *
          * This rendered content serves as a placeholder for the run status
          * as it is updated. See showExecStatus() for that.
-         * 
+         *
          */
         function renderExecStats() {
             var labelStyle = {
@@ -158,7 +158,7 @@ define([
                 ])
             });
         }
-        
+
         function showExecStats() {
             var state = model.getItem('runState');
 
@@ -252,8 +252,8 @@ define([
         /*
          * The job details view essentially showsthe current job state, with little or
          * no reformatting or interpretation.
-         * 
-         * It is updated by showJobDetails(), which is itself driven by 
+         *
+         * It is updated by showJobDetails(), which is itself driven by
          * job events.
          */
         function renderJobDetails() {
@@ -275,7 +275,7 @@ define([
                 ]
             });
         }
-                
+
         function updateJobDetails() {
             var jobState = model.getItem('jobState'),
                 details = {
@@ -288,7 +288,7 @@ define([
                 };
             model.setItem('jobDetails', details);
         }
-        
+
         function showJobDetails() {
             //if (showToggleElement('job-details')) {
             updateJobDetails();
@@ -356,7 +356,7 @@ define([
             if (!result) {
                 return;
             }
-            
+
             args.node.innerHTML = ui.buildPanel({
                 title: 'Success',
                 type: 'success',
@@ -369,7 +369,7 @@ define([
                 obj: result
             });
         }
-        
+
         function renderJobError(args) {
             var error = model.getItem('runState.error');
 
@@ -378,7 +378,7 @@ define([
             }
 
             // TODO: show error style in the tab and tab panel
-            
+
             var content = ui.buildPanel({
                 title: 'Error',
                 type: 'danger',
@@ -395,7 +395,7 @@ define([
         }
 
         /*
-         * When the job is finished, we show the final result through this 
+         * When the job is finished, we show the final result through this
          * mini widget.
          */
 
@@ -444,7 +444,7 @@ define([
          * Add and remove listeners as tabs or other widgets become visible.
          * A map to make adding and removing easier...
          */
-        
+
         function renderSummaryWidget() {
             return div({
                 style: {
@@ -455,7 +455,7 @@ define([
                 'summary widget here'
             ]);
         }
-        
+
 
         function render() {
             var events = Events.make({node: container}),
@@ -586,7 +586,7 @@ define([
                     ]
                 });
 
-            container.innerHTML = div({}, [                
+            container.innerHTML = div({}, [
                 div({style: {marginBottom: '4px'}}, [
                     renderSummaryWidget()
                 ]),
@@ -689,9 +689,9 @@ define([
          */
 
 
-       
+
         // RUN STATE UPDATERS
-        
+
         /*
          * The "run state" is the combined state of all possible execution
          * states, including initial button click, back end launch management,
@@ -768,7 +768,7 @@ define([
                 submitTime, startTime, completedTime,
                 elapsedQueueTime, elapsedRunTime,
                 position;
-            
+
             if (!jobState) {
                 return;
             }
@@ -822,7 +822,7 @@ define([
              position - position of the job in execution waiting queue;
              creation_time, exec_start_time and finish_time - time moments of submission, execution
              start and finish events in milliseconds since Unix Epoch.
-             
+
              typedef structure {
              string job_id;
              boolean finished;
@@ -844,7 +844,7 @@ define([
              */
             if (jobState.creation_time) {
                 submitTime = jobState.creation_time;
-                
+
                 // Need to adjust the launch time.
                 var launchState = model.getItem('launchState');
                 if (launchState && launchState.startTime) {
@@ -852,7 +852,7 @@ define([
                 } else {
                     console.warn('STRANGE - no launchState', launchState);
                 }
-                
+
                 position = jobState.position;
                 if (jobState.exec_start_time) {
                     startTime = jobState.exec_start_time;
@@ -881,7 +881,7 @@ define([
             /*
              * Determine the state of the job execution outcome.
              */
-            
+
             var executionState,
                 error, success,
                 result = jobState.result,
@@ -923,6 +923,10 @@ define([
                         success = {
                             result: result
                         };
+                        break;
+                    case 'canceled':
+                    case 'cancelled':
+                        executionState = 'canceled';
                         break;
                     default:
                         console.error('Invalid job state for finished job', jobState)
@@ -1069,7 +1073,7 @@ define([
 
         /*
          * This is responsible for ensuring that the display (tabs) reflects
-         * the best view of the current execution state. 
+         * the best view of the current execution state.
          * While launching and running, the stats would be the normal display,
          * although in advanced mode the user may have selected details or raw.
          * When finished the Result tab will be selected
@@ -1104,7 +1108,7 @@ define([
             }
             // These will or may be updated with new events.
             launchState.event = launchEvent.event;
-            // The job id will only be sent after the job is actually 
+            // The job id will only be sent after the job is actually
             // started.
             if (!launchEvent.jobId) {
                 launchState.jobId = launchEvent.job_id;
@@ -1216,7 +1220,7 @@ define([
                 showExecState();
             });
             listeners.push(ev);
-            
+
         }
 
         function teardown() {

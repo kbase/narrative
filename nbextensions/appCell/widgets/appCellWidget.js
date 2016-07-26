@@ -249,6 +249,9 @@ define([
                         mode: 'editing',
                         params: 'complete',
                         code: 'built'
+                    },
+                    {
+                        mode: 'canceled'
                     }
                 ]
             },
@@ -288,6 +291,9 @@ define([
                         mode: 'editing',
                         params: 'complete',
                         code: 'built'
+                    },
+                    {
+                        mode: 'canceled'
                     }
                 ]
             },
@@ -353,6 +359,32 @@ define([
                 next: [
                     {
                         mode: 'success'
+                    },
+                    {
+                        mode: 'editing',
+                        params: 'complete',
+                        code: 'built'
+                    }
+                ]
+            },
+            {
+                state: {
+                    mode: 'canceled'
+                },
+                ui: {
+                    buttons: {
+                        enabled: ['re-run-app'],
+                        disabled: [],
+                        hidden: ['run-app', 'cancel']
+                    },
+                    elements: {
+                        show: ['parameters-display-group', 'exec-group', 'output-group'],
+                        hide: ['parameters-group']
+                    }
+                },
+                next: [
+                    {
+                        mode: 'canceled'
                     },
                     {
                         mode: 'editing',
@@ -1347,10 +1379,10 @@ define([
                 jobId: jobId
             });
         }
-        
+
         function resetToEditMode(source) {
             // only do this if we are not editing.
-            
+
              model.deleteItem('exec');
 
             // Also ensure that the exec widget is reset
@@ -1504,6 +1536,10 @@ define([
                                 return {mode: 'error', stage: currentState.state.stage};
                             }
                             return {mode: 'error'};
+                        case 'canceled':
+                        case 'cancelled':
+                            stopListeningForJobMessages();
+                            return {mode: 'canceled'};
                         default:
                             throw new Error('Invalid job state ' + jobState.job_state);
                     }
@@ -1559,7 +1595,7 @@ define([
         var jobListeners = [];
         function startListeningForJobMessages(jobId) {
             var ev;
-            
+
             ev = runtime.bus().listen({
                 channel: {
                     jobId: jobId
@@ -1609,7 +1645,7 @@ define([
                 }
             });
             jobListeners.push(ev);
-            
+
             ev = runtime.bus().listen({
                 channel: {
                     jobId: jobId
@@ -1971,7 +2007,7 @@ define([
                 // TODO: only turn this on when we need it!
                 cellBus.on('run-status', function (message) {
                     updateFromLaunchEvent(message);
-                    
+
                     model.setItem('exec.launchState', message);
 
                     // Save this to the exec state change log.

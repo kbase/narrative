@@ -75,7 +75,7 @@ class JobManager(object):
             try:
                 self._running_jobs[job_id] = {
                     'refresh': True,
-                    'job': Job.from_state(job_id, job_info, app_id=job_info.get('app_id'), tag=job_meta.get('tag', 'release'), cell_id=job_meta.get('cell_id', None))
+                    'job': Job.from_state(job_id, job_info, user_info[0], app_id=job_info.get('app_id'), tag=job_meta.get('tag', 'release'), cell_id=job_meta.get('cell_id', None))
                 }
             except Exception as e:
                 kblogging.log_event(self._log, 'init_error', {'err': str(e)})
@@ -96,6 +96,7 @@ class JobManager(object):
                 job_state = job.state()
                 job_params = job.parameters()
                 job_state['app_id'] = job_params[0].get('app_id', 'Unknown App')
+                job_state['owner'] = job.owner
                 status_set.append(job_state)
             if not len(status_set):
                 return "No running jobs!"
@@ -123,6 +124,7 @@ class JobManager(object):
                     <th>Id</th>
                     <th>Name</th>
                     <th>Submitted</th>
+                    <th>Submitted By</th>
                     <th>Status</th>
                     <th>Run Time</th>
                     <th>Complete Time</th>
@@ -132,6 +134,7 @@ class JobManager(object):
                     <td>{{ j.job_id|e }}</td>
                     <td>{{ j.app_id|e }}</td>
                     <td>{{ j.creation_time|e }}</td>
+                    <td>{{ j.owner|e }}</td>
                     <td>{{ j.job_state|e }}</td>
                     <td>{{ j.run_time|e }}</td>
                     <td>{% if j.complete_time %}{{ j.complete_time|e }}{% else %}Incomplete{% endif %}</td>
@@ -320,6 +323,13 @@ class JobManager(object):
                     except Exception as e:
                         self._send_comm_message('job_comm_error', {'message': str(e), 'request_type': r_type, 'job_id': job_id})
 
+            elif r_type == 'cancel_job':
+                if job_id is not None:
+                    try:
+                        self.cancel_job(job_id)
+                    except Exception as e:
+                        self._send_comm_message('job_comm_error', {'message': str(e), 'request_type': r_type, 'job_id': job_id})
+
             elif r_type == 'job_logs':
                 if job_id is not None:
                     first_line = msg['content']['data'].get('first_line', 0)
@@ -362,14 +372,45 @@ class JobManager(object):
     def delete_job(self, job_id):
         """
         If the job_id doesn't exist, raises a ValueError.
-        If the deletion fails and throws an error, that just gets raised, too.
+        Attempts to delete a job, and cancels it first. If the job cannot be canceled,
+        raises an exception. If it can be canceled but not deleted, it gets canceled, then raises
+        an exception.
         """
         if job_id is None:
             raise ValueError('Job id required for deletion!')
-        job = self.get_job(job_id)
-        job.cancel()
+        self.cancel_job(job_id)
+
+        try:
+            clients.get('user_and_job_state').delete_job(job_id)
+        except Exception as e:
+            raise
+
         del self._running_jobs[job_id]
         self._send_comm_message('job_deleted', {'job_id': job_id})
+
+    def cancel_job(self, job_id):
+        """
+        Cancels a running job, placing it in a canceled state.
+        Does NOT delete the job.
+        Raises an exception if the current user doesn't have permission to cancel the job.
+        """
+        if job_id is None:
+            raise ValueError('Job id required for cancellation!')
+        try:
+            clients.get('job_service').cancel_job({'job_id': job_id})
+        except Exception as e:
+            raise
+
+    # def cancel(self):
+    #     """
+    #     Cancels a currently running job. Fails silently if there's no job running.
+    #     (No way to cancel something started with run_job right now).
+    #     """
+    #     status = self.status()
+    #     if status not in ['completed', 'error', 'suspend', 'cancelled']:
+    #         clients.get('job_service').cancel_job({'job_id': self.job_id})
+    #     clients.get('user_and_job_state').delete_job(self.job_id)
+
 
     def _send_comm_message(self, msg_type, content):
         """

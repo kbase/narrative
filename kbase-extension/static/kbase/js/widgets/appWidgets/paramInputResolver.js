@@ -19,7 +19,8 @@ define([
     './input/multiFloatInput',
     './input/multiSelectInput',
     './input/singleFileInput',
-    './input/multiTextareaInput'
+    './input/multiTextareaInput',
+    './input/errorInput'
 ], function (
     SingleTextInputWidget,
     MultiTextInputWidget,
@@ -38,7 +39,8 @@ define([
     MultiFloatInputWidget,
     MultiSelectInputWidget,
     SingleFileInputWidget,
-    MultiTextareaInputWidget
+    MultiTextareaInputWidget,
+    ErrorInputWidget
     ) {
     'use strict';
 
@@ -239,8 +241,9 @@ define([
                         case 'input':
                             return MultiObjectInputWidget;
                         case 'output':
-                            throw new Error('A set of workspace object names does not make sense for an output');
-                            // return UndefinedInputWidget;
+                            return ErrorInputWidget.make({
+                                message: 'A set of workspace object names does not make sense for an output'
+                            });
                         case 'parameter':
                             return UndefinedInputWidget;
                         default:
@@ -286,7 +289,9 @@ define([
                             return SingleSubdataWidget;
                         case 'file':
                             if (parameterSpec.multipleItems()) {
-                                throw new Error('multiple item "file" parameter type is not currently supported');
+                                return ErrorInputWidget.make({
+                                    message: 'multiple item "file" parameter type is not currently supported'
+                                });
                             }
                             return SingleFileInputWidget;
                         case 'custom_textsubdata':

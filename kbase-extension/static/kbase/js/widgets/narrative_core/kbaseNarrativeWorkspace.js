@@ -1015,6 +1015,14 @@ define (
             }
         },
 
+        toggleCellEditing: function(on) {
+            Jupyter.notebook.get_cells().forEach(function(cell) {
+                if (cell.code_mirror) {
+                    cell.code_mirror.setOption('readOnly', !on);
+                }
+            });
+        },
+
         /**
          * Set narrative into read-only mode.
          */
@@ -1026,6 +1034,7 @@ define (
             _.map(this.getReadOnlySelectors(), function (id) {$(id).hide()});
             this.toggleRunButtons(false);
             this.toggleSelectBoxes(false);
+            this.toggleCellEditing(false);
 
             Jupyter.narrative.sidePanel.setReadOnlyMode(true);
 

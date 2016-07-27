@@ -73,7 +73,7 @@ define([
     }
 
     // TODO: move into app cell widget and invoke with an event 'reset-to-default-values'
-    function setupParams(cell, appSpec) {
+    function initializeParams(cell, appSpec) {
         var defaultParams = {};
         appSpec.parameters.forEach(function (parameterSpec) {
             var param = ParameterSpec.make({parameterSpec: parameterSpec}),
@@ -323,7 +323,7 @@ define([
         })
             .then(function () {
                 // Add the params
-                return setupParams(cell, appSpec);
+                return initializeParams(cell, appSpec);
             })
             .then(function () {
                 // Complete the cell setup.

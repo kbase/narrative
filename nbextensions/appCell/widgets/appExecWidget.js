@@ -18,6 +18,7 @@ define([
     'use strict';
 
     var t = html.tag,
+        tabsId,
         div = t('div'), span = t('span'), form = t('form'),
         table = t('table'), tr = t('tr'), td = t('td'), th = t('th'),
         textarea = t('textarea'),
@@ -70,7 +71,7 @@ define([
                 body: div({style: {fontFamily: 'monospace', whiteSpace: 'pre'}, dataElement: 'content'})
             });
         }
-        
+
         function renderJobResultIcon() {
             var result = model.getItem('runState.success.result');
             if (result) {
@@ -158,7 +159,7 @@ define([
                 ])
             });
         }
-        
+
         function showExecStats() {
             var state = model.getItem('runState');
 
@@ -275,7 +276,7 @@ define([
                 ]
             });
         }
-                
+
         function updateJobDetails() {
             var jobState = model.getItem('jobState'),
                 details = {
@@ -288,7 +289,7 @@ define([
                 };
             model.setItem('jobDetails', details);
         }
-        
+
         function showJobDetails() {
             //if (showToggleElement('job-details')) {
             updateJobDetails();
@@ -356,10 +357,9 @@ define([
             if (!result) {
                 return;
             }
-            
+
             args.node.innerHTML = ui.buildPanel({
-                title: 'Success',
-                type: 'success',
+                title: 'Result Value',
                 classes: ['kb-panel-light'],
                 body: div({dataElement: 'content'})
             });
@@ -369,7 +369,7 @@ define([
                 obj: result
             });
         }
-        
+
         function renderJobError(args) {
             var error = model.getItem('runState.error');
 
@@ -378,7 +378,7 @@ define([
             }
 
             // TODO: show error style in the tab and tab panel
-            
+
             var content = ui.buildPanel({
                 title: 'Error',
                 type: 'danger',
@@ -444,7 +444,7 @@ define([
          * Add and remove listeners as tabs or other widgets become visible.
          * A map to make adding and removing easier...
          */
-        
+
         function renderSummaryWidget() {
             return div({
                 style: {
@@ -455,12 +455,13 @@ define([
                 'summary widget here'
             ]);
         }
-        
+
 
         function render() {
+            tabsId = html.genId();
             var events = Events.make({node: container}),
                 tabs = ui.buildTabs({
-                    id: html.genId(),
+                    id: tabsId,
                     fade: true,
                     style: {
                         padding: '10px 0 0 0'
@@ -470,7 +471,7 @@ define([
                             name: 'stats',
                             label: 'Stats',
                             content: renderExecStats(),
-                            icon: ui.buildIcon({name: 'clock-o'}),
+                            icon: 'clock-o', 
                             events: [
                                 {
                                     type: 'shown',
@@ -532,7 +533,7 @@ define([
                         {
                             label: 'Log',
                             content: renderJobLog(),
-                            icon: ui.buildIcon({name: 'list'}),
+                            icon: 'list',
                             events: [
                                 {
                                     type: 'shown',
@@ -557,9 +558,10 @@ define([
                         },
                         {
                             label: 'Result',
+                            name: 'result',
                             content: renderJobResult(),
                             // icon: renderJobResultIcon(),
-                            icon: ui.buildIcon({name: 'check'}),
+                            icon: 'question',
                             events: [
                                 {
                                     type: 'shown',
@@ -586,7 +588,7 @@ define([
                     ]
                 });
 
-            container.innerHTML = div({}, [                
+            container.innerHTML = div({}, [
                 div({style: {marginBottom: '4px'}}, [
                     renderSummaryWidget()
                 ]),
@@ -689,9 +691,9 @@ define([
          */
 
 
-       
+
         // RUN STATE UPDATERS
-        
+
         /*
          * The "run state" is the combined state of all possible execution
          * states, including initial button click, back end launch management,
@@ -768,7 +770,7 @@ define([
                 submitTime, startTime, completedTime,
                 elapsedQueueTime, elapsedRunTime,
                 position;
-            
+
             if (!jobState) {
                 return;
             }
@@ -844,7 +846,7 @@ define([
              */
             if (jobState.creation_time) {
                 submitTime = jobState.creation_time;
-                
+
                 // Need to adjust the launch time.
                 var launchState = model.getItem('launchState');
                 if (launchState && launchState.startTime) {
@@ -852,7 +854,7 @@ define([
                 } else {
                     console.warn('STRANGE - no launchState', launchState);
                 }
-                
+
                 position = jobState.position;
                 if (jobState.exec_start_time) {
                     startTime = jobState.exec_start_time;
@@ -881,7 +883,7 @@ define([
             /*
              * Determine the state of the job execution outcome.
              */
-            
+
             var executionState,
                 error, success,
                 result = jobState.result,
@@ -894,6 +896,11 @@ define([
                     case 'suspend':
                     case 'error':
                         executionState = 'error';
+
+                        /*
+                         * Here we are simply creating a standardized error
+                         * view object.
+                         */
                         var errorId = new Uuid(4).format();
                         var errorType, errorMessage, errorDetail;
                         if (errorInfo.error) {
@@ -950,7 +957,7 @@ define([
             var canonicalState;
             temporalState = jobState.job_state;
             switch (temporalState) {
-                case 'lauching':
+                case 'launching':
                     switch (executionState) {
                         case 'processing':
                             canonicalState = 'preparing';
@@ -1119,8 +1126,48 @@ define([
             model.setItem('launchState', launchState);
 
             updateRunStateFromLaunchState(launchState);
-            // renderRunState();
+            renderRunState();
             showExecState();
+        }
+        
+        function renderRunState() {
+            var runState = model.getItem('runState');
+            if (runState && runState.executionState) {
+                switch (runState.executionState) {
+                    case 'error':
+                        // update the result tab?
+                        ui.updateTab(tabsId, 'result', {
+                            label: 'Error',
+                            icon: 'exclamation',
+                            color: 'red',
+                            select: true
+                        });
+
+                        // flip to the result tab.
+
+                        break;
+                    case 'success':
+                        // update the reslut tab
+                        ui.updateTab(tabsId, 'result', {
+                            label: 'Success',
+                            icon: 'thumbs-up',
+                            color: 'green',
+                            select: true
+                        });
+
+                        // flip to the result tab
+                        break;
+                    case 'cancelled':
+                        // update the result tab
+
+                        // flip to the result tab
+                        break;
+                    default:
+                        // otherwise just roll along.
+                }
+            }
+
+
         }
 
 
@@ -1133,13 +1180,17 @@ define([
             model.setItem('jobStateLastUpdatedTime', new Date().getTime());
             var currentJobState = model.getItem('jobState');
             //if (!currentJobState || currentJobState.job_state !== jobState.job_state) {
-                model.setItem('jobStateLastUpdatedTime', new Date().getTime());
-                model.setItem('jobState', jobState);
-                updateRunStateFromJobState('process new job state');
-                //updateJobDetails();
-                // renderRunState();
+            model.setItem('jobStateLastUpdatedTime', new Date().getTime());
+            model.setItem('jobState', jobState);
+            updateRunStateFromJobState('process new job state');
 
-                showExecState();
+            /*
+             * Handle job finalization changes here.
+             */
+            // TODO: it would be awfully nice to have this handled by an fsm.
+            renderRunState();
+
+            showExecState();
             //}
             // If any.
             // showJobError();
@@ -1216,7 +1267,7 @@ define([
                 showExecState();
             });
             listeners.push(ev);
-            
+
         }
 
         function teardown() {
@@ -1242,6 +1293,7 @@ define([
                 if (message.jobState) {
                     processNewJobState(message.jobState);
                 }
+                renderRunState();
                 // renderRunState();
                 showExecState();
             });

@@ -38,7 +38,7 @@ define (
 
             // Service URL: should be in window.kbconfig.urls.
             // featureValueURL: 'http://localhost:8889',
-            useDynamicService: false,
+            useDynamicService: true,
             featureValueSrvVersion: 'dev',
             featureValueURL: Config.url('feature_values'),
 

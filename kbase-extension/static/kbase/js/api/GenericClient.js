@@ -31,12 +31,23 @@ function GenericClient(url, auth, auth_cb, use_url_lookup, timeout, async_job_ch
             throw 'Too many arguments ('+arguments.length+' instead of 5)';
         var _url = lookup_url;
         if (_use_url_lookup) {
+            var deferred = $.Deferred();
             var module_name = service_method.split('.')[0];
-            return json_call_ajax(_url, 'ServiceWizard.get_service_status', [{'module_name' : module_name, 
+            json_call_ajax(_url, 'ServiceWizard.get_service_status', [{'module_name' : module_name, 
                     'version' : service_version}], 1, function(service_status_ret) {
                 _url = service_status_ret['url'];
-                json_call_ajax(_url, service_method, param_list, 0, _callback, _errorCallback);
-            }, _errorCallback);
+                json_call_ajax(_url, service_method, param_list, 0, _callback, _errorCallback, deferred);
+            }, function(err) {
+                if (_errorCallback) {
+                    _errorCallback(err);
+                } else {
+                    deferred.reject({
+                        status: 500,
+                        error: err
+                    });
+                }
+            });
+            return deferred;
         } else {
             return json_call_ajax(_url, service_method, param_list, 0, _callback, _errorCallback);
         }
@@ -46,8 +57,9 @@ function GenericClient(url, auth, auth_cb, use_url_lookup, timeout, async_job_ch
     /*
      * JSON call using jQuery method.
      */
-    function json_call_ajax(_url, method, params, numRets, callback, errorCallback) {
-        var deferred = $.Deferred();
+    function json_call_ajax(_url, method, params, numRets, callback, errorCallback, deferred) {
+        if (!deferred)
+            deferred = $.Deferred();
 
         if (typeof callback === 'function') {
            deferred.done(callback);

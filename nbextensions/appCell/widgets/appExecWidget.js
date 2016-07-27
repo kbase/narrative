@@ -106,14 +106,14 @@ define([
         }
 
         /*
-         * The execution status, or summary, area ctonains basic stats on a 
+         * The execution status, or summary, area ctonains basic stats on a
          * running job, indication the current state, the time running in the
          * current and previous stats, and whether or not there is a final
          * result.
-         * 
+         *
          * This rendered content serves as a placeholder for the run status
          * as it is updated. See showExecStatus() for that.
-         * 
+         *
          */
         function renderExecStats() {
             var labelStyle = {
@@ -253,8 +253,8 @@ define([
         /*
          * The job details view essentially showsthe current job state, with little or
          * no reformatting or interpretation.
-         * 
-         * It is updated by showJobDetails(), which is itself driven by 
+         *
+         * It is updated by showJobDetails(), which is itself driven by
          * job events.
          */
         function renderJobDetails() {
@@ -395,7 +395,7 @@ define([
         }
 
         /*
-         * When the job is finished, we show the final result through this 
+         * When the job is finished, we show the final result through this
          * mini widget.
          */
 
@@ -824,7 +824,7 @@ define([
              position - position of the job in execution waiting queue;
              creation_time, exec_start_time and finish_time - time moments of submission, execution
              start and finish events in milliseconds since Unix Epoch.
-             
+
              typedef structure {
              string job_id;
              boolean finished;
@@ -931,6 +931,16 @@ define([
                             result: result
                         };
                         break;
+                    case 'cancelled':
+                        executionState = 'success';
+                        success = {
+
+                        };
+                        break;
+                    // case 'canceled':
+                    // case 'cancelled':
+                    //     executionState = 'canceled';
+                    //     break;
                     default:
                         console.error('Invalid job state for finished job', jobState)
                         throw new Error('Invalid job state for finished job: ' + jobState.job_state);
@@ -1076,7 +1086,7 @@ define([
 
         /*
          * This is responsible for ensuring that the display (tabs) reflects
-         * the best view of the current execution state. 
+         * the best view of the current execution state.
          * While launching and running, the stats would be the normal display,
          * although in advanced mode the user may have selected details or raw.
          * When finished the Result tab will be selected
@@ -1111,7 +1121,7 @@ define([
             }
             // These will or may be updated with new events.
             launchState.event = launchEvent.event;
-            // The job id will only be sent after the job is actually 
+            // The job id will only be sent after the job is actually
             // started.
             if (!launchEvent.jobId) {
                 launchState.jobId = launchEvent.job_id;

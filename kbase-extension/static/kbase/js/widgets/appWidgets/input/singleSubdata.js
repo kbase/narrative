@@ -1180,8 +1180,8 @@ define([
         // MODIFICATION EVENTS
 
         /*
-         * More refinement of modifications. 
-         * 
+         * More refinement of modifications.
+         *
          * - initial run
          * - reference data updated
          *   - added "reset" method to props (model) to allow graceful zapping
@@ -1191,7 +1191,7 @@ define([
          * - search term available
          * - search term removed
          * - filtered data updated
-         * 
+         *
          */
 
 

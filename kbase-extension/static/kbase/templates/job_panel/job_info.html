@@ -26,6 +26,12 @@
                     {{/if}}
                 </td>
             </tr>
+            {{#if owner}}
+            <tr>
+                <th>Started By:</th>
+                <td>{{owner}}</td>
+            </tr>
+            {{/if}}
             {{#if runTime}}
             <tr>
                 <th>Run Time:</th>

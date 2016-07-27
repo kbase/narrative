@@ -29,7 +29,7 @@ class Job(object):
     # _comm = None
     _job_logs = list()
 
-    def __init__(self, job_id, app_id, inputs, tag='release', app_version=None, cell_id=None):
+    def __init__(self, job_id, app_id, inputs, owner, tag='release', app_version=None, cell_id=None):
         """
         Initializes a new Job with a given id, app id, and app app_version.
         The app_id and app_version should both align with what's available in
@@ -40,12 +40,12 @@ class Job(object):
         self.app_version = app_version
         self.tag = tag
         self.cell_id = cell_id
-        # self.job_manager = KBjobManager()
         self.inputs = inputs
+        self.owner = owner
         self._njs = clients.get('job_service')
 
     @classmethod
-    def from_state(Job, job_id, job_info, app_id, tag='release', cell_id=None):
+    def from_state(Job, job_id, job_info, owner, app_id, tag='release', cell_id=None):
         """
         Parameters:
         -----------
@@ -56,6 +56,8 @@ class Job(object):
             element of that list (not the extra list with URLs). Should have the following keys:
             'params': The set of parameters sent to that job.
             'service_ver': The version of the service that was run.
+        owner - string
+            The owner of the job (username of person who started it)
         app_id - string
             Used in place of job_info.method. This is the actual method spec that was used to
             start the job. Can be None, but Bad Things might happen.
@@ -63,16 +65,10 @@ class Job(object):
             The Tag (release, beta, dev) used to start the job.
         cell_id - the cell associated with the job (optional)
         """
-        # app_id = job_info.get('method', "Unknown App")
-        # Still juggling between Module.method_name and Module/method_name
-        # There should be one and only one / after this is done.
-        # So, if there's a /, do nothing.
-        # If not, change the first . to a /
-        # if not '/' in app_id and '.' in app_id:
-        #     app_id = app_id.replace('.', '/', 1)
         return Job(job_id,
                    app_id,
                    job_info['params'],
+                   owner,
                    tag=tag,
                    app_version=job_info.get('service_ver', None),
                    cell_id=cell_id)
@@ -186,16 +182,6 @@ class Job(object):
         log_update = self._njs.get_job_logs({'job_id': self.job_id, 'skip_lines': len(self._job_logs)})
         if log_update['lines']:
             self._job_logs = self._job_logs + log_update['lines']
-
-    def cancel(self):
-        """
-        Cancels a currently running job. Fails silently if there's no job running.
-        (No way to cancel something started with run_job right now).
-        """
-        status = self.status()
-        if status not in ['completed', 'error', 'suspend', 'cancelled']:
-            clients.get('job_service').cancel_job({'job_id': self.job_id})
-        clients.get('user_and_job_state').delete_job(self.job_id)
 
     def is_finished(self):
         """

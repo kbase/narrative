@@ -138,11 +138,11 @@ define([
             }
             return '';
         }
-        
+
         function getCellInfoLink(cell) {
             var url = utils.getCellMeta(cell, 'kbase.attributes.info.url'),
                 label = utils.getCellMeta(cell, 'kbase.attributes.info.label');
-            
+
             if (url) {
                 return a({href: url, target: '_blank'}, label || 'ref');
             }
@@ -186,14 +186,14 @@ define([
                 span({class: 'fa fa-terminal', style: 'font-size: 14pt'})
             ]);
         }
-        
+
         function renderToggleCellSettings(events) {
             // Only kbase cells have cell settings.
             if (!cell.metadata || !cell.metadata.kbase || !cell.metadata.kbase.type) {
                 return
             }
-            
-            
+
+
             return button({
                 type: 'button',
                 class: 'btn btn-default btn-xs',
@@ -246,7 +246,7 @@ define([
 //                                ]),
                                 renderToggleCodeView(events),
                                 renderToggleCellSettings(events),
-                                
+
                                 button({
                                     type: 'button',
                                     class: 'btn btn-default btn-xs',
@@ -297,7 +297,7 @@ define([
                                     dataToggle: 'tooltip',
                                     dataPlacement: 'left',
                                     title: true,
-                                    dataOriginalTitle: 'Minify Cell',
+                                    dataOriginalTitle: toggleMinMax === 'maximized' ? 'Collapse Cell' : 'Expand Cell',
                                     id: events.addEvent({type: 'click', handler: doToggleMinMaxCell})
                                 }, [
                                     span({class: 'fa fa-' + toggleIcon + '-square-o', style: {fontSize: '14pt', color: 'orange'}})

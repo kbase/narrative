@@ -572,7 +572,7 @@ class AppManager(object):
             kblogging.log_event(self._log, "run_app_error", log_info)
             raise
 
-        new_job = Job(job_id, app_id, [params], tag=tag, app_version=service_ver, cell_id=cell_id)
+        new_job = Job(job_id, app_id, [params], system_variable('user_id'), tag=tag, app_version=service_ver, cell_id=cell_id)
 
         self._send_comm_message('run_status', {
             'event': 'launched_job',

@@ -499,12 +499,14 @@ define([
 //                },
                 showNotifications: {
                     label: 'Show the Notifications panel',
+                    help: 'The notifications panel may contain informational, warning, or error messages emitted during the operation of the app cell', 
                     defaultValue: false,
                     type: 'toggle',
                     element: 'notifications'
                 },
                 showAboutApp: {
-                    label: 'Show the About App panel',
+                    label: 'Show the About This App panel',
+                    help: 'The "About This App" panel shows summary and detailed information about the App for this App Cell.',
                     defaultValue: false,
                     type: 'toggle',
                     element: 'about-app'
@@ -781,6 +783,8 @@ define([
                         checked: (settingsValue ? true : false),
                         dataSetting: key,
                         value: key,
+                        //dataToggle: 'tooltip',
+                        //title: setting.help || '',
                         id: events.addEvent({
                             type: 'change',
                             handler: function (e) {
@@ -791,8 +795,12 @@ define([
                     span({style: {marginLeft: '4px', fontStyle: 'italic'}}, setting.label)
                 ]);
             }).join('\n');
-            ui.setContent('settings.content', content);
+            ui.setContent('settings.content', div([
+                p('These options show or hide optional areas of the app cell'),
+                content
+            ]));
             events.attachEvents();
+            // ui.enableTooltips('settings');
 
             //Ensure that the settings are reflected in the UI.
             Object.keys(settings).forEach(function (key) {

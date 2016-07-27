@@ -380,7 +380,11 @@ class JobManager(object):
         """
         if job_id is None:
             raise ValueError('Job id required for deletion!')
-        self.cancel_job(job_id)
+
+        try:
+            self.cancel_job(job_id)
+        except Exception as e:
+            raise
 
         try:
             clients.get('user_and_job_state').delete_job(job_id)
@@ -398,13 +402,24 @@ class JobManager(object):
         """
         if job_id is None:
             raise ValueError('Job id required for cancellation!')
+        if job_id not in self._running_jobs:
+            raise ValueError('Attempting to cancel a Job that does not exist!')
+
+        try:
+            job = self.get_job(job_id)
+            state = job.state()
+            if state.get('cancelled', 0) == 1 or state.get('finished', 0) == 1:
+                # It's already finished, don't try to cancel it again.
+                return
+        except Exception as e:
+            raise ValueError('Unable to get Job state')
+
         try:
             clients.get('job_service').cancel_job({'job_id': job_id})
         except Exception as e:
             raise
 
         self._send_comm_message('job_canceled', {'job_id': job_id})
-
 
     def _send_comm_message(self, msg_type, content):
         """

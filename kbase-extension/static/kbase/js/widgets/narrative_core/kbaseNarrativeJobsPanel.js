@@ -3,6 +3,7 @@
 define([
     'kbwidget',
     'bootstrap',
+    'bluebird',
     'jquery',
     'handlebars',
     'narrativeConfig',
@@ -20,6 +21,7 @@ define([
 ], function (
     KBWidget,
     bootstrap,
+    Promise,
     $,
     Handlebars,
     Config,
@@ -53,6 +55,7 @@ define([
         version: '0.0.1',
         options: {
             loadingImage: Config.get('loading_gif'),
+            workspaceUrl: Config.url('workspace'),
             autopopulate: true,
             title: 'Jobs',
         },
@@ -522,28 +525,49 @@ define([
          *
          * @param {object} jobId
          * @param {object} jobState
+         * @param {object} owner - the job's owner, not the narrative's.
          */
-        openJobDeletePrompt: function (jobId, jobState) {
+        openJobDeletePrompt: function (jobId, jobState, owner) {
             if (!jobId) {
                 return;
             }
+            var curUser = Jupyter.narrative.userId;
 
-            var removeText = "Deleting this job will remove it from your Narrative. Any already generated data will be retained. Continue?";
-            var warningText = "";
-
-            if (jobState) {
-                jobState = jobState.toLowerCase();
-                if (jobState === 'queued' || jobState === 'running' || jobState === 'in-progress') {
-                    warningText = "This job is currently running on KBase servers! Removing it will attempt to stop the running job.";
-                } else if (jobState === 'completed') {
-                    warningText = "This job has completed running. You may safely remove it without affecting your Narrative.";
+            Promise.try(function() {
+                if (curUser !== owner) {
+                    var wsClient = new Workspace(Config.url('workspace'), {token: Jupyter.narrative.authToken});
+                    return Promise.resolve(wsClient.get_permissions({
+                        id: Jupyter.narrative.workspaceId
+                    }))
+                    .then(function(perms) {
+                        return (perms[curUser] && perms[curUser] === 'a');
+                    });
+                } else {
+                    return true;
                 }
-            }
-            this.jobsModal.setBody($('<div>').append(warningText + '<br><br>' + removeText));
-            this.jobsModal.setTitle('Remove Job?');
-            this.removeId = jobId;
+            }).then(function(canDelete) {
+                if (!canDelete) {
+                    this.openCannotDeletePrompt(owner);
+                }
+                else {
+                    var removeText = "Deleting this job will remove it from your Narrative. Any already generated data will be retained. Continue?";
+                    var warningText = "";
 
-            this.jobsModal.show();
+                    if (jobState) {
+                        jobState = jobState.toLowerCase();
+                        if (jobState === 'queued' || jobState === 'running' || jobState === 'in-progress') {
+                            warningText = "This job is currently running on KBase servers! Removing it will attempt to stop the running job.";
+                        } else if (jobState === 'completed') {
+                            warningText = "This job has completed running. You may safely remove it without affecting your Narrative.";
+                        }
+                    }
+                    this.jobsModal.setBody($('<div>').append(warningText + '<br><br>' + removeText));
+                    this.jobsModal.setTitle('Remove Job?');
+                    this.removeId = jobId;
+
+                    this.jobsModal.show();
+                }
+            }.bind(this));
         },
 
         openCannotDeletePrompt: function(owner) {
@@ -821,10 +845,7 @@ define([
                 job.state.position > 0) {
                 position = job.state.position;
             }
-            var owner = null;
-            if (job.owner !== Jupyter.narrative.userId) {
-                owner = job.owner;
-            }
+            var owner = job.owner;
             var jobRenderObj = {
                 name: jobName,
                 hasCell: job.state.cell_id,
@@ -858,12 +879,13 @@ define([
                 });
             }
             $jobDiv.find('span.fa-times').click(function (e) {
-                if (owner === null) {
-                    this.openJobDeletePrompt(jobId, status);
-                }
-                else {
-                    this.openCannotDeletePrompt(owner);
-                }
+                this.openJobDeletePrompt(jobId, status, owner);
+                // if (owner === null) {
+                //     this.openJobDeletePrompt(jobId, status);
+                // }
+                // else {
+                //     this.openCannotDeletePrompt(owner);
+                // }
             }.bind(this));
             return $jobDiv;
         },

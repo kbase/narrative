@@ -32,10 +32,14 @@ define([
         // Validate configuration.
         // Nothing to do...
 
-        options.environment = config.isInSidePanel ? 'sidePanel' : 'standard';
-        options.multiple = spec.multipleItems();
-        options.required = spec.required();
         options.enabled = true;
+        
+        // Is this a valid spec?
+        
+        //if (spec.required() && spec.defaultValue() === null) {
+        //    // console.log('CHECK', spec.defaultValue(), spec.nullValue(), spec.dataType());
+        //    throw new Error('This checkbox is required yet has an undefined default value');
+        /// }
 
 
         /*
@@ -105,7 +109,10 @@ define([
                     setModelValue(valueUnchecked);
                 }
             } else {
-                unsetModelValue();
+                // NOTE: we set the checkbox explicitly to the "unchecked value" 
+                // if no default value is provided.
+                // unsetModelValue();
+                setModelValue(valueUnchecked);
             }
         }
 
@@ -149,13 +156,7 @@ define([
 
                 validationResult = Validation.validateSet(rawValue, validationOptions);
 
-                return {
-                    isValid: validationResult.isValid,
-                    validated: true,
-                    diagnosis: validationResult.diagnosis,
-                    errorMessage: validationResult.errorMessage,
-                    value: validationResult.parsedValue
-                };
+                return validationResult;
             });
         }
 
@@ -182,14 +183,12 @@ define([
                                     validate()
                                         .then(function (result) {
                                             if (result.isValid) {
-                                                bus.send({
-                                                    type: 'changed',
+                                                bus.emit('changed', {
                                                     newValue: result.value
                                                 });
                                                 setModelValue(result.value);
                                             }
-                                            bus.send({
-                                                type: 'validation',
+                                            bus.emit('validation', {
                                                 errorMessage: result.errorMessage,
                                                 diagnosis: result.diagnosis
                                             });
@@ -218,8 +217,8 @@ define([
         function autoValidate() {
             return validate()
                 .then(function (result) {
-                    bus.send({
-                        type: 'validation',
+                    console.log('autovalidated', result);
+                    bus.emit('validation', {
                         errorMessage: result.errorMessage,
                         diagnosis: result.diagnosis
                     });
@@ -272,15 +271,9 @@ define([
 
         function start() {
             return Promise.try(function () {
-                bus.listen({
-                    test: function (message) {
-                        return (message.type === 'reset-to-defaults');
-                    },
-                    handle: function () {
-                        resetModelValue();
-                    }
+                bus.on('reset-to-defaults', function (message) {
+                    resetModelValue();
                 });
-
                 // shorthand for a test of the message type.
                 bus.on('update', function (message) {
                     setModelValue(message.value);

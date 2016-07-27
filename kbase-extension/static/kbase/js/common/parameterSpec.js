@@ -175,10 +175,63 @@ define([
                     return defaultValue;
             }
         }
+        
+        /*
+         * Coerce a string, undefined, or null to an "integer boolean" value --
+         * an integer which is 1 for true, 0 for false.
+         */
+        function coerceToIntBoolean(value) {
+            if (!value) {
+                return 0;
+            }
+            var intValue = parseInt(value);
+            if (!isNaN(intValue)) {
+                if (value > 0) {
+                    return 1;
+                }
+                return 0;
+            }
+            if (typeof value !== 'string') {
+                return 0;
+            }
+            switch (value.toLowerCase(value)) {
+                case 'true':
+                case 't':
+                case 'yes':
+                case 'y':
+                    return 1;
+                case 'false':
+                case 'f':
+                case 'no':
+                case 'n':
+                    return 0;
+                default:
+                    return 0;
+            }
+        }
 
         function defaultValue() {
             var defaultValues = spec.default_values;
             // No default value and not required? null value
+            
+            // special special cases.
+            switch (spec.field_type) {
+                case 'checkbox':
+                    /*
+                     * handle the special case of a checkbox with no or empty
+                     * default value. It will promote to the "unchecked value"
+                     * TODO: more cases of bad default value? Or a generic
+                     * default value validator?
+                     */
+                    if (!defaultValues || 
+                        defaultValues.length === 0) {
+                        return spec.checkbox_options.unchecked_value;
+                    } else {
+                        return coerceToIntBoolean(defaultValues[0]);
+                    }
+            }
+            
+            
             if (!defaultValues && !required()) {
                 return nullValue();
             }

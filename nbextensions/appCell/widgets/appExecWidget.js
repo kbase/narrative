@@ -18,6 +18,7 @@ define([
     'use strict';
 
     var t = html.tag,
+        tabsId,
         div = t('div'), span = t('span'), form = t('form'),
         table = t('table'), tr = t('tr'), td = t('td'), th = t('th'),
         textarea = t('textarea'),
@@ -358,8 +359,7 @@ define([
             }
 
             args.node.innerHTML = ui.buildPanel({
-                title: 'Success',
-                type: 'success',
+                title: 'Result Value',
                 classes: ['kb-panel-light'],
                 body: div({dataElement: 'content'})
             });
@@ -458,9 +458,10 @@ define([
 
 
         function render() {
+            tabsId = html.genId();
             var events = Events.make({node: container}),
                 tabs = ui.buildTabs({
-                    id: html.genId(),
+                    id: tabsId,
                     fade: true,
                     style: {
                         padding: '10px 0 0 0'
@@ -470,7 +471,7 @@ define([
                             name: 'stats',
                             label: 'Stats',
                             content: renderExecStats(),
-                            icon: ui.buildIcon({name: 'clock-o'}),
+                            icon: 'clock-o', 
                             events: [
                                 {
                                     type: 'shown',
@@ -532,7 +533,7 @@ define([
                         {
                             label: 'Log',
                             content: renderJobLog(),
-                            icon: ui.buildIcon({name: 'list'}),
+                            icon: 'list',
                             events: [
                                 {
                                     type: 'shown',
@@ -557,9 +558,10 @@ define([
                         },
                         {
                             label: 'Result',
+                            name: 'result',
                             content: renderJobResult(),
                             // icon: renderJobResultIcon(),
-                            icon: ui.buildIcon({name: 'check'}),
+                            icon: 'question',
                             events: [
                                 {
                                     type: 'shown',
@@ -894,6 +896,11 @@ define([
                     case 'suspend':
                     case 'error':
                         executionState = 'error';
+
+                        /*
+                         * Here we are simply creating a standardized error
+                         * view object.
+                         */
                         var errorId = new Uuid(4).format();
                         var errorType, errorMessage, errorDetail;
                         if (errorInfo.error) {
@@ -960,7 +967,7 @@ define([
             var canonicalState;
             temporalState = jobState.job_state;
             switch (temporalState) {
-                case 'lauching':
+                case 'launching':
                     switch (executionState) {
                         case 'processing':
                             canonicalState = 'preparing';
@@ -1129,8 +1136,48 @@ define([
             model.setItem('launchState', launchState);
 
             updateRunStateFromLaunchState(launchState);
-            // renderRunState();
+            renderRunState();
             showExecState();
+        }
+        
+        function renderRunState() {
+            var runState = model.getItem('runState');
+            if (runState && runState.executionState) {
+                switch (runState.executionState) {
+                    case 'error':
+                        // update the result tab?
+                        ui.updateTab(tabsId, 'result', {
+                            label: 'Error',
+                            icon: 'exclamation',
+                            color: 'red',
+                            select: true
+                        });
+
+                        // flip to the result tab.
+
+                        break;
+                    case 'success':
+                        // update the reslut tab
+                        ui.updateTab(tabsId, 'result', {
+                            label: 'Success',
+                            icon: 'thumbs-up',
+                            color: 'green',
+                            select: true
+                        });
+
+                        // flip to the result tab
+                        break;
+                    case 'cancelled':
+                        // update the result tab
+
+                        // flip to the result tab
+                        break;
+                    default:
+                        // otherwise just roll along.
+                }
+            }
+
+
         }
 
 
@@ -1143,13 +1190,17 @@ define([
             model.setItem('jobStateLastUpdatedTime', new Date().getTime());
             var currentJobState = model.getItem('jobState');
             //if (!currentJobState || currentJobState.job_state !== jobState.job_state) {
-                model.setItem('jobStateLastUpdatedTime', new Date().getTime());
-                model.setItem('jobState', jobState);
-                updateRunStateFromJobState('process new job state');
-                //updateJobDetails();
-                // renderRunState();
+            model.setItem('jobStateLastUpdatedTime', new Date().getTime());
+            model.setItem('jobState', jobState);
+            updateRunStateFromJobState('process new job state');
 
-                showExecState();
+            /*
+             * Handle job finalization changes here.
+             */
+            // TODO: it would be awfully nice to have this handled by an fsm.
+            renderRunState();
+
+            showExecState();
             //}
             // If any.
             // showJobError();
@@ -1252,6 +1303,7 @@ define([
                 if (message.jobState) {
                     processNewJobState(message.jobState);
                 }
+                renderRunState();
                 // renderRunState();
                 showExecState();
             });

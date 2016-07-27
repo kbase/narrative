@@ -527,13 +527,13 @@ define([
             model,
             // HMM. Sync with metadata, or just keep everything there?
             settings = {
-                showAdvanced: {
-                    label: 'Show advanced parameters',
-                    defaultValue: false,
-                    type: 'custom'
-                },
+//                showAdvanced: {
+//                    label: 'Show advanced parameters',
+//                    defaultValue: false,
+//                    type: 'custom'
+//                },
                 showNotifications: {
-                    label: 'Show the notifications panel',
+                    label: 'Show the Notifications panel',
                     defaultValue: false,
                     type: 'toggle',
                     element: 'notifications'
@@ -922,7 +922,7 @@ define([
                                     title: 'About',
                                     name: 'about-app',
                                     hidden: true,
-                                    collapsed: true,
+                                    collapsed: false,
                                     type: 'default',
                                     classes: ['kb-panel-container'],
                                     body: [
@@ -1204,6 +1204,11 @@ define([
         function renderNotifications() {
             var events = Events.make(),
                 notifications = model.getItem('notifications') || [],
+                content;
+                
+            if (notifications.length === 0) {
+                content = span({style: {fontStyle: 'italic'}}, 'There are currently no notifications');
+            } else {
                 content = notifications.map(function (notification, index) {
                     return div({class: 'row'}, [
                         div({class: 'col-md-10'}, notification),
@@ -1220,6 +1225,7 @@ define([
                         ]))
                     ]);
                 }).join('\n');
+            }
             ui.setContent('notifications.content', content);
             events.attachEvents(container);
         }
@@ -1510,7 +1516,6 @@ define([
                         return {mode: 'processing', stage: 'launching'};
                     case 'launched_job':
                         // NEW: start listening for jobs.
-                        // console.log('Starting to listen for job id', message);
                         startListeningForJobMessages(message.job_id);
                         return {mode: 'processing', stage: 'launching'};
                     case 'error':
@@ -1582,7 +1587,7 @@ define([
                 // TODO: better place/way to do this:
                 if (ui.isDeveloper()) {
                     settings.showDeveloper = {
-                        label: 'Show developer features',
+                        label: 'Show Developer features',
                         defaultValue: false,
                         type: 'toggle',
                         element: 'developer-options'
@@ -1670,7 +1675,6 @@ define([
                         return;
                     }
 
-                    console.log('job deleted', message, fsm.getCurrentState());
                     resetToEditMode('job-deleted');
                 }
             });
@@ -2043,7 +2047,6 @@ define([
                 cellBus.on('output-cell-removed', function (message) {
                     var output = model.getItem('output');
 
-                    // console.log('HANDLE', message, output);
                     if (!output.byJob[message.jobId]) {
                         return;
                     }
@@ -2246,7 +2249,6 @@ define([
                             type: 'get-parameter'
                         },
                         handle: function (message) {
-                            console.log('Getting?', message, model.getItem('params'));
                             return {
                                 value: model.getItem(['params', message.parameterName])
                             };

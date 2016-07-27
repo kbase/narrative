@@ -179,6 +179,25 @@ define([
         function defaultValue() {
             var defaultValues = spec.default_values;
             // No default value and not required? null value
+            
+            // special special cases.
+            switch (spec.field_type) {
+                case 'checkbox':
+                    /*
+                     * handle the special case of a checkbox with no or empty
+                     * default value. It will promote to the "unchecked value"
+                     * TODO: more cases of bad default value? Or a generic
+                     * default value validator?
+                     */
+                    if (!defaultValues || 
+                        defaultValues.length === 0 || 
+                        defaultValues[0].trim() === '' || 
+                        parseInt(defaultValues[0]) === null) {
+                        return spec.checkbox_options.unchecked_value;
+                    }
+            }
+            
+            
             if (!defaultValues && !required()) {
                 return nullValue();
             }

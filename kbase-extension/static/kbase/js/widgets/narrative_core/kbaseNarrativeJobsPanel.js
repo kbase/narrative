@@ -202,8 +202,8 @@ define([
             }.bind(this));
 
             bus.on('request-job-cancellation', function (message) {
-                // this.deleteJob(message.jobId);
-                this.sendCommMessage(this.CANCEL_JOB, message.jobId);
+                this.deleteJob(message.jobId);
+                // this.sendCommMessage(this.CANCEL_JOB, message.jobId);
             }.bind(this));
 
             bus.on('request-job-status', function (message) {
@@ -328,6 +328,7 @@ define([
                             owner: jobStateMessage.owner
                         };
 
+
                         this.sendJobMessage('job-status', jobId, {
                             jobId: jobId,
                             jobState: jobStateMessage.state,
@@ -372,6 +373,8 @@ define([
 
                     // TODO: make sure we are catching these ... perhaps they need to be run-status...
                     // this.sendJobMessage('job-status', msg.content.data.content.job_id, msg.content.data.content);
+
+
                     this.sendCellMessage('run-status', msg.content.data.content.cell_id, msg.content.data.content);
                     break;
                 case 'job_err':
@@ -391,7 +394,7 @@ define([
 
                 case 'job_canceled':
                     var canceledId = msg.content.data.content.job_id;
-                    this.sendJobMessage('job-canceled', canceledId, {jobId: canceledId, via: 'job_canceled'});
+                    this.sendJobMessage('job-deleted', canceledId, {jobId: canceledId, via: 'job_canceled'});
                     break;
 
                 case 'job_logs':

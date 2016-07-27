@@ -250,9 +250,9 @@ define([
                         params: 'complete',
                         code: 'built'
                     },
-                    {
-                        mode: 'canceled'
-                    }
+                    // {
+                    //     mode: 'canceled'
+                    // }
                 ]
             },
             {
@@ -292,9 +292,9 @@ define([
                         params: 'complete',
                         code: 'built'
                     },
-                    {
-                        mode: 'canceled'
-                    }
+                    // {
+                    //     mode: 'canceled'
+                    // }
                 ]
             },
             {
@@ -330,9 +330,9 @@ define([
                         params: 'complete',
                         code: 'built'
                     },
-                    {
-                        mode: 'canceled'
-                    }
+                    // {
+                    //     mode: 'canceled'
+                    // }
                 ]
             },
             {
@@ -370,32 +370,32 @@ define([
                     }
                 ]
             },
-            {
-                state: {
-                    mode: 'canceled'
-                },
-                ui: {
-                    buttons: {
-                        enabled: ['re-run-app'],
-                        disabled: [],
-                        hidden: ['run-app', 'cancel']
-                    },
-                    elements: {
-                        show: ['parameters-display-group', 'exec-group', 'output-group'],
-                        hide: ['parameters-group']
-                    }
-                },
-                next: [
-                    {
-                        mode: 'canceled'
-                    },
-                    {
-                        mode: 'editing',
-                        params: 'complete',
-                        code: 'built'
-                    }
-                ]
-            },
+            // {
+            //     state: {
+            //         mode: 'canceled'
+            //     },
+            //     ui: {
+            //         buttons: {
+            //             enabled: ['re-run-app'],
+            //             disabled: [],
+            //             hidden: ['run-app', 'cancel']
+            //         },
+            //         elements: {
+            //             show: ['parameters-display-group', 'exec-group', 'output-group'],
+            //             hide: ['parameters-group']
+            //         }
+            //     },
+            //     next: [
+            //         {
+            //             mode: 'canceled'
+            //         },
+            //         {
+            //             mode: 'editing',
+            //             params: 'complete',
+            //             code: 'built'
+            //         }
+            //     ]
+            // },
             {
                 state: {
                     mode: 'error',
@@ -1477,6 +1477,11 @@ define([
                         // the job will be deleted form the notebook when the job cancellation
                         // event is received.
                     }
+                    else {
+                        model.deleteItem('exec');
+                        fsm.newState({mode: 'editing', params: 'complete', code: 'built'});
+                        renderUI();
+                    }
 
                     // Remove all of the execution state when we reset the app.
                     //model.deleteItem('exec');
@@ -1530,6 +1535,7 @@ define([
                         case 'in-progress':
                             return {mode: 'processing', stage: 'running'};
                         case 'completed':
+                        case 'cancelled':
                             stopListeningForJobMessages();
                             return {mode: 'success'};
                         case 'suspend':
@@ -1539,10 +1545,10 @@ define([
                                 return {mode: 'error', stage: currentState.state.stage};
                             }
                             return {mode: 'error'};
-                        case 'canceled':
-                        case 'cancelled':
-                            stopListeningForJobMessages();
-                            return {mode: 'canceled'};
+                        // case 'canceled':
+                        // case 'cancelled':
+                        //     stopListeningForJobMessages();
+                        //     return {mode: 'canceled'};
                         default:
                             throw new Error('Invalid job state ' + jobState.job_state);
                     }

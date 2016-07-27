@@ -924,10 +924,16 @@ define([
                             result: result
                         };
                         break;
-                    case 'canceled':
                     case 'cancelled':
-                        executionState = 'canceled';
+                        executionState = 'success';
+                        success = {
+
+                        };
                         break;
+                    // case 'canceled':
+                    // case 'cancelled':
+                    //     executionState = 'canceled';
+                    //     break;
                     default:
                         console.error('Invalid job state for finished job', jobState)
                         throw new Error('Invalid job state for finished job: ' + jobState.job_state);

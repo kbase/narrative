@@ -331,10 +331,10 @@ class KBaseWSManagerMixin(object):
                         continue
             elif 'kbase' in meta and 'type' in meta['kbase']:
                 kbase_type = meta['kbase']['type']
-                if kbase_type == 'method':
-                    method = meta['kbase'].get('methodCell', {}).get('method', {})
-                    id = method.get('id', 'UnknownApp')
-                    commit_hash = method.get('gitCommitHash', 'unknown')
+                if kbase_type == 'app':
+                    app = meta['kbase'].get('appCell', {}).get('app', {})
+                    id = app.get('id', 'UnknownApp')
+                    commit_hash = app.get('gitCommitHash', 'unknown')
                     method_info[u'method.' + id + '/' + commit_hash] += 1
                     num_methods += 1
             else:

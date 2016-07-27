@@ -1470,7 +1470,6 @@ define([
                         return {mode: 'processing', stage: 'launching'};
                     case 'launched_job':
                         // NEW: start listening for jobs.
-                        // console.log('Starting to listen for job id', message);
                         startListeningForJobMessages(message.job_id);
                         return {mode: 'processing', stage: 'launching'};
                     case 'error':
@@ -1625,7 +1624,6 @@ define([
                         return;
                     }
 
-                    console.log('job deleted', message, fsm.getCurrentState());
                     resetToEditMode('job-deleted');
                 }
             });
@@ -1998,7 +1996,6 @@ define([
                 cellBus.on('output-cell-removed', function (message) {
                     var output = model.getItem('output');
 
-                    // console.log('HANDLE', message, output);
                     if (!output.byJob[message.jobId]) {
                         return;
                     }
@@ -2201,7 +2198,6 @@ define([
                             type: 'get-parameter'
                         },
                         handle: function (message) {
-                            console.log('Getting?', message, model.getItem('params'));
                             return {
                                 value: model.getItem(['params', message.parameterName])
                             };

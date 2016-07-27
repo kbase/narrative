@@ -60,7 +60,7 @@ define([
             events.forEach(function (event) {
                 var node = root.querySelector(event.selector);
                 if (!node) {
-                    console.error('could not find node for ' + event.selector);
+                    console.error('could not find node', event.selector, root);
                     throw new Error('could not find node for ' + event.selector);
                 }
                 if (event.jquery) {

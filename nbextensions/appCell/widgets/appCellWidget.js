@@ -16,6 +16,7 @@ define([
     'kb_service/client/workspace',
     'common/pythonInterop',
     'common/utils',
+    'common/unodep',
     'common/ui',
     'common/fsm',
     'common/cellUtils',
@@ -38,6 +39,7 @@ define([
     Workspace,
     PythonInterop,
     utils,
+    utils2,
     UI,
     Fsm,
     cellUtils,
@@ -48,7 +50,7 @@ define([
     var t = html.tag,
         div = t('div'), span = t('span'), a = t('a'),
         table = t('table'), tr = t('tr'), th = t('th'), td = t('td'),
-        pre = t('pre'), input = t('input'), img = t('img'), p = t('p'),
+        pre = t('pre'), input = t('input'), img = t('img'), p = t('p'), blockquote = t('blockquote'),
         appStates = [
             {
                 state: {
@@ -1317,7 +1319,7 @@ define([
 
                 // This is now fire and forget.
                 // TODO: close the loop on this.
-                runtime.bus().emit('request-job-removal', {
+                runtime.bus().emit('request-job-deletion', {
                     jobId: jobId
                 });
                 resolve();
@@ -1341,9 +1343,26 @@ define([
          * narrative metadata.
          */
         function cancelJob(jobId) {
-            runtime.bus().emit('request-job-removal', {
+            runtime.bus().emit('request-job-cancellation', {
                 jobId: jobId
             });
+        }
+        
+        function resetToEditMode(source) {
+            // only do this if we are not editing.
+            
+             model.deleteItem('exec');
+
+            // Also ensure that the exec widget is reset
+            // widgets.execWidget.bus.emit('reset');
+            reloadExecutionWidget();
+
+            // TODO: evaluate the params again before we do this.
+            fsm.newState({mode: 'editing', params: 'complete', code: 'built'});
+
+            clearOutput();
+
+            renderUI();
         }
 
         function doRerun() {
@@ -1367,18 +1386,7 @@ define([
                     //}
 
                     // Remove all of the execution state when we reset the app.
-                    model.deleteItem('exec');
-
-                    // Also ensure that the exec widget is reset
-                    // widgets.execWidget.bus.emit('reset');
-                    reloadExecutionWidget();
-
-                    // TODO: evaluate the params again before we do this.
-                    fsm.newState({mode: 'editing', params: 'complete', code: 'built'});
-
-                    clearOutput();
-
-                    renderUI();
+                   resetToEditMode('do rerun');
                 });
         }
 
@@ -1415,7 +1423,11 @@ define([
          */
         function doCancel() {
             var confirmationMessage = div([
-                p('Canelling the job will halt the job processing and remove it from the job queue.'),
+                p([
+                    'Cancelling the job will halt the job processing.',
+                    'Any output objects already created will remain in your narrative and can be removed from the Data panel.'
+                ]),
+                blockquote('Note that canceling the job will not delete the job, you will need to do that from the Jobs Panel.'),
                 p('Continue to Cancel the running job?')
             ]);
             ui.showConfirmDialog('Cancel Job?', confirmationMessage, 'Yes', 'No')
@@ -1432,14 +1444,14 @@ define([
                     }
 
                     // Remove all of the execution state when we reset the app.
-                    model.deleteItem('exec');
+                    //model.deleteItem('exec');
 
-                    reloadExecutionWidget();
+                    //reloadExecutionWidget();
 
                     // TODO: evaluate the params again before we do this.
-                    fsm.newState({mode: 'editing', params: 'complete', code: 'built'});
+                    //fsm.newState({mode: 'editing', params: 'complete', code: 'built'});
 
-                    renderUI();
+                    //renderUI();
                 });
         }
 
@@ -1458,7 +1470,7 @@ define([
                         return {mode: 'processing', stage: 'launching'};
                     case 'launched_job':
                         // NEW: start listening for jobs.
-                        console.log('Starting to listen for job id', message);
+                        // console.log('Starting to listen for job id', message);
                         startListeningForJobMessages(message.job_id);
                         return {mode: 'processing', stage: 'launching'};
                     case 'error':
@@ -1544,10 +1556,11 @@ define([
             });
         }
 
-        var jobListener = null;
+        var jobListeners = [];
         function startListeningForJobMessages(jobId) {
-            // console.log('Starting to listen for job messages', jobChannelId);
-            jobListener = runtime.bus().listen({
+            var ev;
+            
+            ev = runtime.bus().listen({
                 channel: {
                     jobId: jobId
                 },
@@ -1558,7 +1571,7 @@ define([
                     var existingState = model.getItem('exec.jobState'),
                         newJobState = message.jobState,
                         outputWidgetInfo = message.outputWidgetInfo;
-                    if (!existingState || existingState.job_state !== newJobState.job_state) {
+                    if (!existingState || !utils2.isEqual(existingState, newJobState) ) {
                         model.setItem('exec.jobState', newJobState);
                         if (outputWidgetInfo) {
                             model.setItem('exec.outputWidgetInfo', outputWidgetInfo);
@@ -1595,10 +1608,35 @@ define([
                     updateFromJobState(newJobState);
                 }
             });
+            jobListeners.push(ev);
+            
+            ev = runtime.bus().listen({
+                channel: {
+                    jobId: jobId
+                },
+                key: {
+                    type: 'job-deleted'
+                },
+                handle: function (message) {
+                    //  reset the cell into edit mode
+                    var state = fsm.getCurrentState();
+                    if (state.state.mode === 'editing') {
+                        console.warn('in edit mode, so not resetting ui')
+                        return;
+                    }
+
+                    console.log('job deleted', message, fsm.getCurrentState());
+                    resetToEditMode('job-deleted');
+                }
+            });
+            jobListeners.push(ev);
         }
 
         function stopListeningForJobMessages() {
-            runtime.bus().removeListener(jobListener);
+            jobListeners.forEach(function (listener) {
+                runtime.bus().removeListener(listener);
+            });
+            jobListeners = [];
         }
 
         /*
@@ -1932,9 +1970,8 @@ define([
 
                 // TODO: only turn this on when we need it!
                 cellBus.on('run-status', function (message) {
-                    console.log('RUN-STATUS', message);
                     updateFromLaunchEvent(message);
-
+                    
                     model.setItem('exec.launchState', message);
 
                     // Save this to the exec state change log.
@@ -2107,9 +2144,7 @@ define([
                 var value = params[key],
                     paramSpec = env.parameterMap[key];
 
-                console.log('param spec', paramSpec);
                 if (paramSpec.spec.field_type === 'textsubdata') {
-                    console.log('GOT ITTT', value);
                     if (value && value instanceof Array) {
                         value = value.join(',');
                     }

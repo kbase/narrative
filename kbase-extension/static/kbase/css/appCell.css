@@ -58,7 +58,7 @@
 }
 .kb-app-cell .kb-app-parameter-input {
     vertical-align:middle;
-    white-space: nowrap;
+    xwhite-space: nowrap;
     xpadding-left:10px;
     border-bottom: 1px #ccc dotted;
 }

@@ -198,10 +198,11 @@ define([
                 this.deleteJob(message.jobId);
             }.bind(this));
 
-            bus.on('request-job-removal', function (message) {
-                this.deleteJob(message.jobId);
+            bus.on('request-job-cancellation', function (message) {
+                // this.deleteJob(message.jobId);
+                alert('Job cancellation not yet support.');
             }.bind(this));
-
+            
             bus.on('request-job-status', function (message) {
                 this.sendCommMessage(this.JOB_STATUS, message.jobId);
             }.bind(this));
@@ -251,38 +252,78 @@ define([
         handleCommMessages: function (msg) {
             var msgType = msg.content.data.msg_type,
                 bus = this.runtime.bus();
+            
             switch (msgType) {
                 case 'new_job':
                     // this.registerKernelJob(msg.content.data.content);
                     Jupyter.notebook.save_checkpoint();
                     break;
+                /*
+                 * The job status for one or more jobs. See job_status_all
+                 * for a message which covers all active jobs.
+                 * Note that these messages are additive to the job panel
+                 * cache, but the reverse logic does not apply.
+                 */
                 case 'job_status':
-                    var status = {},
-                        info = {},
-                        content = msg.content.data.content;
-                    for (var jobId in content) {
-                        var jobStateMessage = content[jobId];
+                    var incomingJobs = msg.content.data.content;
+                    
+                    /*
+                     * Ensure there is a locally cached copy of each job.
+                     * 
+                     */
+                    for (var jobId in incomingJobs) {
+                        var jobStateMessage = incomingJobs[jobId];
                         // We could just copy the entire message into the job
                         // states cache, but referencing each individual property
-                        // is more explicity about the structure.
+                        // is more explicit about the structure.
                         this.jobStates[jobId] = {
                             state: jobStateMessage.state,
                             spec: jobStateMessage.spec,
                             widgetParameters: jobStateMessage.widget_info
-                        }
+                        };
 
-                        // The job state includes both the job state info and the
-                        // app spec. Not sure why...
-                        // WJR - because the renderer needs info from the app spec
-                        // like its name and such.
-                        // EAP - what i mean was why it is sent with each job state
-                        // message. I can see that given that job_status may be
-                        // issued at any arbitrary front end state, and the spec
-                        // will be useful on the first message received, it might
-                        // be better to just bite the bullet and require that any
-                        // element which needs the app spec fetch that
-                        // independently, or rather perhaps the appmanager could
-                        // arbitrate those requets.
+                        /*
+                         * Notify the front end about the changed or new job
+                         * states.
+                         */
+                        this.sendJobMessage('job-status', jobId, {
+                            jobId: jobId,
+                            jobState: jobStateMessage.state,
+                            outputWidgetInfo: jobStateMessage.widget_info
+                        });
+                    }
+                    this.populateJobsPanel(); //status, info, content);
+                    break;
+                /*
+                 * This message must carry all jobs linked to this narrative.
+                 * The "job-deleted" logic, specifically, requires that the job
+                 * actually not exist in the job service.
+                 * NB there is logic in the job management back end to allow
+                 * job notification to be turned off per job -- this would 
+                 * be incompatible with the logic here and we should address
+                 * that. 
+                 * E.g. if that behavior is allowed, then deletion detection
+                 * would need to move to the back end, since that is the only
+                 * place that would truly know about all jobs for this narrative.
+                 */
+                case 'job_status_all':
+                    var incomingJobs = msg.content.data.content;
+                    
+                    /*
+                     * Ensure there is a locally cached copy of each job.
+                     * 
+                     */
+                    for (var jobId in incomingJobs) {
+                        var jobStateMessage = incomingJobs[jobId];
+                        // We could just copy the entire message into the job
+                        // states cache, but referencing each individual property
+                        // is more explicit about the structure.
+                        this.jobStates[jobId] = {
+                            state: jobStateMessage.state,
+                            spec: jobStateMessage.spec,
+                            widgetParameters: jobStateMessage.widget_info
+                        };
+
                         this.sendJobMessage('job-status', jobId, {
                             jobId: jobId,
                             jobState: jobStateMessage.state,
@@ -292,24 +333,29 @@ define([
 
                     // Remove jobs which are in the local cache but not in the
                     // job_status message.
+                    /*
+                     * This is for maintenance of the local job state cache.
+                     * This loop used to take care of the case in which a
+                     * cached job is not found in the incoming notifications.
+                     * This would signal a "job-deleted" message. 
+                     * Although it could be the case that a+++
+                     */
+                    // NB: this implies that t
                     Object.keys(this.jobStates).forEach(function (jobId) {
-                        var jobState = this.jobStates[jobId];
-                        // HMM the first condition covers jobs in the cache
-                        // which have been set to falsy? Not sure how that
-                        // is possible. But if so, they could not be in the
-                        // message anyway, since we just synced the cache
-                        // from the messages...
-                        //if (!jobState || !content[jobState.state.job_id]) {
-                        if (!content[jobState.state.job_id]) {
-                            this.sendJobMessage('job-deleted', jobState.state.job_id, {
-                                jobId: jobState.state.job_id
+                        if (!incomingJobs[jobId]) {
+                            // If ths job is not found in the incoming list of all
+                            // jobs, then we must both delete it locally, and 
+                            // notify any interested parties.
+                            this.sendJobMessage('job-deleted', jobId, {
+                                jobId: jobId,
+                                via: 'no_longer_exists'
                             });
                             // it is safe to delete properties here
                             delete this.jobStates[jobId];
                         }
                     }.bind(this));
                     this.populateJobsPanel(); //status, info, content);
-                    break;
+                    break;                    
                 case 'run_status':
                     // Send job status notifications on the default channel,
                     // with a key on the message type and the job id, sending
@@ -334,7 +380,7 @@ define([
 
                 case 'job_deleted':
                     var deletedId = msg.content.data.content.job_id;
-                    this.sendJobMessage('job-deleted', deletedId, {jobId: deletedId});
+                    this.sendJobMessage('job-deleted', deletedId, {jobId: deletedId, via: 'job_deleted'});
                     // console.info('Deleted job ' + deletedId);
                     this.removeDeletedJob(deletedId);
                     break;

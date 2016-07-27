@@ -48,8 +48,7 @@ define([
     // Constants
     var t = html.tag,
         div = t('div'), p = t('p'), span = t('span'),
-        select = t('select'), input = t('input'),
-        table = t('table'), tr = t('tr'), td = t('td'),
+        input = t('input'),
         option = t('option'), button = t('button');
 
     function factory(config) {
@@ -195,22 +194,133 @@ define([
             didChange();
         }
 
-        function renderAvailableItems(events) {
-            var selected = model.getItem('selectedItems', []);
-            if (!(selected instanceof Array)) {
-                selected = [ selected ];
-            }
-            var allowSelection = (spec.spec.allow_multiple || selected.length === 0);
-            var items = model.getItem('filteredAvailableItems', []),
+        function renderAvailableItems() {
+            var selected = model.getItem('selectedItems', []),
+                allowSelection = (spec.spec.allow_multiple || selected.length === 0),
+                items = model.getItem('filteredAvailableItems', []),
                 from = model.getItem('showFrom'),
                 to = model.getItem('showTo'),
                 itemsToShow = items.slice(from, to),
+                events = Events.make({node: container}),
+                content;
+
+            if (itemsToShow.length === 0) {
+                content = div({style: {textAlign: 'center'}}, 'no available values');
+            } else {
                 content = itemsToShow.map(function (item, index) {
                     var isSelected = selected.some(function (id) {
                         return (item.id === id);
                     }),
                         disabled = isSelected;
-                    return div({class: 'row', style: {border: '1px #CCC solid', width: '100%'}}, [
+                    return div({class: 'row', style: {border: '1px #CCC solid'}}, [
+                        div({
+                            class: 'col-md-2',
+                            style: {
+                                verticalAlign: 'middle',
+                                borderRadius: '3px',
+                                padding: '2px',
+                                backgroundColor: '#EEE',
+                                color: '#444',
+                                textAlign: 'right',
+                                paddingRight: '6px',
+                                fontFamily: 'monospace'
+                            }
+                        }, String(from + index + 1)),
+                        div({
+                            class: 'col-md-8',
+                            style: {
+                                padding: '2px'
+                            }
+                        }, item.label),
+                        div({class: 'col-md-2',
+                            style: {
+                                padding: '2px',
+                                textAlign: 'right',
+                                verticalAlign: 'top'
+                            }
+                        }, [
+                            (function () {
+                                if (disabled) {
+                                    return span({
+                                        class: 'kb-btn-icon',
+                                        type: 'button',
+                                        dataToggle: 'tooltip',
+                                        title: 'Remove from selected',
+                                        id: events.addEvent({
+                                            type: 'click',
+                                            handler: function () {
+                                                doRemoveSelectedAvailableItem(item.id);
+                                            }
+                                        })
+                                    }, [
+                                        span({
+                                            class: 'fa fa-minus-circle',
+                                            style: {
+                                                color: 'red',
+                                                fontSize: '200%'
+                                            }
+                                        })
+                                    ]);
+                                }
+                                if (allowSelection) {
+                                    return span({
+                                        class: 'kb-btn-icon',
+                                        type: 'button',
+                                        dataToggle: 'tooltip',
+                                        title: 'Add to selected',
+                                        dataItemId: item.id,
+                                        id: events.addEvent({
+                                            type: 'click',
+                                            handler: function () {
+                                                doAddItem(item.id);
+                                            }
+                                        })}, [span({
+                                            class: 'fa fa-plus-circle',
+                                            style: {
+                                                color: 'green',
+                                                fontSize: '200%'
+                                            }
+                                        })
+                                    ]);
+                                }
+                                return span({
+                                    class: 'kb-btn-icon',
+                                    type: 'button',
+                                    dataToggle: 'tooltip',
+                                    title: 'Can\'t add - remove one first',
+                                    dataItemId: item.id
+                                }, span({class: 'fa fa-ban', style: {color: 'silver', fontSize: '200%'}}));
+                            }())
+
+                        ])
+                    ]);
+                })
+                    .join('\n');
+            }
+
+            ui.setContent('available-items', content);
+            events.attachEvents();
+            ui.enableTooltips('available-items');
+        }
+
+        function renderSelectedItems() {
+            var selectedItems = model.getItem('selectedItems', []),
+                valuesMap = model.getItem('availableValuesMap', {}),
+                events = Events.make({node: container}),
+                content;
+
+            if (selectedItems.length === 0) {
+                content = div({style: {textAlign: 'center'}}, 'no selected values');
+            } else {
+                content = selectedItems.map(function (itemId, index) {
+                    var item = valuesMap[itemId];
+                    if (item === undefined || item === null) {
+                        item = {
+                            label: itemId
+                        };
+                    }
+
+                    return div({class: 'row', style: {border: '1px #CCC solid', borderCollapse: 'collapse', boxSizing: 'border-box'}}, [
                         div({
                             class: 'col-md-2',
                             style: {
@@ -225,87 +335,17 @@ define([
                                 paddingRight: '6px',
                                 fontFamily: 'monospace'
                             }
-                        }, String(from + index + 1)),
+                        }, String(index + 1)),
                         div({
-                            class: allowSelection ? 'col-md-7' : 'col-md-10',
-                            style: {
-                                xdisplay: 'inline-block',
-                                xwidth: '70%',
-                                padding: '2px',
-                                overflowY: 'auto'
-                            }
-                        }, item.label),
-                        div({ class: 'col-md-3' + (allowSelection ? '' : ' hidden'),
-                            style: {
-                                xdisplay: 'inline-block',
-                                xwidth: '10%',
-                                //minWidth: '5em',
-                                padding: '2px',
-                                textAlign: 'right',
-                                verticalAlign: 'top'
-                            }
-                        }, [
-                            (function () {
-                                if (disabled) {
-                                    return span({
-                                        class: 'kb-btn-icon',
-                                        type: 'button',
-                                        id: events.addEvent({
-                                            type: 'click',
-                                            handler: function () {
-                                                doRemoveSelectedAvailableItem(item.id);
-                                            }
-                                        })
-                                    }, span({class: 'fa fa-minus-circle', style: {color: 'red', fontSize: '200%'}}));
-                                }
-                                return span({
-                                    class: 'kb-btn-icon',
-                                    type: 'button',
-                                    dataItemId: item.id,
-                                    id: events.addEvent({
-                                        type: 'click',
-                                        handler: function () {
-                                            doAddItem(item.id);
-                                        }
-                                    })}, span({class: 'fa fa-plus-circle', style: {color: 'green', fontSize: '200%'}}));
-                            }())
-
-                        ])
-                    ]);
-                })
-                .join('\n');
-
-            ui.setContent('available-items-count', String(items.length));
-            ui.setContent('available-items', content);
-            ui.setContent('filtered-items-count', items.length);
-        }
-
-        function renderSelectedItems(events) {
-            var selectedItems = model.getItem('selectedItems', []);
-            if (!(selectedItems instanceof Array)) {
-                selectedItems = [selectedItems];
-            }
-            var valuesMap = model.getItem('availableValuesMap', {}),
-                content = selectedItems.map(function (itemId, index) {
-                    var item = valuesMap[itemId];
-                    if (item === undefined || item === null) {
-                        item = {
-                            label: itemId
-                        };
-                    }
-
-                    return div({class: 'row', style: {border: '1px #CCC solid', borderCollapse: 'collapse'}}, [
-                        div({
-                            class: 'col-md-9',
+                            class: 'col-md-8',
                             style: {
                                 xdisplay: 'inline-block',
                                 xwidth: '90%',
-                                padding: '2px',
-                                overflowY: 'auto'
+                                padding: '2px'
                             }
                         }, item.label),
                         div({
-                            class: 'col-md-3',
+                            class: 'col-md-2',
                             style: {
                                 xdisplay: 'inline-block',
                                 xwidth: '10%',
@@ -319,6 +359,8 @@ define([
                             span({
                                 class: 'kb-btn-icon',
                                 type: 'button',
+                                dataToggle: 'tooltip',
+                                title: 'Remove from selected',
                                 id: events.addEvent({
                                     type: 'click',
                                     handler: function () {
@@ -329,7 +371,140 @@ define([
                         ])
                     ]);
                 }).join('\n');
+            }
             ui.setContent('selected-items', content);
+            events.attachEvents();
+            ui.enableTooltips('selected-items');
+        }
+
+        function renderSearchBox() {
+            var items = model.getItem('availableValues', []),
+                events = Events.make({node: container}),
+                content;
+
+            //if (items.length === 0) {
+            //    content = '';
+            //} else {
+            content = input({
+                class: 'form-contol',
+                style: {xwidth: '100%'},
+                placeholder: 'search',
+                value: model.getItem('filter') || '',
+                id: events.addEvents({events: [
+                        {
+                            type: 'keyup',
+                            handler: function (e) {
+                                doSearchKeyUp(e);
+                            }
+                        },
+                        {
+                            type: 'focus',
+                            handler: function () {
+                                Jupyter.narrative.disableKeyboardManager();
+                            }
+                        },
+                        {
+                            type: 'blur',
+                            handler: function () {
+                                console.log('SingleSubData Search BLUR');
+                                // Jupyter.narrative.enableKeyboardManager();
+                            }
+                        },
+                        {
+                            type: 'click',
+                            handler: function () {
+                                Jupyter.narrative.disableKeyboardManager();
+                            }
+                        }
+                    ]})
+            });
+            //}
+
+            ui.setContent('search-box', content);
+            events.attachEvents();
+        }
+
+        function renderStats() {
+            var availableItems = model.getItem('availableValues', []),
+                filteredItems = model.getItem('filteredAvailableItems', []),
+                content;
+
+            if (availableItems.length === 0) {
+                content = span({style: {fontStyle: 'italic'}}, [
+                    ' - no available items'
+                ]);
+            } else {
+                content = span({style: {fontStyle: 'italic'}}, [
+                    ' - showing ',
+                    span([
+                        String(filteredItems.length),
+                        ' of ',
+                        String(availableItems.length)
+                    ])
+                ]);
+            }
+
+            ui.setContent('stats', content);
+        }
+
+        function renderToolbar() {
+            var items = model.getItem('filteredAvailableItems', []),
+                events = Events.make({node: container}),
+                content;
+
+            if (items.length === 0) {
+                content = '';
+            } else {
+                content = div([
+                    button({
+                        type: 'button',
+                        class: 'btn btn-default',
+                        style: {xwidth: '100%'},
+                        id: events.addEvent({
+                            type: 'click',
+                            handler: function () {
+                                doFirstPage();
+                            }
+                        })
+                    }, ui.buildIcon({name: 'step-forward', rotate: 270})),
+                    button({
+                        class: 'btn btn-default',
+                        type: 'button',
+                        style: {xwidth: '50%'},
+                        id: events.addEvent({
+                            type: 'click',
+                            handler: function () {
+                                doPreviousPage();
+                            }
+                        })
+                    }, ui.buildIcon({name: 'caret-up'})),
+                    button({
+                        class: 'btn btn-default',
+                        type: 'button',
+                        style: {xwidth: '100%'},
+                        id: events.addEvent({
+                            type: 'click',
+                            handler: function () {
+                                doNextPage();
+                            }
+                        })
+                    }, ui.buildIcon({name: 'caret-down'})),
+                    button({
+                        type: 'button',
+                        class: 'btn btn-default',
+                        style: {xwidth: '100%'},
+                        id: events.addEvent({
+                            type: 'click',
+                            handler: function () {
+                                doLastPage();
+                            }
+                        })
+                    }, ui.buildIcon({name: 'step-forward', rotate: 90}))
+                ]);
+            }
+
+            ui.setContent('toolbar', content);
+            events.attachEvents();
         }
 
         function setPageStart(newFrom) {
@@ -413,212 +588,99 @@ define([
                     }
                 }, 'Items will be available after selecting a value for ' + subdataOptions.subdata_selection.parameter_id);
             }
-            //if (availableValues.length === 0) {
-            //    return 'No items found';
-            //}
 
             selectOptions = buildOptions();
 
             return div([
-                div({class: 'row'}, [
-                    div({class: 'col-md-6', style: {paddingBottom: '6px'}}, [
-                        div({
-                            style: {
-                                fontWeight: 'bold',
-                                textDecoration: 'underline',
-                                fontStyle: 'italic',
-                                textAlign: 'center'
-                            }
-                        }, 'Available')
-                    ]),
-                    div({class: 'col-md-6'}, [
-                        div({
-                            style: {
-                                fontWeight: 'bold',
-                                textDecoration: 'underline',
-                                fontStyle: 'italic',
-                                textAlign: 'center'
-                            }
-                        }, 'Selected')
-                    ]),
-                ]),
-//                 div({class: 'row'}, [
-//                     div({class: 'col-md-6'}, [
-//                         div({class: 'row'}, [
-//                             div({class: 'col-md-6'}, 'col 1'),
-//                             div({class: 'col-md-6'}, 'col 1')
-//                         ])
+//                div({class: 'row'}, [
+//                    div({class: 'col-md-6', style: {paddingBottom: '6px'}}, [
+//                        div({
+//                            style: {
+//                                fontWeight: 'bold',
+//                                textDecoration: 'underline',
+//                                fontStyle: 'italic',
+//                                textAlign: 'center'
+//                            }
+//                        }, 'Available')
 //                    ]),
 //                    div({class: 'col-md-6'}, [
+//                        div({
+//                            style: {
+//                                fontWeight: 'bold',
+//                                textDecoration: 'underline',
+//                                fontStyle: 'italic',
+//                                textAlign: 'center'
+//                            }
+//                        }, 'Selected')
 //                    ])
 //                ]),
-                div({class: 'row'},
-                (function () {
-                    if (availableValues.length === 0) {
-                        return [div({class: 'col-md-6'}, '')];
-                    }
-                    return  [
-                        div({class: 'col-md-3'}, [
-                            div({class: ''}, [
-                                input({
-                                    class: 'form-contol',
-                                    style: {width: '100%'},
-                                    placeholder: 'search',
-                                    value: model.getItem('filter') || '',
-                                    id: events.addEvents({ events : [{
-                                        type: 'keyup',
-                                        handler: function (e) {
-                                            doSearchKeyUp(e);
-                                        }
-                                    },
-                                    {
-                                        type: 'focus',
-                                        handler: function(e) {
-                                            Jupyter.narrative.disableKeyboardManager();
-                                        }
-                                    },
-                                    {
-                                        type: 'blur',
-                                        handler: function(e) {
-                                            console.log('SingleSubData Search BLUR');
-                                            // Jupyter.narrative.enableKeyboardManager();
-                                        }
-                                    },
-                                    {
-                                        type: 'click',
-                                        handler: function(e) {
-                                            Jupyter.narrative.disableKeyboardManager();
-                                        }
-                                    }]})
-                                })
-                            ])
-                        ]),
-                        div({class: 'col-md-3', style: {textAlign: 'center'}}, [
-                            span({dataElement: 'filtered-items-count'}), ' of ',
-                            span({dataElement: 'available-items-count'})
-                        ])
-                    ];
-                }()).concat([
-                    div({class: 'col-md-6'}, '')
-                ])),
-                div({class: 'row'}, [
-                    (function () {
-                        if (availableValues.length === 0) {
-                            return [div({class: 'col-md-6'}, '')];
-                        }
-                        return [
-                            div({class: 'col-md-6'}, [
-                                div([
-                                    button({
-                                        type: 'button',
-                                        class: 'btn btn-default',
-                                        style: {xwidth: '100%'},
-                                        id: events.addEvent({
-                                            type: 'click',
-                                            handler: function () {
-                                                doFirstPage();
-                                            }
-                                        })
-                                    }, ui.buildIcon({name: 'step-forward', rotate: 270})),
-                                    button({
-                                        class: 'btn btn-default',
-                                        type: 'button',
-                                        style: {xwidth: '50%'},
-                                        id: events.addEvent({
-                                            type: 'click',
-                                            handler: function () {
-                                                doPreviousPage();
-                                            }
-                                        })
-                                    }, ui.buildIcon({name: 'caret-up'})),
-                                    button({
-                                        class: 'btn btn-default',
-                                        type: 'button',
-                                        style: {xwidth: '100%'},
-                                        id: events.addEvent({
-                                            type: 'click',
-                                            handler: function () {
-                                                doNextPage();
-                                            }
-                                        })
-                                    }, ui.buildIcon({name: 'caret-down'})),
-                                    button({
-                                        type: 'button',
-                                        class: 'btn btn-default',
-                                        style: {xwidth: '100%'},
-                                        id: events.addEvent({
-                                            type: 'click',
-                                            handler: function () {
-                                                doLastPage();
-                                            }
-                                        })
-                                    }, ui.buildIcon({name: 'step-forward', rotate: 90}))
-                                ])
-                            ])
-                        ];
-                    }()).concat([div({class: 'col-md-6'}, '')])
-                ]),
-                div({class: 'row'}, [
-                    div({class: 'col-md-6'},
-                    (function () {
-                        if (availableValues.length === 0) {
-                            return div({style: {textAlign: 'center'}}, 'no available values');
-                        }
-                        return div({
-                            style: {border: '1px silver solid', xheight: '100px'},
-                            dataElement: 'available-items'
-                        });
-                    }())),
-                    div({class: 'col-md-6'},
-                    (function () {
-                        if (value.length === 0) {
-                            return div({style: {textAlign: 'center'}}, 'no selected values');
-                        }
-                        return div({
-                            style: {
-                                border: 'silverpx red solid', xheight: '100px'
-                            },
-                            dataElement: 'selected-items'
-                        });
-                    }()))
-                ])
-            ]);
-
-            // CONTROL
-//            return div({style: {border: '1px silver solid'}}, [
-//                div({style: {fontStyle: 'italic'}, dataElement: 'count'}, buildCount()),
-//                select({
-//                    id: events.addEvent({
-//                        type: 'change',
-//                        handler: function (e) {
-//                            validate()
-//                                .then(function (result) {
-//                                    if (result.isValid) {
-//                                        model.setItem('value', result.value);
-//                                        updateInputControl('value');
-//                                        bus.emit('changed', {
-//                                            newValue: result.value
-//                                        });
-//                                    } else if (result.diagnosis === 'required-missing') {
-//                                        model.setItem('value', result.value);
-//                                        updateInputControl('value');
-//                                        bus.emit('changed', {
-//                                            newValue: result.value
-//                                        });
+                ui.buildCollapsiblePanel({
+                    title: span(['Available Items', span({dataElement: 'stats'})]),
+                    classes: ['kb-panel-light'],
+                    body: div({dataElement: 'available-items-area', style: {marginTop: '10px'}}, [
+                        div({class: 'row'}, [
+                            div({
+                                class: 'col-md-6'
+                            }, [
+                                span({dataElement: 'search-box'})
+                            ]),
+//                            div({
+//                                class: 'col-md-3'
+//                            }, [
+//                                span({
+//                                    dataElement: 'stats',
+//                                    style: {
+//                                        fontStyle: 'italic'
 //                                    }
-//                                    bus.emit('validation', {
-//                                        errorMessage: result.errorMessage,
-//                                        diagnosis: result.diagnosis
-//                                    });
-//                                });
-//                        }
-//                    }),
-//                    size: size,
-//                    multiple: multiple,
-//                    class: 'form-control',
-//                    dataElement: 'input'
-//                }, selectOptions)
-//            ]);
+//                                })
+//                            ]),
+                            div({
+                                class: 'col-md-6',
+                                style: {textAlign: 'right'},
+                                dataElement: 'toolbar'
+                            })
+                        ]),
+                        div({class: 'row', style: {marginTop: '4px'}}, [
+                            div({class: 'col-md-12'},
+                                div({
+                                    style: {
+                                        border: '1px silver solid'
+                                    },
+                                    dataElement: 'available-items'
+                                }))
+                        ])
+                    ])
+                }),
+                ui.buildPanel({
+                    title: 'Selected Items',
+                    classes: ['kb-panel-light'],
+                    body: div({
+                        style: {
+                            border: '1px silver solid'
+                        },
+                        dataElement: 'selected-items'
+                    })
+                })
+
+//                div({class: 'row'}, [
+//                    div({class: 'col-md-6'},
+//                        div({
+//                            style: {
+//                                border: '1px silver solid',
+//                                xheight: '100px'
+//                            },
+//                            dataElement: 'available-items'
+//                        })),
+//                    div({class: 'col-md-6'},
+//                        div({
+//                            style: {
+//                                border: '1px silver solid',
+//                                xheight: '100px'
+//                            },
+//                            dataElement: 'selected-items'
+//                        }))
+//                ])
+            ]);
         }
 
         /*
@@ -683,6 +745,7 @@ define([
         }
 
         function resetModelValue() {
+            model.reset();
             if (spec.spec.default_values && spec.spec.default_values.length > 0) {
                 // nb i'm assuming here that this set of strings is actually comma
                 // separated string on the other side.
@@ -732,7 +795,7 @@ define([
 
         function makeLabel(item, showSourceObjectName) {
             return div({style: {wordWrap: 'break-word'}}, [
-                div({style: {fontWeight: 'bold', xOverflow: 'auto'}}, item.id),
+                div({style: {fontWeight: 'bold'}}, item.id),
                 item.desc,
                 (function () {
                     if (showSourceObjectName && item.objectName) {
@@ -754,18 +817,18 @@ define([
             }
             var options = spec.spec.textsubdata_options;
             var subObjectIdentity = {
-                    ref: referenceObjectRef,
-                    included: options.subdata_selection.subdata_included
-                };
+                ref: referenceObjectRef,
+                included: options.subdata_selection.subdata_included
+            };
             var ret;
             if (options.subdata_selection.service_function) {
                 var swUrl = runtime.config('services.workspace.url').replace("ws", "service_wizard");
                 var genericClient = new GenericClient(swUrl, {
                     token: runtime.authToken()
                 });
-                ret = genericClient.sync_call(options.subdata_selection.service_function, 
-                        [[subObjectIdentity]], null, null, 
-                        options.subdata_selection.service_version);
+                ret = genericClient.sync_call(options.subdata_selection.service_function,
+                    [[subObjectIdentity]], null, null,
+                    options.subdata_selection.service_version);
             } else {
                 var workspace = new Workspace(runtime.config('services.workspace.url'), {
                     token: runtime.authToken()
@@ -793,34 +856,34 @@ define([
                         if (!result) {
                             return;
                         }
-                        
+
                         // Check if some generic wrapping is used which wasn't unwrapped by GenericClient
                         if (result.constructor === Array)
                             result = result[0];
-                        
+
                         var subdata = Props.getDataItem(result.data, options.subdata_selection.path_to_subdata);
 
                         if (!subdata) {
                             return;
                         }
 
-                // if(subdata instanceof Array) {
-                //     for(var k=0; k<subdata.length; k++) {
-                //         var dname = datainfo[1];
-                //         if(includeWsId) { dname = datainfo[6] + '/' + datainfo[1]; }
-                //         var id = subdata[k]; // default id is just the value
-                //         // if the selection_id is set, and the object is an object of somekind, then use that value
-                //         if(selection_id && typeof id === 'object') {
-                //             id = subdata[k][selection_id];
-                //         }
-                //         var autofill = {
-                //             id: id,
-                //             desc: hb_template(subdata[k]),
-                //             dref: datainfo[6] + '/' + datainfo[0] + '/' + datainfo[4],
-                //             dname: dname
-                //         };
-                //         self.autofillData.push(autofill);
-                //     }
+                        // if(subdata instanceof Array) {
+                        //     for(var k=0; k<subdata.length; k++) {
+                        //         var dname = datainfo[1];
+                        //         if(includeWsId) { dname = datainfo[6] + '/' + datainfo[1]; }
+                        //         var id = subdata[k]; // default id is just the value
+                        //         // if the selection_id is set, and the object is an object of somekind, then use that value
+                        //         if(selection_id && typeof id === 'object') {
+                        //             id = subdata[k][selection_id];
+                        //         }
+                        //         var autofill = {
+                        //             id: id,
+                        //             desc: hb_template(subdata[k]),
+                        //             dref: datainfo[6] + '/' + datainfo[0] + '/' + datainfo[4],
+                        //             dname: dname
+                        //         };
+                        //         self.autofillData.push(autofill);
+                        //     }
 
                         if (subdata instanceof Array) {
                             // For arrays we pluck off the "selectionId" property from
@@ -941,7 +1004,7 @@ define([
         function render() {
             return Promise.try(function () {
                 // check to see if we have to render inputControl.
-                var events = Events.make(),
+                var events = Events.make({node: container}),
                     inputControl = makeInputControl(events, bus),
                     content = div({
                         class: 'input-group',
@@ -951,17 +1014,20 @@ define([
                     }, inputControl);
 
                 ui.setContent('input-container', content);
-                renderAvailableItems(events);
-                renderSelectedItems(events);
+                renderSearchBox();
+                renderStats();
+                renderToolbar();
+                renderAvailableItems();
+                renderSelectedItems();
 
-                events.attachEvents(container);
+                events.attachEvents();
             })
-            .then(function () {
-                return autoValidate();
-            })
-            .catch(function (err) {
-                console.error('ERROR in render', err);
-            });
+                .then(function () {
+                    return autoValidate();
+                })
+                .catch(function (err) {
+                    console.error('ERROR in render', err);
+                });
         }
 
         /*
@@ -990,12 +1056,20 @@ define([
              */
             bus.on('reset-to-defaults', function (message) {
                 resetModelValue();
+                // model.reset();
                 // TODO: this should really be set when the linked field is reset...
                 model.setItem('availableValues', []);
                 model.setItem('referenceObjectName', null);
                 doFilterItems();
-                updateInputControl('availableValues');
-                updateInputControl('value');
+
+                renderSearchBox();
+                renderStats();
+                renderToolbar();
+                renderAvailableItems();
+                renderSelectedItems();
+
+                // updateInputControl('availableValues');
+                // updateInputControl('value');
             });
 
             /*
@@ -1040,6 +1114,8 @@ define([
                     if (message.newValue === '') {
                         newValue = null;
                     }
+                    // reset the entire model.
+                    model.reset();
                     model.setItem('referenceObjectName', newValue);
                     syncAvailableValues()
                         .then(function () {
@@ -1061,6 +1137,7 @@ define([
                     if (message.newValue === '') {
                         newValue = null;
                     }
+                    model.reset();
                     model.setItem('referenceObjectName', newValue);
                     syncAvailableValues()
                         .then(function () {
@@ -1099,6 +1176,26 @@ define([
 
 
         }
+
+        // MODIFICATION EVENTS
+
+        /*
+         * More refinement of modifications. 
+         * 
+         * - initial run
+         * - reference data updated
+         *   - added "reset" method to props (model) to allow graceful zapping
+         *     of the model state.
+         * - item added to selected
+         * - item removed from selected
+         * - search term available
+         * - search term removed
+         * - filtered data updated
+         * 
+         */
+
+
+
 
         // LIFECYCLE API
 
@@ -1167,7 +1264,7 @@ define([
                             } else {
                                 var selectedItems = paramValue.value;
                                 if (!(selectedItems instanceof Array)) {
-                                    selectedItems = [ selectedItems ];
+                                    selectedItems = [selectedItems];
                                 }
                                 model.setItem('selectedItems', selectedItems);
                             }
@@ -1176,7 +1273,6 @@ define([
                             if (referencedParamValue) {
                                 model.setItem('referenceObjectName', referencedParamValue.value);
                             }
-                            console.log('syncing...');
                             return syncAvailableValues()
                                 .then(function () {
                                     updateInputControl('availableValues');
@@ -1206,7 +1302,15 @@ define([
             }
             ,
             onUpdate: function (props) {
-                render();
+                // cheap version
+                //renderSearchBox();
+                renderStats();
+                renderToolbar();
+
+                renderAvailableItems();
+                renderSelectedItems();
+                // renderNavbar();
+                // render();
                 // updateInputControl(props);
             }
         });

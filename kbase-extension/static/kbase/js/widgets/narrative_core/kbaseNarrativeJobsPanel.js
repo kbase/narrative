@@ -200,7 +200,7 @@ define([
 
             bus.on('request-job-cancellation', function (message) {
                 // this.deleteJob(message.jobId);
-                alert('Job cancellation not yet support.');
+                alert('Job cancellation not yet supported.');
             }.bind(this));
             
             bus.on('request-job-status', function (message) {

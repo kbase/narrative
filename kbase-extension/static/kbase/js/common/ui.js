@@ -78,6 +78,23 @@ define([
 
             return container.querySelector(selector);
         }
+        
+        /*
+         * a node spec is a list of path segment specs, which are each a simple
+         * object where the keys are the suffix to a data- attribute and the v
+         * values are the values. Each segment is an array of these, which are 
+         * concatenated
+         */
+        function findNode(nodePath) {            
+            var selector = nodePath.map(function (pathElement) {     
+                return Object.keys(pathElement).map(function (dataKey) {
+                    var dataValue = pathElement[dataKey];
+                    return '[data-' + dataKey + '="' + dataValue + '"]';
+                }).join('');
+            }).join(' ');
+            
+            return container.querySelector(selector);
+        }
 
         function confirmDialog(prompt, yesLabel, noLabel) {
             return window.confirm(prompt);
@@ -638,6 +655,7 @@ define([
                 }
             }
             return span({
+                dataElement: 'icon',
                 class: klasses.join(' ')
             });
         }
@@ -647,6 +665,56 @@ define([
                 newArray.push(arr[i]);
             }
             return newArray;
+        }
+        function updateTab(tabId, tabName, updates) {
+            var node = document.getElementById(tabId);
+            if (!node) {
+                return;
+            }
+            
+            // Update tab label
+            var tabTab = findNode([
+                {
+                    element: 'tab',
+                    name: tabName
+                }
+            ]);
+            
+            console.log('FOUND TAB', tabTab);
+            
+            // Update tab label 
+            if (updates.label) {
+                var labelNode = tabTab.querySelector('[data-element="label"]');
+                if (labelNode) {
+                    labelNode.innerHTML = updates.label;
+                }
+            }
+            
+            // update the tab icon
+            if (updates.icon) {
+                var iconNode = tabTab.querySelector('[data-element="icon"]');
+                if (iconNode) {
+                    // remove any icons.
+                    var classList = iconNode.classList;
+                    for (var i = classList.length; classList > 0; classList -= 1) {
+                        if (classList.item[i].substring(0,3) === 'fa-') {
+                            classList.remove(classList.item[i]);
+                        }
+                    }
+                    iconNode.classList.add('fa-' + updates.icon);
+                }
+            }
+            
+            // update tab color
+            if (updates.color) {
+                tabTab.style.color = updates.color;
+            }
+            
+            // switch to tab
+            if (updates.select) {
+                
+            }
+            
         }
         function buildTabs(arg) {
             var tabsId = arg.id,
@@ -705,23 +773,33 @@ define([
             content = div(tabsAttribs, [
                 ul({class: tabClasses.join(' '), role: 'tablist'},
                     tabTabs.map(function (tab, index) {
-                        var attribs = {
+                        var tabAttribs = {
                             role: 'presentation'
-                        };
-                        if (selectInitialTab) {
-                            if (index === activeIndex) {
-                                attribs.class = 'active';
-                            }
-                        }
-                        attribs.style = tabStyle;
-                        return li(attribs, a({
+                        }, linkAttribs =  {
                             href: '#' + tab.panelId,
-                            ariaControls: 'home',
+                            dataElement: 'tab',
+                            ariaControls: tab.panelId,
                             role: 'tab',
                             id: tab.tabId,
                             dataPanelId: tab.panelId,
                             dataToggle: 'tab'
-                        }, [tab.icon, tab.label].join(' ')));
+                        }, icon, label = span({dataElement: 'label'}, tab.label);
+                        if (tab.icon) {
+                            icon = buildIcon({name: tab.icon});
+                        } else {
+                            icon = '';
+                        }
+                        
+                        if (tab.name) {
+                            linkAttribs.dataName = tab.name;
+                        }
+                        if (selectInitialTab) {
+                            if (index === activeIndex) {
+                                tabAttribs.class = 'active';
+                            }
+                        }
+                        tabAttribs.style = tabStyle;
+                        return li(tabAttribs, a(linkAttribs, [icon, label].join(' ')));
                     })),
                 div({class: 'tab-content'},
                     tabs.map(function (tab, index) {
@@ -732,7 +810,7 @@ define([
                             style: arg.style || {}
                         };
                         if (tab.name) {
-                            attribs['data-name'] = tab.name;
+                            attribs.dataName = tab.name;
                         }
                         if (index === 0) {
                             attribs.class += ' active';
@@ -823,7 +901,8 @@ define([
             removeClass: removeClass,
             buildTabs: buildTabs,
             jsonBlockWidget: jsonBlockWidget(),
-            enableTooltips: enableTooltips
+            enableTooltips: enableTooltips,
+            updateTab: updateTab
         };
     }
 

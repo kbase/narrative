@@ -3,6 +3,15 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v4.2.1 (more notes will follow).
 
+### Version 3.0.0-alpha-10
+__Changes__
+- Pressing the Enter key should trigger a positive reponse on most dialogs (e.g. if there are Yes or No options, it should select Yes)
+- Only the user who started a job can delete it (except for owners of a narrative... that's all confusing, though, so it's only users who started a job now).
+- The Jobs Panel should now show the owner of a job as registered with UJS.
+- Canceling a job from an App cell will attempt to delete it, and at least, cancel it.
+- Canceled jobs are treated as Deleted by the App cell.
+- Added configuration for the service_wizard client - mild refactor to how configs get loaded.
+
 ### Version 3.0.0-alpha-9
 __Changes__
 - Restore app and viewer cell icons to their rightful place

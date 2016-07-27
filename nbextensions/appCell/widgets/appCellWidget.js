@@ -249,7 +249,10 @@ define([
                         mode: 'editing',
                         params: 'complete',
                         code: 'built'
-                    }
+                    },
+                    // {
+                    //     mode: 'canceled'
+                    // }
                 ]
             },
             {
@@ -288,7 +291,10 @@ define([
                         mode: 'editing',
                         params: 'complete',
                         code: 'built'
-                    }
+                    },
+                    // {
+                    //     mode: 'canceled'
+                    // }
                 ]
             },
             {
@@ -323,7 +329,10 @@ define([
                         mode: 'editing',
                         params: 'complete',
                         code: 'built'
-                    }
+                    },
+                    // {
+                    //     mode: 'canceled'
+                    // }
                 ]
             },
             {
@@ -361,6 +370,32 @@ define([
                     }
                 ]
             },
+            // {
+            //     state: {
+            //         mode: 'canceled'
+            //     },
+            //     ui: {
+            //         buttons: {
+            //             enabled: ['re-run-app'],
+            //             disabled: [],
+            //             hidden: ['run-app', 'cancel']
+            //         },
+            //         elements: {
+            //             show: ['parameters-display-group', 'exec-group', 'output-group'],
+            //             hide: ['parameters-group']
+            //         }
+            //     },
+            //     next: [
+            //         {
+            //             mode: 'canceled'
+            //         },
+            //         {
+            //             mode: 'editing',
+            //             params: 'complete',
+            //             code: 'built'
+            //         }
+            //     ]
+            // },
             {
                 state: {
                     mode: 'error',
@@ -1353,10 +1388,10 @@ define([
                 jobId: jobId
             });
         }
-        
+
         function resetToEditMode(source) {
             // only do this if we are not editing.
-            
+
              model.deleteItem('exec');
 
             // Also ensure that the exec widget is reset
@@ -1448,6 +1483,11 @@ define([
                         // the job will be deleted form the notebook when the job cancellation
                         // event is received.
                     }
+                    else {
+                        model.deleteItem('exec');
+                        fsm.newState({mode: 'editing', params: 'complete', code: 'built'});
+                        renderUI();
+                    }
 
                     // Remove all of the execution state when we reset the app.
                     //model.deleteItem('exec');
@@ -1500,6 +1540,7 @@ define([
                         case 'in-progress':
                             return {mode: 'processing', stage: 'running'};
                         case 'completed':
+                        case 'cancelled':
                             stopListeningForJobMessages();
                             return {mode: 'success'};
                         case 'suspend':
@@ -1509,6 +1550,10 @@ define([
                                 return {mode: 'error', stage: currentState.state.stage};
                             }
                             return {mode: 'error'};
+                        // case 'canceled':
+                        // case 'cancelled':
+                        //     stopListeningForJobMessages();
+                        //     return {mode: 'canceled'};
                         default:
                             throw new Error('Invalid job state ' + jobState.job_state);
                     }
@@ -1564,7 +1609,7 @@ define([
         var jobListeners = [];
         function startListeningForJobMessages(jobId) {
             var ev;
-            
+
             ev = runtime.bus().listen({
                 channel: {
                     jobId: jobId
@@ -1614,7 +1659,7 @@ define([
                 }
             });
             jobListeners.push(ev);
-            
+
             ev = runtime.bus().listen({
                 channel: {
                     jobId: jobId
@@ -1975,7 +2020,7 @@ define([
                 // TODO: only turn this on when we need it!
                 cellBus.on('run-status', function (message) {
                     updateFromLaunchEvent(message);
-                    
+
                     model.setItem('exec.launchState', message);
 
                     // Save this to the exec state change log.
@@ -2364,7 +2409,7 @@ define([
         function makeIcon() {
             // icon is in the spec ...
             var appSpec = env.appSpec,
-                nmsBase = runtime.config('services.narrative_method_store.image_url'),
+                nmsBase = runtime.config('services.narrative_method_store_image.url'),
                 iconUrl = Props.getDataItem(appSpec, 'info.icon.url');
 
             if (iconUrl) {

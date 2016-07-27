@@ -75,7 +75,7 @@ class JobManager(object):
             try:
                 self._running_jobs[job_id] = {
                     'refresh': True,
-                    'job': Job.from_state(job_id, job_info, app_id=job_info.get('app_id'), tag=job_meta.get('tag', 'release'), cell_id=job_meta.get('cell_id', None))
+                    'job': Job.from_state(job_id, job_info, user_info[0], app_id=job_info.get('app_id'), tag=job_meta.get('tag', 'release'), cell_id=job_meta.get('cell_id', None))
                 }
             except Exception as e:
                 kblogging.log_event(self._log, 'init_error', {'err': str(e)})
@@ -92,19 +92,21 @@ class JobManager(object):
         try:
             status_set = list()
             for job_id in self._running_jobs:
-                job_state = self._running_jobs[job_id]['job'].state()
+                job = self._running_jobs[job_id]['job']
+                job_state = job.state()
+                job_params = job.parameters()
+                job_state['app_id'] = job_params[0].get('app_id', 'Unknown App')
+                job_state['owner'] = job.owner
                 status_set.append(job_state)
             if not len(status_set):
                 return "No running jobs!"
-            status_set = sorted(status_set, key=lambda s: dateutil.parser.parse(s['submit_time']))
+            status_set = sorted(status_set, key=lambda s: s['creation_time'])
             for i in range(len(status_set)):
-                status_set[i]['submit_time'] = datetime.datetime.strftime(dateutil.parser.parse(status_set[i]['submit_time']), "%Y-%m-%d %H:%M:%S")
-                meth_id = status_set[i]['original_app']['steps'][0]['method_spec_id']
-                stats = status_set[i]['step_stats'][meth_id]
-                exec_start = stats.get('exec_start_time', None)
+                status_set[i]['creation_time'] = datetime.datetime.strftime(datetime.datetime.fromtimestamp(status_set[i]['creation_time']/1000), "%Y-%m-%d %H:%M:%S")
+                exec_start = status_set[i].get('exec_start_time', None)
                 if 'complete_time' in status_set[i]:
-                    status_set[i]['complete_time'] = datetime.datetime.strftime(dateutil.parser.parse(status_set[i]['complete_time']), "%Y-%m-%d %H:%M:%S")
-                    finished = stats.get('finish_time', None)
+                    status_set[i]['complete_time'] = datetime.datetime.strftime(datetime.datetime.fromtimestamp(status_set[i]['complete_time']/1000), "%Y-%m-%d %H:%M:%S")
+                    finished = status_set[i].get('finish_time', None)
                     if finished and exec_start:
                         delta = datetime.datetime.fromtimestamp(finished/1000.0) - datetime.datetime.fromtimestamp(exec_start/1000.0)
                         delta = delta - datetime.timedelta(microseconds=delta.microseconds)
@@ -122,6 +124,7 @@ class JobManager(object):
                     <th>Id</th>
                     <th>Name</th>
                     <th>Submitted</th>
+                    <th>Submitted By</th>
                     <th>Status</th>
                     <th>Run Time</th>
                     <th>Complete Time</th>
@@ -129,8 +132,9 @@ class JobManager(object):
                 {% for j in jobs %}
                 <tr>
                     <td>{{ j.job_id|e }}</td>
-                    <td>{{ j.original_app.steps[0].method_spec_id|e }}</td>
-                    <td>{{ j.submit_time|e }}</td>
+                    <td>{{ j.app_id|e }}</td>
+                    <td>{{ j.creation_time|e }}</td>
+                    <td>{{ j.owner|e }}</td>
                     <td>{{ j.job_state|e }}</td>
                     <td>{{ j.run_time|e }}</td>
                     <td>{% if j.complete_time %}{{ j.complete_time|e }}{% else %}Incomplete{% endif %}</td>
@@ -182,7 +186,8 @@ class JobManager(object):
         status = {job_id: {
                      'state': state,
                      'spec': job.app_spec(),
-                     'widget_info': job.get_viewer_params(state)
+                     'widget_info': job.get_viewer_params(state),
+                     'owner': job.owner
                  }}
         self._send_comm_message('job_status', status)
 
@@ -203,7 +208,8 @@ class JobManager(object):
                     state = job['job'].state()
                     status_set[job_id] = {'state': state,
                                           'spec': job['job'].app_spec(),
-                                          'widget_info': job['job'].get_viewer_params(state)}
+                                          'widget_info': job['job'].get_viewer_params(state),
+                                          'owner': job['job'].owner}
             except Exception as e:
                 self._log.setLevel(logging.ERROR)
                 kblogging.log_event(self._log, "lookup_job_status.error", {'err': str(e)})
@@ -319,6 +325,13 @@ class JobManager(object):
                     except Exception as e:
                         self._send_comm_message('job_comm_error', {'message': str(e), 'request_type': r_type, 'job_id': job_id})
 
+            elif r_type == 'cancel_job':
+                if job_id is not None:
+                    try:
+                        self.cancel_job(job_id)
+                    except Exception as e:
+                        self._send_comm_message('job_comm_error', {'message': str(e), 'request_type': r_type, 'job_id': job_id})
+
             elif r_type == 'job_logs':
                 if job_id is not None:
                     first_line = msg['content']['data'].get('first_line', 0)
@@ -361,14 +374,52 @@ class JobManager(object):
     def delete_job(self, job_id):
         """
         If the job_id doesn't exist, raises a ValueError.
-        If the deletion fails and throws an error, that just gets raised, too.
+        Attempts to delete a job, and cancels it first. If the job cannot be canceled,
+        raises an exception. If it can be canceled but not deleted, it gets canceled, then raises
+        an exception.
         """
         if job_id is None:
             raise ValueError('Job id required for deletion!')
-        job = self.get_job(job_id)
-        job.cancel()
+
+        try:
+            self.cancel_job(job_id)
+        except Exception as e:
+            raise
+
+        try:
+            clients.get('user_and_job_state').delete_job(job_id)
+        except Exception as e:
+            raise
+
         del self._running_jobs[job_id]
         self._send_comm_message('job_deleted', {'job_id': job_id})
+
+    def cancel_job(self, job_id):
+        """
+        Cancels a running job, placing it in a canceled state.
+        Does NOT delete the job.
+        Raises an exception if the current user doesn't have permission to cancel the job.
+        """
+        if job_id is None:
+            raise ValueError('Job id required for cancellation!')
+        if job_id not in self._running_jobs:
+            raise ValueError('Attempting to cancel a Job that does not exist!')
+
+        try:
+            job = self.get_job(job_id)
+            state = job.state()
+            if state.get('cancelled', 0) == 1 or state.get('finished', 0) == 1:
+                # It's already finished, don't try to cancel it again.
+                return
+        except Exception as e:
+            raise ValueError('Unable to get Job state')
+
+        try:
+            clients.get('job_service').cancel_job({'job_id': job_id})
+        except Exception as e:
+            raise
+
+        self._send_comm_message('job_canceled', {'job_id': job_id})
 
     def _send_comm_message(self, msg_type, content):
         """

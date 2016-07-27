@@ -1436,7 +1436,7 @@ define([
         function makeIcon() {
             // icon is in the spec ...
             var appSpec = env.appSpec,
-                nmsBase = runtime.config('services.narrative_method_store.image_url'),
+                nmsBase = runtime.config('services.narrative_method_store_image.url'),
                 iconUrl = Props.getDataItem(appSpec, 'info.icon.url');
 
             if (iconUrl) {

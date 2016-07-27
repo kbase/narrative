@@ -329,6 +329,9 @@ define([
                         mode: 'editing',
                         params: 'complete',
                         code: 'built'
+                    },
+                    {
+                        mode: 'canceled'
                     }
                 ]
             },

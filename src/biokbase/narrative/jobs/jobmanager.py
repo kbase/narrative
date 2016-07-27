@@ -403,6 +403,8 @@ class JobManager(object):
         except Exception as e:
             raise
 
+        self._send_comm_message('job_canceled', {'job_id': job_id})
+
     # def cancel(self):
     #     """
     #     Cancels a currently running job. Fails silently if there's no job running.

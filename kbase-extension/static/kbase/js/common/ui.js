@@ -15,7 +15,7 @@ define([
 ], function ($, Promise, html, Jupyter, Runtime, Events, PR) {
     'use strict';
     var t = html.tag,
-        div = t('div'), span = t('span'), 
+        div = t('div'), span = t('span'),
         ul = t('ul'), li = t('li'), a = t('a'),
         button = t('button'), pre = t('pre');
 
@@ -37,11 +37,11 @@ define([
 
             return container.querySelector(selector);
         }
-        
+
         function qsa(node, selector) {
             return Array.prototype.slice.call(node.querySelectorAll(selector, 0));
         }
-        
+
         function getElements(names) {
             if (typeof names === 'string') {
                 names = names.split('.');
@@ -114,7 +114,7 @@ define([
 
             confirmNode.id = dialogId;
             confirmNode.innerHTML = dialog;
-            
+
             // top level element for kbase usage
             kbaseNode = document.querySelector('[data-element="kbase"]');
             if (!kbaseNode) {
@@ -122,7 +122,7 @@ define([
                 kbaseNode.setAttribute('data-element', 'kbase');
                 document.body.appendChild(kbaseNode);
             }
-            
+
             // a node uponwhich to place Bootstrap modals.
             modalNode = kbaseNode.querySelector('[data-element="modal"]');
             if (!modalNode) {
@@ -132,15 +132,22 @@ define([
             }
 
             modalNode.appendChild(confirmNode);
-            
+
             modalDialogNode = modalNode.querySelector('.modal');
-            
+
             $(modalDialogNode).modal('show');
             return new Promise(function (resolve) {
                 modalDialogNode.querySelector('[data-element="yes"]').addEventListener('click', function (e) {
                     $(modalDialogNode).modal('hide');
                     confirmNode.parentElement.removeChild(confirmNode);
                     resolve(true);
+                });
+                modalDialogNode.addEventListener('keyup', function (e) {
+                    if (e.keyCode === 13) {
+                        $(modalDialogNode).modal('hide');
+                        confirmNode.parentElement.removeChild(confirmNode);
+                        resolve(true);
+                    }
                 });
                 modalDialogNode.querySelector('[data-element="no"]').addEventListener('click', function (e) {
                     confirmNode.parentElement.removeChild(confirmNode);
@@ -152,7 +159,7 @@ define([
             });
 
         }
-        
+
         function renderInfoDialog(title, content, okLabel) {
            var dialog =
                 div({class: 'modal fade', tabindex: '-1', role: 'dialog'}, [
@@ -183,7 +190,7 @@ define([
 
             confirmNode.id = dialogId;
             confirmNode.innerHTML = dialog;
-            
+
             // top level element for kbase usage
             kbaseNode = document.querySelector('[data-element="kbase"]');
             if (!kbaseNode) {
@@ -191,7 +198,7 @@ define([
                 kbaseNode.setAttribute('data-element', 'kbase');
                 document.body.appendChild(kbaseNode);
             }
-            
+
             // a node uponwhich to place Bootstrap modals.
             modalNode = kbaseNode.querySelector('[data-element="modal"]');
             if (!modalNode) {
@@ -201,7 +208,7 @@ define([
             }
 
             modalNode.appendChild(confirmNode);
-            
+
             modalDialogNode = modalNode.querySelector('.modal');
             $(modalDialogNode).modal('show');
             return new Promise(function (resolve) {
@@ -215,7 +222,7 @@ define([
             });
 
         }
-        
+
         function renderDialog(title, content, cancelLabel, buttons) {
            var dialog =
                 div({class: 'modal fade', tabindex: '-1', role: 'dialog'}, [
@@ -232,15 +239,15 @@ define([
                             ]),
                             div({class: 'modal-footer'}, [
                                 button({
-                                    type: 'button', 
-                                    class: 'btn btn-default', 
-                                    dataDismiss: 'modal', 
+                                    type: 'button',
+                                    class: 'btn btn-default',
+                                    dataDismiss: 'modal',
                                     dataElement: 'cancel'
                                 }, cancelLabel)
                             ].concat(buttons.map(function (btn) {
                                 return button({
-                                    type: 'button', 
-                                    class: 'btn btn-'+ btn.icon, 
+                                    type: 'button',
+                                    class: 'btn btn-'+ btn.icon,
                                     dataElement: btn.action
                                 }, btn.label);
                             })))
@@ -257,7 +264,7 @@ define([
 
             confirmNode.id = dialogId;
             confirmNode.innerHTML = dialog;
-            
+
             // top level element for kbase usage
             kbaseNode = document.querySelector('[data-element="kbase"]');
             if (!kbaseNode) {
@@ -265,7 +272,7 @@ define([
                 kbaseNode.setAttribute('data-element', 'kbase');
                 document.body.appendChild(kbaseNode);
             }
-            
+
             // a node uponwhich to place Bootstrap modals.
             modalNode = kbaseNode.querySelector('[data-element="modal"]');
             if (!modalNode) {
@@ -275,7 +282,7 @@ define([
             }
 
             modalNode.appendChild(confirmNode);
-            
+
             modalDialogNode = modalNode.querySelector('.modal');
             $(modalDialogNode).modal('show');
             return new Promise(function (resolve, reject) {
@@ -362,7 +369,7 @@ define([
         }
 
         // Hmm, something like this, but need to think it through more.
-//        function setButton(name, options) {            
+//        function setButton(name, options) {
 //            var buttonNode = getButton(name);
 //            if (options.label) {
 //                buttonNode.innerHTML = options.label;
@@ -374,7 +381,7 @@ define([
 //                    buttonNode.classList.add(klass);
 //                });
 //            }
-//                
+//
 //        }
 
         function ensureOriginalDisplayStyle(el) {
@@ -525,7 +532,7 @@ define([
             collapseTarget.classList.add('in');
             collapseTarget.setAttribute('aria-expanded', 'true');
         }
-        
+
         function buildButtonToolbar(arg) {
             return div({
                 class: ['btn-toolbar'].concat(arg.classes || [])
@@ -548,7 +555,7 @@ define([
                 node.innerHTML = content;
             });
         }
-        
+
         function enableTooltips(path) {
             var node = getElement(path);
             if (!node) {
@@ -558,7 +565,7 @@ define([
                 $(node).tooltip();
             });
         }
-        
+
         function addClass(path, klass) {
             var node = getElement(path);
             if (node) {
@@ -577,7 +584,7 @@ define([
         function na() {
             return span({style: {fontStyle: 'italic', color: 'orange'}}, 'NA');
         }
-        
+
         function getUserSetting(settingKey, defaultValue) {
             var settings = Jupyter.notebook.metadata.kbase.userSettings,
                 setting;
@@ -604,7 +611,7 @@ define([
                 return fun();
             }
         }
-        
+
         function isAdvanced() {
             var isAdvanced = getUserSetting('advanced', runtime.config('features.advanced')) ;
             if (isAdvanced) {
@@ -620,7 +627,7 @@ define([
             }
             return false;
         }
-        
+
         function buildIcon(arg) {
             var klasses = ['fa'];
             klasses.push('fa-' + arg.name);
@@ -660,11 +667,11 @@ define([
                 selectInitialTab = false,
                 tabMap = {},
                 panelClasses = ['tab-pane'];
-            
+
             if (arg.fade) {
                 panelClasses.push('fade');
             }
-            
+
             if (typeof arg.initialTab === 'number') {
                 selectInitialTab = true;
             }
@@ -672,7 +679,7 @@ define([
             if (tabsId) {
                 tabsAttribs.id = tabsId;
             }
-            
+
             tabs.forEach(function (tab) {
                 tab.panelId = html.genId();
                 tab.tabId = html.genId();
@@ -746,19 +753,19 @@ define([
                 map: tabMap
             };
         }
-        
+
         // TURN THIS INTO A MINI WIDGET!
         function jsonBlockWidget() {
             function factory(config) {
                 var config = config || {},
                     indent = config.indent || 3,
                     fontSize = config.fontSize || 0.8;
-                
+
                 function render(obj) {
                     var specText = JSON.stringify(obj, false, indent),
                         fixedText = specText.replace(/</g, '&lt;').replace(/>/g, '&gt;');
                     return pre({
-                            class: 'prettyprint lang-json', 
+                            class: 'prettyprint lang-json',
                             style: {
                                 fontSize: String(fontSize * 100) + '%'
                             }
@@ -774,7 +781,7 @@ define([
                 function stop() {
                     return Promise.resolve;
                 }
-            
+
                 return {
                     start: start,
                     stop: stop

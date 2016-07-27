@@ -45,6 +45,7 @@ define([
         STOP_JOB_UPDATE: 'stop_job_update',
         START_JOB_UPDATE: 'start_job_update',
         DELETE_JOB: 'delete_job',
+        CANCEL_JOB: 'cancel_job',
         JOB_LOGS: 'job_logs',
         JOB_LOGS_LATEST: 'job_logs_latest',
         name: 'kbaseNarrativeJobsPanel',
@@ -202,7 +203,7 @@ define([
 
             bus.on('request-job-cancellation', function (message) {
                 // this.deleteJob(message.jobId);
-                alert('Job cancellation not yet support.');
+                this.sendCommMessage(this.CANCEL_JOB, message.jobId);
             }.bind(this));
 
             bus.on('request-job-status', function (message) {
@@ -323,7 +324,8 @@ define([
                         this.jobStates[jobId] = {
                             state: jobStateMessage.state,
                             spec: jobStateMessage.spec,
-                            widgetParameters: jobStateMessage.widget_info
+                            widgetParameters: jobStateMessage.widget_info,
+                            owner: jobStateMessage.owner
                         };
 
                         this.sendJobMessage('job-status', jobId, {
@@ -388,6 +390,8 @@ define([
                     break;
 
                 case 'job_canceled':
+                    var canceledId = msg.content.data.content.job_id;
+                    this.sendJobMessage('job-canceled', canceledId, {jobId: canceledId, via: 'job_canceled'});
                     break;
 
                 case 'job_logs':
@@ -517,8 +521,9 @@ define([
          * @param {object} jobState
          */
         openJobDeletePrompt: function (jobId, jobState) {
-            if (!jobId)
+            if (!jobId) {
                 return;
+            }
 
             var removeText = "Deleting this job will remove it from your Narrative. Any already generated data will be retained. Continue?";
             var warningText = "";
@@ -537,6 +542,19 @@ define([
 
             this.jobsModal.show();
         },
+
+        openCannotDeletePrompt: function(owner) {
+            var text = "Sorry, only the user who created this job, " + owner + ", can delete it.";
+
+            this.jobsModal.setBody($('<div>').append(text));
+            this.jobsModal.setTitle('Cannot Delete Job');
+            this.jobsModal.getButtons().last().hide();
+            this.jobsModal.show();
+            this.jobsModal.getElement().one('hidden.bs.modal', function() {
+                this.jobsModal.getButtons().last().show();
+            }.bind(this));
+        },
+
         /**
          * Deletes a job with two steps.
          * 1. Sends a comm message to the job manager to delete the job.
@@ -642,59 +660,37 @@ define([
          * We should also expire jobs in a reasonable time, at least from the Narrative.
          */
         populateJobsPanel: function () {
-            // 1. Check if we have any existing jobs, or drop a message.
-            // if (Object.keys(fetchedJobs).length + Object.keys(this.jobWidgets).length === 0) {
-            //     // this.$jobsList.empty().append($('<div class="kb-data-loading">').append('No jobs exist for this Narrative!'));
-            // }
-            // 2. Do update with given jobs.
-            // else {
-                // If there are any jobs that aren't part of sortedJobs, add them in - means they're new.
-                // This will also happen on initialization.
-//                for (var jobId in fetchedJobs) {
-//                    if (fetchedJobs.hasOwnProperty(jobId) && !this.jobStates[jobId]) {
-//                        this.jobStates[jobId] = fetchedJobs[jobId];
-//                    }
-//                }
-                var sortedJobIds = Object.keys(this.jobStates);
-                sortedJobIds.sort(function (a, b) {
-                    var aTime = this.jobStates[a].state.creation_time;
-                    var bTime = this.jobStates[b].state.creation_time;
-                    // if we have timestamps for both, compare them
-                    return aTime - bTime;
-                }.bind(this));
-                var stillRunning = 0;
-                for (var i = 0; i < sortedJobIds.length; i++) {
-                    var jobId = sortedJobIds[i];
+            var sortedJobIds = Object.keys(this.jobStates);
+            sortedJobIds.sort(function (a, b) {
+                var aTime = this.jobStates[a].state.creation_time;
+                var bTime = this.jobStates[b].state.creation_time;
+                // if we have timestamps for both, compare them
+                return aTime - bTime;
+            }.bind(this));
+            var stillRunning = 0;
+            for (var i = 0; i < sortedJobIds.length; i++) {
+                var jobId = sortedJobIds[i];
 
-                    // if the id shows up in the "render me!" list:
-                    // only those we fetched might still be running.
-                    if (this.jobStates[jobId] && this.jobStates[jobId].state) {
-                        if (this.jobIsIncomplete(this.jobStates[jobId].state.job_state))
-                            stillRunning++;
+                // if the id shows up in the "render me!" list:
+                // only those we fetched might still be running.
+                if (this.jobStates[jobId] && this.jobStates[jobId].state) {
+                    if (this.jobIsIncomplete(this.jobStates[jobId].state.job_state))
+                        stillRunning++;
 
-                          // this message is already sent in the core code which
-                          // catches the jupyter job message.
-//                        this.sendJobMessage('job-status', jobId, {
-//                            jobId: jobId,
-//                            jobInfo: fetchedJobs[jobId].spec,      //jobInfo[jobId],        // the spec
-//                            job: fetchedJobs[jobId],               // jo
-//                            jobState: fetchedJobs[jobId].state     //this.jobStates[jobId] // just the state
-//                        });
-
-                        // updating the given state first allows us to just pass the id and the status set to
-                        // the renderer. If the status set doesn't exist (e.g. we didn't look it up in the
-                        // kernel), then that's just undefined and the renderer can deal.
-                        if (this.jobWidgets[jobId]) {
-                            this.jobWidgets[jobId].remove();
-                        }
-                        if (this.showCanceledJobs || (this.jobStates[jobId].state.job_state !== 'cancelled' && this.jobStates[jobId].state.job_state !== 'canceled')) {
-                            this.jobWidgets[jobId] = this.renderJob(jobId); //, jobInfo[jobId]);
-                            this.$jobsList.prepend(this.jobWidgets[jobId]);
-                        }
+                    // updating the given state first allows us to just pass the id and the status set to
+                    // the renderer. If the status set doesn't exist (e.g. we didn't look it up in the
+                    // kernel), then that's just undefined and the renderer can deal.
+                    if (this.jobWidgets[jobId]) {
+                        this.jobWidgets[jobId].remove();
+                    }
+                    if (this.showCanceledJobs || (this.jobStates[jobId].state.job_state !== 'cancelled' && this.jobStates[jobId].state.job_state !== 'canceled')) {
+                        this.jobWidgets[jobId] = this.renderJob(jobId); //, jobInfo[jobId]);
+                        this.$jobsList.prepend(this.jobWidgets[jobId]);
                     }
                 }
-                this.setJobCounter(stillRunning);
-            // }
+            }
+            this.setJobCounter(stillRunning);
+
             // hide any showing tooltips, otherwise they just sit there stagnant forever.
             this.$jobsPanel.find('span[data-toggle="tooltip"]').tooltip('hide');
             // this.$jobsPanel.empty().append($jobsList);
@@ -822,7 +818,10 @@ define([
                 job.state.position > 0) {
                 position = job.state.position;
             }
-
+            var owner = null;
+            if (job.owner !== Jupyter.narrative.userId) {
+                owner = job.owner;
+            }
             var jobRenderObj = {
                 name: jobName,
                 hasCell: job.state.cell_id,
@@ -833,6 +832,7 @@ define([
                 startedTime: startedTime ? new Handlebars.SafeString(startedTime) : null,
                 completedTime: completedTime ? new Handlebars.SafeString(completedTime) : null,
                 error: errorType,
+                owner: owner
             };
             var $jobDiv = $(this.jobInfoTmpl(jobRenderObj));
             $jobDiv.find('[data-toggle="tooltip"]').tooltip({
@@ -855,10 +855,16 @@ define([
                 });
             }
             $jobDiv.find('span.fa-times').click(function (e) {
-                this.openJobDeletePrompt(jobId, status);
+                if (owner === null) {
+                    this.openJobDeletePrompt(jobId, status);
+                }
+                else {
+                    this.openCannotDeletePrompt(owner);
+                }
             }.bind(this));
             return $jobDiv;
         },
+
         /**
          * @method
          * @private

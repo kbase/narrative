@@ -175,6 +175,40 @@ define([
                     return defaultValue;
             }
         }
+        
+        /*
+         * Coerce a string, undefined, or null to an "integer boolean" value --
+         * an integer which is 1 for true, 0 for false.
+         */
+        function coerceToIntBoolean(value) {
+            if (!value) {
+                return 0;
+            }
+            var intValue = parseInt(value);
+            if (!isNaN(intValue)) {
+                if (value > 0) {
+                    return 1;
+                }
+                return 0;
+            }
+            if (typeof value !== 'string') {
+                return 0;
+            }
+            switch (value.toLowerCase(value)) {
+                case 'true':
+                case 't':
+                case 'yes':
+                case 'y':
+                    return 1;
+                case 'false':
+                case 'f':
+                case 'no':
+                case 'n':
+                    return 0;
+                default:
+                    return 0;
+            }
+        }
 
         function defaultValue() {
             var defaultValues = spec.default_values;
@@ -190,10 +224,10 @@ define([
                      * default value validator?
                      */
                     if (!defaultValues || 
-                        defaultValues.length === 0 || 
-                        defaultValues[0].trim() === '' || 
-                        parseInt(defaultValues[0]) === null) {
+                        defaultValues.length === 0) {
                         return spec.checkbox_options.unchecked_value;
+                    } else {
+                        return coerceToIntBoolean(defaultValues[0]);
                     }
             }
             

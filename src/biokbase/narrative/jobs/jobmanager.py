@@ -186,7 +186,8 @@ class JobManager(object):
         status = {job_id: {
                      'state': state,
                      'spec': job.app_spec(),
-                     'widget_info': job.get_viewer_params(state)
+                     'widget_info': job.get_viewer_params(state),
+                     'owner': job.owner
                  }}
         self._send_comm_message('job_status', status)
 
@@ -207,7 +208,8 @@ class JobManager(object):
                     state = job['job'].state()
                     status_set[job_id] = {'state': state,
                                           'spec': job['job'].app_spec(),
-                                          'widget_info': job['job'].get_viewer_params(state)}
+                                          'widget_info': job['job'].get_viewer_params(state),
+                                          'owner': job['job'].owner}
             except Exception as e:
                 self._log.setLevel(logging.ERROR)
                 kblogging.log_event(self._log, "lookup_job_status.error", {'err': str(e)})

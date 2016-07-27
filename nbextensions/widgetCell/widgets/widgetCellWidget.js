@@ -689,7 +689,7 @@ define([
         function makeIcon() {
             // icon is in the spec ...
             var appSpec = env.appSpec,
-                nmsBase = runtime.config('services.narrative_method_store.image_url'),
+                nmsBase = runtime.config('services.narrative_method_store_image.url'),
                 iconUrl = Props.getDataItem(appSpec, 'info.icon.url');
 
             if (iconUrl) {
@@ -719,12 +719,12 @@ define([
                 makeIcon()
             ]);
         }
-        
+
         function renderUI() {
             renderNotifications();
             renderSettings();
         }
-        
+
         function run(params) {
             // First get the app specs, which is stashed in the model,
             // with the parameters returned.
@@ -753,7 +753,7 @@ define([
         }
 
         // INIT
-        
+
         model = Props.make({
             data: utils.getMeta(cell, 'widgetCell'),
             onUpdate: function (props) {

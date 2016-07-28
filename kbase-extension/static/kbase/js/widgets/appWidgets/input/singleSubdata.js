@@ -822,7 +822,7 @@ define([
             };
             var ret;
             if (options.subdata_selection.service_function) {
-                var swUrl = runtime.config('services.workspace.url').replace("ws", "service_wizard");
+                var swUrl = runtime.config('services.service_wizard.url');
                 var genericClient = new GenericClient(swUrl, {
                     token: runtime.authToken()
                 });

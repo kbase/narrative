@@ -181,6 +181,9 @@ define([
             }
             container.innerHTML = content;
             events.attachEvents(container);
+            if (!Jupyter.notebook.writable || Jupyter.narrative.readonly) {
+                toggleReadOnly(true);
+            }
         }
 
         function importModel(outputs) {
@@ -216,6 +219,18 @@ define([
                     render();
                 });
             });
+            runtime.bus().on('read-only-changed', function(msg) {
+                toggleReadOnly(msg.readOnly);
+            });
+        }
+
+        function toggleReadOnly(readOnly) {
+            if (readOnly) {
+                container.querySelector('.col-md-4 button.btn.btn-sm.btn-standard').classList.add('hidden');
+            }
+            else {
+                container.querySelector('.col-md-4 button.btn.btn-sm.btn-standard').classList.remove('hidden');
+            }
         }
 
         function getBus() {

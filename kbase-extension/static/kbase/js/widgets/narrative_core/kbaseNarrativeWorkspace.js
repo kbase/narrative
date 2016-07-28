@@ -23,6 +23,7 @@
 define (
 	[
         'base/js/namespace',
+        'common/runtime',
 		'kbwidget',
 		'bootstrap',
 		'jquery',
@@ -42,6 +43,7 @@ define (
         'common/pythonInterop'
 	], function(
         Jupyter,
+        Runtime,
 		KBWidget,
 		bootstrap,
 		$,
@@ -63,7 +65,6 @@ define (
 
     return KBWidget({
         name: 'kbaseNarrativeWorkspace',
-
         version: '1.0.0',
         options: {
             loadingImage: Config.get('loading_gif'),
@@ -108,6 +109,7 @@ define (
         init: function(options) {
             this._super(options);
             this.ws_id = this.options.ws_id;
+            this.runtime = Runtime.make();
 
             this.narrativeIsReadOnly = !Jupyter.notebook.writable;
             Jupyter.narrative.readonly = this.narrativeIsReadOnly;
@@ -237,6 +239,7 @@ define (
             // Refresh the read-only or View-only mode
             $(document).on('updateReadOnlyMode.Narrative',
                 function (e, ws, name, callback) {
+                    this.runtime.bus().emit('read-only-changed');
                     this.updateReadOnlyMode(ws, name, callback);
                 }.bind(this)
             );
@@ -853,6 +856,7 @@ define (
                 icon.toggleClass('fa-eye', this.inReadOnlyMode);
                 icon.toggleClass('fa-pencil', !this.inReadOnlyMode);
             }
+            this.runtime.bus().emit('read-only-changed', {readOnly: this.inReadOnlyMode});
         },
 
         /**
@@ -1015,6 +1019,15 @@ define (
             }
         },
 
+        toggleCellEditing: function(on) {
+            Jupyter.notebook.get_cells().forEach(function(cell) {
+                if (cell.code_mirror) {
+                    cell.code_mirror.setOption('readOnly', !on);
+                }
+                cell.celltoolbar.rebuild();
+            });
+        },
+
         /**
          * Set narrative into read-only mode.
          */
@@ -1026,6 +1039,7 @@ define (
             _.map(this.getReadOnlySelectors(), function (id) {$(id).hide()});
             this.toggleRunButtons(false);
             this.toggleSelectBoxes(false);
+            this.toggleCellEditing(false);
 
             Jupyter.narrative.sidePanel.setReadOnlyMode(true);
 

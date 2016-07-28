@@ -182,7 +182,6 @@ define([
                 return
             }
 
-
             return button({
                 type: 'button',
                 class: 'btn btn-default btn-xs',

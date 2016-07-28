@@ -1205,7 +1205,7 @@ define([
             var events = Events.make(),
                 notifications = model.getItem('notifications') || [],
                 content;
-                
+
             if (notifications.length === 0) {
                 content = span({style: {fontStyle: 'italic'}}, 'There are currently no notifications');
             } else {
@@ -1336,6 +1336,32 @@ define([
 //                    tempBus.send(message.message, message.address);
 //                });
 //            }
+        }
+
+        function toggleReadOnlyMode(readOnly) {
+            if (!readOnly) {
+                // restore state based on fsm.
+                var buttonBar = container.querySelector('.kb-btn-toolbar-cell-widget');
+                if (buttonBar) {
+                    buttonBar.classList.remove('hidden');
+                }
+                renderUI();
+                var curMode = fsm.getCurrentState().state.mode;
+                if (curMode === 'processing') {
+                    startListeningForJobMessages();
+                }
+            }
+            else {
+                // Hide the job starting/modifying buttons
+                // It'd be nice to put all the elements in view-only mode,
+                // to mimic a running state, right? Maybe that's another
+                // FSM state?
+                var buttonBar = container.querySelector('.kb-btn-toolbar-cell-widget');
+                if (buttonBar) {
+                    buttonBar.classList.add('hidden');
+                }
+                stopListeningForJobMessages();
+            }
         }
 
         var saveTimer = null;
@@ -2149,6 +2175,10 @@ define([
 //                    }
 //                });
 
+                runtime.bus().on('read-only-changed', function(msg) {
+                    toggleReadOnlyMode(msg.readOnly);
+                });
+
                 // Initialize display
                 showCodeInputArea();
 
@@ -2489,6 +2519,9 @@ define([
                         //
                     } else {
                         renderUI();
+                    }
+                    if (!Jupyter.notebook.writable || Jupyter.narrative.readonly) {
+                        toggleReadOnlyMode(true);
                     }
                 })
                 .catch(function (err) {

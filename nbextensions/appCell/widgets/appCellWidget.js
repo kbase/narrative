@@ -22,6 +22,8 @@ define([
     'common/cellUtils',
     'google-code-prettify/prettify',
     'narrativeConfig',
+    './appCellWidget-fsm',
+    
     'css!google-code-prettify/prettify.css',
     'css!font-awesome.css'
 ], function (
@@ -44,472 +46,15 @@ define([
     Fsm,
     cellUtils,
     PR,
-    narrativeConfig
+    narrativeConfig,
+    AppStates
     ) {
     'use strict';
     var t = html.tag,
         div = t('div'), span = t('span'), a = t('a'),
         table = t('table'), tr = t('tr'), th = t('th'), td = t('td'),
         pre = t('pre'), input = t('input'), img = t('img'), p = t('p'), blockquote = t('blockquote'),
-        appStates = [
-            {
-                state: {
-                    mode: 'new'
-                },
-                ui: {
-                    buttons: {
-                        enabled: [],
-                        disabled: ['run-app'],
-                        hidden: ['re-run-app', 'cancel']
-                    },
-                    elements: {
-                        show: [],
-                        hide: ['fatal-error', 'parameters-group', 'output-group', 'parameters-display-group', 'exec-group']
-                    }
-                },
-                next: [
-                    {
-                        mode: 'fatal-error'
-                    },
-                    {
-                        mode: 'editing',
-                        params: 'incomplete'
-                    }
-                ]
-            },
-            {
-                state: {
-                    mode: 'fatal-error'
-                },
-                ui: {
-                    buttons: {
-                        enabled: [],
-                        disabled: ['run-app'],
-                        hidden: ['re-run-app', 'cancel']
-                    },
-                    elements: {
-                        show: ['fatal-error'],
-                        hide: ['parameters-group', 'output-group', 'parameters-display-group', 'exec-group']
-                    }
-                },
-                next: []
-
-            },
-            {
-                state: {
-                    mode: 'editing',
-                    params: 'incomplete'
-                },
-                ui: {
-                    buttons: {
-                        enabled: [],
-                        disabled: ['run-app'],
-                        hidden: ['re-run-app', 'cancel']
-                    },
-                    elements: {
-                        show: ['parameters-group', 'output-group'],
-                        hide: ['fatal-error', 'parameters-display-group', 'exec-group']
-                    }
-                },
-                next: [
-                    {
-                        mode: 'editing',
-                        params: 'complete',
-                        code: 'built'
-                    },
-                    {
-                        mode: 'editing',
-                        params: 'incomplete'
-                    }
-                ]
-            },
-            {
-                state: {
-                    mode: 'editing',
-                    params: 'complete',
-                    code: 'built'
-                },
-                ui: {
-                    buttons: {
-                        enabled: ['run-app'],
-                        disabled: [],
-                        hidden: ['re-run-app', 'cancel']
-                    },
-                    elements: {
-                        show: ['parameters-group', 'output-group'],
-                        hide: ['fatal-error', 'parameters-display-group', 'exec-group']
-                    }
-                },
-                next: [
-                    {
-                        mode: 'editing',
-                        params: 'incomplete'
-                    },
-                    {
-                        mode: 'editing',
-                        params: 'complete',
-                        code: 'built'
-                    },
-                    {
-                        mode: 'processing',
-                        stage: 'launching'
-                    },
-                    {
-                        mode: 'processing',
-                        stage: 'queued'
-                    },
-                    {
-                        mode: 'processing',
-                        stage: 'running'
-                    },
-                    {
-                        mode: 'success'
-                    },
-                    {
-                        mode: 'error',
-                        stage: 'launching'
-                    },
-                    {
-                        mode: 'error',
-                        stage: 'queued'
-                    },
-                    {
-                        mode: 'error',
-                        stage: 'running'
-                    },
-                    {
-                        mode: 'error'
-                    }
-                ]
-            },
-            {
-                state: {
-                    mode: 'processing',
-                    stage: 'launching'
-                },
-                ui: {
-                    buttons: {
-                        enabled: ['cancel'],
-                        disabled: [],
-                        hidden: ['run-app', 're-run-app'],
-                    },
-                    elements: {
-                        show: ['parameters-display-group', 'exec-group', 'output-group'],
-                        hide: ['parameters-group']
-                    },
-                    messages: [
-                        {
-                            widget: 'paramsDisplayWidget',
-                            message: {},
-                            address: {
-                                key: {
-                                    type: 'sync-all-parameters'
-                                }
-                            }
-                        }
-                    ]
-                },
-                on: {
-                    enter: {
-                        messages: [
-                            {
-                                emit: 'sync-all-display-parameters'
-                            }
-                        ]
-                    },
-                    resume: {
-                        messages: [
-                            {
-                                emit: 'sync-all-display-parameters'
-                            }
-                        ]
-                    }
-                },
-                next: [
-                    {
-                        mode: 'processing',
-                        stage: 'launching'
-                    },
-                    {
-                        mode: 'processing',
-                        stage: 'queued'
-                    },
-                    {
-                        mode: 'processing',
-                        stage: 'running'
-                    },
-                    {
-                        mode: 'success'
-                    },
-                    {
-                        mode: 'error',
-                        stage: 'launching'
-                    },
-                    {
-                        mode: 'editing',
-                        params: 'complete',
-                        code: 'built'
-                    },
-                    // {
-                    //     mode: 'canceled'
-                    // }
-                ]
-            },
-            {
-                state: {
-                    mode: 'processing',
-                    stage: 'queued'
-                },
-                ui: {
-                    buttons: {
-                        enabled: ['cancel'],
-                        disabled: [],
-                        hidden: ['run-app', 're-run-app']
-                    },
-                    elements: {
-                        show: ['parameters-display-group', 'exec-group', 'output-group'],
-                        hide: ['parameters-group']
-                    }
-                },
-                next: [
-                    {
-                        mode: 'processing',
-                        stage: 'running'
-                    },
-                    {
-                        mode: 'processing',
-                        stage: 'queued'
-                    },
-                    {
-                        mode: 'success'
-                    },
-                    {
-                        mode: 'error',
-                        stage: 'queued'
-                    },
-                    {
-                        mode: 'editing',
-                        params: 'complete',
-                        code: 'built'
-                    },
-                    // {
-                    //     mode: 'canceled'
-                    // }
-                ]
-            },
-            {
-                state: {
-                    mode: 'processing',
-                    stage: 'running'
-                },
-                ui: {
-                    buttons: {
-                        enabled: ['cancel'],
-                        disabled: [],
-                        hidden: ['run-app', 're-run-app']
-                    },
-                    elements: {
-                        show: ['parameters-display-group', 'exec-group', 'output-group'],
-                        hide: ['parameters-group']
-                    }
-                },
-                next: [
-                    {
-                        mode: 'processing',
-                        stage: 'running'
-                    },
-                    {
-                        mode: 'success'
-                    },
-                    {
-                        mode: 'error',
-                        stage: 'running'
-                    },
-                    {
-                        mode: 'editing',
-                        params: 'complete',
-                        code: 'built'
-                    },
-                    // {
-                    //     mode: 'canceled'
-                    // }
-                ]
-            },
-            {
-                state: {
-                    mode: 'success'
-                },
-                ui: {
-                    buttons: {
-                        enabled: ['re-run-app'],
-                        disabled: [],
-                        hidden: ['run-app', 'cancel']
-                    },
-                    elements: {
-                        show: ['parameters-display-group', 'exec-group', 'output-group'],
-                        hide: ['parameters-group']
-                    }
-                },
-                on: {
-                    enter: {
-                        messages: [
-                            {
-                                emit: 'on-success'
-                            }
-                        ]
-                    }
-                },
-                next: [
-                    {
-                        mode: 'success'
-                    },
-                    {
-                        mode: 'editing',
-                        params: 'complete',
-                        code: 'built'
-                    }
-                ]
-            },
-            // {
-            //     state: {
-            //         mode: 'canceled'
-            //     },
-            //     ui: {
-            //         buttons: {
-            //             enabled: ['re-run-app'],
-            //             disabled: [],
-            //             hidden: ['run-app', 'cancel']
-            //         },
-            //         elements: {
-            //             show: ['parameters-display-group', 'exec-group', 'output-group'],
-            //             hide: ['parameters-group']
-            //         }
-            //     },
-            //     next: [
-            //         {
-            //             mode: 'canceled'
-            //         },
-            //         {
-            //             mode: 'editing',
-            //             params: 'complete',
-            //             code: 'built'
-            //         }
-            //     ]
-            // },
-            {
-                state: {
-                    mode: 'error',
-                    stage: 'launching'
-                },
-                ui: {
-                    buttons: {
-                        enabled: ['re-run-app'],
-                        disabled: [],
-                        hidden: ['run-app', 'cancel']
-                    },
-                    elements: {
-                        show: ['parameters-display-group', 'exec-group', 'output-group'],
-                        hide: ['parameters-group']
-                    }
-                },
-                next: [
-                    {
-                        mode: 'error',
-                        stage: 'launching'
-                    },
-                    {
-                        mode: 'editing',
-                        params: 'complete',
-                        code: 'built'
-                    }
-                ]
-
-            },
-            {
-                state: {
-                    mode: 'error',
-                    stage: 'queued'
-                },
-                ui: {
-                    buttons: {
-                        enabled: ['re-run-app'],
-                        disabled: [],
-                        hidden: ['run-app', 'cancel']
-                    },
-                    elements: {
-                        show: ['parameters-display-group', 'exec-group', 'output-group'],
-                        hide: ['parameters-group']
-                    }
-                },
-                next: [
-                    {
-                        mode: 'error',
-                        stage: 'queued'
-                    },
-                    {
-                        mode: 'editing',
-                        params: 'complete',
-                        code: 'built'
-                    }
-                ]
-
-            },
-            {
-                state: {
-                    mode: 'error',
-                    stage: 'running'
-                },
-                ui: {
-                    buttons: {
-                        enabled: ['re-run-app'],
-                        disabled: [],
-                        hidden: ['run-app', 'cancel']
-                    },
-                    elements: {
-                        show: ['parameters-display-group', 'exec-group', 'output-group'],
-                        hide: ['parameters-group']
-                    }
-                },
-                next: [
-                    {
-                        mode: 'error',
-                        stage: 'running'
-                    },
-                    {
-                        mode: 'editing',
-                        params: 'complete',
-                        code: 'built'
-                    }
-                ]
-            },
-            // Just a plain error state ... not sure how we get here...
-            {
-                state: {
-                    mode: 'error'
-                },
-                ui: {
-                    buttons: {
-                        enabled: ['re-run-app'],
-                        disabled: [],
-                        hidden: ['run-app', 'cancel']
-                    },
-                    elements: {
-                        show: ['parameters-display-group', 'exec-group', 'output-group'],
-                        hide: ['parameters-group']
-                    }
-                },
-                next: [
-                    {
-                        mode: 'error'
-                    },
-                    {
-                        mode: 'editing',
-                        params: 'complete',
-                        code: 'built'
-                    }
-                ]
-            }
-        ];
+        appStates = AppStates;
 
     function factory(config) {
         var container, places, ui,
@@ -980,9 +525,36 @@ define([
 
                                 div({class: 'btn-toolbar kb-btn-toolbar-cell-widget'}, [
                                     div({class: 'btn-group'}, [
-                                        ui.makeButton('Run', 'run-app', {events: events, type: 'primary'}),
-                                        ui.makeButton('Cancel', 'cancel', {events: events, type: 'danger'}),
-                                        ui.makeButton('Edit and Re-Run', 're-run-app', {events: events, type: 'primary'})
+                                        ui.buildButton({
+                                            label: 'Run',
+                                            name: 'run-app',
+                                            events: events,
+                                            type: 'primary', 
+                                            icon: {
+                                                name: 'play-circle-o',
+                                                size: 2
+                                            }
+                                        }),
+                                        ui.buildButton({
+                                            label: 'Cancel',
+                                            name: 'cancel',
+                                            events: events, 
+                                            type: 'danger',
+                                            icon: {
+                                                name: 'stop-circle-o',
+                                                size: 2
+                                            }
+                                        }),
+                                        ui.buildButton({
+                                            label: 'Edit and Re-Run',
+                                            name: 're-run-app',
+                                            events: events, 
+                                            type: 'primary',
+                                            icon: {
+                                                name: 'pencil-square-o',
+                                                size: 2
+                                            }
+                                        })
                                     ])
                                     //div({class: 'btn-group'}, [
                                     //    ui.makeButton('Remove', 'remove', {events: events, type: 'danger'})
@@ -1571,6 +1143,7 @@ define([
         }
 
         function doRun() {
+            fsm.newState({mode: 'execute-requested'});            
             cell.execute();
         }
 
@@ -1685,8 +1258,29 @@ define([
 
                     resetToEditMode('job-deleted');
                 }
+            });            
+            jobListeners.push(ev);
+            
+            ev = runtime.bus().listen({
+                channel: {
+                    jobId: jobId
+                },
+                key: {
+                    type: 'job-does-not-exist'
+                },
+                handle: function (message) {
+                    //  reset the cell into edit mode
+                    var state = fsm.getCurrentState();
+                    if (state.state.mode === 'editing') {
+                        console.warn('in edit mode, so not resetting ui')
+                        return;
+                    }
+
+                    resetToEditMode('job-deleted');
+                }
             });
             jobListeners.push(ev);
+
         }
 
         function stopListeningForJobMessages() {

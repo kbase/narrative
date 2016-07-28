@@ -16,7 +16,12 @@ define (
         'kbaseAuthenticatedWidget',
         'kbaseTabs',
         'jquery-dataTables',
-        'jquery-dataTables-bootstrap'
+        'jquery-dataTables-bootstrap',
+
+        'GenomeAnnotationAPI-client-api',        
+        'AssemblyAPI-client-api',        
+        'TaxonAPI-client-api'
+
     ], function(
         KBWidget,
         bootstrap,
@@ -28,7 +33,10 @@ define (
         kbaseAuthenticatedWidget,
         kbaseTabs,
         jquery_dataTables,
-        bootstrap
+        bootstrap,
+        GenomeAnnotationAPI_client_api,
+        AssemblyAPI_client_api,
+        TaxonAPI_client_api
     ) {
     return KBWidget({
         name: "kbaseGenomeView",
@@ -140,6 +148,13 @@ define (
         render: function() {
             var self = this;
             var pref = StringUtil.uuid();
+
+            // Example of calling the new API
+            //var api = new GenomeAnnotationAPI('https://ci.kbase.us/services/service_wizard',{'token':self.token});
+            //api.get_feature_ids(self.ws_name + "/" + self.ws_id, null, null)
+            //        .done(function(ids) {
+            //            console.log(ids);
+            //        });
 
             var container = this.$elem;
             if (self.token == null) {

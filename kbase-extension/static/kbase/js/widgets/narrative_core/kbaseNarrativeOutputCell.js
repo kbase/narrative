@@ -20,7 +20,8 @@ define([
             type: 'error',
             title: 'Output',
             time: '',
-            showMenu: true
+            showMenu: true,
+            visible_threshold: 100 // pixel threshhold for rendering on scroll
         },
         OUTPUT_ERROR_WIDGET: 'kbaseNarrativeError',
         init: function (options) {
@@ -34,11 +35,48 @@ define([
                 this.options.widget = 'kbaseDefaultNarrativeOutput';
             }
 
-            this.render();
+            // Lazy rendering setup
+            this.is_rendered = false;
+            var nb_container = $('#notebook-container'); 
+            this.visible_settings = {
+                container: nb_container,
+                threshold: this.visible_threshold };
+            this.render(); // render before any scrolling
+            if (!this.is_rendered) {
+                // Not initially rendered,
+                // so check when to render on scroll events
+                // when we scroll, call render() again
+                nb_container.scroll(this.render);
+            }
 
             return this;
         },
+
+        // Log debug message with cell id
+        cell_debug: function(msg) {
+            console.debug('cell ' + this.cellId + ': ' + msg);
+        },
+
+        // Return true if cell is visible on page, false otherwise
+        is_visible: function () {
+            return this.inviewport(this.$elem, this.visible_settings);
+        },
+
+        // Render cell, if it is visible
         render: function () {
+            if (this.is_rendered) {
+                // Note: We could also see if a cell that is rendered, is now
+                // no longer visible, and somehow free its resources. Although
+                // it's not clear how hard this is.
+                return;
+            }
+            // see if it is visible before trying to render
+            if (!this.is_visible()) {
+                this.cell_debug('do not render cell. not visible');
+                return;
+            }
+            // render the cell
+            this.cell_debug('begin: render cell');
             var icon;
             switch (this.options.type) {
                 case 'method':
@@ -57,7 +95,9 @@ define([
                     this.renderErrorOutputCell();
                     break;
             }
-
+            // remember; don't render again
+            this.is_rendered = true;
+            this.cell_debug('end: render cell');
         },
         renderViewerCell: function () {
             require(['kbaseNarrativeDataCell'], $.proxy(function () {
@@ -254,7 +294,40 @@ define([
             var year = d.getFullYear();
 
             return hours + ":" + minutes + ":" + seconds + ", " + month + "/" + day + "/" + year;
+        },
+        /* -------------------------------------------------------
+         * Code taken and modified from:
+         * Lazy Load - jQuery plugin for lazy loading images
+         *
+         * Copyright (c) 2007-2015 Mika Tuupola
+         *
+         * Licensed under the MIT license:
+         *   http://www.opensource.org/licenses/mit-license.php
+         *
+         * Project home:
+         *   http://www.appelsiini.net/projects/lazyload
+        */
+        belowthefold: function(element, settings) {
+            var fold = settings.container.offset().top + settings.container.height();
+            return fold <= $(element).offset().top - settings.threshold;
+        },
+        rightoffold: function(element, settings) {
+            var fold = settings.container.offset().left + settings.container.width();
+            return fold <= $(element).offset().left - settings.threshold;
+        },
+        abovethetop: function(element, settings) {
+            var fold = settings.container.offset().top;
+            return fold >= $(element).offset().top + settings.threshold  + $(element).height();
+        },
+        leftofbegin: function(element, settings) {
+            var fold = settings.container.offset().left;
+            return fold >= $(element).offset().left + settings.threshold + $(element).width();
+        },
+        inviewport: function(element, settings) {
+             return !this.rightoffold(element, settings) && !this.leftofbegin(element, settings) &&
+                    !this.belowthefold(element, settings) && !this.abovethetop(element, settings);
         }
-
+        /* End of Lazy Load code.
+         * ------------------------------------------------------- */
     });
 });

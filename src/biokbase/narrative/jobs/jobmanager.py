@@ -293,7 +293,10 @@ class JobManager(object):
             if job_id is not None and job_id not in self._running_jobs:
                 # If it's not a real job, just silently ignore the request.
                 # Maybe return an error? Yeah. Let's do that.
-                self._send_comm_message('job_comm_error', {'job_id': job_id, 'message': 'Unknown job id', 'request_type': r_type})
+                # self._send_comm_message('job_comm_error', {'job_id': job_id, 'message': 'Unknown job id', 'request_type': r_type})
+                # TODO: perhaps we should implement request/response here. All we really need is to thread a message
+                # id through
+                self._send_comm_message('job_does_not_exist', {'job_id': job_id, 'request_type': r_type})
                 return
 
             if r_type == 'all_status':
@@ -380,6 +383,10 @@ class JobManager(object):
         """
         if job_id is None:
             raise ValueError('Job id required for deletion!')
+        if job_id not in self._running_jobs:
+            self._send_comm_message('job_does_not_exist', {'job_id': job_id, 'source': 'delete_job'})
+            return
+            # raise ValueError('Attempting to cancel a Job that does not exist!')
 
         try:
             self.cancel_job(job_id)
@@ -403,7 +410,9 @@ class JobManager(object):
         if job_id is None:
             raise ValueError('Job id required for cancellation!')
         if job_id not in self._running_jobs:
-            raise ValueError('Attempting to cancel a Job that does not exist!')
+            self._send_comm_message('job_does_not_exist', {'job_id': job_id, 'source': 'cancel_job'})
+            return
+            # raise ValueError('Attempting to cancel a Job that does not exist!')
 
         try:
             job = self.get_job(job_id)

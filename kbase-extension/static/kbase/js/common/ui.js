@@ -358,13 +358,23 @@ define([
 
         function buildButton(arg) {
             var klass = arg.type || 'default',
-                events = arg.events;
+                events = arg.events, icon;
+            
+            if (arg.icon) {
+                if (!arg.icon.classes) {
+                    arg.icon.classes = [];
+                }
+                // arg.icon.classes.push('pull-left');
+                
+                icon = buildIcon(arg.icon);
+            }
+            
             return button({
                 type: 'button',
                 class: ['btn', 'btn-' + klass].join(' '),
                 dataButton: arg.name,
-                id: addButtonClickEvent(events, arg.eventType || name)
-            }, arg.label);
+                id: addButtonClickEvent(events, arg.eventType || arg.name)
+            }, [icon, span({style: {verticalAlign: 'middle'}}, arg.label)].join('&nbsp;'));
         }
 
         function enableButton(name) {
@@ -646,7 +656,7 @@ define([
         }
 
         function buildIcon(arg) {
-            var klasses = ['fa'];
+            var klasses = ['fa'], style = [];
             klasses.push('fa-' + arg.name);
             if (arg.rotate) {
                 klasses.push('fa-rotate-' + String(arg.rotate));
@@ -661,8 +671,18 @@ define([
                     klasses.push('fa-' + arg.size);
                 }
             }
+            if (arg.classes) {
+                arg.classes.forEach(function (klass) {
+                    klasses.push(klass);
+                });
+            }
+            if (arg.style) {
+                style = style.concat(arg.style);
+            }
+            
             return span({
                 dataElement: 'icon',
+                style: {verticalAlign: 'middle'},
                 class: klasses.join(' ')
             });
         }

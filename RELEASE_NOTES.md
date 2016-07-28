@@ -6,6 +6,12 @@ This is built on the Jupyter Notebook v4.2.1 (more notes will follow).
 ### Version 3.0.0-alpha-11
 __Changes__
 - Fixed Narrative metadata to contain a proper list of Apps for showing on the Dashboard.
+- Updated read only mode
+  - Codemirror elements (markdown cell and code cell input areas) are visible, but not editable
+  - App Cells get their button bars hidden
+  - Output areas get their delete areas hidden
+  - Cell toolbars get their buttons hidden (maybe all but the collapse and code toggles should be hidden?)
+- Tweaked placeholder text of Markdown cells.
 
 ### Version 3.0.0-alpha-10
 __Changes__

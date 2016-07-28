@@ -150,7 +150,7 @@ define (
             var pref = StringUtil.uuid();
 
             // Example of calling the new API
-            //var api = new GenomeAnnotationAPI('https://ci.kbase.us/services/service_wizard',{'token':self.token});
+            //var api = new GenomeAnnotationAPI(Config.url('service_wizard'),{'token':self.token});
             //api.get_feature_ids(self.ws_name + "/" + self.ws_id, null, null)
             //        .done(function(ids) {
             //            console.log(ids);

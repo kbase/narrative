@@ -201,7 +201,7 @@ class JobManager(object):
                     'message': 'Unable to return job state',
                     'name': 'Job Error',
                     'code': -2
-                }
+                },
                 'creation_time': 0,
                 'cell_id': None,
                 'job_id': job_id

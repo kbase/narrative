@@ -112,12 +112,12 @@ class JobManager(object):
                 status_set[i]['creation_time'] = datetime.datetime.strftime(datetime.datetime.fromtimestamp(status_set[i]['creation_time']/1000), "%Y-%m-%d %H:%M:%S")
                 exec_start = status_set[i].get('exec_start_time', None)
                 if 'finish_time' in status_set[i]:
-                    status_set[i]['finish_time'] = datetime.datetime.strftime(datetime.datetime.fromtimestamp(status_set[i]['finish_time']/1000), "%Y-%m-%d %H:%M:%S")
-                    finished = status_set[i].get('finish_time', 0)
-                    if finished == 1 and exec_start:
+                    finished = status_set[i].get('finish_time', None)
+                    if finished is not None and exec_start:
                         delta = datetime.datetime.fromtimestamp(finished/1000.0) - datetime.datetime.fromtimestamp(exec_start/1000.0)
                         delta = delta - datetime.timedelta(microseconds=delta.microseconds)
                         status_set[i]['run_time'] = str(delta)
+                        status_set[i]['finish_time'] = datetime.datetime.strftime(datetime.datetime.fromtimestamp(status_set[i]['finish_time']/1000), "%Y-%m-%d %H:%M:%S")
                 elif exec_start:
                     delta = datetime.datetime.utcnow() - datetime.datetime.utcfromtimestamp(exec_start/1000.0)
                     delta = delta - datetime.timedelta(microseconds=delta.microseconds)

@@ -199,7 +199,7 @@ def get_result_sub_path(result, path, pos):
     In total, we use path to get to the exact value we want out of the result list.
     Kinda complex for a few lines of code.
     """
-    if pos >= len(path):
+    if pos >= len(path) or not isinstance(result, list):
         return result
     if isinstance(result, list):
         listPos = int(path[pos])

@@ -40,6 +40,7 @@ class JobManager(object):
     _comm = None
     _log = kblogging.get_logger(__name__)
     _log.setLevel(logging.INFO)
+    _running_lookup_loop = False
 
     def __new__(cls):
         if JobManager.__instance is None:
@@ -56,6 +57,7 @@ class JobManager(object):
         3. initialize the Job objects by running NJS.get_job_params on each of those (also gets app_id)
         4. start the status lookup loop.
         """
+
         ws_id = system_variable('workspace_id')
         try:
             nar_jobs = clients.get('user_and_job_state').list_jobs2({
@@ -80,10 +82,15 @@ class JobManager(object):
             except Exception as e:
                 kblogging.log_event(self._log, 'init_error', {'err': str(e)})
                 self._send_comm_message('job_init_lookup_err', {'msg': 'Unable to get job info!', 'job_id': job_id, 'err': str(e)})
-        # only keep one loop at a time in cause this gets called again!
-        if self._lookup_timer is not None:
-            self._lookup_timer.cancel()
-        self._lookup_job_status_loop()
+
+        if not self._running_lookup_loop:
+            # only keep one loop at a time in cause this gets called again!
+            if self._lookup_timer is not None:
+                self._lookup_timer.cancel()
+            self._running_lookup_loop = True
+            self._lookup_job_status_loop()
+        else:
+            self._lookup_all_job_status()
 
     def list_jobs(self):
         """
@@ -104,13 +111,13 @@ class JobManager(object):
             for i in range(len(status_set)):
                 status_set[i]['creation_time'] = datetime.datetime.strftime(datetime.datetime.fromtimestamp(status_set[i]['creation_time']/1000), "%Y-%m-%d %H:%M:%S")
                 exec_start = status_set[i].get('exec_start_time', None)
-                if 'complete_time' in status_set[i]:
-                    status_set[i]['complete_time'] = datetime.datetime.strftime(datetime.datetime.fromtimestamp(status_set[i]['complete_time']/1000), "%Y-%m-%d %H:%M:%S")
+                if 'finish_time' in status_set[i]:
                     finished = status_set[i].get('finish_time', None)
-                    if finished and exec_start:
+                    if finished is not None and exec_start:
                         delta = datetime.datetime.fromtimestamp(finished/1000.0) - datetime.datetime.fromtimestamp(exec_start/1000.0)
                         delta = delta - datetime.timedelta(microseconds=delta.microseconds)
                         status_set[i]['run_time'] = str(delta)
+                        status_set[i]['finish_time'] = datetime.datetime.strftime(datetime.datetime.fromtimestamp(status_set[i]['finish_time']/1000), "%Y-%m-%d %H:%M:%S")
                 elif exec_start:
                     delta = datetime.datetime.utcnow() - datetime.datetime.utcfromtimestamp(exec_start/1000.0)
                     delta = delta - datetime.timedelta(microseconds=delta.microseconds)
@@ -137,7 +144,7 @@ class JobManager(object):
                     <td>{{ j.owner|e }}</td>
                     <td>{{ j.job_state|e }}</td>
                     <td>{{ j.run_time|e }}</td>
-                    <td>{% if j.complete_time %}{{ j.complete_time|e }}{% else %}Incomplete{% endif %}</td>
+                    <td>{% if j.finish_time %}{{ j.finish_time|e }}{% else %}Incomplete{% endif %}</td>
                 </tr>
                 {% endfor %}
             </table>
@@ -174,23 +181,67 @@ class JobManager(object):
             kblogging.log_event(self._log, "get_existing_job.error", {'job_id': job_id, 'err': str(e)})
             raise
 
+    def _construct_job_status(self, job_id):
+        job = self.get_job(job_id)
+        if job is None:
+            raise ValueError('job "{}" not found!'.format(job_id))
+
+        state = {}
+        widget_info = None
+        app_spec = {}
+        try:
+            state = job.state()
+        except Exception as e:
+            self._log.setLevel(logging.ERROR)
+            kblogging.log_event(self._log, "lookup_job_status.error", {'err': str(e)})
+            state = {
+                'job_state': 'error',
+                'error': {
+                    'error': 'Unable to find current job state. Please try again later, or contact KBase.',
+                    'message': 'Unable to return job state',
+                    'name': 'Job Error',
+                    'code': -2
+                },
+                'creation_time': 0,
+                'cell_id': None,
+                'job_id': job_id
+            }
+
+        try:
+            app_spec = job.app_spec()
+        except Exception as e:
+            self._log.setLevel(logging.ERROR)
+            kblogging.log_event(self._log, "lookup_job_status.error", {'err': str(e)})
+            pass
+
+        if state.get('finished', 0) == 1:
+            try:
+                widget_info = job.get_viewer_params(state)
+            except Exception as e:
+                # Can't get viewer params
+                self._log.setLevel(logging.ERROR)
+                kblogging.log_event(self._log, "lookup_job_status.error", {'err': str(e)})
+                state['job_state'] = 'error'
+                state['error'] = {
+                    'error': 'Unable to generate App output viewer!\nThe App appears to have completed successfully,\nbut we cannot construct its output viewer.\nPlease contact the developer of this App for assistance.',
+                    'message': 'Unable to build output viewer parameters!',
+                    'name': 'App Error',
+                    'code': -1
+                }
+
+        return {'state': state,
+                'spec': app_spec,
+                'widget_info': widget_info,
+                'owner': job.owner}
+
+
     def _lookup_job_status(self, job_id):
         """
         Will raise a ValueError if job_id doesn't exist.
         Sends the status over the comm channel as the usual job_status message.
         """
-        job = self.get_job(job_id)
-        if job is None:
-            raise ValueError('job "{}" not found!'.format(job_id))
-        state = job.state()
-        status = {job_id: {
-                     'state': state,
-                     'spec': job.app_spec(),
-                     'widget_info': job.get_viewer_params(state),
-                     'owner': job.owner
-                 }}
+        status = self._construct_job_status(job_id)
         self._send_comm_message('job_status', status)
-
 
     def _lookup_all_job_status(self, ignore_refresh_flag=False):
         """
@@ -200,23 +251,9 @@ class JobManager(object):
         """
         status_set = dict()
         # grab the list of running job ids, so we don't run into update-while-iterating problems.
-        running_job_ids = self._running_jobs.keys()
-        for job_id in running_job_ids:
-            try:
-                job = self._running_jobs[job_id]
-                if job['refresh'] or ignore_refresh_flag:
-                    state = job['job'].state()
-                    status_set[job_id] = {'state': state,
-                                          'spec': job['job'].app_spec(),
-                                          'widget_info': job['job'].get_viewer_params(state),
-                                          'owner': job['job'].owner}
-            except Exception as e:
-                self._log.setLevel(logging.ERROR)
-                kblogging.log_event(self._log, "lookup_job_status.error", {'err': str(e)})
-                self._send_comm_message('job_err', {
-                    'job_id': job_id,
-                    'message': str(e)
-                })
+        for job_id in self._running_jobs.keys():
+            if self._running_jobs[job_id]['refresh'] or ignore_refresh_flag:
+                status_set[job_id] = self._construct_job_status(job_id)
         self._send_comm_message('job_status_all', status_set)
 
     def _lookup_job_status_loop(self):
@@ -234,6 +271,8 @@ class JobManager(object):
         """
         if self._lookup_timer:
             self._lookup_timer.cancel()
+            self._lookup_timer = None
+        self._running_lookup_loop = False
 
     def register_new_job(self, job):
         """

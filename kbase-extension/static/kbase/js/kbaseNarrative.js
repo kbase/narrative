@@ -780,11 +780,25 @@ define(
      * get_cell_elements, which does this searching).
      */
     Narrative.prototype.getCellIndexByKbaseId = function (id) {
-        return $('#' + id).closest('.cell').not('.cell .cell').index();
+        var cells = Jupyter.notebook.get_cells();
+        for (var i=0; i<cells.length; i++) {
+            var c = cells[i];
+            if (c.metadata.kbase &&
+                c.metadata.kbase.attributes &&
+                c.metadata.kbase.attributes.id &&
+                c.metadata.kbase.attributes.id === id) {
+                return i;
+            }
+        }
+        return null;
     };
 
     Narrative.prototype.getCellByKbaseId = function (id) {
-        return Jupyter.notebook.get_cell(this.getCellIndexByKbaseId(id));
+        var cellIndex = this.getCellIndexByKbaseId(id);
+        if (cellIndex !== null) {
+            return Jupyter.notebook.get_cell(this.getCellIndexByKbaseId(id));
+        }
+        return null;
     };
 
     /**

@@ -209,21 +209,49 @@ class JobManager(object):
         # grab the list of running job ids, so we don't run into update-while-iterating problems.
         running_job_ids = self._running_jobs.keys()
         for job_id in running_job_ids:
-            try:
-                job = self._running_jobs[job_id]
-                if job['refresh'] or ignore_refresh_flag:
+            job = self._running_jobs[job_id]
+            if job['refresh'] or ignore_refresh_flag:
+                state = {}
+                widget_info = None
+                app_spec = {}
+                try:
                     state = job['job'].state()
-                    status_set[job_id] = {'state': state,
-                                          'spec': job['job'].app_spec(),
-                                          'widget_info': job['job'].get_viewer_params(state),
-                                          'owner': job['job'].owner}
-            except Exception as e:
-                self._log.setLevel(logging.ERROR)
-                kblogging.log_event(self._log, "lookup_job_status.error", {'err': str(e)})
-                self._send_comm_message('job_err', {
-                    'job_id': job_id,
-                    'message': str(e)
-                })
+                except Exception as e:
+                    self._log.setLevel(logging.ERROR)
+                    kblogging.log_event(self._log, "lookup_job_status.error", {'err': str(e)})
+                    state = {
+                        'job_state': 'unknown',
+                        'creation_time': 0,
+                        'cell_id': None,
+                        'job_id': job_id
+                    }
+
+                try:
+                    app_spec = job['job'].app_spec()
+                except Exception as e:
+                    self._log.setLevel(logging.ERROR)
+                    kblogging.log_event(self._log, "lookup_job_status.error", {'err': str(e)})
+                    pass
+
+                if state.get('finished', 0) == 1:
+                    try:
+                        widget_info = job['job'].get_viewer_params(state)
+                    except Exception as e:
+                        self._log.setLevel(logging.ERROR)
+                        kblogging.log_event(self._log, "lookup_job_status.error", {'err': str(e)})
+                        state['job_state'] = 'error'
+                        state['error'] = {
+                            'error': 'Unable to generate App output viewer!\nThe App appears to have completed successfully,\nbut we cannot construct its output viewer.\nPlease contact the developer of this App for assistance.',
+                            'message': 'Unable to build output viewer parameters!',
+                            'name': 'App Error',
+                            'code': -1
+                        }
+                        # Can't get viewer params
+
+                status_set[job_id] = {'state': state,
+                                      'spec': job['job'].app_spec(),
+                                      'widget_info': job['job'].get_viewer_params(state),
+                                      'owner': job['job'].owner}
         self._send_comm_message('job_status_all', status_set)
 
     def _lookup_job_status_loop(self):

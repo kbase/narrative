@@ -44,6 +44,12 @@ require.config({
         'kbaseFeatureValues-client-api'         : 'kbase/js/api/KBaseFeatureValues',
         'kbase-generic-client-api'              : 'kbase/js/api/GenericClient',
         'catalog-client-api'                    : 'kbase/js/api/Catalog',
+
+        // Data API dynamic service clients
+        'GenomeAnnotationAPI-client-api'        : 'kbase/js/api/GenomeAnnotationAPIClient',        
+        'AssemblyAPI-client-api'                : 'kbase/js/api/AssemblyAPIClient',        
+        'TaxonAPI-client-api'                   : 'kbase/js/api/TaxonAPIClient',
+
         'njs-wrapper-client-api'                : 'kbase/js/api/NarrativeJobServiceWrapper',
         kbaseNarrativeJobStatus                 : 'kbase/js/widgets/narrative_core/kbaseNarrativeJobStatus',
         kbaseCellToolbarMenu                    : 'kbase/js/widgets/narrative_core/kbaseCellToolbarMenu',

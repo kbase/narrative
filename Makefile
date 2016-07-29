@@ -78,7 +78,7 @@ test-frontend-unit:
 
 test-frontend-unit-standalone:
 	@echo "running standalone front end unit tests"
-	karma start test2/test.conf.js --single-run
+	karma start test2/travis.conf.js
 	@echo done
 
 # test-frontend-e2e should use Selenium to perform an end-

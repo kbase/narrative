@@ -15,7 +15,8 @@
     "grunt-regex-replace": "0.3.0",
     "jasmine-core": "2.4.1",
     "jasmine-jquery": "2.1.1",
-    
+    "requirejs": "2.2.0",
+
     "karma": "1.1.2",
     "karma-coverage": "1.1.1",
     "karma-chrome-launcher": "1.0.1",

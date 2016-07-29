@@ -54,7 +54,7 @@ build-travis-narrative:
 	npm install && \
 	bash $(INSTALLER) --no-venv
 
-test: test-backend test-frontend-unit test-frontend-e2e
+test: test-backend test-frontend-unit test-frontend-unit-standalone test-frontend-e2e
 	@echo "done running backend and frontend test scripts"
 
 # test-backend should use nose, or the like, to test our
@@ -75,6 +75,11 @@ test-frontend-unit:
 	@echo "running frontend unit tests"
 	python test/unit/run_tests.py
 	@echo "done"
+
+test-frontend-unit-standalone:
+	@echo "running standalone front end unit tests"
+	karma start test2/test.conf.js --single-run
+	@echo done
 
 # test-frontend-e2e should use Selenium to perform an end-
 # to-end test of the front end components, with a running

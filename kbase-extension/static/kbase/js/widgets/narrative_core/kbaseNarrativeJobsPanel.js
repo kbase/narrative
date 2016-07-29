@@ -399,6 +399,10 @@ define([
                     var canceledId = msg.content.data.content.job_id;
                     this.sendJobMessage('job-deleted', canceledId, {jobId: canceledId, via: 'job_canceled'});
                     break;
+                    
+                case 'job_does_not_exist':
+                    this.sendJobMessage('job-does-not-exist', msg.content.data.content.job_id, {jobId: msg.content.data.content.job_id, source: msg.content.data.content.source});
+                    break;
 
                 case 'job_logs':
                     var jobId = msg.content.data.content.job_id;

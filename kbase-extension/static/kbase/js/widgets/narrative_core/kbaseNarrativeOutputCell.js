@@ -20,8 +20,7 @@ define([
             type: 'error',
             title: 'Output',
             time: '',
-            showMenu: true,
-            visible_threshold: 100 // pixel threshhold for rendering on scroll
+            showMenu: true
         },
         OUTPUT_ERROR_WIDGET: 'kbaseNarrativeError',
         init: function (options) {
@@ -35,48 +34,61 @@ define([
                 this.options.widget = 'kbaseDefaultNarrativeOutput';
             }
 
-            // Lazy rendering setup
+            /*
+             * This sets up "lazy" rendering.
+             * Cells that are not visible are not rendered initially.
+             * To render them when they scroll into view, a handler is
+             * added to the container that will check their visibility on
+             * every scroll event.
+             * XXX: Not sure whether "on every scroll event" is going to be
+             * too heavy-weight a check once there are 100 elements to worry about.
+             */
             this.is_rendered = false;
             var nb_container = $('#notebook-container'); 
             this.visible_settings = {
                 container: nb_container,
-                threshold: this.visible_threshold };
-            this.render(); // render before any scrolling
+                threshold: 100 };
+            this.lazyRender({data: this}); // try to render at first view
             if (!this.is_rendered) {
-                // Not initially rendered,
-                // so check when to render on scroll events
-                // when we scroll, call render() again
-                nb_container.scroll(this.render);
+                // Not initially rendered, so add handler to re-check after scroll events
+                nb_container.scroll(this, this.lazyRender);
             }
 
             return this;
         },
 
         // Log debug message with cell id
-        cell_debug: function(msg) {
-            console.debug('cell ' + this.cellId + ': ' + msg);
+        cellDebug: function(msg) {
+            console.debug('cell ' + this.options.cellId + ': ' + msg);
         },
 
         // Return true if cell is visible on page, false otherwise
-        is_visible: function () {
+        lazyVisible: function () {
             return this.inviewport(this.$elem, this.visible_settings);
         },
 
-        // Render cell, if it is visible
-        render: function () {
-            if (this.is_rendered) {
+        // Possibly render lazily not-yet-rendered cell
+        lazyRender: function(event) {
+            var self = event.data;
+            if (self.is_rendered) {
+                //self.cellDebug('already rendered');
                 // Note: We could also see if a cell that is rendered, is now
-                // no longer visible, and somehow free its resources. Although
-                // it's not clear how hard this is.
+                // no longer visible, and somehow free its resources.
                 return;
             }
             // see if it is visible before trying to render
-            if (!this.is_visible()) {
-                this.cell_debug('do not render cell. not visible');
+            if ( !self.lazyVisible() ) {
+                //self.cellDebug('do not render cell. not visible');
                 return;
             }
+            //self.cellDebug('visible: true');
+            return self.render();
+        },
+
+        // Render cell (unconditionally)
+        render: function () {
             // render the cell
-            this.cell_debug('begin: render cell');
+            this.cellDebug('begin: render cell');
             var icon;
             switch (this.options.type) {
                 case 'method':
@@ -97,7 +109,7 @@ define([
             }
             // remember; don't render again
             this.is_rendered = true;
-            this.cell_debug('end: render cell');
+            this.cellDebug('end: render cell');
         },
         renderViewerCell: function () {
             require(['kbaseNarrativeDataCell'], $.proxy(function () {
@@ -296,36 +308,16 @@ define([
             return hours + ":" + minutes + ":" + seconds + ", " + month + "/" + day + "/" + year;
         },
         /* -------------------------------------------------------
-         * Code taken and modified from:
+         * Code modified from:
          * Lazy Load - jQuery plugin for lazy loading images
-         *
          * Copyright (c) 2007-2015 Mika Tuupola
-         *
-         * Licensed under the MIT license:
-         *   http://www.opensource.org/licenses/mit-license.php
-         *
-         * Project home:
-         *   http://www.appelsiini.net/projects/lazyload
-        */
-        belowthefold: function(element, settings) {
-            var fold = settings.container.offset().top + settings.container.height();
-            return fold <= $(element).offset().top - settings.threshold;
-        },
-        rightoffold: function(element, settings) {
-            var fold = settings.container.offset().left + settings.container.width();
-            return fold <= $(element).offset().left - settings.threshold;
-        },
-        abovethetop: function(element, settings) {
-            var fold = settings.container.offset().top;
-            return fold >= $(element).offset().top + settings.threshold  + $(element).height();
-        },
-        leftofbegin: function(element, settings) {
-            var fold = settings.container.offset().left;
-            return fold >= $(element).offset().left + settings.threshold + $(element).width();
-        },
+         * Licensed under the MIT license
+         * Project home: http://www.appelsiini.net/projects/lazyload
+         */
         inviewport: function(element, settings) {
-             return !this.rightoffold(element, settings) && !this.leftofbegin(element, settings) &&
-                    !this.belowthefold(element, settings) && !this.abovethetop(element, settings);
+             var fold = settings.container.offset().top + settings.container.height(),
+                 element_top = $(element).offset().top - settings.threshold;
+             return element_top <= fold; // test if it is "above the fold"
         }
         /* End of Lazy Load code.
          * ------------------------------------------------------- */

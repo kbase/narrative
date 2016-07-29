@@ -16,8 +16,9 @@ define([
     'kb_common/html',
     'common/events',
     'common/ui',
+    './input/errorInput',
     'css!google-code-prettify/prettify.css'
-], function (Promise, $, PR, html, Events, UI) {
+], function (Promise, $, PR, html, Events, UI, ErrorControlFactory) {
     'use strict';
     var t = html.tag,
         div = t('div'), span = t('span'), label = t('label'), button = t('button'),
@@ -42,18 +43,25 @@ define([
             bus = config.bus,
             places, container,
             inputControlFactory = config.inputControlFactory,
-            inputControl = inputControlFactory.make({
-                bus: config.bus,
-                initialValue: config.initialValue,
-                parameterSpec: config.parameterSpec,
-                workspaceInfo: config.workspaceInfo,
-                workspaceId: config.workspaceId,
-                fieldSpec: config.fieldSpec
-            }),
+            inputControl,
             options = {},
             fieldId = html.genId(),
-            bus = config.bus,
             spec = config.parameterSpec;
+        
+        try {
+            inputControl = inputControlFactory.make({
+                    bus: config.bus,
+                    initialValue: config.initialValue,
+                    parameterSpec: config.parameterSpec,
+                    workspaceInfo: config.workspaceInfo,
+                    workspaceId: config.workspaceId,
+                    fieldSpec: config.fieldSpec
+                });
+        } catch (ex) {
+            inputControl = ErrorControlFactory.make({
+                message: ex.message
+            }).make();
+        }
 
         // options.isOutputName = spec.text_options && spec.text_options.is_output_name;
         options.enabled = true;
@@ -94,7 +102,6 @@ define([
         }
 
         function setError(error) {
-            console.log('SET ERROR', error);
             var component = buildInputMessage({
                 title: 'ERROR',
                 type: 'danger',

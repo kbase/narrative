@@ -40,6 +40,7 @@ class JobManager(object):
     _comm = None
     _log = kblogging.get_logger(__name__)
     _log.setLevel(logging.INFO)
+    _running_lookup_loop = False
 
     def __new__(cls):
         if JobManager.__instance is None:
@@ -56,6 +57,7 @@ class JobManager(object):
         3. initialize the Job objects by running NJS.get_job_params on each of those (also gets app_id)
         4. start the status lookup loop.
         """
+
         ws_id = system_variable('workspace_id')
         try:
             nar_jobs = clients.get('user_and_job_state').list_jobs2({
@@ -80,10 +82,15 @@ class JobManager(object):
             except Exception as e:
                 kblogging.log_event(self._log, 'init_error', {'err': str(e)})
                 self._send_comm_message('job_init_lookup_err', {'msg': 'Unable to get job info!', 'job_id': job_id, 'err': str(e)})
-        # only keep one loop at a time in cause this gets called again!
-        if self._lookup_timer is not None:
-            self._lookup_timer.cancel()
-        self._lookup_job_status_loop()
+
+        if not self._running_lookup_loop:
+            # only keep one loop at a time in cause this gets called again!
+            if self._lookup_timer is not None:
+                self._lookup_timer.cancel()
+            self._running_lookup_loop = True
+            self._lookup_job_status_loop()
+        else:
+            self._lookup_all_job_status()
 
     def list_jobs(self):
         """
@@ -104,10 +111,10 @@ class JobManager(object):
             for i in range(len(status_set)):
                 status_set[i]['creation_time'] = datetime.datetime.strftime(datetime.datetime.fromtimestamp(status_set[i]['creation_time']/1000), "%Y-%m-%d %H:%M:%S")
                 exec_start = status_set[i].get('exec_start_time', None)
-                if 'complete_time' in status_set[i]:
-                    status_set[i]['complete_time'] = datetime.datetime.strftime(datetime.datetime.fromtimestamp(status_set[i]['complete_time']/1000), "%Y-%m-%d %H:%M:%S")
-                    finished = status_set[i].get('finish_time', None)
-                    if finished and exec_start:
+                if 'finish_time' in status_set[i]:
+                    status_set[i]['finish_time'] = datetime.datetime.strftime(datetime.datetime.fromtimestamp(status_set[i]['finish_time']/1000), "%Y-%m-%d %H:%M:%S")
+                    finished = status_set[i].get('finish_time', 0)
+                    if finished == 1 and exec_start:
                         delta = datetime.datetime.fromtimestamp(finished/1000.0) - datetime.datetime.fromtimestamp(exec_start/1000.0)
                         delta = delta - datetime.timedelta(microseconds=delta.microseconds)
                         status_set[i]['run_time'] = str(delta)
@@ -137,7 +144,7 @@ class JobManager(object):
                     <td>{{ j.owner|e }}</td>
                     <td>{{ j.job_state|e }}</td>
                     <td>{{ j.run_time|e }}</td>
-                    <td>{% if j.complete_time %}{{ j.complete_time|e }}{% else %}Incomplete{% endif %}</td>
+                    <td>{% if j.finish_time %}{{ j.finish_time|e }}{% else %}Incomplete{% endif %}</td>
                 </tr>
                 {% endfor %}
             </table>
@@ -234,6 +241,8 @@ class JobManager(object):
         """
         if self._lookup_timer:
             self._lookup_timer.cancel()
+            self._lookup_timer = None
+        self._running_lookup_loop = False
 
     def register_new_job(self, job):
         """

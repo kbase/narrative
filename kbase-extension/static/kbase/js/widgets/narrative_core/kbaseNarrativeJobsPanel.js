@@ -846,9 +846,13 @@ define([
                 position = job.state.position;
             }
             var owner = job.owner;
+            var cellId = null;
+            if (job.state.cell_id && Jupyter.narrative.getCellByKbaseId(job.state.cell_id) !== null) {
+                cellId = job.state.cell_id;
+            }
             var jobRenderObj = {
                 name: jobName,
-                hasCell: job.state.cell_id,
+                hasCell: cellId,
                 jobId: jobId,
                 status: new Handlebars.SafeString(status),
                 runTime: runTime,
@@ -872,9 +876,9 @@ define([
                     this.triggerJobErrorButton(jobId, errorType);
                 }.bind(this));
             }
-            if (job.state.cell_id) {
+            if (cellId) {
                 $jobDiv.find('span.fa-location-arrow').click(function (e) {
-                    var cell = Jupyter.narrative.getCellByKbaseId(job.state.cell_id);
+                    var cell = Jupyter.narrative.getCellByKbaseId(cellId);
                     Jupyter.narrative.scrollToCell(cell, true);
                 });
             }

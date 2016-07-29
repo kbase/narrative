@@ -6,7 +6,7 @@ module.exports = function (config) {
         frameworks: ['jasmine', 'requirejs'],
         plugins: [
             'karma-jasmine',
-            'karma-chrome-launcher',
+            // 'karma-chrome-launcher',
             'karma-phantomjs-launcher',
             'karma-coverage',
             'karma-requirejs'

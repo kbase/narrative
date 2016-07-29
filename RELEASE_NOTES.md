@@ -3,6 +3,14 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v4.2.1 (more notes will follow).
 
+### Version 3.0.0-alpha-12
+__Changes__
+- Fixed JobManager.list_jobs (again)
+- Reconnected the 'scroll to app' button in the Jobs panel to existing App Cell widgets
+- Removed the Scroll to App button from Jobs that don't have an accompanying cell to scroll to (might be confusing, still).
+- Fixed a constant spam of Job info from the kernel on page refresh.
+- Restored multiselection in subdata inputs.
+
 ### Version 3.0.0-alpha-11
 __Changes__
 - Fixed Narrative metadata to contain a proper list of Apps for showing on the Dashboard.

@@ -195,7 +195,13 @@ class JobManager(object):
             self._log.setLevel(logging.ERROR)
             kblogging.log_event(self._log, "lookup_job_status.error", {'err': str(e)})
             state = {
-                'job_state': 'unknown',
+                'job_state': 'error',
+                'error': {
+                    'error': 'Unable to find current job state. Please try again later, or contact KBase.',
+                    'message': 'Unable to return job state',
+                    'name': 'Job Error',
+                    'code': -2
+                }
                 'creation_time': 0,
                 'cell_id': None,
                 'job_id': job_id

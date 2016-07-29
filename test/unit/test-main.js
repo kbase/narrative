@@ -12,7 +12,6 @@ for (var file in window.__karma__.files) {
     }
 }
 console.log('starting...');
-console.log('karma files: ', tests);
 
 requirejs.config({
     baseUrl: '/narrative/static/',

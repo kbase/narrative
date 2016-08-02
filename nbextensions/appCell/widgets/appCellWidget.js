@@ -23,7 +23,7 @@ define([
     'google-code-prettify/prettify',
     'narrativeConfig',
     './appCellWidget-fsm',
-    
+
     'css!google-code-prettify/prettify.css',
     'css!font-awesome.css'
 ], function (
@@ -79,7 +79,7 @@ define([
 //                },
                 showNotifications: {
                     label: 'Show the Notifications panel',
-                    help: 'The notifications panel may contain informational, warning, or error messages emitted during the operation of the app cell', 
+                    help: 'The notifications panel may contain informational, warning, or error messages emitted during the operation of the app cell',
                     defaultValue: false,
                     type: 'toggle',
                     element: 'notifications'
@@ -529,7 +529,7 @@ define([
                                             label: 'Run',
                                             name: 'run-app',
                                             events: events,
-                                            type: 'primary', 
+                                            type: 'primary',
                                             icon: {
                                                 name: 'play-circle-o',
                                                 size: 2
@@ -538,7 +538,7 @@ define([
                                         ui.buildButton({
                                             label: 'Cancel',
                                             name: 'cancel',
-                                            events: events, 
+                                            events: events,
                                             type: 'danger',
                                             icon: {
                                                 name: 'stop-circle-o',
@@ -548,7 +548,7 @@ define([
                                         ui.buildButton({
                                             label: 'Edit and Re-Run',
                                             name: 're-run-app',
-                                            events: events, 
+                                            events: events,
                                             type: 'primary',
                                             icon: {
                                                 name: 'pencil-square-o',
@@ -1169,7 +1169,7 @@ define([
         }
 
         function doRun() {
-            fsm.newState({mode: 'execute-requested'});            
+            fsm.newState({mode: 'execute-requested'});
             cell.execute();
         }
 
@@ -1284,9 +1284,9 @@ define([
 
                     resetToEditMode('job-deleted');
                 }
-            });            
+            });
             jobListeners.push(ev);
-            
+
             ev = runtime.bus().listen({
                 channel: {
                     jobId: jobId
@@ -1457,6 +1457,8 @@ define([
                     widget: model.getItem('exec.outputWidgetInfo')
                 }
             });
+
+            console.log('INSERTED OUTPUT CELL', cellId);
 
             return newCellId;
         }

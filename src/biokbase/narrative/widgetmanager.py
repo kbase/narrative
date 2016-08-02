@@ -276,7 +276,7 @@ class WidgetManager(object):
                     constants[p] = params[p]["allowed_values"][0]
         return constants
 
-    def show_output_widget(self, widget_name, params, tag="release", title="", type="method", check_widget=True, **kwargs):
+    def show_output_widget(self, widget_name, params, tag="release", title="", type="method", cell_id=None, check_widget=True, **kwargs):
         """
         Renders a widget using the generic kbaseNarrativeOutputWidget container.
 
@@ -317,7 +317,7 @@ class WidgetManager(object):
             var w = new KBaseNarrativeOutputCell($('#{{input_id}}'), {"data": {{input_data}},
                 "type":"{{output_type}}",
                 "widget":"{{widget_name}}",
-                "cellId":"{{input_id}}",
+                "cellId":"{{cell_id}}",
                 "title":"{{cell_title}}",
                 "time":{{timestamp}}
             });
@@ -329,8 +329,47 @@ class WidgetManager(object):
                                              widget_name=widget_name,
                                              input_data=json.dumps(input_data),
                                              cell_title=title,
+                                             cell_id=cell_id,
                                              timestamp=int(round(time.time()*1000)))
         return Javascript(data=js, lib=None, css=None)
+
+    def show_data_widget(self, widget_name, object_info, title="", cell_id=None):
+        """
+        Renders a widget using the generic kbaseNarrativeOutputWidget container.
+
+        Parameters
+        ----------
+        widget_name : string
+            The name of the widget to print the widgets for.
+        params : dict
+            The dictionary of parameters that gets fed into the widget.
+        """
+
+        input_data = dict()
+        input_data.update(object_info)
+        input_template = """
+        element.html("<div id='{{input_id}}' class='kb-vis-area'></div>");
+
+        require(['kbaseNarrativeOutputCell'], function(KBaseNarrativeOutputCell) {
+            var w = new KBaseNarrativeOutputCell($('#{{input_id}}'), {"data": {{input_data}},
+                "type":"viewer",
+                "widget":"{{widget_name}}",
+                "cellId":"{{cell_id}}",
+                "title":"{{cell_title}}",
+                "time":{{timestamp}}
+            });
+        });
+        """
+
+        js = Template(input_template).render(input_id=self._cell_id_prefix + str(uuid.uuid4()),
+                                             output_type=type,
+                                             widget_name=widget_name,
+                                             input_data=json.dumps(input_data),
+                                             cell_title=title,
+                                             cell_id=cell_id,
+                                             timestamp=int(round(time.time()*1000)))
+        return Javascript(data=js, lib=None, css=None)
+
 
 
     def show_custom_widget(self, widget_id, app_id, app_version, app_tag, spec):

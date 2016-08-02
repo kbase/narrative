@@ -28,7 +28,7 @@ define([
 
             this.data = this.options.data;
             this.options.type = this.options.type.toLowerCase();
-            this.cell = Jupyter.narrative.getCellByKbaseId(this.$elem.attr('id'));
+            this.cell = Jupyter.narrative.getCellByKbaseId(this.options.cellId);
             this.cell.element.trigger('hideCodeArea.cell');
             if (this.options.widget.toLowerCase() === "null") {
                 this.options.widget = 'kbaseDefaultNarrativeOutput';

@@ -915,6 +915,32 @@ define([
 //            }
         }
 
+        function toggleReadOnlyMode(readOnly) {
+            if (!readOnly) {
+                // restore state based on fsm.
+                var buttonBar = container.querySelector('.kb-btn-toolbar-cell-widget');
+                if (buttonBar) {
+                    buttonBar.classList.remove('hidden');
+                }
+                renderUI();
+                var curMode = fsm.getCurrentState().state.mode;
+                if (curMode === 'processing') {
+                    startListeningForJobMessages();
+                }
+            }
+            else {
+                // Hide the job starting/modifying buttons
+                // It'd be nice to put all the elements in view-only mode,
+                // to mimic a running state, right? Maybe that's another
+                // FSM state?
+                var buttonBar = container.querySelector('.kb-btn-toolbar-cell-widget');
+                if (buttonBar) {
+                    buttonBar.classList.add('hidden');
+                }
+                stopListeningForJobMessages();
+            }
+        }
+
         var saveTimer = null;
         function saveNarrative() {
             if (saveTimer) {
@@ -1446,6 +1472,8 @@ define([
                 }
             });
 
+            console.log('INSERTED OUTPUT CELL', cellId);
+
             return newCellId;
         }
 
@@ -1764,6 +1792,10 @@ define([
 //                        });
 //                    }
 //                });
+
+                runtime.bus().on('read-only-changed', function(msg) {
+                    toggleReadOnlyMode(msg.readOnly);
+                });
 
                 // Initialize display
                 showCodeInputArea();
@@ -2123,6 +2155,9 @@ define([
                         //
                     } else {
                         renderUI();
+                    }
+                    if (!Jupyter.notebook.writable || Jupyter.narrative.readonly) {
+                        toggleReadOnlyMode(true);
                     }
                 })
                 .catch(function (err) {

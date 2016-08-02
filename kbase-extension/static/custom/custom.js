@@ -758,7 +758,7 @@ define([
         cm_config: {
             mode: 'ipythongfm'
         },
-        placeholder: "_Markdown_ and LaTeX cell - double click here to edit."
+        placeholder: "_Markdown_/LaTeX cell - double click here to edit."
             // "Type _Markdown_ and LaTeX: $\\alpha^2$" +
             //     "<!-- " +
             //     "The above text is Markdown and LaTeX markup.\n" +

@@ -8,6 +8,7 @@ import subprocess
 import sys
 import argparse
 import threading
+import time
 
 KARMA_PORT = 9876
 
@@ -53,6 +54,7 @@ def readlines():
 thread = threading.Thread(target=readlines)
 thread.setDaemon(True)
 thread.start()
+time.sleep(15)
 
 test_command = ['grunt', 'test']
 

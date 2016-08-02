@@ -161,10 +161,10 @@ define([
 
         function doRemoveSelectedItem(indexOfitemToRemove) {
             var selectedItems = model.getItem('selectedItems', []),
-                prevAllowSelection = spec.spec.allow_multiple || selectedItems.length === 0;
+                prevAllowSelection = spec.spec.textsubdata_options.multiselection || selectedItems.length === 0;
             selectedItems.splice(indexOfitemToRemove, 1);
 
-            var newAllowSelection = spec.spec.allow_multiple || selectedItems.length === 0;
+            var newAllowSelection = spec.spec.textsubdata_options.multiselection || selectedItems.length === 0;
             if (newAllowSelection && !prevAllowSelection) {
                 // update text areas to have md-col-7 (from md-col-10)
                 $(ui.getElement('input-container')).find('.row > .col-md-10').switchClass('col-md-10', 'col-md-7');
@@ -190,7 +190,7 @@ define([
 
         function renderAvailableItems() {
             var selected = model.getItem('selectedItems', []),
-                allowSelection = (spec.spec.allow_multiple || selected.length === 0),
+                allowSelection = (spec.spec.textsubdata_options.multiselection || selected.length === 0),
                 items = model.getItem('filteredAvailableItems', []),
                 from = model.getItem('showFrom'),
                 to = model.getItem('showTo'),

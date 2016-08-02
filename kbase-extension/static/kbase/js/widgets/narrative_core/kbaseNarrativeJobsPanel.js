@@ -1,5 +1,5 @@
 /*global define*/
-/*jslint white: true*/
+/*jslint white:true,browser:true,maxerr:100*/
 define([
     'kbwidget',
     'bootstrap',
@@ -57,7 +57,7 @@ define([
             loadingImage: Config.get('loading_gif'),
             workspaceUrl: Config.url('workspace'),
             autopopulate: true,
-            title: 'Jobs',
+            title: 'Jobs'
         },
         title: $('<span>Jobs </span>'),
         // these are the elements that contain running apps and methods
@@ -70,22 +70,19 @@ define([
 
         init: function (options) {
             this._super(options);
-            this.$jobCountBadge = $('<span>').addClass('label label-danger'),
-                this.title.append(this.$jobCountBadge);
+            $('<span>').addClass('label label-danger');
+            this.$jobCountBadge = this.title.append(this.$jobCountBadge);
             Handlebars.registerHelper('colorStatus', function(status) {
                 var s = status.string.toLowerCase();
                 switch(s) {
                     case "in-progress":
                         return "<b>" + status + "</b>";
-                        break;
                     case "queued":
                         return "<b>" + status + "</b>";
-                        break;
                     default:
                         return status;
-                        break;
                 }
-            })
+            });
             this.jobInfoTmpl = Handlebars.compile(JobInfoTemplate);
             this.jobErrorTmpl = Handlebars.compile(JobErrorTemplate);
             this.runtime = Runtime.make();
@@ -101,7 +98,7 @@ define([
                         hide: Config.get('tooltip').hideDelay
                     }
                 })
-                .click(function (event) {
+                .click(function () {
                     $refreshBtn.tooltip('hide');
                     this.sendCommMessage(this.ALL_STATUS);
                 }.bind(this));
@@ -135,13 +132,13 @@ define([
             var modalButtons = [
                 $('<a type="button" class="btn btn-default">')
                     .append('Cancel')
-                    .click(function (event) {
+                    .click(function () {
                         this.jobsModal.hide();
                         this.removeId = null;
                     }.bind(this)),
                 $('<a type="button" class="btn btn-danger">')
                     .append('Delete Job')
-                    .click(function (event) {
+                    .click(function () {
                         if (this.removeId) {
                             this.deleteJob(this.removeId);
                         }
@@ -195,9 +192,9 @@ define([
                 key: {
                     type: messageType
                 }
-            })
+            });
         },
-        handleBusMessages: function (msg) {
+        handleBusMessages: function () {
             var bus = this.runtime.bus();
 
             bus.on('request-job-deletion', function (message) {
@@ -245,7 +242,7 @@ define([
             }
             var msg = {
                 target_name: this.COMM_NAME,
-                request_type: msgType,
+                request_type: msgType
             };
             if (jobId) {
                 msg.job_id = jobId;
@@ -399,7 +396,7 @@ define([
                     var canceledId = msg.content.data.content.job_id;
                     this.sendJobMessage('job-deleted', canceledId, {jobId: canceledId, via: 'job_canceled'});
                     break;
-                    
+
                 case 'job_does_not_exist':
                     this.sendJobMessage('job-does-not-exist', msg.content.data.content.job_id, {jobId: msg.content.data.content.job_id, source: msg.content.data.content.source});
                     break;
@@ -850,9 +847,13 @@ define([
                 position = job.state.position;
             }
             var owner = job.owner;
+            var cellId = null;
+            if (job.state.cell_id && Jupyter.narrative.getCellByKbaseId(job.state.cell_id) !== null) {
+                cellId = job.state.cell_id;
+            }
             var jobRenderObj = {
                 name: jobName,
-                hasCell: job.state.cell_id,
+                hasCell: cellId,
                 jobId: jobId,
                 status: new Handlebars.SafeString(status),
                 runTime: runTime,
@@ -876,9 +877,9 @@ define([
                     this.triggerJobErrorButton(jobId, errorType);
                 }.bind(this));
             }
-            if (job.state.cell_id) {
+            if (cellId) {
                 $jobDiv.find('span.fa-location-arrow').click(function (e) {
-                    var cell = Jupyter.narrative.getCellByKbaseId(job.state.cell_id);
+                    var cell = Jupyter.narrative.getCellByKbaseId(cellId);
                     Jupyter.narrative.scrollToCell(cell, true);
                 });
             }

@@ -102,9 +102,10 @@ define([
                        '        "arg2": 2,\n' +
                        '        "arg3": 3\n' +
                        '    },\n' +
-                       '    tag="tag"\n' +
+                       '    tag="tag",\n' +
+                       '    cell_id="my_cell_id"\n' +
                        ')';
-            expect(PythonInterop.buildOutputRunner('widget', 'tag', inputs)).toEqual(code);
+            expect(PythonInterop.buildOutputRunner('widget', 'tag', 'my_cell_id', inputs)).toEqual(code);
 
         })
     });

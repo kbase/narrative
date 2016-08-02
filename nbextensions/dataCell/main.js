@@ -59,7 +59,7 @@ define([
                 inputPrompt.innerHTML = div({
                     style: {textAlign: 'center'}
                 }, [
-                    AppUtils.makeGenericIcon('arrow-left')
+                    AppUtils.makeGenericIcon('database')
                 ]);
             }
         };
@@ -95,7 +95,7 @@ define([
         if (!cell.metadata.kbase) {
             return;
         }
-        if (cell.metadata.kbase.type !== 'output') {
+        if (cell.metadata.kbase.type !== 'data') {
             return;
         }
 
@@ -125,20 +125,20 @@ define([
                 outputCode, parentTitle,
                 cellId = data.kbase.cellId || (new Uuid(4).format());
 
+            console.log('upgrading data cell', data);
+
             // Set the initial metadata for the output cell.
             meta.kbase = {
-                type: 'output',
+                type: 'data',
                 attributes: {
                     id: cellId,
                     status: 'new',
                     created: new Date().toGMTString(),
                     lastLoaded: new Date().toGMTString(),
-                    icon: 'arrow-right',
-                    title: 'Output Cell'
+                    icon: 'database',
+                    title: 'Data Cell'
                 },
                 outputCell: {
-                    jobId: data.kbase.jobId,
-                    parentCellId: data.kbase.parentCellId,
                     widget: data.kbase.widget
                 }
             };
@@ -147,9 +147,9 @@ define([
             // We just need to generate, set, and execute the output
             // the first time (for now).
 
-              console.log('BUILDING OUTPUT', data);
-              outputCode = PythonInterop.buildOutputRunner(data.kbase.widget.name, data.kbase.widget.tag, cellId, data.kbase.widget.params);
-              cell.set_text(outputCode);
+            var cellText = PythonInterop.buildDataWidgetRunner('kbaseNarrativeDataCell', cellId, data.objectInfo);
+
+            cell.set_text(cellText);
             cell.execute();
 
             // all we do for now is set up the input area
@@ -168,7 +168,8 @@ define([
 
     function load() {
         $([Jupyter.events]).on('inserted.Cell', function (event, data) {
-            if (data.kbase && data.kbase.type === 'output') {
+          console.log('inserted!', data);
+            if (data.kbase && data.kbase.type === 'data') {
                 upgradeCell(data)
                     .catch(function (err) {
                         console.error('ERROR creating cell', err);

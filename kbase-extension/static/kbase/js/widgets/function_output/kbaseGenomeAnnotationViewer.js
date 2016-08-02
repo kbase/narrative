@@ -17,11 +17,7 @@ define (
         'kbaseTabs',
         'jquery-dataTables',
         'jquery-dataTables-bootstrap',
-
-        'GenomeAnnotationAPI-client-api',        
-        'AssemblyAPI-client-api',        
-        'TaxonAPI-client-api'
-
+        'GenomeAnnotationAPI-client-api'
     ], function(
         KBWidget,
         bootstrap,
@@ -34,12 +30,10 @@ define (
         kbaseTabs,
         jquery_dataTables,
         bootstrap,
-        GenomeAnnotationAPI_client_api,
-        AssemblyAPI_client_api,
-        TaxonAPI_client_api
+        gaa
     ) {
     return KBWidget({
-        name: "kbaseGenomeView",
+        name: "kbaseGenomeAnnotationViewer",
         parent : kbaseAuthenticatedWidget,
         version: "1.0.0",
         ws_id: null,
@@ -58,12 +52,44 @@ define (
         init: function(options) {
             this._super(options);
 
-            this.ws_name = options.ws_name;
-            this.ws_id = options.ws_id;
-            if (options.ws && options.id) {
-                  this.ws_id = options.id;
-                  this.ws_name = options.ws;
+console.log('WIZARD : ', Config.url('service_wizard'), this.authToken());
+var ref = this.options.wsNameOrId + '/' + this.options.objNameOrId;
+console.log("REF : ", this.options.wsNameOrId + '/' + this.options.objNameOrId);
+//ref = '8990/2/1';
+            //in this case, ref is "thomasoniii:1469466138774/Ptrichocarpa_Ensembl"
+            var ref = this.options.wsNameOrId + '/' + this.options.objNameOrId;
+            var genome_api = new GenomeAnnotationAPI(Config.url('service_wizard'), {token : this.authToken() });
+
+            genome_api.get_summary(ref).then(function (d) {
+              console.log("API GET SUMMARY ", d);
+            })
+            .fail(function (d) {
+              console.log("FAILED WITH", d);
+            });
+
+            if (this.options.wsNameOrId != undefined) {
+              this.wsKey = this.options.wsNameOrId.match(/^\d+/)
+                ? 'wsid'
+                : 'workspace'
+              ;
             }
+
+            if (this.options.objNameOrId != undefined) {
+              this.objKey = this.options.objNameOrId.match(/^\d+/)
+                ? 'objid'
+                : 'name'
+              ;
+            }
+
+
+            var $self = this;
+
+            var dictionary_params = {};
+            dictionary_params[this.wsKey] = this.options.wsNameOrId;
+            dictionary_params[this.objKey] = this.options.objNameOrId;
+
+            this.dictionary_params = dictionary_params;
+
             return this;
         },
 
@@ -149,13 +175,6 @@ define (
             var self = this;
             var pref = StringUtil.uuid();
 
-            // Example of calling the new API
-            //var api = new GenomeAnnotationAPI(Config.url('service_wizard'),{'token':self.token});
-            //api.get_feature_ids(self.ws_name + "/" + self.ws_id, null, null)
-            //        .done(function(ids) {
-            //            console.log(ids);
-            //        });
-
             var container = this.$elem;
             if (self.token == null) {
                 container.empty();
@@ -165,6 +184,10 @@ define (
 
             var kbws = new Workspace(self.wsUrl, {'token': self.token});
 
+            kbws.get_objects([{ref : this.options.wsNameOrId + '/' + this.options.objNameOrId}]).then(function(d) {
+              console.log("KBWS GOT BACK ", d);
+            });
+console.log("RENDERED"); return;
             var ready = function(gnm, ctg) {
                     container.empty();
                     var tabPane = $('<div id="'+pref+'tab-content">');
@@ -393,7 +416,11 @@ define (
                             "/domain","/gc_content","/genetic_code","/id","/md5","num_contigs",
                             "/scientific_name","/source","/source_id","/tax_id","/taxonomy",
                             "/features/[*]/type", "/features/[*]/unknownfield", "/features/[*]/location", "/features/[*]/ontology_terms","/features/[*]/id"];
-            kbws.get_object_subset([{ref: self.ws_name + "/" + self.ws_id, included: included}], function(data) {
+            //var ws_params = {ref: self.ws_name + "/" + self.ws_id, included: included};
+            var ws_params = {included: included};
+            ws_params[self.wsKey] = self.dictionary_params[self.wsKey];
+            ws_params[self.objKey] = self.dictionary_params[self.objKey];
+            kbws.get_object_subset([ws_params], function(data) {
             //kbws.get_object([{ref: self.ws_name + "/" + self.ws_id}], function(data) {
                 var gnm = data[0].data;
                 if (gnm.contig_ids && gnm.contig_lengths && gnm.contig_ids.length == gnm.contig_lengths.length) {
@@ -401,7 +428,10 @@ define (
                 } else {
                     var contigSetRef = gnm.contigset_ref;
                     if (gnm.contigset_ref) {
-                        kbws.get_object_subset([{ref: contigSetRef, included: ['contigs/[*]/unknownfield']}], function(data2) {
+                        var ws_params = {included: ['contigs/[*]/unknownfield']};
+                        ws_params[self.wsKey] = self.dictionary_params[self.wsKey];
+                        ws_params[self.objKey] = self.dictionary_params[self.objKey];
+                        kbws.get_object_subset([ws_params], function(data2) {
                             var ctg = data2[0].data;
                             ready(gnm, ctg);
                         }, function(data2) {
@@ -422,12 +452,15 @@ define (
 
         prepareGenesAndContigs: function(pref, kbws, gnm, tabPane) {
             var self = this;
-            var subsetRequests = [{ref: self.ws_name + "/" + self.ws_id, included:
+            var ws_params = {included:
                 ["/features/[*]/aliases","/features/[*]/annotations",
                  "/features/[*]/function","/features/[*]/id","/features/[*]/location",
                  "/features/[*]/protein_translation_length",
                  "/features/[*]/dna_translation_length","/features/[*]/type"]
-            }];
+            };
+                        ws_params[self.wsKey] = self.dictionary_params[self.wsKey];
+                        ws_params[self.objKey] = self.dictionary_params[self.objKey];
+            var subsetRequests = [ws_params];
             if (!(gnm.contig_ids && gnm.contig_lengths && gnm.contig_ids.length == gnm.contig_lengths.length)) {
                 var contigSetRef = gnm.contigset_ref;
                 subsetRequests.push({ref: contigSetRef, included: ['contigs/[*]/id', 'contigs/[*]/length']});
@@ -705,11 +738,14 @@ define (
                         }
                     }
                     elemTable.append('<tr id="seq-loader"><td colspan=2><img src="' + self.loadingImage + '"></td></tr>');
-                    Promise.resolve(kbws.get_object_subset([{
-                        ref: self.ws_name + "/" + self.ws_id,
+                    var ws_params = {
+                        //ref: self.ws_name + "/" + self.ws_id,
                         included: ['/features/' + gene.arrPos + '/protein_translation',
                                    '/features/' + gene.arrPos + '/dna_sequence']
-                    }])).then(function(data) {
+                    };
+                        ws_params[self.wsKey] = self.dictionary_params[self.wsKey];
+                        ws_params[self.objKey] = self.dictionary_params[self.objKey];
+                    Promise.resolve(kbws.get_object_subset([ws_params])).then(function(data) {
                         elemTable.find('#seq-loader').remove();
                         data = data[0].data;
                         if (data.features) {

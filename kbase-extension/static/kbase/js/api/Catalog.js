@@ -1,8 +1,7 @@
 
 
-function Catalog(url, auth, auth_cb, timeout, async_job_check_time_ms) {
+function Catalog(url, auth, auth_cb, timeout, async_job_check_time_ms, service_version) {
     var self = this;
-
     this.url = url;
     var _url = url;
 
@@ -12,10 +11,10 @@ function Catalog(url, auth, auth_cb, timeout, async_job_check_time_ms) {
     this.async_job_check_time_ms = async_job_check_time_ms;
     if (!this.async_job_check_time_ms)
         this.async_job_check_time_ms = 5000;
+    this.service_version = service_version;
 
     var _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
     var _auth_cb = auth_cb;
-
 
      this.version = function (_callback, _errorCallback) {
         if (_callback && typeof _callback !== 'function')
@@ -24,7 +23,7 @@ function Catalog(url, auth, auth_cb, timeout, async_job_check_time_ms) {
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 0+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(0+2)+')';
-        return json_call_ajax("Catalog.version",
+        return json_call_ajax(_url, "Catalog.version",
             [], 1, _callback, _errorCallback);
     };
  
@@ -37,7 +36,7 @@ function Catalog(url, auth, auth_cb, timeout, async_job_check_time_ms) {
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Catalog.is_registered",
+        return json_call_ajax(_url, "Catalog.is_registered",
             [params], 1, _callback, _errorCallback);
     };
  
@@ -50,7 +49,7 @@ function Catalog(url, auth, auth_cb, timeout, async_job_check_time_ms) {
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Catalog.register_repo",
+        return json_call_ajax(_url, "Catalog.register_repo",
             [params], 1, _callback, _errorCallback);
     };
  
@@ -63,7 +62,7 @@ function Catalog(url, auth, auth_cb, timeout, async_job_check_time_ms) {
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Catalog.push_dev_to_beta",
+        return json_call_ajax(_url, "Catalog.push_dev_to_beta",
             [params], 0, _callback, _errorCallback);
     };
  
@@ -76,7 +75,7 @@ function Catalog(url, auth, auth_cb, timeout, async_job_check_time_ms) {
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Catalog.request_release",
+        return json_call_ajax(_url, "Catalog.request_release",
             [params], 0, _callback, _errorCallback);
     };
  
@@ -87,7 +86,7 @@ function Catalog(url, auth, auth_cb, timeout, async_job_check_time_ms) {
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 0+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(0+2)+')';
-        return json_call_ajax("Catalog.list_requested_releases",
+        return json_call_ajax(_url, "Catalog.list_requested_releases",
             [], 1, _callback, _errorCallback);
     };
  
@@ -100,7 +99,7 @@ function Catalog(url, auth, auth_cb, timeout, async_job_check_time_ms) {
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Catalog.review_release_request",
+        return json_call_ajax(_url, "Catalog.review_release_request",
             [review], 0, _callback, _errorCallback);
     };
  
@@ -113,7 +112,7 @@ function Catalog(url, auth, auth_cb, timeout, async_job_check_time_ms) {
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Catalog.list_basic_module_info",
+        return json_call_ajax(_url, "Catalog.list_basic_module_info",
             [params], 1, _callback, _errorCallback);
     };
  
@@ -126,7 +125,7 @@ function Catalog(url, auth, auth_cb, timeout, async_job_check_time_ms) {
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Catalog.add_favorite",
+        return json_call_ajax(_url, "Catalog.add_favorite",
             [params], 0, _callback, _errorCallback);
     };
  
@@ -139,7 +138,7 @@ function Catalog(url, auth, auth_cb, timeout, async_job_check_time_ms) {
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Catalog.remove_favorite",
+        return json_call_ajax(_url, "Catalog.remove_favorite",
             [params], 0, _callback, _errorCallback);
     };
  
@@ -152,7 +151,7 @@ function Catalog(url, auth, auth_cb, timeout, async_job_check_time_ms) {
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Catalog.list_favorites",
+        return json_call_ajax(_url, "Catalog.list_favorites",
             [username], 1, _callback, _errorCallback);
     };
  
@@ -165,7 +164,7 @@ function Catalog(url, auth, auth_cb, timeout, async_job_check_time_ms) {
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Catalog.list_app_favorites",
+        return json_call_ajax(_url, "Catalog.list_app_favorites",
             [item], 1, _callback, _errorCallback);
     };
  
@@ -178,7 +177,7 @@ function Catalog(url, auth, auth_cb, timeout, async_job_check_time_ms) {
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Catalog.list_favorite_counts",
+        return json_call_ajax(_url, "Catalog.list_favorite_counts",
             [params], 1, _callback, _errorCallback);
     };
  
@@ -191,7 +190,7 @@ function Catalog(url, auth, auth_cb, timeout, async_job_check_time_ms) {
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Catalog.get_module_info",
+        return json_call_ajax(_url, "Catalog.get_module_info",
             [selection], 1, _callback, _errorCallback);
     };
  
@@ -204,7 +203,7 @@ function Catalog(url, auth, auth_cb, timeout, async_job_check_time_ms) {
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Catalog.get_version_info",
+        return json_call_ajax(_url, "Catalog.get_version_info",
             [params], 1, _callback, _errorCallback);
     };
  
@@ -217,8 +216,73 @@ function Catalog(url, auth, auth_cb, timeout, async_job_check_time_ms) {
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Catalog.list_released_module_versions",
+        return json_call_ajax(_url, "Catalog.list_released_module_versions",
             [params], 1, _callback, _errorCallback);
+    };
+ 
+     this.get_module_version = function (selection, _callback, _errorCallback) {
+        if (typeof selection === 'function')
+            throw 'Argument selection can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax(_url, "Catalog.get_module_version",
+            [selection], 1, _callback, _errorCallback);
+    };
+ 
+     this.list_local_functions = function (params, _callback, _errorCallback) {
+        if (typeof params === 'function')
+            throw 'Argument params can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax(_url, "Catalog.list_local_functions",
+            [params], 1, _callback, _errorCallback);
+    };
+ 
+     this.get_local_function_details = function (params, _callback, _errorCallback) {
+        if (typeof params === 'function')
+            throw 'Argument params can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax(_url, "Catalog.get_local_function_details",
+            [params], 1, _callback, _errorCallback);
+    };
+ 
+     this.module_version_lookup = function (selection, _callback, _errorCallback) {
+        if (typeof selection === 'function')
+            throw 'Argument selection can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax(_url, "Catalog.module_version_lookup",
+            [selection], 1, _callback, _errorCallback);
+    };
+ 
+     this.list_service_modules = function (filter, _callback, _errorCallback) {
+        if (typeof filter === 'function')
+            throw 'Argument filter can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax(_url, "Catalog.list_service_modules",
+            [filter], 1, _callback, _errorCallback);
     };
  
      this.set_registration_state = function (params, _callback, _errorCallback) {
@@ -230,7 +294,7 @@ function Catalog(url, auth, auth_cb, timeout, async_job_check_time_ms) {
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Catalog.set_registration_state",
+        return json_call_ajax(_url, "Catalog.set_registration_state",
             [params], 0, _callback, _errorCallback);
     };
  
@@ -243,7 +307,7 @@ function Catalog(url, auth, auth_cb, timeout, async_job_check_time_ms) {
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Catalog.get_module_state",
+        return json_call_ajax(_url, "Catalog.get_module_state",
             [params], 1, _callback, _errorCallback);
     };
  
@@ -256,7 +320,7 @@ function Catalog(url, auth, auth_cb, timeout, async_job_check_time_ms) {
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Catalog.get_build_log",
+        return json_call_ajax(_url, "Catalog.get_build_log",
             [registration_id], 1, _callback, _errorCallback);
     };
  
@@ -269,7 +333,7 @@ function Catalog(url, auth, auth_cb, timeout, async_job_check_time_ms) {
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Catalog.get_parsed_build_log",
+        return json_call_ajax(_url, "Catalog.get_parsed_build_log",
             [params], 1, _callback, _errorCallback);
     };
  
@@ -282,7 +346,7 @@ function Catalog(url, auth, auth_cb, timeout, async_job_check_time_ms) {
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Catalog.list_builds",
+        return json_call_ajax(_url, "Catalog.list_builds",
             [params], 1, _callback, _errorCallback);
     };
  
@@ -295,7 +359,7 @@ function Catalog(url, auth, auth_cb, timeout, async_job_check_time_ms) {
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Catalog.delete_module",
+        return json_call_ajax(_url, "Catalog.delete_module",
             [params], 0, _callback, _errorCallback);
     };
  
@@ -308,7 +372,7 @@ function Catalog(url, auth, auth_cb, timeout, async_job_check_time_ms) {
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Catalog.migrate_module_to_new_git_url",
+        return json_call_ajax(_url, "Catalog.migrate_module_to_new_git_url",
             [params], 0, _callback, _errorCallback);
     };
  
@@ -321,7 +385,7 @@ function Catalog(url, auth, auth_cb, timeout, async_job_check_time_ms) {
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Catalog.set_to_active",
+        return json_call_ajax(_url, "Catalog.set_to_active",
             [params], 0, _callback, _errorCallback);
     };
  
@@ -334,7 +398,7 @@ function Catalog(url, auth, auth_cb, timeout, async_job_check_time_ms) {
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Catalog.set_to_inactive",
+        return json_call_ajax(_url, "Catalog.set_to_inactive",
             [params], 0, _callback, _errorCallback);
     };
  
@@ -347,7 +411,7 @@ function Catalog(url, auth, auth_cb, timeout, async_job_check_time_ms) {
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Catalog.is_approved_developer",
+        return json_call_ajax(_url, "Catalog.is_approved_developer",
             [usernames], 1, _callback, _errorCallback);
     };
  
@@ -358,7 +422,7 @@ function Catalog(url, auth, auth_cb, timeout, async_job_check_time_ms) {
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 0+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(0+2)+')';
-        return json_call_ajax("Catalog.list_approved_developers",
+        return json_call_ajax(_url, "Catalog.list_approved_developers",
             [], 1, _callback, _errorCallback);
     };
  
@@ -371,7 +435,7 @@ function Catalog(url, auth, auth_cb, timeout, async_job_check_time_ms) {
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Catalog.approve_developer",
+        return json_call_ajax(_url, "Catalog.approve_developer",
             [username], 0, _callback, _errorCallback);
     };
  
@@ -384,7 +448,7 @@ function Catalog(url, auth, auth_cb, timeout, async_job_check_time_ms) {
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Catalog.revoke_developer",
+        return json_call_ajax(_url, "Catalog.revoke_developer",
             [username], 0, _callback, _errorCallback);
     };
  
@@ -397,7 +461,7 @@ function Catalog(url, auth, auth_cb, timeout, async_job_check_time_ms) {
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Catalog.log_exec_stats",
+        return json_call_ajax(_url, "Catalog.log_exec_stats",
             [params], 0, _callback, _errorCallback);
     };
  
@@ -410,16 +474,158 @@ function Catalog(url, auth, auth_cb, timeout, async_job_check_time_ms) {
             throw 'Argument _errorCallback must be a function if defined';
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
-        return json_call_ajax("Catalog.get_exec_aggr_stats",
+        return json_call_ajax(_url, "Catalog.get_exec_aggr_stats",
             [params], 1, _callback, _errorCallback);
     };
+ 
+     this.get_exec_aggr_table = function (params, _callback, _errorCallback) {
+        if (typeof params === 'function')
+            throw 'Argument params can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax(_url, "Catalog.get_exec_aggr_table",
+            [params], 1, _callback, _errorCallback);
+    };
+ 
+     this.get_exec_raw_stats = function (params, _callback, _errorCallback) {
+        if (typeof params === 'function')
+            throw 'Argument params can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax(_url, "Catalog.get_exec_raw_stats",
+            [params], 1, _callback, _errorCallback);
+    };
+ 
+     this.get_client_groups = function (params, _callback, _errorCallback) {
+        if (typeof params === 'function')
+            throw 'Argument params can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax(_url, "Catalog.get_client_groups",
+            [params], 1, _callback, _errorCallback);
+    };
+ 
+     this.set_client_group_config = function (config, _callback, _errorCallback) {
+        if (typeof config === 'function')
+            throw 'Argument config can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax(_url, "Catalog.set_client_group_config",
+            [config], 0, _callback, _errorCallback);
+    };
+ 
+     this.remove_client_group_config = function (config, _callback, _errorCallback) {
+        if (typeof config === 'function')
+            throw 'Argument config can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax(_url, "Catalog.remove_client_group_config",
+            [config], 0, _callback, _errorCallback);
+    };
+ 
+     this.list_client_group_configs = function (filter, _callback, _errorCallback) {
+        if (typeof filter === 'function')
+            throw 'Argument filter can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax(_url, "Catalog.list_client_group_configs",
+            [filter], 1, _callback, _errorCallback);
+    };
+ 
+     this.set_volume_mount = function (config, _callback, _errorCallback) {
+        if (typeof config === 'function')
+            throw 'Argument config can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax(_url, "Catalog.set_volume_mount",
+            [config], 0, _callback, _errorCallback);
+    };
+ 
+     this.remove_volume_mount = function (config, _callback, _errorCallback) {
+        if (typeof config === 'function')
+            throw 'Argument config can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax(_url, "Catalog.remove_volume_mount",
+            [config], 0, _callback, _errorCallback);
+    };
+ 
+     this.list_volume_mounts = function (filter, _callback, _errorCallback) {
+        if (typeof filter === 'function')
+            throw 'Argument filter can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax(_url, "Catalog.list_volume_mounts",
+            [filter], 1, _callback, _errorCallback);
+    };
+ 
+     this.is_admin = function (username, _callback, _errorCallback) {
+        if (typeof username === 'function')
+            throw 'Argument username can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax(_url, "Catalog.is_admin",
+            [username], 1, _callback, _errorCallback);
+    };
   
+    this.status = function (_callback, _errorCallback) {
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 2)
+            throw 'Too many arguments ('+arguments.length+' instead of 2)';
+        return json_call_ajax(_url, "Catalog.status",
+            [], 1, _callback, _errorCallback);
+    };
+
 
     /*
      * JSON call using jQuery method.
      */
-    function json_call_ajax(method, params, numRets, callback, errorCallback) {
-        var deferred = $.Deferred();
+    function json_call_ajax(srv_url, method, params, numRets, callback, errorCallback, json_rpc_context, deferred) {
+        if (!deferred)
+            deferred = $.Deferred();
 
         if (typeof callback === 'function') {
            deferred.done(callback);
@@ -435,6 +641,8 @@ function Catalog(url, auth, auth_cb, timeout, async_job_check_time_ms) {
             version: "1.1",
             id: String(Math.random()).slice(2),
         };
+        if (json_rpc_context)
+            rpc['context'] = json_rpc_context;
 
         var beforeSend = null;
         var token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
@@ -446,7 +654,7 @@ function Catalog(url, auth, auth_cb, timeout, async_job_check_time_ms) {
         }
 
         var xhr = jQuery.ajax({
-            url: _url,
+            url: srv_url,
             dataType: "text",
             type: 'POST',
             processData: false,
@@ -462,7 +670,7 @@ function Catalog(url, auth, auth_cb, timeout, async_job_check_time_ms) {
                     deferred.reject({
                         status: 503,
                         error: err,
-                        url: _url,
+                        url: srv_url,
                         resp: data
                     });
                     return;
@@ -495,3 +703,4 @@ function Catalog(url, auth, auth_cb, timeout, async_job_check_time_ms) {
 }
 
 
+ 

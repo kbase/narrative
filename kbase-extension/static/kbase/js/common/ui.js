@@ -707,8 +707,6 @@ define([
                 }
             ]);
             
-            console.log('FOUND TAB', tabTab);
-            
             // Update tab label 
             if (updates.label) {
                 var labelNode = tabTab.querySelector('[data-element="label"]');

@@ -52,6 +52,7 @@ define([
             inputControl = inputControlFactory.make({
                     bus: config.bus,
                     initialValue: config.initialValue,
+                    appSpec: config.appSpec,
                     parameterSpec: config.parameterSpec,
                     workspaceInfo: config.workspaceInfo,
                     workspaceId: config.workspaceId,

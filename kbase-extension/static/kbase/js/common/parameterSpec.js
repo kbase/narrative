@@ -89,9 +89,24 @@ define([
                 case 'textsubdata':
                     return 'subdata';
                 case 'custom_textsubdata':
-                    var custom = customTextSubdata();
-                    if (custom) {
-                        return custom;
+                    if (spec.allow_multiple) {
+                        return '[]string';
+                    }
+                    return 'string';
+                    //var custom = customTextSubdata();
+                    //if (custom) {
+                    //    return custom;
+                    //}
+                case 'custom_button':
+                    switch (spec.id) {
+                        case 'input_check_other_params':
+                            return 'boolean';
+                        default:
+                            return 'unspecified';
+                    }
+                case 'custom_widget':
+                    if (spec.dropdown_options) {
+                        return '[]string';
                     }
             }
 
@@ -170,6 +185,8 @@ define([
                     return parseFloat(defaultValue);
                 case 'workspaceObjectName':
                     return defaultValue;
+                case 'boolean':
+                    return coerceToBoolean(defaultValue);
                 default:
                     // Assume it is a string...
                     return defaultValue;
@@ -228,6 +245,10 @@ define([
                         return spec.checkbox_options.unchecked_value;
                     } else {
                         return coerceToIntBoolean(defaultValues[0]);
+                    }
+                case 'custom_textsubdata':
+                    if (!defaultValues) {
+                        
                     }
             }
             

@@ -763,7 +763,7 @@ define([
 
         function updateRunStateFromJobState(source) {
             var jobState = model.getItem('jobState'),
-                runState = model.getItem('runState'),
+                runState = model.getItem('runState', {}),
                 now = new Date().getTime(),
                 newRunState,
                 temporalState,

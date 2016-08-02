@@ -1,4 +1,5 @@
-/* global: define */
+/*global define*/
+/*jslint white:true,browser:true,devel:true*/
 
 /**
  * Top-level 'widget' for the workspace interaction with the KBase narrative.
@@ -20,49 +21,50 @@
  * @public
  */
 
-define (
-	[
-        'base/js/namespace',
-        'common/runtime',
-		'kbwidget',
-		'bootstrap',
-		'jquery',
-		'underscore',
-		'bluebird',
-		'narrativeConfig',
-		'util/bootstrapDialog',
-		'util/string',
-		'kbaseDefaultNarrativeOutput',
-		'kbaseDefaultNarrativeInput',
-		'kbaseNarrativeAppCell',
-		'kbaseNarrativeMethodCell',
-		'kbaseNarrativeSidePanel',
-		'kbaseNarrativeDataPanel',
-        'kbaseNarrativeOutputCell',
-        'kbaseTabs',
-        'common/pythonInterop'
-	], function(
-        Jupyter,
-        Runtime,
-		KBWidget,
-		bootstrap,
-		$,
-		_,
-		Promise,
-		Config,
-		BootstrapDialog,
-		StringUtil,
-		kbaseDefaultNarrativeOutput,
-		kbaseDefaultNarrativeInput,
-		kbaseNarrativeAppCell,
-		kbaseNarrativeMethodCell,
-		kbaseNarrativeSidePanel,
-		kbaseNarrativeDataPanel,
-        kbaseNarrativeOutputCell,
-        kbaseTabs,
-        PythonInterop
-	) {
-
+define([
+    'base/js/namespace',
+    'common/runtime',
+    'kbwidget',
+    'bootstrap',
+    'jquery',
+    'underscore',
+    'bluebird',
+    'narrativeConfig',
+    'util/bootstrapDialog',
+    'util/string',
+    'kbaseDefaultNarrativeOutput',
+    'kbaseDefaultNarrativeInput',
+    'kbaseNarrativeAppCell',
+    'kbaseNarrativeMethodCell',
+    'kbaseNarrativeSidePanel',
+    'kbaseNarrativeDataPanel',
+    'kbaseNarrativeOutputCell',
+    'kbaseTabs',
+    'common/pythonInterop',
+    'kb_service/client/narrativeMethodStore'
+], function(
+    Jupyter,
+    Runtime,
+    KBWidget,
+    bootstrap,
+    $,
+    _,
+    Promise,
+    Config,
+    BootstrapDialog,
+    StringUtil,
+    kbaseDefaultNarrativeOutput,
+    kbaseDefaultNarrativeInput,
+    kbaseNarrativeAppCell,
+    kbaseNarrativeMethodCell,
+    kbaseNarrativeSidePanel,
+    kbaseNarrativeDataPanel,
+    kbaseNarrativeOutputCell,
+    kbaseTabs,
+    PythonInterop,
+    NarrativeMethodStore
+) {
+    'use strict';
     return KBWidget({
         name: 'kbaseNarrativeWorkspace',
         version: '1.0.0',
@@ -81,7 +83,7 @@ define (
         connectable: {},
 
         inputsRendered: false,
-        maxSavedStates: 1,      // limit the states saved to 1 for now.
+        maxSavedStates: 1, // limit the states saved to 1 for now.
         nextOutputCellId: '',
 
         // constant strings.
@@ -97,13 +99,13 @@ define (
         curCell: null,
 
         // set up as a hash for quickie lookup time!
-        ignoredDataTypes : {
-            string : 1,
-            unicode : 1,
-            numeric : 1,
-            integer : 1,
-            list : 1,
-            'a number' : 1
+        ignoredDataTypes: {
+            string: 1,
+            unicode: 1,
+            numeric: 1,
+            integer: 1,
+            list: 1,
+            'a number': 1
         },
 
         init: function(options) {
@@ -207,11 +209,13 @@ define (
             $(document).on('createOutputCell.Narrative',
                 function(event, data) {
                     var cell = Jupyter.narrative.getCellByKbaseId(data.cellId);
-                    var params = {embed : true,
-                                  data: StringUtil.safeJSONStringify(data.result)};
+                    var params = {
+                        embed: true,
+                        data: StringUtil.safeJSONStringify(data.result)
+                    };
                     if (data.next_steps) {
-                      // console.debug("adding next steps in create");
-                      params.next_steps = data.next_steps;
+                        // console.debug("adding next steps in create");
+                        params.next_steps = data.next_steps;
                     }
                     this.createOutputCell(cell, params);
                 }.bind(this)
@@ -231,14 +235,14 @@ define (
 
             // Global functions for setting icons
             $(document).on('setDataIcon.Narrative',
-                function (e, param) {
+                function(e, param) {
                     this.setDataIcon(param.elt, param.type);
                 }.bind(this)
             );
 
             // Refresh the read-only or View-only mode
             $(document).on('updateReadOnlyMode.Narrative',
-                function (e, ws, name, callback) {
+                function(e, ws, name, callback) {
                     this.runtime.bus().emit('read-only-changed');
                     this.updateReadOnlyMode(ws, name, callback);
                 }.bind(this)
@@ -258,17 +262,17 @@ define (
 
         initReadOnlyElements: function() {
             $('#kb-view-mode').click(function() {
-                this.toggleReadOnlyMode();
-            }.bind(this))
-            .tooltip({
-                title: 'Toggle view-only mode',
-                container: 'body',
-                delay: {
-                    show: Config.get('tooltip').showDelay,
-                    hide: Config.get('tooltip').hideDelay
-                },
-                placement: 'bottom'
-            });
+                    this.toggleReadOnlyMode();
+                }.bind(this))
+                .tooltip({
+                    title: 'Toggle view-only mode',
+                    container: 'body',
+                    delay: {
+                        show: Config.get('tooltip').showDelay,
+                        hide: Config.get('tooltip').hideDelay
+                    },
+                    placement: 'bottom'
+                });
 
             /* This is the input box for the new narrative name.
              * Gets pre-populated with the current narrative name + "- copy"
@@ -276,14 +280,16 @@ define (
              */
             var $newNameInput = $('<input type="text">')
                 .addClass('form-control')
-                .tooltip({title: 'Please enter a name.',
-                          container: 'body',
-                          placement: 'right',
-                          trigger: 'manual'})
-                .on('focus', function () {
+                .tooltip({
+                    title: 'Please enter a name.',
+                    container: 'body',
+                    placement: 'right',
+                    trigger: 'manual'
+                })
+                .on('focus', function() {
                     Jupyter.narrative.disableKeyboardManager();
                 })
-                .on('blur', function () {
+                .on('blur', function() {
                     Jupyter.narrative.enableKeyboardManager();
                 })
                 .on('input', function() {
@@ -291,71 +297,71 @@ define (
                     if (!v) {
                         $newNameInput.tooltip('show');
                         $doCopyBtn.prop('disabled', true);
-                    }
-                    else {
+                    } else {
                         $newNameInput.tooltip('hide');
                         $doCopyBtn.prop('disabled', false);
                     }
                 });
 
-            var $errorMessage = $('<div>').css({'color': '#F44336', 'padding-top': '5px'});
+            var $errorMessage = $('<div>').css({
+                'color': '#F44336',
+                'padding-top': '5px'
+            });
 
             /*
              * Does the actual copy and displays the error if that happens.
              */
             var $doCopyBtn = $('<button>')
-                             .addClass('kb-primary-btn')
-                             .append('Copy')
-                             .click(function(e) {
-                                $errorMessage.empty();
-                                $doCopyBtn.prop('disabled', true);
-                                $cancelBtn.prop('disabled', true);
-                                Jupyter.narrative.sidePanel.$narrativesWidget.copyThisNarrative($newNameInput.val())
-                                .then(function(result) {
-                                    Jupyter.narrative.sidePanel.$narrativesWidget.refresh();
-                                    console.log(result);
-                                    // show go-to button
-                                    $cancelBtn.html('Close');
-                                    $jumpButton.click(function() {
-                                        window.location.href = result.url;
-                                    });
-                                    $jumpButton.show();
-                                    $doCopyBtn.prop('disabled', false);
-                                    $cancelBtn.prop('disabled', false);
-                                }.bind(this))
-                                .catch(function(error) {
-                                    if (error && error.error && error.error.message) {
-                                        $errorMessage.append(error.error.message);
-                                    }
-                                    else if (typeof error === 'string') {
-                                        $errorMessage.append(error);
-                                    }
-                                    else {
-                                        $errorMessage.append('Sorry, an error occurred while copying. Please try again.');
-                                    }
-                                    $doCopyBtn.prop('disabled', false);
-                                    $cancelBtn.prop('disabled', false);
-                                })
-                             }.bind(this));
+                .addClass('kb-primary-btn')
+                .append('Copy')
+                .click(function(e) {
+                    $errorMessage.empty();
+                    $doCopyBtn.prop('disabled', true);
+                    $cancelBtn.prop('disabled', true);
+                    Jupyter.narrative.sidePanel.$narrativesWidget.copyThisNarrative($newNameInput.val())
+                        .then(function(result) {
+                            Jupyter.narrative.sidePanel.$narrativesWidget.refresh();
+                            console.log(result);
+                            // show go-to button
+                            $cancelBtn.html('Close');
+                            $jumpButton.click(function() {
+                                window.location.href = result.url;
+                            });
+                            $jumpButton.show();
+                            $doCopyBtn.prop('disabled', false);
+                            $cancelBtn.prop('disabled', false);
+                        }.bind(this))
+                        .catch(function(error) {
+                            if (error && error.error && error.error.message) {
+                                $errorMessage.append(error.error.message);
+                            } else if (typeof error === 'string') {
+                                $errorMessage.append(error);
+                            } else {
+                                $errorMessage.append('Sorry, an error occurred while copying. Please try again.');
+                            }
+                            $doCopyBtn.prop('disabled', false);
+                            $cancelBtn.prop('disabled', false);
+                        })
+                }.bind(this));
 
             var $cancelBtn = $('<button>')
-                             .addClass('kb-default-btn')
-                             .append('Cancel')
-                             .click(function() {
-                                $newNameInput.tooltip('hide');
-                                this.copyModal.hide();
-                             }.bind(this));
+                .addClass('kb-default-btn')
+                .append('Cancel')
+                .click(function() {
+                    $newNameInput.tooltip('hide');
+                    this.copyModal.hide();
+                }.bind(this));
 
 
             var $jumpButton = $('<button>')
-                              .addClass('btn btn-info')
-                              .text('Open the new Narrative');
+                .addClass('btn btn-info')
+                .text('Open the new Narrative');
 
             var $copyModalBody = $('<div>')
-                                 .append($('<div>').append("Enter a name for the new Narrative"))
-                                 .append($('<div>').append($newNameInput))
-                                 .append($errorMessage)
-                                 .append($jumpButton);
+                .append($('<div>').append("Enter a name for the new Narrative"))
+                .append($('<div>').append($newNameInput))
+                .append($errorMessage)
+                .append($jumpButton);
 
             this.copyModal = new BootstrapDialog({
                 title: 'Copy a narrative',
@@ -413,8 +419,9 @@ define (
         showDeleteCellModal: function(index, cell, message) {
             if (cell && cell.metadata[this.KB_CELL]) {
                 this.cellToDelete = index;
-                if (message)
+                if (message) {
                     this.$deleteCellModalBody.empty().html(message);
+                }
                 this.$deleteCellModal.show();
             }
         },
@@ -443,7 +450,7 @@ define (
             var cellType = this.determineMethodCellType(spec);
             //if (cellType === 'view') {
             //    alert('Sorry, view cells are not yet supported');
-           // }
+            // }
 
             // This will also trigger the create.Cell event, which is not very
             // useful for us really since we haven't been able to set the
@@ -462,7 +469,7 @@ define (
             });
         },
 
-        determineMethodCellType: function (spec) {
+        determineMethodCellType: function(spec) {
             // An app will execute via the method described in the behavior. If
             // such a method is not described, it is by definition not an
             // executing app.
@@ -474,9 +481,9 @@ define (
             // The category property is supposedly used to indicate that the app
             // is a viewer, but this is not used very reliably.
             // Still, we look at that here...
-            if (spec.info.categories.some(function (category) {
-                return (category === 'viewers');
-            })) {
+            if (spec.info.categories.some(function(category) {
+                    return (category === 'viewers');
+                })) {
                 return 'view';
             }
 
@@ -491,14 +498,14 @@ define (
 
             return 'view';
 
-//            if (!spec.parameters.some(function (parameter) {
-//                return (parameter.ui_class === 'output');
-//            })) {
-//                return 'app';
-//            };
-//
-//            console.error('ERROR - could not determine cell type', spec);
-//            throw new Error('Could not determine cell type');
+            //            if (!spec.parameters.some(function (parameter) {
+            //                return (parameter.ui_class === 'output');
+            //            })) {
+            //                return 'app';
+            //            };
+            //
+            //            console.error('ERROR - could not determine cell type', spec);
+            //            throw new Error('Could not determine cell type');
         },
 
 
@@ -525,11 +532,11 @@ define (
             // This is because the cell expects a text input, not a jQuery input.
             // Yeah, I know it's ugly, but that's how it goes.
             var cellContent = "<div id='" + cellId + "'></div>" +
-                              "\n<script>" +
-                              "require(['kbaseNarrativeMethodCell'], function(kbaseNarrativeMethodCell) {" +
-                              "var w = new kbaseNarrativeMethodCell($('#" + cellId + "'), {'method' : '" + StringUtil.safeJSONStringify(method) + "', 'cellId' : '" + cellId + "'});" +
-                              "});" +
-                              "</script>";
+                "\n<script>" +
+                "require(['kbaseNarrativeMethodCell'], function(kbaseNarrativeMethodCell) {" +
+                "var w = new kbaseNarrativeMethodCell($('#" + cellId + "'), {'method' : '" + StringUtil.safeJSONStringify(method) + "', 'cellId' : '" + cellId + "'});" +
+                "});" +
+                "</script>";
 
             cell.set_text(cellContent);
             cell.rendered = false;
@@ -714,23 +721,28 @@ define (
                     newMeta['widget'] = undefined;
                     newMeta[this.KB_STATE] = [];
                     cell.metadata[this.KB_CELL] = newMeta;
-                }
-                else if (typeof cell.metadata[this.KB_CELL] === "object") {
+                } else if (typeof cell.metadata[this.KB_CELL] === "object") {
                     // The "old" version (i.e. at the beginning of the workshop starting 1/6/2013)
                     // just needs to make sure the input cells have the widget state as an array.
                     // AND it should store the widget name, as found in the method, as a separate field.
 
                     if (cell.metadata[this.KB_CELL][this.KB_TYPE] === this.KB_FUNCTION_CELL) {
-                        if (!cell.metadata[this.KB_CELL]['widget'])
+                        if (!cell.metadata[this.KB_CELL]['widget']) {
                             cell.metadata[this.KB_CELL]['widget'] = cell.metadata[this.KB_CELL]['method'].properties.widgets.input || this.defaultInputWidget;
+                        }
                         if (!cell.metadata[this.KB_CELL][this.KB_STATE]) {
                             cell.metadata[this.KB_CELL][this.KB_STATE] = [];
                             if (cell.metadata[this.KB_CELL]['input_state']) {
-                                cell.metadata[this.KB_CELL][this.KB_STATE].unshift({ 'time': 0, 'state' : cell.metadata[this.KB_CELL]['input_state'] });
+                                cell.metadata[this.KB_CELL][this.KB_STATE].unshift({
+                                    'time': 0,
+                                    'state': cell.metadata[this.KB_CELL]['input_state']
+                                });
                             }
-                        }
-                        else if (Object.prototype.toString.call(cell.metadata[this.KB_CELL][this.KB_STATE]) !== '[object Array]') {
-                            cell.metadata[this.KB_CELL][this.KB_STATE] = [ { 'time' : 0, 'state' : cell.metadata[this.KB_CELL][this.KB_STATE] } ];
+                        } else if (Object.prototype.toString.call(cell.metadata[this.KB_CELL][this.KB_STATE]) !== '[object Array]') {
+                            cell.metadata[this.KB_CELL][this.KB_STATE] = [{
+                                'time': 0,
+                                'state': cell.metadata[this.KB_CELL][this.KB_STATE]
+                            }];
                         }
                     }
                 }
@@ -749,7 +761,7 @@ define (
         refreshFunctionInputs: function(fullRender) {
             if (Jupyter && Jupyter.notebook) {
                 var cells = Jupyter.notebook.get_cells();
-                for (var i=0; i<cells.length; i++) {
+                for (var i = 0; i < cells.length; i++) {
                     var cell = cells[i];
                     if (this.isFunctionCell(cell)) {
                         var method = cell.metadata[this.KB_CELL].method;
@@ -763,16 +775,13 @@ define (
 
                                 this.loadRecentCellState(cell);
                                 this.bindActionButtons(cell);
-                            }
-                            else {
+                            } else {
                                 $(cell.element).find("#inputs")[inputWidget]('refresh');
                             }
-                        }
-                        else {
+                        } else {
                             $(cell.element).find("div[id^=kb-cell-]").kbaseNarrativeMethodCell('refresh');
                         }
-                    }
-                    else if (this.isAppCell(cell)) {
+                    } else if (this.isAppCell(cell)) {
                         $(cell.element).find("div[id^=kb-cell-]").kbaseNarrativeAppCell('refresh');
                     }
                 }
@@ -822,7 +831,9 @@ define (
             // remove its double-click and return functions. sneaky!
             $(cell.element).off('dblclick');
             $(cell.element).off('keydown');
-            $(cell.element).on('click', function() { Jupyter.narrative.disableKeyboardManager(); });
+            $(cell.element).on('click', function() {
+                Jupyter.narrative.disableKeyboardManager();
+            });
         },
 
         /**
@@ -847,8 +858,7 @@ define (
         toggleReadOnlyMode: function() {
             if (!this.inReadOnlyMode) {
                 this.readOnlyMode(500);
-            }
-            else {
+            } else {
                 this.readWriteMode(500);
             }
             if (!this.narrativeIsReadOnly) {
@@ -856,7 +866,9 @@ define (
                 icon.toggleClass('fa-eye', this.inReadOnlyMode);
                 icon.toggleClass('fa-pencil', !this.inReadOnlyMode);
             }
-            this.runtime.bus().emit('read-only-changed', {readOnly: this.inReadOnlyMode});
+            this.runtime.bus().emit('read-only-changed', {
+                readOnly: this.inReadOnlyMode
+            });
         },
 
         /**
@@ -869,20 +881,22 @@ define (
          *
          * Side-effects: modifies this.narrativeIsReadOnly to reflect current value.
          */
-        updateReadOnlyMode: function (ws, name, callback) {
-            this.checkReadOnly(ws, name, $.proxy(function (readonly) {
+        updateReadOnlyMode: function(ws, name, callback) {
+            this.checkReadOnly(ws, name, $.proxy(function(readonly) {
                 if (readonly != null) {
                     if (this.narrativeIsReadOnly != readonly) {
                         if (this.narrativeIsReadOnly == null && readonly == false) {
                             // pass: first time, and it is the default read/write
-                        }
-                        else if (readonly == true) {
+                        } else if (readonly == true) {
                             this.readOnlyMode();
-                            $('#kb-view-mode').css({display: 'none'});
-                        }
-                        else {
+                            $('#kb-view-mode').css({
+                                display: 'none'
+                            });
+                        } else {
                             this.readWriteMode();
-                            $('#kb-view-mode').css({display: 'inline-block'});
+                            $('#kb-view-mode').css({
+                                display: 'inline-block'
+                            });
                         }
                         this.narrativeIsReadOnly = readonly;
                     }
@@ -928,22 +942,24 @@ define (
             // update the last check time
             this.last_readonly_check = sec;
             // check the workspace, and invoke callback with result
-            ws.get_workspace_info({workspace: name},
-              function (info) {
-                  var is_ro = true;
-                  if (info[5] == 'w' || info[5] == 'a') {
-                      is_ro = false;
-                  }
-                  Jupyter.narrative.readonly = is_ro; // set globally
-                  // console.debug("set_readonly_mode.end: callback_value=" + is_ro);
-                  return callback(is_ro);
-              },
-              function (error) {
-                  KBError("kbaseNarrativeWorkspace.checkReadOnly",
-                    "get_workspace_info had an error for ID=" + name +
-                    ": " + error);
-                  return callback(null);
-              });
+            ws.get_workspace_info({
+                    workspace: name
+                },
+                function(info) {
+                    var is_ro = true;
+                    if (info[5] == 'w' || info[5] == 'a') {
+                        is_ro = false;
+                    }
+                    Jupyter.narrative.readonly = is_ro; // set globally
+                    // console.debug("set_readonly_mode.end: callback_value=" + is_ro);
+                    return callback(is_ro);
+                },
+                function(error) {
+                    KBError("kbaseNarrativeWorkspace.checkReadOnly",
+                        "get_workspace_info had an error for ID=" + name +
+                        ": " + error);
+                    return callback(null);
+                });
         },
 
         /**
@@ -952,14 +968,14 @@ define (
          * @returns {string[]}
          */
         getReadOnlySelectors: function() {
-            return ['.kb-app-next',                         // next steps
-                    '#kb-add-code-cell', '#kb-add-md-cell', // edit btns
-                    '#kb-share-btn', '#kb-save-btn',        // action btns
-                    '#kb-ipy-menu',                         // kernel
-                    '.kb-app-panel .pull-right',            // app icons
-                    '.kb-func-panel .pull-right',           // method icons
-                    '.kb-cell-toolbar .buttons.pull-right',       // Jupyter icons
-                    '.kb-title .btn-toolbar .btn .fa-arrow-right', // data panel slideout
+            return ['.kb-app-next', // next steps
+                '#kb-add-code-cell', '#kb-add-md-cell', // edit btns
+                '#kb-share-btn', '#kb-save-btn', // action btns
+                '#kb-ipy-menu', // kernel
+                '.kb-app-panel .pull-right', // app icons
+                '.kb-func-panel .pull-right', // method icons
+                '.kb-cell-toolbar .buttons.pull-right', // Jupyter icons
+                '.kb-title .btn-toolbar .btn .fa-arrow-right', // data panel slideout
             ];
         },
 
@@ -971,24 +987,24 @@ define (
          */
         toggleRunButtons: function(on) {
             var classes = ['.kb-app-run', '.kb-method-run',
-                'span.pull-right.kb-func-timestamp span>span'];
+                'span.pull-right.kb-func-timestamp span>span'
+            ];
             if (on) {
                 _.map(this.readonly_buttons, function(b) {
-                   b.show();
+                    b.show();
                 });
                 this.readonly_buttons = []; // don't do it twice
-            }
-            else {
+            } else {
                 var ro = [];
                 _.map(classes, function(c) {
-                   _.map($(c), function(b) {
-                       var $btn = $(b);
-                       if ($btn.css('display') != "none") {
-                           // it is visible, so hide it and remember it
-                           ro.push($btn);
-                           $btn.hide();
-                       }
-                   });
+                    _.map($(c), function(b) {
+                        var $btn = $(b);
+                        if ($btn.css('display') != "none") {
+                            // it is visible, so hide it and remember it
+                            ro.push($btn);
+                            $btn.hide();
+                        }
+                    });
                 });
                 this.readonly_buttons = ro;
             }
@@ -1006,10 +1022,9 @@ define (
                 _.map(this.readonly_params, function($c) {
                     $c.removeClass(disabled);
                 });
-            }
-            else {
+            } else {
                 var params = [];
-                _.map($('.select2-container'), function (c) {
+                _.map($('.select2-container'), function(c) {
                     if (!$(c).hasClass(disabled)) {
                         params.push($(c));
                         $(c).addClass(disabled)
@@ -1036,7 +1051,9 @@ define (
             Jupyter.narrative.toggleSidePanel(true);
 
             // Hide things
-            _.map(this.getReadOnlySelectors(), function (id) {$(id).hide()});
+            _.map(this.getReadOnlySelectors(), function(id) {
+                $(id).hide()
+            });
             this.toggleRunButtons(false);
             this.toggleSelectBoxes(false);
             this.toggleCellEditing(false);
@@ -1049,9 +1066,9 @@ define (
                     placement: 'bottom',
                     trigger: 'hover',
                     content: 'You do not have permissions to modify ' +
-                    'this narrative. If you want to make your own ' +
-                    'copy that can be modified, use the ' +
-                    '"Copy" button.'
+                        'this narrative. If you want to make your own ' +
+                        'copy that can be modified, use the ' +
+                        '"Copy" button.'
                 });
                 $('#kb-view-only-copy').removeClass('hidden');
                 $('#kb-view-mode').hide();
@@ -1060,14 +1077,13 @@ define (
                 $('#name').unbind();
                 // Hide save status
                 $('#autosave_status').hide();
-            }
-            else {
+            } else {
                 $('#kb-view-only-msg').popover({
                     html: false,
                     placement: 'bottom',
                     trigger: 'hover',
                     content: 'This is narrative in temporary view-only mode. ' +
-                    'This mode shows what any user without write privileges will see.'
+                        'This mode shows what any user without write privileges will see.'
                 });
             }
             $('#kb-view-only-msg').removeClass('hidden');
@@ -1080,22 +1096,20 @@ define (
          * Set narrative from read-only mode to read-write mode
          *
          */
-        readWriteMode: function (delay) {
+        readWriteMode: function(delay) {
             // Remove the view-only buttons (first 1 or 2 children)
             if (!delay)
                 delay = 0;
 
             if (this.narrativeIsReadOnly) {
                 Jupyter.narrative.sidePanel.setReadOnlyMode(true, this.hideControlPanels);
-            }
-
-            else {
+            } else {
                 Jupyter.narrative.sidePanel.setReadOnlyMode(false);
                 $('#kb-view-only-msg').addClass('hidden');
                 $('#kb-view-only-copy').addClass('hidden');
 
                 // re-enable clicking on narrative name
-                $('#name').click(function (e) {
+                $('#name').click(function(e) {
                     if (Jupyter && Jupyter.save_widget) {
                         Jupyter.save_widget.rename_notebook("Rename your Narrative.", true);
                     }
@@ -1105,7 +1119,7 @@ define (
 
                 // re-enable auto-save status
                 $('#autosave_status').show();
-                _.map(this.getReadOnlySelectors(), function (id) {
+                _.map(this.getReadOnlySelectors(), function(id) {
                     $(id).show();
                 });
             }
@@ -1167,9 +1181,9 @@ define (
         /**
          * Object identifier of current narrative, extracted from page URL.
          */
-         getNarrId: function() {
+        getNarrId: function() {
             return window.location.pathname.split('/').pop();
-         },
+        },
 
         /**
          * Once the notebook is loaded, all code cells with generated code
@@ -1180,7 +1194,7 @@ define (
          */
         hideGeneratedCodeCells: function() {
             var cells = Jupyter.notebook.get_cells();
-            for (var i=0; i<cells.length; i++) {
+            for (var i = 0; i < cells.length; i++) {
                 var cell = cells[i];
                 if (this.isFunctionCodeCell(cell))
                     cell.element.css('display', 'none');
@@ -1258,8 +1272,8 @@ define (
 
         checkCellType: function(cell, type) {
             return cell.metadata &&
-                   cell.metadata[this.KB_CELL] &&
-                   cell.metadata[this.KB_CELL][this.KB_TYPE] === type;
+                cell.metadata[this.KB_CELL] &&
+                cell.metadata[this.KB_CELL][this.KB_TYPE] === type;
         },
 
 
@@ -1289,17 +1303,14 @@ define (
                 if (method.properties) {
                     widget = cell.metadata[this.KB_CELL].method.properties.widgets.input || this.defaultInputWidget;
                     target = '#inputs';
-                }
-                else {
+                } else {
                     widget = 'kbaseNarrativeMethodCell';
                 }
-            }
-            else if (this.isOutputCell(cell)) {
+            } else if (this.isOutputCell(cell)) {
                 // do output widget stuff.
 
                 widget = 'kbaseNarrativeOutputCell';
-            }
-            else if (this.isAppCell(cell)) {
+            } else if (this.isAppCell(cell)) {
                 widget = 'kbaseNarrativeAppCell';
             }
 
@@ -1321,8 +1332,7 @@ define (
                 // while (this.maxSavedStates && cell.metadata[this.KB_CELL][this.KB_STATE].length > this.maxSavedStates) {
                 //     cell.metadata[this.KB_CELL][this.KB_STATE].pop();
                 // }
-            }
-            catch(error) {
+            } catch (error) {
                 this.dbg('Unable to save state for cell:');
                 this.dbg(cell);
             }
@@ -1349,8 +1359,7 @@ define (
                     if (method.properties) {
                         widget = cell.metadata[this.KB_CELL].method.properties.widgets.input || this.defaultInputWidget;
                         target = '#inputs';
-                    }
-                    else {
+                    } else {
                         widget = 'kbaseNarrativeMethodCell';
                     }
                 }
@@ -1374,24 +1383,23 @@ define (
                     // var metadata = cell.metadata[this.KB_CELL];
                     // if (metadata.widget)
                     //     widget = metadata.widget;
-                }
-                else if (this.isAppCell(cell)) {
+                } else if (this.isAppCell(cell)) {
                     widget = 'kbaseNarrativeAppCell';
                 }
                 // it might not be either! if we don't have both a target and widget, don't do anything!
                 if (target && widget) {
                     try {
                         var widget_mapping = {
-                            'kbaseNarrativeOutputCell' : kbaseNarrativeOutputCell,
-                            'kbaseTabs' : kbaseTabs
+                            'kbaseNarrativeOutputCell': kbaseNarrativeOutputCell,
+                            'kbaseTabs': kbaseTabs
                         };
 
-                        var $widget = new widget_mapping[widget] ( $(cell.element).find(target) ) ;
+                        var $widget = new widget_mapping[widget]($(cell.element).find(target));
                         if ($widget.prototype.loadState) {
                             $widget.loadState(state.state);
                             // later, do something with the timestamp.
                         }
-                    } catch(err) {
+                    } catch (err) {
                         // just ignore it and move on.
                         // this.dbg('Unable to load cell state! Ignoring the following cell:')
                         // this.dbg(cell);
@@ -1513,14 +1521,13 @@ define (
                         if (state === 'input') {
                             Jupyter.notebook.delete_cell(index);
                             return;
-                        }
-                        else {
+                        } else {
                             // if it's running, say so, and say it'll stop and delete the job
                             // if it's done, say it'll clear the associated job, but won't delete data
                             // if it's error, say it'll delete the assoc'd job
 
                             var stateWarning = 'Deleting this cell will also delete any associated job. ' +
-                                               'Any generated data will be retained. Continue?';
+                                'Any generated data will be retained. Continue?';
 
                             this.showDeleteCellModal(index, cell, stateWarning);
                             // switch(state) {
@@ -1561,7 +1568,7 @@ define (
          */
         bindDeleteButton: function() {
             var self = this;
-            return(
+            return (
                 function(event) {
                     event.preventDefault();
                     var idx = Jupyter.notebook.get_selected_index();
@@ -1589,7 +1596,7 @@ define (
             var cells = Jupyter.notebook.get_cells();
 
             // not using $.each because its namespacing kinda screws things up.
-            for (var i=0; i<cells.length; i++) {
+            for (var i = 0; i < cells.length; i++) {
                 var cell = cells[i];
                 var cellType = cell.metadata[this.KB_CELL];
                 if (cellType) {
@@ -1628,16 +1635,26 @@ define (
 
                 var callbacks = {
                     shell: {
-                        reply: function(content) { self.handleExecuteReply(cell, content); },
+                        reply: function(content) {
+                            self.handleExecuteReply(cell, content);
+                        },
                         payload: {
-                            set_next_input: function(content) { self.handleSetNextInput(cell, content); },
+                            set_next_input: function(content) {
+                                self.handleSetNextInput(cell, content);
+                            },
                         },
                     },
                     iopub: {
-                        output: function(content) { self.handleOutput(cell, content); },
-                        clear_output: function(content) { self.handleClearOutput(cell, content); },
+                        output: function(content) {
+                            self.handleOutput(cell, content);
+                        },
+                        clear_output: function(content) {
+                            self.handleClearOutput(cell, content);
+                        },
                     },
-                    input: function(content) { self.handleInputRequest(cell, content); }
+                    input: function(content) {
+                        self.handleInputRequest(cell, content);
+                    }
                 };
 
                 var executeOptions = {
@@ -1657,7 +1674,9 @@ define (
                 // codeCell.output_area.clear_output(true, true, true);
                 // codeCell.set_input_prompt('*');
 
-                $(cell.element).find('#kb-func-progress').css({'display': 'block'});
+                $(cell.element).find('#kb-func-progress').css({
+                    'display': 'block'
+                });
                 nb.kernel.execute(code, callbacks, executeOptions);
             };
         },
@@ -1667,8 +1686,8 @@ define (
             var paramsJSON = StringUtil.safeJSONStringify(data.parameters);
 
             return "import biokbase.narrative.common.service as Service\n" +
-                   "method = Service.get_service('generic_service').get_method('method_call')\n" +
-                   "method('" + methodJSON + "', '" + paramsJSON + "')";
+                "method = Service.get_service('generic_service').get_method('method_call')\n" +
+                "method('" + methodJSON + "', '" + paramsJSON + "')";
         },
 
         /**
@@ -1692,7 +1711,7 @@ define (
             var escService = addSlashes(service);
             var escMethod = addSlashes(method);
             var cmd = "import biokbase.narrative.common.service as Service\n" +
-                      "method = Service.get_service('" + escService + "').get_method('" + escMethod + "')\n";
+                "method = Service.get_service('" + escService + "').get_method('" + escMethod + "')\n";
 
             var paramList = params.map(
                 function(p) {
@@ -1707,13 +1726,13 @@ define (
         /**
          * Make JS dict into Python dict (string)
          */
-         _pythonDict: function(data) {
+        _pythonDict: function(data) {
             var dict = "{";
             $.each(data, function(key, value) {
                 dict += "'" + key + "': ";
                 // XXX: assume either more maps or simple type
                 var vtype = typeof value;
-                switch(vtype) {
+                switch (vtype) {
                     case "boolean":
                         if (value)
                             dict += "True";
@@ -1738,7 +1757,7 @@ define (
                 dict += ", "
             });
             return dict + "}";
-         },
+        },
 
         /* ------------------------------------------------------
          * Functions to handle running code.
@@ -1747,7 +1766,7 @@ define (
          * @method _handle_execute_reply
          * @private
          */
-        handleExecuteReply: function (cell, content) {
+        handleExecuteReply: function(cell, content) {
             this.dbg('[handleExecuteReply]');
             this.dbg(content);
 
@@ -1759,8 +1778,8 @@ define (
              */
             if (content.content.status === 'error') {
                 var errorBlob = {
-                    msg : content.content.evalue,
-                    type : content.content.ename
+                    msg: content.content.evalue,
+                    type: content.content.ename
                 };
 
                 if (cell && cell.metadata && cell.metadata['kb-cell'] &&
@@ -1786,21 +1805,26 @@ define (
             }
             this.showCellProgress(cell, "DONE", 0, 0);
             //this.set_input_prompt(content.execution_count);
-            $([Jupyter.events]).trigger('set_dirty.Notebook', {value: true});
+            $([Jupyter.events]).trigger('set_dirty.Notebook', {
+                value: true
+            });
         },
         /**
          * @method _handle_set_next_input
          * @private
          */
-        handleSetNextInput: function (cell, text) {
-            var data = {'cell': this, 'text': text}
+        handleSetNextInput: function(cell, text) {
+            var data = {
+                'cell': this,
+                'text': text
+            }
             $([Jupyter.events]).trigger('set_next_input.Notebook', data);
         },
         /**
          * @method _handle_input_request
          * @private
          */
-        handleInputRequest: function (cell, content) {
+        handleInputRequest: function(cell, content) {
             this.dbg("handle input request called");
             return;
             //this.output_area.append_raw_input(content);
@@ -1809,7 +1833,7 @@ define (
          * @method _handle_clear_output
          * @private
          */
-        handleClearOutput: function (cell, content) {
+        handleClearOutput: function(cell, content) {
             this.dbg("handle clear output called");
             return;
             //this.clear_output(content.stdout, content.stderr, content.other);
@@ -1818,7 +1842,7 @@ define (
         /**
          * @method _handle_output
          */
-        handleOutput: function (cell, content, showOutput, callingWidget) {
+        handleOutput: function(cell, content, showOutput, callingWidget) {
             this.dbg('[handle output]');
             this.dbg(content);
             this.dbg(showOutput);
@@ -1837,12 +1861,11 @@ define (
                     if (!done) {
                         if (line.length == 0) {
                             offs += 1; // blank line, move offset
-                        }
-                        else {
+                        } else {
                             // look for @@S, @@P, @@D, @@G, @@J, @@E, or @@A
                             var matches = line.match(/^@@([ADEGJSP])(.*)/);
                             if (matches) { // if we got one
-                                switch(matches[1]) {
+                                switch (matches[1]) {
                                     case 'S': // Start running
                                         // if we're starting, init the progress bar.
                                         break;
@@ -1859,8 +1882,7 @@ define (
                                             offs += line.length;
                                             if (index < lines.length - 1)
                                                 offs += 1;
-                                        }
-                                        else
+                                        } else
                                             done = true;
                                         break;
 
@@ -1919,13 +1941,11 @@ define (
                             var data = JSON.parse(result);
                             if (data && typeof data === 'object')
                                 cell.metadata[this.KB_CELL].stackTrace.push(data.data);
-                        }
-                        catch (err) {
+                        } catch (err) {
                             // it's NOT JSON, and we should just append it.
                             cell.metadata[this.KB_CELL].stackTrace.push(result);
                         }
-                    }
-                    else if (showOutput) {
+                    } else if (showOutput) {
                         this.createOutputCell(cell, result);
                         // if we create an output cell, and the callingWidget is defined, then make sure we say it
                         // is complete (this is not updated for widgets with 'none' behavior otherwise)
@@ -1958,10 +1978,10 @@ define (
                 cellId = $('<div>').append(txt).find('div[id^=kb-cell-]').attr('id');
 
             var jobInfo = {
-                id : jobId,
-                source : cellId,
-                target : '',
-                timestamp : new Date().toISOString()
+                id: jobId,
+                source: cellId,
+                target: '',
+                timestamp: new Date().toISOString()
             };
 
             if (this.isAppCell(sourceCell))
@@ -1976,35 +1996,34 @@ define (
             var cell;
             if (placement === 'above') {
                 cell = Jupyter.notebook.insert_cell_above('code', cellIndex);
-            }
-            else {
+            } else {
                 cell = Jupyter.notebook.insert_cell_below('code', cellIndex);
             }
             var title = (data.info && data.info.name) ? data.info.name : 'Data Viewer';
             var type = 'viewer';
             // $(cell.element).trigger('toggleCodeArea.cell');
 
-            var cellText = ['from biokbase.narrative.widgetmanager import WidgetManager',
-                            'WidgetManager().show_output_widget(',
-                            '    "kbaseNarrativeDataCell",',
-                            '    {"info": ' + StringUtil.safeJSONStringify(data.info) + '},',
-                            '    check_widget=False,',
-                            '    title="' + title + '",',
-                            '    type="viewer",',
-                            ')'].join('\n');
 
-            cell.set_text(cellText);
-            var meta = {
-                'kbase': {
-                    'attributes': {
-                        'status': 'new',
-                        'title': title
-                    },
-                    'type': 'output'
-                }
-            };
-            cell.metadata = meta;
-            cell.execute();
+            // var meta = {
+            //     'kbase': {
+            //         'attributes': {
+            //             'status': 'new',
+            //             'title': title
+            //         },
+            //         'type': 'output',
+            // 				'subtype': 'data'
+            //     }
+            // };
+            // cell.metadata = meta;
+            // cell.execute();
+            $([Jupyter.events]).trigger('inserted.Cell', {
+                cell: cell,
+                kbase: {
+                    type: 'data'
+                },
+                objectInfo: data.info
+            });
+
         },
 
         /**
@@ -2027,8 +2046,7 @@ define (
                     result = JSON.parse(result);
                     if (!result || typeof result !== 'object' || result === null)
                         return;
-                }
-                catch (err) {
+                } catch (err) {
                     return;
                 }
             }
@@ -2067,19 +2085,17 @@ define (
                     if (method.widgets && method.widgets.output) {
                         widget = method.widgets.output;
                         // if the widget is set to 'no-display', then exit without showing anything
-                        if(widget === 'no-display') {
+                        if (widget === 'no-display') {
                             return;
                         }
-                    }
-                    else {
+                    } else {
                         widget = this.defaultOutputWidget;
                     }
                 }
                 outputTitle = method.title;
                 if (!outputTitle && method.info && method.info.name)
                     outputTitle = method.info.name;
-            }
-            else if (this.isAppCell(cell)) {
+            } else if (this.isAppCell(cell)) {
                 var app = cell.metadata[this.KB_CELL].app;
                 outputTitle = app.info.name || 'KBase App';
                 outputType = 'app';
@@ -2090,22 +2106,22 @@ define (
             }
 
             var outputCell = isError ? this.addErrorCell(Jupyter.notebook.find_cell_index(cell), widget) :
-                                       this.addOutputCell(Jupyter.notebook.find_cell_index(cell), widget);
+                this.addOutputCell(Jupyter.notebook.find_cell_index(cell), widget);
 
             var uuid = StringUtil.uuid();
             var outCellId = 'kb-cell-out-' + uuid;
             var outputData = '{"data":' + data + ', ' +
-                               '"type":"' + outputType + '", ' +
-                               '"widget":"' + widget + '", ' +
-                               '"cellId":"' + outCellId + '", ' +
-                               '"title":"' + outputTitle + '", ' +
-                               '"time":' + this.getTimestamp() + '}';
+                '"type":"' + outputType + '", ' +
+                '"widget":"' + widget + '", ' +
+                '"cellId":"' + outCellId + '", ' +
+                '"title":"' + outputTitle + '", ' +
+                '"time":' + this.getTimestamp() + '}';
 
             cellText = '<div id="' + outCellId + '"></div>\n' +
-                       '<script>' +
-                       'require(["kbaseNarrativeOutputCell"], function(kbaseNarrativeOutputCell) {' +
-                       'new kbaseNarrativeOutputCell($("#' + outCellId + '"), ' + outputData + '); });' +
-                       '</script>';
+                '<script>' +
+                'require(["kbaseNarrativeOutputCell"], function(kbaseNarrativeOutputCell) {' +
+                'new kbaseNarrativeOutputCell($("#' + outCellId + '"), ' + outputData + '); });' +
+                '</script>';
             outputCell.set_text(cellText);
             outputCell.rendered = false; // force a render
             outputCell.render();
@@ -2113,7 +2129,10 @@ define (
             if (result.next_steps) {
                 if (result.next_steps.apps || result.next_steps.methods) {
                     var $body = $('#' + outCellId).find('.panel-body');
-                    this.showNextSteps({elt: $body, next_steps: result.next_steps});
+                    this.showNextSteps({
+                        elt: $body,
+                        next_steps: result.next_steps
+                    });
                 }
             }
             this.resetProgress(cell);
@@ -2124,59 +2143,72 @@ define (
         },
 
         /**
-        * Show a list of suggested 'next steps' after we have finished the run.
-        * The input is an object of the form:
-        *   { next_steps: value is exactly the same type of object,
-        *                 returned by the `getfunctionSpecs.Narrative`
-        *                 trigger in `kbaseNarrativeMethodPanel`.
-        *     elt: Created <div> is added with .append()
-        *   }
-        * Returns the <div> that was populated.
-        */
+         * Show a list of suggested 'next steps' after we have finished the run.
+         * The input is an object of the form:
+         *   { next_steps: value is exactly the same type of object,
+         *                 returned by the `getfunctionSpecs.Narrative`
+         *                 trigger in `kbaseNarrativeMethodPanel`.
+         *     elt: Created <div> is added with .append()
+         *   }
+         * Returns the <div> that was populated.
+         */
         showNextSteps: function(obj) {
-          var $elt = obj.elt, next_steps = obj.next_steps;
+            var $elt = obj.elt,
+                next_steps = obj.next_steps;
 
-          // if the element already has a 'kb-app-next' div, don't add another one.
-          if ($elt.has('.kb-app-next').length)
-            return;
+            // if the element already has a 'kb-app-next' div, don't add another one.
+            if ($elt.has('.kb-app-next').length)
+                return;
 
-          var $tgt = $('<div>').addClass('kb-app-next');
-          var $title = $('<h3>').text('Suggested next steps:');
-          $tgt.append($title);
-          // init hide/unhide behavior
-          $hide_btn = $('<span>').addClass('kb-app-next-hide').text('hide');
-          $unhide_btn = $('<span>').addClass('kb-app-next-unhide')
-                      .text('next steps').hide();
-          $hide_btn.click(function() {                  // hide
-            $title.hide(); $tgt.find('a').hide();
-            $hide_btn.hide(); $unhide_btn.show(); });
-          $unhide_btn.click(function() {                // unhide
-            $title.show(); $tgt.find('a').show();
-            $unhide_btn.hide(); $hide_btn.show(); });
-          $tgt.append($hide_btn).append($unhide_btn);
-          // add all the links to the next-step apps/methods
-          var $apps = $('<div>'), comma = {v: ''}, self = this;
-          // iterate over apps and methods in the result
-          var has_both = next_steps.apps && next_steps.methods;
-          _.each(['apps', 'methods'], function(mtype) {
-            if (has_both) { /* XXX: prefix with (App) or something? */ }
-            var specs = next_steps[mtype];
-            // Iterate over all specs in app/method section
-            _.each(_.values(specs), function(s) {
-              var name = s.info.name; // readable name, displayed to user
-              var href = $('<a>').attr({'href': 'javascript:;'})
-                                 .text(comma.v + name);
-              // insert app/method on click
-              href.click(function() {
-                self.trigger(mtype.slice(0, -1) + "Clicked.Narrative", s);
-              });
-              $apps.append(href);
-              comma.v = ', ';
+            var $tgt = $('<div>').addClass('kb-app-next');
+            var $title = $('<h3>').text('Suggested next steps:');
+            $tgt.append($title);
+            // init hide/unhide behavior
+            $hide_btn = $('<span>').addClass('kb-app-next-hide').text('hide');
+            $unhide_btn = $('<span>').addClass('kb-app-next-unhide')
+                .text('next steps').hide();
+            $hide_btn.click(function() { // hide
+                $title.hide();
+                $tgt.find('a').hide();
+                $hide_btn.hide();
+                $unhide_btn.show();
             });
-          });
-          $tgt.append($apps);
-          $elt.append($tgt);
-          return $tgt;
+            $unhide_btn.click(function() { // unhide
+                $title.show();
+                $tgt.find('a').show();
+                $unhide_btn.hide();
+                $hide_btn.show();
+            });
+            $tgt.append($hide_btn).append($unhide_btn);
+            // add all the links to the next-step apps/methods
+            var $apps = $('<div>'),
+                comma = {
+                    v: ''
+                },
+                self = this;
+            // iterate over apps and methods in the result
+            var has_both = next_steps.apps && next_steps.methods;
+            _.each(['apps', 'methods'], function(mtype) {
+                if (has_both) { /* XXX: prefix with (App) or something? */ }
+                var specs = next_steps[mtype];
+                // Iterate over all specs in app/method section
+                _.each(_.values(specs), function(s) {
+                    var name = s.info.name; // readable name, displayed to user
+                    var href = $('<a>').attr({
+                            'href': 'javascript:;'
+                        })
+                        .text(comma.v + name);
+                    // insert app/method on click
+                    href.click(function() {
+                        self.trigger(mtype.slice(0, -1) + "Clicked.Narrative", s);
+                    });
+                    $apps.append(href);
+                    comma.v = ', ';
+                });
+            });
+            $tgt.append($apps);
+            $elt.append($tgt);
+            return $tgt;
         },
 
         /**
@@ -2187,9 +2219,9 @@ define (
          */
         resetProgress: function(cell) {
             $(cell.element).find('#kb-func-progress .kb-cell-progressbar .progress-bar')
-                           .css('width', '0%');
+                .css('width', '0%');
             $(cell.element).find('#kb-func-progress .text-success')
-                           .text('');
+                .text('');
         },
 
         /**
@@ -2212,9 +2244,10 @@ define (
                 $progressMsg.text("Completed");
                 percentDone = 100;
                 $progressBar.css('width', '100%');
-                $(cell.element).find("#kb-func-progress").fadeOut(1000, $.proxy(function() { this.resetProgress(cell); }, this));
-            }
-            else {
+                $(cell.element).find("#kb-func-progress").fadeOut(1000, $.proxy(function() {
+                    this.resetProgress(cell);
+                }, this));
+            } else {
                 $progressMsg.text("Step " + done + " / " + total + ": " + name);
                 percentDone = (100 * done - 100) / total;
                 $progressBar.css('width', percentDone + '%');
@@ -2258,7 +2291,7 @@ define (
         },
 
         /** Not really used right now. */
-        convert_mime_types: function (json, data) {
+        convert_mime_types: function(json, data) {
             if (data === undefined) {
                 return json;
             }
@@ -2292,11 +2325,11 @@ define (
         /* ------------------------------------------------------ */
         /* Accessors */
 
-        workspace : function(key, value) {
+        workspace: function(key, value) {
             return this._accessor('_workspace', key, value);
         },
 
-        _accessor : function(name, key, value) {
+        _accessor: function(name, key, value) {
             if (this.data(name) == undefined) {
                 this.data(name, {});
             }
@@ -2309,8 +2342,7 @@ define (
 
             if (arguments.length > 0) {
                 return obj[key];
-            }
-            else {
+            } else {
                 return obj;
             }
         },
@@ -2327,7 +2359,7 @@ define (
                 this.rebindActionButtons();
                 this.hideGeneratedCodeCells();
                 var cells = Jupyter.notebook.get_cells();
-                for (var i=0; i<cells.length; i++) {
+                for (var i = 0; i < cells.length; i++) {
                     this.checkCellMetadata(cells[i]);
                 }
                 this.loadAllRecentCellStates();
@@ -2338,7 +2370,7 @@ define (
         /**
          * Show input/output cell connections.
          */
-         show_connections: function() {
+        show_connections: function() {
             var self = this;
             // console.debug("show_connections.start");
             _.each(_.pairs(this.connectable), function(pair) {
@@ -2398,7 +2430,7 @@ define (
             var hours = format(d.getHours());
             var minutes = format(d.getMinutes());
             var seconds = format(d.getSeconds());
-            var month = d.getMonth()+1;
+            var month = d.getMonth() + 1;
             var day = format(d.getDate());
             var year = d.getFullYear();
 
@@ -2414,7 +2446,7 @@ define (
          */
         scanAndUpdateCells: function() {
             var cells = Jupyter.notebook.get_cells();
-            for (var i=0; i<cells.length; i++) {
+            for (var i = 0; i < cells.length; i++) {
                 var cell = cells[i];
                 if (this.isFunctionCell(cell)) {
                     var cellText = cell.get_text();
@@ -2436,29 +2468,32 @@ define (
          * @param $logo - Target element
          * @param type - Name of data type
          */
-        setDataIcon: function ($logo, type) {
+        setDataIcon: function($logo, type) {
             if ($logo.hasClass('exampleDataIcon')) {
                 console.debug("SET EXAMPLE ICON");
             }
             var icons = this.data_icons;
             var icon = _.has(icons, type) ? icons[type] : icons['DEFAULT'];
             // background circle
-            $logo.addClass("fa-stack fa-2x").css({'cursor': 'pointer'})
-              .append($('<i>')
-                .addClass("fa fa-circle fa-stack-2x")
-                .css({'color': this.logoColorLookup(type)}));
+            $logo.addClass("fa-stack fa-2x").css({
+                    'cursor': 'pointer'
+                })
+                .append($('<i>')
+                    .addClass("fa fa-circle fa-stack-2x")
+                    .css({
+                        'color': this.logoColorLookup(type)
+                    }));
             if (this.isCustomIcon(icon)) {
                 // add custom icons (more than 1 will look weird, though)
-                _.each(icon, function (cls) {
+                _.each(icon, function(cls) {
                     $logo.append($('<i>')
-                      .addClass("icon fa-inverse fa-stack-1x " + cls));
+                        .addClass("icon fa-inverse fa-stack-1x " + cls));
                 });
-            }
-            else {
+            } else {
                 // add stack of font-awesome icons
-                _.each(icon, function (cls) {
+                _.each(icon, function(cls) {
                     $logo.append($('<i>')
-                      .addClass("fa fa-inverse fa-stack-1x " + cls));
+                        .addClass("fa fa-inverse fa-stack-1x " + cls));
                 });
             }
         },
@@ -2470,9 +2505,9 @@ define (
          * @param icon_list {list of str} Icon classes, from icons.json
          * @returns {boolean}
          */
-        isCustomIcon: function (icon_list) {
+        isCustomIcon: function(icon_list) {
             return (icon_list.length > 0 && icon_list[0].length > 4 &&
-            icon_list[0].substring(0, 4) == 'icon');
+                icon_list[0].substring(0, 4) == 'icon');
         },
 
         /**
@@ -2480,7 +2515,7 @@ define (
          * @param type
          * @returns {string} Color code
          */
-        logoColorLookup: function (type) {
+        logoColorLookup: function(type) {
             var code = 0;
             for (var i = 0; i < type.length; code += type.charCodeAt(i++));
             return this.icon_colors[code % this.icon_colors.length];

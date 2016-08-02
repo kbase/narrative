@@ -148,7 +148,7 @@ def map_outputs_from_state(state, params, app_spec):
         elif 'input_parameter' in out_param:
             value = params.get(out_param['input_parameter'], None)
         elif 'service_method_output_path' in out_param:
-            value = get_result_sub_path(state['result'], out_param['service_method_output_path'], 0)
+            value = get_result_sub_path(state['result'], out_param['service_method_output_path'])
 
         p_id = out_param.get('target_property', None)
         if p_id is not None:
@@ -163,7 +163,26 @@ def map_outputs_from_state(state, params, app_spec):
 
     return (output_widget, widget_params)
 
-def get_result_sub_path(result, path, pos):
+def get_result_sub_path(result, path):
+    """
+    Try this again...
+    This time ...
+    """
+    # When we have an empty path, it is the identity of the result.
+    if len(path) == 0:
+        return result
+
+    # if we have a list, assume the first element of the path is an integer
+    # in string's clothing
+    path_head = path[0]
+    path_tail = path[1:]
+    if isinstance(result, list):
+        return get_result_sub_path(result[int(path_head)], path_tail)
+    return get_result_sub_path(result.get(path_head), path_tail)
+
+
+
+def xget_result_sub_path(result, path, pos):
     """
     Peels the right value out of the result with the given path.
     result - list
@@ -205,4 +224,3 @@ def get_result_sub_path(result, path, pos):
         listPos = int(path[pos])
         return get_result_sub_path(result[listPos], path, pos + 1)
     return get_result_sub_path(result[path[pos]], path, pos + 1)
-

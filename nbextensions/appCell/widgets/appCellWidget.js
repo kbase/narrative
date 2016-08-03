@@ -23,7 +23,6 @@ define([
     'google-code-prettify/prettify',
     'narrativeConfig',
     './appCellWidget-fsm',
-
     'css!google-code-prettify/prettify.css',
     'css!font-awesome.css'
 ], function (
@@ -97,8 +96,6 @@ define([
             inputBusMap = {},
             fsm,
             saveMaxFrequency = config.saveMaxFrequency || 5000;
-
-
 
         // DATA API
 
@@ -214,8 +211,6 @@ define([
 
             ui.setContent('fsm-display.content', content);
         }
-
-
 
         function renderAppSpec() {
 //            if (!env.appSpec) {
@@ -351,7 +346,6 @@ define([
             renderSetting(settingName);
         }
 
-
         function renderSettings() {
             var events = Events.make({node: container}),
                 content = Object.keys(settings).map(function (key) {
@@ -437,7 +431,6 @@ define([
                     }, [
                         div({dataElement: 'widget', style: {display: 'block', width: '100%'}}, [
                             div({class: 'container-fluid'}, [
-
                                 ui.buildPanel({
                                     title: 'Error',
                                     name: 'fatal-error',
@@ -491,7 +484,7 @@ define([
                                         name: 'developer-options',
                                         hidden: true,
                                         type: 'default',
-                                    classes: ['kb-panel-container'],
+                                        classes: ['kb-panel-container'],
                                         body: [
                                             div({dataElement: 'fsm-display', style: {marginBottom: '4px'}}, [
                                                 span({style: {marginRight: '4px'}}, 'FSM'),
@@ -522,7 +515,6 @@ define([
                                     classes: ['kb-panel-container'],
                                     body: div({dataElement: 'widget'})
                                 }),
-
                                 div({class: 'btn-toolbar kb-btn-toolbar-cell-widget'}, [
                                     div({class: 'btn-group'}, [
                                         ui.buildButton({
@@ -556,9 +548,9 @@ define([
                                             }
                                         })
                                     ])
-                                    //div({class: 'btn-group'}, [
-                                    //    ui.makeButton('Remove', 'remove', {events: events, type: 'danger'})
-                                    //])
+                                        //div({class: 'btn-group'}, [
+                                        //    ui.makeButton('Remove', 'remove', {events: events, type: 'danger'})
+                                        //])
                                 ]),
                                 ui.buildPanel({
                                     title: 'App Execution ' + span({class: 'fa fa-bolt'}),
@@ -994,11 +986,17 @@ define([
                 jobId: jobId
             });
         }
+        
+        function requestJobStatus(jobId) {
+            runtime.bus().emit('request-job-status', {
+                jobId: jobId
+            });
+        }
 
         function resetToEditMode(source) {
             // only do this if we are not editing.
 
-             model.deleteItem('exec');
+            model.deleteItem('exec');
 
             // Also ensure that the exec widget is reset
             // widgets.execWidget.bus.emit('reset');
@@ -1028,12 +1026,12 @@ define([
                     //var jobState = model.getItem('exec.jobState');
                     //if (jobState) {
                     //    cancelJob(jobState.job_id);
-                        // the job will be deleted form the notebook when the job cancellation
-                        // event is received.
+                    // the job will be deleted form the notebook when the job cancellation
+                    // event is received.
                     //}
 
                     // Remove all of the execution state when we reset the app.
-                   resetToEditMode('do rerun');
+                    resetToEditMode('do rerun');
                 });
         }
 
@@ -1088,8 +1086,7 @@ define([
                         cancelJob(jobState.job_id);
                         // the job will be deleted form the notebook when the job cancellation
                         // event is received.
-                    }
-                    else {
+                    } else {
                         model.deleteItem('exec');
                         fsm.newState({mode: 'editing', params: 'complete', code: 'built'});
                         renderUI();
@@ -1156,10 +1153,10 @@ define([
                                 return {mode: 'error', stage: currentState.state.stage};
                             }
                             return {mode: 'error'};
-                        // case 'canceled':
-                        // case 'cancelled':
-                        //     stopListeningForJobMessages();
-                        //     return {mode: 'canceled'};
+                            // case 'canceled':
+                            // case 'cancelled':
+                            //     stopListeningForJobMessages();
+                            //     return {mode: 'canceled'};
                         default:
                             throw new Error('Invalid job state ' + jobState.job_state);
                     }
@@ -1168,8 +1165,26 @@ define([
             renderUI();
         }
 
+        // TODO: runId needs to be obtained here from the model.
+        //       it is created during the code build (since it needs to be passed
+        //       to the kernel)
         function doRun() {
             fsm.newState({mode: 'execute-requested'});
+            
+            // Save this to the exec state change log.
+            var execLog = model.getItem('exec.log');
+            if (!execLog) {
+                execLog = [];
+            }
+            execLog.push({
+                timestamp: new Date(),
+                event: 'execute-requested',
+                data: {
+                    runId: 'should be here'
+                }
+            });
+            model.setItem('exec.log', execLog);
+            
             cell.execute();
         }
 
@@ -1228,7 +1243,7 @@ define([
                     var existingState = model.getItem('exec.jobState'),
                         newJobState = message.jobState,
                         outputWidgetInfo = message.outputWidgetInfo;
-                    if (!existingState || !utils2.isEqual(existingState, newJobState) ) {
+                    if (!existingState || !utils2.isEqual(existingState, newJobState)) {
                         model.setItem('exec.jobState', newJobState);
                         if (outputWidgetInfo) {
                             model.setItem('exec.outputWidgetInfo', outputWidgetInfo);
@@ -1240,7 +1255,7 @@ define([
                         }
                         execLog.push({
                             timestamp: new Date(),
-                            event: 'jobs-status',
+                            event: 'job-status',
                             data: {
                                 jobState: newJobState
                             }
@@ -1307,6 +1322,9 @@ define([
             });
             jobListeners.push(ev);
 
+            runtime.bus().emit('request-job-status', {
+                jobId: jobId
+            });
         }
 
         function stopListeningForJobMessages() {
@@ -1457,8 +1475,6 @@ define([
                     widget: model.getItem('exec.outputWidgetInfo')
                 }
             });
-
-            console.log('INSERTED OUTPUT CELL', cellId);
 
             return newCellId;
         }
@@ -1623,28 +1639,41 @@ define([
                 // get the status
 
                 // if we are in a running state, start listening for jobs
-                var state = model.getItem('fsm.currentState');
+//                var state = model.getItem('fsm.currentState');
+//                var listeningForJobUpdates = false;
+//                if (state) {
+//                    switch (state.mode) {
+//                        case 'editing':
+//                        case 'launching':
+//                        case 'processing':
+//                            switch (state.stage) {
+//                                case 'launching':
+//                                    // nothing to do.
+//                                    break;
+//                                case 'queued':
+//                                case 'running':
+//                                    listeningForJobUpdates = true;
+//                                    startListeningForJobMessages(model.getItem('exec.jobState.job_id'));
+//                                    break;
+//                            }
+//                            break;
+//                        case 'success':
+//                        case 'error':
+//                            // do nothing for now
+//                    }
+//                }
 
-                if (state) {
-                    switch (state.mode) {
-                        case 'editing':
-                        case 'launching':
-                        case 'processing':
-                            switch (state.stage) {
-                                case 'launching':
-                                    // nothing to do.
-                                    break;
-                                case 'queued':
-                                case 'running':
-                                    startListeningForJobMessages(model.getItem('exec.jobState.job_id'));
-                                    break;
-                            }
-                            break;
-                        case 'success':
-                        case 'error':
-                            // do nothing for now
+                // Regardless of what the FSM says, if we are not listening for a
+                // job update and we already have an execution job state, let's 
+                // see if there is anything new, even if we don't expect anything
+                // new...
+                //if (!listeningForJobUpdates) {
+                    var jobId = model.getItem('exec.jobState.job_id');
+                    if (jobId) {
+                        startListeningForJobMessages(jobId);
                     }
-                }
+                //}
+                
 
 
                 // TODO: only turn this on when we need it!
@@ -1862,12 +1891,29 @@ define([
                     };
                     bus.emit('run', {
                         node: ui.getElement(['parameters-group', 'widget']),
+                        appSpec: env.appSpec,
                         parameters: env.parameters
                     });
+
+                    bus.on('sync-params', function (message) {
+                        message.parameters.forEach(function (paramId) {
+                            bus.send({
+                                parameter: paramId,
+                                value: model.getItem(['params', message.parameter])
+                            },
+                                {
+                                    key: {
+                                        type: 'update',
+                                        parameter: message.parameter
+                                    }
+                                });
+                        });
+                    });
+
                     bus.on('parameter-sync', function (message) {
                         var value = model.getItem(['params', message.parameter]);
                         bus.send({
-                            parameter: message.parameter,
+//                            parameter: message.parameter,
                             value: value
                         }, {
                             // This points the update back to a listener on this key

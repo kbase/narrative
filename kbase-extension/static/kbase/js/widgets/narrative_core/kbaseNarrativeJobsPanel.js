@@ -70,8 +70,8 @@ define([
 
         init: function (options) {
             this._super(options);
-            $('<span>').addClass('label label-danger');
-            this.$jobCountBadge = this.title.append(this.$jobCountBadge);
+            this.$jobCountBadge = $('<span>').addClass('label label-danger');
+            this.title.append(this.$jobCountBadge);
             Handlebars.registerHelper('colorStatus', function(status) {
                 var s = status.string.toLowerCase();
                 switch(s) {
@@ -207,6 +207,7 @@ define([
             }.bind(this));
 
             bus.on('request-job-status', function (message) {
+                console.log('REQ JOB STATUS', message);
                 this.sendCommMessage(this.JOB_STATUS, message.jobId);
             }.bind(this));
 
@@ -269,7 +270,7 @@ define([
                  */
                 case 'job_status':
                     var incomingJobs = msg.content.data.content;
-
+                    
                     /*
                      * Ensure there is a locally cached copy of each job.
                      *
@@ -289,6 +290,7 @@ define([
                          * Notify the front end about the changed or new job
                          * states.
                          */
+                        
                         this.sendJobMessage('job-status', jobId, {
                             jobId: jobId,
                             jobState: jobStateMessage.state,

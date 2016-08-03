@@ -24,6 +24,7 @@ from jinja2 import Template
 import dateutil.parser
 import datetime
 from biokbase.narrative.app_util import system_variable
+import traceback
 
 class JobManager(object):
     """
@@ -194,13 +195,23 @@ class JobManager(object):
         except Exception as e:
             self._log.setLevel(logging.ERROR)
             kblogging.log_event(self._log, "lookup_job_status.error", {'err': str(e)})
+            
+            e_type = type(e).__name__
+            e_message = str(e).replace('<', '&lt;').replace('>', '&gt;')
+            e_trace = traceback.format_exc().replace('<', '&lt;').replace('>', '&gt;')
+
             state = {
                 'job_state': 'error',
                 'error': {
                     'error': 'Unable to find current job state. Please try again later, or contact KBase.',
                     'message': 'Unable to return job state',
                     'name': 'Job Error',
-                    'code': -2
+                    'code': -2,
+                    'exception': {
+                        'error_message': e_message,
+                        'error_type': e_type,
+                        'error_stacktrace': e_trace
+                    }
                 },
                 'creation_time': 0,
                 'cell_id': None,

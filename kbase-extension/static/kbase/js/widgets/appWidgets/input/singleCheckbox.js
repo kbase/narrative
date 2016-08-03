@@ -217,7 +217,6 @@ define([
         function autoValidate() {
             return validate()
                 .then(function (result) {
-                    console.log('autovalidated', result);
                     bus.emit('validation', {
                         errorMessage: result.errorMessage,
                         diagnosis: result.diagnosis

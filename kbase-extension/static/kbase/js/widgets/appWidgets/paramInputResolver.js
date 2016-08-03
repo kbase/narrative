@@ -14,13 +14,15 @@ define([
     './input/singleCheckbox',
     './input/singleFloatInput',
     './input/singleSubdata',
-    './input/singleCustomSubdata',
+    './input/customSubdata',
     './input/singleTextareaInput',
     './input/multiFloatInput',
     './input/multiSelectInput',
     './input/singleFileInput',
     './input/multiTextareaInput',
-    './input/errorInput'
+    './input/errorInput',
+    './input/singleToggleButton',
+    './input/singleCustomSelect'
 ], function (
     SingleTextInputWidget,
     MultiTextInputWidget,
@@ -34,13 +36,15 @@ define([
     SingleCheckboxInputWidget,
     SingleFloatInputWidget,
     SingleSubdataWidget,
-    SingleCustomSubdataWidget,
+    CustomSubdataWidget,
     SingleTextareaInputWidget,
     MultiFloatInputWidget,
     MultiSelectInputWidget,
     SingleFileInputWidget,
     MultiTextareaInputWidget,
-    ErrorInputWidget
+    ErrorInputWidget,
+    SingleToggleButtonWidget,
+    SingleCustomSelectWidget
     ) {
     'use strict';
 
@@ -127,7 +131,7 @@ define([
                             };
                         default:
                             throw new Error('Unknown []string field type');
-                    }                    
+                    }         
                 case 'unspecified':
                     // a bunch of field types are untyped:
                     switch (fieldType) {
@@ -195,6 +199,8 @@ define([
                             return SingleTextareaInputWidget;
                         case 'file':
                             return SingleFileInputWidget;
+                        case 'custom_textsubdata':
+                            return CustomSubdataWidget;                            
                         default:
                             return UndefinedInputWidget;
                     }
@@ -257,11 +263,24 @@ define([
                             return MultiSelectInputWidget;
                         case 'textarea':
                             return MultiTextareaInputWidget;
+                        case 'custom_textsubdata':
+                            return CustomSubdataWidget;
+                        case 'custom_widget':
+                            if (parameterSpec.multipleItems()) {
+                                return UndefinedInputWidget;
+                            }
+                            return SingleCustomSelectWidget;
                         default:
                             return MultiTextInputWidget;
                     }
-                case 'sample_property':
-                    return SingleCustomSubdataWidget;
+                case 'boolean':
+                    if (parameterSpec.multipleItems()) {
+                        return UndefinedInputWidget;
+                    }
+                    return SingleToggleButtonWidget;
+                    
+                //case 'sample_property':
+                //    return SingleCustomSubdataWidget;
                 case 'unspecified':
                     // a bunch of field types are untyped:
                     switch (fieldType) {
@@ -282,7 +301,6 @@ define([
                         case 'custom_button':
                             return UndefinedInputWidget;
                         case 'textsubdata':
-                            console.log('TEXTSUBDATA', parameterSpec);
                             if (parameterSpec.multipleItems()) {
                                 return UndefinedInputWidget;
                             }
@@ -295,11 +313,10 @@ define([
                             }
                             return SingleFileInputWidget;
                         case 'custom_textsubdata':
-                            console.log('CUSTOM_TEXTSUBDATA', parameterSpec);
                             if (parameterSpec.multipleItems()) {
                                 return UndefinedInputWidget;
                             }
-                            return UndefinedInputWidget;
+                            return SingleSubdataWidget;
                         case 'custom_widget':
                             return UndefinedInputWidget;
                         case 'tab':

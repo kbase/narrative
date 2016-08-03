@@ -590,7 +590,8 @@ define([
                 send: channelSend,
                 respond: channelRespond,
                 request: channelRequest,
-                stop: stop
+                stop: stop,
+                channelName: channelName
             };
         }
 

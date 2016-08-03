@@ -763,7 +763,7 @@ define([
 
         function updateRunStateFromJobState(source) {
             var jobState = model.getItem('jobState'),
-                runState = model.getItem('runState'),
+                runState = model.getItem('runState', {}),
                 now = new Date().getTime(),
                 newRunState,
                 temporalState,
@@ -877,6 +877,7 @@ define([
                     }
                 }
             } else {
+                console.error('Job state without submission time', jobState);
                 throw new Error('Job state without submission time?');
             }
 
@@ -1251,7 +1252,6 @@ define([
              * This was done, rather thanhave
              */
             ev = cellBus.on('job-state', function (message) {
-                console.log('NEW JOB STATE pos', message.jobState.position);
                 processNewJobState(message.jobState);
             });
             listeners.push(ev);

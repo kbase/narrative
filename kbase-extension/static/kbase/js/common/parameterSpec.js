@@ -89,9 +89,24 @@ define([
                 case 'textsubdata':
                     return 'subdata';
                 case 'custom_textsubdata':
-                    var custom = customTextSubdata();
-                    if (custom) {
-                        return custom;
+                    if (spec.allow_multiple) {
+                        return '[]string';
+                    }
+                    return 'string';
+                    //var custom = customTextSubdata();
+                    //if (custom) {
+                    //    return custom;
+                    //}
+                case 'custom_button':
+                    switch (spec.id) {
+                        case 'input_check_other_params':
+                            return 'boolean';
+                        default:
+                            return 'unspecified';
+                    }
+                case 'custom_widget':
+                    if (spec.dropdown_options) {
+                        return '[]string';
                     }
             }
 
@@ -170,6 +185,8 @@ define([
                     return parseFloat(defaultValue);
                 case 'workspaceObjectName':
                     return defaultValue;
+                case 'boolean':
+                    return coerceToBoolean(defaultValue);
                 default:
                     // Assume it is a string...
                     return defaultValue;
@@ -228,6 +245,10 @@ define([
                         return spec.checkbox_options.unchecked_value;
                     } else {
                         return coerceToIntBoolean(defaultValues[0]);
+                    }
+                case 'custom_textsubdata':
+                    if (!defaultValues) {
+                        
                     }
             }
             
@@ -556,8 +577,13 @@ define([
                     break;
                 case 'parameter':
                     // do outlandish things
+                    // TODO: these two conditions are inconsistent, but we honor the is_output_name as per mike.
+                    // The ui_class is really just for the man page and app cell ui organization, so it is relatively minor
+                    // to override it with is_output_name which is actually functional!
                     if (spec.text_options && spec.text_options.is_output_name) {
-                        throw new Error('Parameter ' + spec.id + ' is a parameter type, but has text_options.is_output_name specified');
+                        // console.error('Parameter ' + spec.id + ' is a parameter type, but has text_options.is_output_name specified', spec);
+                        //throw new Error('Parameter ' + spec.id + ' is a parameter type, but has text_options.is_output_name specified');
+                        paramClassName = 'output';
                     }
                     break;
             }

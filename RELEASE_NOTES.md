@@ -3,6 +3,14 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v4.2.1 (more notes will follow).
 
+### Version 3.0.0-alpha-14
+__Changes__
+- fix job cell (as produced by JobManager()->job_info())
+- relax enforcement of object output name input widget being categorized as an "output" control
+- fix tab label and job count badge in job panel
+- more progress on custom subdata, binary, and select controls
+
+
 ### Version 3.0.0-alpha-13
 __Changes__
 - Fix display of data objects drag-and-dropped or clicked from the data panel

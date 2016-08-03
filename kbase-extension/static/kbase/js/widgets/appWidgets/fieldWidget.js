@@ -16,9 +16,10 @@ define([
     'kb_common/html',
     'common/events',
     'common/ui',
+    'common/props',
     './input/errorInput',
     'css!google-code-prettify/prettify.css'
-], function (Promise, $, PR, html, Events, UI, ErrorControlFactory) {
+], function (Promise, $, PR, html, Events, UI, Props, ErrorControlFactory) {
     'use strict';
     var t = html.tag,
         div = t('div'), span = t('span'), label = t('label'), button = t('button'),
@@ -204,8 +205,8 @@ define([
                     // just for now ...
                     if (spec.spec.field_type === 'checkbox') {
                         return [
-                            tr([th('Min'), td(String(0))]),
-                            tr([th('Max'), td(String(1))])
+                            tr([th('Value when checked'), td(Props.getDataItem(spec.spec, 'checkbox_options.checked_value', UI.na()))]),
+                            tr([th('Value when un-checked'), td(Props.getDataItem(spec.spec, 'checkbox_options.unchecked_value', UI.na()))])
                         ];
                     }
                     return [

@@ -42,15 +42,16 @@ define (
             var $self = this;
             $self.obj_ref = $self.options.wsNameOrId + '/' + $self.options.objNameOrId;
 
-            var assembly = new AssemblyAPI(Config.url('service_wizard'),{'token':$self.authToken()});
-            var ws = new Workspace(Config.url('workspace'),{'token':$self.authToken()});
+            $self.assembly = new AssemblyAPI(Config.url('service_wizard'),{'token':$self.authToken()});
+            $self.ws = new Workspace(Config.url('workspace'),{'token':$self.authToken()});
             
+            //$self.$elem.append($('<div>').append($('<i class="fa-li fa fa-spinner fa-spin">')));
             $self.$elem.append('loading...');
 
             // 1) get stats, and show the panel
             var basicInfoCalls = [];
             basicInfoCalls.push(
-                assembly.get_stats(this.obj_ref, null)
+                $self.assembly.get_stats(this.obj_ref, null)
                         .done(function(stats) {
                             $self.assembly_stats = stats;
                         }));
@@ -58,48 +59,26 @@ define (
                         //    console.error(error);
                         //});
             basicInfoCalls.push(
-                ws.get_object_info_new({objects: [{'ref':this.obj_ref}], includeMetadata:1})
+                $self.ws.get_object_info_new({objects: [{'ref':this.obj_ref}], includeMetadata:1})
                         .done(function(info) {
                             $self.assembly_obj_info = info[0];
                         }));
             Promise.all(basicInfoCalls)
                 .then(function() {
-                   console.log('basics assembly info:');
-                   console.log($self.assembly_stats);
-                   console.log($self.assembly_obj_info);
+                   //console.log('basics assembly info:');
+                   //console.log($self.assembly_stats);
+                   //console.log($self.assembly_obj_info);
                    $self.renderBasicTable();
                 });
 
 
-            // 2) get contig lengths and gc, render the table
-            /*
-            $self.assembly_stats = {};
-            $self.contig_lengths = [];
-            $self.contig_gc = [];
-
-            var loadingCalls = [];
-            loadingCalls.push(
-                assembly.get_contig_lengths(this.obj_ref, null)
-                            .done(function(lengths) {
-                                $self.contig_lengths = lengths;
-                            }));
-            loadingCalls.push(
-                assembly.get_contig_gc_content(this.obj_ref, null)
-                    .done(function(gc) {
-                                $self.contig_gc = gc;
-                            }));
-
-            Promise.all(loadingCalls)
-                .then(function() {
-                    $self.processContigDataAndRender();
-                });
-            */
+            
 
             return this;
         },
 
 
-        processContigDataAndRender: function() {
+        processContigData: function() {
             var $self = this;
 
             var contig_table = [];
@@ -111,14 +90,14 @@ define (
                     }
                     var contig = {
                         id: id,
-                        len: $self.contig_lengths[id],
-                        gc: gc
+                        len: ($self.contig_lengths[id]),
+                        gc: gc.toFixed(4)
                     };
                     contig_table.push(contig);
                 }
             }
-            console.log(contig_table);
-
+            $self.contig_table = contig_table;
+            //console.log(contig_table);
         },
 
 
@@ -154,50 +133,76 @@ define (
                     canDelete : true, //whether or not the tab can be removed.
                     tabs : [
                         {
-                            tab : 'Summary',                                     //name of the tab
+                            tab : 'Assembly Summary',                               //name of the tab
                             content : $('<div>').append($overviewTable),  //jquery object to stuff into the content
                             canDelete : false,                             //override the canDelete param on a per tab basis
                             show : true,      
                         }, {
                             tab : 'Contigs',
-                            canDelete : false,                               //boolean. This tab gets shown by default. If not specified, the first tab is shown
-                            showContentCallback: function() {console.log('here');} // if you don't want to show the content right away, add a callback method that returns the content...
+                            canDelete : false,
+                            showContentCallback: function() { return $self.addContigList(); } // if you don't want to show the content right away, add a callback method that returns the content...
                         },
                     ],
                 }
             );
 
+        },
+
+        addContigList: function() {
+            var $self = this;
+            var $content = $('<div>');
 
 
+            // 2) get contig lengths and gc, render the table
+            
+            $self.assembly_stats = {};
+            $self.contig_lengths = [];
+            $self.contig_gc = [];
 
+            var loadingCalls = [];
+            loadingCalls.push(
+                $self.assembly.get_contig_lengths(this.obj_ref, null)
+                            .done(function(lengths) {
+                                $self.contig_lengths = lengths;
+                            }));
+            loadingCalls.push(
+                $self.assembly.get_contig_gc_content(this.obj_ref, null)
+                    .done(function(gc) {
+                                $self.contig_gc = gc;
+                            }));
 
-                    /*////////////////////////////// Contigs Tab //////////////////////////////
-                    $('#'+pref+'contigs').append('<table cellpadding="0" cellspacing="0" border="0" id="'+pref+'contigs-table" \
-                    class="table table-bordered table-striped" style="width: 100%; margin-left: 0px; margin-right: 0px;"/>');
-                    var contigsData = [];
+            Promise.all(loadingCalls)
+                .then(function() {
+                    $self.processContigData();
 
-                    for (var pos in cs.contigs) {
-                        var contig = cs.contigs[pos];
-                        contigsData.push({name: contig.id, length: contig.length});
-                    }
+                    ////////////////////////////// Contigs Tab //////////////////////////////
+                    var $table = $('<table cellpadding="0" cellspacing="0" \
+                                        class="table table-striped" \
+                                        style="border: 0px; width: 100%; margin-left: 0px; margin-right: 0px;">');
+
                     var contigsSettings = {
                             "sPaginationType": "full_numbers",
                             "iDisplayLength": 10,
                             "aaSorting": [[ 1, "desc" ]],
                             "aoColumns": [
-                                          {sTitle: "Contig name", mData: "name"},
-                                          {sTitle: "Length", mData: "length"}
+                                          {sTitle: "Contig Id", mData: "id"},
+                                          {sTitle: "Length (bp)", mData: "len"},
+                                          {sTitle: "GC Content", mData: "gc"}
                                           ],
-                                          "aaData": [],
+                                          "aaData": $self.contig_table,
                                           "oLanguage": {
-                                              "sSearch": "Search contig:",
+                                              "sSearch": "Search contigs:",
                                               "sEmptyTable": "No contigs found."
                                           }
                     };
-                    var contigsTable = $('#'+pref+'contigs-table').dataTable(contigsSettings);
-                    contigsTable.fnAddData(contigsData);*/
+                    $content.empty();
+                    $content.append($table);
+                    $table.dataTable(contigsSettings);
+                });
+            
 
-
+            //return $content.append($('<div>').append($('<i class="fa-li fa fa-spinner fa-spin">')));
+            return $content.append('loading');
         },
 
         appendUI: function appendUI($elem) {

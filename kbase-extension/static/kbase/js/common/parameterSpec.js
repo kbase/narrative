@@ -577,8 +577,13 @@ define([
                     break;
                 case 'parameter':
                     // do outlandish things
+                    // TODO: these two conditions are inconsistent, but we honor the is_output_name as per mike.
+                    // The ui_class is really just for the man page and app cell ui organization, so it is relatively minor
+                    // to override it with is_output_name which is actually functional!
                     if (spec.text_options && spec.text_options.is_output_name) {
-                        throw new Error('Parameter ' + spec.id + ' is a parameter type, but has text_options.is_output_name specified');
+                        // console.error('Parameter ' + spec.id + ' is a parameter type, but has text_options.is_output_name specified', spec);
+                        //throw new Error('Parameter ' + spec.id + ' is a parameter type, but has text_options.is_output_name specified');
+                        paramClassName = 'output';
                     }
                     break;
             }

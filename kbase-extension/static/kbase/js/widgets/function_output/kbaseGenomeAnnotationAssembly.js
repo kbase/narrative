@@ -41,6 +41,7 @@ define (
 
             var $self = this;
             $self.obj_ref = $self.options.wsNameOrId + '/' + $self.options.objNameOrId;
+            $self.link_ref = $self.obj_ref;
 
             $self.assembly = new AssemblyAPI(Config.url('service_wizard'),{'token':$self.authToken()});
             $self.ws = new Workspace(Config.url('workspace'),{'token':$self.authToken()});
@@ -58,6 +59,7 @@ define (
                 $self.ws.get_object_info_new({objects: [{'ref':this.obj_ref}], includeMetadata:1})
                         .done(function(info) {
                             $self.assembly_obj_info = info[0];
+                            $self.link_ref = info[0][6] + '/' + info[0][1] + '/' + info[0][4];
                         }));
             Promise.all(basicInfoCalls)
                 .then(function() {
@@ -111,7 +113,10 @@ define (
                 return $('<tr>').append($('<td>').append(key)).append($('<td>').append(value));
             }
 
-            $overviewTable.append(get_table_row('Name',$self.assembly_obj_info[1]));
+            $overviewTable.append(get_table_row('Name',
+                '<a href="/#dataview/'+$self.link_ref + '" target="_blank">' + $self.assembly_obj_info[1] +'</a>' ));
+                // leave out version for now, because that is not passed into data widgets
+                //'<a href="/#dataview/'+$self.link_ref + '" target="_blank">' + $self.assembly_obj_info[1] + ' (v'+$self.assembly_obj_info[4]+')'+'</a>' ));
             $overviewTable.append(get_table_row('Number of Contigs', $self.assembly_stats['num_contigs'] ));
             $overviewTable.append(get_table_row('Total GC Content',  String(($self.assembly_stats['gc_content']*100).toFixed(2)) + '%' ));
             $overviewTable.append(get_table_row('Total Length',      String($self.numberWithCommas($self.assembly_stats['dna_size']))+' bp'  )  );

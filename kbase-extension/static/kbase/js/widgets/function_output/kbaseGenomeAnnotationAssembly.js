@@ -45,8 +45,7 @@ define (
             $self.assembly = new AssemblyAPI(Config.url('service_wizard'),{'token':$self.authToken()});
             $self.ws = new Workspace(Config.url('workspace'),{'token':$self.authToken()});
             
-            //$self.$elem.append($('<div>').append($('<i class="fa-li fa fa-spinner fa-spin">')));
-            $self.$elem.append('loading...');
+            $self.$elem.append($('<i class="fa fa-spinner fa-spin fa-2x">'));
 
             // 1) get stats, and show the panel
             var basicInfoCalls = [];
@@ -55,9 +54,6 @@ define (
                         .done(function(stats) {
                             $self.assembly_stats = stats;
                         }));
-                        //.catch(function(error) {
-                        //    console.error(error);
-                        //});
             basicInfoCalls.push(
                 $self.ws.get_object_info_new({objects: [{'ref':this.obj_ref}], includeMetadata:1})
                         .done(function(info) {
@@ -65,14 +61,12 @@ define (
                         }));
             Promise.all(basicInfoCalls)
                 .then(function() {
-                   //console.log('basics assembly info:');
-                   //console.log($self.assembly_stats);
-                   //console.log($self.assembly_obj_info);
                    $self.renderBasicTable();
+                })
+                .catch(function(err) {
+                    $self.$elem.empty();
+                    $self.$elem.append('Error' + JSON.stringify(err));
                 });
-
-
-            
 
             return this;
         },
@@ -86,12 +80,12 @@ define (
                 if ($self.contig_lengths.hasOwnProperty(id)) {
                     var gc='unknown';
                     if($self.contig_lengths.hasOwnProperty(id)) {
-                        gc = $self.contig_gc[id]
+                        gc = String(($self.contig_gc[id]*100).toFixed(2)) + '%';
                     }
                     var contig = {
                         id: id,
-                        len: ($self.contig_lengths[id]),
-                        gc: gc.toFixed(4)
+                        len: '<!--' + $self.contig_lengths[id] + '-->' + String($self.numberWithCommas($self.contig_lengths[id]))+' bp',
+                        gc:  gc
                     };
                     contig_table.push(contig);
                 }
@@ -111,21 +105,17 @@ define (
 
 
             // Build the overview table
-            var $overviewTable = $('<table class="table table-striped table-bordered" \
-                style="margin-left: auto; margin-right: auto;"/>');
+            var $overviewTable = $('<table class="table table-striped table-bordered" style="margin-left: auto; margin-right: auto;"/>');
 
             function get_table_row(key, value) {
                 return $('<tr>').append($('<td>').append(key)).append($('<td>').append(value));
             }
 
-
             $overviewTable.append(get_table_row('Name',$self.assembly_obj_info[1]));
-
-            $overviewTable.append(get_table_row('Number of Contigs',$self.assembly_stats['num_contigs'] ));
-            $overviewTable.append(get_table_row('Total GC Content',$self.assembly_stats['gc_content'].toFixed(3) ));
-            $overviewTable.append(get_table_row('Total Length (kb)',($self.assembly_stats['dna_size']/1000).toFixed(2)));
-                
-
+            $overviewTable.append(get_table_row('Number of Contigs', $self.assembly_stats['num_contigs'] ));
+            $overviewTable.append(get_table_row('Total GC Content',  String(($self.assembly_stats['gc_content']*100).toFixed(2)) + '%' ));
+            $overviewTable.append(get_table_row('Total Length',      String($self.numberWithCommas($self.assembly_stats['dna_size']))+' bp'  )  );
+            
 
             // Build the tabs
             var $tabs =  new kbaseTabs($tabPane, {
@@ -151,9 +141,10 @@ define (
         addContigList: function() {
             var $self = this;
             var $content = $('<div>');
+            $self.$contigTablePanel = $content;
 
 
-            // 2) get contig lengths and gc, render the table
+            // Get contig lengths and gc, render the table
             
             $self.assembly_stats = {};
             $self.contig_lengths = [];
@@ -175,39 +166,87 @@ define (
                 .then(function() {
                     $self.processContigData();
 
+                    // sort extension for length- is there a better way?
+                    if(!$.fn.dataTableExt.oSort['genome-annotation-assembly-hidden-number-stats-pre']) {
+                        $.extend( $.fn.dataTableExt.oSort, {
+                            "genome-annotation-assembly-hidden-number-stats-pre": function ( a ) {
+                                // extract out the first comment if it exists, then parse as number
+                                var t = a.split('-->');
+                                if(t.length>1) {
+                                    var t2 = t[0].split('<!--');
+                                    if(t2.length>1) {
+                                        return Number(t2[1]);
+                                    }
+                                }
+                                return Number(a);
+                            },
+                            "genome-annotation-assembly-hidden-number-stats-asc": function( a, b ) {
+                                return ((a < b) ? -1 : ((a > b) ? 1 : 0));
+                            },
+                            "genome-annotation-assembly-hidden-number-stats-desc": function(a,b) {
+                                return ((a < b) ? 1 : ((a > b) ? -1 : 0));
+                            }
+                        } );
+                    }
+
                     ////////////////////////////// Contigs Tab //////////////////////////////
-                    var $table = $('<table cellpadding="0" cellspacing="0" \
-                                        class="table table-striped" \
-                                        style="border: 0px; width: 100%; margin-left: 0px; margin-right: 0px;">');
+                    var $table = $('<table class="table table-striped table-bordered" style="width: 100%; border: 1px solid #ddd; margin-left: auto; margin-right: auto;" >');
+
+                    var contigsPerPage = 10;
+                    var sDom = 'lft<ip>';
+                    if($self.contig_table.length<contigsPerPage) {
+                        sDom = 'ti';
+                    }
 
                     var contigsSettings = {
-                            "sPaginationType": "full_numbers",
-                            "iDisplayLength": 10,
-                            "aaSorting": [[ 1, "desc" ]],
-                            "aoColumns": [
-                                          {sTitle: "Contig Id", mData: "id"},
-                                          {sTitle: "Length (bp)", mData: "len"},
-                                          {sTitle: "GC Content", mData: "gc"}
-                                          ],
-                                          "aaData": $self.contig_table,
-                                          "oLanguage": {
-                                              "sSearch": "Search contigs:",
-                                              "sEmptyTable": "No contigs found."
-                                          }
+                        "bFilter": true,
+                        "sPaginationType": "full_numbers",
+                        "iDisplayLength": contigsPerPage,
+                        "aaSorting": [[ 1, "desc" ]],
+                        
+                        "sDom": sDom,
+
+                        "columns": [
+                            {sTitle: 'Contig Id', data: "id"},
+                            {sTitle: "Length", data: "len"},
+                            {sTitle: "GC Content", data: "gc"}
+                        ],
+                        "columnDefs": [
+                            { "type": "genome-annotation-assembly-hidden-number-stats", targets: [1] }
+                        ],
+                        "data": $self.contig_table,
+                        "language": {
+                            "lengthMenu": "_MENU_ Contigs per page",
+                            "zeroRecords": "No Matching Contigs Found",
+                            "info": "Showing page _PAGE_ of _PAGES_",
+                            "infoEmpty": "No Contigs",
+                            "infoFiltered": "(filtered from _MAX_)"
+                        }
                     };
                     $content.empty();
-                    $content.append($table);
+                    $content.append($('<div>').css('padding','20px 0px').append($table));
                     $table.dataTable(contigsSettings);
+                })
+                .catch(function(err) {
+                    $content.empty();
+                    $content.append('Error' + JSON.stringify(err));
+                    console.err($self);
+                    console.err(err);
                 });
             
-
-            //return $content.append($('<div>').append($('<i class="fa-li fa fa-spinner fa-spin">')));
-            return $content.append('loading');
+            return $content.append('<br>').append($('<i class="fa fa-spinner fa-spin fa-2x">'));
         },
 
         appendUI: function appendUI($elem) {
           $elem.append("One day, there will be a widget here.")
         },
+
+        numberWithCommas: function(x) {
+            //var parts = x.toString().split(".");
+            //parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            //return parts.join(".");
+            return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
 
     });
 

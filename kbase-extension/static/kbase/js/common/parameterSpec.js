@@ -592,6 +592,10 @@ define([
             
         }
         
+        function paramClass() {
+            return attributes.paramClass;
+        }
+        
         setupParamClass();
         
         // NEW -- validate and completely set up normalized param first,
@@ -617,7 +621,8 @@ define([
             isEmpty: isEmpty,
             nullValue: nullValue,
             defaultValue: defaultValue,
-            getConstraints: getConstraints
+            getConstraints: getConstraints,
+            paramClass: paramClass
         };
     }
 

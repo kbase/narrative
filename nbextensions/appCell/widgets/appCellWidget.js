@@ -97,8 +97,6 @@ define([
             fsm,
             saveMaxFrequency = config.saveMaxFrequency || 5000;
 
-
-
         // DATA API
 
         /*
@@ -213,8 +211,6 @@ define([
 
             ui.setContent('fsm-display.content', content);
         }
-
-
 
         function renderAppSpec() {
 //            if (!env.appSpec) {
@@ -349,7 +345,6 @@ define([
 
             renderSetting(settingName);
         }
-
 
         function renderSettings() {
             var events = Events.make({node: container}),
@@ -991,6 +986,12 @@ define([
                 jobId: jobId
             });
         }
+        
+        function requestJobStatus(jobId) {
+            runtime.bus().emit('request-job-status', {
+                jobId: jobId
+            });
+        }
 
         function resetToEditMode(source) {
             // only do this if we are not editing.
@@ -1321,6 +1322,9 @@ define([
             });
             jobListeners.push(ev);
 
+            runtime.bus().emit('request-job-status', {
+                jobId: jobId
+            });
         }
 
         function stopListeningForJobMessages() {
@@ -1471,8 +1475,6 @@ define([
                     widget: model.getItem('exec.outputWidgetInfo')
                 }
             });
-
-            console.log('INSERTED OUTPUT CELL', cellId);
 
             return newCellId;
         }
@@ -1637,28 +1639,41 @@ define([
                 // get the status
 
                 // if we are in a running state, start listening for jobs
-                var state = model.getItem('fsm.currentState');
+//                var state = model.getItem('fsm.currentState');
+//                var listeningForJobUpdates = false;
+//                if (state) {
+//                    switch (state.mode) {
+//                        case 'editing':
+//                        case 'launching':
+//                        case 'processing':
+//                            switch (state.stage) {
+//                                case 'launching':
+//                                    // nothing to do.
+//                                    break;
+//                                case 'queued':
+//                                case 'running':
+//                                    listeningForJobUpdates = true;
+//                                    startListeningForJobMessages(model.getItem('exec.jobState.job_id'));
+//                                    break;
+//                            }
+//                            break;
+//                        case 'success':
+//                        case 'error':
+//                            // do nothing for now
+//                    }
+//                }
 
-                if (state) {
-                    switch (state.mode) {
-                        case 'editing':
-                        case 'launching':
-                        case 'processing':
-                            switch (state.stage) {
-                                case 'launching':
-                                    // nothing to do.
-                                    break;
-                                case 'queued':
-                                case 'running':
-                                    startListeningForJobMessages(model.getItem('exec.jobState.job_id'));
-                                    break;
-                            }
-                            break;
-                        case 'success':
-                        case 'error':
-                            // do nothing for now
+                // Regardless of what the FSM says, if we are not listening for a
+                // job update and we already have an execution job state, let's 
+                // see if there is anything new, even if we don't expect anything
+                // new...
+                //if (!listeningForJobUpdates) {
+                    var jobId = model.getItem('exec.jobState.job_id');
+                    if (jobId) {
+                        startListeningForJobMessages(jobId);
                     }
-                }
+                //}
+                
 
 
                 // TODO: only turn this on when we need it!
@@ -1881,7 +1896,6 @@ define([
                     });
 
                     bus.on('sync-params', function (message) {
-                        console.log('SYNC PARAMS', message);
                         message.parameters.forEach(function (paramId) {
                             bus.send({
                                 parameter: paramId,

@@ -1,11 +1,10 @@
+/*global define*/
+/*jslint white:true,browser:true*/
+
 define([
     'jquery',
     'kbwidget',
-    'bluebird',
-    'bootstrap',
-    'narrativeConfig',
     'base/js/namespace',
-    'util/string',
     'util/timeFormat',
     'handlebars',
     'kbaseAuthenticatedWidget',
@@ -17,15 +16,12 @@ define([
     'text!kbase/templates/job_status/header.html',
     'text!kbase/templates/job_status/log_panel.html',
     'text!kbase/templates/job_status/log_line.html',
-    'css!kbase/css/kbaseJobLog.css'
+    'css!kbase/css/kbaseJobLog.css',
+    'bootstrap'
 ], function (
     $,
     KBWidget,
-    Promise,
-    bootstrap,
-    Config,
     Jupyter,
-    StringUtil,
     TimeFormat,
     Handlebars,
     KBaseAuthenticatedWidget,
@@ -36,8 +32,7 @@ define([
     JobStatusTableTemplate,
     HeaderTemplate,
     LogPanelTemplate,
-    LogLineTemplate,
-    JobLogCss
+    LogLineTemplate
 ) {
     'use strict';
     return new KBWidget({
@@ -64,9 +59,26 @@ define([
             // expects:
             // name, id, version for appInfo
             this.appInfo = this.options.info;
-            this.cell = Jupyter.narrative.getCellByKbaseId(this.$elem.attr('id'));
-
-            console.log('initializing with job id = ' + this.jobId);
+            
+            var cellNode = this.$elem.closest('.cell').get(0);
+            function findCell() {
+                var cells = Jupyter.notebook.get_cell_elements().toArray().filter(function (element) {
+                    if (element === cellNode) {
+                        return true;
+                    }
+                    return false;
+                });
+                if (cells.length === 1) {
+                    return $(cells[0]).data('cell');
+                }
+                throw new Error('Cannot find the cell node!', cellNode, cells);
+                
+            }
+            
+            this.cell = findCell();
+            
+            // this.cell = Jupyter.narrative.getCellByKbaseId(this.$elem.attr('id'));
+            //console.log('initializing with job id = ' + this.jobId);
             if (!this.jobId) {
                 this.showError("No Job id provided!");
                 return this;
@@ -96,6 +108,7 @@ define([
                     type: 'job-status'
                 },
                 handle: function (message) {
+                    console.log('Have job status', message);
                     this.handleJobStatus(message);
                 }.bind(this)
             });

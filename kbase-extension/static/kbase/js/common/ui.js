@@ -19,6 +19,11 @@ define([
         ul = t('ul'), li = t('li'), a = t('a'),
         button = t('button'), pre = t('pre');
 
+    // "static" methods
+    function na() {
+        return span({style: {fontStyle: 'italic', color: 'orange'}}, 'NA');
+    }
+
     function factory(config) {
         var container = config.node,
             bus = config.bus,
@@ -608,10 +613,6 @@ define([
             }
         }
 
-        function na() {
-            return span({style: {fontStyle: 'italic', color: 'orange'}}, 'NA');
-        }
-
         function getUserSetting(settingKey, defaultValue) {
             var settings = Jupyter.notebook.metadata.kbase.userSettings,
                 setting;
@@ -934,6 +935,8 @@ define([
     return {
         make: function (config) {
             return factory(config);
-        }
+        },
+        // "static" methods
+        na: na
     };
 });

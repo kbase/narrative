@@ -3,6 +3,13 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v4.2.1 (more notes will follow).
 
+### Version 3.0.0-alpha-15
+__Changes__
+- fix output param marked as parameter triggering error and blocking app cell insertion
+- improve error message when checkbox is misconfigured
+- improve checkbox rules display
+
+
 ### Version 3.0.0-alpha-14
 __Changes__
 - fix job cell (as produced by JobManager()->job_info())

@@ -371,13 +371,13 @@ define([
             return Promise.try(function () {
                 var params = validateParameterSpecs(model.getItem('parameters')),
                     inputParams = params.filter(function (spec) {
-                        return (spec.spec.ui_class === 'input');
+                        return (spec.paramClass() === 'input');
                     }),
                     outputParams = params.filter(function (spec) {
-                        return (spec.spec.ui_class === 'output');
+                        return (spec.paramClass() === 'output');
                     }),
                     parameterParams = params.filter(function (spec) {
-                        return (spec.spec.ui_class === 'parameter');
+                        return (spec.paramClass() === 'parameter');
                     });
 
                 return Promise.resolve()

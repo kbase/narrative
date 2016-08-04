@@ -31,12 +31,16 @@ define([
             },
             runtime = Runtime.make(),
             widgets = [];
-
+        
         function normalizeModel() {
             var newModel = model.value.filter(function (item) {
                 return item ? true : false;
             });
             model.value = newModel;
+        }
+        
+        function getModelValue() {
+            return model.value;
         }
 
         function setModelValue(value, index) {
@@ -60,6 +64,24 @@ define([
             })
                 .then(function () {
                     render();
+                })
+                .then(function () {
+                    autoValidate();
+                });
+        }
+        
+        function deleteModelValue(index) {
+            return Promise.try(function () {
+                if (index !== undefined) {
+                    model.value.splice(index, 1);
+                }
+                normalizeModel();
+            })
+                .then(function () {
+                    render();
+                })
+                .then(function () {
+                    autoValidate();
                 });
         }
 
@@ -69,6 +91,9 @@ define([
             })
                 .then(function () {
                     render();
+                })
+                .then(function () {
+                    autoValidate();
                 });
         }
 
@@ -78,7 +103,11 @@ define([
             })
                 .then(function (changed) {
                     render();
+                })
+                .then(function () {
+                    autoValidate();
                 });
+
         }
 
         function resetModelValue() {
@@ -120,20 +149,14 @@ define([
             return newObj;
         }
 
-        function validate(rawValue) {
+        function validate() {
             return Promise.try(function () {
-                if (!options.enabled) {
-                    return {
-                        isValid: true,
-                        validated: false,
-                        diagnosis: 'disabled'
-                    };
-                }
-
-                var validationOptions = copyProps(spec.spec.text_options, ['regexp_constraint', 'min_length', 'max_length']);
-
-                validationOptions.required = spec.required();
-                return Validation.validateTextString(rawValue, validationOptions);
+                var validationOptions = {
+                    validObjectTypes: spec.spec.text_options.valid_ws_types,
+                    required: spec.required()
+                };
+                var rawValue = getModelValue();
+                return Validation.validateWorkspaceObjectRefSet(rawValue, validationOptions);
             });
         }
 
@@ -209,11 +232,14 @@ define([
                 }
             });
             inputBus.on('changed', function (message) {
-                model.value[index] = message.newValue;
+                setModelValue(message.newValue, index);
+                // model.value[index] = message.newValue;
                 // TODO: validate the main control...
                 bus.emit('changed', {
                     newValue: model.value
                 });
+                
+                
             });
 
             preButton = div({class: 'input-group-addon', style: {width: '5ex', padding: '0'}}, String(index + 1) + '.');
@@ -225,7 +251,8 @@ define([
                 id: events.addEvent({type: 'click', handler: function (e) {
                         // no, we don't need to consult the control, we just remove 
                         // it...
-                        model.value.splice(widgetWrapper.index, 1);
+                        deleteModelValue(widgetWrapper.index);
+                        // model.value.splice(widgetWrapper.index, 1);
                         //var index = e.target.getAttribute('data-index'),
                         //    control = container.querySelector('input[data-index="' + index + '"]');
                         //control.value = '';
@@ -233,7 +260,7 @@ define([
                         bus.emit('changed', {
                             newValue: model.value
                         });
-                        render();
+                        // render();
                     }})
             }, 'x'));
             return div({class: 'input-group', dataIndex: String(index)}, [
@@ -267,7 +294,8 @@ define([
             });
             
             inputBus.on('changed', function (message) {
-                model.value.push(message.newValue);
+                addModelValue(message.newValue);
+                // model.value.push(message.newValue);
                 
                 // TODO: and insert a new row ...
                 
@@ -337,13 +365,16 @@ define([
             };
         }
         function autoValidate() {
-            return Promise.all(model.value.map(function (value, index) {
+            //return Promise.all(model.value.map(function (value, index) {
                 // could get from DOM, but the model is the same.
-                var rawValue = container.querySelector('[data-index="' + index + '"]').value;
+                // var rawValue = container.querySelector('[data-index="' + index + '"]').value;
                 // console.log('VALIDATE', value);
-                return validate(rawValue);
-            }))
+            //    return validate();
+            //}))
+                return validate()
                 .then(function (results) {
+                    bus.emit('validation', results);
+                    return;
                     // a bit of a hack -- we need to handle the 
                     // validation here, and update the individual rows
                     // for now -- just create one mega message.

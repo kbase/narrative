@@ -19,11 +19,11 @@ define([
     function factory(config) {
         var options = {},
             spec = config.parameterSpec,
+            checkboxOptions,
             container,
             $container,
             bus = config.bus,
-            valueChecked = spec.spec.checkbox_options.checked_value,
-            valueUnchecked = spec.spec.checkbox_options.unchecked_value,
+            constraints,
             model = {
                 updates: 0,
                 value: undefined
@@ -31,9 +31,28 @@ define([
 
         // Validate configuration.
         // Nothing to do...
+        
+        // validate
+        if (!spec.spec.checkbox_options) {
+            throw new Error('Checkbox control does not have checkbox_options configured');
+        }
+        checkboxOptions = spec.spec.checkbox_options.checked_value;
+        if ( (typeof checkboxOptions.checked_value !== 'string') ||
+             (checkboxOptions.checked_value.length === 0) ) {
+            throw new Error('Checkbox spec option checked_value is not configured');
+        }
+        if ( (typeof checkboxOptions.unchecked_value !== 'string') ||
+             (checkboxOptions.checked_value.length === 0) ) {
+            throw new Error('Checkbox spec option unchecked_value is not configured');
+        }
 
         options.enabled = true;
-        
+
+        constraints = {
+            valueChecked: checkboxOptions.checked_value,
+            valueUnchecked: checkboxOptions.unchecked_value
+        };
+
         // Is this a valid spec?
         
         //if (spec.required() && spec.defaultValue() === null) {
@@ -54,9 +73,9 @@ define([
         function getInputValue() {
             var checkbox = container.querySelector('[data-element="input-container"] [data-element="input"]');
             if (checkbox.checked) {
-                return valueChecked;
+                return constraints.valueChecked;
             }
-            return valueUnchecked;
+            return constraints.valueUnchecked;
         }
 
         /*
@@ -104,15 +123,15 @@ define([
         function resetModelValue() {
             if (spec.spec.default_values && spec.spec.default_values.length > 0) {
                 if (meansChecked(spec.spec.default_values[0])) {
-                    setModelValue(valueChecked);
+                    setModelValue(constraints.valueChecked);
                 } else {
-                    setModelValue(valueUnchecked);
+                    setModelValue(constraints.valueUnchecked);
                 }
             } else {
                 // NOTE: we set the checkbox explicitly to the "unchecked value" 
                 // if no default value is provided.
                 // unsetModelValue();
-                setModelValue(valueUnchecked);
+                setModelValue(constraints.valueUnchecked);
             }
         }
 
@@ -150,7 +169,7 @@ define([
                     // such in the spec.
                     validationOptions = {
                         required: spec.required(),
-                        values: [valueChecked, valueUnchecked]
+                        values: [constraints.valueChecked, constraints.valueUnchecked]
                     },
                 validationResult;
 
@@ -169,7 +188,7 @@ define([
             // CONTROL
             var checked = false,
                 booleanString = 'no';
-            if (model.value === valueChecked) {
+            if (model.value === constraints.valueChecked) {
                 checked = true;
                 booleanString = 'yes';
             }
@@ -211,7 +230,7 @@ define([
                     type: 'checkbox',
                     dataElement: 'input',
                     checked: checked,
-                    value: valueChecked
+                    value: constraints.valueChecked
                 })]);
         }
         function autoValidate() {

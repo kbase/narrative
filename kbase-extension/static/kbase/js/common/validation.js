@@ -250,6 +250,42 @@ define([
                     };
                 });
         }
+        
+        function validateWorkspaceObjectRefSet(value, options) {
+            // TODO: validate each item.
+            var parsedValue,
+                messageId, shortMessage, errorMessage, diagnosis = 'valid';
+            return Promise.try(function () {
+                if (!(value instanceof Array)) {
+                    diagnosis = 'invalid';
+                    errorMessage = 'value must be an array';
+                } else {
+                    parsedValue = value;
+                    if (parsedValue.length === 0) {
+                        if (options.required) {
+                            messageId = 'required-missing';
+                            diagnosis = 'required-missing';
+                            errorMessage = 'value is required';
+                        } else {
+                            diagnosis = 'optional-empty';
+                        }                        
+                    } else {
+                        // TODO: validate each object name and report errors...                        
+                    }
+                }
+            })
+                .then(function () {
+                    return {
+                        isValid: errorMessage ? false : true,
+                        messageId: messageId,
+                        errorMessage: errorMessage,
+                        shortMessage: shortMessage,
+                        diagnosis: diagnosis,
+                        value: value,
+                        parsedValue: parsedValue
+                    };
+                });
+        }
 
         function validateInteger(value, min, max) {
             if (max && max < value) {
@@ -521,6 +557,7 @@ define([
         return {
             validateWorkspaceObjectName: validateWorkspaceObjectName,
             validateWorkspaceObjectRef: validateWorkspaceObjectRef,
+            validateWorkspaceObjectRefSet: validateWorkspaceObjectRefSet,
             validateInteger: validateInteger,
             validateIntString: validateIntString,
             validateIntegerField: validateIntString,

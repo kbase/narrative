@@ -1,4 +1,4 @@
-/*! kbase-client-api 2015-01-30 */
+/*! kbase-client-api 2016-08-04 */
 
 
 function AbstractHandle(url, auth, auth_cb) {
@@ -12822,67 +12822,6 @@ function ShockClient(params) {
     };
     
     self.loadNext = function (file, url, promise, currentChunk, chunks, incompleteId, chunkSize, ret, errorCallback, cancelCallback) {
-    	if (cancelCallback && cancelCallback())
-	{
-	    if (errorCallback)
-		errorCallback("cancelled");
-    	    return;
-	}
-	
-	var start = currentChunk * chunkSize;
-	var blob;
-	if (start < file.size) {
-	    var end = (start + chunkSize >= file.size) ? file.size : start + chunkSize;
-	    var blobSlice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice;
-	    blob = blobSlice.call(file, start, end);
-	} else {
-	    ret({file_size: file.size, uploaded_size: file.size, node_id: incompleteId});
-	    return;
-	}
-	var fd = new FormData();
-	fd.append(currentChunk+1, blob);
-	var lastChunk = (currentChunk + 1) * chunkSize >= file.size;
-	var incomplete_attr = { 
-	    "incomplete": (lastChunk ? "0" : "1"), 
-	    "file_size": "" + file.size, 
-	    "file_name": file.name,
-	    "file_time": "" + file.lastModifiedDate.getTime(), 
-	    "chunks": "" + (currentChunk+1),
-	    "chunk_size": "" + chunkSize};
-	var aFileParts = [ JSON.stringify(incomplete_attr) ];
-	var oMyBlob2 = new Blob(aFileParts, { "type" : "text\/json" });
-	fd.append('attributes', oMyBlob2);
-	console.log(Date.now() + " chunk " + currentChunk);
-	jQuery.ajax(url, {
-	    contentType: false,
-	    processData: false,
-	    data: fd,
-	    success: function(data) {
-    		if (cancelCallback && cancelCallback())
-		{
-		    if (errorCallback)
-			errorCallback("cancelled");
-    		    return;
-		}
-		currentChunk++;
-		var uploaded_size = Math.min(file.size, currentChunk * chunkSize);
-		ret({file_size: file.size, uploaded_size: uploaded_size, node_id: incompleteId});
-		if ((currentChunk * chunkSize) >= file.size) {
-		    promise.resolve();
-		} else {
-		    self.loadNext(file, url, promise, currentChunk, chunks, incompleteId, chunkSize, ret, errorCallback, cancelCallback);
-		}
-	    },
-	    error: function(jqXHR, error) {
-		if (errorCallback)
-		    errorCallback(error);
-		promise.resolve();
-	    },
-	    headers: self.auth_header,
-	    type: "PUT"
-	});
-    };
-    self.loadNextOrig = function (file, url, promise, currentChunk, chunks, incompleteId, chunkSize, ret, errorCallback, cancelCallback) {
 		if (cancelCallback && cancelCallback())
 			return;
 	    var fileReader = new FileReader();
@@ -12903,7 +12842,6 @@ function ShockClient(params) {
 		    var aFileParts = [ JSON.stringify(incomplete_attr) ];
 		    var oMyBlob2 = new Blob(aFileParts, { "type" : "text\/json" });
 		    fd.append('attributes', oMyBlob2);
-console.log(Date.now() + " chunk " + currentChunk);
 		    jQuery.ajax(url, {
 		    	contentType: false,
 		    	processData: false,
@@ -12955,104 +12893,91 @@ console.log(Date.now() + " chunk " + currentChunk);
 	    // if this is a chunked upload, check if it needs to be resumed
 
     	function searchForIncomplete() {
-    	    if (searchToResume) {
-    		self.check_file(file, function (incomplete) {
-    		    if (cancelCallback && cancelCallback())
-		    {
-			if (errorCallback)
-			    errorCallback("cancelled");
-    		    	return;
-		    }
-    		    processNode(incomplete);
-    		}, function(error){
-    		    if (errorCallback)
-    			errorCallback(error);
-    		    promise.resolve();
-    		});
-    	    } else {
-    		processNode(null);
-    	    }
+    		if (searchToResume) {
+    			self.check_file(file, function (incomplete) {
+    				if (cancelCallback && cancelCallback())
+    					return;
+    				processNode(incomplete);
+    			}, function(error){
+    				if (errorCallback)
+    					errorCallback(error);
+    				promise.resolve();
+    			});
+    		} else {
+    			processNode(null);
+    		}
     	}
     	
     	function processNode(incomplete) {
-    	    if (incomplete != null) {
-    		var incompleteId = incomplete["id"];
-    		url += "/" + incomplete["id"];
-    		var currentChunk = 0;
-    		if (incomplete["attributes"]["incomplete_chunks"]) {
-    		    currentChunk = parseInt(incomplete["attributes"]["incomplete_chunks"]);
-    		} else if (incomplete["attributes"]["chunks"]) {
-    		    currentChunk = parseInt(incomplete["attributes"]["chunks"]);
-    		}
-    		var chunkSize = self.chunkSize;
-    		if (incomplete["attributes"]["chunk_size"])
-    		    chunkSize = parseInt(incomplete["attributes"]["chunk_size"]);
-    		var uploadedSize = Math.min(file.size, currentChunk * chunkSize);
-    		ret({file_size: file.size, uploaded_size: uploadedSize, node_id: incompleteId});
-    		self.loadNext(file, url, promise, currentChunk, chunks, incompleteId, chunkSize, ret, errorCallback, cancelCallback);
-    	    } else {
-    		var chunkSize = self.chunkSize;
-    		var chunks = Math.ceil(file.size / chunkSize);
-    		var incomplete_attr = { "incomplete": "1", "file_size": "" + file.size, "file_name": file.name,
+    		if (incomplete != null) {
+    			var incompleteId = incomplete["id"];
+    			url += "/" + incomplete["id"];
+    			var currentChunk = 0;
+    			if (incomplete["attributes"]["incomplete_chunks"]) {
+    				currentChunk = parseInt(incomplete["attributes"]["incomplete_chunks"]);
+    			} else if (incomplete["attributes"]["chunks"]) {
+    				currentChunk = parseInt(incomplete["attributes"]["chunks"]);
+    			}
+    			var chunkSize = self.chunkSize;
+    			if (incomplete["attributes"]["chunk_size"])
+    				chunkSize = parseInt(incomplete["attributes"]["chunk_size"]);
+    			var uploadedSize = Math.min(file.size, currentChunk * chunkSize);
+    			ret({file_size: file.size, uploaded_size: uploadedSize, node_id: incompleteId});
+    			self.loadNext(file, url, promise, currentChunk, chunks, incompleteId, chunkSize, ret, errorCallback, cancelCallback);
+    		} else {
+    			var chunkSize = self.chunkSize;
+    			var chunks = Math.ceil(file.size / chunkSize);
+    			var incomplete_attr = { "incomplete": "1", "file_size": "" + file.size, "file_name": file.name,
     					"file_time": "" + file.lastModifiedDate.getTime(), "chunk_size": "" + chunkSize};
-    		var aFileParts = [ JSON.stringify(incomplete_attr) ];
-    		var oMyBlob = new Blob(aFileParts, { "type" : "text\/json" });
-    		var fd = new FormData();
-    		fd.append('attributes', oMyBlob);
-    		fd.append('parts', chunks);
-    		jQuery.ajax(url, {
-    		    contentType: false,
-    		    processData: false,
-    		    data: fd,
-    		    success: function(data) {
-    		    	if (cancelCallback && cancelCallback())
-			{
-			    if (errorCallback)
-				errorCallback("cancelled");
-    		    	    return;
-			}
-    			var incompleteId = data.data.id;
-    			var uploaded_size = 0;
-    			ret({file_size: file.size, uploaded_size: uploaded_size, node_id: incompleteId});
-    			url += "/" + data.data.id;
-    			self.loadNext(file, url, promise, 0, chunks, incompleteId, chunkSize, ret, errorCallback, cancelCallback);
-    		    },
-    		    error: function(jqXHR, error){
-    			if (errorCallback)
-    			    errorCallback(error);
-    			promise.resolve();
-    		    },
-    		    headers: self.auth_header,
-    		    type: "POST"
-    		});
-    	    }
+    			var aFileParts = [ JSON.stringify(incomplete_attr) ];
+    			var oMyBlob = new Blob(aFileParts, { "type" : "text\/json" });
+    			var fd = new FormData();
+    			fd.append('attributes', oMyBlob);
+    			fd.append('parts', chunks);
+    			jQuery.ajax(url, {
+    				contentType: false,
+    				processData: false,
+    				data: fd,
+    				success: function(data) {
+    		    		if (cancelCallback && cancelCallback())
+    		    			return;
+    					var incompleteId = data.data.id;
+    					var uploaded_size = 0;
+    					ret({file_size: file.size, uploaded_size: uploaded_size, node_id: incompleteId});
+    					url += "/" + data.data.id;
+    					self.loadNext(file, url, promise, 0, chunks, incompleteId, chunkSize, ret, errorCallback, cancelCallback);
+    				},
+    				error: function(jqXHR, error){
+    					if (errorCallback)
+    						errorCallback(error);
+    					promise.resolve();
+    				},
+    				headers: self.auth_header,
+    				type: "POST"
+    			});
+    		}
     	}
     	
     	if (shockNodeId) {
-    	    self.get_node(shockNodeId, function(data) {
-    		if (cancelCallback && cancelCallback())
-		{
-		    if (errorCallback)
-			errorCallback("cancelled");
-    		    return;
-		}
-		console.log(data);
-		if (data &&  data["attributes"] && 
-		    data["attributes"]["file_size"] === ("" + file.size) && 
-		    data["attributes"]["file_name"] === file.name &&
-    		    data["attributes"]["file_time"] === ("" + file.lastModifiedDate.getTime())) {
-		    processNode(data);
-		} else {
-		    searchForIncomplete();
-		}
-    	    }, function(error) {
-		searchForIncomplete();
-    	    });
+    		self.get_node(shockNodeId, function(data) {
+				if (cancelCallback && cancelCallback())
+					return;
+				if (data && 
+						data["attributes"]["file_size"] === ("" + file.size) && 
+						data["attributes"]["file_name"] === file.name &&
+    					data["attributes"]["file_time"] === ("" + file.lastModifiedDate.getTime())) {
+					processNode(data);
+				} else {
+					searchForIncomplete();
+				}
+    		}, function(error) {
+				searchForIncomplete();
+    		});
     	} else {
-    	    searchForIncomplete();
+    		searchForIncomplete();
     	}
     	
-	return promise;
+	    return promise;
     };
     
     /**
@@ -13481,22 +13406,19 @@ function UserAndJobState(url, auth, auth_cb) {
 
 
 
-function Workspace(url, auth, auth_cb) {
+function Workspace(url, auth, auth_cb, timeout, async_job_check_time_ms, async_version) {
+    var self = this;
 
     this.url = url;
     var _url = url;
-    var deprecationWarningSent = false;
 
-    function deprecationWarning() {
-        if (!deprecationWarningSent) {
-            deprecationWarningSent = true;
-            if (!window.console) return;
-            console.log(
-                "DEPRECATION WARNING: '*_async' method names will be removed",
-                "in a future version. Please use the identical methods without",
-                "the'_async' suffix.");
-        }
-    }
+    this.timeout = timeout;
+    var _timeout = timeout;
+    
+    this.async_job_check_time_ms = async_job_check_time_ms;
+    if (!this.async_job_check_time_ms)
+        this.async_job_check_time_ms = 5000;
+    this.async_version = async_version;
 
     if (typeof(_url) != "string" || _url.length == 0) {
         _url = "https://kbase.us/services/ws/";
@@ -13505,581 +13427,791 @@ function Workspace(url, auth, auth_cb) {
     var _auth_cb = auth_cb;
 
 
-    this.ver = function (_callback, _errorCallback) {
-    return json_call_ajax("Workspace.ver",
-        [], 1, _callback, _errorCallback);
-};
-
-    this.ver_async = function (_callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.ver", [], 1, _callback, _error_callback);
-    };
-
-    this.create_workspace = function (params, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.create_workspace",
-        [params], 1, _callback, _errorCallback);
-};
-
-    this.create_workspace_async = function (params, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.create_workspace", [params], 1, _callback, _error_callback);
-    };
-
-    this.alter_workspace_metadata = function (params, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.alter_workspace_metadata",
-        [params], 0, _callback, _errorCallback);
-};
-
-    this.alter_workspace_metadata_async = function (params, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.alter_workspace_metadata", [params], 0, _callback, _error_callback);
-    };
-
-    this.clone_workspace = function (params, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.clone_workspace",
-        [params], 1, _callback, _errorCallback);
-};
-
-    this.clone_workspace_async = function (params, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.clone_workspace", [params], 1, _callback, _error_callback);
-    };
-
-    this.lock_workspace = function (wsi, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.lock_workspace",
-        [wsi], 1, _callback, _errorCallback);
-};
-
-    this.lock_workspace_async = function (wsi, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.lock_workspace", [wsi], 1, _callback, _error_callback);
-    };
-
-    this.get_workspacemeta = function (params, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.get_workspacemeta",
-        [params], 1, _callback, _errorCallback);
-};
-
-    this.get_workspacemeta_async = function (params, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.get_workspacemeta", [params], 1, _callback, _error_callback);
-    };
-
-    this.get_workspace_info = function (wsi, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.get_workspace_info",
-        [wsi], 1, _callback, _errorCallback);
-};
-
-    this.get_workspace_info_async = function (wsi, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.get_workspace_info", [wsi], 1, _callback, _error_callback);
-    };
-
-    this.get_workspace_description = function (wsi, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.get_workspace_description",
-        [wsi], 1, _callback, _errorCallback);
-};
-
-    this.get_workspace_description_async = function (wsi, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.get_workspace_description", [wsi], 1, _callback, _error_callback);
-    };
-
-    this.set_permissions = function (params, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.set_permissions",
-        [params], 0, _callback, _errorCallback);
-};
-
-    this.set_permissions_async = function (params, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.set_permissions", [params], 0, _callback, _error_callback);
-    };
-
-    this.set_global_permission = function (params, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.set_global_permission",
-        [params], 0, _callback, _errorCallback);
-};
-
-    this.set_global_permission_async = function (params, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.set_global_permission", [params], 0, _callback, _error_callback);
-    };
-
-    this.set_workspace_description = function (params, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.set_workspace_description",
-        [params], 0, _callback, _errorCallback);
-};
-
-    this.set_workspace_description_async = function (params, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.set_workspace_description", [params], 0, _callback, _error_callback);
-    };
-
-    this.get_permissions = function (wsi, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.get_permissions",
-        [wsi], 1, _callback, _errorCallback);
-};
-
-    this.get_permissions_async = function (wsi, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.get_permissions", [wsi], 1, _callback, _error_callback);
-    };
-
-    this.save_object = function (params, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.save_object",
-        [params], 1, _callback, _errorCallback);
-};
-
-    this.save_object_async = function (params, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.save_object", [params], 1, _callback, _error_callback);
-    };
-
-    this.save_objects = function (params, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.save_objects",
-        [params], 1, _callback, _errorCallback);
-};
-
-    this.save_objects_async = function (params, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.save_objects", [params], 1, _callback, _error_callback);
-    };
-
-    this.get_object = function (params, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.get_object",
-        [params], 1, _callback, _errorCallback);
-};
-
-    this.get_object_async = function (params, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.get_object", [params], 1, _callback, _error_callback);
-    };
-
-    this.get_object_provenance = function (object_ids, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.get_object_provenance",
-        [object_ids], 1, _callback, _errorCallback);
-};
-
-    this.get_object_provenance_async = function (object_ids, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.get_object_provenance", [object_ids], 1, _callback, _error_callback);
-    };
-
-    this.get_objects = function (object_ids, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.get_objects",
-        [object_ids], 1, _callback, _errorCallback);
-};
-
-    this.get_objects_async = function (object_ids, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.get_objects", [object_ids], 1, _callback, _error_callback);
-    };
-
-    this.get_object_subset = function (sub_object_ids, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.get_object_subset",
-        [sub_object_ids], 1, _callback, _errorCallback);
-};
-
-    this.get_object_subset_async = function (sub_object_ids, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.get_object_subset", [sub_object_ids], 1, _callback, _error_callback);
-    };
-
-    this.get_object_history = function (object, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.get_object_history",
-        [object], 1, _callback, _errorCallback);
-};
-
-    this.get_object_history_async = function (object, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.get_object_history", [object], 1, _callback, _error_callback);
-    };
-
-    this.list_referencing_objects = function (object_ids, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.list_referencing_objects",
-        [object_ids], 1, _callback, _errorCallback);
-};
-
-    this.list_referencing_objects_async = function (object_ids, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.list_referencing_objects", [object_ids], 1, _callback, _error_callback);
-    };
-
-    this.list_referencing_object_counts = function (object_ids, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.list_referencing_object_counts",
-        [object_ids], 1, _callback, _errorCallback);
-};
-
-    this.list_referencing_object_counts_async = function (object_ids, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.list_referencing_object_counts", [object_ids], 1, _callback, _error_callback);
-    };
-
-    this.get_referenced_objects = function (ref_chains, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.get_referenced_objects",
-        [ref_chains], 1, _callback, _errorCallback);
-};
-
-    this.get_referenced_objects_async = function (ref_chains, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.get_referenced_objects", [ref_chains], 1, _callback, _error_callback);
-    };
-
-    this.list_workspaces = function (params, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.list_workspaces",
-        [params], 1, _callback, _errorCallback);
-};
-
-    this.list_workspaces_async = function (params, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.list_workspaces", [params], 1, _callback, _error_callback);
-    };
-
-    this.list_workspace_info = function (params, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.list_workspace_info",
-        [params], 1, _callback, _errorCallback);
-};
-
-    this.list_workspace_info_async = function (params, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.list_workspace_info", [params], 1, _callback, _error_callback);
-    };
-
-    this.list_workspace_objects = function (params, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.list_workspace_objects",
-        [params], 1, _callback, _errorCallback);
-};
-
-    this.list_workspace_objects_async = function (params, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.list_workspace_objects", [params], 1, _callback, _error_callback);
-    };
-
-    this.list_objects = function (params, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.list_objects",
-        [params], 1, _callback, _errorCallback);
-};
-
-    this.list_objects_async = function (params, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.list_objects", [params], 1, _callback, _error_callback);
-    };
-
-    this.get_objectmeta = function (params, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.get_objectmeta",
-        [params], 1, _callback, _errorCallback);
-};
-
-    this.get_objectmeta_async = function (params, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.get_objectmeta", [params], 1, _callback, _error_callback);
-    };
-
-    this.get_object_info = function (object_ids, includeMetadata, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.get_object_info",
-        [object_ids, includeMetadata], 1, _callback, _errorCallback);
-};
-
-    this.get_object_info_async = function (object_ids, includeMetadata, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.get_object_info", [object_ids, includeMetadata], 1, _callback, _error_callback);
-    };
-
-    this.get_object_info_new = function (params, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.get_object_info_new",
-        [params], 1, _callback, _errorCallback);
-};
-
-    this.get_object_info_new_async = function (params, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.get_object_info_new", [params], 1, _callback, _error_callback);
-    };
-
-    this.rename_workspace = function (params, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.rename_workspace",
-        [params], 1, _callback, _errorCallback);
-};
-
-    this.rename_workspace_async = function (params, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.rename_workspace", [params], 1, _callback, _error_callback);
-    };
-
-    this.rename_object = function (params, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.rename_object",
-        [params], 1, _callback, _errorCallback);
-};
-
-    this.rename_object_async = function (params, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.rename_object", [params], 1, _callback, _error_callback);
-    };
-
-    this.copy_object = function (params, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.copy_object",
-        [params], 1, _callback, _errorCallback);
-};
-
-    this.copy_object_async = function (params, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.copy_object", [params], 1, _callback, _error_callback);
-    };
-
-    this.revert_object = function (object, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.revert_object",
-        [object], 1, _callback, _errorCallback);
-};
-
-    this.revert_object_async = function (object, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.revert_object", [object], 1, _callback, _error_callback);
-    };
-
-    this.hide_objects = function (object_ids, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.hide_objects",
-        [object_ids], 0, _callback, _errorCallback);
-};
-
-    this.hide_objects_async = function (object_ids, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.hide_objects", [object_ids], 0, _callback, _error_callback);
-    };
-
-    this.unhide_objects = function (object_ids, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.unhide_objects",
-        [object_ids], 0, _callback, _errorCallback);
-};
-
-    this.unhide_objects_async = function (object_ids, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.unhide_objects", [object_ids], 0, _callback, _error_callback);
-    };
-
-    this.delete_objects = function (object_ids, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.delete_objects",
-        [object_ids], 0, _callback, _errorCallback);
-};
-
-    this.delete_objects_async = function (object_ids, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.delete_objects", [object_ids], 0, _callback, _error_callback);
-    };
-
-    this.undelete_objects = function (object_ids, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.undelete_objects",
-        [object_ids], 0, _callback, _errorCallback);
-};
-
-    this.undelete_objects_async = function (object_ids, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.undelete_objects", [object_ids], 0, _callback, _error_callback);
-    };
-
-    this.delete_workspace = function (wsi, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.delete_workspace",
-        [wsi], 0, _callback, _errorCallback);
-};
-
-    this.delete_workspace_async = function (wsi, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.delete_workspace", [wsi], 0, _callback, _error_callback);
-    };
-
-    this.undelete_workspace = function (wsi, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.undelete_workspace",
-        [wsi], 0, _callback, _errorCallback);
-};
-
-    this.undelete_workspace_async = function (wsi, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.undelete_workspace", [wsi], 0, _callback, _error_callback);
-    };
-
-    this.request_module_ownership = function (mod, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.request_module_ownership",
-        [mod], 0, _callback, _errorCallback);
-};
-
-    this.request_module_ownership_async = function (mod, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.request_module_ownership", [mod], 0, _callback, _error_callback);
-    };
-
-    this.register_typespec = function (params, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.register_typespec",
-        [params], 1, _callback, _errorCallback);
-};
-
-    this.register_typespec_async = function (params, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.register_typespec", [params], 1, _callback, _error_callback);
-    };
-
-    this.register_typespec_copy = function (params, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.register_typespec_copy",
-        [params], 1, _callback, _errorCallback);
-};
-
-    this.register_typespec_copy_async = function (params, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.register_typespec_copy", [params], 1, _callback, _error_callback);
-    };
-
-    this.release_module = function (mod, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.release_module",
-        [mod], 1, _callback, _errorCallback);
-};
-
-    this.release_module_async = function (mod, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.release_module", [mod], 1, _callback, _error_callback);
-    };
-
-    this.list_modules = function (params, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.list_modules",
-        [params], 1, _callback, _errorCallback);
-};
-
-    this.list_modules_async = function (params, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.list_modules", [params], 1, _callback, _error_callback);
-    };
-
-    this.list_module_versions = function (params, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.list_module_versions",
-        [params], 1, _callback, _errorCallback);
-};
-
-    this.list_module_versions_async = function (params, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.list_module_versions", [params], 1, _callback, _error_callback);
-    };
-
-    this.get_module_info = function (params, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.get_module_info",
-        [params], 1, _callback, _errorCallback);
-};
-
-    this.get_module_info_async = function (params, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.get_module_info", [params], 1, _callback, _error_callback);
-    };
-
-    this.get_jsonschema = function (type, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.get_jsonschema",
-        [type], 1, _callback, _errorCallback);
-};
-
-    this.get_jsonschema_async = function (type, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.get_jsonschema", [type], 1, _callback, _error_callback);
-    };
-
-    this.translate_from_MD5_types = function (md5_types, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.translate_from_MD5_types",
-        [md5_types], 1, _callback, _errorCallback);
-};
-
-    this.translate_from_MD5_types_async = function (md5_types, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.translate_from_MD5_types", [md5_types], 1, _callback, _error_callback);
-    };
-
-    this.translate_to_MD5_types = function (sem_types, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.translate_to_MD5_types",
-        [sem_types], 1, _callback, _errorCallback);
-};
-
-    this.translate_to_MD5_types_async = function (sem_types, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.translate_to_MD5_types", [sem_types], 1, _callback, _error_callback);
-    };
-
-    this.get_type_info = function (type, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.get_type_info",
-        [type], 1, _callback, _errorCallback);
-};
-
-    this.get_type_info_async = function (type, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.get_type_info", [type], 1, _callback, _error_callback);
-    };
-
-    this.get_all_type_info = function (mod, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.get_all_type_info",
-        [mod], 1, _callback, _errorCallback);
-};
-
-    this.get_all_type_info_async = function (mod, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.get_all_type_info", [mod], 1, _callback, _error_callback);
-    };
-
-    this.get_func_info = function (func, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.get_func_info",
-        [func], 1, _callback, _errorCallback);
-};
-
-    this.get_func_info_async = function (func, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.get_func_info", [func], 1, _callback, _error_callback);
-    };
-
-    this.get_all_func_info = function (mod, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.get_all_func_info",
-        [mod], 1, _callback, _errorCallback);
-};
-
-    this.get_all_func_info_async = function (mod, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.get_all_func_info", [mod], 1, _callback, _error_callback);
-    };
-
-    this.grant_module_ownership = function (params, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.grant_module_ownership",
-        [params], 0, _callback, _errorCallback);
-};
-
-    this.grant_module_ownership_async = function (params, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.grant_module_ownership", [params], 0, _callback, _error_callback);
-    };
-
-    this.remove_module_ownership = function (params, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.remove_module_ownership",
-        [params], 0, _callback, _errorCallback);
-};
-
-    this.remove_module_ownership_async = function (params, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.remove_module_ownership", [params], 0, _callback, _error_callback);
-    };
-
-    this.list_all_types = function (params, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.list_all_types",
-        [params], 1, _callback, _errorCallback);
-};
-
-    this.list_all_types_async = function (params, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.list_all_types", [params], 1, _callback, _error_callback);
-    };
-
-    this.administer = function (command, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.administer",
-        [command], 1, _callback, _errorCallback);
-};
-
-    this.administer_async = function (command, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("Workspace.administer", [command], 1, _callback, _error_callback);
+     this.ver = function (_callback, _errorCallback) {
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 0+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(0+2)+')';
+        return json_call_ajax("Workspace.ver",
+            [], 1, _callback, _errorCallback);
     };
  
+     this.create_workspace = function (params, _callback, _errorCallback) {
+        if (typeof params === 'function')
+            throw 'Argument params can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.create_workspace",
+            [params], 1, _callback, _errorCallback);
+    };
+ 
+     this.alter_workspace_metadata = function (params, _callback, _errorCallback) {
+        if (typeof params === 'function')
+            throw 'Argument params can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.alter_workspace_metadata",
+            [params], 0, _callback, _errorCallback);
+    };
+ 
+     this.clone_workspace = function (params, _callback, _errorCallback) {
+        if (typeof params === 'function')
+            throw 'Argument params can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.clone_workspace",
+            [params], 1, _callback, _errorCallback);
+    };
+ 
+     this.lock_workspace = function (wsi, _callback, _errorCallback) {
+        if (typeof wsi === 'function')
+            throw 'Argument wsi can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.lock_workspace",
+            [wsi], 1, _callback, _errorCallback);
+    };
+ 
+     this.get_workspacemeta = function (params, _callback, _errorCallback) {
+        if (typeof params === 'function')
+            throw 'Argument params can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.get_workspacemeta",
+            [params], 1, _callback, _errorCallback);
+    };
+ 
+     this.get_workspace_info = function (wsi, _callback, _errorCallback) {
+        if (typeof wsi === 'function')
+            throw 'Argument wsi can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.get_workspace_info",
+            [wsi], 1, _callback, _errorCallback);
+    };
+ 
+     this.get_workspace_description = function (wsi, _callback, _errorCallback) {
+        if (typeof wsi === 'function')
+            throw 'Argument wsi can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.get_workspace_description",
+            [wsi], 1, _callback, _errorCallback);
+    };
+ 
+     this.set_permissions = function (params, _callback, _errorCallback) {
+        if (typeof params === 'function')
+            throw 'Argument params can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.set_permissions",
+            [params], 0, _callback, _errorCallback);
+    };
+ 
+     this.set_global_permission = function (params, _callback, _errorCallback) {
+        if (typeof params === 'function')
+            throw 'Argument params can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.set_global_permission",
+            [params], 0, _callback, _errorCallback);
+    };
+ 
+     this.set_workspace_description = function (params, _callback, _errorCallback) {
+        if (typeof params === 'function')
+            throw 'Argument params can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.set_workspace_description",
+            [params], 0, _callback, _errorCallback);
+    };
+ 
+     this.get_permissions_mass = function (mass, _callback, _errorCallback) {
+        if (typeof mass === 'function')
+            throw 'Argument mass can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.get_permissions_mass",
+            [mass], 1, _callback, _errorCallback);
+    };
+ 
+     this.get_permissions = function (wsi, _callback, _errorCallback) {
+        if (typeof wsi === 'function')
+            throw 'Argument wsi can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.get_permissions",
+            [wsi], 1, _callback, _errorCallback);
+    };
+ 
+     this.save_object = function (params, _callback, _errorCallback) {
+        if (typeof params === 'function')
+            throw 'Argument params can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.save_object",
+            [params], 1, _callback, _errorCallback);
+    };
+ 
+     this.save_objects = function (params, _callback, _errorCallback) {
+        if (typeof params === 'function')
+            throw 'Argument params can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.save_objects",
+            [params], 1, _callback, _errorCallback);
+    };
+ 
+     this.get_object = function (params, _callback, _errorCallback) {
+        if (typeof params === 'function')
+            throw 'Argument params can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.get_object",
+            [params], 1, _callback, _errorCallback);
+    };
+ 
+     this.get_object_provenance = function (object_ids, _callback, _errorCallback) {
+        if (typeof object_ids === 'function')
+            throw 'Argument object_ids can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.get_object_provenance",
+            [object_ids], 1, _callback, _errorCallback);
+    };
+ 
+     this.get_objects = function (object_ids, _callback, _errorCallback) {
+        if (typeof object_ids === 'function')
+            throw 'Argument object_ids can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.get_objects",
+            [object_ids], 1, _callback, _errorCallback);
+    };
+ 
+     this.get_objects2 = function (params, _callback, _errorCallback) {
+        if (typeof params === 'function')
+            throw 'Argument params can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.get_objects2",
+            [params], 1, _callback, _errorCallback);
+    };
+ 
+     this.get_object_subset = function (sub_object_ids, _callback, _errorCallback) {
+        if (typeof sub_object_ids === 'function')
+            throw 'Argument sub_object_ids can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.get_object_subset",
+            [sub_object_ids], 1, _callback, _errorCallback);
+    };
+ 
+     this.get_object_history = function (object, _callback, _errorCallback) {
+        if (typeof object === 'function')
+            throw 'Argument object can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.get_object_history",
+            [object], 1, _callback, _errorCallback);
+    };
+ 
+     this.list_referencing_objects = function (object_ids, _callback, _errorCallback) {
+        if (typeof object_ids === 'function')
+            throw 'Argument object_ids can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.list_referencing_objects",
+            [object_ids], 1, _callback, _errorCallback);
+    };
+ 
+     this.list_referencing_object_counts = function (object_ids, _callback, _errorCallback) {
+        if (typeof object_ids === 'function')
+            throw 'Argument object_ids can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.list_referencing_object_counts",
+            [object_ids], 1, _callback, _errorCallback);
+    };
+ 
+     this.get_referenced_objects = function (ref_chains, _callback, _errorCallback) {
+        if (typeof ref_chains === 'function')
+            throw 'Argument ref_chains can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.get_referenced_objects",
+            [ref_chains], 1, _callback, _errorCallback);
+    };
+ 
+     this.list_workspaces = function (params, _callback, _errorCallback) {
+        if (typeof params === 'function')
+            throw 'Argument params can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.list_workspaces",
+            [params], 1, _callback, _errorCallback);
+    };
+ 
+     this.list_workspace_info = function (params, _callback, _errorCallback) {
+        if (typeof params === 'function')
+            throw 'Argument params can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.list_workspace_info",
+            [params], 1, _callback, _errorCallback);
+    };
+ 
+     this.list_workspace_objects = function (params, _callback, _errorCallback) {
+        if (typeof params === 'function')
+            throw 'Argument params can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.list_workspace_objects",
+            [params], 1, _callback, _errorCallback);
+    };
+ 
+     this.list_objects = function (params, _callback, _errorCallback) {
+        if (typeof params === 'function')
+            throw 'Argument params can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.list_objects",
+            [params], 1, _callback, _errorCallback);
+    };
+ 
+     this.get_objectmeta = function (params, _callback, _errorCallback) {
+        if (typeof params === 'function')
+            throw 'Argument params can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.get_objectmeta",
+            [params], 1, _callback, _errorCallback);
+    };
+ 
+     this.get_object_info = function (object_ids, includeMetadata, _callback, _errorCallback) {
+        if (typeof object_ids === 'function')
+            throw 'Argument object_ids can not be a function';
+        if (typeof includeMetadata === 'function')
+            throw 'Argument includeMetadata can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 2+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(2+2)+')';
+        return json_call_ajax("Workspace.get_object_info",
+            [object_ids, includeMetadata], 1, _callback, _errorCallback);
+    };
+ 
+     this.get_object_info_new = function (params, _callback, _errorCallback) {
+        if (typeof params === 'function')
+            throw 'Argument params can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.get_object_info_new",
+            [params], 1, _callback, _errorCallback);
+    };
+ 
+     this.rename_workspace = function (params, _callback, _errorCallback) {
+        if (typeof params === 'function')
+            throw 'Argument params can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.rename_workspace",
+            [params], 1, _callback, _errorCallback);
+    };
+ 
+     this.rename_object = function (params, _callback, _errorCallback) {
+        if (typeof params === 'function')
+            throw 'Argument params can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.rename_object",
+            [params], 1, _callback, _errorCallback);
+    };
+ 
+     this.copy_object = function (params, _callback, _errorCallback) {
+        if (typeof params === 'function')
+            throw 'Argument params can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.copy_object",
+            [params], 1, _callback, _errorCallback);
+    };
+ 
+     this.revert_object = function (object, _callback, _errorCallback) {
+        if (typeof object === 'function')
+            throw 'Argument object can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.revert_object",
+            [object], 1, _callback, _errorCallback);
+    };
+ 
+     this.get_names_by_prefix = function (params, _callback, _errorCallback) {
+        if (typeof params === 'function')
+            throw 'Argument params can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.get_names_by_prefix",
+            [params], 1, _callback, _errorCallback);
+    };
+ 
+     this.hide_objects = function (object_ids, _callback, _errorCallback) {
+        if (typeof object_ids === 'function')
+            throw 'Argument object_ids can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.hide_objects",
+            [object_ids], 0, _callback, _errorCallback);
+    };
+ 
+     this.unhide_objects = function (object_ids, _callback, _errorCallback) {
+        if (typeof object_ids === 'function')
+            throw 'Argument object_ids can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.unhide_objects",
+            [object_ids], 0, _callback, _errorCallback);
+    };
+ 
+     this.delete_objects = function (object_ids, _callback, _errorCallback) {
+        if (typeof object_ids === 'function')
+            throw 'Argument object_ids can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.delete_objects",
+            [object_ids], 0, _callback, _errorCallback);
+    };
+ 
+     this.undelete_objects = function (object_ids, _callback, _errorCallback) {
+        if (typeof object_ids === 'function')
+            throw 'Argument object_ids can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.undelete_objects",
+            [object_ids], 0, _callback, _errorCallback);
+    };
+ 
+     this.delete_workspace = function (wsi, _callback, _errorCallback) {
+        if (typeof wsi === 'function')
+            throw 'Argument wsi can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.delete_workspace",
+            [wsi], 0, _callback, _errorCallback);
+    };
+ 
+     this.undelete_workspace = function (wsi, _callback, _errorCallback) {
+        if (typeof wsi === 'function')
+            throw 'Argument wsi can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.undelete_workspace",
+            [wsi], 0, _callback, _errorCallback);
+    };
+ 
+     this.request_module_ownership = function (mod, _callback, _errorCallback) {
+        if (typeof mod === 'function')
+            throw 'Argument mod can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.request_module_ownership",
+            [mod], 0, _callback, _errorCallback);
+    };
+ 
+     this.register_typespec = function (params, _callback, _errorCallback) {
+        if (typeof params === 'function')
+            throw 'Argument params can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.register_typespec",
+            [params], 1, _callback, _errorCallback);
+    };
+ 
+     this.register_typespec_copy = function (params, _callback, _errorCallback) {
+        if (typeof params === 'function')
+            throw 'Argument params can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.register_typespec_copy",
+            [params], 1, _callback, _errorCallback);
+    };
+ 
+     this.release_module = function (mod, _callback, _errorCallback) {
+        if (typeof mod === 'function')
+            throw 'Argument mod can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.release_module",
+            [mod], 1, _callback, _errorCallback);
+    };
+ 
+     this.list_modules = function (params, _callback, _errorCallback) {
+        if (typeof params === 'function')
+            throw 'Argument params can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.list_modules",
+            [params], 1, _callback, _errorCallback);
+    };
+ 
+     this.list_module_versions = function (params, _callback, _errorCallback) {
+        if (typeof params === 'function')
+            throw 'Argument params can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.list_module_versions",
+            [params], 1, _callback, _errorCallback);
+    };
+ 
+     this.get_module_info = function (params, _callback, _errorCallback) {
+        if (typeof params === 'function')
+            throw 'Argument params can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.get_module_info",
+            [params], 1, _callback, _errorCallback);
+    };
+ 
+     this.get_jsonschema = function (type, _callback, _errorCallback) {
+        if (typeof type === 'function')
+            throw 'Argument type can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.get_jsonschema",
+            [type], 1, _callback, _errorCallback);
+    };
+ 
+     this.translate_from_MD5_types = function (md5_types, _callback, _errorCallback) {
+        if (typeof md5_types === 'function')
+            throw 'Argument md5_types can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.translate_from_MD5_types",
+            [md5_types], 1, _callback, _errorCallback);
+    };
+ 
+     this.translate_to_MD5_types = function (sem_types, _callback, _errorCallback) {
+        if (typeof sem_types === 'function')
+            throw 'Argument sem_types can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.translate_to_MD5_types",
+            [sem_types], 1, _callback, _errorCallback);
+    };
+ 
+     this.get_type_info = function (type, _callback, _errorCallback) {
+        if (typeof type === 'function')
+            throw 'Argument type can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.get_type_info",
+            [type], 1, _callback, _errorCallback);
+    };
+ 
+     this.get_all_type_info = function (mod, _callback, _errorCallback) {
+        if (typeof mod === 'function')
+            throw 'Argument mod can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.get_all_type_info",
+            [mod], 1, _callback, _errorCallback);
+    };
+ 
+     this.get_func_info = function (func, _callback, _errorCallback) {
+        if (typeof func === 'function')
+            throw 'Argument func can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.get_func_info",
+            [func], 1, _callback, _errorCallback);
+    };
+ 
+     this.get_all_func_info = function (mod, _callback, _errorCallback) {
+        if (typeof mod === 'function')
+            throw 'Argument mod can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.get_all_func_info",
+            [mod], 1, _callback, _errorCallback);
+    };
+ 
+     this.grant_module_ownership = function (params, _callback, _errorCallback) {
+        if (typeof params === 'function')
+            throw 'Argument params can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.grant_module_ownership",
+            [params], 0, _callback, _errorCallback);
+    };
+ 
+     this.remove_module_ownership = function (params, _callback, _errorCallback) {
+        if (typeof params === 'function')
+            throw 'Argument params can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.remove_module_ownership",
+            [params], 0, _callback, _errorCallback);
+    };
+ 
+     this.list_all_types = function (params, _callback, _errorCallback) {
+        if (typeof params === 'function')
+            throw 'Argument params can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.list_all_types",
+            [params], 1, _callback, _errorCallback);
+    };
+ 
+     this.administer = function (command, _callback, _errorCallback) {
+        if (typeof command === 'function')
+            throw 'Argument command can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Workspace.administer",
+            [command], 1, _callback, _errorCallback);
+    };
+  
 
     /*
      * JSON call using jQuery method.
      */
-    function json_call_ajax(method, params, numRets, callback, errorCallback) {
+    function json_call_ajax(method, params, numRets, callback, errorCallback, json_rpc_context) {
         var deferred = $.Deferred();
 
         if (typeof callback === 'function') {
@@ -14096,6 +14228,8 @@ function Workspace(url, auth, auth_cb) {
             version: "1.1",
             id: String(Math.random()).slice(2),
         };
+        if (json_rpc_context)
+            rpc['context'] = json_rpc_context;
 
         var beforeSend = null;
         var token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
@@ -14113,6 +14247,7 @@ function Workspace(url, auth, auth_cb) {
             processData: false,
             data: JSON.stringify(rpc),
             beforeSend: beforeSend,
+            timeout: _timeout,
             success: function (data, status, xhr) {
                 var result;
                 try {

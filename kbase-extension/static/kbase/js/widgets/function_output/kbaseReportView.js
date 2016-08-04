@@ -80,7 +80,9 @@ define (
             var self = this;
             self.loading(true);
 
-            var objIdentity = self.buildObjectIdentity(this.options.workspace_name, this.options.report_name, null, null);
+            // var objIdentity = self.buildObjectIdentity(this.options.workspace_name, this.options.report_name, null, null);
+						var objIdentity = {ref: this.options.report_ref};
+						console.log('REPORT', objIdentity, this.options, objIdentity);
             self.ws.get_objects([objIdentity],
                 function(data) {
                     self.reportData = data[0].data;

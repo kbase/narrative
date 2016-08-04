@@ -105,7 +105,7 @@ class _JSONObjectEncoder(_json.JSONEncoder):
 
 class Workspace(object):
 
-    def __init__(self, url=None, timeout=30 * 60, user_id=None,
+    def __init__(self, url=None, timeout=1 * 60, user_id=None,
                  password=None, token=None, ignore_authrc=False,
                  trust_all_ssl_certificates=False):
         if url is None:

@@ -336,17 +336,17 @@ class UserAndJobState(object):
            2012-12-17T23:24:06-0500 (EST time) 2013-04-03T08:56:32+0000 (UTC
            time)), (2) parameter "stage" of type "job_stage" (A string that
            describes the stage of processing of the job. One of 'created',
-           'started', 'completed', or 'error'.), (3) parameter "status" of
-           type "job_status" (A job status string supplied by the reporting
-           service. No more than 200 characters.), (4) parameter "progress"
-           of type "total_progress" (The total progress of a job.), (5)
-           parameter "est_complete" of type "timestamp" (A time in the format
-           YYYY-MM-DDThh:mm:ssZ, where Z is the difference in time to UTC in
-           the format +/-HHMM, eg: 2012-12-17T23:24:06-0500 (EST time)
-           2013-04-03T08:56:32+0000 (UTC time)), (6) parameter "complete" of
-           type "boolean" (A boolean. 0 = false, other = true.), (7)
-           parameter "error" of type "boolean" (A boolean. 0 = false, other =
-           true.)
+           'started', 'completed', 'canceled' or 'error'.), (3) parameter
+           "status" of type "job_status" (A job status string supplied by the
+           reporting service. No more than 200 characters.), (4) parameter
+           "progress" of type "total_progress" (The total progress of a
+           job.), (5) parameter "est_complete" of type "timestamp" (A time in
+           the format YYYY-MM-DDThh:mm:ssZ, where Z is the difference in time
+           to UTC in the format +/-HHMM, eg: 2012-12-17T23:24:06-0500 (EST
+           time) 2013-04-03T08:56:32+0000 (UTC time)), (6) parameter
+           "complete" of type "boolean" (A boolean. 0 = false, other =
+           true.), (7) parameter "error" of type "boolean" (A boolean. 0 =
+           false, other = true.)
         """
         return self._client.call_method(
             'UserAndJobState.get_job_status',
@@ -395,6 +395,17 @@ class UserAndJobState(object):
         return self._client.call_method(
             'UserAndJobState.complete_job',
             [job, token, status, error, res], self._service_ver, context)
+
+    def cancel_job(self, job, status, context=None):
+        """
+        Cancel a job.
+        :param job: instance of type "job_id" (A job id.)
+        :param status: instance of type "job_status" (A job status string
+           supplied by the reporting service. No more than 200 characters.)
+        """
+        return self._client.call_method(
+            'UserAndJobState.cancel_job',
+            [job, status], self._service_ver, context)
 
     def get_results(self, job, context=None):
         """
@@ -448,21 +459,26 @@ class UserAndJobState(object):
         Get information about a job.
         :param job: instance of type "job_id" (A job id.)
         :returns: instance of type "job_info2" (Information about a job.) ->
-           tuple of size 12: parameter "job" of type "job_id" (A job id.),
-           parameter "service" of type "service_name" (A service name.
-           Alphanumerics and the underscore are allowed.), parameter "stage"
-           of type "job_stage" (A string that describes the stage of
-           processing of the job. One of 'created', 'started', 'completed',
-           or 'error'.), parameter "status" of type "job_status" (A job
-           status string supplied by the reporting service. No more than 200
-           characters.), parameter "times" of type "time_info" (Job timing
-           information.) -> tuple of size 3: parameter "started" of type
-           "timestamp" (A time in the format YYYY-MM-DDThh:mm:ssZ, where Z is
-           the difference in time to UTC in the format +/-HHMM, eg:
-           2012-12-17T23:24:06-0500 (EST time) 2013-04-03T08:56:32+0000 (UTC
-           time)), parameter "last_update" of type "timestamp" (A time in the
-           format YYYY-MM-DDThh:mm:ssZ, where Z is the difference in time to
-           UTC in the format +/-HHMM, eg: 2012-12-17T23:24:06-0500 (EST time)
+           tuple of size 13: parameter "job" of type "job_id" (A job id.),
+           parameter "users" of type "user_info" (Who owns a job and who
+           canceled a job (null if not canceled).) -> tuple of size 2:
+           parameter "owner" of type "username" (Login name of a KBase user
+           account.), parameter "canceledby" of type "username" (Login name
+           of a KBase user account.), parameter "service" of type
+           "service_name" (A service name. Alphanumerics and the underscore
+           are allowed.), parameter "stage" of type "job_stage" (A string
+           that describes the stage of processing of the job. One of
+           'created', 'started', 'completed', 'canceled' or 'error'.),
+           parameter "status" of type "job_status" (A job status string
+           supplied by the reporting service. No more than 200 characters.),
+           parameter "times" of type "time_info" (Job timing information.) ->
+           tuple of size 3: parameter "started" of type "timestamp" (A time
+           in the format YYYY-MM-DDThh:mm:ssZ, where Z is the difference in
+           time to UTC in the format +/-HHMM, eg: 2012-12-17T23:24:06-0500
+           (EST time) 2013-04-03T08:56:32+0000 (UTC time)), parameter
+           "last_update" of type "timestamp" (A time in the format
+           YYYY-MM-DDThh:mm:ssZ, where Z is the difference in time to UTC in
+           the format +/-HHMM, eg: 2012-12-17T23:24:06-0500 (EST time)
            2013-04-03T08:56:32+0000 (UTC time)), parameter "est_complete" of
            type "timestamp" (A time in the format YYYY-MM-DDThh:mm:ssZ, where
            Z is the difference in time to UTC in the format +/-HHMM, eg:
@@ -533,8 +549,8 @@ class UserAndJobState(object):
            "service_name" (A service name. Alphanumerics and the underscore
            are allowed.), parameter "stage" of type "job_stage" (A string
            that describes the stage of processing of the job. One of
-           'created', 'started', 'completed', or 'error'.), parameter
-           "started" of type "timestamp" (A time in the format
+           'created', 'started', 'completed', 'canceled' or 'error'.),
+           parameter "started" of type "timestamp" (A time in the format
            YYYY-MM-DDThh:mm:ssZ, where Z is the difference in time to UTC in
            the format +/-HHMM, eg: 2012-12-17T23:24:06-0500 (EST time)
            2013-04-03T08:56:32+0000 (UTC time)), parameter "status" of type
@@ -608,38 +624,43 @@ class UserAndJobState(object):
            (A service name. Alphanumerics and the underscore are allowed.),
            parameter "filter" of type "job_filter" (A string-based filter for
            listing jobs. If the string contains: 'R' - running jobs are
-           returned. 'C' - completed jobs are returned. 'E' - jobs that
-           errored out are returned. 'S' - shared jobs are returned. The
-           string can contain any combination of these codes in any order. If
-           the string contains none of the codes or is null, all self-owned
-           jobs are returned. If only the S filter is present, all jobs are
-           returned. The S filter is ignored for jobs not using the default
-           authorization strategy.), parameter "authstrat" of type
-           "auth_strategy" (An authorization strategy to use for jobs. Other
-           than the DEFAULT strategy (ACLs local to the UJS and managed by
-           the UJS sharing functions), currently the only other strategy is
-           the 'kbaseworkspace' strategy, which consults the workspace
-           service for authorization information.), parameter "authparams" of
-           list of type "auth_param" (An authorization parameter. The
-           contents of this parameter differ by auth_strategy, but for the
-           workspace strategy it is the workspace id (an integer) as a
-           string.)
+           returned. 'C' - completed jobs are returned. 'N' - canceled jobs
+           are returned. 'E' - jobs that errored out are returned. 'S' -
+           shared jobs are returned. The string can contain any combination
+           of these codes in any order. If the string contains none of the
+           codes or is null, all self-owned jobs are returned. If only the S
+           filter is present, all jobs are returned. The S filter is ignored
+           for jobs not using the default authorization strategy.), parameter
+           "authstrat" of type "auth_strategy" (An authorization strategy to
+           use for jobs. Other than the DEFAULT strategy (ACLs local to the
+           UJS and managed by the UJS sharing functions), currently the only
+           other strategy is the 'kbaseworkspace' strategy, which consults
+           the workspace service for authorization information.), parameter
+           "authparams" of list of type "auth_param" (An authorization
+           parameter. The contents of this parameter differ by auth_strategy,
+           but for the workspace strategy it is the workspace id (an integer)
+           as a string.)
         :returns: instance of list of type "job_info2" (Information about a
-           job.) -> tuple of size 12: parameter "job" of type "job_id" (A job
-           id.), parameter "service" of type "service_name" (A service name.
-           Alphanumerics and the underscore are allowed.), parameter "stage"
-           of type "job_stage" (A string that describes the stage of
-           processing of the job. One of 'created', 'started', 'completed',
-           or 'error'.), parameter "status" of type "job_status" (A job
-           status string supplied by the reporting service. No more than 200
-           characters.), parameter "times" of type "time_info" (Job timing
-           information.) -> tuple of size 3: parameter "started" of type
-           "timestamp" (A time in the format YYYY-MM-DDThh:mm:ssZ, where Z is
-           the difference in time to UTC in the format +/-HHMM, eg:
-           2012-12-17T23:24:06-0500 (EST time) 2013-04-03T08:56:32+0000 (UTC
-           time)), parameter "last_update" of type "timestamp" (A time in the
-           format YYYY-MM-DDThh:mm:ssZ, where Z is the difference in time to
-           UTC in the format +/-HHMM, eg: 2012-12-17T23:24:06-0500 (EST time)
+           job.) -> tuple of size 13: parameter "job" of type "job_id" (A job
+           id.), parameter "users" of type "user_info" (Who owns a job and
+           who canceled a job (null if not canceled).) -> tuple of size 2:
+           parameter "owner" of type "username" (Login name of a KBase user
+           account.), parameter "canceledby" of type "username" (Login name
+           of a KBase user account.), parameter "service" of type
+           "service_name" (A service name. Alphanumerics and the underscore
+           are allowed.), parameter "stage" of type "job_stage" (A string
+           that describes the stage of processing of the job. One of
+           'created', 'started', 'completed', 'canceled' or 'error'.),
+           parameter "status" of type "job_status" (A job status string
+           supplied by the reporting service. No more than 200 characters.),
+           parameter "times" of type "time_info" (Job timing information.) ->
+           tuple of size 3: parameter "started" of type "timestamp" (A time
+           in the format YYYY-MM-DDThh:mm:ssZ, where Z is the difference in
+           time to UTC in the format +/-HHMM, eg: 2012-12-17T23:24:06-0500
+           (EST time) 2013-04-03T08:56:32+0000 (UTC time)), parameter
+           "last_update" of type "timestamp" (A time in the format
+           YYYY-MM-DDThh:mm:ssZ, where Z is the difference in time to UTC in
+           the format +/-HHMM, eg: 2012-12-17T23:24:06-0500 (EST time)
            2013-04-03T08:56:32+0000 (UTC time)), parameter "est_complete" of
            type "timestamp" (A time in the format YYYY-MM-DDThh:mm:ssZ, where
            Z is the difference in time to UTC in the format +/-HHMM, eg:
@@ -708,21 +729,21 @@ class UserAndJobState(object):
            name. Alphanumerics and the underscore are allowed.)
         :param filter: instance of type "job_filter" (A string-based filter
            for listing jobs. If the string contains: 'R' - running jobs are
-           returned. 'C' - completed jobs are returned. 'E' - jobs that
-           errored out are returned. 'S' - shared jobs are returned. The
-           string can contain any combination of these codes in any order. If
-           the string contains none of the codes or is null, all self-owned
-           jobs are returned. If only the S filter is present, all jobs are
-           returned. The S filter is ignored for jobs not using the default
-           authorization strategy.)
+           returned. 'C' - completed jobs are returned. 'N' - canceled jobs
+           are returned. 'E' - jobs that errored out are returned. 'S' -
+           shared jobs are returned. The string can contain any combination
+           of these codes in any order. If the string contains none of the
+           codes or is null, all self-owned jobs are returned. If only the S
+           filter is present, all jobs are returned. The S filter is ignored
+           for jobs not using the default authorization strategy.)
         :returns: instance of list of type "job_info" (Information about a
            job. @deprecated job_info2) -> tuple of size 14: parameter "job"
            of type "job_id" (A job id.), parameter "service" of type
            "service_name" (A service name. Alphanumerics and the underscore
            are allowed.), parameter "stage" of type "job_stage" (A string
            that describes the stage of processing of the job. One of
-           'created', 'started', 'completed', or 'error'.), parameter
-           "started" of type "timestamp" (A time in the format
+           'created', 'started', 'completed', 'canceled' or 'error'.),
+           parameter "started" of type "timestamp" (A time in the format
            YYYY-MM-DDThh:mm:ssZ, where Z is the difference in time to UTC in
            the format +/-HHMM, eg: 2012-12-17T23:24:06-0500 (EST time)
            2013-04-03T08:56:32+0000 (UTC time)), parameter "status" of type
@@ -778,7 +799,9 @@ class UserAndJobState(object):
 
     def list_job_services(self, context=None):
         """
-        List all job services.
+        List all job services. Note that only services with jobs owned by the
+        user or shared with the user via the default auth strategy will be
+        listed.
         :returns: instance of list of type "service_name" (A service name.
            Alphanumerics and the underscore are allowed.)
         """
@@ -838,7 +861,8 @@ class UserAndJobState(object):
 
     def delete_job(self, job, context=None):
         """
-        Delete a job. Will fail if the job is not complete.
+        Delete a job. Will fail if the job is not complete. Only the job owner
+        can delete a job.
         :param job: instance of type "job_id" (A job id.)
         """
         return self._client.call_method(
@@ -849,7 +873,8 @@ class UserAndJobState(object):
         """
         Force delete a job - will succeed unless the job has not been started.
         In that case, the service must start the job and then delete it, since
-        a job is not "owned" by any service until it is started.
+        a job is not "owned" by any service until it is started. Only the job
+        owner can delete a job.
         :param token: instance of type "service_token" (A globus ID token
            that validates that the service really is said service.)
         :param job: instance of type "job_id" (A job id.)
@@ -857,3 +882,7 @@ class UserAndJobState(object):
         return self._client.call_method(
             'UserAndJobState.force_delete_job',
             [token, job], self._service_ver, context)
+
+    def status(self, context=None):
+        return self._client.call_method('UserAndJobState.status',
+            [], self._service_ver, context)

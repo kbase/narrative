@@ -85,7 +85,7 @@ define([
 
         // RENDERING
 
-        function makeFieldWidget(parameterSpec, value) {
+        function makeFieldWidget(appSpec, parameterSpec, value) {
             var fieldBus = runtime.bus().makeChannelBus(null, 'A field widget'),
                 inputWidget = paramResolver.getInputWidgetFactory(parameterSpec);
 
@@ -106,6 +106,15 @@ define([
                     parameter: parameterSpec.id()
                 });
             });
+            
+            fieldBus.on('sync-params', function (message) {
+                console.log('request sync params', message);
+                parentBus.emit('sync-params', {
+                    parameters: message.parameters,
+                    replyToChannel: fieldBus.channelName
+                });
+            });
+
 
             /*
              * Or in fact any parameter value at any time...
@@ -162,7 +171,6 @@ define([
             //bus.on('newstate', function (message) {
             //    inputWidgetBus.send(message);
             //});
-
             return {
                 bus: bus,
                 widget: FieldWidget.make({
@@ -170,6 +178,7 @@ define([
                     showHint: true,
                     useRowHighight: true,
                     initialValue: value,
+                    appSpec: appSpec,
                     parameterSpec: parameterSpec,
                     bus: fieldBus,
                     workspaceId: workspaceInfo.id
@@ -340,6 +349,8 @@ define([
             // First get the app specs, which is stashed in the model,
             // with the parameters returned.
             // Separate out the params into the primary groups.
+            
+            var appSpec = model.getItem('appSpec');
 
 
             return Promise.try(function () {
@@ -361,7 +372,7 @@ define([
                         } else {
                             return Promise.all(inputParams.map(function (spec) {
                                 try {
-                                    var result = makeFieldWidget(spec, model.getItem(['params', spec.name()])),
+                                    var result = makeFieldWidget(appSpec, spec, model.getItem(['params', spec.name()])),
                                         rowWidget = RowWidget.make({widget: result.widget, spec: spec}),
                                         rowNode = document.createElement('div');
                                     places.inputFields.appendChild(rowNode);
@@ -395,7 +406,7 @@ define([
                         } else {
                             return Promise.all(parameterParams.map(function (spec) {
                                 try {
-                                    var result = makeFieldWidget(spec, model.getItem(['params', spec.name()])),
+                                    var result = makeFieldWidget(appSpec, spec, model.getItem(['params', spec.name()])),
                                         rowWidget = RowWidget.make({widget: result.widget, spec: spec}),
                                         rowNode = document.createElement('div');
                                     places.parameterFields.appendChild(rowNode);
@@ -438,7 +449,9 @@ define([
             // parent will send us our initial parameters
             parentBus.on('run', function (message) {
                 doAttach(message.node);
+                
 
+                model.setItem('appSpec', message.appSpec);
                 model.setItem('parameters', message.parameters);
 
                 // we then create our widgets

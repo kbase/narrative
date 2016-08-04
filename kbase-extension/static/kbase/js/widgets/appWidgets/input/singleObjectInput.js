@@ -129,6 +129,9 @@ define([
             })
                 .then(function (changed) {
                     return render();
+                })
+                .then(function () {
+                    autoValidate();
                 });
         }
 
@@ -138,6 +141,9 @@ define([
             })
                 .then(function (changed) {
                     render();
+                })
+                .then(function () {
+                    autoValidate();
                 });
         }
 
@@ -229,10 +235,7 @@ define([
 
                 dom.setContent('input-container', content);
                 events.attachEvents(container);
-            })
-                .then(function () {
-                    // return autoValidate();
-                });
+            });
         }
 
         /*
@@ -281,11 +284,14 @@ define([
                                 return true;
                             }
                             return false;
-                        })
+                        });
                         if (matching.length === 0) {
                             model.value = null;
                         }
-                        render();
+                        render()
+                            .then(function () {
+                                autoValidate();
+                            });
                     }
                 });
 
@@ -311,7 +317,6 @@ define([
                             render();
                         })
                         .then(function () {
-
                             bus.on('reset-to-defaults', function (message) {
                                 resetModelValue();
                             });

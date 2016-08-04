@@ -220,7 +220,7 @@ define([
             return Promise.resolve()
                 .then(function () {
                     if (inputParams.length === 0) {
-                        places.inputFields.innerHTML = 'No inputs';
+                        places.inputFields.innerHTML = span({style: {fontStyle: 'italic'}}, 'No input objects for this app');
                     } else {
                         return Promise.all(inputParams.map(function (spec) {
                             var fieldWidget = makeFieldWidget(spec, model.getItem(['params', spec.name()])),
@@ -234,7 +234,7 @@ define([
                 })
                 .then(function () {
                     if (outputParams.length === 0) {
-                        places.outputFields.innerHTML = 'No outputs';
+                        places.outputFields.innerHTML = span({style: {fontStyle: 'italic'}}, 'No output objects for this app');
                     } else {
                         return Promise.all(outputParams.map(function (spec) {
                             var fieldWidget = makeFieldWidget(spec, model.getItem(['params', spec.name()])),
@@ -248,7 +248,7 @@ define([
                 })
                 .then(function () {
                     if (parameterParams.length === 0) {
-                        places.parameterFields.innerHTML = 'No parameters';
+                        ui.setContent('parameter-fields', span({style: {fontStyle: 'italic'}}, 'No parameters for this app'));
                     } else {
                         return Promise.all(parameterParams.map(function (spec) {
                             var fieldWidget = makeFieldWidget(spec, model.getItem(['params', spec.name()])),

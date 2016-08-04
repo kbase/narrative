@@ -71,10 +71,15 @@ define([
     });
 
     window.kbconfig = config;
-
     Object.keys(serviceSet).forEach(function (key) {
         config[key] = serviceSet[key];
     });
+
+    config['services'] = {};
+    Object.keys(config.urls).forEach(function (key) {
+        config.services[key] = {'url': config.urls[key], 'name': key};
+    });
+
 
     function assertConfig() {
         if (config === undefined) {

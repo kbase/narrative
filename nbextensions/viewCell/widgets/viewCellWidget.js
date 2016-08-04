@@ -1314,6 +1314,7 @@ define([
                     };
                     bus.emit('run', {
                         node: ui.getElement(['parameters-group', 'widget']),
+                        appSpec: env.appSpec,
                         parameters: env.parameters
                     });
                     bus.on('parameter-sync', function (message) {
@@ -1327,6 +1328,23 @@ define([
                                 type: 'update',
                                 parameter: message.parameter
                             }
+                        });
+                    });
+                    
+                    bus.on('sync-params', function (message) {
+                        console.log('SYNC PARAMS', message);
+                        message.parameters.forEach(function (paramId) {
+                            bus.send({
+                                parameter: paramId,
+                                value: model.getItem(['params', message.parameter])
+                            },
+                                {
+                                    key: {
+                                        type: 'parameter-value',
+                                        parameter: paramId
+                                    },
+                                    channel: message.replyToChannel
+                                });
                         });
                     });
 
@@ -1421,6 +1439,7 @@ define([
                     widget.start();
                     bus.emit('run', {
                         node: ui.getElement(['parameters-display-group', 'widget']),
+                        appSpec: env.appSpec,
                         parameters: env.parameters
                     });
 
@@ -1436,7 +1455,7 @@ define([
         function makeIcon() {
             // icon is in the spec ...
             var appSpec = env.appSpec,
-                nmsBase = runtime.config('services.narrative_method_store.image_url'),
+                nmsBase = runtime.config('services.narrative_method_store_image.url'),
                 iconUrl = Props.getDataItem(appSpec, 'info.icon.url');
 
             if (iconUrl) {

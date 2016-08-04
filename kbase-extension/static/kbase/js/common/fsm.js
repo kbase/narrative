@@ -123,7 +123,7 @@ define([
         function newState(nextState) {
             var state = findNextState(currentState.next, nextState);
             if (!state) {
-                console.error('Could not find new state', nextState, currentState);
+                // console.error('Could not find new state', nextState, currentState);
                 throw new Error('Cannot find the new state');
             }
 

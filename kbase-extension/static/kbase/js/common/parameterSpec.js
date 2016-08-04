@@ -89,9 +89,24 @@ define([
                 case 'textsubdata':
                     return 'subdata';
                 case 'custom_textsubdata':
-                    var custom = customTextSubdata();
-                    if (custom) {
-                        return custom;
+                    if (spec.allow_multiple) {
+                        return '[]string';
+                    }
+                    return 'string';
+                    //var custom = customTextSubdata();
+                    //if (custom) {
+                    //    return custom;
+                    //}
+                case 'custom_button':
+                    switch (spec.id) {
+                        case 'input_check_other_params':
+                            return 'boolean';
+                        default:
+                            return 'unspecified';
+                    }
+                case 'custom_widget':
+                    if (spec.dropdown_options) {
+                        return '[]string';
                     }
             }
 
@@ -170,15 +185,74 @@ define([
                     return parseFloat(defaultValue);
                 case 'workspaceObjectName':
                     return defaultValue;
+                case 'boolean':
+                    return coerceToBoolean(defaultValue);
                 default:
                     // Assume it is a string...
                     return defaultValue;
+            }
+        }
+        
+        /*
+         * Coerce a string, undefined, or null to an "integer boolean" value --
+         * an integer which is 1 for true, 0 for false.
+         */
+        function coerceToIntBoolean(value) {
+            if (!value) {
+                return 0;
+            }
+            var intValue = parseInt(value);
+            if (!isNaN(intValue)) {
+                if (value > 0) {
+                    return 1;
+                }
+                return 0;
+            }
+            if (typeof value !== 'string') {
+                return 0;
+            }
+            switch (value.toLowerCase(value)) {
+                case 'true':
+                case 't':
+                case 'yes':
+                case 'y':
+                    return 1;
+                case 'false':
+                case 'f':
+                case 'no':
+                case 'n':
+                    return 0;
+                default:
+                    return 0;
             }
         }
 
         function defaultValue() {
             var defaultValues = spec.default_values;
             // No default value and not required? null value
+            
+            // special special cases.
+            switch (spec.field_type) {
+                case 'checkbox':
+                    /*
+                     * handle the special case of a checkbox with no or empty
+                     * default value. It will promote to the "unchecked value"
+                     * TODO: more cases of bad default value? Or a generic
+                     * default value validator?
+                     */
+                    if (!defaultValues || 
+                        defaultValues.length === 0) {
+                        return spec.checkbox_options.unchecked_value;
+                    } else {
+                        return coerceToIntBoolean(defaultValues[0]);
+                    }
+                case 'custom_textsubdata':
+                    if (!defaultValues) {
+                        
+                    }
+            }
+            
+            
             if (!defaultValues && !required()) {
                 return nullValue();
             }
@@ -503,14 +577,23 @@ define([
                     break;
                 case 'parameter':
                     // do outlandish things
+                    // TODO: these two conditions are inconsistent, but we honor the is_output_name as per mike.
+                    // The ui_class is really just for the man page and app cell ui organization, so it is relatively minor
+                    // to override it with is_output_name which is actually functional!
                     if (spec.text_options && spec.text_options.is_output_name) {
-                        throw new Error('Parameter ' + spec.id + ' is a parameter type, but has text_options.is_output_name specified');
+                        // console.error('Parameter ' + spec.id + ' is a parameter type, but has text_options.is_output_name specified', spec);
+                        //throw new Error('Parameter ' + spec.id + ' is a parameter type, but has text_options.is_output_name specified');
+                        paramClassName = 'output';
                     }
                     break;
             }
             
             attributes.paramClass = paramClassName;
             
+        }
+        
+        function paramClass() {
+            return attributes.paramClass;
         }
         
         setupParamClass();
@@ -538,7 +621,8 @@ define([
             isEmpty: isEmpty,
             nullValue: nullValue,
             defaultValue: defaultValue,
-            getConstraints: getConstraints
+            getConstraints: getConstraints,
+            paramClass: paramClass
         };
     }
 

@@ -4,23 +4,27 @@
 define([
     'bluebird',
     'jquery',
+    'uuid',
     'base/js/namespace',
     'common/utils',
     'common/appUtils',
     'common/props',
     'common/cellUtils',
     'common/pythonInterop',
-    'kb_common/html'
+    'kb_common/html',
+    'util/string'
 ], function (
     Promise,
     $,
+    Uuid,
     Jupyter,
     utils,
     AppUtils,
     Props,
     cellUtils,
     PythonInterop,
-    html
+    html,
+    StringUtil
     ) {
     'use strict';
 
@@ -118,13 +122,14 @@ define([
         return Promise.try(function () {
             var cell = data.cell,
                 meta = cell.metadata,
-                outputCode, parentTitle;
+                outputCode, parentTitle,
+                cellId = data.kbase.cellId || (new Uuid(4).format());
 
             // Set the initial metadata for the output cell.
             meta.kbase = {
                 type: 'output',
                 attributes: {
-                    id: data.kbase.cellId,
+                    id: cellId,
                     status: 'new',
                     created: new Date().toGMTString(),
                     lastLoaded: new Date().toGMTString(),
@@ -141,8 +146,10 @@ define([
 
             // We just need to generate, set, and execute the output
             // the first time (for now).
-            outputCode = PythonInterop.buildOutputRunner(data.kbase.widget.name, data.kbase.widget.tag, data.kbase.widget.params);
-            cell.set_text(outputCode);
+
+              console.log('BUILDING OUTPUT', data);
+              outputCode = PythonInterop.buildOutputRunner(data.kbase.widget.name, data.kbase.widget.tag, cellId, data.kbase.widget.params);
+              cell.set_text(outputCode);
             cell.execute();
 
             // all we do for now is set up the input area

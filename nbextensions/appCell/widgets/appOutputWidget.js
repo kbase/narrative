@@ -18,7 +18,8 @@ define([
 
     var t = html.tag,
         div = t('div'), button = t('button'),
-        table = t('table'), tr = t('tr'), th = t('td'), td = t('td'), p = t('p');
+        table = t('table'), tr = t('tr'), th = t('td'), td = t('td'), p = t('p'),
+        ul = t('ul'), li = t('li');
 
     function factory(config) {
         var runtime = Runtime.make(),
@@ -29,7 +30,7 @@ define([
                 currentJobState: null,
                 outputs: null
             },
-            api;
+        api;
 
         function findCellForId(id) {
             var matchingCells = Jupyter.notebook.get_cells().filter(function (cell) {
@@ -49,47 +50,76 @@ define([
         }
 
         function doRemoveOutputCell(index) {
-            var content = div([
-                p('This will remove the output cell from the Narrative, as well as this output record. This action is not reversable. Any associated data will remain in your narrative, and may be found in the Data panel.'),
-                p('Are you sure you want to remove the output cell?')
-            ]);
+            var output = model.outputs[index],
+                currentOutput, content;
+
+            if (model.currentJobState && output.jobId === model.currentJobState.job_id) {
+                currentOutput = true;
+            } else {
+                currentOutput = false;
+            }
+
+            if (currentOutput) {
+                content = div([
+                    p('This will:'),
+                    ul([
+                        li('Remove the output cell from the Narrative'),
+                        li('Remove this output record'),
+                        li('Remove the associated job'),
+                        li('Reset the app to edit mode')
+                    ]),
+                    p('Note: This action is not reversable.'),
+                    p('Data produced in this output will remain in your narrative, and may be found in the Data panel.'),
+                    p('Are you sure you want to remove the output cell?')
+                ]);
+            } else {
+                content = div([
+                    p('This will:'),
+                    ul([
+                        li('Remove the output cell from the Narrative'),
+                        li('Remove this output record'),
+                        li('Remove the associated job')
+                    ]),
+                    p('Note: This action is not reversable.'),
+                    p('Data produced in this output will remain in your narrative, and may be found in the Data panel.'),
+                    p('Are you sure you want to remove the output cell?')
+                ]);
+            }
             ui.showConfirmDialog('Confirm Deletion of Cell Output', content, 'Yes', 'No')
                 .then(function (answer) {
                     if (!answer) {
                         return;
                     }
-                // remove the output cell
-                var output = model.outputs[index],
-                    outputCell = findCellForId(output.cellId),
-                    cellIndex;
+                    // remove the output cell
+                    var output = model.outputs[index],
+                        outputCell = findCellForId(output.cellId),
+                        cellIndex;
 
-                if (outputCell) {
-                    //alert('Could not find this cell');
-                    //return;
-                    cellIndex = Jupyter.notebook.find_cell_index(outputCell);
-                    Jupyter.notebook.delete_cell(cellIndex);
-                }
+                    if (outputCell) {
+                        cellIndex = Jupyter.notebook.find_cell_index(outputCell);
+                        Jupyter.notebook.delete_cell(cellIndex);
+                    }
 
-                // send a message on the cell bus bus, parent should pick it up, remove the
-                // output from the model, and update us.
-                bus.bus().send({
-                    jobId: output.jobId
-                }, {
-                    channel: {
-                        cell: cellId
-                    },
-                    key: {
-                        type: 'output-cell-removed'
-                    }
+                    // send a message on the cell bus bus, parent should pick it up, remove the
+                    // output from the model, and update us.
+                    bus.bus().send({
+                        jobId: output.jobId
+                    }, {
+                        channel: {
+                            cell: cellId
+                        },
+                        key: {
+                            type: 'output-cell-removed'
+                        }
+                    });
+                    bus.bus().send({
+                        jobId: output.jobId
+                    }, {
+                        key: {
+                            type: 'request-job-deletion'
+                        }
+                    });
                 });
-                bus.bus().send({
-                    jobId: output.jobId
-                }, {
-                    key: {
-                        type: 'request-job-deletion'
-                    }
-                });
-            });
         }
 
         function render() {
@@ -134,15 +164,6 @@ define([
                                 ])
                             ]),
                             div({class: 'col-md-4', style: {textAlign: 'right'}}, [
-//                                button({
-//                                    class: 'btn btn-sm btn-standard',
-//                                    type: 'button',
-//                                    id: events.addEvent({
-//                                        type: 'click',
-//                                        handler: function () {
-//                                            doRemoveOutput(index);
-//                                        }
-//                                    })}, 'delete'),
                                 button({
                                     class: 'btn btn-sm btn-standard',
                                     type: 'button',
@@ -151,8 +172,7 @@ define([
                                         handler: function () {
                                             doRemoveOutputCell(index);
                                         }
-                                    })}, 'Remove Output Cell'),
-
+                                    })}, '&times;'),
                                 div({style: {marginTop: '20px'}, dataElement: 'message'}, message)
 
                             ])
@@ -161,6 +181,9 @@ define([
             }
             container.innerHTML = content;
             events.attachEvents(container);
+            if (!Jupyter.notebook.writable || Jupyter.narrative.readonly) {
+                toggleReadOnly(true);
+            }
         }
 
         function importModel(outputs) {
@@ -196,6 +219,18 @@ define([
                     render();
                 });
             });
+            runtime.bus().on('read-only-changed', function(msg) {
+                toggleReadOnly(msg.readOnly);
+            });
+        }
+
+        function toggleReadOnly(readOnly) {
+            if (readOnly) {
+                container.querySelector('.col-md-4 button.btn.btn-sm.btn-standard').classList.add('hidden');
+            }
+            else {
+                container.querySelector('.col-md-4 button.btn.btn-sm.btn-standard').classList.remove('hidden');
+            }
         }
 
         function getBus() {

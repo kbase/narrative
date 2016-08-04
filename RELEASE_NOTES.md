@@ -3,6 +3,63 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v4.2.1 (more notes will follow).
 
+### Version 3.0.0-alpha-16
+__Changes__
+- fix multiple object input widget
+- remove execution summary widget
+- updated kbase client api lib to bring in updated workspace client
+
+### Version 3.0.0-alpha-15
+__Changes__
+- fix output param marked as parameter triggering error and blocking app cell insertion
+- improve error message when checkbox is misconfigured
+- improve checkbox rules display
+
+
+### Version 3.0.0-alpha-14
+__Changes__
+- fix job cell (as produced by JobManager()->job_info())
+- relax enforcement of object output name input widget being categorized as an "output" control
+- fix tab label and job count badge in job panel
+- more progress on custom subdata, binary, and select controls
+
+
+### Version 3.0.0-alpha-13
+__Changes__
+- Fix display of data objects drag-and-dropped or clicked from the data panel
+- Job status lookup and error handling improvements
+- Fixed bug in handling app results
+- Initial implementation of viewers for new objects
+- Fixed ontology dictionary
+
+
+### Version 3.0.0-alpha-12
+__Changes__
+- Fixed JobManager.list_jobs (again)
+- Reconnected the 'scroll to app' button in the Jobs panel to existing App Cell widgets
+- Removed the Scroll to App button from Jobs that don't have an accompanying cell to scroll to (might be confusing, still).
+- Fixed a constant spam of Job info from the kernel on page refresh.
+- Restored multiselection in subdata inputs.
+
+### Version 3.0.0-alpha-11
+__Changes__
+- Fixed Narrative metadata to contain a proper list of Apps for showing on the Dashboard.
+- Updated read only mode
+  - Codemirror elements (markdown cell and code cell input areas) are visible, but not editable
+  - App Cells get their button bars hidden
+  - Output areas get their delete areas hidden
+  - Cell toolbars get their buttons hidden (maybe all but the collapse and code toggles should be hidden?)
+- Tweaked placeholder text of Markdown cells.
+
+### Version 3.0.0-alpha-10
+__Changes__
+- Pressing the Enter key should trigger a positive reponse on most dialogs (e.g. if there are Yes or No options, it should select Yes)
+- Only the user who started a job can delete it (except for owners of a narrative... that's all confusing, though, so it's only users who started a job now).
+- The Jobs Panel should now show the owner of a job as registered with UJS.
+- Canceling a job from an App cell will attempt to delete it, and at least, cancel it.
+- Canceled jobs are treated as Deleted by the App cell.
+- Added configuration for the service_wizard client - mild refactor to how configs get loaded.
+
 ### Version 3.0.0-alpha-9
 __Changes__
 - Restore app and viewer cell icons to their rightful place

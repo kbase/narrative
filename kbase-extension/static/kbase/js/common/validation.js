@@ -250,6 +250,42 @@ define([
                     };
                 });
         }
+        
+        function validateWorkspaceObjectRefSet(value, options) {
+            // TODO: validate each item.
+            var parsedValue,
+                messageId, shortMessage, errorMessage, diagnosis = 'valid';
+            return Promise.try(function () {
+                if (!(value instanceof Array)) {
+                    diagnosis = 'invalid';
+                    errorMessage = 'value must be an array';
+                } else {
+                    parsedValue = value;
+                    if (parsedValue.length === 0) {
+                        if (options.required) {
+                            messageId = 'required-missing';
+                            diagnosis = 'required-missing';
+                            errorMessage = 'value is required';
+                        } else {
+                            diagnosis = 'optional-empty';
+                        }                        
+                    } else {
+                        // TODO: validate each object name and report errors...                        
+                    }
+                }
+            })
+                .then(function () {
+                    return {
+                        isValid: errorMessage ? false : true,
+                        messageId: messageId,
+                        errorMessage: errorMessage,
+                        shortMessage: shortMessage,
+                        diagnosis: diagnosis,
+                        value: value,
+                        parsedValue: parsedValue
+                    };
+                });
+        }
 
         function validateInteger(value, min, max) {
             if (max && max < value) {
@@ -390,7 +426,6 @@ define([
                 }
             } else if (typeof value !== 'string') {
                 diagnosis = 'invalid';
-                console.error('VALIDATION', value);
                 errorMessage = 'value must be a string (it is of type "' + (typeof value) + '")';
             } else {
                 parsedValue = value.trim();
@@ -464,10 +499,65 @@ define([
                 parsedValue: parsedSet
             };
         }
+        
+        function stringToBoolean(value) {
+            switch (value.toLowerCase(value)) {
+                case 'true':
+                case 't':
+                case 'yes':
+                case 'y':
+                    return true;
+                case 'false':
+                case 'f':
+                case 'no':
+                case 'n':
+                    return false;
+                default:
+                    throw new Error('Invalid format for boolean: ' + value);
+            }
+        }
+        
+        // As with all validators, the key is that this validates form input,
+        // in its raw form. For booleans is a string taking the form of a boolean
+        // symbol. E.g. a checkbox may have a value of "true" or falsy, or a boolean
+        // may be represented as a two or three state dropdown or set of radio buttons,
+        // etc.
+        function validateBoolean(value, options) {
+            var parsedValue,
+                errorMessage, diagnosis = 'valid';
+
+            if (isEmptyString(value)) {
+                if (options.required) {
+                    diagnosis = 'required-missing';
+                    errorMessage = 'value is required';
+                } else {
+                    diagnosis = 'optional-empty';
+                }
+            } else if (typeof value !== 'string') {
+                diagnosis = 'invalid';
+                errorMessage = 'value must be a string (it is of type "' + (typeof value) + '")';
+            } else {
+                try {
+                    parsedValue = stringToBoolean(value);
+                } catch (ex) {
+                    diagnosis = 'invalid';
+                    errorMessage = ex.message;
+                }
+            }
+
+            return {
+                isValid: errorMessage ? false : true,
+                errorMessage: errorMessage,
+                diagnosis: diagnosis,
+                value: value,
+                parsedValue: parsedValue
+            };
+        }
 
         return {
             validateWorkspaceObjectName: validateWorkspaceObjectName,
             validateWorkspaceObjectRef: validateWorkspaceObjectRef,
+            validateWorkspaceObjectRefSet: validateWorkspaceObjectRefSet,
             validateInteger: validateInteger,
             validateIntString: validateIntString,
             validateIntegerField: validateIntString,
@@ -478,6 +568,7 @@ define([
             validateSet: validateSet,
             validateStringSet: validateTextSet,
             validateTextSet: validateTextSet,
+            validateBoolean: validateBoolean
         };
     }
 

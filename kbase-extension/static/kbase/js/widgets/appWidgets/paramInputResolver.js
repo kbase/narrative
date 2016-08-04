@@ -14,12 +14,15 @@ define([
     './input/singleCheckbox',
     './input/singleFloatInput',
     './input/singleSubdata',
-    './input/singleCustomSubdata',
+    './input/customSubdata',
     './input/singleTextareaInput',
     './input/multiFloatInput',
     './input/multiSelectInput',
     './input/singleFileInput',
-    './input/multiTextareaInput'
+    './input/multiTextareaInput',
+    './input/errorInput',
+    './input/singleToggleButton',
+    './input/singleCustomSelect'
 ], function (
     SingleTextInputWidget,
     MultiTextInputWidget,
@@ -33,12 +36,15 @@ define([
     SingleCheckboxInputWidget,
     SingleFloatInputWidget,
     SingleSubdataWidget,
-    SingleCustomSubdataWidget,
+    CustomSubdataWidget,
     SingleTextareaInputWidget,
     MultiFloatInputWidget,
     MultiSelectInputWidget,
     SingleFileInputWidget,
-    MultiTextareaInputWidget
+    MultiTextareaInputWidget,
+    ErrorInputWidget,
+    SingleToggleButtonWidget,
+    SingleCustomSelectWidget
     ) {
     'use strict';
 
@@ -125,7 +131,7 @@ define([
                             };
                         default:
                             throw new Error('Unknown []string field type');
-                    }                    
+                    }         
                 case 'unspecified':
                     // a bunch of field types are untyped:
                     switch (fieldType) {
@@ -193,6 +199,8 @@ define([
                             return SingleTextareaInputWidget;
                         case 'file':
                             return SingleFileInputWidget;
+                        case 'custom_textsubdata':
+                            return CustomSubdataWidget;                            
                         default:
                             return UndefinedInputWidget;
                     }
@@ -239,8 +247,9 @@ define([
                         case 'input':
                             return MultiObjectInputWidget;
                         case 'output':
-                            throw new Error('A set of workspace object names does not make sense for an output');
-                            // return UndefinedInputWidget;
+                            return ErrorInputWidget.make({
+                                message: 'A set of workspace object names does not make sense for an output'
+                            });
                         case 'parameter':
                             return UndefinedInputWidget;
                         default:
@@ -254,11 +263,24 @@ define([
                             return MultiSelectInputWidget;
                         case 'textarea':
                             return MultiTextareaInputWidget;
+                        case 'custom_textsubdata':
+                            return CustomSubdataWidget;
+                        case 'custom_widget':
+                            if (parameterSpec.multipleItems()) {
+                                return UndefinedInputWidget;
+                            }
+                            return SingleCustomSelectWidget;
                         default:
                             return MultiTextInputWidget;
                     }
-                case 'sample_property':
-                    return SingleCustomSubdataWidget;
+                case 'boolean':
+                    if (parameterSpec.multipleItems()) {
+                        return UndefinedInputWidget;
+                    }
+                    return SingleToggleButtonWidget;
+                    
+                //case 'sample_property':
+                //    return SingleCustomSubdataWidget;
                 case 'unspecified':
                     // a bunch of field types are untyped:
                     switch (fieldType) {
@@ -279,22 +301,22 @@ define([
                         case 'custom_button':
                             return UndefinedInputWidget;
                         case 'textsubdata':
-                            console.log('TEXTSUBDATA', parameterSpec);
                             if (parameterSpec.multipleItems()) {
                                 return UndefinedInputWidget;
                             }
                             return SingleSubdataWidget;
                         case 'file':
                             if (parameterSpec.multipleItems()) {
-                                throw new Error('multiple item "file" parameter type is not currently supported');
+                                return ErrorInputWidget.make({
+                                    message: 'multiple item "file" parameter type is not currently supported'
+                                });
                             }
                             return SingleFileInputWidget;
                         case 'custom_textsubdata':
-                            console.log('CUSTOM_TEXTSUBDATA', parameterSpec);
                             if (parameterSpec.multipleItems()) {
                                 return UndefinedInputWidget;
                             }
-                            return UndefinedInputWidget;
+                            return SingleSubdataWidget;
                         case 'custom_widget':
                             return UndefinedInputWidget;
                         case 'tab':

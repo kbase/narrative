@@ -19,11 +19,11 @@ define([
     function factory(config) {
         var options = {},
             spec = config.parameterSpec,
+            checkboxOptions,
             container,
             $container,
             bus = config.bus,
-            valueChecked = spec.spec.checkbox_options.checked_value,
-            valueUnchecked = spec.spec.checkbox_options.unchecked_value,
+            constraints,
             model = {
                 updates: 0,
                 value: undefined
@@ -31,11 +31,34 @@ define([
 
         // Validate configuration.
         // Nothing to do...
+        
+        // validate
+        if (!spec.spec.checkbox_options) {
+            throw new Error('Checkbox control does not have checkbox_options configured');
+        }
+        checkboxOptions = spec.spec.checkbox_options.checked_value;
+        if ( (typeof checkboxOptions.checked_value !== 'string') ||
+             (checkboxOptions.checked_value.length === 0) ) {
+            throw new Error('Checkbox spec option checked_value is not configured');
+        }
+        if ( (typeof checkboxOptions.unchecked_value !== 'string') ||
+             (checkboxOptions.checked_value.length === 0) ) {
+            throw new Error('Checkbox spec option unchecked_value is not configured');
+        }
 
-        options.environment = config.isInSidePanel ? 'sidePanel' : 'standard';
-        options.multiple = spec.multipleItems();
-        options.required = spec.required();
         options.enabled = true;
+
+        constraints = {
+            valueChecked: checkboxOptions.checked_value,
+            valueUnchecked: checkboxOptions.unchecked_value
+        };
+
+        // Is this a valid spec?
+        
+        //if (spec.required() && spec.defaultValue() === null) {
+        //    // console.log('CHECK', spec.defaultValue(), spec.nullValue(), spec.dataType());
+        //    throw new Error('This checkbox is required yet has an undefined default value');
+        /// }
 
 
         /*
@@ -50,9 +73,9 @@ define([
         function getInputValue() {
             var checkbox = container.querySelector('[data-element="input-container"] [data-element="input"]');
             if (checkbox.checked) {
-                return valueChecked;
+                return constraints.valueChecked;
             }
-            return valueUnchecked;
+            return constraints.valueUnchecked;
         }
 
         /*
@@ -100,12 +123,15 @@ define([
         function resetModelValue() {
             if (spec.spec.default_values && spec.spec.default_values.length > 0) {
                 if (meansChecked(spec.spec.default_values[0])) {
-                    setModelValue(valueChecked);
+                    setModelValue(constraints.valueChecked);
                 } else {
-                    setModelValue(valueUnchecked);
+                    setModelValue(constraints.valueUnchecked);
                 }
             } else {
-                unsetModelValue();
+                // NOTE: we set the checkbox explicitly to the "unchecked value" 
+                // if no default value is provided.
+                // unsetModelValue();
+                setModelValue(constraints.valueUnchecked);
             }
         }
 
@@ -143,19 +169,13 @@ define([
                     // such in the spec.
                     validationOptions = {
                         required: spec.required(),
-                        values: [valueChecked, valueUnchecked]
+                        values: [constraints.valueChecked, constraints.valueUnchecked]
                     },
                 validationResult;
 
                 validationResult = Validation.validateSet(rawValue, validationOptions);
 
-                return {
-                    isValid: validationResult.isValid,
-                    validated: true,
-                    diagnosis: validationResult.diagnosis,
-                    errorMessage: validationResult.errorMessage,
-                    value: validationResult.parsedValue
-                };
+                return validationResult;
             });
         }
 
@@ -168,7 +188,7 @@ define([
             // CONTROL
             var checked = false,
                 booleanString = 'no';
-            if (model.value === valueChecked) {
+            if (model.value === constraints.valueChecked) {
                 checked = true;
                 booleanString = 'yes';
             }
@@ -182,14 +202,12 @@ define([
                                     validate()
                                         .then(function (result) {
                                             if (result.isValid) {
-                                                bus.send({
-                                                    type: 'changed',
+                                                bus.emit('changed', {
                                                     newValue: result.value
                                                 });
                                                 setModelValue(result.value);
                                             }
-                                            bus.send({
-                                                type: 'validation',
+                                            bus.emit('validation', {
                                                 errorMessage: result.errorMessage,
                                                 diagnosis: result.diagnosis
                                             });
@@ -212,14 +230,13 @@ define([
                     type: 'checkbox',
                     dataElement: 'input',
                     checked: checked,
-                    value: valueChecked
+                    value: constraints.valueChecked
                 })]);
         }
         function autoValidate() {
             return validate()
                 .then(function (result) {
-                    bus.send({
-                        type: 'validation',
+                    bus.emit('validation', {
                         errorMessage: result.errorMessage,
                         diagnosis: result.diagnosis
                     });
@@ -272,15 +289,9 @@ define([
 
         function start() {
             return Promise.try(function () {
-                bus.listen({
-                    test: function (message) {
-                        return (message.type === 'reset-to-defaults');
-                    },
-                    handle: function () {
-                        resetModelValue();
-                    }
+                bus.on('reset-to-defaults', function (message) {
+                    resetModelValue();
                 });
-
                 // shorthand for a test of the message type.
                 bus.on('update', function (message) {
                     setModelValue(message.value);

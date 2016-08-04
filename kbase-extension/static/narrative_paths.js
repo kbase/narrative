@@ -44,6 +44,12 @@ require.config({
         'kbaseFeatureValues-client-api'         : 'kbase/js/api/KBaseFeatureValues',
         'kbase-generic-client-api'              : 'kbase/js/api/GenericClient',
         'catalog-client-api'                    : 'kbase/js/api/Catalog',
+
+        // Data API dynamic service clients
+        'GenomeAnnotationAPI-client-api'        : 'kbase/js/api/GenomeAnnotationAPIClient',        
+        'AssemblyAPI-client-api'                : 'kbase/js/api/AssemblyAPIClient',        
+        'TaxonAPI-client-api'                   : 'kbase/js/api/TaxonAPIClient',
+
         'njs-wrapper-client-api'                : 'kbase/js/api/NarrativeJobServiceWrapper',
         kbaseNarrativeJobStatus                 : 'kbase/js/widgets/narrative_core/kbaseNarrativeJobStatus',
         kbaseCellToolbarMenu                    : 'kbase/js/widgets/narrative_core/kbaseCellToolbarMenu',
@@ -196,6 +202,9 @@ require.config({
         'kbaseContigBrowserButtons'             : 'kbase/js/widgets/genomes/kbaseContigBrowserButtons',
         'ContigBrowserPanel'                    : 'kbase/js/widgets/function_output/contigBrowserPanel',
         'kbaseGenomeView'                       : 'kbase/js/widgets/function_output/kbaseGenomeAnnotation',
+        'kbaseGenomeAnnotationViewer'           : 'kbase/js/widgets/function_output/kbaseGenomeAnnotationViewer',
+        'kbaseGenomeAnnotationAssembly'         : 'kbase/js/widgets/function_output/kbaseGenomeAnnotationAssembly',
+        
         'kbaseContigSetView'                    : 'kbase/js/widgets/function_output/kbaseContigSetView',
         'kbaseAssemblyView'                     : 'kbase/js/widgets/function_output/kbaseAssemblyView',
         'AssemblyWidget'                        : 'kbase/js/widgets/function_output/kbaseAssembly',
@@ -414,7 +423,7 @@ require.config({
 function addCdnModules(baseUrl) {
     if (!baseUrl) {
         baseUrl = 'https://ci.kbase.us/cdn/files';
-        // baseUrl = 'http://cdn.kbase.us/cdn',
+        // baseUrl = 'http://cdn.kbase.us/cdn';
     }
     var modules = {
             kb_common: 'kbase-common-js/1.7.0/',
@@ -423,7 +432,7 @@ function addCdnModules(baseUrl) {
             // TODO: we need to reconcile Jupyter and KBase external deps
             // text:  'requirejs-text/2.0.14/text',
             css: 'require-css/0.1.8/css',
-            'font-awesome': 'font-awesome/4.3.0/css/font-awesome',
+            'font-awesome': 'font-awesome/4.5.0/css/font-awesome',
             handlebars: 'handlebars/4.0.5/handlebars',
             'google-code-prettify': 'google-code-prettify/1.2.0/'
         },

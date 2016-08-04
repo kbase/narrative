@@ -16,8 +16,10 @@ define([
     'kb_common/html',
     'common/events',
     'common/ui',
+    'common/props',
+    './input/errorInput',
     'css!google-code-prettify/prettify.css'
-], function (Promise, $, PR, html, Events, UI) {
+], function (Promise, $, PR, html, Events, UI, Props, ErrorControlFactory) {
     'use strict';
     var t = html.tag,
         div = t('div'), span = t('span'), label = t('label'), button = t('button'),
@@ -42,18 +44,26 @@ define([
             bus = config.bus,
             places, container,
             inputControlFactory = config.inputControlFactory,
-            inputControl = inputControlFactory.make({
-                bus: config.bus,
-                initialValue: config.initialValue,
-                parameterSpec: config.parameterSpec,
-                workspaceInfo: config.workspaceInfo,
-                workspaceId: config.workspaceId,
-                fieldSpec: config.fieldSpec
-            }),
+            inputControl,
             options = {},
             fieldId = html.genId(),
-            bus = config.bus,
             spec = config.parameterSpec;
+        
+        try {
+            inputControl = inputControlFactory.make({
+                    bus: config.bus,
+                    initialValue: config.initialValue,
+                    appSpec: config.appSpec,
+                    parameterSpec: config.parameterSpec,
+                    workspaceInfo: config.workspaceInfo,
+                    workspaceId: config.workspaceId,
+                    fieldSpec: config.fieldSpec
+                });
+        } catch (ex) {
+            inputControl = ErrorControlFactory.make({
+                message: ex.message
+            }).make();
+        }
 
         // options.isOutputName = spec.text_options && spec.text_options.is_output_name;
         options.enabled = true;
@@ -94,7 +104,6 @@ define([
         }
 
         function setError(error) {
-            console.log('SET ERROR', error);
             var component = buildInputMessage({
                 title: 'ERROR',
                 type: 'danger',
@@ -196,8 +205,8 @@ define([
                     // just for now ...
                     if (spec.spec.field_type === 'checkbox') {
                         return [
-                            tr([th('Min'), td(String(0))]),
-                            tr([th('Max'), td(String(1))])
+                            tr([th('Value when checked'), td(Props.getDataItem(spec.spec, 'checkbox_options.checked_value', UI.na()))]),
+                            tr([th('Value when un-checked'), td(Props.getDataItem(spec.spec, 'checkbox_options.unchecked_value', UI.na()))])
                         ];
                     }
                     return [

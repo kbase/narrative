@@ -13,10 +13,19 @@ define([
     }
 
     function escapeString(stringValue, delimiter) {
-        return stringValue.replace(delimiter, '\\"').replace(/\n/, '\\n');
+        var delimiterRegex = new RegExp(delimiter, 'g');
+        return stringValue.replace(delimiterRegex, '\\'+delimiter).replace(/\n/, '\\n');
     }
 
-    function pythonifyValue(value, autoIndent) {
+    function autoDelimiter(value) {
+      if (/\"/.test(value)) {
+        return '"';
+      }
+      return "'";
+    }
+
+    function pythonifyValue(value, options) {
+        options = options || {};
         switch (typeof value) {
             case 'number':
                 if (value === null) {
@@ -24,12 +33,14 @@ define([
                 }
                 return String(value);
             case 'string':
-                return '"' + escapeString(value) + '"';
+                return '"' + escapeString(value, options.delimiter || autoDelimiter(value)) + '"';
+            case 'boolean':
+                return value ? 'True' : 'False';
             case 'object':
                 var indent = '    ';
                 if (value instanceof Array) {
                     return '[' + value.map(function (value) {
-                        return pythonifyValue(value);
+                        return pythonifyValue(value, options);
                     }).join(', ') + ']';
                 }
                 if (value === null) {
@@ -38,12 +49,12 @@ define([
                 return '{\n' +
                     Object.keys(value).map(function (key) {
                         var prefix = indent;
-                        if (autoIndent) {
+                        if (options.autoIndent) {
                             prefix += indent;
                         }
-                       return  prefix + pythonifyValue(key) + ': ' + pythonifyValue(value[key]);
+                       return  prefix + pythonifyValue(key, options) + ': ' + pythonifyValue(value[key], options);
                     }).join(',\n') +
-                    '\n' + (autoIndent ? indent : '') + '}';
+                    '\n' + (options.autoIndent ? indent : '') + '}';
             default:
                 console.error('Unsupported parameter type ' + (typeof value), value);
                 throw new Error('Unsupported parameter type ' + (typeof value));
@@ -74,7 +85,7 @@ define([
     function buildAppRunner(cellId, runId, app, params) {
         var positionalArgs = [
                 pythonifyValue(app.id),
-                pythonifyValue(params, true)
+                pythonifyValue(params, {autoIndent: true})
             ],
             namedArgs = objectToNamedArgs({
                 tag: app.tag,
@@ -94,7 +105,7 @@ define([
     function buildViewRunner(cellId, runId, app, params) {
         var positionalArgs = [
                 pythonifyValue(app.id),
-                pythonifyValue(params, true)
+                pythonifyValue(params, {autoIndent: true})
             ],
             namedArgs = objectToNamedArgs({
                 tag: app.tag,
@@ -111,19 +122,42 @@ define([
         return pythonCode;
     }
 
-    function buildOutputRunner(jqueryWidgetName, widgetTag, params) {
+    function buildOutputRunner(jqueryWidgetName, widgetTag, cellId, params) {
         var positionalArgs = [
                 pythonifyValue(jqueryWidgetName),
-                pythonifyValue(params, true)
+                pythonifyValue(params, {autoIndent: true})
             ],
             namedArgs = objectToNamedArgs({
-                tag: widgetTag
+                tag: widgetTag,
+                cell_id: cellId
             }),
             args = positionalArgs.concat(namedArgs),
             pythonCode = [
                 'from biokbase.narrative.widgetmanager import WidgetManager',
                 'WidgetManager().show_output_widget(' + buildNiceArgsList(args) + ')'
             ].join('\n');
+
+        return pythonCode;
+    }
+
+    function buildDataWidgetRunner(jqueryWidgetName, cellId, objectInfo) {
+        var title = (objectInfo && objectInfo.name) ? objectInfo.name : 'Data Viewer',
+            positionalArgs = [
+                pythonifyValue(jqueryWidgetName),
+                pythonifyValue({info: objectInfo})
+            ],
+            namedArgs = objectToNamedArgs({
+                cell_id: cellId,
+                title: title
+            }),
+            args = positionalArgs.concat(namedArgs),
+            pythonCode = [
+                'from biokbase.narrative.widgetmanager import WidgetManager',
+                'WidgetManager().show_data_widget(' + buildNiceArgsList(args) + ')'
+            ].join('\n');
+
+            console.log('CODE', pythonCode);
+
 
         return pythonCode;
     }
@@ -153,6 +187,7 @@ define([
         buildAppRunner: buildAppRunner,
         buildViewRunner: buildViewRunner,
         buildOutputRunner: buildOutputRunner,
-        buildCustomWidgetRunner: buildCustomWidgetRunner
+        buildCustomWidgetRunner: buildCustomWidgetRunner,
+        buildDataWidgetRunner: buildDataWidgetRunner
     };
 });

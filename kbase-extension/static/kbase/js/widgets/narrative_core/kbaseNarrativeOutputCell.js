@@ -20,7 +20,8 @@ define([
             type: 'error',
             title: 'Output',
             time: '',
-            showMenu: true
+            showMenu: true,
+            lazyRender: true // used in init()
         },
         OUTPUT_ERROR_WIDGET: 'kbaseNarrativeError',
         init: function (options) {
@@ -41,17 +42,23 @@ define([
              * added to the container that will check their visibility on
              * every scroll event.
              * XXX: Not sure whether "on every scroll event" is going to be
-             * too heavy-weight a check once there are 100 elements to worry about.
+             * too heavy-weight a check once there are 100+ elements to worry about.
              */
-            this.is_rendered = false;
-            var nb_container = $('#notebook-container'); 
-            this.visible_settings = {
-                container: nb_container,
-                threshold: 100 };
-            this.lazyRender({data: this}); // try to render at first view
-            if (!this.is_rendered) {
-                // Not initially rendered, so add handler to re-check after scroll events
-                nb_container.scroll(this, this.lazyRender);
+            if (this.options.lazyRender) {
+                this.is_rendered = false;
+                var nb_container = $('#notebook-container'); 
+                this.visible_settings = {
+                    container: nb_container,
+                    threshold: 100 };
+                this.lazyRender({data: this}); // try to render at first view
+                if (!this.is_rendered) {
+                    // Not initially rendered, so add handler to re-check after scroll events
+                    nb_container.scroll(this, this.lazyRender);
+                }
+            }
+            /* For testing/comparison, do eager-rendering instead */
+            else {
+                this.render();
             }
 
             return this;

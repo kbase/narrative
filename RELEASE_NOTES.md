@@ -3,6 +3,12 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v4.2.1 (more notes will follow).
 
+### Version 3.0.0-alpha-16
+__Changes__
+- fix multiple object input widget
+- remove execution summary widget
+- updated kbase client api lib to bring in updated workspace client
+
 ### Version 3.0.0-alpha-15
 __Changes__
 - fix output param marked as parameter triggering error and blocking app cell insertion

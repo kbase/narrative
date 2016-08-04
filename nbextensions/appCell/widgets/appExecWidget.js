@@ -589,9 +589,9 @@ define([
                 });
 
             container.innerHTML = div({}, [
-                div({style: {marginBottom: '4px'}}, [
-                    renderSummaryWidget()
-                ]),
+                //div({style: {marginBottom: '4px'}}, [
+                //    renderSummaryWidget()
+                //]),
                 tabs.content
             ]);
             tabs.events.forEach(function (event) {

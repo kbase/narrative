@@ -207,7 +207,6 @@ define([
             }.bind(this));
 
             bus.on('request-job-status', function (message) {
-                console.log('REQ JOB STATUS', message);
                 this.sendCommMessage(this.JOB_STATUS, message.jobId);
             }.bind(this));
 

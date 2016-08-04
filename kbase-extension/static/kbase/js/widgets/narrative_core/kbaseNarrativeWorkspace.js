@@ -128,6 +128,7 @@ define([
             this.data_icons = icons.data;
             this.meth_icons = icons.methods;
             this.icon_colors = icons.colors;
+            this.icon_color_mapping = icons.color_mapping;
 
             this.methClient = new NarrativeMethodStore(this.options.methodStoreURL);
 
@@ -2515,10 +2516,15 @@ define([
          * @param type
          * @returns {string} Color code
          */
-        logoColorLookup: function(type) {
-            var code = 0;
-            for (var i = 0; i < type.length; code += type.charCodeAt(i++));
-            return this.icon_colors[code % this.icon_colors.length];
+        logoColorLookup: function (type) {
+            var color = this.icon_color_mapping[type];
+            if ( color === undefined) {
+                // fall back to primitive hack that just guesses
+                var code = 0;
+                for (var i = 0; i < type.length; code += type.charCodeAt(i++));
+                color = this.icon_colors[code % this.icon_colors.length];
+            }
+            return color;
         }
     });
 });

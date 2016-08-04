@@ -17,7 +17,8 @@ define (
         'kbaseTabs',
         'jquery-dataTables',
         'jquery-dataTables-bootstrap',
-        'GenomeAnnotationAPI-client-api'
+        'GenomeAnnotationAPI-client-api',
+        'kbaseTable'
     ], function(
         KBWidget,
         bootstrap,
@@ -30,7 +31,8 @@ define (
         kbaseTabs,
         jquery_dataTables,
         bootstrap,
-        gaa
+        gaa,
+        kbaseTable
     ) {
     return KBWidget({
         name: "kbaseGenomeAnnotationViewer",
@@ -52,20 +54,8 @@ define (
         init: function(options) {
             this._super(options);
 
-console.log('WIZARD : ', Config.url('service_wizard'), this.authToken());
-var ref = this.options.wsNameOrId + '/' + this.options.objNameOrId;
-console.log("REF : ", this.options.wsNameOrId + '/' + this.options.objNameOrId);
-//ref = '8990/2/1';
-            //in this case, ref is "thomasoniii:1469466138774/Ptrichocarpa_Ensembl"
-            var ref = this.options.wsNameOrId + '/' + this.options.objNameOrId;
-            var genome_api = new GenomeAnnotationAPI(Config.url('service_wizard'), {token : this.authToken() });
-
-            genome_api.get_summary(ref).then(function (d) {
-              console.log("API GET SUMMARY ", d);
-            })
-            .fail(function (d) {
-              console.log("FAILED WITH", d);
-            });
+            this.content = {};
+            this.tableData = {};
 
             if (this.options.wsNameOrId != undefined) {
               this.wsKey = this.options.wsNameOrId.match(/^\d+/)
@@ -90,7 +80,403 @@ console.log("REF : ", this.options.wsNameOrId + '/' + this.options.objNameOrId);
 
             this.dictionary_params = dictionary_params;
 
+            this.ref = this.options.wsNameOrId + '/' + this.options.objNameOrId;
+            this.genome_api = new GenomeAnnotationAPI(Config.url('service_wizard'), {token : this.authToken() });
+
+            this.appendUI(this.$elem);
+
             return this;
+        },
+
+        loaderElem : function () {
+          return $.jqElem('div')
+                .append('<br>&nbsp;Loading data...<br>&nbsp;please wait...<br>&nbsp;Data parsing may take upwards of 30 seconds, during which time this page may be unresponsive.')
+                .append($.jqElem('br'))
+                .append(
+                    $.jqElem('div')
+                    .attr('align', 'center')
+                    .append($.jqElem('i').addClass('fa fa-spinner').addClass('fa fa-spin fa fa-4x'))
+                    )
+                ;
+        },
+
+        appendUI : function($elem) {
+
+            var $self = this;
+
+            var $loaderElem = $self.loaderElem();
+
+            $self.data('loaderElem', $loaderElem);
+            $elem.append($loaderElem);
+
+            var $tabElem = $.jqElem('div').css('display', 'none');
+            $self.data('tabElem', $tabElem);
+            $elem.append($tabElem);
+
+            var $tabObj = new kbaseTabs($tabElem, {canDelete : true});
+            $self.data('tabObj', $tabObj);
+
+            $self.genome_api.get_summary($self.ref).then(function (d) {
+console.log("RESPONSE IS ", d);
+
+              $self.summary = d;
+
+              var $overviewTableElem = $.jqElem('div');
+              var $overviewTable =  new kbaseTable($overviewTableElem, {
+                      allowNullRows: false,
+                      structure: {
+                          keys: [
+                            'KBase Object Name',
+                            'Scientific name',
+                            'Domain',
+                            'Genetic Code',
+                            'Source',
+                            'Source ID',
+                            'GC',
+                            'Taxonomy',
+                            'Size',
+                            'Number of Contigs',
+                            'Number of Genes'
+                          ],
+                          rows: {
+                            'KBase Object Name' : $self.ref,
+                            'Scientific name' : d.taxonomy.scientific_name,
+                            'Domain' : d.taxonomy.kingdom,
+                            'Genetic Code' : d.taxonomy.genetic_code,
+                            'Source' : d.annotation.external_source,
+                            'Source ID' : d.assembly.assembly_source_id,
+                            'GC' : (Math.round(10000 * d.assembly.gc_content) / 100) + '%',
+                            'Taxonomy' : d.taxonomy.scientific_lineage.join('; '),
+                            'Size' : d.assembly.dna_size,
+                            'Number of Contigs' : d.assembly.contig_ids.length,
+                            'Number of Genes' : d.annotation.feature_type_counts.gene,
+                          }
+                      }
+                  }
+              );
+
+              $tabObj.addTab(
+                { tab : 'Overview', content : $overviewTableElem, canDelete : false, show : true}
+              );
+
+              $tabObj.addTab(
+                { tab : 'Contigs',  canDelete : false, show : false, dynamicContent : true, showContentCallback : function($tab) {
+                  return $self.showContigContent($tab);
+                }}
+              );
+
+              $tabObj.addTab(
+                { tab : 'Genes',canDelete : false, show : false, dynamicContent : true, showContentCallback : function($tab) {
+                  return $self.showGeneContent($tab);
+                }}
+              );
+
+              $loaderElem.hide();
+              $tabElem.show();
+
+
+            })
+            .fail(function (d) {
+              $self.$elem.empty();
+              $self.$elem
+                  .addClass('alert alert-danger')
+                  .html("Summary object is empty : " + d.error.message);
+            });
+
+
+            return $elem;
+
+        },
+
+        showContigContent : function($tab) {
+          return this.showContent('contigs', $tab);
+        },
+
+        showGeneContent : function($tab) {
+          return this.showContent('genes', $tab);
+        },
+
+        showContent : function(type, $tab) {
+        console.log("SHOWS CONTENT FOR ", type, " IN ", $tab);
+
+          var genesTable;
+          var contigsTable;
+
+          var genesTableElem = $.jqElem('table').css('width', '100%');
+          var contigsTableElem = $.jqElem('table').css('width', '100%');
+
+          var populated = {};
+
+          var $self = this;
+          if (this.content[type] == undefined) {
+
+            $self.genesData = [];
+            $self.contigsData = [];
+console.log("STARTS CALLS @", Date.now());
+            $self.genome_api.get_feature_locations($self.ref).then(function (features) {
+              console.log("GOT FEATURE LOCATIONS", Date.now());
+            });
+
+            $self.genome_api.get_feature_types($self.ref).then(function (features) {
+              console.log("GOT FEATURE types", Date.now(), features);
+            });
+
+            $self.genome_api.get_features($self.ref).then(function (features) {
+              console.log("API GET FEATURES ", features, Date.now());
+
+              var geneMap = {};
+              var contigMap = {};
+
+              var cdsData = [] //XXX plants baloney. Extra tab for CDS data. See below on line 372 or so.
+              var mrnaData = [] //XXX plants baloney. We throw away mrnaData. See below on line 372 or so.
+
+              function geneEvents() {
+                  $('.'+pref+'gene-click').unbind('click');
+                  $('.'+pref+'gene-click').click(function() {
+                      var geneId = [$(this).data('geneid')];
+                      showGene(geneId);
+                  });
+              }
+
+              var genomeType = 'genome'; //self.genomeType(gnm); XXX THIS NEEDS TO BE FIXED TO IDENTIFY TRANSCRIPTOMES AGAIN!
+var featurelist = {};
+              var pref = 12345;
+console.log("PARSED 1");
+              $.each(
+                features,
+                function (feature_id, feature) {
+                  if (feature.feature_locations != undefined) {
+
+                    $.each(
+                      feature.feature_locations,
+                      function (i, contig) {
+                        if (contigMap[contig.contig_id] == undefined) {
+                          contigMap[contig.contig_id] = {name : contig.contig_id, length : contig.length, genes : []};
+                        }
+                      }
+                    );
+
+                    contigName = feature.feature_locations[0].contig_id;
+
+                    //XXX plants baloney - if it's non plant, it just goes into the genes array.
+                    //but if it is plants, then we split it up - same data, two different tabs.
+                    //locus data goes on the genes tab, cds data goes on the cds tab.
+                    //We're also creating an mrnaData array for mrna data, but we're just throwing that out later.
+
+                    /*var dataArray = [];
+                    if ((gnm.domain != 'Plant' && gnm.domain != 'Eukaryota') || gene.type == 'locus') {
+                      dataArray = $self.genesData;
+                    }
+                    else*/
+
+                    var dataArray = [];
+
+                    featurelist[feature.feature_type] = 1;
+                    if (feature.feature_type == 'gene') {
+                      dataArray = $self.genesData;
+                    }
+                    if (feature.feature_type == 'CDS') {
+                      dataArray = cdsData;
+                    }
+                    else if (feature.feature_type == 'mRNA') {
+                      dataArray = mrnaData;
+                    }
+
+
+                    dataArray.push({
+                      // id: '<a href="/#dataview/'+self.ws_name+'/'+self.ws_id+'?sub=Feature&subid='+geneId+'" target="_blank">'+geneId+'</a>',
+                      id: '<a class="'+pref+'gene-click" data-geneid="'+feature_id+'">'+feature_id+'</a>',
+                      // contig: contigName,
+                      contig: '<a class="' + pref + 'contig-click" data-contigname="'+feature.feature_locations[0].contig_id+'">' + feature.feature_locations[0].contig_id + '</a>',
+                      start: feature.feature_locations[0].start,
+                      dir: feature.feature_locations[0].strand,
+                      len: feature.feature_locations[0].length,
+                      type: feature.feature_type,
+                      func: feature.function || '-'
+                    });
+
+                    geneMap[feature_id] = feature;
+
+                    var contig = contigMap[contigName];
+                    if (contig != undefined) {
+                      var geneStop = feature.feature_locations[0].start;
+
+                      if (feature.feature_locations[0].strand == '+') {
+                        geneStop += feature.feature_locations[0].length;
+                      }
+                      if (contig.length < geneStop) {
+                        contig.length = geneStop;
+                      }
+
+                      contig.genes.push(feature);
+                    }
+
+                  }
+                }
+              );
+console.log("PARSED 2", featurelist);
+              $self.genesSettings = {
+                  "sPaginationType": "full_numbers",
+                  "iDisplayLength": 10,
+                  "aaSorting": [[ 1, "asc" ], [2, "asc"]],
+                  "aoColumns": [
+                                {sTitle: "Gene ID", mData: "id"},
+                                {sTitle: "Contig", mData: "contig"},
+                                {sTitle: "Start", mData: "start"},
+                                {sTitle: "Strand", mData: "dir"},
+                                {sTitle: "Length", mData: "len"},
+                                {sTitle: "Type", mData: "type"},
+                                {sTitle: "Function", mData: "func"}
+                                ],
+                                "aaData": [],
+                                "oLanguage": {
+                                    "sSearch": "Search gene:",
+                                    "sEmptyTable": "No genes found."
+                                },
+                                "fnDrawCallback": function() { geneEvents(); contigEvents(); }
+              };
+
+              /*//XXX plants baloney - plants are a special case. If it's in plants or eukaryota, then we use the simpler display with less data.
+              if (genomeType == 'transcriptome' || gnm.domain == 'Plant' || gnm.domain == 'Eukaryota') {
+                  $self.genesSettings.aoColumns = [
+                      {sTitle: "Gene ID", mData: "id"},
+                      {sTitle: "Length", mData: "len"},
+                      {sTitle: "Function", mData: "func"}
+                  ];
+
+                  // XXX more plants baloney. Remove the length column
+                  if (gnm.domain == 'Plant' || gnm.domain == 'Eukaryota') {
+                      $self.genesSettings["aaSorting"] = [[ 0, "asc" ], [1, "asc"]];
+                      $self.genesSettings.aoColumns.splice(1,1);
+                  }
+                  // XXX done with plants
+              }*/
+
+
+              $self.content['genes'] = genesTableElem;
+console.log("PARSED 3");
+              /*//XXX plants baloney - build up the CDS div, if necessary.
+              if (gnm.domain == 'Plant' || gnm.domain == 'Eukaryota') {
+
+                  var cdsTab = $('#'+pref+'cds');
+                  cdsTab.empty();
+                  cdsTab.append('<table cellpadding="0" cellspacing="0" border="0" id="'+pref+'cds-table" \
+                  class="table table-bordered table-striped" style="width: 100%; margin-left: 0px; margin-right: 0px;"/>');
+
+                  var cdsSettings = {
+                      "sPaginationType": "full_numbers",
+                      "iDisplayLength": 10,
+                      "aaSorting": [[ 0, "asc" ], [1, "asc"]],
+                      "aoColumns": [
+                          {sTitle: "Gene ID", mData: "id"},
+                          {sTitle: "Function", mData: "func"}
+                      ]
+                  };
+
+                  var cdsTable = $('#'+pref+'cds-table').dataTable(cdsSettings);
+                  if (cdsData.length) {
+                      cdsTable.fnAddData(cdsData);
+                  }
+              }
+              //XXX done with plants*/
+
+              function contigEvents() {
+                  $('.'+pref+'contig-click').unbind('click');
+                  $('.'+pref+'contig-click').click(function() {
+                      var contigId = [$(this).data('contigname')];
+                      showContig(contigId);
+                  });
+              }
+
+              for (var key in contigMap) {
+                  if (!contigMap.hasOwnProperty(key))
+                      continue;
+                  var contig = contigMap[key];
+                  $self.contigsData.push({name: '<a class="'+pref+'contig-click" data-contigname="'+contig.name+'">'+contig.name+'</a>',
+                      length: contig.length, genecount: contig.genes.length});
+              }
+              $self.contigsSettings = {
+                      "sPaginationType": "full_numbers",
+                      "iDisplayLength": 10,
+                      "aaSorting": [[ 1, "desc" ]],
+                      "aoColumns": [
+                                    {sTitle: "Contig name", mData: "name"},
+                                    {sTitle: "Length", mData: "length"},
+                                    {sTitle: "Genes", mData: "genecount"}
+                                    ],
+                                    "aaData": [],
+                                    "oLanguage": {
+                                        "sSearch": "Search contig:",
+                                        "sEmptyTable": "No contigs found."
+                                    },
+                                    "fnDrawCallback": contigEvents
+              };
+
+
+
+              $self.content['contigs'] = contigsTableElem;
+
+
+console.log("PARSED ALL CONTENT", $self.genesData);
+
+              $tab.empty();
+              $tab.append($self.content[type]);
+              $tab.hasContent = true;
+
+              if (type == 'genes') {
+                genesTable = $self.content[type].dataTable($self.genesSettings);
+                genesTable.fnAddData($self.genesData);
+                populated.genes = true;
+              }
+              else {
+                contigsTable = $self.content[type].dataTable($self.contigsSettings);
+                contigsTable.fnAddData($self.contigsData);
+                populated.contigs = true;
+              }
+
+
+            })
+            .fail(function (d) {
+              $tab.empty();
+              $tab
+                  .addClass('alert alert-danger')
+                  .html("Could not load features : " + d.error.message);
+            });
+
+            return $self.loaderElem();
+
+          }
+
+          if (populated[type] == true) {
+            return this.content[type];
+          }
+          else {
+            setTimeout( function() {
+              console.log("TAB WAS", $tab, $tab.html());
+              $tab.empty();
+              $tab.append($self.content[type]);
+              $tab.hasContent = true;
+              console.log("TAB IS NOW", $tab, $tab.html());
+              if (type == 'genes') {
+              console.log("APPENDS TABLE", $self.genesSettings);
+                genesTable = $self.content[type].dataTable($self.genesSettings);
+                console.log("HAS OBJ");
+                genesTable.fnAddData($self.genesData);
+                console.log("ADDED DATA");
+                populated.genes = true;
+              }
+              else {
+              console.log("APPENDS TABLE", $self.contigsSettings);
+                contigsTable = $self.content[type].dataTable($self.contigsSettings);
+              console.log("HAS OBJ", $self.contigsData);
+                contigsTable.fnAddData($self.contigsData);
+              console.log("ADDED DATA");
+                populated.contigs = true;
+              }
+            }, 0);
+            return '';
+          }
+
         },
 
         //Sam says that it's considered a transcriptome if there are no contigs, or if the features lack locations.
@@ -227,7 +613,7 @@ console.log("RENDERED"); return;
                     ////////////////////////////// Overview Tab //////////////////////////////
                     $('#'+pref+'overview').append('<table class="table table-striped table-bordered" \
                             style="margin-left: auto; margin-right: auto;" id="'+pref+'overview-table"/>');
-                    var overviewLabels = ['KBase ID', 'Name', 'Domain', 'Genetic code', 'Source', "Source ID", "GC", "Taxonomy", "Size",
+                    var overviewLabels = ['Name', 'Domain', 'Genetic code', 'Source', "Source ID", "GC", "Taxonomy", "Size",
                                           "Number of Contigs", "Number of Genes"];
 
                     var tax = gnm.taxonomy;
@@ -473,7 +859,6 @@ console.log("RENDERED"); return;
                 geneTab.empty();
                 geneTab.append('<table cellpadding="0" cellspacing="0" border="0" id="'+pref+'genes-table" \
                 class="table table-bordered table-striped" style="width: 100%; margin-left: 0px; margin-right: 0px;"/>');
-                var genesData = [];
                 var geneMap = {};
                 var contigMap = {};
 
@@ -536,7 +921,7 @@ console.log("RENDERED"); return;
 
                     var dataArray = [];
                     if ((gnm.domain != 'Plant' && gnm.domain != 'Eukaryota') || gene.type == 'locus') {
-                      dataArray = genesData;
+                      dataArray = $self.genesData;
                     }
                     else if (gene.type == 'CDS') {
                       dataArray = cdsData;
@@ -595,7 +980,7 @@ console.log("RENDERED"); return;
 
                 //XXX plants baloney - plants are a special case. If it's in plants or eukaryota, then we use the simpler display with less data.
                 if (genomeType == 'transcriptome' || gnm.domain == 'Plant' || gnm.domain == 'Eukaryota') {
-                    genesSettings.aoColumns = [
+                    $self.genesSettings.aoColumns = [
                         {sTitle: "Gene ID", mData: "id"},
                         {sTitle: "Length", mData: "len"},
                         {sTitle: "Function", mData: "func"}
@@ -603,15 +988,15 @@ console.log("RENDERED"); return;
 
                     // XXX more plants baloney. Remove the length column
                     if (gnm.domain == 'Plant' || gnm.domain == 'Eukaryota') {
-                        genesSettings["aaSorting"] = [[ 0, "asc" ], [1, "asc"]];
-                        genesSettings.aoColumns.splice(1,1);
+                        $self.genesSettings["aaSorting"] = [[ 0, "asc" ], [1, "asc"]];
+                        $self.genesSettings.aoColumns.splice(1,1);
                     }
                     // XXX done with plants
                 }
 
-                var genesTable = $('#'+pref+'genes-table').dataTable(genesSettings);
-                if (genesData.length) {
-                    genesTable.fnAddData(genesData);
+                var genesTable = $('#'+pref+'genes-table').dataTable($self.genesSettings);
+                if ($self.genesData.length) {
+                    genesTable.fnAddData($self.genesData);
                 }
 
                 //XXX plants baloney - build up the CDS div, if necessary.
@@ -644,7 +1029,6 @@ console.log("RENDERED"); return;
                 contigTab.empty();
                 contigTab.append($('<div>').append('<table cellpadding="0" cellspacing="0" border="0" id="'+pref+'contigs-table" '+
                     'class="table table-bordered table-striped" style="width: 100%; margin-left: 0px; margin-right: 0px;"/>'));
-                var contigsData = [];
 
                 function contigEvents() {
                     $('.'+pref+'contig-click').unbind('click');
@@ -658,10 +1042,10 @@ console.log("RENDERED"); return;
                     if (!contigMap.hasOwnProperty(key))
                         continue;
                     var contig = contigMap[key];
-                    contigsData.push({name: '<a class="'+pref+'contig-click" data-contigname="'+contig.name+'">'+contig.name+'</a>',
+                    $self.contigsData.push({name: '<a class="'+pref+'contig-click" data-contigname="'+contig.name+'">'+contig.name+'</a>',
                         length: contig.length, genecount: contig.genes.length});
                 }
-                var contigsSettings = {
+                $self.contigsSettings = {
                         "sPaginationType": "full_numbers",
                         "iDisplayLength": 10,
                         "aaSorting": [[ 1, "desc" ]],
@@ -677,8 +1061,8 @@ console.log("RENDERED"); return;
                                       },
                                       "fnDrawCallback": contigEvents
                 };
-                var contigsTable = $('#'+pref+'contigs-table').dataTable(contigsSettings);
-                contigsTable.fnAddData(contigsData);
+                var contigsTable = $('#'+pref+'contigs-table').dataTable($self.contigsSettings);
+                contigsTable.fnAddData($self.contigsData);
 
                 ////////////////////////////// New Tab //////////////////////////////
                 var lastElemTabNum = 0;

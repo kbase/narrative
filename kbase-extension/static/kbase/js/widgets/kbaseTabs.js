@@ -43,7 +43,7 @@ define (
 		bootstrap,
 		$,
 		kbaseDeletePrompt
-	) { 
+	) {
 
     return KBWidget({
 
@@ -134,10 +134,10 @@ define (
             var $tab = $('<div></div>')
                 .addClass('tab-pane fade');
 
-            var hasContent = false;
+            $tab.hasContent = false;
             if(tab.content) {
                 $tab.append(tab.content);
-                hasContent = true;
+                $tab.hasContent = true;
             }
 
             if (this.options.border) {
@@ -187,10 +187,12 @@ define (
                                             relatedTarget   : previous
                                         })
                                     });
-                                if(!hasContent) {
+                                if(!$tab.hasContent) {
                                     if(tab.showContentCallback) {
-                                        $tab.append(tab.showContentCallback());
-                                        hasContent = true;
+                                        $tab.append(tab.showContentCallback($tab));
+                                        if (! tab.dynamicContent) {
+                                          $tab.hasContent = true;
+                                        }
                                     }
                                 }
                             }

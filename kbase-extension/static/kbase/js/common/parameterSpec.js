@@ -354,7 +354,7 @@ define([
                     return {
                     };
                 case 'workspaceObjectName':
-                    switch (uiClass()) {
+                    switch (paramClass()) {
                         case 'input':
                             return {
                                 required: required(),
@@ -377,7 +377,7 @@ define([
                             throw new Error('Unknown workspaceObjectName ui class');
                     }
                 case '[]workspaceObjectName':
-                    switch (uiClass()) {
+                    switch (paramClass()) {
                         case 'input':
                             return {
                                 required: required(),
@@ -405,7 +405,7 @@ define([
                         case 'textarea':
                             return {
                                 required: required()
-                            }
+                            };
                         default:
                             throw new Error('Unknown []string field type: ' + fieldType);
                     }
@@ -573,6 +573,12 @@ define([
                     // do more stuff
                     if (!spec.text_options || !spec.text_options.is_output_name) {
                         throw new Error('Parameter ' + spec.id + ' is an output type, but does not have text_options.is_output_name specified');
+                    }
+                    // Workaround if a parameter is multiple object names, turn it
+                    // into an input.
+                    // console.log('PARAM CLASS output?', spec, dataType());
+                    if (dataType() === '[]workspaceObjectName') {
+                        paramClassName = 'input';
                     }
                     break;
                 case 'parameter':

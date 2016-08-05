@@ -1,11 +1,13 @@
-/*global define*/
+/*global define,require */
 /*jslint white:true,browser:true*/
 define([
     'jquery',
+    'bluebird',
     'kbwidget',
     'base/js/namespace'
 ], function (
     $,
+    Promise,
     KBWidget,
     Jupyter
     ) {
@@ -46,10 +48,10 @@ define([
              */
             if (this.options.lazyRender) {
                 this.is_rendered = false;
-                var nb_container = $('#notebook-container'); 
+                var nb_container = $('#notebook-container');
                 this.visible_settings = {
                     container: nb_container,
-                    threshold: 100 };
+                    threshold: 100};
                 this.lazyRender({data: this}); // try to render at first view
                 if (!this.is_rendered) {
                     // Not initially rendered, so add handler to re-check after scroll events
@@ -63,19 +65,16 @@ define([
 
             return this;
         },
-
         // Log debug message with cell id
-        cellDebug: function(msg) {
+        cellDebug: function (msg) {
             console.debug('cell ' + this.options.cellId + ': ' + msg);
         },
-
         // Return true if cell is visible on page, false otherwise
         lazyVisible: function () {
             return this.inviewport(this.$elem, this.visible_settings);
         },
-
         // Possibly render lazily not-yet-rendered cell
-        lazyRender: function(event) {
+        lazyRender: function (event) {
             var self = event.data;
             if (self.is_rendered) {
                 //self.cellDebug('already rendered');
@@ -84,14 +83,13 @@ define([
                 return;
             }
             // see if it is visible before trying to render
-            if ( !self.lazyVisible() ) {
+            if (!self.lazyVisible()) {
                 //self.cellDebug('do not render cell. not visible');
                 return;
             }
             //self.cellDebug('visible: true');
             return self.render();
         },
-
         // Render cell (unconditionally)
         render: function () {
             // render the cell
@@ -140,15 +138,16 @@ define([
             $cell.trigger('set-icon.cell', ['<i class="fa fa-2x fa-file-o app-output-icon"></i>']);
         },
         renderErrorOutputCell: function () {
-            require(['kbaseNarrativeError'], $.proxy(function () {
-                if (!this.options.title)
+            require(['kbaseNarrativeError'], function () {
+                if (!this.options.title) {
                     this.options.title = 'Narrative Error';
+                }
                 var $label = $('<span>').addClass('label label-danger').append('Error');
                 this.renderCell('kb-cell-error', 'panel-danger', 'kb-err-desc', $label);
                 var $cell = this.$elem.closest('.cell');
                 $cell.trigger('set-icon.cell', ['<i class="fa fa-2x fa-exclamation-triangle error-icon"></i>']);
                 $cell.addClass('kb-error');
-            }, this));
+            }.bind(this));
         },
         renderCell: function (baseClass, panelClass, headerClass, $label, titleSuffix) {
             // set up the widget line
@@ -210,14 +209,20 @@ define([
             var $body = $('<div class="kb-cell-output-content">');
 
             try {
-                require([widget],
-                    function (W) {
+                new Promise(function (resolve, reject) {
+                    try {
+                        require([widget], resolve, reject);
+                    } catch (ex) {
+                        reject(ex);
+                    }
+                })
+                    .then(function (W) {
                         // If we successfully Require the widget code, render it:
                         this.$outWidget = new W($body, widgetData);
                         // this.$outWidget = $body.find('.panel-body > div')[widget](widgetData);
                         this.$elem.append($body);
-                    }.bind(this),
-                    function (err) {
+                    }.bind(this))
+                    .catch(function (err) {
                         // If we fail, render the error widget and log the error.
                         KBError("Output::" + this.options.title, "failed to render output widget: '" + widget);
                         this.options.title = 'App Error';
@@ -227,14 +232,16 @@ define([
                                 method_name: 'kbaseNarrativeOutputCell.renderCell',
                                 type: 'Output',
                                 severity: '',
-                                traceback: 'Failed while trying to show a "' + widget + '"\n' +
-                                    'With inputs ' + JSON.stringify(widgetData) + '\n\n' +
-                                    err.message
+                                traceback: err.stack
+                                //traceback: 'Failed while trying to show a "' + widget + '"\n' +
+                                //    'With inputs ' + JSON.stringify(widgetData) + '\n\n' +
+                                //    err.message
                             }
                         };
                         this.options.widget = this.OUTPUT_ERROR_WIDGET;
                         this.renderErrorOutputCell();
                     }.bind(this));
+
             } catch (err) {
                 KBError("Output::" + this.options.title, "failed to render output widget: '" + widget);
                 this.options.title = 'App Error';
@@ -244,9 +251,10 @@ define([
                         method_name: 'kbaseNarrativeOutputCell.renderCell',
                         type: 'Output',
                         severity: '',
-                        traceback: 'Failed while trying to show a "' + widget + '"\n' +
-                            'With inputs ' + JSON.stringify(widgetData) + '\n\n' +
-                            err.message
+                        trace: err.trace
+                        //traceback: 'Failed while trying to show a "' + widget + '"\n' +
+                        //    'With inputs ' + JSON.stringify(widgetData) + '\n\n' +
+                        //    err.message
                     }
                 };
                 this.options.widget = this.OUTPUT_ERROR_WIDGET;
@@ -321,10 +329,10 @@ define([
          * Licensed under the MIT license
          * Project home: http://www.appelsiini.net/projects/lazyload
          */
-        inviewport: function(element, settings) {
-             var fold = settings.container.offset().top + settings.container.height(),
-                 element_top = $(element).offset().top - settings.threshold;
-             return element_top <= fold; // test if it is "above the fold"
+        inviewport: function (element, settings) {
+            var fold = settings.container.offset().top + settings.container.height(),
+                element_top = $(element).offset().top - settings.threshold;
+            return element_top <= fold; // test if it is "above the fold"
         }
         /* End of Lazy Load code.
          * ------------------------------------------------------- */

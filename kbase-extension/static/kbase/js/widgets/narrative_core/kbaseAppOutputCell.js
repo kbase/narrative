@@ -107,7 +107,7 @@ define([
                     }.bind(this),
                     function (err) {
                         // If we fail, render the error widget and log the error.
-                        KBError("Output::" + this.options.title, "failed to render output widget: '" + widget);
+                        KBError("Output::" + this.options.title, "failed to render app output widget: '" + widget);
                         this.options.title = 'App Error';
                         this.options.data = {
                             error: {
@@ -124,7 +124,7 @@ define([
                         this.renderErrorOutputCell();
                     }.bind(this));
             } catch (err) {
-                KBError("Output::" + this.options.title, "failed to render output widget: '" + widget);
+                KBError("Output::" + this.options.title, "failed to render app output widget: '" + widget);
                 this.options.title = 'App Error';
                 this.options.data = {
                     error: {

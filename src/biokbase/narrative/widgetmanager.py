@@ -312,9 +312,9 @@ class WidgetManager(object):
 
         input_template = """
         element.html("<div id='{{input_id}}' class='kb-vis-area'></div>");
-
         require(['kbaseNarrativeOutputCell'], function(KBaseNarrativeOutputCell) {
-            var w = new KBaseNarrativeOutputCell($('#{{input_id}}'), {"data": {{input_data}},
+            var w = new KBaseNarrativeOutputCell($('#{{input_id}}'), {
+                "data": {{input_data}},
                 "type":"{{output_type}}",
                 "widget":"{{widget_name}}",
                 "cellId":"{{cell_id}}",
@@ -351,7 +351,8 @@ class WidgetManager(object):
         element.html("<div id='{{input_id}}' class='kb-vis-area'></div>");
 
         require(['kbaseNarrativeOutputCell'], function(KBaseNarrativeOutputCell) {
-            var w = new KBaseNarrativeOutputCell($('#{{input_id}}'), {"data": {{input_data}},
+            var w = new KBaseNarrativeOutputCell($('#{{input_id}}'), {
+                "data": {{input_data}},
                 "type":"viewer",
                 "widget":"{{widget_name}}",
                 "cellId":"{{cell_id}}",

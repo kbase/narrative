@@ -36,13 +36,11 @@ define([
         if (!spec.spec.checkbox_options) {
             throw new Error('Checkbox control does not have checkbox_options configured');
         }
-        checkboxOptions = spec.spec.checkbox_options.checked_value;
-        if ( (typeof checkboxOptions.checked_value !== 'string') ||
-             (checkboxOptions.checked_value.length === 0) ) {
+        checkboxOptions = spec.spec.checkbox_options;
+        if (checkboxOptions.checked_value === undefined) {
             throw new Error('Checkbox spec option checked_value is not configured');
         }
-        if ( (typeof checkboxOptions.unchecked_value !== 'string') ||
-             (checkboxOptions.checked_value.length === 0) ) {
+        if (checkboxOptions.unchecked_value === undefined) {
             throw new Error('Checkbox spec option unchecked_value is not configured');
         }
 

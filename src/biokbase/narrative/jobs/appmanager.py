@@ -221,7 +221,7 @@ class AppManager(object):
 
         # now just map onto outputs.
         (output_widget, widget_params) = map_outputs_from_state([], params, spec)
-        return WidgetManager().show_output_widget(output_widget, widget_params, tag=tag)
+        return WidgetManager().show_output_widget(output_widget, widget_params, cell_id=cell_id, tag=tag)
 
     def run_widget_app(self, app_id, tag="release", version=None, cell_id=None, run_id=None):
         """

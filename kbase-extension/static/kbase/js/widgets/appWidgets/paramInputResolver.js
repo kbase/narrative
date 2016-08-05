@@ -243,7 +243,7 @@ define([
                             return UndefinedInputWidget;
                     }
                 case '[]workspaceObjectName':
-                    switch (parameterSpec.uiClass()) {
+                    switch (parameterSpec.paramClass()) {
                         case 'input':
                             return MultiObjectInputWidget;
                         case 'output':

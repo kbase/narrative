@@ -286,11 +286,11 @@ define (
                     callback : this.deleteTabCallback(tabName),
                 }
             );
-
             $deleteModal.openPrompt();
         },
 
         deleteTabCallback : function (tabName) {
+
             return $.proxy(function(e, $prompt) {
                 if ($prompt != undefined) {
                     $prompt.closePrompt();

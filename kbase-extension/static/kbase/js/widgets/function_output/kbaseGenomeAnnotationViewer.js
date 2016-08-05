@@ -58,6 +58,7 @@ define (
             this.tableData = {};
             this.populated = {};
             this.contigMap = {};
+            this.geneMap = {};
 
             if (this.options.wsNameOrId != undefined) {
               this.wsKey = this.options.wsNameOrId.match(/^\d+/)
@@ -124,7 +125,6 @@ define (
               $self.genome_api.get_summary($self.ref),
               $self.ws.get_object_info_new({objects: [{'ref':$self.ref}], includeMetadata:1})
             ).then(function (d, info) {
-console.log("RESPONSE IS ", d, info);
 
               $self.summary = d;
 
@@ -138,8 +138,6 @@ console.log("RESPONSE IS ", d, info);
                   rows : $self.summary.annotation.feature_type_counts
                 }
               });
-
-              console.log("FT", $featureTableElem);
 
               var $overviewTableElem = $.jqElem('div');
               var $overviewTable =  new kbaseTable($overviewTableElem, {
@@ -245,7 +243,7 @@ console.log("RESPONSE IS ", d, info);
                                         "emptyTable": "No contigs found."
                                     },
                       "createdRow" : function (row, data, index) {
-console.log("CR", row, data, index);
+
                         var $linkCell = $('td', row).eq(0);
                         $linkCell.empty();
 
@@ -351,7 +349,6 @@ console.log("CR", row, data, index);
         },
 
         showContent : function(type, $tab) {
-        console.log("SHOWS CONTENT FOR ", type, " IN ", $tab);
 
           var $self = this;
           if (this.content[type] == undefined) {
@@ -359,9 +356,7 @@ console.log("CR", row, data, index);
             $self.genomeAnnotationData = {contigs : []};
 
             $self.genome_api.get_features($self.ref).then(function (features) {
-              console.log("API GET FEATURES ", features, Date.now());
 
-              var geneMap = {};
               var contigMap = $self.contigMap;
 
               var cdsData = [] //XXX plants baloney. Extra tab for CDS data. See below on line 372 or so.
@@ -374,7 +369,7 @@ console.log("CR", row, data, index);
               var genomeType = 'genome'; //self.genomeType(gnm); XXX THIS NEEDS TO BE FIXED TO IDENTIFY TRANSCRIPTOMES AGAIN!
 var featurelist = {};
               var pref = 12345;
-console.log("PARSED 1");
+
               $.each(
                 features,
                 function (feature_id, feature) {
@@ -424,7 +419,7 @@ console.log("PARSED 1");
                       }
                     );
 
-                    geneMap[feature_id] = feature;
+                    $self.geneMap[feature_id] = feature;
 
                     var contig = contigMap[contigName];
                     if (contig != undefined) {
@@ -447,11 +442,6 @@ console.log("PARSED 1");
                   }
                 }
               );
-console.log("PARSED 2", featurelist);
-
-
-console.log("PARSED 3");
-
 
               for (var key in contigMap) {
                   if (!contigMap.hasOwnProperty(key))
@@ -478,7 +468,7 @@ console.log("PARSED 3");
               table.rows.add($self.genomeAnnotationData[type]).draw();
               //table.fnAddData($self.genomeAnnotationData[type]);
               $self.populated[type] = true;
-console.log(type, $self.genomeAnnotationData[type], $self.settingsForType(type));
+
 
             })
             .fail(function (d) {
@@ -496,7 +486,7 @@ console.log(type, $self.genomeAnnotationData[type], $self.settingsForType(type))
             return this.content[type];
           }
           else {
-            console.log("HAS NOT POPULATED TYPE", type, this.content[type]);
+
             setTimeout( function() {
               $tab.empty();
               $tab.removeClass('alert alert-danger');
@@ -516,7 +506,6 @@ console.log(type, $self.genomeAnnotationData[type], $self.settingsForType(type))
 
         showGene : function(geneId) {
           var $self = this;
-          console.log("SHOWS GENE", geneId);
 
           var $tabObj = $self.data('tabObj');
 
@@ -524,31 +513,56 @@ console.log(type, $self.genomeAnnotationData[type], $self.settingsForType(type))
 
           if (! $tabObj.hasTab(geneId)) {
 
-            /*var $content = $.jqElem('div');
-            var contig = $self.contigMap[contigName];
-            var elemTable = $content.append('<table class="table table-striped table-bordered" \
-                    style="margin-left: auto; margin-right: auto;">');
-            var elemLabels = ['Contig name', 'Length', 'Gene count'];
-            var elemData = [contigName, contig.length, contig.features['gene'].length];
+            var $content = $.jqElem('div');
 
-            for (var i=0; i<elemData.length; i++) {
-                elemTable.append('<tr><td>'+elemLabels[i]+'</td><td>'+elemData[i]+'</td></tr>');
+            var gene = $self.geneMap[geneId];
+
+            var contigName = null;
+            var geneStart = null;
+            var geneDir = null;
+            var geneLen = null;
+            if (gene.feature_locations && gene.feature_locations.length > 0) {
+                contigName = gene.feature_locations[0][0];
+                geneStart = gene.feature_locations[0][1];
+                geneDir = gene.feature_locations[0][2];
+                geneLen = gene.feature_locations[0][3];
             }
-            var cgb = new ContigBrowserPanel();
-            cgb.data.options.contig = contig;
-            cgb.data.options.svgWidth = $self.width - 28;
-            cgb.data.options.onClickFunction = function(svgElement, feature) {
-                showGene(feature.feature_id);
-            };
-            cgb.data.options.token = $self.authToken();
-            cgb.data.$elem = $('<div style="width:100%; height: 200px;"/>');
-            cgb.data.$elem.show(function(){
-                cgb.data.update();
-            });
-            $content.append(cgb.data.$elem);
-            cgb.data.init();*/
+            var geneType = gene.feature_type;
+            var geneFunc = gene['feature_function'];
+            var geneAnn = '';
+            if (gene['annotations'])
+                geneAnn = gene['annotations'];
 
-var $content = 'Genes are not enabled yet';
+            var elemLabels = ['Gene ID', 'Contig name', 'Gene start', 'Strand', 'Gene length', "Gene type", "Function", "Annotations"];
+            var elemData = ['<a href="/#dataview/'+$self.ref+'?sub=Feature&subid='+geneId+'" target="_blank">'+geneId+'</a>',
+                            $.jqElem('a')
+                              .on('click', function(e) {
+                                $self.showContig(contigName);
+                              })
+                              .append(contigName)
+                            ,
+                            geneStart, geneDir, geneLen, geneType, geneFunc, geneAnn];
+            var elemTable = $content.append('<table class="table table-striped table-bordered" \
+                    style="margin-left: auto; margin-right: auto;>');
+            for (var i=0; i<elemData.length; i++) {
+                if (elemLabels[i] === 'Function') {
+                    elemTable.append('<tr><td>' + elemLabels[i] + '</td> \
+                            <td><textarea style="width:100%;" cols="2" rows="3" readonly>'+elemData[i]+'</textarea></td></tr>');
+                } else if (elemLabels[i] === 'Annotations') {
+                    elemTable.append('<tr><td>' + elemLabels[i] + '</td> \
+                            <td><textarea style="width:100%;" cols="2" rows="3" readonly>'+elemData[i]+'</textarea></td></tr>');
+                } else {
+                    elemTable.append('<tr><td>'+elemLabels[i]+'</td> \
+                            <td>'+elemData[i]+'</td></tr>');
+                }
+            }
+
+            if (f.protein_translation) {
+                elemTable.append('<tr><td>Protein Translation</td><td><div class="kb-ga-seq">' + f.protein_translation + '</div></td></tr>');
+            }
+            if (f.feature_dna_sequence) {
+                elemTable.append('<tr><td>Nucleotide Sequence</td><td><div class="kb-ga-seq">' + f.feature_dna_sequence + '</div></td></tr>');
+            }
 
             $tabObj.addTab({ tab : geneId, content : $content, canDelete : true, show : true});
           }
@@ -559,7 +573,6 @@ var $content = 'Genes are not enabled yet';
 
         showContig : function(contigId) {
           var $self = this;
-          console.log("SHOWS CONTIG", contigId);
 
           var $tabObj = $self.data('tabObj');
 

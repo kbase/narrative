@@ -46,7 +46,6 @@ define([
         //if (!workspaceUrl) {
         //    throw new Error('Workspace url is required for the object widget');
         //}
-        options.enabled = true;
         
         function makeInputControl(events, bus) {
             // There is an input control, and a dropdown,
@@ -157,14 +156,6 @@ define([
 
         function validate() {
             return Promise.try(function () {
-                if (!options.enabled) {
-                    return {
-                        isValid: true,
-                        validated: false,
-                        diagnosis: 'disabled'
-                    };
-                }
-
                 var rawValue = getInputValue(),
                     validationOptions = {
                         required: constraints.required,

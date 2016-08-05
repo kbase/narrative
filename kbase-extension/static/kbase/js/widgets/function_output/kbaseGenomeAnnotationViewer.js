@@ -105,6 +105,14 @@ define (
                 ;
         },
 
+        numberWithCommas : function(x) {
+            x = x.toString();
+            var pattern = /(-?\d+)(\d{3})/;
+            while (pattern.test(x))
+                x = x.replace(pattern, "$1,$2");
+            return x;
+        },
+
         appendUI : function($elem) {
 
             var $self = this;
@@ -128,14 +136,24 @@ define (
 
               $self.summary = d;
 
-              var object_name = info[0][2] + ', version ' + info[0][4];
+              var object_name = info[0][1] + ', version ' + info[0][4];
 
               var $featureTableElem = $.jqElem('div');
+
+              var pretty_counts = {};
+
+              $.each(
+                $self.summary.annotation.feature_type_counts,
+                function (k, v) {
+                  pretty_counts[k] = $self.numberWithCommas(v);
+                }
+              );
+
               var $featureTable = new kbaseTable($featureTableElem, {
                 allowNullRows : false,
                 structure : {
                   keys : Object.keys($self.summary.annotation.feature_type_counts).sort($self.sortCaseInsensitively),
-                  rows : $self.summary.annotation.feature_type_counts
+                  rows : pretty_counts, //$self.summary.annotation.feature_type_counts
                 }
               });
 
@@ -173,7 +191,7 @@ define (
                             'GC' : (Math.round(10000 * d.assembly.gc_content) / 100) + '%',
                             'Taxonomy lineage' : d.taxonomy.scientific_lineage.join('; '),
                             'Aliases' : d.taxonomy.organism_aliases.join('<br>'),
-                            'Size' : d.assembly.dna_size,
+                            'Size' : $self.numberWithCommas(d.assembly.dna_size),
                             'Number of Contigs' : d.assembly.contig_ids.length,
                             'Number of Features' : $featureTableElem,
                           }
@@ -270,7 +288,8 @@ define (
                             {title: "Strand", data: "dir"},
                             {title: "Length", data: "len"},
                             {title: "Type", data: "type"},
-                            {title: "Function", data: "func"}
+                            {title: "Function", data: "func"},
+                            {title: "Aliases", data: "aliases"}
                             ],
                             "data": [],
                             "language": {
@@ -367,14 +386,24 @@ define (
               $self.content['contigs'] = $.jqElem('table').css('width', '100%');
 
               var genomeType = 'genome'; //self.genomeType(gnm); XXX THIS NEEDS TO BE FIXED TO IDENTIFY TRANSCRIPTOMES AGAIN!
-var featurelist = {};
-              var pref = 12345;
+              var featurelist = {};
 
               $.each(
                 features,
                 function (feature_id, feature) {
 
                   $self.content[feature.feature_type] = $.jqElem('table').css('width', '100%');
+
+                  var aliases = [];
+
+                  if (feature.feature_aliases != undefined) {
+                    $.each(
+                      feature.feature_aliases,
+                      function (alias, sources) {
+                        aliases.push(alias + ' (' + sources.join(',') + ')');
+                      }
+                    );
+                  }
 
                   if (feature.feature_locations != undefined) {
 
@@ -401,20 +430,24 @@ var featurelist = {};
                       dataArray = $self.genomeAnnotationData[feature.feature_type] = [];
                     }
 
+if (feature.feature_locations.length > 1) {
+  console.log("FEATURE LOCATION TOO LONG IS ", feature_id, feature);
+}
+
                     $.each(
                       feature.feature_locations,
                       function (i, location) {
                         dataArray.push({
                           // id: '<a href="/#dataview/'+self.ws_name+'/'+self.ws_id+'?sub=Feature&subid='+geneId+'" target="_blank">'+geneId+'</a>',
-                          //id: '<a class="'+pref+'gene-click" data-geneid="'+feature_id+'">'+feature_id+'</a>',
                           id : feature_id,
                           // contig: contigName,
                           contig : location.contig_id,
-                          start: location.start,
+                          start: $self.numberWithCommas(location.start),
                           dir: location.strand,
-                          len: location.length,
+                          len: $self.numberWithCommas(location.length),
                           type: feature.feature_type,
-                          func: feature.function || '-'
+                          func: feature.function || '-',
+                          aliases : aliases.join(';'),
                         });
                       }
                     );
@@ -450,11 +483,11 @@ var featurelist = {};
 
                   var contigRow = {
                     name: contig.name,
-                    length: contig.length,
+                    length: $self.numberWithCommas(contig.length),
                   };
 
                   for (f in contig.features) {
-                    contigRow[f + 'count'] = contig.features[f].length;
+                    contigRow[f + 'count'] = $self.numberWithCommas(contig.features[f].length);
                   }
 
                   $self.genomeAnnotationData.contigs.push(contigRow);

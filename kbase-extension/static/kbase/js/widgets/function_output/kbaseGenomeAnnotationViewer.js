@@ -430,27 +430,26 @@ define (
                       dataArray = $self.genomeAnnotationData[feature.feature_type] = [];
                     }
 
-if (feature.feature_locations.length > 1) {
-  console.log("FEATURE LOCATION TOO LONG IS ", feature_id, feature);
-}
+                    dataArray.push({
+                      // id: '<a href="/#dataview/'+self.ws_name+'/'+self.ws_id+'?sub=Feature&subid='+geneId+'" target="_blank">'+geneId+'</a>',
+                      id : feature_id,
+                      contig: $self.numberWithCommas(feature.feature_locations.map(function(v) { return v.contig_id}).join('<br>')),
+                      start: $self.numberWithCommas(feature.feature_locations.map(function(v) { return $self.numberWithCommas(v.start)}).join('<br>')),
+                      //dir: location.strand,
+                      dir : $self.numberWithCommas(feature.feature_locations.map(function(v) { return v.strand}).join('<br>')),
+                      //len: $self.numberWithCommas(location.length),
+                      len : $self.numberWithCommas(feature.feature_locations.map(function(v) { return $self.numberWithCommas(v.length)}).join('<br>')),
+                      type: feature.feature_type,
+                      func: feature.function || '-',
+                      aliases : aliases.join(';'),
+                    });
 
-                    $.each(
+                    /*$.each(
                       feature.feature_locations,
                       function (i, location) {
-                        dataArray.push({
-                          // id: '<a href="/#dataview/'+self.ws_name+'/'+self.ws_id+'?sub=Feature&subid='+geneId+'" target="_blank">'+geneId+'</a>',
-                          id : feature_id,
-                          // contig: contigName,
-                          contig : location.contig_id,
-                          start: $self.numberWithCommas(location.start),
-                          dir: location.strand,
-                          len: $self.numberWithCommas(location.length),
-                          type: feature.feature_type,
-                          func: feature.function || '-',
-                          aliases : aliases.join(';'),
-                        });
+
                       }
-                    );
+                    );*/
 
                     $self.geneMap[feature_id] = feature;
 

@@ -3,6 +3,12 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v4.2.1 (more notes will follow).
 
+### Version 3.0.0-alpha-17
+__Changes__
+- fix checkbox validation bug
+- fix viewer widget not getting the cell id and therefore not rendering
+- update python workspace client to latest
+
 ### Version 3.0.0-alpha-16
 __Changes__
 - fix multiple object input widget

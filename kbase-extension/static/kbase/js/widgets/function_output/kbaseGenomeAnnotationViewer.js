@@ -374,7 +374,7 @@ define (
 
             $self.genomeAnnotationData = {contigs : []};
 
-            $self.genome_api.get_features($self.ref).then(function (features) {
+            $self.genome_api.get_features2({ref : $self.ref, exclude_sequence: 1}).then(function (features) {
 
               var contigMap = $self.contigMap;
 
@@ -548,16 +548,16 @@ define (
             var $content = $.jqElem('div');
 
             var gene = $self.geneMap[geneId];
-
+console.log("SHOWS GENE", geneId, gene);
             var contigName = null;
             var geneStart = null;
             var geneDir = null;
             var geneLen = null;
             if (gene.feature_locations && gene.feature_locations.length > 0) {
-                contigName = gene.feature_locations[0][0];
-                geneStart = gene.feature_locations[0][1];
-                geneDir = gene.feature_locations[0][2];
-                geneLen = gene.feature_locations[0][3];
+                contigName = gene.feature_locations[0].contig_id;
+                geneStart = gene.feature_locations[0].start;
+                geneDir = gene.feature_locations[0].strand;
+                geneLen = gene.feature_locations[0].length;
             }
             var geneType = gene.feature_type;
             var geneFunc = gene['feature_function'];
@@ -584,8 +584,10 @@ define (
                     elemTable.append('<tr><td>' + elemLabels[i] + '</td> \
                             <td><textarea style="width:100%;" cols="2" rows="3" readonly>'+elemData[i]+'</textarea></td></tr>');
                 } else {
-                    elemTable.append('<tr><td>'+elemLabels[i]+'</td> \
-                            <td>'+elemData[i]+'</td></tr>');
+                  var $tr = $.jqElem('tr');
+                  $tr.append($.jqElem('td').append(elemLabels[i]));
+                  $tr.append($.jqElem('td').append(elemData[i]));
+                  elemTable.append($tr);
                 }
             }
 

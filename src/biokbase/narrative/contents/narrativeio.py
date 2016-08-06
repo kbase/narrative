@@ -8,6 +8,7 @@ import biokbase.narrative.common.service as service
 from biokbase.narrative.common import util
 import biokbase.workspace
 from biokbase.workspace import client as WorkspaceClient
+from biokbase.workspace.baseclient import ServerError
 from tornado.web import HTTPError
 from notebook.utils import (
     to_api_path,
@@ -37,7 +38,7 @@ obj_ref_regex = re.compile('^(?P<wsid>\d+)\/(?P<objid>\d+)(\/(?P<ver>\d+))?$')
 MAX_METADATA_STRING_BYTES = 900
 MAX_METADATA_SIZE_BYTES = 16000
 
-class PermissionsError(WorkspaceClient.ServerError):
+class PermissionsError(ServerError):
     """Raised if user does not have permission to
     access the workspace.
     """
@@ -50,7 +51,7 @@ class PermissionsError(WorkspaceClient.ServerError):
         return pat.search(err) is not None
 
     def __init__(self, name=None, code=None, message=None, **kw):
-        WorkspaceClient.ServerError.__init__(self, name, code, message, **kw)
+        ServerError.__init__(self, name, code, message, **kw)
 
 
 class KBaseWSManagerMixin(object):
@@ -91,7 +92,7 @@ class KBaseWSManagerMixin(object):
         try:
             ws_info = self.ws_client().get_workspace_info({'id': wsid})
             return ws_info[1]
-        except WorkspaceClient.ServerError, err:
+        except ServerError, err:
             raise self._ws_err_to_perm_err(err)
 
     def _parse_obj_ref(self, obj_ref):
@@ -114,7 +115,7 @@ class KBaseWSManagerMixin(object):
             return self.read_narrative(obj_ref, content=False, include_metadata=False) is not None
         except PermissionsError:
             raise
-        except WorkspaceClient.ServerError, err:
+        except ServerError, err:
             return False
 
     def read_narrative(self, obj_ref, content=True, include_metadata=True):
@@ -147,7 +148,7 @@ class KBaseWSManagerMixin(object):
                 })
                 if nar_data:
                     return {'info': nar_data[0]}
-        except WorkspaceClient.ServerError, err:
+        except ServerError, err:
             raise self._ws_err_to_perm_err(err)
 
     def write_narrative(self, obj_ref, nb, cur_user):
@@ -217,7 +218,7 @@ class KBaseWSManagerMixin(object):
                 u'narrative_nice_name': nb[u'metadata'][u'name']
             }
             self.ws_client().alter_workspace_metadata({u'wsi': {u'id': ws_id}, u'new':updated_metadata})
-        except WorkspaceClient.ServerError, err:
+        except ServerError, err:
             pass
 #            raise self._ws_err_to_perm_err(err)
         except Exception as e:
@@ -272,7 +273,7 @@ class KBaseWSManagerMixin(object):
 
             return (nb, obj_info[6], obj_info[0])
 
-        except WorkspaceClient.ServerError, err:
+        except ServerError, err:
             raise self._ws_err_to_perm_err(err)
         except Exception as e:
             raise HTTPError(500, u'%s saving Narrative: %s' % (type(e),e))
@@ -457,7 +458,7 @@ class KBaseWSManagerMixin(object):
 
         try:
             res = self.ws_client().list_objects(list_obj_params)
-        except WorkspaceClient.ServerError, err:
+        except ServerError, err:
             raise self._ws_err_to_perm_err(err)
         my_narratives = [dict(zip(list_objects_fields, obj)) for obj in res]
         for nar in my_narratives:
@@ -489,7 +490,7 @@ class KBaseWSManagerMixin(object):
         perms = {}
         try:
             perms = self.ws_client().get_permissions({'id': ws_id})
-        except WorkspaceClient.ServerError, err:
+        except ServerError, err:
             raise self._ws_err_to_perm_err(err)
         if user is not None:
             if perms.has_key(user):

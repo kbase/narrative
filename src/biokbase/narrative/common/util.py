@@ -12,7 +12,7 @@ from setuptools import Command
 import time
 from .kvp import KVP_EXPR, parse_kvp
 from biokbase.workspace.client import Workspace as WS2
-from biokbase.workspace.client import ServerError
+from biokbase.workspace.baseclient import ServerError
 from urllib2 import URLError
 
 def kbase_debug_mode():

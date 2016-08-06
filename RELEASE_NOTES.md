@@ -3,6 +3,11 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v4.2.1 (more notes will follow).
 
+### Version 3.0.0-alpha-19
+__Changes__
+- add latest workspace python client
+- update narrative usage of ws client since ServerError has moved
+
 ### Version 3.0.0-alpha-18
 __Changes__
 - revert python workspace client for now (breaks narrative launch)

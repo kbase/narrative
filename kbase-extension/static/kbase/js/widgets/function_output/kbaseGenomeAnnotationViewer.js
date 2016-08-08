@@ -95,22 +95,25 @@ define (
 
         loaderElem : function () {
           return $.jqElem('div')
-                .append('<br>&nbsp;Loading data...<br>&nbsp;please wait...<br>&nbsp;Data parsing may take upwards of 30 seconds, during which time this page may be unresponsive.')
                 .append($.jqElem('br'))
                 .append(
                     $.jqElem('div')
                     .attr('align', 'center')
-                    .append($.jqElem('i').addClass('fa fa-spinner').addClass('fa fa-spin fa fa-4x'))
+                    .append($.jqElem('i').addClass('fa fa-spinner fa-spin fa-2x'))
+                    .append('<br>Loading data... please wait...<br>Data processing may take upwards of 30 seconds, during which time this page may be unresponsive.<br><br>')
+                    
                     )
                 ;
         },
 
         numberWithCommas : function(x) {
-            x = x.toString();
-            var pattern = /(-?\d+)(\d{3})/;
-            while (pattern.test(x))
-                x = x.replace(pattern, "$1,$2");
-            return x;
+            //x = x.toString();
+            //var pattern = /(-?\d+)(\d{3})/;
+            //while (pattern.test(x))
+            //    x = x.replace(pattern, "$1,$2");
+            //return x;
+            // speedup over above code, which can help on very long lists
+            return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
         },
 
         appendUI : function($elem) {
@@ -136,7 +139,9 @@ define (
 
               $self.summary = d;
 
-              var object_name = info[0][1] + ', version ' + info[0][4];
+              var object_link = '<a href="/#dataview/' + info[0][6] + '/' + info[0][1] + '/' + info[0][4] + '" target="_blank">' + info[0][1] + '</a>';
+              var object_name = object_link + ', version ' + info[0][4];
+
 
               var $featureTableElem = $.jqElem('div');
 
@@ -167,7 +172,7 @@ define (
                             'Domain',
                             'Genetic Code',
                             'Source',
-                            'Source ID',
+                            'Source Id',
                             'Source File name',
                             'Source Date',
                             'Source Release',
@@ -184,7 +189,7 @@ define (
                             'Domain' : d.taxonomy.kingdom,
                             'Genetic Code' : d.taxonomy.genetic_code,
                             'Source' : d.annotation.external_source,
-                            'Source ID' : d.assembly.assembly_source_id,
+                            'Source Id' : d.assembly.assembly_source_id,
                             'Source File name' : d.annotation.original_source_filename,
                             'Source Date' : d.annotation.external_source_date,
                             'Source Release' : d.annotation.release,
@@ -198,20 +203,23 @@ define (
                       }
                   }
               );
+              // correct some styles!  too difficult to do since kbaseTable is in the old ui-common submodule
+              $overviewTable.$elem.find('table').addClass('table table-striped table-bordered table-hover');
+              $overviewTable.$elem.find('tr').attr('style','');
 
               $tabObj.addTab(
-                { tab : 'Overview', content : $overviewTableElem, canDelete : false, show : true}
-              );
-
-              $tabObj.addTab(
-                { tab : 'Contigs',  canDelete : false, show : false, dynamicContent : true, showContentCallback : function($tab) {
-                  return $self.showContigContent($tab);
-                }}
+                { tab : 'Genome Annotation Summary', content : $overviewTableElem, canDelete : false, show : true}
               );
 
               $tabObj.addTab(
                 { tab : 'Features',canDelete : false, show : false, dynamicContent : true, showContentCallback : function($tab) {
                   return $self.showGeneContent($tab);
+                }}
+              );
+
+              $tabObj.addTab(
+                { tab : 'Contigs',  canDelete : false, show : false, dynamicContent : true, showContentCallback : function($tab) {
+                  return $self.showContigContent($tab);
                 }}
               );
 
@@ -239,7 +247,7 @@ define (
           if (type == 'contigs') {
 
             var columns = [
-              {title: "Contig name", data: "name"},
+              {title: "Contig Id", data: "name"},
               {title: "Length", data: "length"},
               {title: "Genes", data: "genecount"}
             ];
@@ -252,7 +260,7 @@ define (
 
               return {
                       "pagingType": "full_numbers",
-                      "displayLength": 20,
+                      "displayLength": 10,
                       "sorting": [[ 1, "desc" ]],
                       "columns": columns,
                                     "data": [],
@@ -260,9 +268,18 @@ define (
                                         "search": "Search contig:",
                                         "emptyTable": "No contigs found."
                                     },
-                      "createdRow" : function (row, data, index) {
+                        "language": {
+                            "lengthMenu": "_MENU_ Contigs per page",
+                            "zeroRecords": "No Matching Contigs Found",
+                            "info": "Showing _START_ to _END_ of _TOTAL_ Contigs",
+                            "infoEmpty": "No Contigs",
+                            "infoFiltered": "(filtered from _MAX_)",
+                            "search" : "Search Contigs"
+                        }
+                      //"createdRow" : function (row, data, index) {
 
-                        var $linkCell = $('td', row).eq(0);
+                        /* creates a contig browser tab -- not working yet, so commented out */
+                        /*var $linkCell = $('td', row).eq(0);
                         $linkCell.empty();
 
                         $linkCell.append(
@@ -271,9 +288,9 @@ define (
                             $self.showContig(data.name);
                           })
                           .append(data.name)
-                        );
+                        );*/
 
-                      },
+                      //},
               };
           }
           else {
@@ -282,21 +299,27 @@ define (
               "displayLength": 10,
               "sorting": [[ 1, "asc" ], [2, "asc"]],
               "columns": [
-                            {title: "Feature ID", data: "id"},
+                            {title: "Feature Id", data: "id"},
+                            {title: "Aliases", data: "aliases"},
                             {title: "Contig", data: "contig"},
                             {title: "Start", data: "start"},
                             {title: "Strand", data: "dir"},
                             {title: "Length", data: "len"},
-                            {title: "Type", data: "type"},
-                            {title: "Function", data: "func"},
-                            {title: "Aliases", data: "aliases"}
+                            //{title: "Type", data: "type"}, // do not need to show type
+                            {title: "Function", data: "func"}
                             ],
-                            "data": [],
-                            "language": {
-                                "search": "Search gene:",
-                                "emptyTable": "No genes found."
-                            },
-              "createdRow" : function (row, data, index) {
+              "data": [],
+              "language": {
+                            "lengthMenu": "_MENU_ Features per page",
+                            "zeroRecords": "No Matching Features Found",
+                            "info": "Showing _START_ to _END_ of _TOTAL_ Features",
+                            "infoEmpty": "No Features",
+                            "infoFiltered": "(filtered from _MAX_)",
+                            "search" : "Search Features"
+                          },
+
+              // Gene view and simple contig browser not working, so comment out */
+              /*"createdRow" : function (row, data, index) {
 
                 if (data.type == 'gene') {
                   var $featureCell = $('td', row).eq(0);
@@ -311,7 +334,7 @@ define (
                   );
                 }
 
-                var $contigCell = $('td', row).eq(1);
+                var $contigCell = $('td', row).eq(2);
                 $contigCell.empty();
 
                 $contigCell.append(
@@ -322,8 +345,8 @@ define (
                   .append(data.contig)
                 );
 
-              },
-                            //"fnDrawCallback": function() { geneEvents(); contigEvents(); }
+              },*/
+              //"fnDrawCallback": function() { geneEvents(); contigEvents(); }
              };
           }
         },
@@ -349,14 +372,17 @@ define (
                 .attr('value', type)
                 .attr('selected', type == 'gene' ? 'selected' : undefined)
                 .append(type)
-            );
+            ).addClass('form-control input-sm').css({'width':'auto', 'display':'inline'});
           }
 
 
           var $container = $.jqElem('div')
-            .append("Please select feature type:  ")
-            .append($selector)
-            .append('<br>')
+            .append(
+              $.jqElem('div')
+                .css('padding-top','10px')
+                .append("Showing Feature Type:  ")
+                .append($selector)
+            )
             .append($target);
 
           $tab.append($container);
@@ -366,6 +392,14 @@ define (
           this.showContent('gene', $target);
           return;
         },
+
+
+        setDataTableStyles: function($table) {
+          return $table
+                    .addClass('table table-striped table-bordered table-hover')
+                    .css({'width':'100%', 'border':'1px solid #ddd', 'margin-left': 'auto', 'margin-right':'auto'});
+        },
+
 
         showContent : function(type, $tab) {
 
@@ -383,7 +417,7 @@ define (
 
 
 
-              $self.content['contigs'] = $.jqElem('table').css('width', '100%');
+              $self.content['contigs'] = $self.setDataTableStyles($.jqElem('table'));
 
               var genomeType = 'genome'; //self.genomeType(gnm); XXX THIS NEEDS TO BE FIXED TO IDENTIFY TRANSCRIPTOMES AGAIN!
               var featurelist = {};
@@ -392,7 +426,7 @@ define (
                 features,
                 function (feature_id, feature) {
 
-                  $self.content[feature.feature_type] = $.jqElem('table').css('width', '100%');
+                  $self.content[feature.feature_type] = $self.setDataTableStyles($.jqElem('table'));
 
                   var aliases = [];
 
@@ -400,7 +434,7 @@ define (
                     $.each(
                       feature.feature_aliases,
                       function (alias, sources) {
-                        aliases.push(alias + ' (' + sources.join(',') + ')');
+                        aliases.push('<span title="'+sources.join(',')+ '">'+alias+'</span>');
                       }
                     );
                   }
@@ -433,15 +467,15 @@ define (
                     dataArray.push({
                       // id: '<a href="/#dataview/'+self.ws_name+'/'+self.ws_id+'?sub=Feature&subid='+geneId+'" target="_blank">'+geneId+'</a>',
                       id : feature_id,
-                      contig: $self.numberWithCommas(feature.feature_locations.map(function(v) { return v.contig_id}).join('<br>')),
+                      contig: feature.feature_locations.map(function(v) { return v.contig_id}).join('<br>'),
                       start: $self.numberWithCommas(feature.feature_locations.map(function(v) { return $self.numberWithCommas(v.start)}).join('<br>')),
                       //dir: location.strand,
                       dir : $self.numberWithCommas(feature.feature_locations.map(function(v) { return v.strand}).join('<br>')),
                       //len: $self.numberWithCommas(location.length),
                       len : $self.numberWithCommas(feature.feature_locations.map(function(v) { return $self.numberWithCommas(v.length)}).join('<br>')),
                       type: feature.feature_type,
-                      func: feature.function || '-',
-                      aliases : aliases.join(';'),
+                      func: feature.function || '',
+                      aliases : aliases.join(', '),
                     });
 
                     /*$.each(
@@ -493,7 +527,7 @@ define (
               }
 
               $tab.empty();
-              $tab.append($self.content[type]);
+              $tab.append($('<div>').css('padding','10px 0px').append($self.content[type])); //wrapped in a container so no scroll bars appear
               $tab.hasContent = true;
 
               var table = $self.content[type].DataTable($self.settingsForType(type));
@@ -509,7 +543,6 @@ define (
                   .addClass('alert alert-danger')
                   .html("Could not load features : " + d.error.message);
             });
-
             return $self.loaderElem();
 
           }
@@ -523,9 +556,9 @@ define (
               $tab.empty();
               $tab.removeClass('alert alert-danger');
 
-              var $tableElem = $.jqElem('table').css('width', '100%');
+              var $tableElem = $self.setDataTableStyles($.jqElem('table'));
 
-              $tab.append($tableElem);
+              $tab.append($('<div>').css('padding','10px 0px').append($tableElem));  //wrapped in a container so no scroll bars appear
 
               var table = $tableElem.dataTable($self.settingsForType(type));
               table.fnAddData($self.genomeAnnotationData[type]);
@@ -574,8 +607,9 @@ console.log("SHOWS GENE", geneId, gene);
                               .append(contigName)
                             ,
                             geneStart, geneDir, geneLen, geneType, geneFunc, geneAnn];
-            var elemTable = $content.append('<table class="table table-striped table-bordered" \
-                    style="margin-left: auto; margin-right: auto;>');
+
+            var elemTable = $('<table class="table table-striped table-bordered" \
+                                  style="width: 100%; border: 1px solid #ddd; margin-left: auto; margin-right: auto;" >');
             for (var i=0; i<elemData.length; i++) {
                 if (elemLabels[i] === 'Function') {
                     elemTable.append('<tr><td>' + elemLabels[i] + '</td> \
@@ -616,9 +650,9 @@ console.log("SHOWS GENE", geneId, gene);
 
             var $content = $.jqElem('div');
             var contig = $self.contigMap[contigName];
-            var elemTable = $content.append('<table class="table table-striped table-bordered" \
-                    style="margin-left: auto; margin-right: auto;">');
-            var elemLabels = ['Contig name', 'Length', 'Gene count'];
+            var elemTable = $('<table class="table table-striped table-bordered" \
+                                  style="width: 100%; border: 1px solid #ddd; margin-left: auto; margin-right: auto;" >');
+            var elemLabels = ['Contig Id', 'Length', 'Gene count'];
             var elemData = [contigName, contig.length, contig.features['gene'].length];
 
             for (var i=0; i<elemData.length; i++) {

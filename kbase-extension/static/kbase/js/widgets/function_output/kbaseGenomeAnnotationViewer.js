@@ -409,7 +409,7 @@ define (
             $self.genomeAnnotationData = {contigs : []};
 
             $self.genome_api.get_features({ref : $self.ref, exclude_sequence: 1}).then(function (features) {
-              console.log(features);
+
               var contigMap = $self.contigMap;
 
               var cdsData = [] //XXX plants baloney. Extra tab for CDS data. See below on line 372 or so.

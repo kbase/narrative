@@ -6,6 +6,7 @@ import re
 import biokbase
 import biokbase.workspace
 from biokbase.workspace import client as WorkspaceClient
+from biokbase.workspace.baseclient import ServerError
 
 g_log = logging.getLogger(__name__)
 
@@ -24,7 +25,7 @@ class BadWorkspaceID(Exception):
 class BadWorkspaceID(Exception):
     pass
 
-class PermissionsError(WorkspaceClient.ServerError):
+class PermissionsError(ServerError):
     """Raised if user does not have permission to
     access the workspace.
     """
@@ -37,7 +38,7 @@ class PermissionsError(WorkspaceClient.ServerError):
         return pat.match(err) is not None
 
     def __init__(self, name=None, code=None, message=None, **kw):
-        WorkspaceClient.ServerError.__init__(self, name, code,
+        ServerError.__init__(self, name, code,
                                                        message, **kw)
 
 # List of fields returned by the list_workspace_objects function
@@ -83,7 +84,7 @@ def get_wsobj_meta(wsclient, objtype=ws_narrative_type, ws_id=None):
             res = wsclient.list_objects({'type' : objtype,
                                          'includeMetadata' : 1,
                                          'ids' : [ws_id] })
-    except WorkspaceClient.ServerError, err:
+    except ServerError, err:
         if PermissionsError.is_permissions_error(err.message):
             raise PermissionsError(name=err.name, code=err.code,
                                    message=err.message, data=err.data)
@@ -101,7 +102,7 @@ def get_wsid(wsclient, workspace):
     """
     try:
         ws_meta = wsclient.get_workspace_info({'workspace' : workspace});
-    except WorkspaceClient.ServerError, e:
+    except ServerError, e:
         if e.message.find('not found') >= 0 or e.message.find('No workspace with name') >= 0:
             return(None)
         else:
@@ -172,7 +173,7 @@ def delete_wsobj(wsclient, wsid, objid):
     try:
         wsclient.delete_objects( [{ 'wsid' : wsid,
                                     'objid' : objid }] )
-    except WorkspaceClient.ServerError, e:
+    except ServerError, e:
         raise e
         # return False
     return True
@@ -196,7 +197,7 @@ def rename_wsobj(wsclient, identity, new_name):
     try:
         obj_info = wsclient.rename_object({ 'obj' : identity,
                                             'new_name' : new_name })
-    except WorkspaceClient.ServerError, e:
+    except ServerError, e:
         raise e
 
     return dict(zip(list_objects_fields, obj_info))
@@ -215,7 +216,7 @@ def check_project_tag(wsclient, ws_id):
         tag = wsclient.get_object_info( [{ 'wsid' : ws_id,
                                            'name' : ws_tag['project'] }],
                                         0);
-    except WorkspaceClient.ServerError, e:
+    except ServerError, e:
         # If it is a not found error, create it, otherwise reraise
         if e.message.find('not found') >= 0 or e.message.find('No object with name') >= 0:
             obj_save_data = { 'name' : ws_tag['project'],
@@ -271,7 +272,7 @@ def check_homews(wsclient, user_id = None):
         homews = "%s:home" % user_id
         workspace_identity = { 'workspace' : homews }
         ws_meta = wsclient.get_workspace_info( workspace_identity)
-    except WorkspaceClient.ServerError, e:
+    except ServerError, e:
         # If it is a not found error, create it, otherwise reraise
         if e.message.find('not found') >= 0 or e.message.find('No workspace with name') >= 0:
             ws_meta = wsclient.create_workspace({ 'workspace' : homews,

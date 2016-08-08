@@ -35,104 +35,99 @@ class GenomeAnnotationAPI(object):
             auth_svc=auth_svc,
             lookup_url=True)
 
-    def get_taxon(self, ref, context=None):
+    def get_taxon(self, inputs_get_taxon, context=None):
         """
-        Retrieve the Taxon associated with this GenomeAnnotation.
-        @return Reference to TaxonAPI object
-        :param ref: instance of type "ObjectReference"
+        :param inputs_get_taxon: instance of type "inputs_get_taxon" (* *
+           Retrieve the Taxon associated with this GenomeAnnotation. * *
+           @return Reference to TaxonAPI object) -> structure: parameter
+           "ref" of type "ObjectReference"
         :returns: instance of type "ObjectReference"
         """
         return self._client.call_method(
             'GenomeAnnotationAPI.get_taxon',
-            [ref], self._service_ver, context)
+            [inputs_get_taxon], self._service_ver, context)
 
-    def get_assembly(self, ref, context=None):
+    def get_assembly(self, inputs_get_assembly, context=None):
         """
-        Retrieve the Assembly associated with this GenomeAnnotation.
-        @return Reference to AssemblyAPI object
-        :param ref: instance of type "ObjectReference"
+        :param inputs_get_assembly: instance of type "inputs_get_assembly" (*
+           * Retrieve the Assembly associated with this GenomeAnnotation. * *
+           @return Reference to AssemblyAPI object) -> structure: parameter
+           "ref" of type "ObjectReference"
         :returns: instance of type "ObjectReference"
         """
         return self._client.call_method(
             'GenomeAnnotationAPI.get_assembly',
-            [ref], self._service_ver, context)
+            [inputs_get_assembly], self._service_ver, context)
 
-    def get_feature_types(self, ref, context=None):
+    def get_feature_types(self, inputs_get_feature_types, context=None):
         """
-        Retrieve the list of Feature types.
-        @return List of feature type identifiers (strings)
-        :param ref: instance of type "ObjectReference"
+        :param inputs_get_feature_types: instance of type
+           "inputs_get_feature_types" (* * Retrieve the list of Feature
+           types. * * @return List of feature type identifiers (strings)) ->
+           structure: parameter "ref" of type "ObjectReference"
         :returns: instance of list of String
         """
         return self._client.call_method(
             'GenomeAnnotationAPI.get_feature_types',
-            [ref], self._service_ver, context)
+            [inputs_get_feature_types], self._service_ver, context)
 
-    def get_feature_type_descriptions(self, ref, feature_type_list, context=None):
+    def get_feature_type_descriptions(self, inputs_get_feature_type_descriptions, context=None):
         """
-        Retrieve the descriptions for each Feature type in
-        this GenomeAnnotation.
-        @param feature_type_list List of Feature types. If this list
-         is empty or None,
-         the whole mapping will be returned.
-        @return Name and description for each requested Feature Type
-        :param ref: instance of type "ObjectReference"
-        :param feature_type_list: instance of list of String
+        :param inputs_get_feature_type_descriptions: instance of type
+           "inputs_get_feature_type_descriptions" (optional
+           feature_type_list) -> structure: parameter "ref" of type
+           "ObjectReference", parameter "feature_type_list" of list of String
         :returns: instance of mapping from String to String
         """
         return self._client.call_method(
             'GenomeAnnotationAPI.get_feature_type_descriptions',
-            [ref, feature_type_list], self._service_ver, context)
+            [inputs_get_feature_type_descriptions], self._service_ver, context)
 
-    def get_feature_type_counts(self, ref, feature_type_list, context=None):
+    def get_feature_type_counts(self, inputs_get_feature_type_counts, context=None):
         """
-        Retrieve the count of each Feature type.
-        @param feature_type_list  List of Feature Types. If empty,
-          this will retrieve  counts for all Feature Types.
-        :param ref: instance of type "ObjectReference"
-        :param feature_type_list: instance of list of String
+        :param inputs_get_feature_type_counts: instance of type
+           "inputs_get_feature_type_counts" (@optional feature_type_list) ->
+           structure: parameter "ref" of type "ObjectReference", parameter
+           "feature_type_list" of list of String
         :returns: instance of mapping from String to Long
         """
         return self._client.call_method(
             'GenomeAnnotationAPI.get_feature_type_counts',
-            [ref, feature_type_list], self._service_ver, context)
+            [inputs_get_feature_type_counts], self._service_ver, context)
 
-    def get_feature_ids(self, ref, filters, group_type, context=None):
+    def get_feature_ids(self, inputs_get_feature_ids, context=None):
         """
-        Retrieve Feature IDs, optionally filtered by type, region, function, alias.
-        @param filters Dictionary of filters that can be applied to contents.
-          If this is empty or missing, all Feature IDs will be returned.
-        @param group_type How to group results, which is a single string matching one
-          of the values for the ``filters`` parameter.
-        @return Grouped mapping of features.
-        :param ref: instance of type "ObjectReference"
-        :param filters: instance of type "Feature_id_filters" (* * Filters
-           passed to :meth:`get_feature_ids`) -> structure: parameter
-           "type_list" of list of String, parameter "region_list" of list of
-           type "Region" -> structure: parameter "contig_id" of String,
-           parameter "strand" of String, parameter "start" of Long, parameter
-           "length" of Long, parameter "function_list" of list of String,
-           parameter "alias_list" of list of String
-        :param group_type: instance of String
-        :returns: instance of type "Feature_id_mapping" -> structure:
-           parameter "by_type" of mapping from String to list of String,
-           parameter "by_region" of mapping from String to mapping from
-           String to mapping from String to list of String, parameter
-           "by_function" of mapping from String to list of String, parameter
-           "by_alias" of mapping from String to list of String
+        :param inputs_get_feature_ids: instance of type
+           "inputs_get_feature_ids" (@optional filters group_by) ->
+           structure: parameter "ref" of type "ObjectReference", parameter
+           "filters" of type "Feature_id_filters" (* * Filters passed to
+           :meth:`get_feature_ids` * @optional type_list region_list
+           function_list alias_list) -> structure: parameter "type_list" of
+           list of String, parameter "region_list" of list of type "Region"
+           -> structure: parameter "contig_id" of String, parameter "strand"
+           of String, parameter "start" of Long, parameter "length" of Long,
+           parameter "function_list" of list of String, parameter
+           "alias_list" of list of String, parameter "group_by" of String
+        :returns: instance of type "Feature_id_mapping" (@optional by_type
+           by_region by_function by_alias) -> structure: parameter "by_type"
+           of mapping from String to list of String, parameter "by_region" of
+           mapping from String to mapping from String to mapping from String
+           to list of String, parameter "by_function" of mapping from String
+           to list of String, parameter "by_alias" of mapping from String to
+           list of String
         """
         return self._client.call_method(
             'GenomeAnnotationAPI.get_feature_ids',
-            [ref, filters, group_type], self._service_ver, context)
+            [inputs_get_feature_ids], self._service_ver, context)
 
-    def get_features(self, ref, feature_id_list, context=None):
+    def get_features(self, inputs_get_features, context=None):
         """
-        Retrieve Feature data.
-        @param feature_id_list List of Features to retrieve.
-          If None, returns all Feature data.
-        @return Mapping from Feature IDs to dicts of available data.
-        :param ref: instance of type "ObjectReference"
-        :param feature_id_list: instance of list of String
+        :param inputs_get_features: instance of type "inputs_get_features"
+           (@optional feature_id_list exclude_sequence) -> structure:
+           parameter "ref" of type "ObjectReference", parameter
+           "feature_id_list" of list of String, parameter "exclude_sequence"
+           of type "boolean" (A boolean - 0 for false, 1 for true. @range (0,
+           1))
         :returns: instance of mapping from String to type "Feature_data" ->
            structure: parameter "feature_id" of String, parameter
            "feature_type" of String, parameter "feature_function" of String,
@@ -149,7 +144,7 @@ class GenomeAnnotationAPI(object):
         """
         return self._client.call_method(
             'GenomeAnnotationAPI.get_features',
-            [ref, feature_id_list], self._service_ver, context)
+            [inputs_get_features], self._service_ver, context)
 
     def get_features2(self, params, context=None):
         """
@@ -182,11 +177,12 @@ class GenomeAnnotationAPI(object):
             'GenomeAnnotationAPI.get_features2',
             [params], self._service_ver, context)
 
-    def get_proteins(self, ref, context=None):
+    def get_proteins(self, inputs_get_proteins, context=None):
         """
-        Retrieve Protein data.
-        @return Mapping from protein ID to data about the protein.
-        :param ref: instance of type "ObjectReference"
+        :param inputs_get_proteins: instance of type "inputs_get_proteins" (*
+           * Retrieve Protein data. * * @return Mapping from protein ID to
+           data about the protein.) -> structure: parameter "ref" of type
+           "ObjectReference"
         :returns: instance of mapping from String to type "Protein_data" ->
            structure: parameter "protein_id" of String, parameter
            "protein_amino_acid_sequence" of String, parameter
@@ -196,172 +192,154 @@ class GenomeAnnotationAPI(object):
         """
         return self._client.call_method(
             'GenomeAnnotationAPI.get_proteins',
-            [ref], self._service_ver, context)
+            [inputs_get_proteins], self._service_ver, context)
 
-    def get_feature_locations(self, ref, feature_id_list, context=None):
+    def get_feature_locations(self, inputs_get_feature_locations, context=None):
         """
-        Retrieve Feature locations.
-        @param feature_id_list List of Feature IDs for which to retrieve locations.
-            If empty, returns data for all features.
-        @return Mapping from Feature IDs to location information for each.
-        :param ref: instance of type "ObjectReference"
-        :param feature_id_list: instance of list of String
+        :param inputs_get_feature_locations: instance of type
+           "inputs_get_feature_locations" (optional feature_id_list) ->
+           structure: parameter "ref" of type "ObjectReference", parameter
+           "feature_id_list" of list of String
         :returns: instance of mapping from String to list of type "Region" ->
            structure: parameter "contig_id" of String, parameter "strand" of
            String, parameter "start" of Long, parameter "length" of Long
         """
         return self._client.call_method(
             'GenomeAnnotationAPI.get_feature_locations',
-            [ref, feature_id_list], self._service_ver, context)
+            [inputs_get_feature_locations], self._service_ver, context)
 
-    def get_feature_publications(self, ref, feature_id_list, context=None):
+    def get_feature_publications(self, inputs_get_feature_publications, context=None):
         """
-        Retrieve Feature publications.
-        @param feature_id_list List of Feature IDs for which to retrieve publications.
-            If empty, returns data for all features.
-        @return Mapping from Feature IDs to publication info for each.
-        :param ref: instance of type "ObjectReference"
-        :param feature_id_list: instance of list of String
+        :param inputs_get_feature_publications: instance of type
+           "inputs_get_feature_publications" (optional feature_id_list) ->
+           structure: parameter "ref" of type "ObjectReference", parameter
+           "feature_id_list" of list of String
         :returns: instance of mapping from String to list of String
         """
         return self._client.call_method(
             'GenomeAnnotationAPI.get_feature_publications',
-            [ref, feature_id_list], self._service_ver, context)
+            [inputs_get_feature_publications], self._service_ver, context)
 
-    def get_feature_dna(self, ref, feature_id_list, context=None):
+    def get_feature_dna(self, inputs_get_feature_dna, context=None):
         """
-        Retrieve Feature DNA sequences.
-        @param feature_id_list List of Feature IDs for which to retrieve sequences.
-            If empty, returns data for all features.
-        @return Mapping of Feature IDs to their DNA sequence.
-        :param ref: instance of type "ObjectReference"
-        :param feature_id_list: instance of list of String
+        :param inputs_get_feature_dna: instance of type
+           "inputs_get_feature_dna" (* * Retrieve Feature DNA sequences. * *
+           @param feature_id_list List of Feature IDs for which to retrieve
+           sequences. *     If empty, returns data for all features. *
+           @return Mapping of Feature IDs to their DNA sequence.) ->
+           structure: parameter "ref" of type "ObjectReference", parameter
+           "feature_id_list" of list of String
         :returns: instance of mapping from String to String
         """
         return self._client.call_method(
             'GenomeAnnotationAPI.get_feature_dna',
-            [ref, feature_id_list], self._service_ver, context)
+            [inputs_get_feature_dna], self._service_ver, context)
 
-    def get_feature_functions(self, ref, feature_id_list, context=None):
+    def get_feature_functions(self, inputs_get_feature_functions, context=None):
         """
-        Retrieve Feature functions.
-        @param feature_id_list List of Feature IDs for which to retrieve functions.
-            If empty, returns data for all features.
-        @return Mapping of Feature IDs to their functions.
-        :param ref: instance of type "ObjectReference"
-        :param feature_id_list: instance of list of String
+        :param inputs_get_feature_functions: instance of type
+           "inputs_get_feature_functions" (@optional feature_id_list) ->
+           structure: parameter "ref" of type "ObjectReference", parameter
+           "feature_id_list" of list of String
         :returns: instance of mapping from String to String
         """
         return self._client.call_method(
             'GenomeAnnotationAPI.get_feature_functions',
-            [ref, feature_id_list], self._service_ver, context)
+            [inputs_get_feature_functions], self._service_ver, context)
 
-    def get_feature_aliases(self, ref, feature_id_list, context=None):
+    def get_feature_aliases(self, inputs_get_feature_aliases, context=None):
         """
-        Retrieve Feature aliases.
-        @param feature_id_list List of Feature IDS for which to retrieve aliases.
-            If empty, returns data for all features.
-        @return Mapping of Feature IDs to a list of aliases.
-        :param ref: instance of type "ObjectReference"
-        :param feature_id_list: instance of list of String
+        :param inputs_get_feature_aliases: instance of type
+           "inputs_get_feature_aliases" (@optional feature_id_list) ->
+           structure: parameter "ref" of type "ObjectReference", parameter
+           "feature_id_list" of list of String
         :returns: instance of mapping from String to list of String
         """
         return self._client.call_method(
             'GenomeAnnotationAPI.get_feature_aliases',
-            [ref, feature_id_list], self._service_ver, context)
+            [inputs_get_feature_aliases], self._service_ver, context)
 
-    def get_cds_by_gene(self, ref, gene_id_list, context=None):
+    def get_cds_by_gene(self, inputs_get_cds_by_gene, context=None):
         """
-        Retrieves coding sequence Features (cds) for given gene Feature IDs.
-        @param gene_id_list List of gene Feature IDS for which to retrieve CDS.
-            If empty, returns data for all features.
-        @return Mapping of gene Feature IDs to a list of CDS Feature IDs.
-        :param ref: instance of type "ObjectReference"
-        :param gene_id_list: instance of list of String
+        :param inputs_get_cds_by_gene: instance of type
+           "inputs_get_cds_by_gene" (* * Retrieves coding sequence Features
+           (cds) for given gene Feature IDs. * * @param gene_id_list List of
+           gene Feature IDS for which to retrieve CDS. *     If empty,
+           returns data for all features. * @return Mapping of gene Feature
+           IDs to a list of CDS Feature IDs.) -> structure: parameter "ref"
+           of type "ObjectReference", parameter "gene_id_list" of list of
+           String
         :returns: instance of mapping from String to list of String
         """
         return self._client.call_method(
             'GenomeAnnotationAPI.get_cds_by_gene',
-            [ref, gene_id_list], self._service_ver, context)
+            [inputs_get_cds_by_gene], self._service_ver, context)
 
-    def get_cds_by_mrna(self, ref, mrna_id_list, context=None):
+    def get_cds_by_mrna(self, inputs_mrna_id_list, context=None):
         """
-        Retrieves coding sequence (cds) Feature IDs for given mRNA Feature IDs.
-        @param mrna_id_list List of mRNA Feature IDS for which to retrieve CDS.
-            If empty, returns data for all features.
-        @return Mapping of mRNA Feature IDs to a list of CDS Feature IDs.
-        :param ref: instance of type "ObjectReference"
-        :param mrna_id_list: instance of list of String
+        :param inputs_mrna_id_list: instance of type "inputs_mrna_id_list"
+           (@optional mrna_id_list) -> structure: parameter "ref" of type
+           "ObjectReference", parameter "mrna_id_list" of list of String
         :returns: instance of mapping from String to String
         """
         return self._client.call_method(
             'GenomeAnnotationAPI.get_cds_by_mrna',
-            [ref, mrna_id_list], self._service_ver, context)
+            [inputs_mrna_id_list], self._service_ver, context)
 
-    def get_gene_by_cds(self, ref, cds_id_list, context=None):
+    def get_gene_by_cds(self, inputs_get_gene_by_cds, context=None):
         """
-        Retrieves gene Feature IDs for given coding sequence (cds) Feature IDs.
-        @param cds_id_list List of cds Feature IDS for which to retrieve gene IDs.
-            If empty, returns all cds/gene mappings.
-        @return Mapping of cds Feature IDs to gene Feature IDs.
-        :param ref: instance of type "ObjectReference"
-        :param cds_id_list: instance of list of String
+        :param inputs_get_gene_by_cds: instance of type
+           "inputs_get_gene_by_cds" (@optional cds_id_list) -> structure:
+           parameter "ref" of type "ObjectReference", parameter "cds_id_list"
+           of list of String
         :returns: instance of mapping from String to String
         """
         return self._client.call_method(
             'GenomeAnnotationAPI.get_gene_by_cds',
-            [ref, cds_id_list], self._service_ver, context)
+            [inputs_get_gene_by_cds], self._service_ver, context)
 
-    def get_gene_by_mrna(self, ref, mrna_id_list, context=None):
+    def get_gene_by_mrna(self, inputs_get_gene_by_mrna, context=None):
         """
-        Retrieves gene Feature IDs for given mRNA Feature IDs.
-        @param mrna_id_list List of mRNA Feature IDS for which to retrieve gene IDs.
-            If empty, returns all mRNA/gene mappings.
-        @return Mapping of mRNA Feature IDs to gene Feature IDs.
-        :param ref: instance of type "ObjectReference"
-        :param mrna_id_list: instance of list of String
+        :param inputs_get_gene_by_mrna: instance of type
+           "inputs_get_gene_by_mrna" (@optional mrna_id_list) -> structure:
+           parameter "ref" of type "ObjectReference", parameter
+           "mrna_id_list" of list of String
         :returns: instance of mapping from String to String
         """
         return self._client.call_method(
             'GenomeAnnotationAPI.get_gene_by_mrna',
-            [ref, mrna_id_list], self._service_ver, context)
+            [inputs_get_gene_by_mrna], self._service_ver, context)
 
-    def get_mrna_by_cds(self, ref, cds_id_list, context=None):
+    def get_mrna_by_cds(self, inputs_get_mrna_by_cds, context=None):
         """
-        Retrieves mRNA Features for given coding sequences (cds) Feature IDs.
-        @param cds_id_list List of cds Feature IDS for which to retrieve mRNA IDs.
-            If empty, returns all cds/mRNA mappings.
-        @return Mapping of cds Feature IDs to mRNA Feature IDs.
-        :param ref: instance of type "ObjectReference"
-        :param cds_id_list: instance of list of String
+        :param inputs_get_mrna_by_cds: instance of type
+           "inputs_get_mrna_by_cds" (@optional cds_id_list) -> structure:
+           parameter "ref" of type "ObjectReference", parameter "cds_id_list"
+           of list of String
         :returns: instance of mapping from String to String
         """
         return self._client.call_method(
             'GenomeAnnotationAPI.get_mrna_by_cds',
-            [ref, cds_id_list], self._service_ver, context)
+            [inputs_get_mrna_by_cds], self._service_ver, context)
 
-    def get_mrna_by_gene(self, ref, gene_id_list, context=None):
+    def get_mrna_by_gene(self, inputs_get_mrna_by_gene, context=None):
         """
-        Retrieve the mRNA IDs for given gene IDs.
-        @param gene_id_list List of gene Feature IDS for which to retrieve mRNA IDs.
-            If empty, returns all gene/mRNA mappings.
-        @return Mapping of gene Feature IDs to a list of mRNA Feature IDs.
-        :param ref: instance of type "ObjectReference"
-        :param gene_id_list: instance of list of String
+        :param inputs_get_mrna_by_gene: instance of type
+           "inputs_get_mrna_by_gene" (@optional gene_id_list) -> structure:
+           parameter "ref" of type "ObjectReference", parameter
+           "gene_id_list" of list of String
         :returns: instance of mapping from String to list of String
         """
         return self._client.call_method(
             'GenomeAnnotationAPI.get_mrna_by_gene',
-            [ref, gene_id_list], self._service_ver, context)
+            [inputs_get_mrna_by_gene], self._service_ver, context)
 
-    def get_mrna_exons(self, ref, mrna_id_list, context=None):
+    def get_mrna_exons(self, inputs_get_mrna_exons, context=None):
         """
-        Retrieve Exon information for each mRNA ID.
-        @param mrna_id_list List of mRNA Feature IDS for which to retrieve exons.
-            If empty, returns data for all exons.
-        @return Mapping of mRNA Feature IDs to a list of exons (:js:data:`Exon_data`).
-        :param ref: instance of type "ObjectReference"
-        :param mrna_id_list: instance of list of String
+        :param inputs_get_mrna_exons: instance of type
+           "inputs_get_mrna_exons" (@optional mrna_id_list) -> structure:
+           parameter "ref" of type "ObjectReference", parameter
+           "mrna_id_list" of list of String
         :returns: instance of mapping from String to list of type "Exon_data"
            -> structure: parameter "exon_location" of type "Region" ->
            structure: parameter "contig_id" of String, parameter "strand" of
@@ -371,27 +349,13 @@ class GenomeAnnotationAPI(object):
         """
         return self._client.call_method(
             'GenomeAnnotationAPI.get_mrna_exons',
-            [ref, mrna_id_list], self._service_ver, context)
+            [inputs_get_mrna_exons], self._service_ver, context)
 
-    def get_mrna_utrs(self, ref, mrna_id_list, context=None):
+    def get_mrna_utrs(self, inputs_get_mrna_utrs, context=None):
         """
-        Retrieve UTR information for each mRNA Feature ID.
-         UTRs are calculated between mRNA features and corresponding CDS features.
-         The return value for each mRNA can contain either:
-            - no UTRs found (empty dict)
-            -  5' UTR only
-            -  3' UTR only
-            -  5' and 3' UTRs
-         Note: The Genome data type does not contain interfeature
-         relationship information. Calling this method for Genome objects
-         will raise a :js:throws:`exc.TypeException`.
-        @param feature_id_list List of mRNA Feature IDS for which to retrieve UTRs.
-        If empty, returns data for all UTRs.
-        @return Mapping of mRNA Feature IDs to a mapping that contains
-        both 5' and 3' UTRs::
-            { "5'UTR": :js:data:`UTR_data`, "3'UTR": :js:data:`UTR_data` }
-        :param ref: instance of type "ObjectReference"
-        :param mrna_id_list: instance of list of String
+        :param inputs_get_mrna_utrs: instance of type "inputs_get_mrna_utrs"
+           (@optional mrna_id_list) -> structure: parameter "ref" of type
+           "ObjectReference", parameter "mrna_id_list" of list of String
         :returns: instance of mapping from String to mapping from String to
            type "UTR_data" -> structure: parameter "utr_locations" of list of
            type "Region" -> structure: parameter "contig_id" of String,
@@ -400,13 +364,14 @@ class GenomeAnnotationAPI(object):
         """
         return self._client.call_method(
             'GenomeAnnotationAPI.get_mrna_utrs',
-            [ref, mrna_id_list], self._service_ver, context)
+            [inputs_get_mrna_utrs], self._service_ver, context)
 
-    def get_summary(self, ref, context=None):
+    def get_summary(self, inputs_get_summary, context=None):
         """
-        Retrieve a summary representation of this GenomeAnnotation.
-        @return summary data
-        :param ref: instance of type "ObjectReference"
+        :param inputs_get_summary: instance of type "inputs_get_summary" (* *
+           Retrieve a summary representation of this GenomeAnnotation. * *
+           @return summary data) -> structure: parameter "ref" of type
+           "ObjectReference"
         :returns: instance of type "Summary_data" -> structure: parameter
            "scientific_name" of String, parameter "taxonomy_id" of Long,
            parameter "kingdom" of String, parameter "scientific_lineage" of
@@ -423,18 +388,31 @@ class GenomeAnnotationAPI(object):
         """
         return self._client.call_method(
             'GenomeAnnotationAPI.get_summary',
-            [ref], self._service_ver, context)
+            [inputs_get_summary], self._service_ver, context)
 
-    def save_summary(self, ref, context=None):
+    def save_summary(self, inputs_save_summary, context=None):
         """
-        Retrieve a summary representation of this GenomeAnnotation.
-        @return summary data
-        :param ref: instance of type "ObjectReference"
-        :returns: instance of Long
+        :param inputs_save_summary: instance of type "inputs_save_summary" (*
+           * Retrieve a summary representation of this GenomeAnnotation. * *
+           @return (int, Summary_data)) -> structure: parameter "ref" of type
+           "ObjectReference"
+        :returns: multiple set - (1) instance of Long, (2) instance of type
+           "Summary_data" -> structure: parameter "scientific_name" of
+           String, parameter "taxonomy_id" of Long, parameter "kingdom" of
+           String, parameter "scientific_lineage" of list of String,
+           parameter "genetic_code" of Long, parameter "organism_aliases" of
+           list of String, parameter "assembly_source" of String, parameter
+           "assembly_source_id" of String, parameter "assembly_source_date"
+           of String, parameter "gc_content" of Double, parameter "dna_size"
+           of Long, parameter "num_contigs" of Long, parameter "contig_ids"
+           of list of String, parameter "external_source" of String,
+           parameter "external_source_date" of String, parameter "release" of
+           String, parameter "original_source_filename" of String, parameter
+           "feature_type_counts" of mapping from String to Long
         """
         return self._client.call_method(
             'GenomeAnnotationAPI.save_summary',
-            [ref], self._service_ver, context)
+            [inputs_save_summary], self._service_ver, context)
 
     def status(self, context=None):
         return self._client.call_method('GenomeAnnotationAPI.status',

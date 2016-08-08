@@ -133,7 +133,7 @@ define (
             $self.data('tabObj', $tabObj);
 
             $.when(
-              $self.genome_api.get_summary($self.ref),
+              $self.genome_api.get_summary({ref:$self.ref}),
               $self.ws.get_object_info_new({objects: [{'ref':$self.ref}], includeMetadata:1})
             ).then(function (d, info) {
 
@@ -408,7 +408,7 @@ define (
 
             $self.genomeAnnotationData = {contigs : []};
 
-            $self.genome_api.get_features2({ref : $self.ref, exclude_sequence: 1}).then(function (features) {
+            $self.genome_api.get_features({ref : $self.ref, exclude_sequence: 1}).then(function (features) {
 
               var contigMap = $self.contigMap;
 

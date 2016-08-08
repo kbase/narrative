@@ -409,7 +409,7 @@ define (
             $self.genomeAnnotationData = {contigs : []};
 
             $self.genome_api.get_features({ref : $self.ref, exclude_sequence: 1}).then(function (features) {
-
+              console.log(features);
               var contigMap = $self.contigMap;
 
               var cdsData = [] //XXX plants baloney. Extra tab for CDS data. See below on line 372 or so.
@@ -474,7 +474,7 @@ define (
                       //len: $self.numberWithCommas(location.length),
                       len : $self.numberWithCommas(feature.feature_locations.map(function(v) { return $self.numberWithCommas(v.length)}).join('<br>')),
                       type: feature.feature_type,
-                      func: feature.function || '',
+                      func: feature.feature_function || '',
                       aliases : aliases.join(', '),
                     });
 

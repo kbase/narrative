@@ -474,7 +474,7 @@ define (
                       //len: $self.numberWithCommas(location.length),
                       len : $self.numberWithCommas(feature.feature_locations.map(function(v) { return $self.numberWithCommas(v.length)}).join('<br>')),
                       type: feature.feature_type,
-                      func: feature.function || '',
+                      func: feature.feature_function || '',
                       aliases : aliases.join(', '),
                     });
 

@@ -1,16 +1,277 @@
 ### OVERVIEW
 The Narrative Interface allows users to craft KBase Narratives using a combination of GUI-based commands, Python and R scripts, and graphical output elements.
 
-This is built on the IPython Notebook (more notes will follow).
+This is built on the Jupyter Notebook v4.2.1 (more notes will follow).
+
+### Version 3.0.0-alpha-19
+__Changes__
+- add latest workspace python client
+- update narrative usage of ws client since ServerError has moved
+
+### Version 3.0.0-alpha-18
+__Changes__
+- revert python workspace client for now (breaks narrative launch)
+- fix error widget for output cell
+
+### Version 3.0.0-alpha-17
+__Changes__
+- fix checkbox validation bug
+- fix viewer widget not getting the cell id and therefore not rendering
+- update python workspace client to latest
+
+### Version 3.0.0-alpha-16
+__Changes__
+- fix multiple object input widget
+- remove execution summary widget
+- updated kbase client api lib to bring in updated workspace client
+
+### Version 3.0.0-alpha-15
+__Changes__
+- fix output param marked as parameter triggering error and blocking app cell insertion
+- improve error message when checkbox is misconfigured
+- improve checkbox rules display
+
+
+### Version 3.0.0-alpha-14
+__Changes__
+- fix job cell (as produced by JobManager()->job_info())
+- relax enforcement of object output name input widget being categorized as an "output" control
+- fix tab label and job count badge in job panel
+- more progress on custom subdata, binary, and select controls
+
+
+### Version 3.0.0-alpha-13
+__Changes__
+- Fix display of data objects drag-and-dropped or clicked from the data panel
+- Job status lookup and error handling improvements
+- Fixed bug in handling app results
+- Initial implementation of viewers for new objects
+- Fixed ontology dictionary
+
+
+### Version 3.0.0-alpha-12
+__Changes__
+- Fixed JobManager.list_jobs (again)
+- Reconnected the 'scroll to app' button in the Jobs panel to existing App Cell widgets
+- Removed the Scroll to App button from Jobs that don't have an accompanying cell to scroll to (might be confusing, still).
+- Fixed a constant spam of Job info from the kernel on page refresh.
+- Restored multiselection in subdata inputs.
+
+### Version 3.0.0-alpha-11
+__Changes__
+- Fixed Narrative metadata to contain a proper list of Apps for showing on the Dashboard.
+- Updated read only mode
+  - Codemirror elements (markdown cell and code cell input areas) are visible, but not editable
+  - App Cells get their button bars hidden
+  - Output areas get their delete areas hidden
+  - Cell toolbars get their buttons hidden (maybe all but the collapse and code toggles should be hidden?)
+- Tweaked placeholder text of Markdown cells.
+
+### Version 3.0.0-alpha-10
+__Changes__
+- Pressing the Enter key should trigger a positive reponse on most dialogs (e.g. if there are Yes or No options, it should select Yes)
+- Only the user who started a job can delete it (except for owners of a narrative... that's all confusing, though, so it's only users who started a job now).
+- The Jobs Panel should now show the owner of a job as registered with UJS.
+- Canceling a job from an App cell will attempt to delete it, and at least, cancel it.
+- Canceled jobs are treated as Deleted by the App cell.
+- Added configuration for the service_wizard client - mild refactor to how configs get loaded.
+
+### Version 3.0.0-alpha-9
+__Changes__
+- Restore app and viewer cell icons to their rightful place
+- Minor string tweaks
+- Minor CSS tweaks
+- First pass at setup for optionally using Dynamic services for getting widget subdata
+
+### Version 3.0.0-alpha-8
+__Changes__
+- Fix various problems with subdata input widget - selecting multiple when only one should be allowed, pathway issues into data object, etc.
+- Convert execution area back to tabbed items.
+- Add catalog link back to toolbar.
+- Fix launch start time bug.
+- Remove millisecond counts from times.
+- Add icon to tab in tabset.
+- Make use of updated cancel job function in UJS (gonna need some iteration on this once the UJS change goes up)
+
+### Version 3.0.0-alpha-7
+__Changes__
+- Updated invocation signatures for AppManage.run_app, .run_local_app, WidgetManager.show_output_widget -- inputs to apps (and widgets) must now be a map where the keys are the input ids and the values are the inputs themselves. See this PR for details: https://github.com/kbase/narrative/pull/679
+- Newly generated output cells auto-hide their input areas (still not ideal, since it's the generated widget, but... it's a start).
+- Fixed a couple UI typos
+
+### Version 3.0.0-alpha-6
+__Changes__
+- App parameter validation updates:
+  - Empty strings in either text fields or dropdowns get transformed to null before starting the app
+  - Empty strings in checkboxes get transformed to false
+- Log view in App cells has blocky whitespace removed
+- Multiple textarea inputs (currently unused?) has improved support
+- App cell layout has been updated to remove most excess whitespace
+- Improved error and warning handling for Apps. (e.g. pre-existing output object names can be overwritten again, but now there's a warning)
+- '-' characters are not allowed in App parameter ids. They must be representable as variable names (still up for debate, but that's how it is now)
+
+### Version 3.0.0-alpha-5
+__Changes__
+- Fixed issue when starting SDK jobs from the upload panel with numeric parameters.
+- Fixed crash bug when trying to unpack a finished job that has incomplete inputs.
+- Shut off Jupyter command-mode quick keys when a text parameter input is focused.
+
+### Version 3.0.0-alpha-4
+__Changes__
+- Improve error reporting when failing to load a viewer.
+
+### Version 3.0.0-alpha-3
+__Changes__
+- Replace RNA-Seq viewers that had wandered off
+- Display SDK methods for various uploaders
+
+### Version 3.0.0-alpha-2
+__Changes__
+- Fix updater so that it updates the Markdown cell version of viewer cells into pre-executed code cells that generate viewers. (So, updated viewers should work again)
+- Fix Docker image so that it doesn't spam the annoying SSL errors in all cells.
+- Put code area toggle on all code cells at all times. (Just to give Erik and I something to argue about)
+
+### Version 3.0.0-alpha-1
+__Major Updates__
+- Apps and Methods not made as part of KBase SDK modules are now obsolete and will no longer run. Those apps have been replaced with Markdown cells that note their obsolescence, but still give the name and set of parameters used in the apps for reference. This also gives suggestions for updated apps (that will be available in production eventually...)
+- The distinction between "App" and "Method" has been removed. All cells that execute KBase jobs are now referred to as Apps.
+- All app cells are now based on Jupyter code cells (previously they were based on heavily modified Markdown cells). This means that they generate code that gets executed in the same way that any other code does. This also introduces a KBase Jobs API that gives programmatic access to running Apps. See docs/developer/job_api.md for details.
+- All output and viewer cells are now code cells as well. Existing viewers are still based on Markdown cells, and should work as previously.
+- All visualization widgets had their initialization code slightly modified. See docs/developer/narrative_widgets.md for details.
+
+__Other Changes__
+- Update Jupyter to version 4.2.1.
+- Update IPython kernel to version 5.0.0.
+- Adds a settings menu for editing user options (prototype).
+- App cells tightly validate each input before generating runnable code - until all required inputs are valid, no code can be run.
+- The Jobs panel gets its information pushed from the kernel, and that from communicating with back end servies. Job information is no longer stored in Narrative objects.
+- Running Jobs are associated directly with a Narrative, and inherit its view permissions accordingly; if you can view a Narrative, you can view its running jobs.
+- Copying a shared Narrative no longer copies its Jobs - copying a Narrative with running Jobs will not copy the results.
+- Updated the job log widget to no longer fetch all lines of a running log. It has a limit of 100 lines at a time, with buttons to navigate around the log.
+
+### Version 2.0.9
+__Changes__
+- Small changes to viewer widgets - esp. genome viewer and expression data viewer.
+- Fixed overlapping sort icons in tables - JIRA ticket KBASE-4220.
+
+### Version 2.0.8
+__Changes__
+- Numerous small fixes to text and layout of various widgets.
+- Genome view deals with plants and eukaryota better.
+- Proteome comparison widget uses SVG now.
+- Tree browser widget is properly clickable again.
+- Ontologies, Assemblies, and GenomeAnnotations are uploadable.
+- Fixed several issues with Narrative copying (see JIRA tickets KBASE-2034, KBASE-4140, KBASE-4154, KBASE-4159, NAR-849, and NAR-850).
+
+### Version 2.0.7
+__Changes__
+- Fixed data subsetting parameter input.
+
+### Version 2.0.6
+__Changes__
+- Fixed local configuration issue with Public and Example data tabs.
+- Updated genome viewer widget to better support eukaryotic genomes.
+- Added sequence category to app catalog.
+- Added Release/Beta method button toggle that should show up in production mode.
+- JIRA NAR-846 - fix problem with Run Time in jobs panel reported as "how long ago"
+
+### Version 2.0.5
+__Changes__
+- Fixed problems with missing data from Public data tab.
+- Added separate configuration file for Public and Example data tabs.
+- Fixed a few missing vis widget paths.
+- Fixed jitter on data object mouseover.
+- Added 'Shutdown and Restart' option to hamburger menu.
+
+### Version 2.0.4
+__Changes__
+- Fixed problems with sharing jobs based on SDK-built methods.
+- JIRA KBASE-3725 - renaming narratives should now trigger a save.
+- Updated widgets for some feature-value methods and data types.
+- Fixed problem where pressing 'enter' while filtering the method catalog would refresh the page.
+- Added categories and new icons to various methods.
+- Removed unused data objects from example data tab.
+- Methods can now specify that no output widget should be created.
+
+### Version 2.0.3
+__Changes__
+- JIRA KBASE-3388 - fixed problem that caused a crash on save when too many unique methods or apps were in a narrative. The narrative metadata has been reformatted to support this.
+- Fixed problems with funky unicode characters in narrative titles.
+- Updates to various FBA widgets.
+
+### Version 2.0.2
+__Changes__
+- JIRA KBASE-3556 - fixed links from genome widget to gene landing page, made contigs in genome tab clickable.
+- Added tools for editing FBA models.
+- JIRA NAR-838 - delete cell dialog should no longer break when hitting return to trigger it.
+- JIRA NAR-839 - delete cell dialogs should not pollute the DOM (there's only one dialog now, not a new one for each cell).
+- JIRA NAR-589 - change "Copy Narrative" to "Copy This Narrative" for clarity.
+- JIRA NAR-788 - remove light colors from random picker when coloring user names for sharing.
+
+### Version 2.0.1
+__Changes__
+- JIRA KBASE-3623 - fixed problem where updating an old version of the Narrative typed object could cause the Narrative title to be lost
+- JIRA KBASE-3624 - fixed links in method input cell subtitles to manual pages
+- JIRA KBASE-3630 - fixed problem with hierarchical clustering widget missing a button
+- Added widget for sequence comparison
+- Added tools for editing FBA model media sets.
+
+### Version 2.0.0
+__Changes__
+- Update IPython Notebook backend to Jupyter 4.1.0.
+- Data Panel slideout should now perform better for users with lots and lots of objects.
+- Fixed problem with copied narratives sometimes referring back to their original workspace.
+- Data Panel slideout dimmer should be in the correct z-position now.
+- Added separate job console for each running method, attached to that cell.
+- Changed style of cells to better show what cell is selected and active.
+- Adjusted Narrative Management tab to be somewhat more performant.
+- Updated Narrative object definition to match the Jupyter notebook object definition more closely.
+- Data panel should no longer hang forever on Narrative startup.
+
+### Version 1.1.0
+__Changes__
+- Added "Edit and Re-Run" button to method cells that have already been run.
+- Updated 'filtered' in method panel to 'filtered out'.
+- Added uploaders for Feature-Value pair data.
+- Added viewers for BLAST output.
+- Added bokeh (Python) and Plot.ly (JS) dependencies.
+- Added KBase data_api methods.
+- Added a refresh button to the method panel.
+- Added support for method specs based on namespacing.
+- Added preliminary third party SDK support.
+
+### Version 1.0.5
+__Changes__
+- Fix for bugs in saving/loading App state and displaying App step output widgets.
+- Fix for a bug that prevented users with edit privileges from saving a shared narrative.
+- Fixed issue where FBA model comparison widget wasn't showing up properly.
+
+### Version 1.0.4
+__Changes__
+- Added widgets and methods to support feature-value analyses
+- JIRA KBASE-2626 - Narrative should no longer crash when the Workspace Service is unavailable, but it will produce a 404 error when trying to fetch a Narrative from that Workspace.
+- JIRA NAR-528 - Narrative method panel now allows filtering by input/output type along with additional
+search terms.
 
 ### Version 1.0.3
 __Changes__
 - JIRA KBASE-1672 - updated text in upload dialogs
+- JIRA KBASE-1288 - show prompt when copying a public genome to a Narrative if that genome already exists in the Narrative
+- JIRA NAR-702 - show warning on My Data panel for untitled Narratives
+- JIRA KBASE-1245 - block the Data Uploader's "Import" button while a file is being uploaded.
+- JIRA KBASE-1350 - change reference to "Workspace" to a reference to "Narrative".
+- Refactored all widget code to be loaded asynchronously through Require.js
 - Added initial Selenium test scripts
-- Updated root README
+- Updated root README, added Travis-CI and Coveralls badges
+- Linked the Narrative Github repo to Travis-CI and Coveralls
 
 __Bugfixes__
+- JIRA KBASE-1671 - fix typo in genome annotation widget
+- JIRA KBASE-2042 - fix errors in the error page that shows up when a Narrative is unavailable.
+- JIRA KBASE-1843/KBASE-1849 - fixed issue where a large narrative object (e.g. a large IPython notebook object) fails to save without a decent error message. The maximum size was bumped to 4MB, and a sensible error message was introduced.
 - Fixed issue where duplicated results can appear in the Public Data tab
+- JIRA NAR-758 - added a horizontal scrollbar to widgets who get too wide (this currenly only affects the OTU Abundance data table widget, but others might get affected in the future).
+- JIRA NAR-814 - added a trailing slash to the service status url.
 
 ### Version 1.0.2 - 2/19/2015
 __Bugfixes__
@@ -77,7 +338,7 @@ __Changes__
 - Renamed CSV Transform API arguments to TSV
 
 __Bugfixes__
-- JIRA KBASE-1411 fix - render issue for protein comparison widget 
+- JIRA KBASE-1411 fix - render issue for protein comparison widget
 - Fixed case where genome object doesn't have any contig info.
 
 ### Version 0.5.7 - 2/9/2015
@@ -166,7 +427,7 @@ __Changes__
   - Added test script for the backend shutdown command to verify it's only possible for an authenticated user to only shut down their own narrative
   - Added improvements to suggested next steps functionality - now it should pull from the method store instead of being hard-coded
   - Added custom icons for several datatypes
-  
+
 __Bugfixes__
 - JIRA NAR-586 - fixed error with quotation marks not being used correctly in App info boxes, and links not being rendered properly
 - Fixed several font mismatch issues - in kernel menu, new/copy narrative buttons, error buttons

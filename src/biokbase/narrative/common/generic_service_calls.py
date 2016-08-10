@@ -5,11 +5,11 @@ In method 'bindRunButton' of 'src/notebook/ipython_profiles/profile_narrative/kb
 instead of line:
                     //self.runCell()(cell, method.service, method.title, paramList);
 you can use:
-                    var methodSpec = {parameters: [{id: "param0", field_type : "text"}, {id : "param1", field_type : "text"}], 
-                            behavior: {kb_service_url: "https://kbase.us/services/trees", 
-                                kb_service_name: "KBaseTrees", kb_service_method: "construct_tree_for_alignment", 
+                    var methodSpec = {parameters: [{id: "param0", field_type : "text"}, {id : "param1", field_type : "text"}],
+                            behavior: {kb_service_url: "https://kbase.us/services/trees",
+                                kb_service_name: "KBaseTrees", kb_service_method: "construct_tree_for_alignment",
                                 kb_service_parameters_mapping: {
-                                    param0: {target_property: "msa_ref", target_type_transform: "ref"}, 
+                                    param0: {target_property: "msa_ref", target_type_transform: "ref"},
                                     param1: {target_property: "out_tree_id"}
                                 }, kb_service_workspace_name_mapping: {target_property: "out_workspace"}}};
                     self.runCell()(cell, "generic_service", "method_call", [JSON.stringify(methodSpec), JSON.stringify(paramList)]);
@@ -36,8 +36,7 @@ import hashlib
 import re
 import sys
 # Third-party
-import IPython.utils.traitlets as trt
-from IPython.core.application import Application
+import traitlets as trt
 from biokbase.njs_mock.Client import NJSMock
 from biokbase.NarrativeJobService.Client import NarrativeJobService
 from biokbase.workspace.client import Workspace as workspaceService
@@ -49,13 +48,13 @@ def prepare_generic_method_input(token, workspace, methodSpec, paramValues, inpu
     narrSysProps = {'workspace': workspace, 'token': token}
     parameters = methodSpec['parameters']
     inputMapping = methodSpec['behavior']['kb_service_input_mapping']
-    
+
     for paramPos in range(0, len(parameters)):
         param = parameters[paramPos]
         paramId = param['id']
         paramValue = paramValues[paramPos]
         input[paramId] = paramValue
-    
+
     for mapping in inputMapping:
         paramValue = None
         paramId = None
@@ -109,6 +108,8 @@ def prepare_generic_method_output(token, workspace, methodSpec, input, output):
     return outArgs[0]
 
 def correct_method_specs_json(method_specs_json):
+    # make all single backslashes into double backslashes
+    method_specs_json = method_specs_json.replace('\\', '\\\\')
     method_specs_json = method_specs_json.replace('\n', '\\n')
     method_specs_json = method_specs_json.replace('\t', '\\t')
     return method_specs_json
@@ -134,7 +135,7 @@ def app_state_output_into_method_output(workspace, token, wsClient, methodSpec, 
 
 def _app_get_state(workspace, token, URLS, job_manager, app_spec_json, method_specs_json, param_values_json, app_job_id):
     appSpec = json.loads(app_spec_json)
-    paramValues = json.loads(param_values_json)
+    paramValues = json.loads(correct_method_specs_json(param_values_json))
     methIdToSpec = json.loads(correct_method_specs_json(method_specs_json))
     njsClient = NarrativeJobService(URLS.job_service, token = token)
     wsClient = workspaceService(URLS.workspace, token = token)
@@ -163,12 +164,19 @@ def _app_get_state(workspace, token, URLS, job_manager, app_spec_json, method_sp
 
 def _method_get_state(workspace, token, URLS, job_manager, method_spec_json, param_values_json, method_job_id):
     methodSpec = json.loads(method_spec_json)
-    methodInputValues = json.loads(param_values_json)
+    methodInputValues = json.loads(correct_method_specs_json(param_values_json))
     njsClient = NarrativeJobService(URLS.job_service, token = token)
     wsClient = workspaceService(URLS.workspace, token = token)
     if method_job_id.startswith("method:"):
         method_job_id = method_job_id[7:]
-        appState = njsClient.check_app_state(method_job_id)
+        is_async = is_async_method(methodSpec)
+        appState = None
+        if is_async:
+            # It's an SDK method, we use narrative proxy user to deal with sharing
+            ujs_proxy = job_manager.proxy_client()
+            appState = ujs_proxy.check_app_state(method_job_id)
+        else:  # If it's NJS script method then we cannot use narrative proxy user
+            appState = njsClient.check_app_state(method_job_id)
         for stepId in appState['step_outputs']:
             rpcOut = appState['step_outputs'][stepId]
             appState['widget_outputs'] = app_state_output_into_method_output(workspace, token, wsClient, methodSpec, methodInputValues, rpcOut)
@@ -236,11 +244,14 @@ def build_args(paramValue, paramMapping, workspace, args):
 
 def transform_value(paramValue, workspace, targetTrans):
     if targetTrans == "ref":
-        return workspace + '/' + paramValue
+        if paramValue is None:
+            return None
+        else:
+            return workspace + '/' + paramValue
     if targetTrans == "int":
         if paramValue is None or len(str(paramValue).strip()) == 0:
             return None
-        return int(paramValue) 
+        return int(paramValue)
     if targetTrans.startswith("list<") and targetTrans.endswith(">"):
         innerTrans = targetTrans[5:-1]
         if isinstance(paramValue, list):
@@ -266,7 +277,7 @@ def prepare_njs_method_input(token, wsClient, workspace, methodSpec, paramValues
     else:
         inputMapping = methodSpec['behavior']['script_input_mapping']
         isScript = True
-    
+
     paramToSpecs = {}
     for paramPos in range(0, len(parameters)):
         param = parameters[paramPos]
@@ -274,7 +285,7 @@ def prepare_njs_method_input(token, wsClient, workspace, methodSpec, paramValues
         paramValue = paramValues[paramPos]
         input[paramId] = paramValue
         paramToSpecs[paramId] = param
-    
+
     for mapping in inputMapping:
         paramValue = None
         paramId = None
@@ -355,7 +366,7 @@ def build_args_njs(paramValue, paramMapping, workspace, paramSpec):
                         njsType = type
             paramValue = str(paramValue)
     else:
-        paramValue = str(paramValue)        
+        paramValue = str(paramValue)
     ret['label'] = targetProp
     ret['value'] = paramValue
     ret['type'] = njsType
@@ -364,6 +375,8 @@ def build_args_njs(paramValue, paramMapping, workspace, paramSpec):
 def is_script_method(methodSpec):
     behavior = methodSpec['behavior']
     if 'kb_service_input_mapping' in behavior:
+        if 'job_id_output_field' in methodSpec:
+            return False
         url = behavior['kb_service_url']
         if len(url) == 0:
             return True
@@ -371,8 +384,17 @@ def is_script_method(methodSpec):
         return True
     return False
 
+def is_async_method(methodSpec):
+    if is_script_method(methodSpec):
+        return False
+    behavior = methodSpec['behavior']
+    return ('job_id_output_field' in methodSpec and
+            methodSpec['job_id_output_field'] == 'docker' and
+            'kb_service_input_mapping' in behavior and
+            behavior['kb_service_url'] == '')
+
 def create_app_step(workspace, token, wsClient, methodSpec, methodInputValues, stepId, scriptStep):
-    step = { 'step_id' : stepId }
+    step = { 'step_id' : stepId, 'method_spec_id' : methodSpec['info']['id'] }
     if methodInputValues is not None:
         behavior = methodSpec['behavior']
         if 'kb_service_input_mapping' in behavior or 'script_input_mapping' in behavior:
@@ -413,10 +435,14 @@ def create_app_step(workspace, token, wsClient, methodSpec, methodInputValues, s
                             if len(rpcOutPath) == 1:
                                 rpcJobIdField = rpcOutPath[0]
                 if not jobIdFieldFound:
-                    raise ValueError("Job id field wasn't found in method output mappings for method [" + methodId + "]: " + json.dumps(behavior['kb_service_output_mapping']))
+                    if jobIdField == 'docker':
+                        if 'kb_service_version' in behavior:
+                            step['service']['service_version'] = behavior['kb_service_version']
+                    else:
+                        raise ValueError("Job id field wasn't found in method output mappings for method [" + methodId + "]: " + json.dumps(behavior['kb_service_output_mapping']))
                 step['is_long_running'] = 1
                 if rpcJobIdField is not None:
-                    step['job_id_output_field'] = rpcJobIdField                                   
+                    step['job_id_output_field'] = rpcJobIdField
         elif 'output_mapping' in behavior:
             return None  # We don't put these steps in app sending to NJS. We will process them later in _app_get_state
         else:
@@ -607,6 +633,10 @@ class GenericService(object):
         resp = json.loads(ret.read())
 
         if 'result' in resp:
+            # Note: what if there are more than one return values? --mike
+            # we need to check for methods with no return
+            if not resp['result']:
+                return None
             return resp['result'][0]
         else:
             raise ServerError('Unknown', 0, 'An unknown server error occurred')

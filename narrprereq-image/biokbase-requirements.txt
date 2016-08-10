@@ -1,0 +1,12 @@
+bokeh
+dateutils
+decorator
+jsonschema
+markupsafe
+pickleshare
+plotly
+qgrid
+setuptools>=0.8
+simplegeneric
+sympy
+terminado

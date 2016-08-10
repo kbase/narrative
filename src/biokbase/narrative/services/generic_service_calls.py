@@ -5,11 +5,11 @@ In method 'bindRunButton' of 'src/notebook/ipython_profiles/profile_narrative/kb
 instead of line:
                     //self.runCell()(cell, method.service, method.title, paramList);
 you can use:
-                    var methodSpec = {parameters: [{id: "param0", field_type : "text"}, {id : "param1", field_type : "text"}], 
-                            behavior: {kb_service_url: "https://kbase.us/services/trees", 
-                                kb_service_name: "KBaseTrees", kb_service_method: "construct_tree_for_alignment", 
+                    var methodSpec = {parameters: [{id: "param0", field_type : "text"}, {id : "param1", field_type : "text"}],
+                            behavior: {kb_service_url: "https://kbase.us/services/trees",
+                                kb_service_name: "KBaseTrees", kb_service_method: "construct_tree_for_alignment",
                                 kb_service_parameters_mapping: {
-                                    param0: {target_property: "msa_ref", target_type_transform: "ref"}, 
+                                    param0: {target_property: "msa_ref", target_type_transform: "ref"},
                                     param1: {target_property: "out_tree_id"}
                                 }, kb_service_workspace_name_mapping: {target_property: "out_workspace"}}};
                     self.runCell()(cell, "generic_service", "method_call", [JSON.stringify(methodSpec), JSON.stringify(paramList)]);
@@ -44,7 +44,9 @@ from biokbase.narrative.common.service import *
 from biokbase.narrative.common.generic_service_calls import prepare_generic_method_input
 from biokbase.narrative.common.generic_service_calls import prepare_generic_method_output
 from biokbase.narrative.common.generic_service_calls import is_script_method
+from biokbase.narrative.common.generic_service_calls import is_async_method
 from biokbase.narrative.common.generic_service_calls import create_app_step
+from biokbase.narrative.common.generic_service_calls import correct_method_specs_json
 from biokbase.workspace.client import Workspace as workspaceService
 from biokbase.NarrativeJobService.Client import NarrativeJobService
 
@@ -75,16 +77,18 @@ def _method_call(meth, method_spec_json, param_values_json):
     """
     token = os.environ['KB_AUTH_TOKEN']
     workspace = os.environ['KB_WORKSPACE_ID']
-    methodSpec = json.loads(method_spec_json)
-    paramValues = json.loads(param_values_json)
+    methodSpec = json.loads(correct_method_specs_json(method_spec_json))
+    paramValues = json.loads(correct_method_specs_json(param_values_json))
     methodOut = None
-
-    if is_script_method(methodSpec):
+    behavior = methodSpec['behavior']
+    scriptStep = is_script_method(methodSpec)
+    async = is_async_method(methodSpec)
+    if scriptStep or async:
         wsClient = workspaceService(service.URLS.workspace, token = token)
         steps = []
         methodId = methodSpec['info']['id']
         app = { 'name' : 'App wrapper for method ' + methodId,'steps' : steps }
-        steps.append(create_app_step(workspace, token, wsClient, methodSpec, paramValues, methodId, True))
+        steps.append(create_app_step(workspace, token, wsClient, methodSpec, paramValues, methodId, scriptStep))
         meth.debug(json.dumps(app))
         njsClient = NarrativeJobService(service.URLS.job_service, token = token)
         appState = njsClient.run_app(app)
@@ -94,7 +98,6 @@ def _method_call(meth, method_spec_json, param_values_json):
     else:
         input = {}
         output = None
-        behavior = methodSpec['behavior']
         if 'kb_service_input_mapping' in behavior:
             rpcArgs = prepare_generic_method_input(token, workspace, methodSpec, paramValues, input);
             url = behavior['kb_service_url']
@@ -273,6 +276,10 @@ class GenericService(object):
         resp = json.loads(ret.read())
 
         if 'result' in resp:
+            # Note: what if there are more than one return values? --mike
+            # we need to check for methods with no return
+            if not resp['result']:
+                return None
             return resp['result'][0]
         else:
             raise ServerError('Unknown', 0, 'An unknown server error occurred')

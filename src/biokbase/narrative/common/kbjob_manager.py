@@ -21,6 +21,7 @@ __version__ = "0.1.0"
 import os
 import json
 import traceback
+import urllib2
 from biokbase.userandjobstate.client import UserAndJobState
 from biokbase.narrativejobproxy.client import NarrativeJobProxy
 from biokbase.NarrativeJobService.Client import NarrativeJobService
@@ -49,6 +50,10 @@ class KBjobManager():
             self.ujs_proxy = NarrativeJobProxy(url=URLS.narrative_job_proxy, token=token)
 
         return self.ujs_proxy
+
+    def proxy_client(self, token=None):
+        return self.__proxy_client(token)
+
 
     def register_job(self, job_id):
         """This really just shares an existing job with narrativejoblistener.
@@ -151,8 +156,8 @@ class KBjobManager():
 
     def prepare_job_error_state(self, job_id, e):
         e_type = type(e).__name__
-        e_message = e.__str__()
-        e_trace = traceback.format_exc()
+        e_message = str(e).replace('<', '&lt;').replace('>', '&gt;')
+        e_trace = traceback.format_exc().replace('<', '&lt;').replace('>', '&gt;')
         job_state = 'error'
         if e_type == 'ConnectionError' or e_type == 'HTTPError':
             job_state = 'network_error'            # Network problem routing to NJS wrapper
@@ -167,6 +172,8 @@ class KBjobManager():
                 job_state = 'network_error'        # Network problem routing NJS
             elif '[awe error]' in e_message:
                 job_state = 'awe_error'
+        elif e_type == 'URLError':
+            job_state = 'network_error'
         return {
             'job_id' : job_id,
             'job_state' : job_state,
@@ -225,3 +232,12 @@ class KBjobManager():
             import json
             deletion_status = json.dumps(deletion_status)
         return deletion_status
+
+    def get_job_logs(self, params, ujs_proxy=None):
+        """
+        Loads SDK job logs on behalf of the narrativejoblistener account.
+        Params is a structure with 'job_id' string value and optional 'skip_lines' int value.
+        """
+        if ujs_proxy is None:
+            ujs_proxy = self.__proxy_client()
+        return ujs_proxy.get_job_logs(params)

@@ -1,0 +1,22 @@
+sudo: false
+language: python
+python:
+  - "2.7"
+cache:
+  directories:
+  - kbase-extension/static/components
+  - node_modules
+branches:
+  only:
+    - develop
+    - staging
+    - master
+    - jupyter
+before_install:
+  - pip install virtualenv
+  - npm install -g bower
+  - npm install -g grunt-cli
+  - npm install -g karma-cli
+install:
+  - pip install -r src/requirements.txt
+script: make build-travis-narrative && make test

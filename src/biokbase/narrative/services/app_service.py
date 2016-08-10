@@ -10,7 +10,7 @@ __date__ = '10/28/14'
 
 import json
 # Third-party
-import IPython.utils.traitlets as trt
+import traitlets as trt
 # Local
 import biokbase.narrative.common.service as service
 from biokbase.narrative.common.service import *
@@ -51,7 +51,7 @@ def _app_call(meth, app_spec_json, method_specs_json, param_values_json):
     token, workspace = meth.token, meth.workspace_id
     
     appSpec = json.loads(app_spec_json)
-    paramValues = json.loads(param_values_json)
+    paramValues = json.loads(correct_method_specs_json(param_values_json))
 
     methIdToSpec = json.loads(correct_method_specs_json(method_specs_json))
     

@@ -36,7 +36,7 @@ Because features should only be merged into develop after testing, and changes s
 
 Bumping the version number can be done by providing it as an argument to the biokbase.narrative package's `__init__.py` (where the version number lives):
 
-    # bump to number of the beast
+    # bump to version of the beast
     python src/biokbase/narrative/__init__.py 6.6.6
 
 ### Production releases

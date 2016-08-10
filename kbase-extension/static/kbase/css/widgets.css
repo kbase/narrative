@@ -1,0 +1,13 @@
+
+
+/* tab.js */
+
+.nav-tabs .glyphicon-remove {
+	margin: 0 0 0 3px;
+	color: #aaa;
+}
+.nav-tabs .glyphicon-remove:hover {
+	color: #666;
+	cursor: hand;
+	cursor: pointer;
+}

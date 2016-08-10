@@ -1,0 +1,93 @@
+/**
+ * CSS related to editing tools.  This currently includes media and model editing
+ */
+
+.modal-body .dataTables_processing {
+    border: 1px solid #aaa;
+    background: #E8F9FF;
+    opacity: 0.8;
+}
+
+.kb-editor {
+    margin: 0 10px;
+}
+
+.kb-editor .tab-content {
+    margin: 5px 0 0 0;
+}
+
+.kb-editor .controls {
+    margin: 5px 0px;
+}
+.kb-editor .controls .btn{
+    margin: 0 10px;
+}
+
+
+/**
+ * Override KBase stylings that override jupyter styling.
+ * Should be removed after Bill's refactoring.
+ */
+
+/* override button staylings that were removed */
+.kb-editor .btn-primary {
+    background-color: #337ab7 !important;
+    border-color: #2e6da4 !important;
+}
+.kb-editor .btn-danger {
+    background-color: #d9534f !important;
+    border-color: #d43f3a !important;
+}
+
+/* override icon stylings in button that were removed */
+.kb-editor .btn i {
+    color: #fff;
+}
+
+/* override table border styling */
+.kb-editor table {
+    border: 1px solid #bbb;
+}
+
+
+/**
+ * General editor styling
+ */
+.kb-editor-table {
+    width: 100% !important; /* override datatables hackory */
+}
+
+.kb-editor-table > tbody > tr > td:first-child {
+    width: 1%; /* checkboxes are expected on editable tables */
+}
+
+.kb-editor-table > tbody > tr > td:first-child .fa-square-o {
+    font-size: 1.4em;
+    color: #666;
+}
+
+.kb-editor-table > tbody > tr > td:first-child:hover {
+    cursor: pointer;
+}
+
+.kb-editor-table > tbody > tr > td:first-child:hover .fa-square-o {
+    color: #000;
+}
+
+.kb-editor-table > tbody > tr.row-select .fa-square-o:before {
+    content: "\f046";
+    color: #444;
+}
+
+.kb-editor-table > tbody > tr > td.editable {
+    position: relative;
+}
+
+.kb-editor-table > tbody > tr > td.editable:hover:after{
+    content: "\f044";
+    font-family: FontAwesome;
+    position: absolute;
+    bottom: 0;
+    right: 2px;
+    color: #888;
+}

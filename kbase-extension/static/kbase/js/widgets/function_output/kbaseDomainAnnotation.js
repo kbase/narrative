@@ -27,7 +27,7 @@ define (
     return KBWidget({
         name: 'kbaseDomainAnnotation',
         parent : kbaseAuthenticatedWidget,
-        version: '1.0.2',
+        version: '1.0.3',
         options: {
             domainAnnotationID: null,
             workspaceID: null,
@@ -119,6 +119,7 @@ define (
                     [{ref: self.domainModelSetRef}],
                     function(data) {
                         self.accessionToShortDescription = data[0].data.domain_accession_to_description;
+			self.domainModelSetName = data[0].data.set_name;
                         // make regex for each prefix to map to external URLs
                         $.each(data[0].data.domain_prefix_to_dbxref_url, function(prefix,url) {
                             self.prefixToURL['^'+prefix] = url;
@@ -162,7 +163,7 @@ define (
                             $('<span />').append(self.genomeName).css('font-style', 'italic') ) )
                         .append( self.makeRow(
                             'Domain model set',
-                            self.domainSetName ) )
+                            self.domainModelSetName ) )
                         .append( self.makeRow(
                             'Annotated genes',
                             self.annotatedGenesCount ) )

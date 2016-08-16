@@ -14,7 +14,7 @@ define([
                     buttons: {
                         enabled: [],
                         disabled: ['run-app'],
-                        hidden: ['re-run-app', 'cancel']
+                        hidden: ['re-run-app', 'cancel', 'report-error']
                     },
                     elements: {
                         show: [],
@@ -40,7 +40,7 @@ define([
                     buttons: {
                         enabled: [],
                         disabled: ['run-app'],
-                        hidden: ['re-run-app', 'cancel']
+                        hidden: ['re-run-app', 'cancel', 'report-error']
                     },
                     elements: {
                         show: ['parameters-group', 'output-group'],
@@ -72,7 +72,7 @@ define([
                     buttons: {
                         enabled: ['run-app'],
                         disabled: [],
-                        hidden: ['re-run-app', 'cancel']
+                        hidden: ['re-run-app', 'cancel', 'report-error']
                     },
                     elements: {
                         show: ['parameters-group', 'output-group'],
@@ -136,7 +136,7 @@ define([
                     buttons: {
                         enabled: ['cancel'],
                         disabled: [],
-                        hidden: ['run-app', 're-run-app']
+                        hidden: ['run-app', 're-run-app', 'report-error']
                     },
                     elements: {
                         show: ['parameters-display-group', 'exec-group', 'output-group'],
@@ -197,7 +197,7 @@ define([
                     buttons: {
                         enabled: ['cancel'],
                         disabled: [],
-                        hidden: ['run-app', 're-run-app']
+                        hidden: ['run-app', 're-run-app', 'report-error']
                     },
                     elements: {
                         show: ['parameters-display-group', 'exec-group', 'output-group'],
@@ -252,7 +252,7 @@ define([
                     buttons: {
                         enabled: ['cancel'],
                         disabled: [],
-                        hidden: ['run-app', 're-run-app']
+                        hidden: ['run-app', 're-run-app', 'report-error']
                     },
                     elements: {
                         show: ['parameters-display-group', 'exec-group', 'output-group'],
@@ -294,7 +294,7 @@ define([
                     buttons: {
                         enabled: ['cancel'],
                         disabled: [],
-                        hidden: ['run-app', 're-run-app']
+                        hidden: ['run-app', 're-run-app', 'report-error']
                     },
                     elements: {
                         show: ['parameters-display-group', 'exec-group', 'output-group'],
@@ -331,7 +331,7 @@ define([
                     buttons: {
                         enabled: ['re-run-app'],
                         disabled: [],
-                        hidden: ['run-app', 'cancel']
+                        hidden: ['run-app', 'cancel', 'report-error']
                     },
                     elements: {
                         show: ['parameters-display-group', 'exec-group', 'output-group'],
@@ -368,7 +368,7 @@ define([
                 },
                 ui: {
                     buttons: {
-                        enabled: ['re-run-app'],
+                        enabled: ['re-run-app', 'report-error'],
                         disabled: [],
                         hidden: ['run-app', 'cancel']
                     },
@@ -400,7 +400,7 @@ define([
                 },
                 ui: {
                     buttons: {
-                        enabled: ['re-run-app'],
+                        enabled: ['re-run-app', 'report-error'],
                         disabled: [],
                         hidden: ['run-app', 'cancel']
                     },
@@ -432,7 +432,7 @@ define([
                 },
                 ui: {
                     buttons: {
-                        enabled: ['re-run-app'],
+                        enabled: ['re-run-app', 'report-error'],
                         disabled: [],
                         hidden: ['run-app', 'cancel']
                     },
@@ -463,7 +463,7 @@ define([
                 },
                 ui: {
                     buttons: {
-                        enabled: ['re-run-app'],
+                        enabled: ['re-run-app', 'report-error'],
                         disabled: [],
                         hidden: ['run-app', 'cancel']
                     },
@@ -493,7 +493,7 @@ define([
                 },
                 ui: {
                     buttons: {
-                        enabled: [],
+                        enabled: ['report-error'],
                         disabled: [],
                         hidden: ['re-run-app', 'run-app', 'cancel']
                     },

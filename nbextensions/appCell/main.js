@@ -457,8 +457,6 @@ define([
                 })
                 .then(function () {
                     return appCellWidget.run({
-                        appId: appId,
-                        appTag: appTag,
                         authToken: runtime.authToken()
                     });
                 })

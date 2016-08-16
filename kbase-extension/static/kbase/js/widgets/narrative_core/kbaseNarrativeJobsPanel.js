@@ -158,9 +158,9 @@ define([
 
             this.addButton($refreshBtn);
 
-            this.body().append(this.$jobsPanel)
-                .append(this.$loadingPanel)
-                .append(this.$errorPanel);
+            // this.body().append(this.$jobsPanel)
+            //     .append(this.$loadingPanel)
+            //     .append(this.$errorPanel);
 
             this.showMessage('Initializing...', true);
             this.handleBusMessages();
@@ -269,7 +269,7 @@ define([
                  */
                 case 'job_status':
                     var incomingJobs = msg.content.data.content;
-                    
+
                     /*
                      * Ensure there is a locally cached copy of each job.
                      *
@@ -289,7 +289,7 @@ define([
                          * Notify the front end about the changed or new job
                          * states.
                          */
-                        
+
                         this.sendJobMessage('job-status', jobId, {
                             jobId: jobId,
                             jobState: jobStateMessage.state,

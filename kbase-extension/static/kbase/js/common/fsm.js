@@ -3,9 +3,9 @@
 
 /*
  * fsm.js
- * 
+ *
  *  A simple finite state machine.
- *  
+ *
  */
 
 define([
@@ -30,7 +30,7 @@ define([
 
             // ...
         }
-        
+
         function run() {
             if (!newStateHandler) {
                 return;
@@ -47,7 +47,7 @@ define([
                 }
             }, 0);
         }
-        
+
         function findState(stateToFind) {
             var foundStates = allStates.filter(function (stateDef) {
                 if (utils.isEqual(stateToFind, stateDef.state)) {
@@ -58,8 +58,9 @@ define([
                 return foundStates[0];
             }
             if (foundStates.length > 1) {
+                console.error('state error: multiple states found:', stateToFind, foundStates)
                 throw new Error('state error: multiple states found');
-            }            
+            }
 
         }
         function doMessages(changeType) {
@@ -76,17 +77,17 @@ define([
                 }
             }
         }
-        
+
         function doResumeState() {
             doMessages('resume');
         }
-        
+
         function doEnterState() {
-            doMessages('enter');            
+            doMessages('enter');
         }
 
         function doLeaveState() {
-            doMessages('leave');            
+            doMessages('leave');
         }
 
 
@@ -102,10 +103,10 @@ define([
 
             // make it the current state
             currentState = state;
-            
+
             doResumeState();
         }
-        
+
         function findNextState(stateList, stateToFind) {
             var foundStates = stateList.filter(function (state) {
                 if (utils.isEqual(state, stateToFind)) {
@@ -117,13 +118,13 @@ define([
             }
             if (foundStates.length > 1) {
                 throw new Error('Multiple next states found');
-            }            
+            }
         }
 
         function newState(nextState) {
             var state = findNextState(currentState.next, nextState);
             if (!state) {
-                // console.error('Could not find new state', nextState, currentState);
+                console.error('Cannot not find new state', nextState, currentState);
                 throw new Error('Cannot find the new state');
             }
 
@@ -131,33 +132,33 @@ define([
             if (!newState) {
                 throw new Error('Next state found, but that state does not exist');
             }
-            
+
             if (utils.isEqual(newState.state, currentState.state)) {
                 return;
             }
-            
+
             doMessages('exit');
-            
+
             // make it the current state
             currentState = newState;
 
             doMessages('enter');
-            
-            
+
+
             run();
         }
 
         function getCurrentState() {
             return currentState;
         }
-        
+
         api = {
             start: start,
             newState: newState,
             getCurrentState: getCurrentState,
             findState: findState
         };
-        
+
         return api;
     }
 

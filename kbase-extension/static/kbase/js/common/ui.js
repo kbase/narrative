@@ -890,6 +890,16 @@ define([
                 }
             };
         }
+        
+        function buildGridTable(arg) {
+            return arg.table.map(function (row) {
+                return div({class: 'row', style: arg.row.style}, arg.cols.map(function (col, index) {
+                    return div({class: 'col-md-' + String(col.width), style: col.style}, row[index]);
+                }));
+            });
+        }
+
+
 
         return {
             getElement: getElement,
@@ -928,7 +938,8 @@ define([
             buildTabs: buildTabs,
             jsonBlockWidget: jsonBlockWidget(),
             enableTooltips: enableTooltips,
-            updateTab: updateTab
+            updateTab: updateTab,
+            buildGridTable: buildGridTable
         };
     }
 

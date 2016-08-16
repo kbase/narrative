@@ -71,11 +71,6 @@ define([
             model,
             // HMM. Sync with metadata, or just keep everything there?
             settings = {
-//                showAdvanced: {
-//                    label: 'Show advanced parameters',
-//                    defaultValue: false,
-//                    type: 'custom'
-//                },
                 showNotifications: {
                     label: 'Show the Notifications panel',
                     help: 'The notifications panel may contain informational, warning, or error messages emitted during the operation of the app cell',
@@ -193,6 +188,7 @@ define([
         function syncFatalError() {
             ui.setContent('fatal-error.title', model.getItem('fatalError.title'));
             ui.setContent('fatal-error.message', model.getItem('fatalError.message'));
+            ui.setContent('fatal-error.detail', model.getItem('fatalError.detail'));
         }
 
         function showFatalError(arg) {
@@ -432,21 +428,6 @@ define([
                         div({dataElement: 'widget', style: {display: 'block', width: '100%'}}, [
                             div({class: 'container-fluid'}, [
                                 ui.buildPanel({
-                                    title: 'Error',
-                                    name: 'fatal-error',
-                                    hidden: true,
-                                    type: 'danger',
-                                    classes: ['kb-panel-container'],
-                                    body: div([
-                                        table({class: 'table table-striped'}, [
-                                            tr([
-                                                th('Title'), td({dataElement: 'title'}),
-                                                td('Message', td({dataElement: 'message'}))
-                                            ])
-                                        ])
-                                    ])
-                                }),
-                                ui.buildPanel({
                                     title: 'App Cell Settings',
                                     name: 'settings',
                                     hidden: true,
@@ -498,23 +479,6 @@ define([
                                         ]
                                     });
                                 }()),
-                                ui.buildCollapsiblePanel({
-                                    title: 'Input ' + span({class: 'fa fa-arrow-right'}),
-                                    name: 'parameters-group',
-                                    hidden: false,
-                                    type: 'default',
-                                    classes: ['kb-panel-container'],
-                                    body: div({dataElement: 'widget'})
-                                }),
-                                ui.buildCollapsiblePanel({
-                                    title: 'Parameters (display)',
-                                    name: 'parameters-display-group',
-                                    hidden: false,
-                                    collapsed: true,
-                                    type: 'default',
-                                    classes: ['kb-panel-container'],
-                                    body: div({dataElement: 'widget'})
-                                }),
                                 div({class: 'btn-toolbar kb-btn-toolbar-cell-widget'}, [
                                     div({class: 'btn-group'}, [
                                         ui.buildButton({
@@ -552,6 +516,23 @@ define([
                                         //    ui.makeButton('Remove', 'remove', {events: events, type: 'danger'})
                                         //])
                                 ]),
+                                ui.buildCollapsiblePanel({
+                                    title: 'Input ' + span({class: 'fa fa-arrow-right'}),
+                                    name: 'parameters-group',
+                                    hidden: false,
+                                    type: 'default',
+                                    classes: ['kb-panel-container'],
+                                    body: div({dataElement: 'widget'})
+                                }),
+                                ui.buildCollapsiblePanel({
+                                    title: 'Parameters (display)',
+                                    name: 'parameters-display-group',
+                                    hidden: false,
+                                    collapsed: true,
+                                    type: 'default',
+                                    classes: ['kb-panel-container'],
+                                    body: div({dataElement: 'widget'})
+                                }),
                                 ui.buildPanel({
                                     title: 'App Execution ' + span({class: 'fa fa-bolt'}),
                                     name: 'exec-group',
@@ -567,6 +548,35 @@ define([
                                     type: 'default',
                                     classes: ['kb-panel-container'],
                                     body: div({dataElement: 'widget'})
+                                }),
+                                ui.buildPanel({
+                                    title: 'Error',
+                                    name: 'fatal-error',
+                                    hidden: true,
+                                    type: 'danger',
+                                    classes: ['kb-panel-container'],
+                                    body: div([
+                                        div({class: 'alert alert-danger'}, 'This App cell could not load due to errors described below'),
+                                        ui.buildGridTable({
+                                            row: {
+                                                style: {marginBottom: '6px'}
+                                            },
+                                            cols: [
+                                                {
+                                                    width: 2,
+                                                    style: {fontWeight: 'bold'}
+                                                },
+                                                {
+                                                    width: 10
+                                                }
+                                            ],
+                                            table: [
+                                                ['Title', div({dataElement: 'title'})],
+                                                ['Message', div({dataElement: 'message'})],
+                                                ['Details', div({dataElement: 'detail', style: {maxHeight: '300px', maxWidth: '100%', overflow: 'scroll', fontFamily: 'monospace'}})]
+                                            ]
+                                        })
+                                    ])
                                 })
                             ])
                         ])
@@ -577,7 +587,7 @@ define([
                 events: events
             };
         }
-
+        
         function validateModel() {
             /*
              * Validation is currently very simple.
@@ -922,8 +932,7 @@ define([
                 if (curMode === 'processing') {
                     startListeningForJobMessages();
                 }
-            }
-            else {
+            } else {
                 // Hide the job starting/modifying buttons
                 // It'd be nice to put all the elements in view-only mode,
                 // to mimic a running state, right? Maybe that's another
@@ -986,7 +995,7 @@ define([
                 jobId: jobId
             });
         }
-        
+
         function requestJobStatus(jobId) {
             runtime.bus().emit('request-job-status', {
                 jobId: jobId
@@ -1170,7 +1179,7 @@ define([
         //       to the kernel)
         function doRun() {
             fsm.newState({mode: 'execute-requested'});
-            
+
             // Save this to the exec state change log.
             var execLog = model.getItem('exec.log');
             if (!execLog) {
@@ -1184,7 +1193,7 @@ define([
                 }
             });
             model.setItem('exec.log', execLog);
-            
+
             cell.execute();
         }
 
@@ -1293,7 +1302,7 @@ define([
                     //  reset the cell into edit mode
                     var state = fsm.getCurrentState();
                     if (state.state.mode === 'editing') {
-                        console.warn('in edit mode, so not resetting ui')
+                        console.warn('in edit mode, so not resetting ui');
                         return;
                     }
 
@@ -1313,7 +1322,7 @@ define([
                     //  reset the cell into edit mode
                     var state = fsm.getCurrentState();
                     if (state.state.mode === 'editing') {
-                        console.warn('in edit mode, so not resetting ui')
+                        console.warn('in edit mode, so not resetting ui');
                         return;
                     }
 
@@ -1664,16 +1673,16 @@ define([
 //                }
 
                 // Regardless of what the FSM says, if we are not listening for a
-                // job update and we already have an execution job state, let's 
+                // job update and we already have an execution job state, let's
                 // see if there is anything new, even if we don't expect anything
                 // new...
                 //if (!listeningForJobUpdates) {
-                    var jobId = model.getItem('exec.jobState.job_id');
-                    if (jobId) {
-                        startListeningForJobMessages(jobId);
-                    }
+                var jobId = model.getItem('exec.jobState.job_id');
+                if (jobId) {
+                    startListeningForJobMessages(jobId);
+                }
                 //}
-                
+
 
 
                 // TODO: only turn this on when we need it!
@@ -1808,7 +1817,7 @@ define([
 //                    }
 //                });
 
-                runtime.bus().on('read-only-changed', function(msg) {
+                runtime.bus().on('read-only-changed', function (msg) {
                     toggleReadOnlyMode(msg.readOnly);
                 });
 
@@ -1854,6 +1863,11 @@ define([
             Object.keys(params).forEach(function (key) {
                 var value = params[key],
                     paramSpec = env.parameterMap[key];
+
+                if (!paramSpec) {
+                    console.error('Parameter ' + key + ' is not defined in the parameter map', env.parameterMap, env.parameters);
+                    throw new Error('Parameter ' + key + ' is not defined in the parameter map');
+                }
 
                 if (paramSpec.spec.field_type === 'textsubdata') {
                     if (value && value instanceof Array) {
@@ -2175,16 +2189,78 @@ define([
                     }
                 })
                 .catch(function (err) {
-                    console.error('ERROR loading main widgets', err);
-                    addNotification('Error loading main widgets: ' + err.message);
+                    var error = grokError(err);
+                    console.error('ERROR loading main widgets', error);
+                    addNotification('Error loading main widgets: ' + error.message);
+
                     model.setItem('fatalError', {
                         title: 'Error loading main widgets',
-                        message: err.message
+                        message: error.message,
+                        detail: error.detail
                     });
                     syncFatalError();
                     fsm.newState({mode: 'fatal-error'});
                     renderUI();
                 });
+        }
+
+        /*
+         Grok a sensible error structure out of something returned by something.
+         */
+        function grokError(err) {
+            if (err instanceof Error) {
+                return {
+                    type: 'js-error',
+                    name: err.name,
+                    message: err.message,
+                    original: err
+                };
+            }
+            if (err instanceof KBError) {
+                return err;
+            }
+
+            switch (typeof err) {
+                case 'string':
+                    return {
+                        type: 'string-error',
+                        message: err,
+                        original: err
+                    };
+                    break;
+                case 'object':
+                    if (err.error) {
+                        // this is a kbase service client style error
+                        return {
+                            type: 'kbase-client-error',
+                            name: err.error.name,
+                            message: err.error.message,
+                            detail: err.error.error,
+                            original: err
+                        };
+                    } else if (err.message) {
+                        return {
+                            type: 'js-error',
+                            name: err.name,
+                            message: err.message,
+                            original: err
+                        };
+                    } else {
+                        return {
+                            type: 'unknown-error',
+                            name: 'Unknown',
+                            message: 'An unknown error occurred',
+                            original: err
+                        };
+                    }
+                default:
+                    return {
+                        type: 'unknown-error',
+                        name: 'Unknown',
+                        message: 'An unknown error occurred',
+                        original: err
+                    };
+            }
         }
 
         // INIT

@@ -473,7 +473,7 @@ define([
                 })
                 .catch(function (err) {
                     console.error('ERROR starting app cell', err);
-                    alert('Error starting app cell');
+                    alert('Error starting app cell: ' + err.message);
                 });
         });
     }

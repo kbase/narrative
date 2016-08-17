@@ -1,10 +1,10 @@
 /*global define*/
 /*jslint white:true,browser:true*/
 
-define([    
+define([
 ], function () {
    'use strict';
-   
+
    var appStates = [
             {
                 state: {
@@ -14,7 +14,7 @@ define([
                     buttons: {
                         enabled: [],
                         disabled: ['run-app'],
-                        hidden: ['re-run-app', 'cancel']
+                        hidden: ['re-run-app', 'cancel', 'report-error']
                     },
                     elements: {
                         show: [],
@@ -33,24 +33,6 @@ define([
             },
             {
                 state: {
-                    mode: 'fatal-error'
-                },
-                ui: {
-                    buttons: {
-                        enabled: [],
-                        disabled: ['run-app'],
-                        hidden: ['re-run-app', 'cancel']
-                    },
-                    elements: {
-                        show: ['fatal-error'],
-                        hide: ['parameters-group', 'output-group', 'parameters-display-group', 'exec-group']
-                    }
-                },
-                next: []
-
-            },
-            {
-                state: {
                     mode: 'editing',
                     params: 'incomplete'
                 },
@@ -58,7 +40,7 @@ define([
                     buttons: {
                         enabled: [],
                         disabled: ['run-app'],
-                        hidden: ['re-run-app', 'cancel']
+                        hidden: ['re-run-app', 'cancel', 'report-error']
                     },
                     elements: {
                         show: ['parameters-group', 'output-group'],
@@ -74,6 +56,9 @@ define([
                     {
                         mode: 'editing',
                         params: 'incomplete'
+                    },
+                    {
+                        mode: 'fatal-error'
                     }
                 ]
             },
@@ -87,7 +72,7 @@ define([
                     buttons: {
                         enabled: ['run-app'],
                         disabled: [],
-                        hidden: ['re-run-app', 'cancel']
+                        hidden: ['re-run-app', 'cancel', 'report-error']
                     },
                     elements: {
                         show: ['parameters-group', 'output-group'],
@@ -132,6 +117,9 @@ define([
                     },
                     {
                         mode: 'error'
+                    },
+                    {
+                        mode: 'fatal-error'
                     }
                 ]
             },
@@ -148,7 +136,7 @@ define([
                     buttons: {
                         enabled: ['cancel'],
                         disabled: [],
-                        hidden: ['run-app', 're-run-app']
+                        hidden: ['run-app', 're-run-app', 'report-error']
                     },
                     elements: {
                         show: ['parameters-display-group', 'exec-group', 'output-group'],
@@ -194,6 +182,9 @@ define([
                         mode: 'editing',
                         params: 'complete',
                         code: 'built'
+                    },
+                    {
+                        mode: 'fatal-error'
                     }
                 ]
             },
@@ -206,7 +197,7 @@ define([
                     buttons: {
                         enabled: ['cancel'],
                         disabled: [],
-                        hidden: ['run-app', 're-run-app']
+                        hidden: ['run-app', 're-run-app', 'report-error']
                     },
                     elements: {
                         show: ['parameters-display-group', 'exec-group', 'output-group'],
@@ -246,6 +237,9 @@ define([
                         mode: 'editing',
                         params: 'complete',
                         code: 'built'
+                    },
+                    {
+                        mode: 'fatal-error'
                     }
                 ]
             },
@@ -258,7 +252,7 @@ define([
                     buttons: {
                         enabled: ['cancel'],
                         disabled: [],
-                        hidden: ['run-app', 're-run-app']
+                        hidden: ['run-app', 're-run-app', 'report-error']
                     },
                     elements: {
                         show: ['parameters-display-group', 'exec-group', 'output-group'],
@@ -285,6 +279,9 @@ define([
                         mode: 'editing',
                         params: 'complete',
                         code: 'built'
+                    },
+                    {
+                        mode: 'fatal-error'
                     }
                 ]
             },
@@ -297,7 +294,7 @@ define([
                     buttons: {
                         enabled: ['cancel'],
                         disabled: [],
-                        hidden: ['run-app', 're-run-app']
+                        hidden: ['run-app', 're-run-app', 'report-error']
                     },
                     elements: {
                         show: ['parameters-display-group', 'exec-group', 'output-group'],
@@ -320,6 +317,9 @@ define([
                         mode: 'editing',
                         params: 'complete',
                         code: 'built'
+                    },
+                    {
+                        mode: 'fatal-error'
                     }
                 ]
             },
@@ -331,7 +331,7 @@ define([
                     buttons: {
                         enabled: ['re-run-app'],
                         disabled: [],
-                        hidden: ['run-app', 'cancel']
+                        hidden: ['run-app', 'cancel', 'report-error']
                     },
                     elements: {
                         show: ['parameters-display-group', 'exec-group', 'output-group'],
@@ -355,6 +355,9 @@ define([
                         mode: 'editing',
                         params: 'complete',
                         code: 'built'
+                    },
+                    {
+                        mode: 'fatal-error'
                     }
                 ]
             },
@@ -365,7 +368,7 @@ define([
                 },
                 ui: {
                     buttons: {
-                        enabled: ['re-run-app'],
+                        enabled: ['re-run-app', 'report-error'],
                         disabled: [],
                         hidden: ['run-app', 'cancel']
                     },
@@ -383,6 +386,9 @@ define([
                         mode: 'editing',
                         params: 'complete',
                         code: 'built'
+                    },
+                    {
+                        mode: 'fatal-error'
                     }
                 ]
 
@@ -394,7 +400,7 @@ define([
                 },
                 ui: {
                     buttons: {
-                        enabled: ['re-run-app'],
+                        enabled: ['re-run-app', 'report-error'],
                         disabled: [],
                         hidden: ['run-app', 'cancel']
                     },
@@ -412,6 +418,9 @@ define([
                         mode: 'editing',
                         params: 'complete',
                         code: 'built'
+                    },
+                    {
+                        mode: 'fatal-error'
                     }
                 ]
 
@@ -423,7 +432,7 @@ define([
                 },
                 ui: {
                     buttons: {
-                        enabled: ['re-run-app'],
+                        enabled: ['re-run-app', 'report-error'],
                         disabled: [],
                         hidden: ['run-app', 'cancel']
                     },
@@ -441,6 +450,9 @@ define([
                         mode: 'editing',
                         params: 'complete',
                         code: 'built'
+                    },
+                    {
+                        mode: 'fatal-error'
                     }
                 ]
             },
@@ -451,7 +463,7 @@ define([
                 },
                 ui: {
                     buttons: {
-                        enabled: ['re-run-app'],
+                        enabled: ['re-run-app', 'report-error'],
                         disabled: [],
                         hidden: ['run-app', 'cancel']
                     },
@@ -468,11 +480,36 @@ define([
                         mode: 'editing',
                         params: 'complete',
                         code: 'built'
+                    },
+                    {
+                        mode: 'fatal-error'
+                    }
+                ]
+            },
+            // A fatal error represents an app cell which cannot operate.
+            {
+                state: {
+                    mode: 'fatal-error'
+                },
+                ui: {
+                    buttons: {
+                        enabled: ['report-error'],
+                        disabled: [],
+                        hidden: ['re-run-app', 'run-app', 'cancel']
+                    },
+                    elements: {
+                        show: ['fatal-error'],
+                        hide: ['parameters-group', 'parameters-display-group', 'exec-group', 'output-group']
+                    }
+                },
+                next: [
+                    {
+                        mode: 'fatal-error'
                     }
                 ]
             }
+
         ];
-   
+
    return appStates;
 });
-

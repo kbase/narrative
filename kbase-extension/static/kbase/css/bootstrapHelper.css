@@ -69,7 +69,7 @@
 .panel.kb-panel-container > .panel-heading {
     background-color: transparent;
     font-weight: bold;
-    color: #2e618d;
+    xcolor: #2e618d;
     padding-left: 0;
     padding-bottom: 2px;
     border-bottom: 2px #CCC solid;

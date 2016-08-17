@@ -24,9 +24,9 @@ function GenomeAnnotationAPI(url, auth, auth_cb, timeout, async_job_check_time_m
     var _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
     var _auth_cb = auth_cb;
 
-     this.get_taxon = function (ref, _callback, _errorCallback) {
-        if (typeof ref === 'function')
-            throw 'Argument ref can not be a function';
+     this.get_taxon = function (inputs_get_taxon, _callback, _errorCallback) {
+        if (typeof inputs_get_taxon === 'function')
+            throw 'Argument inputs_get_taxon can not be a function';
         if (_callback && typeof _callback !== 'function')
             throw 'Argument _callback must be a function if defined';
         if (_errorCallback && typeof _errorCallback !== 'function')
@@ -38,7 +38,7 @@ function GenomeAnnotationAPI(url, auth, auth_cb, timeout, async_job_check_time_m
                 'version' : self.service_version}], 1, function(service_status_ret) {
             srv_url = service_status_ret['url'];
             json_call_ajax(srv_url, "GenomeAnnotationAPI.get_taxon", 
-                [ref], 1, _callback, _errorCallback, null, deferred);
+                [inputs_get_taxon], 1, _callback, _errorCallback, null, deferred);
         }, function(err) {
             if (_errorCallback) {
                 _errorCallback(err);
@@ -52,9 +52,9 @@ function GenomeAnnotationAPI(url, auth, auth_cb, timeout, async_job_check_time_m
         return deferred;
     };
  
-     this.get_assembly = function (ref, _callback, _errorCallback) {
-        if (typeof ref === 'function')
-            throw 'Argument ref can not be a function';
+     this.get_assembly = function (inputs_get_assembly, _callback, _errorCallback) {
+        if (typeof inputs_get_assembly === 'function')
+            throw 'Argument inputs_get_assembly can not be a function';
         if (_callback && typeof _callback !== 'function')
             throw 'Argument _callback must be a function if defined';
         if (_errorCallback && typeof _errorCallback !== 'function')
@@ -66,7 +66,7 @@ function GenomeAnnotationAPI(url, auth, auth_cb, timeout, async_job_check_time_m
                 'version' : self.service_version}], 1, function(service_status_ret) {
             srv_url = service_status_ret['url'];
             json_call_ajax(srv_url, "GenomeAnnotationAPI.get_assembly", 
-                [ref], 1, _callback, _errorCallback, null, deferred);
+                [inputs_get_assembly], 1, _callback, _errorCallback, null, deferred);
         }, function(err) {
             if (_errorCallback) {
                 _errorCallback(err);
@@ -80,9 +80,9 @@ function GenomeAnnotationAPI(url, auth, auth_cb, timeout, async_job_check_time_m
         return deferred;
     };
  
-     this.get_feature_types = function (ref, _callback, _errorCallback) {
-        if (typeof ref === 'function')
-            throw 'Argument ref can not be a function';
+     this.get_feature_types = function (inputs_get_feature_types, _callback, _errorCallback) {
+        if (typeof inputs_get_feature_types === 'function')
+            throw 'Argument inputs_get_feature_types can not be a function';
         if (_callback && typeof _callback !== 'function')
             throw 'Argument _callback must be a function if defined';
         if (_errorCallback && typeof _errorCallback !== 'function')
@@ -94,7 +94,7 @@ function GenomeAnnotationAPI(url, auth, auth_cb, timeout, async_job_check_time_m
                 'version' : self.service_version}], 1, function(service_status_ret) {
             srv_url = service_status_ret['url'];
             json_call_ajax(srv_url, "GenomeAnnotationAPI.get_feature_types", 
-                [ref], 1, _callback, _errorCallback, null, deferred);
+                [inputs_get_feature_types], 1, _callback, _errorCallback, null, deferred);
         }, function(err) {
             if (_errorCallback) {
                 _errorCallback(err);
@@ -108,23 +108,21 @@ function GenomeAnnotationAPI(url, auth, auth_cb, timeout, async_job_check_time_m
         return deferred;
     };
  
-     this.get_feature_type_descriptions = function (ref, feature_type_list, _callback, _errorCallback) {
-        if (typeof ref === 'function')
-            throw 'Argument ref can not be a function';
-        if (typeof feature_type_list === 'function')
-            throw 'Argument feature_type_list can not be a function';
+     this.get_feature_type_descriptions = function (inputs_get_feature_type_descriptions, _callback, _errorCallback) {
+        if (typeof inputs_get_feature_type_descriptions === 'function')
+            throw 'Argument inputs_get_feature_type_descriptions can not be a function';
         if (_callback && typeof _callback !== 'function')
             throw 'Argument _callback must be a function if defined';
         if (_errorCallback && typeof _errorCallback !== 'function')
             throw 'Argument _errorCallback must be a function if defined';
-        if (typeof arguments === 'function' && arguments.length > 2+2)
-            throw 'Too many arguments ('+arguments.length+' instead of '+(2+2)+')';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
         var deferred = $.Deferred();
         json_call_ajax(_url, 'ServiceWizard.get_service_status', [{'module_name' : "GenomeAnnotationAPI", 
                 'version' : self.service_version}], 1, function(service_status_ret) {
             srv_url = service_status_ret['url'];
             json_call_ajax(srv_url, "GenomeAnnotationAPI.get_feature_type_descriptions", 
-                [ref, feature_type_list], 1, _callback, _errorCallback, null, deferred);
+                [inputs_get_feature_type_descriptions], 1, _callback, _errorCallback, null, deferred);
         }, function(err) {
             if (_errorCallback) {
                 _errorCallback(err);
@@ -138,23 +136,21 @@ function GenomeAnnotationAPI(url, auth, auth_cb, timeout, async_job_check_time_m
         return deferred;
     };
  
-     this.get_feature_type_counts = function (ref, feature_type_list, _callback, _errorCallback) {
-        if (typeof ref === 'function')
-            throw 'Argument ref can not be a function';
-        if (typeof feature_type_list === 'function')
-            throw 'Argument feature_type_list can not be a function';
+     this.get_feature_type_counts = function (inputs_get_feature_type_counts, _callback, _errorCallback) {
+        if (typeof inputs_get_feature_type_counts === 'function')
+            throw 'Argument inputs_get_feature_type_counts can not be a function';
         if (_callback && typeof _callback !== 'function')
             throw 'Argument _callback must be a function if defined';
         if (_errorCallback && typeof _errorCallback !== 'function')
             throw 'Argument _errorCallback must be a function if defined';
-        if (typeof arguments === 'function' && arguments.length > 2+2)
-            throw 'Too many arguments ('+arguments.length+' instead of '+(2+2)+')';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
         var deferred = $.Deferred();
         json_call_ajax(_url, 'ServiceWizard.get_service_status', [{'module_name' : "GenomeAnnotationAPI", 
                 'version' : self.service_version}], 1, function(service_status_ret) {
             srv_url = service_status_ret['url'];
             json_call_ajax(srv_url, "GenomeAnnotationAPI.get_feature_type_counts", 
-                [ref, feature_type_list], 1, _callback, _errorCallback, null, deferred);
+                [inputs_get_feature_type_counts], 1, _callback, _errorCallback, null, deferred);
         }, function(err) {
             if (_errorCallback) {
                 _errorCallback(err);
@@ -168,25 +164,21 @@ function GenomeAnnotationAPI(url, auth, auth_cb, timeout, async_job_check_time_m
         return deferred;
     };
  
-     this.get_feature_ids = function (ref, filters, group_type, _callback, _errorCallback) {
-        if (typeof ref === 'function')
-            throw 'Argument ref can not be a function';
-        if (typeof filters === 'function')
-            throw 'Argument filters can not be a function';
-        if (typeof group_type === 'function')
-            throw 'Argument group_type can not be a function';
+     this.get_feature_ids = function (inputs_get_feature_ids, _callback, _errorCallback) {
+        if (typeof inputs_get_feature_ids === 'function')
+            throw 'Argument inputs_get_feature_ids can not be a function';
         if (_callback && typeof _callback !== 'function')
             throw 'Argument _callback must be a function if defined';
         if (_errorCallback && typeof _errorCallback !== 'function')
             throw 'Argument _errorCallback must be a function if defined';
-        if (typeof arguments === 'function' && arguments.length > 3+2)
-            throw 'Too many arguments ('+arguments.length+' instead of '+(3+2)+')';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
         var deferred = $.Deferred();
         json_call_ajax(_url, 'ServiceWizard.get_service_status', [{'module_name' : "GenomeAnnotationAPI", 
                 'version' : self.service_version}], 1, function(service_status_ret) {
             srv_url = service_status_ret['url'];
             json_call_ajax(srv_url, "GenomeAnnotationAPI.get_feature_ids", 
-                [ref, filters, group_type], 1, _callback, _errorCallback, null, deferred);
+                [inputs_get_feature_ids], 1, _callback, _errorCallback, null, deferred);
         }, function(err) {
             if (_errorCallback) {
                 _errorCallback(err);
@@ -200,23 +192,21 @@ function GenomeAnnotationAPI(url, auth, auth_cb, timeout, async_job_check_time_m
         return deferred;
     };
  
-     this.get_features = function (ref, feature_id_list, _callback, _errorCallback) {
-        if (typeof ref === 'function')
-            throw 'Argument ref can not be a function';
-        if (typeof feature_id_list === 'function')
-            throw 'Argument feature_id_list can not be a function';
+     this.get_features = function (inputs_get_features, _callback, _errorCallback) {
+        if (typeof inputs_get_features === 'function')
+            throw 'Argument inputs_get_features can not be a function';
         if (_callback && typeof _callback !== 'function')
             throw 'Argument _callback must be a function if defined';
         if (_errorCallback && typeof _errorCallback !== 'function')
             throw 'Argument _errorCallback must be a function if defined';
-        if (typeof arguments === 'function' && arguments.length > 2+2)
-            throw 'Too many arguments ('+arguments.length+' instead of '+(2+2)+')';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
         var deferred = $.Deferred();
         json_call_ajax(_url, 'ServiceWizard.get_service_status', [{'module_name' : "GenomeAnnotationAPI", 
                 'version' : self.service_version}], 1, function(service_status_ret) {
             srv_url = service_status_ret['url'];
             json_call_ajax(srv_url, "GenomeAnnotationAPI.get_features", 
-                [ref, feature_id_list], 1, _callback, _errorCallback, null, deferred);
+                [inputs_get_features], 1, _callback, _errorCallback, null, deferred);
         }, function(err) {
             if (_errorCallback) {
                 _errorCallback(err);
@@ -258,9 +248,9 @@ function GenomeAnnotationAPI(url, auth, auth_cb, timeout, async_job_check_time_m
         return deferred;
     };
  
-     this.get_proteins = function (ref, _callback, _errorCallback) {
-        if (typeof ref === 'function')
-            throw 'Argument ref can not be a function';
+     this.get_proteins = function (inputs_get_proteins, _callback, _errorCallback) {
+        if (typeof inputs_get_proteins === 'function')
+            throw 'Argument inputs_get_proteins can not be a function';
         if (_callback && typeof _callback !== 'function')
             throw 'Argument _callback must be a function if defined';
         if (_errorCallback && typeof _errorCallback !== 'function')
@@ -272,7 +262,7 @@ function GenomeAnnotationAPI(url, auth, auth_cb, timeout, async_job_check_time_m
                 'version' : self.service_version}], 1, function(service_status_ret) {
             srv_url = service_status_ret['url'];
             json_call_ajax(srv_url, "GenomeAnnotationAPI.get_proteins", 
-                [ref], 1, _callback, _errorCallback, null, deferred);
+                [inputs_get_proteins], 1, _callback, _errorCallback, null, deferred);
         }, function(err) {
             if (_errorCallback) {
                 _errorCallback(err);
@@ -286,23 +276,21 @@ function GenomeAnnotationAPI(url, auth, auth_cb, timeout, async_job_check_time_m
         return deferred;
     };
  
-     this.get_feature_locations = function (ref, feature_id_list, _callback, _errorCallback) {
-        if (typeof ref === 'function')
-            throw 'Argument ref can not be a function';
-        if (typeof feature_id_list === 'function')
-            throw 'Argument feature_id_list can not be a function';
+     this.get_feature_locations = function (inputs_get_feature_locations, _callback, _errorCallback) {
+        if (typeof inputs_get_feature_locations === 'function')
+            throw 'Argument inputs_get_feature_locations can not be a function';
         if (_callback && typeof _callback !== 'function')
             throw 'Argument _callback must be a function if defined';
         if (_errorCallback && typeof _errorCallback !== 'function')
             throw 'Argument _errorCallback must be a function if defined';
-        if (typeof arguments === 'function' && arguments.length > 2+2)
-            throw 'Too many arguments ('+arguments.length+' instead of '+(2+2)+')';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
         var deferred = $.Deferred();
         json_call_ajax(_url, 'ServiceWizard.get_service_status', [{'module_name' : "GenomeAnnotationAPI", 
                 'version' : self.service_version}], 1, function(service_status_ret) {
             srv_url = service_status_ret['url'];
             json_call_ajax(srv_url, "GenomeAnnotationAPI.get_feature_locations", 
-                [ref, feature_id_list], 1, _callback, _errorCallback, null, deferred);
+                [inputs_get_feature_locations], 1, _callback, _errorCallback, null, deferred);
         }, function(err) {
             if (_errorCallback) {
                 _errorCallback(err);
@@ -316,23 +304,21 @@ function GenomeAnnotationAPI(url, auth, auth_cb, timeout, async_job_check_time_m
         return deferred;
     };
  
-     this.get_feature_publications = function (ref, feature_id_list, _callback, _errorCallback) {
-        if (typeof ref === 'function')
-            throw 'Argument ref can not be a function';
-        if (typeof feature_id_list === 'function')
-            throw 'Argument feature_id_list can not be a function';
+     this.get_feature_publications = function (inputs_get_feature_publications, _callback, _errorCallback) {
+        if (typeof inputs_get_feature_publications === 'function')
+            throw 'Argument inputs_get_feature_publications can not be a function';
         if (_callback && typeof _callback !== 'function')
             throw 'Argument _callback must be a function if defined';
         if (_errorCallback && typeof _errorCallback !== 'function')
             throw 'Argument _errorCallback must be a function if defined';
-        if (typeof arguments === 'function' && arguments.length > 2+2)
-            throw 'Too many arguments ('+arguments.length+' instead of '+(2+2)+')';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
         var deferred = $.Deferred();
         json_call_ajax(_url, 'ServiceWizard.get_service_status', [{'module_name' : "GenomeAnnotationAPI", 
                 'version' : self.service_version}], 1, function(service_status_ret) {
             srv_url = service_status_ret['url'];
             json_call_ajax(srv_url, "GenomeAnnotationAPI.get_feature_publications", 
-                [ref, feature_id_list], 1, _callback, _errorCallback, null, deferred);
+                [inputs_get_feature_publications], 1, _callback, _errorCallback, null, deferred);
         }, function(err) {
             if (_errorCallback) {
                 _errorCallback(err);
@@ -346,23 +332,21 @@ function GenomeAnnotationAPI(url, auth, auth_cb, timeout, async_job_check_time_m
         return deferred;
     };
  
-     this.get_feature_dna = function (ref, feature_id_list, _callback, _errorCallback) {
-        if (typeof ref === 'function')
-            throw 'Argument ref can not be a function';
-        if (typeof feature_id_list === 'function')
-            throw 'Argument feature_id_list can not be a function';
+     this.get_feature_dna = function (inputs_get_feature_dna, _callback, _errorCallback) {
+        if (typeof inputs_get_feature_dna === 'function')
+            throw 'Argument inputs_get_feature_dna can not be a function';
         if (_callback && typeof _callback !== 'function')
             throw 'Argument _callback must be a function if defined';
         if (_errorCallback && typeof _errorCallback !== 'function')
             throw 'Argument _errorCallback must be a function if defined';
-        if (typeof arguments === 'function' && arguments.length > 2+2)
-            throw 'Too many arguments ('+arguments.length+' instead of '+(2+2)+')';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
         var deferred = $.Deferred();
         json_call_ajax(_url, 'ServiceWizard.get_service_status', [{'module_name' : "GenomeAnnotationAPI", 
                 'version' : self.service_version}], 1, function(service_status_ret) {
             srv_url = service_status_ret['url'];
             json_call_ajax(srv_url, "GenomeAnnotationAPI.get_feature_dna", 
-                [ref, feature_id_list], 1, _callback, _errorCallback, null, deferred);
+                [inputs_get_feature_dna], 1, _callback, _errorCallback, null, deferred);
         }, function(err) {
             if (_errorCallback) {
                 _errorCallback(err);
@@ -376,23 +360,21 @@ function GenomeAnnotationAPI(url, auth, auth_cb, timeout, async_job_check_time_m
         return deferred;
     };
  
-     this.get_feature_functions = function (ref, feature_id_list, _callback, _errorCallback) {
-        if (typeof ref === 'function')
-            throw 'Argument ref can not be a function';
-        if (typeof feature_id_list === 'function')
-            throw 'Argument feature_id_list can not be a function';
+     this.get_feature_functions = function (inputs_get_feature_functions, _callback, _errorCallback) {
+        if (typeof inputs_get_feature_functions === 'function')
+            throw 'Argument inputs_get_feature_functions can not be a function';
         if (_callback && typeof _callback !== 'function')
             throw 'Argument _callback must be a function if defined';
         if (_errorCallback && typeof _errorCallback !== 'function')
             throw 'Argument _errorCallback must be a function if defined';
-        if (typeof arguments === 'function' && arguments.length > 2+2)
-            throw 'Too many arguments ('+arguments.length+' instead of '+(2+2)+')';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
         var deferred = $.Deferred();
         json_call_ajax(_url, 'ServiceWizard.get_service_status', [{'module_name' : "GenomeAnnotationAPI", 
                 'version' : self.service_version}], 1, function(service_status_ret) {
             srv_url = service_status_ret['url'];
             json_call_ajax(srv_url, "GenomeAnnotationAPI.get_feature_functions", 
-                [ref, feature_id_list], 1, _callback, _errorCallback, null, deferred);
+                [inputs_get_feature_functions], 1, _callback, _errorCallback, null, deferred);
         }, function(err) {
             if (_errorCallback) {
                 _errorCallback(err);
@@ -406,23 +388,21 @@ function GenomeAnnotationAPI(url, auth, auth_cb, timeout, async_job_check_time_m
         return deferred;
     };
  
-     this.get_feature_aliases = function (ref, feature_id_list, _callback, _errorCallback) {
-        if (typeof ref === 'function')
-            throw 'Argument ref can not be a function';
-        if (typeof feature_id_list === 'function')
-            throw 'Argument feature_id_list can not be a function';
+     this.get_feature_aliases = function (inputs_get_feature_aliases, _callback, _errorCallback) {
+        if (typeof inputs_get_feature_aliases === 'function')
+            throw 'Argument inputs_get_feature_aliases can not be a function';
         if (_callback && typeof _callback !== 'function')
             throw 'Argument _callback must be a function if defined';
         if (_errorCallback && typeof _errorCallback !== 'function')
             throw 'Argument _errorCallback must be a function if defined';
-        if (typeof arguments === 'function' && arguments.length > 2+2)
-            throw 'Too many arguments ('+arguments.length+' instead of '+(2+2)+')';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
         var deferred = $.Deferred();
         json_call_ajax(_url, 'ServiceWizard.get_service_status', [{'module_name' : "GenomeAnnotationAPI", 
                 'version' : self.service_version}], 1, function(service_status_ret) {
             srv_url = service_status_ret['url'];
             json_call_ajax(srv_url, "GenomeAnnotationAPI.get_feature_aliases", 
-                [ref, feature_id_list], 1, _callback, _errorCallback, null, deferred);
+                [inputs_get_feature_aliases], 1, _callback, _errorCallback, null, deferred);
         }, function(err) {
             if (_errorCallback) {
                 _errorCallback(err);
@@ -436,23 +416,21 @@ function GenomeAnnotationAPI(url, auth, auth_cb, timeout, async_job_check_time_m
         return deferred;
     };
  
-     this.get_cds_by_gene = function (ref, gene_id_list, _callback, _errorCallback) {
-        if (typeof ref === 'function')
-            throw 'Argument ref can not be a function';
-        if (typeof gene_id_list === 'function')
-            throw 'Argument gene_id_list can not be a function';
+     this.get_cds_by_gene = function (inputs_get_cds_by_gene, _callback, _errorCallback) {
+        if (typeof inputs_get_cds_by_gene === 'function')
+            throw 'Argument inputs_get_cds_by_gene can not be a function';
         if (_callback && typeof _callback !== 'function')
             throw 'Argument _callback must be a function if defined';
         if (_errorCallback && typeof _errorCallback !== 'function')
             throw 'Argument _errorCallback must be a function if defined';
-        if (typeof arguments === 'function' && arguments.length > 2+2)
-            throw 'Too many arguments ('+arguments.length+' instead of '+(2+2)+')';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
         var deferred = $.Deferred();
         json_call_ajax(_url, 'ServiceWizard.get_service_status', [{'module_name' : "GenomeAnnotationAPI", 
                 'version' : self.service_version}], 1, function(service_status_ret) {
             srv_url = service_status_ret['url'];
             json_call_ajax(srv_url, "GenomeAnnotationAPI.get_cds_by_gene", 
-                [ref, gene_id_list], 1, _callback, _errorCallback, null, deferred);
+                [inputs_get_cds_by_gene], 1, _callback, _errorCallback, null, deferred);
         }, function(err) {
             if (_errorCallback) {
                 _errorCallback(err);
@@ -466,23 +444,21 @@ function GenomeAnnotationAPI(url, auth, auth_cb, timeout, async_job_check_time_m
         return deferred;
     };
  
-     this.get_cds_by_mrna = function (ref, mrna_id_list, _callback, _errorCallback) {
-        if (typeof ref === 'function')
-            throw 'Argument ref can not be a function';
-        if (typeof mrna_id_list === 'function')
-            throw 'Argument mrna_id_list can not be a function';
+     this.get_cds_by_mrna = function (inputs_mrna_id_list, _callback, _errorCallback) {
+        if (typeof inputs_mrna_id_list === 'function')
+            throw 'Argument inputs_mrna_id_list can not be a function';
         if (_callback && typeof _callback !== 'function')
             throw 'Argument _callback must be a function if defined';
         if (_errorCallback && typeof _errorCallback !== 'function')
             throw 'Argument _errorCallback must be a function if defined';
-        if (typeof arguments === 'function' && arguments.length > 2+2)
-            throw 'Too many arguments ('+arguments.length+' instead of '+(2+2)+')';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
         var deferred = $.Deferred();
         json_call_ajax(_url, 'ServiceWizard.get_service_status', [{'module_name' : "GenomeAnnotationAPI", 
                 'version' : self.service_version}], 1, function(service_status_ret) {
             srv_url = service_status_ret['url'];
             json_call_ajax(srv_url, "GenomeAnnotationAPI.get_cds_by_mrna", 
-                [ref, mrna_id_list], 1, _callback, _errorCallback, null, deferred);
+                [inputs_mrna_id_list], 1, _callback, _errorCallback, null, deferred);
         }, function(err) {
             if (_errorCallback) {
                 _errorCallback(err);
@@ -496,23 +472,21 @@ function GenomeAnnotationAPI(url, auth, auth_cb, timeout, async_job_check_time_m
         return deferred;
     };
  
-     this.get_gene_by_cds = function (ref, cds_id_list, _callback, _errorCallback) {
-        if (typeof ref === 'function')
-            throw 'Argument ref can not be a function';
-        if (typeof cds_id_list === 'function')
-            throw 'Argument cds_id_list can not be a function';
+     this.get_gene_by_cds = function (inputs_get_gene_by_cds, _callback, _errorCallback) {
+        if (typeof inputs_get_gene_by_cds === 'function')
+            throw 'Argument inputs_get_gene_by_cds can not be a function';
         if (_callback && typeof _callback !== 'function')
             throw 'Argument _callback must be a function if defined';
         if (_errorCallback && typeof _errorCallback !== 'function')
             throw 'Argument _errorCallback must be a function if defined';
-        if (typeof arguments === 'function' && arguments.length > 2+2)
-            throw 'Too many arguments ('+arguments.length+' instead of '+(2+2)+')';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
         var deferred = $.Deferred();
         json_call_ajax(_url, 'ServiceWizard.get_service_status', [{'module_name' : "GenomeAnnotationAPI", 
                 'version' : self.service_version}], 1, function(service_status_ret) {
             srv_url = service_status_ret['url'];
             json_call_ajax(srv_url, "GenomeAnnotationAPI.get_gene_by_cds", 
-                [ref, cds_id_list], 1, _callback, _errorCallback, null, deferred);
+                [inputs_get_gene_by_cds], 1, _callback, _errorCallback, null, deferred);
         }, function(err) {
             if (_errorCallback) {
                 _errorCallback(err);
@@ -526,23 +500,21 @@ function GenomeAnnotationAPI(url, auth, auth_cb, timeout, async_job_check_time_m
         return deferred;
     };
  
-     this.get_gene_by_mrna = function (ref, mrna_id_list, _callback, _errorCallback) {
-        if (typeof ref === 'function')
-            throw 'Argument ref can not be a function';
-        if (typeof mrna_id_list === 'function')
-            throw 'Argument mrna_id_list can not be a function';
+     this.get_gene_by_mrna = function (inputs_get_gene_by_mrna, _callback, _errorCallback) {
+        if (typeof inputs_get_gene_by_mrna === 'function')
+            throw 'Argument inputs_get_gene_by_mrna can not be a function';
         if (_callback && typeof _callback !== 'function')
             throw 'Argument _callback must be a function if defined';
         if (_errorCallback && typeof _errorCallback !== 'function')
             throw 'Argument _errorCallback must be a function if defined';
-        if (typeof arguments === 'function' && arguments.length > 2+2)
-            throw 'Too many arguments ('+arguments.length+' instead of '+(2+2)+')';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
         var deferred = $.Deferred();
         json_call_ajax(_url, 'ServiceWizard.get_service_status', [{'module_name' : "GenomeAnnotationAPI", 
                 'version' : self.service_version}], 1, function(service_status_ret) {
             srv_url = service_status_ret['url'];
             json_call_ajax(srv_url, "GenomeAnnotationAPI.get_gene_by_mrna", 
-                [ref, mrna_id_list], 1, _callback, _errorCallback, null, deferred);
+                [inputs_get_gene_by_mrna], 1, _callback, _errorCallback, null, deferred);
         }, function(err) {
             if (_errorCallback) {
                 _errorCallback(err);
@@ -556,23 +528,21 @@ function GenomeAnnotationAPI(url, auth, auth_cb, timeout, async_job_check_time_m
         return deferred;
     };
  
-     this.get_mrna_by_cds = function (ref, cds_id_list, _callback, _errorCallback) {
-        if (typeof ref === 'function')
-            throw 'Argument ref can not be a function';
-        if (typeof cds_id_list === 'function')
-            throw 'Argument cds_id_list can not be a function';
+     this.get_mrna_by_cds = function (inputs_get_mrna_by_cds, _callback, _errorCallback) {
+        if (typeof inputs_get_mrna_by_cds === 'function')
+            throw 'Argument inputs_get_mrna_by_cds can not be a function';
         if (_callback && typeof _callback !== 'function')
             throw 'Argument _callback must be a function if defined';
         if (_errorCallback && typeof _errorCallback !== 'function')
             throw 'Argument _errorCallback must be a function if defined';
-        if (typeof arguments === 'function' && arguments.length > 2+2)
-            throw 'Too many arguments ('+arguments.length+' instead of '+(2+2)+')';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
         var deferred = $.Deferred();
         json_call_ajax(_url, 'ServiceWizard.get_service_status', [{'module_name' : "GenomeAnnotationAPI", 
                 'version' : self.service_version}], 1, function(service_status_ret) {
             srv_url = service_status_ret['url'];
             json_call_ajax(srv_url, "GenomeAnnotationAPI.get_mrna_by_cds", 
-                [ref, cds_id_list], 1, _callback, _errorCallback, null, deferred);
+                [inputs_get_mrna_by_cds], 1, _callback, _errorCallback, null, deferred);
         }, function(err) {
             if (_errorCallback) {
                 _errorCallback(err);
@@ -586,23 +556,21 @@ function GenomeAnnotationAPI(url, auth, auth_cb, timeout, async_job_check_time_m
         return deferred;
     };
  
-     this.get_mrna_by_gene = function (ref, gene_id_list, _callback, _errorCallback) {
-        if (typeof ref === 'function')
-            throw 'Argument ref can not be a function';
-        if (typeof gene_id_list === 'function')
-            throw 'Argument gene_id_list can not be a function';
+     this.get_mrna_by_gene = function (inputs_get_mrna_by_gene, _callback, _errorCallback) {
+        if (typeof inputs_get_mrna_by_gene === 'function')
+            throw 'Argument inputs_get_mrna_by_gene can not be a function';
         if (_callback && typeof _callback !== 'function')
             throw 'Argument _callback must be a function if defined';
         if (_errorCallback && typeof _errorCallback !== 'function')
             throw 'Argument _errorCallback must be a function if defined';
-        if (typeof arguments === 'function' && arguments.length > 2+2)
-            throw 'Too many arguments ('+arguments.length+' instead of '+(2+2)+')';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
         var deferred = $.Deferred();
         json_call_ajax(_url, 'ServiceWizard.get_service_status', [{'module_name' : "GenomeAnnotationAPI", 
                 'version' : self.service_version}], 1, function(service_status_ret) {
             srv_url = service_status_ret['url'];
             json_call_ajax(srv_url, "GenomeAnnotationAPI.get_mrna_by_gene", 
-                [ref, gene_id_list], 1, _callback, _errorCallback, null, deferred);
+                [inputs_get_mrna_by_gene], 1, _callback, _errorCallback, null, deferred);
         }, function(err) {
             if (_errorCallback) {
                 _errorCallback(err);
@@ -616,23 +584,21 @@ function GenomeAnnotationAPI(url, auth, auth_cb, timeout, async_job_check_time_m
         return deferred;
     };
  
-     this.get_mrna_exons = function (ref, mrna_id_list, _callback, _errorCallback) {
-        if (typeof ref === 'function')
-            throw 'Argument ref can not be a function';
-        if (typeof mrna_id_list === 'function')
-            throw 'Argument mrna_id_list can not be a function';
+     this.get_mrna_exons = function (inputs_get_mrna_exons, _callback, _errorCallback) {
+        if (typeof inputs_get_mrna_exons === 'function')
+            throw 'Argument inputs_get_mrna_exons can not be a function';
         if (_callback && typeof _callback !== 'function')
             throw 'Argument _callback must be a function if defined';
         if (_errorCallback && typeof _errorCallback !== 'function')
             throw 'Argument _errorCallback must be a function if defined';
-        if (typeof arguments === 'function' && arguments.length > 2+2)
-            throw 'Too many arguments ('+arguments.length+' instead of '+(2+2)+')';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
         var deferred = $.Deferred();
         json_call_ajax(_url, 'ServiceWizard.get_service_status', [{'module_name' : "GenomeAnnotationAPI", 
                 'version' : self.service_version}], 1, function(service_status_ret) {
             srv_url = service_status_ret['url'];
             json_call_ajax(srv_url, "GenomeAnnotationAPI.get_mrna_exons", 
-                [ref, mrna_id_list], 1, _callback, _errorCallback, null, deferred);
+                [inputs_get_mrna_exons], 1, _callback, _errorCallback, null, deferred);
         }, function(err) {
             if (_errorCallback) {
                 _errorCallback(err);
@@ -646,23 +612,21 @@ function GenomeAnnotationAPI(url, auth, auth_cb, timeout, async_job_check_time_m
         return deferred;
     };
  
-     this.get_mrna_utrs = function (ref, mrna_id_list, _callback, _errorCallback) {
-        if (typeof ref === 'function')
-            throw 'Argument ref can not be a function';
-        if (typeof mrna_id_list === 'function')
-            throw 'Argument mrna_id_list can not be a function';
+     this.get_mrna_utrs = function (inputs_get_mrna_utrs, _callback, _errorCallback) {
+        if (typeof inputs_get_mrna_utrs === 'function')
+            throw 'Argument inputs_get_mrna_utrs can not be a function';
         if (_callback && typeof _callback !== 'function')
             throw 'Argument _callback must be a function if defined';
         if (_errorCallback && typeof _errorCallback !== 'function')
             throw 'Argument _errorCallback must be a function if defined';
-        if (typeof arguments === 'function' && arguments.length > 2+2)
-            throw 'Too many arguments ('+arguments.length+' instead of '+(2+2)+')';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
         var deferred = $.Deferred();
         json_call_ajax(_url, 'ServiceWizard.get_service_status', [{'module_name' : "GenomeAnnotationAPI", 
                 'version' : self.service_version}], 1, function(service_status_ret) {
             srv_url = service_status_ret['url'];
             json_call_ajax(srv_url, "GenomeAnnotationAPI.get_mrna_utrs", 
-                [ref, mrna_id_list], 1, _callback, _errorCallback, null, deferred);
+                [inputs_get_mrna_utrs], 1, _callback, _errorCallback, null, deferred);
         }, function(err) {
             if (_errorCallback) {
                 _errorCallback(err);
@@ -676,9 +640,9 @@ function GenomeAnnotationAPI(url, auth, auth_cb, timeout, async_job_check_time_m
         return deferred;
     };
  
-     this.get_summary = function (ref, _callback, _errorCallback) {
-        if (typeof ref === 'function')
-            throw 'Argument ref can not be a function';
+     this.get_summary = function (inputs_get_summary, _callback, _errorCallback) {
+        if (typeof inputs_get_summary === 'function')
+            throw 'Argument inputs_get_summary can not be a function';
         if (_callback && typeof _callback !== 'function')
             throw 'Argument _callback must be a function if defined';
         if (_errorCallback && typeof _errorCallback !== 'function')
@@ -690,7 +654,7 @@ function GenomeAnnotationAPI(url, auth, auth_cb, timeout, async_job_check_time_m
                 'version' : self.service_version}], 1, function(service_status_ret) {
             srv_url = service_status_ret['url'];
             json_call_ajax(srv_url, "GenomeAnnotationAPI.get_summary", 
-                [ref], 1, _callback, _errorCallback, null, deferred);
+                [inputs_get_summary], 1, _callback, _errorCallback, null, deferred);
         }, function(err) {
             if (_errorCallback) {
                 _errorCallback(err);
@@ -704,9 +668,9 @@ function GenomeAnnotationAPI(url, auth, auth_cb, timeout, async_job_check_time_m
         return deferred;
     };
  
-     this.save_summary = function (ref, _callback, _errorCallback) {
-        if (typeof ref === 'function')
-            throw 'Argument ref can not be a function';
+     this.save_summary = function (inputs_save_summary, _callback, _errorCallback) {
+        if (typeof inputs_save_summary === 'function')
+            throw 'Argument inputs_save_summary can not be a function';
         if (_callback && typeof _callback !== 'function')
             throw 'Argument _callback must be a function if defined';
         if (_errorCallback && typeof _errorCallback !== 'function')
@@ -718,7 +682,7 @@ function GenomeAnnotationAPI(url, auth, auth_cb, timeout, async_job_check_time_m
                 'version' : self.service_version}], 1, function(service_status_ret) {
             srv_url = service_status_ret['url'];
             json_call_ajax(srv_url, "GenomeAnnotationAPI.save_summary", 
-                [ref], 1, _callback, _errorCallback, null, deferred);
+                [inputs_save_summary], 2, _callback, _errorCallback, null, deferred);
         }, function(err) {
             if (_errorCallback) {
                 _errorCallback(err);

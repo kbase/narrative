@@ -46,7 +46,7 @@ define (
             $self.assembly = new AssemblyAPI(Config.url('service_wizard'),{'token':$self.authToken()});
             $self.ws = new Workspace(Config.url('workspace'),{'token':$self.authToken()});
             
-            $self.$elem.append($('<i class="fa fa-spinner fa-spin fa-2x">'));
+            $self.$elem.append($('<div>').attr('align', 'center').append($('<i class="fa fa-spinner fa-spin fa-2x">')));
 
             // 1) get stats, and show the panel
             var basicInfoCalls = [];
@@ -107,13 +107,13 @@ define (
 
 
             // Build the overview table
-            var $overviewTable = $('<table class="table table-striped table-bordered" style="margin-left: auto; margin-right: auto;"/>');
+            var $overviewTable = $('<table class="table table-striped table-bordered table-hover" style="margin-left: auto; margin-right: auto;"/>');
 
             function get_table_row(key, value) {
                 return $('<tr>').append($('<td>').append(key)).append($('<td>').append(value));
             }
 
-            $overviewTable.append(get_table_row('Name',
+            $overviewTable.append(get_table_row('KBase Object Name',
                 '<a href="/#dataview/'+$self.link_ref + '" target="_blank">' + $self.assembly_obj_info[1] +'</a>' ));
                 // leave out version for now, because that is not passed into data widgets
                 //'<a href="/#dataview/'+$self.link_ref + '" target="_blank">' + $self.assembly_obj_info[1] + ' (v'+$self.assembly_obj_info[4]+')'+'</a>' ));
@@ -195,12 +195,12 @@ define (
                     }
 
                     ////////////////////////////// Contigs Tab //////////////////////////////
-                    var $table = $('<table class="table table-striped table-bordered" style="width: 100%; border: 1px solid #ddd; margin-left: auto; margin-right: auto;" >');
+                    var $table = $('<table class="table table-striped table-bordered table-hover" style="width: 100%; border: 1px solid #ddd; margin-left: auto; margin-right: auto;" >');
 
                     var contigsPerPage = 10;
                     var sDom = 'lft<ip>';
                     if($self.contig_table.length<contigsPerPage) {
-                        sDom = 'ti';
+                        sDom = 'fti';
                     }
 
                     var contigsSettings = {
@@ -223,13 +223,14 @@ define (
                         "language": {
                             "lengthMenu": "_MENU_ Contigs per page",
                             "zeroRecords": "No Matching Contigs Found",
-                            "info": "Showing page _PAGE_ of _PAGES_",
+                            "info": "Showing _START_ to _END_ of _TOTAL_ Contigs",
                             "infoEmpty": "No Contigs",
-                            "infoFiltered": "(filtered from _MAX_)"
+                            "infoFiltered": "(filtered from _MAX_)",
+                            "search" : "Search Contigs"
                         }
                     };
                     $content.empty();
-                    $content.append($('<div>').css('padding','20px 0px').append($table));
+                    $content.append($('<div>').css('padding','10px 0px').append($table));
                     $table.dataTable(contigsSettings);
                 })
                 .catch(function(err) {
@@ -239,7 +240,7 @@ define (
                     console.err(err);
                 });
             
-            return $content.append('<br>').append($('<i class="fa fa-spinner fa-spin fa-2x">'));
+            return $content.append('<br>').append($('<div>').attr('align', 'center').append($('<i class="fa fa-spinner fa-spin fa-2x">')));
         },
 
         appendUI: function appendUI($elem) {

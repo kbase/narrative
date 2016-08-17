@@ -23,8 +23,8 @@
 		bootstrap,
 		$,
 		Plotly,
-		kbaseAuthenticatedWidget,
-		KBModeling
+		kbaseAuthenticatedWidget
+		// KBModeling
 	) {
 
     return KBWidget({

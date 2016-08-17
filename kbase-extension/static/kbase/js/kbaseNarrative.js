@@ -322,7 +322,7 @@ define(
             body: renderSettingsDialog(existingSettings),
             buttons: [
                 {
-                    icon: 'file',
+                    type: 'primary',
                     label: 'Save Settings',
                     action: 'save',
                     handler: function (e) {

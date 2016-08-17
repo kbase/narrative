@@ -136,6 +136,11 @@ define([
                 type: 'primary',
                 classes: ['kb-panel-light'],
                 body: div({style: {paddingTop: '6px'}}, [
+                    div({class: 'row', dataElement: 'last-updated'}, [
+                        div({class: 'col-md-2', style: labelStyle}, span({dataElement: 'label'}, 'Last updated')),
+                        div({class: 'col-md-2', style: dataStyle}, span({dataElement: 'elapsed', class: 'kb-elapsed-time'})),
+                        div({class: 'col-md-2', style: dataStyle}, span({dataElement: 'time'}))
+                    ]),
                     div({class: 'row', dataElement: 'launch'}, [
                         div({class: 'col-md-2', style: labelStyle}, span({dataElement: 'label'}, 'Launch')),
                         div({class: 'col-md-2', style: dataStyle}, span({dataElement: 'elapsed', class: 'kb-elapsed-time'}))
@@ -165,6 +170,16 @@ define([
 
             if (!state) {
                 return;
+            }
+            
+            // UPDATED
+            if (model.getItem('runStateLastUpdatedTime')) {
+                (function () {
+                    var now = new Date().getTime(),
+                        then = model.getItem('runStateLastUpdatedTime', now); 
+                    ui.setContent(['execStatus', 'last-updated', 'elapsed'], format.elapsedTime(now - then));
+                    ui.setContent(['execStatus', 'last-updated', 'time'], format.niceElapsedTime(then));
+                }());
             }
 
             // LAUNCH
@@ -704,7 +719,8 @@ define([
             var temporalState, executionState, canonicalState,
                 error, now = new Date().getTime(),
                 launchStartTime = launchState.startTime,
-                elapsed = now - launchStartTime, newRunState;
+                elapsed = now - launchStartTime, newRunState,
+                oldRunState = model.getItem('runState', {});
 
             switch (launchState.event) {
                 case 'validating_app':
@@ -745,7 +761,6 @@ define([
             newRunState = {
                 runId: launchState.runId,
                 jobId: launchState.jobId,
-                lastUpdatedTime: new Date().getTime(),
                 temporalState: temporalState,
                 executionState: executionState,
                 canonicalState: canonicalState,
@@ -770,6 +785,7 @@ define([
                 submitTime, startTime, completedTime,
                 elapsedQueueTime, elapsedRunTime,
                 position;
+
 
             if (!jobState) {
                 return;
@@ -1022,11 +1038,9 @@ define([
                     break;
             }
 
-
             var newRunState = {
                 runId: runState.runId,
                 jobId: jobState.job_id,
-                lastUpdatedTime: model.getItem('jobStateLastUpdatedTime'),
                 temporalState: temporalState,
                 executionState: executionState,
                 canonicalState: canonicalState,
@@ -1188,10 +1202,10 @@ define([
             // for the incoming job notification, and compare it to our copy
             // of the most recent one, if any.
             // TODO: the controller should meter this for us!
-            model.setItem('jobStateLastUpdatedTime', new Date().getTime());
+            model.setItem('runStateLastUpdatedTime', new Date().getTime());
             var currentJobState = model.getItem('jobState');
             //if (!currentJobState || currentJobState.job_state !== jobState.job_state) {
-            model.setItem('jobStateLastUpdatedTime', new Date().getTime());
+            model.setItem('runStateLastUpdatedTime', new Date().getTime());
             model.setItem('jobState', jobState);
             updateRunStateFromJobState('process new job state');
 
@@ -1258,7 +1272,7 @@ define([
             // not sure if this is the wisest thing to do...
 
             ev = cellBus.on('job-state-updated', function (message) {
-                model.setItem('jobStateLastUpdatedTime', new Date().getTime());
+                model.setItem('runStateLastUpdatedTime', new Date().getTime());
             });
             listeners.push(ev);
 

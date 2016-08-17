@@ -170,11 +170,10 @@ define([
             return this;
         },
         sendJobMessage: function (msgType, jobId, message) {
-            var jobChannelId = JSON.stringify({
-                    jobId: jobId
-                });
             this.runtime.bus().send(JSON.parse(JSON.stringify(message)), {
-                channel: jobChannelId,
+                channel: {
+                    jobId: jobId
+                },
                 key: {
                     type: msgType
                 }
@@ -184,11 +183,10 @@ define([
          * Messages sent directly to cells.
          */
         sendCellMessage: function (messageType, cellId, message) {
-            var channelId = JSON.stringify({
-                    cell: cellId
-                });
             this.runtime.bus().send(JSON.parse(JSON.stringify(message)), {
-                channel: channelId,
+                channel: {
+                    cell: cellId
+                },
                 key: {
                     type: messageType
                 }
@@ -253,9 +251,8 @@ define([
             this.comm.send(msg);
         },
         handleCommMessages: function (msg) {
-            var msgType = msg.content.data.msg_type,
-                bus = this.runtime.bus();
-
+            var msgType = msg.content.data.msg_type;
+console.log('handle comm message', msg);
             switch (msgType) {
                 case 'new_job':
                     // this.registerKernelJob(msg.content.data.content);
@@ -268,34 +265,27 @@ define([
                  * cache, but the reverse logic does not apply.
                  */
                 case 'job_status':
-                    var incomingJobs = msg.content.data.content;
-                    
-                    /*
-                     * Ensure there is a locally cached copy of each job.
-                     *
-                     */
-                    for (var jobId in incomingJobs) {
-                        var jobStateMessage = incomingJobs[jobId];
-                        // We could just copy the entire message into the job
-                        // states cache, but referencing each individual property
-                        // is more explicit about the structure.
-                        this.jobStates[jobId] = {
-                            state: jobStateMessage.state,
-                            spec: jobStateMessage.spec,
-                            widgetParameters: jobStateMessage.widget_info
-                        };
+                    var jobStateMessage = msg.content.data.content,
+                        jobId = jobStateMessage.state.job_id;
+                    // We could just copy the entire message into the job
+                    // states cache, but referencing each individual property
+                    // is more explicit about the structure.
+                    console.log('JOB STATUS', jobStateMessage);
+                    this.jobStates[jobId] = {
+                        state: jobStateMessage.state,
+                        spec: jobStateMessage.spec,
+                        widgetParameters: jobStateMessage.widget_info
+                    };
 
-                        /*
-                         * Notify the front end about the changed or new job
-                         * states.
-                         */
-                        
-                        this.sendJobMessage('job-status', jobId, {
-                            jobId: jobId,
-                            jobState: jobStateMessage.state,
-                            outputWidgetInfo: jobStateMessage.widget_info
-                        });
-                    }
+                    /*
+                     * Notify the front end about the changed or new job
+                     * states.
+                     */
+                    this.sendJobMessage('job-status', jobId, {
+                        jobId: jobId,
+                        jobState: jobStateMessage.state,
+                        outputWidgetInfo: jobStateMessage.widget_info
+                    });
                     this.populateJobsPanel(); //status, info, content);
                     break;
                 /*

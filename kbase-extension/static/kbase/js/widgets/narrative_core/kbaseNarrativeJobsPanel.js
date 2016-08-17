@@ -158,9 +158,9 @@ define([
 
             this.addButton($refreshBtn);
 
-            this.body().append(this.$jobsPanel)
-                .append(this.$loadingPanel)
-                .append(this.$errorPanel);
+            // this.body().append(this.$jobsPanel)
+            //     .append(this.$loadingPanel)
+            //     .append(this.$errorPanel);
 
             this.showMessage('Initializing...', true);
             this.handleBusMessages();
@@ -252,7 +252,6 @@ define([
         },
         handleCommMessages: function (msg) {
             var msgType = msg.content.data.msg_type;
-console.log('handle comm message', msg);
             switch (msgType) {
                 case 'new_job':
                     // this.registerKernelJob(msg.content.data.content);
@@ -270,7 +269,6 @@ console.log('handle comm message', msg);
                     // We could just copy the entire message into the job
                     // states cache, but referencing each individual property
                     // is more explicit about the structure.
-                    console.log('JOB STATUS', jobStateMessage);
                     this.jobStates[jobId] = {
                         state: jobStateMessage.state,
                         spec: jobStateMessage.spec,

@@ -10,6 +10,7 @@ define([
     'common/parameterSpec',
     'common/runtime',
     'common/events',
+    'common/error',
     'kb_common/html',
     'common/props',
     'kb_service/client/narrativeMethodStore',
@@ -34,6 +35,7 @@ define([
     ParameterSpec,
     Runtime,
     Events,
+    ToErr,
     html,
     Props,
     NarrativeMethodStore,
@@ -71,11 +73,6 @@ define([
             model,
             // HMM. Sync with metadata, or just keep everything there?
             settings = {
-//                showAdvanced: {
-//                    label: 'Show advanced parameters',
-//                    defaultValue: false,
-//                    type: 'custom'
-//                },
                 showNotifications: {
                     label: 'Show the Notifications panel',
                     help: 'The notifications panel may contain informational, warning, or error messages emitted during the operation of the app cell',
@@ -99,18 +96,13 @@ define([
 
         // DATA API
 
-        /*
-         * Fetch the app spec for a given app and store the spec in the model.
-         * As well, process and store the parameters in the model as well.
-         *
-         * @param {type} appId
-         * @param {type} appTag
-         * @returns {unresolved}
-         */
-        function syncAppSpec(appId, appTag) {
+
+
+        function syncAppSpec(appId, appTag, version) {
             var appRef = {
                 ids: [appId],
-                tag: appTag
+                tag: appTag,
+                version: version
             },
             nms = new NarrativeMethodStore(runtime.config('services.narrative_method_store.url'), {
                 token: runtime.authToken()
@@ -121,6 +113,12 @@ define([
                     if (!data[0]) {
                         throw new Error('App not found');
                     }
+
+                    /*
+                     * Compare the matching app spec to the one we already have.
+                     */
+
+
                     // TODO: really the best way to store state?
                     env.appSpec = data[0];
                     // Get an input field widget per parameter
@@ -136,6 +134,77 @@ define([
                     return parameters;
                 });
         }
+
+        function getAppRef() {
+            var app = model.getItem('app');
+            
+            // Make sure the app info stored in the model is valid.
+            if (!app || !app.spec || !app.spec.info) {
+                throw new ToErr.KBError({
+                    type: 'internal-app-cell-error',
+                    message: 'This app cell is corrupt -- the app info is incomplete',
+                    advice: [
+                            'This condition should never occur outside of a development environment',
+                            'The tag of the app associated with the app cell must be one of "release", "beta", or "dev"',
+                            'Chances are that this app cell was inserted in a development environment in which the app cell structure was in flux',
+                            'You should remove this app cell from the narrative an insert an new one'
+                        ]
+                });
+            }
+            
+            console.log('APP', app);
+            switch (app.tag) {
+                case 'release':
+                    return {
+                        ids: [app.spec.info.id],
+                        tag: 'release',
+                        version: app.spec.info.ver
+                    };
+                case 'dev':
+                case 'beta':
+                    return {
+                        ids: [app.spec.info.id],
+                        tag: app.tag
+                    };
+                default:
+                    // we may be able to grok this.
+                    //if (app.spec.info.ver) {
+                    //    return {
+                    //        ids: [app.spec.info.id],
+                    //        tag: 'release',
+                    //        version: app.spec.info.ver
+                    //    };
+                    //} 
+                    console.error('Invalid tag', app);
+                    throw new ToErr.KBError({
+                        type: 'internal-app-cell-error',
+                        message: 'This app cell is corrrupt -- the app tag ' + String(app.tag) + ' is not recognized',
+                        advice: [
+                            'This condition should never occur outside of a development environment',
+                            'The tag of the app associated with the app cell must be one of "release", "beta", or "dev"',
+                            'Chances are that this app cell was inserted in a development environment in which the app cell structure was in flux',
+                            'You should remove this app cell from the narrative an insert an new one'
+                        ]
+                    });
+            }
+            
+        }
+
+        function getAppSpec() {
+            var appRef = getAppRef(), 
+                nms = new NarrativeMethodStore(runtime.config('services.narrative_method_store.url'), {
+                    token: runtime.authToken()
+                });
+
+            return nms.get_method_spec(appRef)
+                .then(function (data) {
+                    if (!data[0]) {
+                        throw new Error('App not found');
+                    }
+                    return data[0];
+                });
+        }
+
 
         // RENDER API
 
@@ -191,12 +260,30 @@ define([
         }
 
         function syncFatalError() {
+            var advice = model.getItem('fatalError.advice'),
+                info = model.getItem('fatalError.info'),
+                ul = t('ul'),
+                li = t('li');
+            if (advice) {
+                // Note the 1.2em seems to be the de-facto work around to have a list
+                // align left with other blocks yet retain the bullet and the 
+                // indentation for list items.
+                advice = ul({style: {paddingLeft: '1.2em'}}, advice.map(function (adv) {
+                    return li(adv);
+                }));
+            } else {
+                advice = 'no advice';
+            }
+            if (info) {
+                info = html.makeObjTable(info, {rotated: true, classes: []});
+            } else {
+                info = 'no additional info';
+            }
             ui.setContent('fatal-error.title', model.getItem('fatalError.title'));
             ui.setContent('fatal-error.message', model.getItem('fatalError.message'));
-        }
-
-        function showFatalError(arg) {
-            ui.showElement('fatal-error');
+            ui.setContent('fatal-error.advice', advice);
+            ui.setContent('fatal-error.info', info);
+            ui.setContent('fatal-error.detail', model.getItem('fatalError.detail'));
         }
 
         function showFsmBar() {
@@ -390,7 +477,7 @@ define([
         }
 
         function showAboutApp() {
-            var appSpec = env.appSpec;
+            var appSpec = model.getItem('app.spec');
             ui.setContent('about-app.name', appSpec.info.name);
             ui.setContent('about-app.module', appSpec.info.namespace || ui.na());
             ui.setContent('about-app.id', appSpec.info.id);
@@ -409,10 +496,10 @@ define([
         }
 
         function showAppSpec() {
-            if (!env.appSpec) {
+            if (!model.getItem('app.spec')) {
                 return;
             }
-            var specText = JSON.stringify(env.appSpec, false, 3),
+            var specText = JSON.stringify(model.getItem('app.spec'), false, 3),
                 fixedText = specText.replace(/</g, '&lt;').replace(/>/g, '&gt;'),
                 content = pre({class: 'prettyprint lang-json', style: {fontSize: '80%'}}, fixedText);
             ui.setContent('about-app.spec', content);
@@ -431,21 +518,6 @@ define([
                     }, [
                         div({dataElement: 'widget', style: {display: 'block', width: '100%'}}, [
                             div({class: 'container-fluid'}, [
-                                ui.buildPanel({
-                                    title: 'Error',
-                                    name: 'fatal-error',
-                                    hidden: true,
-                                    type: 'danger',
-                                    classes: ['kb-panel-container'],
-                                    body: div([
-                                        table({class: 'table table-striped'}, [
-                                            tr([
-                                                th('Title'), td({dataElement: 'title'}),
-                                                td('Message', td({dataElement: 'message'}))
-                                            ])
-                                        ])
-                                    ])
-                                }),
                                 ui.buildPanel({
                                     title: 'App Cell Settings',
                                     name: 'settings',
@@ -498,23 +570,6 @@ define([
                                         ]
                                     });
                                 }()),
-                                ui.buildCollapsiblePanel({
-                                    title: 'Input ' + span({class: 'fa fa-arrow-right'}),
-                                    name: 'parameters-group',
-                                    hidden: false,
-                                    type: 'default',
-                                    classes: ['kb-panel-container'],
-                                    body: div({dataElement: 'widget'})
-                                }),
-                                ui.buildCollapsiblePanel({
-                                    title: 'Parameters (display)',
-                                    name: 'parameters-display-group',
-                                    hidden: false,
-                                    collapsed: true,
-                                    type: 'default',
-                                    classes: ['kb-panel-container'],
-                                    body: div({dataElement: 'widget'})
-                                }),
                                 div({class: 'btn-toolbar kb-btn-toolbar-cell-widget'}, [
                                     div({class: 'btn-group'}, [
                                         ui.buildButton({
@@ -546,12 +601,39 @@ define([
                                                 name: 'pencil-square-o',
                                                 size: 2
                                             }
+                                        }),
+                                        ui.buildButton({
+                                            label: 'Report Error',
+                                            name: 'report-error',
+                                            events: events,
+                                            type: 'primary',
+                                            icon: {
+                                                name: 'envelope-o',
+                                                size: 2
+                                            }
                                         })
                                     ])
                                         //div({class: 'btn-group'}, [
                                         //    ui.makeButton('Remove', 'remove', {events: events, type: 'danger'})
                                         //])
                                 ]),
+                                ui.buildCollapsiblePanel({
+                                    title: 'Input ' + span({class: 'fa fa-arrow-right'}),
+                                    name: 'parameters-group',
+                                    hidden: false,
+                                    type: 'default',
+                                    classes: ['kb-panel-container'],
+                                    body: div({dataElement: 'widget'})
+                                }),
+                                ui.buildCollapsiblePanel({
+                                    title: 'Parameters (display)',
+                                    name: 'parameters-display-group',
+                                    hidden: false,
+                                    collapsed: true,
+                                    type: 'default',
+                                    classes: ['kb-panel-container'],
+                                    body: div({dataElement: 'widget'})
+                                }),
                                 ui.buildPanel({
                                     title: 'App Execution ' + span({class: 'fa fa-bolt'}),
                                     name: 'exec-group',
@@ -567,6 +649,37 @@ define([
                                     type: 'default',
                                     classes: ['kb-panel-container'],
                                     body: div({dataElement: 'widget'})
+                                }),
+                                ui.buildPanel({
+                                    title: 'Error',
+                                    name: 'fatal-error',
+                                    hidden: true,
+                                    type: 'danger',
+                                    classes: ['kb-panel-container'],
+                                    body: div([
+                                        div({class: 'alert alert-danger'}, 'This App cell could not load due to errors described below'),
+                                        ui.buildGridTable({
+                                            row: {
+                                                style: {marginBottom: '6px'}
+                                            },
+                                            cols: [
+                                                {
+                                                    width: 2,
+                                                    style: {fontWeight: 'bold'}
+                                                },
+                                                {
+                                                    width: 10
+                                                }
+                                            ],
+                                            table: [
+                                                ['Title', div({dataElement: 'title'})],
+                                                ['Message', div({dataElement: 'message'})],
+                                                ['Advice', div({dataElement: 'advice'})],
+                                                ['Info', div({dataElement: 'info'})],
+                                                ['Details', div({dataElement: 'detail', style: {maxHeight: '300px', maxWidth: '100%', overflow: 'scroll', fontFamily: 'monospace'}})]
+                                            ]
+                                        })
+                                    ])
                                 })
                             ])
                         ])
@@ -922,8 +1035,7 @@ define([
                 if (curMode === 'processing') {
                     startListeningForJobMessages();
                 }
-            }
-            else {
+            } else {
                 // Hide the job starting/modifying buttons
                 // It'd be nice to put all the elements in view-only mode,
                 // to mimic a running state, right? Maybe that's another
@@ -986,7 +1098,7 @@ define([
                 jobId: jobId
             });
         }
-        
+
         function requestJobStatus(jobId) {
             runtime.bus().emit('request-job-status', {
                 jobId: jobId
@@ -1170,7 +1282,7 @@ define([
         //       to the kernel)
         function doRun() {
             fsm.newState({mode: 'execute-requested'});
-            
+
             // Save this to the exec state change log.
             var execLog = model.getItem('exec.log');
             if (!execLog) {
@@ -1184,7 +1296,7 @@ define([
                 }
             });
             model.setItem('exec.log', execLog);
-            
+
             cell.execute();
         }
 
@@ -1293,7 +1405,7 @@ define([
                     //  reset the cell into edit mode
                     var state = fsm.getCurrentState();
                     if (state.state.mode === 'editing') {
-                        console.warn('in edit mode, so not resetting ui')
+                        console.warn('in edit mode, so not resetting ui');
                         return;
                     }
 
@@ -1313,7 +1425,7 @@ define([
                     //  reset the cell into edit mode
                     var state = fsm.getCurrentState();
                     if (state.state.mode === 'editing') {
-                        console.warn('in edit mode, so not resetting ui')
+                        console.warn('in edit mode, so not resetting ui');
                         return;
                     }
 
@@ -1373,7 +1485,7 @@ define([
          *
          */
         function getOutputParams() {
-            var outputParams = env.appSpec.parameters.map(function (parameter) {
+            var outputParams = model.getItem('app.spec.parameters').map(function (parameter) {
                 var textOptions = parameter.text_options;
                 if (textOptions) {
                     if (textOptions.is_output_name === 1) {
@@ -1541,6 +1653,10 @@ define([
             });
             // bus.emit('output-created', )
         }
+        
+        function doReportError() {
+            alert('placeholder for reporting an error');
+        }
 
         function start() {
             return Promise.try(function () {
@@ -1603,6 +1719,9 @@ define([
                 bus.on('remove', function () {
                     doRemove();
                 });
+                bus.on('report-error', function () {
+                    doReportError();
+                })
 
                 bus.on('on-success', function () {
                     doOnSuccess();
@@ -1664,16 +1783,16 @@ define([
 //                }
 
                 // Regardless of what the FSM says, if we are not listening for a
-                // job update and we already have an execution job state, let's 
+                // job update and we already have an execution job state, let's
                 // see if there is anything new, even if we don't expect anything
                 // new...
                 //if (!listeningForJobUpdates) {
-                    var jobId = model.getItem('exec.jobState.job_id');
-                    if (jobId) {
-                        startListeningForJobMessages(jobId);
-                    }
+                var jobId = model.getItem('exec.jobState.job_id');
+                if (jobId) {
+                    startListeningForJobMessages(jobId);
+                }
                 //}
-                
+
 
 
                 // TODO: only turn this on when we need it!
@@ -1808,7 +1927,7 @@ define([
 //                    }
 //                });
 
-                runtime.bus().on('read-only-changed', function(msg) {
+                runtime.bus().on('read-only-changed', function (msg) {
                     toggleReadOnlyMode(msg.readOnly);
                 });
 
@@ -1855,6 +1974,11 @@ define([
                 var value = params[key],
                     paramSpec = env.parameterMap[key];
 
+                if (!paramSpec) {
+                    console.error('Parameter ' + key + ' is not defined in the parameter map', env.parameterMap, env.parameters);
+                    throw new Error('Parameter ' + key + ' is not defined in the parameter map');
+                }
+
                 if (paramSpec.spec.field_type === 'textsubdata') {
                     if (value && value instanceof Array) {
                         value = value.join(',');
@@ -1869,7 +1993,7 @@ define([
 
         function loadInputWidget() {
             return new Promise(function (resolve, reject) {
-                var inputWidget = env.appSpec.widgets.input,
+                var inputWidget = model.getItem('app.spec.widgets.input'),
                     selectedWidget = findInputWidget(inputWidget);
 
                 if (!selectedWidget) {
@@ -1891,7 +2015,7 @@ define([
                     };
                     bus.emit('run', {
                         node: ui.getElement(['parameters-group', 'widget']),
-                        appSpec: env.appSpec,
+                        appSpec: model.getItem('app.spec'),
                         parameters: env.parameters
                     });
 
@@ -2088,7 +2212,7 @@ define([
 
         function makeIcon() {
             // icon is in the spec ...
-            var appSpec = env.appSpec,
+            var appSpec = model.getItem('app.spec'),
                 nmsBase = runtime.config('services.narrative_method_store_image.url'),
                 iconUrl = Props.getDataItem(appSpec, 'info.icon.url');
 
@@ -2133,15 +2257,88 @@ define([
             }
         }
 
+        function checkSpec(appSpec) {
+            var cellAppSpec = model.getItem('app.spec');
+            
+            if (!cellAppSpec) {
+                throw new ToErr.KBError({
+                    type: 'app-cell-app-info',
+                    message: 'This app cell is misconfigured - it does not contain an app spec',
+                    info: model.getItem('app'),
+                    advice: [
+                        'This app cell is not correctly configured',
+                        'It should contain an app object but does not',
+                        'The app object contains the raw spec and other info',
+                        'This is most likely due to this app being inserted into the narrative in a development environment in which the app model (and cell metadata) is in flux'
+                    ]
+                });
+            }
+
+            if (appSpec.info.module !== cellAppSpec.info.module) {
+                throw new Error('Mismatching app modules: ' + cellAppSpec.info.module + ' !== ' + appSpec.info.module);
+            }
+
+            if (cellAppSpec.info.name !== appSpec.info.name) {
+                throw new Error('Mismatching app names: ' + cellAppSpec.info.name + ' !== ' + appSpec.info.name);
+            }
+
+            if (cellAppSpec.info.git_commit_hash !== appSpec.info.git_commit_hash) {
+                throw new ToErr.KBError({
+                    type: 'app-spec-mismatched-commit',
+                    message: 'Mismatching app commit for ' + appSpec.info.id + ', tag=' + model.getItem('app.tag') + ' : ' + cellAppSpec.info.git_commit_hash + ' !== ' + appSpec.info.git_commit_hash,
+                    info: {
+                        tag: model.getItem('app.tag'),
+                        cellCommitHash: cellAppSpec.info.git_commit_hash,
+                        catalogCommitHash: appSpec.info.git_commit_hash
+                        //cellAppSpec: cellAppSpec,
+                        //catalogAppSpec: appSpec
+                    },
+                    advice: [
+                        'Due to potential incompatibilities between different versions of an dev or beta app, this app cell cannot be rendered',
+                        'You should add a new app cell for this app, and remove this one',
+                        'Inserting a dev or beta app cell will tie the app cell to the specific current commit by storing the commit hash',
+                        'In the future we may provide options to attempt conversion of this cell and provide other options'
+                    ]
+                });
+            }
+
+            if (cellAppSpec.info.version !== appSpec.info.version) {
+                throw new Error('Mismatching app version: ' + cellAppSpec.info.version + ' !== ' + appSpec.info.version);
+            }
+
+
+        }
+
         function run(params) {
             // First get the app specs, which is stashed in the model,
             // with the parameters returned.
-            return syncAppSpec(params.appId, params.appTag)
-                .then(function () {
-                    var appRef = [model.getItem('app').id, model.getItem('app').tag].filter(toBoolean).join('/'),
+
+            // If the app has been run before...
+
+            // The app reference is already in the app cell metadata.
+
+            return Promise.try(function () {
+                return getAppSpec();
+            })
+                .then(function (appSpec) {
+                    // Ensure that the current app spec matches our existing one.
+                    checkSpec(appSpec);
+
+                    // Create a map of paramters for easy access
+                    var parameterMap = {};
+                    env.parameters = model.getItem('app.spec.parameters').map(function (parameterSpec) {
+                        // tee hee
+                        var param = ParameterSpec.make({parameterSpec: parameterSpec});
+                        parameterMap[param.id()] = param;
+                        return param;
+                    });
+                    env.parameterMap = parameterMap;
+
+
+                    var appRef = [model.getItem('app.id'), model.getItem('app.tag')].filter(toBoolean).join('/'),
                         url = '/#appcatalog/app/' + appRef;
-                    utils.setCellMeta(cell, 'kbase.attributes.title', env.appSpec.info.name);
-                    utils.setCellMeta(cell, 'kbase.attributes.subtitle', env.appSpec.info.subtitle);
+                    utils.setCellMeta(cell, 'kbase.attributes.title', model.getItem('app.spec.info.name'));
+                    utils.setCellMeta(cell, 'kbase.attributes.subtitle', model.getItem('app.spec.info.subtitle'));
                     utils.setCellMeta(cell, 'kbase.attributes.info.url', url);
                     utils.setCellMeta(cell, 'kbase.attributes.info.label', 'more...');
                     return Promise.all([
@@ -2175,17 +2372,27 @@ define([
                     }
                 })
                 .catch(function (err) {
-                    console.error('ERROR loading main widgets', err);
-                    addNotification('Error loading main widgets: ' + err.message);
+                    var error = ToErr.grokError(err);
+                    console.error('ERROR loading main widgets', error);
+                    addNotification('Error loading main widgets: ' + error.message);
+
                     model.setItem('fatalError', {
                         title: 'Error loading main widgets',
-                        message: err.message
+                        message: error.message,
+                        advice: error.advice || [],
+                        info: error.info,
+                        detail: error.detail || 'no additional details'
                     });
                     syncFatalError();
                     fsm.newState({mode: 'fatal-error'});
                     renderUI();
                 });
         }
+
+        /*
+         Grok a sensible error structure out of something returned by something.
+         */
+
 
         // INIT
 

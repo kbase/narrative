@@ -457,8 +457,6 @@ define([
                 })
                 .then(function () {
                     return appCellWidget.run({
-                        appId: appId,
-                        appTag: appTag,
                         authToken: runtime.authToken()
                     });
                 })
@@ -473,7 +471,7 @@ define([
                 })
                 .catch(function (err) {
                     console.error('ERROR starting app cell', err);
-                    alert('Error starting app cell');
+                    alert('Error starting app cell: ' + err.message);
                 });
         });
     }

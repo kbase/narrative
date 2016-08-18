@@ -59,7 +59,7 @@ define([
             widgetArea.removeClass('hidden');
             outputArea.removeClass('hidden');
         };
-        cell.renderIcon = function() {
+        cell.renderIcon = function () {
             var inputPrompt = this.element[0].querySelector('[data-element="icon"]');
 
             if (inputPrompt) {
@@ -74,7 +74,7 @@ define([
             // Hide the code input area.
             this.input.find('.input_area').addClass('hidden');
             utils.setCellMeta(this, 'kbase.widgetCell.user-settings.showCodeInputArea', false);
-            
+
             // And add our own!
             var prompt = document.createElement('div');
             prompt.innerHTML = div({dataElement: 'icon', class: 'prompt'});
@@ -85,9 +85,9 @@ define([
             this.input.find('.input_prompt').hide();
             utils.horribleHackToHideElement(this, '.output_prompt', 10);
         };
-        
+
     }
-    
+
     // This is the python/kernel driven version
     // 
     function setupCell(cell) {
@@ -110,11 +110,11 @@ define([
 
         // Update metadata.
         utils.setMeta(cell, 'attributes', 'lastLoaded', (new Date()).toUTCString());
-        
+
         var appId = utils.getMeta(cell, 'widgetCell', 'app').id,
             appTag = utils.getMeta(cell, 'widgetCell', 'app').tag,
             widgetCellWidget = WidgetCellWidget.make({
-                cell: cell,
+                cell: cell
                 // workspaceInfo: workspaceInfo
             }),
             ui = UI.make({node: cell.input[0]}),
@@ -132,40 +132,77 @@ define([
         cell.renderIcon();
 
         cell.renderMinMax();
-        
+
         return widgetCellWidget.init()
-                .then(function () {
-                    return widgetCellWidget.attach(kbaseNode);
-                })
-                .then(function () {
-                    return widgetCellWidget.start();
-                })
-                .then(function () {
-                    return widgetCellWidget.run({
-                        appId: appId,
-                        appTag: appTag
-                    });
-                })
-                .then(function () {
-                    // AppCellController.start();
-                    cell.renderMinMax();
-                    return {
-                        widget: widgetCellWidget
-                    };
-                })
-                .catch(function (err) {
-                    console.error('ERROR starting app cell', err);
-                    alert('Error starting app cell');
+            .then(function () {
+                return widgetCellWidget.attach(kbaseNode);
+            })
+            .then(function () {
+                return widgetCellWidget.start();
+            })
+            .then(function () {
+                return widgetCellWidget.run({
+                    appId: appId,
+                    appTag: appTag
                 });
+            })
+            .then(function () {
+                // AppCellController.start();
+                cell.renderMinMax();
+                return {
+                    widget: widgetCellWidget
+                };
+            })
+            .catch(function (err) {
+                console.error('ERROR starting app cell', err);
+                alert('Error starting app cell');
+            });
+    }
+
+    function makeAppRef(app) {
+        switch (app.tag) {
+            case 'release':
+                return {
+                    id: app.id,
+                    tag: app.tag,
+                    version: app.version
+                };
+            case 'beta':
+            case 'dev':
+                return {
+                    id: app.id,
+                    tag: app.tag
+                };
+            default:
+                throw new Error('Invalid tag for app ' + app.id);
+        }
+    }
+
+    function buildPython(cell, cellId, runId, app) {
+        var //runId = new Uuid(4).format(),
+            //app = fixApp(app),
+            code = PythonInterop.buildCustomWidgetRunner(cellId, runId, app);
+        // TODO: do something with the runId
+        //console.log('CODE', code);
+        //cell.set_text(code);
+        return code;
     }
 
     function upgradeCell(cell, appSpec, appTag) {
         var cellId = 'kbase_cell_' + (new Uuid(4).format()),
             runId = 'run_' + (new Uuid(4).format());
 
+        console.log('APP SPEC', appSpec);
+
         return Promise.try(function () {
             // Create base widget cell
-            var meta = cell.metadata;
+            var meta = cell.metadata,
+                initialParams = {};
+                
+            // TODO: rational default params here.
+            appSpec.parameters.map(function (parameter) {
+                initialParams[parameter.id] = null;
+            });
 
             meta.kbase = {
                 type: 'widget',
@@ -174,7 +211,7 @@ define([
                     status: 'new',
                     created: (new Date()).toUTCString(),
                     defaultIcon: 'bar-chart',
-                    iconUrl: appSpec.info.icon.url,
+                    iconUrl: Props.getDataItem(appSpec, 'info.icon.url'),
                     title: appSpec.info.name,
                     subtitle: appSpec.info.subtitle
                 },
@@ -188,7 +225,7 @@ define([
                         tag: appTag,
                         spec: appSpec
                     },
-                    params: null
+                    params: initialParams
                 }
             };
             cell.metadata = meta;
@@ -199,20 +236,21 @@ define([
             })
             .then(function (cellStuff) {
                 // Create the python code, insert it, and execute it.
+            
+                var appRef = makeAppRef({
+                    id: appSpec.info.id,
+                    tag: appTag,
+                    version: appSpec.info.ver,
+                    gitCommitHash: appSpec.info.git_commit_hash
+                });
 
-                // get the python code
-                var pythonCode = PythonInterop.buildCustomWidgetRunner(
-                    appSpec.info.id,
-                    appSpec.info.ver,
-                    appTag,
-                    cellId,
-                    runId
-                    );
+//                // get the python code
+                var pythonCode = buildPython(cell, cellId, runId, appRef);
 
-                // set it in the cell
+//                // set it in the cell
                 cell.set_text(pythonCode);
-
-                // execute it
+//
+//                // execute it
                 cell.execute();
             })
             .then(function () {
@@ -221,7 +259,7 @@ define([
                 // cellStuff.bus.emit('reset-to-defaults');
             });
     }
-    
+
 
     function load() {
         $([Jupyter.events]).on('inserted.Cell', function (event, data) {

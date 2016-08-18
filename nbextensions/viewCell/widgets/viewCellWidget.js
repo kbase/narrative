@@ -5,13 +5,13 @@ define([
     'jquery',
     'bluebird',
     'uuid',
-    'base/js/namespace',
-    'base/js/dialog',
     'common/parameterSpec',
     'common/runtime',
     'common/events',
     'common/html',
     'common/props',
+    'common/jupyter',
+    'common/busEventManager',
     'kb_service/client/narrativeMethodStore',
     'kb_service/client/workspace',
     'common/pythonInterop',
@@ -25,13 +25,13 @@ define([
     $,
     Promise,
     Uuid,
-    Jupyter,
-    dialog,
     ParameterSpec,
     Runtime,
     Events,
     html,
     Props,
+    Jupyter,
+    BusEventManager,
     NarrativeMethodStore,
     Workspace,
     PythonInterop,
@@ -42,9 +42,10 @@ define([
     ) {
     'use strict';
     var t = html.tag,
-        div = t('div'), span = t('span'), a = t('a'),
+        div = t('div'), span = t('span'), a = t('a'), p = t('p'),
         table = t('table'), tr = t('tr'), th = t('th'), td = t('td'),
         pre = t('pre'), input = t('input'),
+        places,
         appStates = [
             {
                 state: {
@@ -234,19 +235,21 @@ define([
         ];
 
     function factory(config) {
-        var container, places, ui,
+        var container, ui,
             workspaceInfo = config.workspaceInfo,
             runtime = Runtime.make(),
             cell = config.cell,
             parentBus = config.bus,
             // TODO: the cell bus should be created and managed through main.js,
             // that is, the extension.
-            cellBus = runtime.bus().makeChannelBus({
-            cell: utils.getMeta(cell, 'attributes', 'id')
-        }, 'A cell channel'),
+            cellBus,
             bus = runtime.bus().makeChannelBus(null, 'A view cell widget'),
             env = {},
             model,
+            
+            eventManager = BusEventManager.make({
+                bus: runtime.bus()
+            }),
             // HMM. Sync with metadata, or just keep everything there?
             settings = {
                 showAdvanced: {
@@ -268,8 +271,6 @@ define([
                 }
             },
         widgets = {},
-            inputBusses = [],
-            inputBusMap = {},
             fsm,
             saveMaxFrequency = config.saveMaxFrequency || 5000;
 
@@ -367,7 +368,7 @@ define([
                     return tr([
                         th('Module'),
                         td({dataElement: 'module'})
-                    ])
+                    ]);
                 }),
                 tr([
                     th('Id'),
@@ -389,7 +390,7 @@ define([
                     return tr([
                         th('Git commit hash'),
                         td({dataElement: 'git-commit-hash'})
-                    ])
+                    ]);
                 }),
                 tr([
                     th('More info'),
@@ -745,22 +746,11 @@ define([
         // LIFECYCYLE API
 
         function doEditNotebookMetadata() {
-            Jupyter.notebook.edit_metadata({
-                notebook: Jupyter.notebook,
-                keyboard_manager: Jupyter.notebook.keyboard_manager
-            });
+            Jupyter.editNotebookMetadata();
         }
 
         function doEditCellMetadata() {
-            dialog.edit_metadata({
-                md: cell.metadata,
-                callback: function (md) {
-                    cell.metadata = md;
-                },
-                name: 'Cell',
-                notebook: Jupyter.notebook,
-                keyboard_manager: Jupyter.keyboard_manager
-            });
+            Jupyter.editCellMetadata(cell);
         }
 
         function initCodeInputArea() {
@@ -912,7 +902,7 @@ define([
             }
             saveTimer = window.setTimeout(function () {
                 saveTimer = null;
-                Jupyter.notebook.save_checkpoint();
+                Jupyter.saveNotebook();
             }, saveMaxFrequency);
         }
 
@@ -943,22 +933,26 @@ define([
             renderUI();
         }
 
-        function doRemove() {
-            var confirmed = ui.confirmDialog('Are you sure you want to remove this app cell? It will also remove any pending jobs, but will leave generated output intact', 'Yes', 'No way, dude');
-            if (!confirmed) {
-                return;
-            }
+        function doDeleteCell() {
+            var content = div([
+                p([
+                    'Deleting this cell will remove the data visualization, ',
+                    'but will not delete the data object, which will still be avaiable ',
+                    'in the data panel.'
+                ]),
+                p('Continue to delete this data cell?')
+            ]);
+            ui.showConfirmDialog({title: 'Confirm Cell Deletion', body: content})
+                .then(function (confirmed) {
+                    if (!confirmed) {
+                        return;
+                    }
 
-            var jobState = model.getItem('exec.jobState');
-            if (jobState) {
-                cancelJob(jobState.job_id);
-                // the job will be deleted form the notebook when the job cancellation
-                // event is received.
-            }
+                    bus.emit('stop');
 
-            $(document).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(cell));
+                    Jupyter.deleteCell(cell);
+                });
         }
-
         function doRun() {
             ui.collapsePanel('parameters-group');
             cell.execute();
@@ -982,7 +976,7 @@ define([
                     bus: bus
                 });
 
-                 if (ui.isDeveloper()) {
+                if (ui.isDeveloper()) {
                     settings.showDeveloper = {
                         label: 'Show developer features',
                         defaultValue: false,
@@ -1117,7 +1111,7 @@ define([
         }
 
         function findCellForId(id) {
-            var matchingCells = Jupyter.notebook.get_cells().filter(function (cell) {
+            var matchingCells = Jupyter.getCells().filter(function (cell) {
                 if (cell.metadata && cell.metadata.kbase) {
                     return (cell.metadata.kbase.attributes.id === id);
                 }
@@ -1193,6 +1187,14 @@ define([
                 parentBus.on('reset-to-defaults', function () {
                     bus.emit('reset-to-defaults');
                 });
+
+                cellBus = runtime.bus().makeChannelBus({
+                    cell: Props.getDataItem(cell.metadata, 'kbase.attributes.id')
+                }, 'A cell channel');
+
+                eventManager.add(cellBus.on('delete-cell', function () {
+                    doDeleteCell();
+                }));
 
 
                 // We need to listen for job-status messages is we are loading
@@ -1330,9 +1332,8 @@ define([
                             }
                         });
                     });
-                    
+
                     bus.on('sync-params', function (message) {
-                        console.log('SYNC PARAMS', message);
                         message.parameters.forEach(function (paramId) {
                             bus.send({
                                 parameter: paramId,

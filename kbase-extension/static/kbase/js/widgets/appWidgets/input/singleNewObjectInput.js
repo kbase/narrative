@@ -181,19 +181,7 @@ define([
                                         });
                                     });
                             }
-                        }, changeOnPause(),
-                        {
-                            type: 'focus',
-                            handler: function () {
-                                Jupyter.keyboard_manager.disable();
-                            }
-                        },
-                        {
-                            type: 'blur',
-                            handler: function () {
-                                Jupyter.keyboard_manager.enable();
-                            }
-                        }
+                        }, changeOnPause()
                     ]}),
                 class: 'form-control',
                 dataElement: 'input',

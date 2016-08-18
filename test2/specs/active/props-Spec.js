@@ -43,6 +43,13 @@ define([
             props.setItem('pet', {type: 'dog', name: 'peet'});
             expect(props.getItem('pet')).toEqual({type: 'dog', name: 'peet'});
         });
+        it('Set two object propertyes', function () {
+            var props = Props.make();
+            props.setItem(['pet', 'coco'], 'yellow');
+            props.setItem(['pet', 'peet'], 'black');
+            expect(props.getItem('pet.coco')).toEqual('yellow');
+            expect(props.getItem('pet.peet')).toEqual('black');
+        })
         it('History should undefined', function () {
             var props = Props.make();
             expect(props.getHistoryCount()).toBeUndefined;

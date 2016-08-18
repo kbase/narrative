@@ -19,6 +19,7 @@ define([
     'kbaseNarrativeInput',
     'kbaseNarrativeParameterTextInput',
     'kb_service/client/workspace',
+    'base/js/namespace',
     'bootstrap'
 ], function (
     KBWidget,
@@ -28,7 +29,8 @@ define([
     kbaseNarrativeMethodInput,
     kbaseNarrativeInput,
     kbaseNarrativeParameterTextInput,
-    Workspace
+    Workspace,
+    Jupyter
     ) {
     'use strict';
     return KBWidget({
@@ -67,17 +69,22 @@ define([
 
             // Creates the media chooser widget, which is just a 'text' input
             // This was originally designed to deal with the parameter spec object.
-            this.mediaChooserWidget = new kbaseNarrativeParameterTextInput(this.$mediaChooserPanel, {
+            this.mediaChooserWidget = new kbaseNarrativeParameterTextInput(this.$mediaChooserPanel, {                
                 loadingImage: Config.get('loading_gif'),
                 parsedParameterSpec: this.options.appSpec.parameters[0],
                 isInSidePanel: false
             });
+            
+            this.parameterIdLookup = {};
+            this.parameterIdLookup[this.options.appSpec.parameters[0].id] = this.mediaChooserWidget;
+
 
             // Simple listener that just plops the input value in this panel.
             // Listener gets triggered whenever anything in the chooser widget
             // changes.
 
             this.mediaChooserWidget.addInputListener(function () {
+                // Jupyter.keyboard_manager.disable();
                 this.mediaName = this.mediaChooserWidget.getParameterValue();
                 this.updateDisplayPanel(this.mediaName);
             }.bind(this));

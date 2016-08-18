@@ -11,6 +11,7 @@ define([
     'common/runtime',
     'common/events',
     'common/error',
+    'common/jupyter',
     'kb_common/html',
     'common/props',
     'kb_service/client/narrativeMethodStore',
@@ -37,6 +38,7 @@ define([
     Runtime,
     Events,
     ToErr,
+    JupyterProxy,
     html,
     Props,
     NarrativeMethodStore,
@@ -816,22 +818,11 @@ define([
         // LIFECYCYLE API
 
         function doEditNotebookMetadata() {
-            Jupyter.notebook.edit_metadata({
-                notebook: Jupyter.notebook,
-                keyboard_manager: Jupyter.notebook.keyboard_manager
-            });
+            JupyterProxy.editNotebookMetadata();
         }
 
         function doEditCellMetadata() {
-            dialog.edit_metadata({
-                md: cell.metadata,
-                callback: function (md) {
-                    cell.metadata = md;
-                },
-                name: 'Cell',
-                notebook: Jupyter.notebook,
-                keyboard_manager: Jupyter.keyboard_manager
-            });
+            JupyterProxy.editCellMetadata(cell);
         }
 
         function initCodeInputArea() {
@@ -1059,7 +1050,7 @@ define([
             }
             saveTimer = window.setTimeout(function () {
                 saveTimer = null;
-                Jupyter.notebook.save_checkpoint();
+                JupyterProxy.saveNotebook();
             }, saveMaxFrequency);
         }
 

@@ -109,53 +109,6 @@ define([
          * Places it into the dom node
          * Hooks up event listeners
          */
-        function xmakeInputControl(currentValue, events, bus) {
-            // CONTROL
-            var initialControlValue;
-            if (currentValue) {
-                initialControlValue = String(currentValue);
-            }
-            return input({
-                id: events.addEvents({
-                    events: [
-                        {
-                            type: 'change',
-                            handler: function (e) {
-                                validate()
-                                    .then(function (result) {
-                                        if (result.isValid) {
-                                            bus.send({
-                                                type: 'changed',
-                                                newValue: result.value
-                                            });
-                                        }
-                                        bus.send({
-                                            type: 'validation',
-                                            errorMessage: result.errorMessage,
-                                            diagnosis: result.diagnosis
-                                        });
-                                    });
-                            }
-                        },
-                        {
-                            type: 'focus',
-                            handler: function (e) {
-                                Jupyter.keyboard_manager.disable();
-                            }
-                        },
-                        {
-                            type: 'blur',
-                            handler: function (e) {
-                                Jupyter.keyboard_manager.enable();
-                            }
-                        }
-                    ]}),
-                type: 'checkbox',
-                class: 'form-control',
-                dataElement: 'input',
-                value: initialControlValue
-            });
-        }
         
         function makeInputControl(currentValue, data, events, bus) {
             var selectOptions = [

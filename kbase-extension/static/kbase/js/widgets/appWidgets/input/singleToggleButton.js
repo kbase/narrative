@@ -129,18 +129,6 @@ define([
                                             });
                                         });
                                 }
-                            },
-                            {
-                                type: 'focus',
-                                handler: function (e) {
-                                    Jupyter.keyboard_manager.disable();
-                                }
-                            },
-                            {
-                                type: 'blur',
-                                handler: function (e) {
-                                    Jupyter.keyboard_manager.enable();
-                                }
                             }
                         ]})
                 })]);

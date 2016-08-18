@@ -85,7 +85,7 @@ define([
                     p('Are you sure you want to remove the output cell?')
                 ]);
             }
-            ui.showConfirmDialog('Confirm Deletion of Cell Output', content, 'Yes', 'No')
+            ui.showConfirmDialog({title: 'Confirm Deletion of Cell Output', body: content})
                 .then(function (answer) {
                     if (!answer) {
                         return;

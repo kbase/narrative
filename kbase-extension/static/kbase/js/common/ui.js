@@ -83,21 +83,21 @@ define([
 
             return container.querySelector(selector);
         }
-        
+
         /*
          * a node spec is a list of path segment specs, which are each a simple
          * object where the keys are the suffix to a data- attribute and the v
          * values are the values. Each segment is an array of these, which are 
          * concatenated
          */
-        function findNode(nodePath) {            
-            var selector = nodePath.map(function (pathElement) {     
+        function findNode(nodePath) {
+            var selector = nodePath.map(function (pathElement) {
                 return Object.keys(pathElement).map(function (dataKey) {
                     var dataValue = pathElement[dataKey];
                     return '[data-' + dataKey + '="' + dataValue + '"]';
                 }).join('');
             }).join(' ');
-            
+
             return container.querySelector(selector);
         }
 
@@ -105,8 +105,10 @@ define([
             return window.confirm(prompt);
         }
 
-        function renderConfirmDialog(title, content, yesLabel, noLabel) {
-           var dialog =
+        function renderConfirmDialog(arg) {
+            var yesLabel = arg.yesLabel || 'Yes',
+                noLabel = arg.noLabel || 'No';
+            var dialog =
                 div({class: 'modal fade', tabindex: '-1', role: 'dialog'}, [
                     div({class: 'modal-dialog'}, [
                         div({class: 'modal-content'}, [
@@ -114,10 +116,10 @@ define([
                                 button({type: 'button', class: 'close', dataDismiss: 'modal', ariaLabel: noLabel}, [
                                     span({ariaHidden: 'true'}, '&times;')
                                 ]),
-                                span({class: 'modal-title'}, title)
+                                span({class: 'modal-title'}, arg.title)
                             ]),
                             div({class: 'modal-body'}, [
-                                content
+                                arg.body
                             ]),
                             div({class: 'modal-footer'}, [
                                 button({type: 'button', class: 'btn btn-default', dataDismiss: 'modal', dataElement: 'no'}, noLabel),
@@ -128,8 +130,8 @@ define([
                 ]);
             return dialog;
         }
-        function showConfirmDialog(title, content, yesLabel, noLabel) {
-            var dialog = renderConfirmDialog(title, content, yesLabel, noLabel),
+        function showConfirmDialog(arg) {
+            var dialog = renderConfirmDialog(arg),
                 dialogId = html.genId(),
                 confirmNode = document.createElement('div'),
                 kbaseNode, modalNode, modalDialogNode;
@@ -159,7 +161,7 @@ define([
 
             $(modalDialogNode).modal('show');
             return new Promise(function (resolve) {
-                modalDialogNode.querySelector('[data-element="yes"]').addEventListener('click', function (e) {
+                modalDialogNode.querySelector('[data-element="yes"]').addEventListener('click', function () {
                     $(modalDialogNode).modal('hide');
                     confirmNode.parentElement.removeChild(confirmNode);
                     resolve(true);
@@ -171,11 +173,11 @@ define([
                         resolve(true);
                     }
                 });
-                modalDialogNode.querySelector('[data-element="no"]').addEventListener('click', function (e) {
+                modalDialogNode.querySelector('[data-element="no"]').addEventListener('click', function () {
                     confirmNode.parentElement.removeChild(confirmNode);
                     resolve(false);
                 });
-                modalDialogNode.addEventListener('hide.bs.modal', function (e) {
+                modalDialogNode.addEventListener('hide.bs.modal', function () {
                     resolve(false);
                 });
             });
@@ -183,7 +185,7 @@ define([
         }
 
         function renderInfoDialog(title, content, okLabel) {
-           var dialog =
+            var dialog =
                 div({class: 'modal fade', tabindex: '-1', role: 'dialog'}, [
                     div({class: 'modal-dialog'}, [
                         div({class: 'modal-content'}, [
@@ -246,7 +248,7 @@ define([
         }
 
         function renderDialog(title, content, cancelLabel, buttons) {
-           var dialog =
+            var dialog =
                 div({class: 'modal fade', tabindex: '-1', role: 'dialog'}, [
                     div({class: 'modal-dialog'}, [
                         div({class: 'modal-content'}, [
@@ -269,7 +271,7 @@ define([
                             ].concat(buttons.map(function (btn) {
                                 return button({
                                     type: 'button',
-                                    class: 'btn btn-'+ btn.icon,
+                                    class: 'btn btn-' + btn.type || 'default',
                                     dataElement: btn.action
                                 }, btn.label);
                             })))
@@ -315,7 +317,7 @@ define([
                     });
                 });
                 args.buttons.forEach(function (btn) {
-                    modalDialogNode.querySelector('[data-element="'+btn.action+'"]').addEventListener('click', function (e) {
+                    modalDialogNode.querySelector('[data-element="' + btn.action + '"]').addEventListener('click', function (e) {
                         try {
                             var result = btn.handler(e);
                             if (result) {
@@ -364,16 +366,16 @@ define([
         function buildButton(arg) {
             var klass = arg.type || 'default',
                 events = arg.events, icon;
-            
+
             if (arg.icon) {
                 if (!arg.icon.classes) {
                     arg.icon.classes = [];
                 }
                 // arg.icon.classes.push('pull-left');
-                
+
                 icon = buildIcon(arg.icon);
             }
-            
+
             return button({
                 type: 'button',
                 class: ['btn', 'btn-' + klass].join(' '),
@@ -526,7 +528,7 @@ define([
                         dataToggle: 'collapse',
                         dataTarget: '#' + collapseId,
                         style: {cursor: 'pointer'}
-                    }, [args.title, icon] ))
+                    }, [args.title, icon]))
                 ]),
                 div({id: collapseId, class: collapseClasses.join(' ')},
                     div({class: 'panel-body'}, [
@@ -569,9 +571,9 @@ define([
             return div({
                 class: ['btn-toolbar'].concat(arg.classes || [])
             }, [
-               div({
-                   class: 'btn-group'
-               }, arg.buttons)
+                div({
+                    class: 'btn-group'
+                }, arg.buttons)
             ]);
         }
 
@@ -627,7 +629,7 @@ define([
         }
 
         function ifAdvanced(fun) {
-            var isAdvanced = getUserSetting('advanced', runtime.config('features.advanced')) ;
+            var isAdvanced = getUserSetting('advanced', runtime.config('features.advanced'));
             if (isAdvanced) {
                 return fun();
             }
@@ -641,7 +643,7 @@ define([
         }
 
         function isAdvanced() {
-            var isAdvanced = getUserSetting('advanced', runtime.config('features.advanced')) ;
+            var isAdvanced = getUserSetting('advanced', runtime.config('features.advanced'));
             if (isAdvanced) {
                 return true;
             }
@@ -680,7 +682,7 @@ define([
             if (arg.style) {
                 style = style.concat(arg.style);
             }
-            
+
             return span({
                 dataElement: 'icon',
                 style: {verticalAlign: 'middle'},
@@ -689,7 +691,7 @@ define([
         }
         function reverse(arr) {
             var newArray = [], i, len = arr.length;
-            for (i = len-1; i >= 0; i -= 1) {
+            for (i = len - 1; i >= 0; i -= 1) {
                 newArray.push(arr[i]);
             }
             return newArray;
@@ -699,7 +701,7 @@ define([
             if (!node) {
                 return;
             }
-            
+
             // Update tab label
             var tabTab = findNode([
                 {
@@ -707,7 +709,7 @@ define([
                     name: tabName
                 }
             ]);
-            
+
             // Update tab label 
             if (updates.label) {
                 var labelNode = tabTab.querySelector('[data-element="label"]');
@@ -715,7 +717,7 @@ define([
                     labelNode.innerHTML = updates.label;
                 }
             }
-            
+
             // update the tab icon
             if (updates.icon) {
                 var iconNode = tabTab.querySelector('[data-element="icon"]');
@@ -723,24 +725,24 @@ define([
                     // remove any icons.
                     var classList = iconNode.classList;
                     for (var i = classList.length; classList > 0; classList -= 1) {
-                        if (classList.item[i].substring(0,3) === 'fa-') {
+                        if (classList.item[i].substring(0, 3) === 'fa-') {
                             classList.remove(classList.item[i]);
                         }
                     }
                     iconNode.classList.add('fa-' + updates.icon);
                 }
             }
-            
+
             // update tab color
             if (updates.color) {
                 tabTab.style.color = updates.color;
             }
-            
+
             // switch to tab
             if (updates.select) {
-                
+
             }
-            
+
         }
         function buildTabs(arg) {
             var tabsId = arg.id,
@@ -801,7 +803,7 @@ define([
                     tabTabs.map(function (tab, index) {
                         var tabAttribs = {
                             role: 'presentation'
-                        }, linkAttribs =  {
+                        }, linkAttribs = {
                             href: '#' + tab.panelId,
                             dataElement: 'tab',
                             ariaControls: tab.panelId,
@@ -815,7 +817,7 @@ define([
                         } else {
                             icon = '';
                         }
-                        
+
                         if (tab.name) {
                             linkAttribs.dataName = tab.name;
                         }
@@ -862,11 +864,11 @@ define([
                     var specText = JSON.stringify(obj, false, indent),
                         fixedText = specText.replace(/</g, '&lt;').replace(/>/g, '&gt;');
                     return pre({
-                            class: 'prettyprint lang-json',
-                            style: {
-                                fontSize: String(fontSize * 100) + '%'
-                            }
-                        }, fixedText);
+                        class: 'prettyprint lang-json',
+                        style: {
+                            fontSize: String(fontSize * 100) + '%'
+                        }
+                    }, fixedText);
                 }
 
                 function start(arg) {

@@ -92,196 +92,6 @@ define([
      *
      */
 
-    var appStates = [
-        {
-            state: {
-                mode: 'editing',
-                params: 'incomplete'
-            },
-            next: [
-                {
-                    mode: 'editing',
-                    params: 'complete'
-                },
-                {
-                    mode: 'editing',
-                    params: 'incomplete'
-                }
-            ]
-        },
-        {
-            state: {
-                mode: 'editing',
-                params: 'complete'
-            },
-            next: [
-                {
-                    mode: 'editing',
-                    params: 'complete',
-                    code: 'built'
-                }
-            ]
-        },
-        {
-            state: {
-                mode: 'editing',
-                params: 'complete',
-                code: 'built'
-            },
-            next: [
-                {
-                    mode: 'editing',
-                    params: 'incomplete'
-                },
-                {
-                    mode: 'editing',
-                    params: 'complete',
-                    code: 'built'
-                },
-                {
-                    mode: 'processing',
-                    stage: 'launching'
-                }
-            ]
-        },
-        {
-            state: {
-                mode: 'processing',
-                stage: 'launching'
-            },
-            next: [
-                {
-                    mode: 'processing',
-                    stage: 'queued'
-                },
-                {
-                    mode: 'processing',
-                    stage: 'launching'
-                },
-                {
-                    mode: 'error',
-                    stage: 'launching'
-                },
-                {
-                    mode: 'editing',
-                    params: 'complete',
-                    code: 'built'
-                }
-            ]
-        },
-        {
-            state: {
-                mode: 'processing',
-                stage: 'queued'
-            },
-            next: [
-                {
-                    mode: 'processing',
-                    stage: 'running'
-                },
-                {
-                    mode: 'processing',
-                    stage: 'queued'
-                },
-                {
-                    mode: 'error',
-                    stage: 'queued'
-                },
-                {
-                    mode: 'editing',
-                    params: 'complete',
-                    code: 'built'
-                }
-            ]
-        },
-        {
-            state: {
-                mode: 'processing',
-                stage: 'running'
-            },
-            next: [
-                {
-                    mode: 'success'
-                },
-                {
-                    mode: 'error',
-                    stage: 'running'
-                },
-                {
-                    mode: 'editing',
-                    params: 'complete',
-                    code: 'built'
-                }
-            ]
-        },
-        {
-            state: {
-                mode: 'success'
-            },
-            next: [
-                {
-                    mode: 'success'
-                },
-                {
-                    mode: 'editing',
-                    params: 'complete',
-                    code: 'built'
-                }
-            ]
-        },
-        {
-            state: {
-                mode: 'error',
-                stage: 'launching'
-            },
-            next: [
-                {
-                    mode: 'editing',
-                    params: 'complete',
-                    code: 'built'
-                }
-            ]
-
-        },
-        {
-            state: {
-                mode: 'error',
-                stage: 'queued'
-            },
-            next: [
-                {
-                    mode: 'editing',
-                    params: 'complete',
-                    code: 'built'
-                }
-            ]
-
-        },
-        {
-            state: {
-                mode: 'error',
-                stage: 'running'
-            },
-            next: [
-                {
-                    mode: 'editing',
-                    params: 'complete',
-                    code: 'built'
-                }
-            ]
-
-        }
-    ];
-
-    function intialAppState() {
-        return {
-            mode: 'editing'
-        };
-    }
-    function stateTransition(existingState, changes) {
-
-    }
-
     /*
      * Should only be called when a cell is first inserted into a narrative.
      * It creates the correct metadata and then sets up the cell.
@@ -528,15 +338,7 @@ define([
         $(document).on('dataUpdated.Narrative', function () {
             // Tell each cell that the workspace has been updated.
             // This is what is interesting, no?
-            // we can just broadcast this on the runtime bus
-//                    runtime.bus().send({
-//                        type: 'workspace-changed'
-//                    });
-            // console.log('sending workspace changed event');
-            // runtime.bus().send('workspace-changed');
             runtime.bus().emit('workspace-changed');
-            // widgets.paramsInputWidget.bus.emit('workspace-changed');
-            //widgets.paramsDisplayWidget.bus.send('workspace-changed');
         });
 
         // Set the notebook environment.
@@ -574,7 +376,9 @@ define([
                             .catch(function (err) {
                                 console.error('ERROR creating cell', err);
                                 // delete cell.
-                                $(document).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(data.cell));
+                                // TODO: this needs to be a direct cell deletion, not a request:
+                                Jupyter.notebook.delete_cell(Jupyter.notebook.find_cell_index(data.cell));
+                                // $(document).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(data.cell));
                                 alert('Could not insert cell due to errors.\n' + err.message);
                             });
                     }

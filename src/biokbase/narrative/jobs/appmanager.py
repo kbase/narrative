@@ -322,7 +322,7 @@ class AppManager(object):
 
         # now just map onto outputs.
         custom_widget = spec.get('widgets', {}).get('input', None)
-        return WidgetManager().show_custom_widget(custom_widget, app_id, version, tag, spec)
+        return WidgetManager().show_custom_widget(custom_widget, app_id, version, tag, spec, cell_id)
 
     def _validate_parameters(self, app_id, tag, spec_params, params):
         """

@@ -156,19 +156,16 @@ define([
                 'WidgetManager().show_data_widget(' + buildNiceArgsList(args) + ')'
             ].join('\n');
 
-            console.log('CODE', pythonCode);
-
-
         return pythonCode;
     }
 
-    function buildCustomWidgetRunner(appId, appVersion, appTag, cellId, runId) {
-        var positionalArgs = [appId].map(function (arg) {
-                return pythonifyValue(arg);
-            }),
+    function buildCustomWidgetRunner(cellId, runId, app) {
+        var positionalArgs = [
+                pythonifyValue(app.id)
+            ],            
             namedArgs = objectToNamedArgs({
-                version: appVersion,
-                tag: appTag,
+                tag: app.tag,
+                version: app.version,
                 cell_id: cellId,
                 run_id: runId
             }),

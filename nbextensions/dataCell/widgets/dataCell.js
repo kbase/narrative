@@ -60,14 +60,14 @@ define([
         
         // Widget API
         
-        bus.on('run', function (message) {                
+        eventManager.add(bus.on('run', function (message) {                
             container = message.node;
             ui = UI.make({node:container});
 
             // Events for comm from the parent.
-            bus.on('stop', function () {
+            eventManager.add(bus.on('stop', function () {
                 eventManager.removeAll();
-            });
+            }));
 
 
             // The cell bus is for communication via the common id.
@@ -78,11 +78,11 @@ define([
                 cell: Props.getDataItem(cell.metadata, 'kbase.attributes.id')
             }, 'A cell channel');
 
-            cellBus.on('delete-cell', function () {
+            eventManager.add(cellBus.on('delete-cell', function () {
                 doDeleteCell();
-            });
+            }));
 
-        });
+        }));
 
         return {
             bus: bus

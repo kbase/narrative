@@ -147,7 +147,7 @@ define(
     };
 
     Narrative.prototype.enableKeyboardManager = function () {
-        Jupyter.keyboard_manager.enable();
+        // Jupyter.keyboard_manager.enable();
     };
 
     /**
@@ -175,7 +175,7 @@ define(
         // }.bind(this));
 
         $([Jupyter.events]).on('delete.Cell', function () {
-            this.enableKeyboardManager();
+            // this.enableKeyboardManager();
         }.bind(this));
 
         $([Jupyter.events]).on('notebook_save_failed.Notebook', function (event, data) {

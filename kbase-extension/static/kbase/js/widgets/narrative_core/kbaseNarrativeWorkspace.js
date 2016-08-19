@@ -492,7 +492,10 @@ define([
 
             // A very small class of methods are just non-app-calling widgets.
             switch (spec.info.id) {
-                case 'edit_media':
+                //case 'model_support/edit_model':
+                case 'fba_tools/edit_metabolic_model':
+                case 'fba_tools/create_or_edit_media':
+                //case 'model_support/edit_media':
                     return 'widget';
             }
 

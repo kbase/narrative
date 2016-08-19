@@ -28,8 +28,9 @@ def system_variable(var):
 
     Parameters
     ----------
-    var: string, one of "workspace", "token", "user_id"
+    var: string, one of "workspace", "workspace_id", "token", "user_id"
         workspace - returns the KBase workspace name
+        workspace_id - returns the numerical id of the current workspace
         token - returns the current user's token credential
         user_id - returns the current user's id
 
@@ -58,6 +59,8 @@ def system_variable(var):
             return m.group(1)
         else:
             return None
+    else:
+        return None
 
 def map_inputs_from_job(job_inputs, app_spec):
     """
@@ -134,6 +137,8 @@ def map_outputs_from_state(state, params, app_spec):
     Returns the dict of output values from a completed app.
     Also returns the output widget.
     """
+    if 'behavior' not in app_spec:
+        raise ValueError("Invalid app spec - unable to map outputs")
     widget_params = dict()
     out_mapping_key = 'kb_service_output_mapping'
     if out_mapping_key not in app_spec['behavior']:

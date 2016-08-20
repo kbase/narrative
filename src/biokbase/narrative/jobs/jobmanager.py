@@ -76,7 +76,7 @@ class JobManager(object):
                 'error': 'Unable to get initial jobs list',
                 'message': getattr(new_e, 'message', 'Unknown reason'),
                 'code': getattr(new_e, 'code', -1),
-                'source': getattr(new_e, 'source', 'JobManager'),
+                'source': getattr(new_e, 'source', 'jobmanager'),
                 'name': getattr(new_e, 'name', type(e).__name__)
             }
             self._send_comm_message('job_init_err', error)
@@ -100,7 +100,7 @@ class JobManager(object):
                     'job_id': job_id,
                     'message': getattr(new_e, 'message', 'Unknown reason'),
                     'code': getattr(new_e, 'code', -1),
-                    'source': getattr(new_e, 'source', 'JobManager'),
+                    'source': getattr(new_e, 'source', 'jobmanager'),
                     'name': getattr(new_e, 'name', type(e).__name__)
                 }
                 self._send_comm_message('job_init_lookup_err', error)

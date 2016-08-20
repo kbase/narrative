@@ -16,6 +16,9 @@ from biokbase.narrative.app_util import (
     system_variable,
     map_outputs_from_state
 )
+from biokbase.narrative.exception_util import (
+    transform_job_exception
+)
 from IPython.display import HTML
 from jinja2 import Template
 import json
@@ -428,6 +431,8 @@ class AppManager(object):
             e_type = type(e).__name__
             e_message = str(e).replace('<', '&lt;').replace('>', '&gt;')
             e_trace = traceback.format_exc().replace('<', '&lt;').replace('>', '&gt;')
+            e_code = getattr(e, 'code', -1)
+            e_source = getattr(e, 'source', 'appmanager')
             self._send_comm_message('run_status', {
                 'event': 'error',
                 'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
@@ -435,9 +440,10 @@ class AppManager(object):
                 'run_id': run_id,
                 'error_message': e_message,
                 'error_type': e_type,
-                'error_stacktrace': e_trace
+                'error_stacktrace': e_trace,
+                'error_code': e_code,
+                'error_source': e_source
             })
-            # raise
             print("Error while trying to start your app (run_app)!\n-------------------------------------\n" + str(e))
             return
 
@@ -570,7 +576,7 @@ class AppManager(object):
             log_info.update({'err': str(e)})
             self._log.setLevel(logging.ERROR)
             kblogging.log_event(self._log, "run_app_error", log_info)
-            raise
+            raise transform_job_exception(e)
 
         new_job = Job(job_id, app_id, [params], system_variable('user_id'), tag=tag, app_version=service_ver, cell_id=cell_id)
 

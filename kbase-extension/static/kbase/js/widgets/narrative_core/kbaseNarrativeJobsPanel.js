@@ -17,7 +17,8 @@ define([
     'common/runtime',
     'services/kernels/comm',
     'text!kbase/templates/job_panel/job_info.html',
-    'text!kbase/templates/job_panel/job_error.html'
+    'text!kbase/templates/job_panel/job_error.html',
+    'text!kbase/templates/job_panel/job_init_error.html'
 ], function (
     KBWidget,
     bootstrap,
@@ -35,7 +36,8 @@ define([
     Runtime,
     JupyterComm,
     JobInfoTemplate,
-    JobErrorTemplate
+    JobErrorTemplate,
+    JobInitErrorTemplate
     ) {
     'use strict';
     return KBWidget({
@@ -444,6 +446,41 @@ define([
                     }
                     console.error('Error from job comm:', msg);
                     break;
+
+                case 'job_init_err':
+                case 'job_init_lookup_err':
+                    var content = msg.content.data.content;
+                    /*
+                    code, error, job_id (opt), message, name, source
+                    */
+                    var $modalBody = $(Handlebars.compile(JobInitErrorTemplate)(content));
+                    var modal = new BootstrapDialog({
+                        title: 'Job Initialization Error',
+                        body: $modalBody,
+                        buttons: [
+                            $('<a type="button" class="btn btn-default">')
+                            .append("OK")
+                            .click(function (event) {
+                                modal.hide();
+                            })
+                        ]
+                    });
+                    new kbaseAccordion($modalBody.find('div#kb-job-err-trace'), {
+                        elements: [{
+                            title: 'Detailed Error Information',
+                            body: $('<table class="table table-bordered"><tr><th>code:</th><td>' + content.code +
+                                    '</td></tr><tr><th>error:</th><td>' + content.error +
+                                    '</td></tr><tr><th>type:</th><td>' + content.name +
+                                    '</td></tr><tr><th>source:</th><td>' + content.source + '</td></tr></table>')
+                        }]
+                    });
+                    $modalBody.find('button#kb-job-err-report').click(function(e) {alert('reporting error!'); });
+                    modal.getElement().on('hidden.bs.modal', function() {
+                        modal.destroy();
+                    });
+                    modal.show();
+                    break;
+
                 default:
                     console.warn("Unhandled KBaseJobs message from kernel (type='" + msgType + "'):");
                     console.warn(msg);

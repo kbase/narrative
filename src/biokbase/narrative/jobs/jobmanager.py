@@ -24,6 +24,10 @@ from jinja2 import Template
 import dateutil.parser
 import datetime
 from biokbase.narrative.app_util import system_variable
+from biokbase.narrative.exception_util import (
+    NarrativeException,
+    transform_job_exception
+)
 import traceback
 
 class JobManager(object):
@@ -67,22 +71,40 @@ class JobManager(object):
             })
         except Exception as e:
             kblogging.log_event(self._log, 'init_error', {'err': str(e)})
-            self._send_comm_message('job_init_err', {'msg': 'Unable to get jobs list!', 'err': str(e)})
-            raise
+            new_e = transform_job_exception(e)
+            error = {
+                'error': 'Unable to get initial jobs list',
+                'message': getattr(new_e, 'message', 'Unknown reason'),
+                'code': getattr(new_e, 'code', -1),
+                'source': getattr(new_e, 'source', 'JobManager'),
+                'name': getattr(new_e, 'name', type(e).__name__)
+            }
+            self._send_comm_message('job_init_err', error)
+            raise new_e
 
         for info in nar_jobs:
             job_id = info[0]
             user_info = info[1]
             job_meta = info[10]
-            job_info = clients.get('job_service').get_job_params(job_id)[0]
             try:
+                job_info = clients.get('job_service').get_job_params(job_id)[0]
                 self._running_jobs[job_id] = {
                     'refresh': True,
                     'job': Job.from_state(job_id, job_info, user_info[0], app_id=job_info.get('app_id'), tag=job_meta.get('tag', 'release'), cell_id=job_meta.get('cell_id', None))
                 }
             except Exception as e:
                 kblogging.log_event(self._log, 'init_error', {'err': str(e)})
-                self._send_comm_message('job_init_lookup_err', {'msg': 'Unable to get job info!', 'job_id': job_id, 'err': str(e)})
+                new_e = transform_job_exception(e)
+                error = {
+                    'error': 'Unable to get job info on initial lookup',
+                    'job_id': job_id,
+                    'message': getattr(new_e, 'message', 'Unknown reason'),
+                    'code': getattr(new_e, 'code', -1),
+                    'source': getattr(new_e, 'source', 'JobManager'),
+                    'name': getattr(new_e, 'name', type(e).__name__)
+                }
+                self._send_comm_message('job_init_lookup_err', error)
+            raise new_e # should crash and burn on any of these.
 
         if not self._running_lookup_loop:
             # only keep one loop at a time in cause this gets called again!
@@ -183,39 +205,36 @@ class JobManager(object):
             raise
 
     def _construct_job_status(self, job_id):
-        job = self.get_job(job_id)
-        if job is None:
-            raise ValueError('job "{}" not found!'.format(job_id))
+        """
+        Always creates a Job Status.
+        It'll embed error messages into the status if there are problems.
+        """
 
         state = {}
         widget_info = None
         app_spec = {}
-        try:
-            state = job.state()
-        except Exception as e:
-            self._log.setLevel(logging.ERROR)
-            kblogging.log_event(self._log, "lookup_job_status.error", {'err': str(e)})
-            
-            e_type = type(e).__name__
-            e_message = str(e).replace('<', '&lt;').replace('>', '&gt;')
-            e_trace = traceback.format_exc().replace('<', '&lt;').replace('>', '&gt;')
 
+        job = self.get_job(job_id)
+        if job is None:
             state = {
                 'job_state': 'error',
                 'error': {
-                    'error': 'Unable to find current job state. Please try again later, or contact KBase.',
-                    'message': 'Unable to return job state',
+                    'error': 'Job does not seem to exist, or it is otherwise unavailable.',
+                    'message': 'Job does not exist',
                     'name': 'Job Error',
-                    'code': -2,
+                    'code': -1,
                     'exception': {
-                        'error_message': e_message,
-                        'error_type': e_type,
-                        'error_stacktrace': e_trace
+                        'error_message': 'job not found in JobManager',
+                        'error_type': 'ValueError',
+                        'error_stacktrace': ''
                     }
-                },
-                'creation_time': 0,
-                'cell_id': None,
-                'job_id': job_id
+                }
+            }
+            return {
+                'state': state,
+                'app_spec': app_spec,
+                'widget_info': widget_info,
+                'owner': None
             }
 
         try:
@@ -223,13 +242,45 @@ class JobManager(object):
         except Exception as e:
             self._log.setLevel(logging.ERROR)
             kblogging.log_event(self._log, "lookup_job_status.error", {'err': str(e)})
-            pass
+
+        try:
+            state = job.state()
+        except Exception as e:
+            self._log.setLevel(logging.ERROR)
+            kblogging.log_event(self._log, "lookup_job_status.error", {'err': str(e)})
+
+            new_e = transform_job_exception(e)
+            e_type = type(e).__name__
+            e_message = str(new_e).replace('<', '&lt;').replace('>', '&gt;')
+            e_trace = traceback.format_exc().replace('<', '&lt;').replace('>', '&gt;')
+            e_code = getattr(new_e, "code", -2)
+            e_source = getattr(new_e, "source", "JobManager")
+
+            state = {
+                'job_state': 'error',
+                'error': {
+                    'error': 'Unable to find current job state. Please try again later, or contact KBase.',
+                    'message': 'Unable to return job state',
+                    'name': 'Job Error',
+                    'code': e_code,
+                    'source': e_source,
+                    'exception': {
+                        'error_message': e_message,
+                        'error_type': e_type,
+                        'error_stacktrace': e_trace,
+                    }
+                },
+                'creation_time': 0,
+                'cell_id': None,
+                'job_id': job_id
+            }
 
         if state.get('finished', 0) == 1:
             try:
                 widget_info = job.get_viewer_params(state)
             except Exception as e:
                 # Can't get viewer params
+                new_e = transform_job_exception(e)
                 self._log.setLevel(logging.ERROR)
                 kblogging.log_event(self._log, "lookup_job_status.error", {'err': str(e)})
                 state['job_state'] = 'error'
@@ -237,7 +288,8 @@ class JobManager(object):
                     'error': 'Unable to generate App output viewer!\nThe App appears to have completed successfully,\nbut we cannot construct its output viewer.\nPlease contact the developer of this App for assistance.',
                     'message': 'Unable to build output viewer parameters!',
                     'name': 'App Error',
-                    'code': -1
+                    'code': getattr(new_e, "code", -1),
+                    'source': getattr(new_e, "source", "JobManager")
                 }
 
         return {'state': state,

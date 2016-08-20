@@ -11,6 +11,7 @@ __Changes__
 - Updated Dockerfiles to use new versions of a few dependencies.
 - Fixed DomainAnnotation viewer widget.
 - Updated Data API-based widgets to use latest clients.
+- Added prompt with report option (not working yet) when the JobManager fails to initialize.
 
 ### Version 3.0.0-alpha-19
 __Changes__

@@ -4,7 +4,7 @@
 define([
     'common/runtime',
     'common/busEventManager',
-    'common/Props',
+    'common/props',
     'common/ui',
     'common/html',
     'common/jupyter'
@@ -17,7 +17,7 @@ define([
     Jupyter
     ) {
     'use strict';
-    
+
     var t = html.tag,
         div = t('div'), p = t('p');
 
@@ -28,19 +28,19 @@ define([
                 bus: runtime.bus()
             }),
             bus = runtime.bus().makeChannelBus(null, 'data cell bus'),
-            
+
             // To be instantiated at attach()
             container, ui,
-            
+
             // To be instantiated in start()
-            cellBus;               
-        
+            cellBus;
+
         function doDeleteCell() {
             var content = div([
                 p([
                     'Deleting this cell will remove the data visualization, ',
                     'but will not delete the data object, which will still be avaiable ',
-                    'in the data panel.'                    
+                    'in the data panel.'
                 ]),
                 p('Continue to delete this data cell?')
             ]);
@@ -51,16 +51,16 @@ define([
                     }
 
                     bus.emit('stop');
-                    
+
                     Jupyter.deleteCell(cell);
                 });
         }
-        
-        
-        
+
+
+
         // Widget API
-        
-        eventManager.add(bus.on('run', function (message) {                
+
+        eventManager.add(bus.on('run', function (message) {
             container = message.node;
             ui = UI.make({node:container});
 

@@ -578,7 +578,14 @@ class AppManager(object):
             kblogging.log_event(self._log, "run_app_error", log_info)
             raise transform_job_exception(e)
 
-        new_job = Job(job_id, app_id, [params], system_variable('user_id'), tag=tag, app_version=service_ver, cell_id=cell_id)
+        new_job = Job(job_id,
+                      app_id,
+                      [params],
+                      system_variable('user_id'),
+                      tag=tag,
+                      app_version=service_ver,
+                      cell_id=cell_id,
+                      run_id=run_id)
 
         self._send_comm_message('run_status', {
             'event': 'launched_job',

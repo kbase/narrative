@@ -44,6 +44,8 @@ class NarrativeHandler(IPythonHandler):
                 k: v.replace('EQUALSSIGN', '=').replace('PIPESIGN', '|')
                 for k, v in cookie_regex.findall(cookie_val)
             }
+        else:
+            raise web.HTTPError(status_code=401, log_message='No auth cookie, denying access', reason='Authorization required for Narrative access')
 
         biokbase.auth.set_environ_token(cookie_obj.get('token', None))
         kbase_env.session = cookie_obj.get('kbase_sessionid', '')

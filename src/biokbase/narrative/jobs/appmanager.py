@@ -423,6 +423,7 @@ class AppManager(object):
         --------
         run_app('MegaHit/run_megahit', version=">=1.0.0", read_library_name="My_PE_Library", output_contigset_name="My_Contig_Assembly")
         """
+
         try:
             if params is None:
                 params = dict()
@@ -471,13 +472,6 @@ class AppManager(object):
         my_job = mm.run_app('MegaHit/run_megahit', version=">=1.0.0", read_library_name="My_PE_Library", output_contigset_name="My_Contig_Assembly")
         """
 
-        self._send_comm_message('run_status', {
-            'event': 'validating_app',
-            'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
-            'cell_id': cell_id,
-            'run_id': run_id
-        })
-
         ### TODO: this needs restructuring so that we can send back validation failure
         ### messages. Perhaps a separate function and catch the errors, or return an
         ### error structure.
@@ -507,13 +501,6 @@ class AppManager(object):
         spec_params = self.spec_manager.app_params(spec)
 
         (params, ws_input_refs) = self._validate_parameters(app_id, tag, spec_params, params)
-
-        self._send_comm_message('run_status', {
-            'event': 'validated_app',
-            'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
-            'cell_id': cell_id,
-            'run_id': run_id
-        })
 
         ws_id = system_variable('workspace_id')
         if ws_id is None:
@@ -560,18 +547,12 @@ class AppManager(object):
             'username': system_variable('user_id'),
             'wsid': ws_id
         }
-        self._log.setLevel(logging.INFO)
         kblogging.log_event(self._log, "run_app", log_info)
 
-        self._send_comm_message('run_status', {
-            'event': 'launching_job',
-            'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
-            'cell_id': cell_id,
-            'run_id': run_id
-        })
-
         try:
+            kblogging.log_event(self._log, 'run_job', {'msg': 'sending run_job request'})
             job_id = self.njs.run_job(job_runner_inputs)
+            kblogging.log_event(self._log, 'run_job', {'msg': 'sent run_job job request'})
         except Exception as e:
             log_info.update({'err': str(e)})
             self._log.setLevel(logging.ERROR)

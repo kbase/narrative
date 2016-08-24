@@ -589,8 +589,28 @@ define([
                                             }
                                         }),
                                         ui.buildButton({
+                                            label: 'Launching...',
+                                            name: 'launching',
+                                            events: events,
+                                            type: 'primary',
+                                            icon: {
+                                                name: 'play-circle-o',
+                                                size: 2
+                                            }
+                                        }),
+                                        ui.buildButton({
                                             label: 'Cancel',
                                             name: 'cancel',
+                                            events: events,
+                                            type: 'danger',
+                                            icon: {
+                                                name: 'stop-circle-o',
+                                                size: 2
+                                            }
+                                        }),
+                                        ui.buildButton({
+                                            label: 'Canceling...',
+                                            name: 'canceling',
                                             events: events,
                                             type: 'danger',
                                             icon: {
@@ -1054,36 +1074,6 @@ define([
             }, saveMaxFrequency);
         }
 
-        function deleteJob(jobId) {
-            return new Promise(function (resolve, reject) {
-                // NB the narrative callback code does not pass back error
-                // through the callback -- it is just logged to the console.
-                // Gulp!
-
-                // we don't really delete jobs here any more, just
-                // temporarily disable for now.
-
-                // This is now fire and forget.
-                // TODO: close the loop on this.
-                runtime.bus().emit('request-job-deletion', {
-                    jobId: jobId
-                });
-                resolve();
-
-
-//
-//
-//                function callback(value) {
-//                    resolve(value);
-//                }
-//                try {
-//                    $(document).trigger('cancelJob.Narrative', [jobId, callback]);
-//                } catch (err) {
-//                    reject(err);
-//                }
-            });
-        }
-
         /*
          * NB: the jobs panel takes care of removing the job info from the
          * narrative metadata.
@@ -1098,6 +1088,7 @@ define([
             if (!jobId) {
                 return;
             }
+            console.log('req job status', jobId);
             runtime.bus().emit('request-job-status', {
                 jobId: jobId
             });
@@ -1154,10 +1145,9 @@ define([
         function doCancel() {
             var confirmationMessage = div([
                 p([
-                    'Cancelling the job will halt the job processing.',
+                    'Canceling the job will halt the job processing.',
                     'Any output objects already created will remain in your narrative and can be removed from the Data panel.'
                 ]),
-                blockquote('Note that canceling the job will not delete the job, you will need to do that from the Jobs Panel.'),
                 p('Continue to Cancel the running job?')
             ]);
             ui.showConfirmDialog({title: 'Cancel Job?', body: confirmationMessage})
@@ -1169,9 +1159,13 @@ define([
                     var jobState = model.getItem('exec.jobState');
                     if (jobState) {
                         cancelJob(jobState.job_id);
+                        
+                        fsm.newState({mode: 'canceling'});
+                        renderUI();
                         // the job will be deleted form the notebook when the job cancellation
                         // event is received.
                     } else {
+                        alert('cannot cancel yet');
                         model.deleteItem('exec');
                         fsm.newState({mode: 'editing', params: 'complete', code: 'built'});
                         renderUI();
@@ -1198,14 +1192,10 @@ define([
             // Update FSM
             var newFsmState = (function () {
                 switch (message.event) {
-                    case 'validating_app':
-                    case 'validated_app':
-                    case 'launching_job':
-                        return {mode: 'processing', stage: 'launching'};
                     case 'launched_job':
                         // NEW: start listening for jobs.
                         startListeningForJobMessages(message.job_id);
-                        return {mode: 'processing', stage: 'launching'};
+                        return {mode: 'processing', stage: 'launched'};
                     case 'error':
                         return {mode: 'error', stage: 'launching'};
                     default:
@@ -1228,20 +1218,23 @@ define([
                         case 'in-progress':
                             return {mode: 'processing', stage: 'running'};
                         case 'completed':
-                        case 'cancelled':
                             stopListeningForJobMessages();
                             return {mode: 'success'};
+                        case 'cancelled':
+                            stopListeningForJobMessages();
+                            return {mode: 'canceled'};
                         case 'suspend':
                         case 'error':
                             stopListeningForJobMessages();
                             if (currentState.state.stage) {
-                                return {mode: 'error', stage: currentState.state.stage};
+                                return {
+                                    mode: 'error', 
+                                    stage: currentState.state.stage
+                                };
                             }
-                            return {mode: 'error'};
-                            // case 'canceled':
-                            // case 'cancelled':
-                            //     stopListeningForJobMessages();
-                            //     return {mode: 'canceled'};
+                            return {
+                                mode: 'error'
+                            };
                         default:
                             throw new Error('Invalid job state ' + jobState.job_state);
                     }
@@ -1315,6 +1308,8 @@ define([
 
         var jobListeners = [];
         function startListeningForJobMessages(jobId) {
+            
+            
             var ev;
 
             ev = runtime.bus().listen({
@@ -1359,8 +1354,8 @@ define([
                             jobId: newJobState.job_id
                         });
                     }
+                    
                     model.setItem('exec.jobStateUpdated', new Date().getTime());
-
 
                     updateFromJobState(newJobState);
                 }
@@ -1372,7 +1367,7 @@ define([
                     jobId: jobId
                 },
                 key: {
-                    type: 'job-deleted'
+                    type: 'job-canceled'
                 },
                 handle: function (message) {
                     //  reset the cell into edit mode
@@ -1381,12 +1376,14 @@ define([
                         console.warn('in edit mode, so not resetting ui');
                         return;
                     }
+                    
+                    
 
-                    resetToEditMode('job-deleted');
+                    resetToEditMode('job-canceled');
                 }
             });
             jobListeners.push(ev);
-
+            
             ev = runtime.bus().listen({
                 channel: {
                     jobId: jobId
@@ -1402,11 +1399,12 @@ define([
                         return;
                     }
 
-                    resetToEditMode('job-deleted');
+                    resetToEditMode('job-does-not-exist');
                 }
             });
             jobListeners.push(ev);
 
+            console.log('requesting job status...', jobId);
             runtime.bus().emit('request-job-status', {
                 jobId: jobId
             });
@@ -1610,15 +1608,15 @@ define([
             if (!skipOutputCell) {
                 // If not created yet, create it.
                 outputCellId = createOutputCell(jobId);
-                model.setItem(['output', 'byJob', jobId], {
-                    cell: {
-                        id: outputCellId,
-                        created: true,
-                        createdAt: new Date().toGMTString()
-                    },
-                    params: model.copyItem('params')
-                });
             }
+            model.setItem(['output', 'byJob', jobId], {
+                cell: {
+                    id: null,
+                    created: false,
+                    createdAt: new Date().toGMTString()
+                },
+                params: model.copyItem('params')
+            });
 
             widgets.outputWidget.instance.bus().emit('update', {
                 jobState: model.getItem('exec.jobState'),
@@ -1785,18 +1783,16 @@ define([
                 // if we are in a running state, start listening for jobs
                 var state = model.getItem('fsm.currentState');
                 // var listeningForJobUpdates = false;
+                console.log('current state', state);
                 if (state) {
                     switch (state.mode) {
                         case 'editing':
-                        case 'launching':
+                            break;
                         case 'processing':
                             switch (state.stage) {
-                                case 'launching':
-                                    // nothing to do.
-                                    break;
+                                case 'launched':
                                 case 'queued':
                                 case 'running':
-                                    // listeningForJobUpdates = true;
                                     startListeningForJobMessages(model.getItem('exec.jobState.job_id'));
                                     requestJobStatus(model.getItem('exec.jobState.job_id'));
                                     break;
@@ -1828,11 +1824,7 @@ define([
                     model.setItem('exec.launchState', message);
 
                     // Save this to the exec state change log.
-                    var execLog = model.getItem('exec.log');
-                    if (!execLog) {
-                        execLog = [];
-                    }
-                    execLog.push({
+                    model.pushItem('exec.log', {
                         timestamp: new Date(),
                         event: 'launch-status',
                         data: {
@@ -1841,7 +1833,8 @@ define([
                             status: message.event
                         }
                     });
-                    model.setItem('exec.log', execLog);
+                    
+                    saveNarrative();
 
                     cellBus.emit('launch-status', {
                         launchState: message

@@ -647,6 +647,11 @@ define(
                     this.workspaceId = wsInfo[1];
                 }
 
+                // Note that the stuff we are building here is being loaded
+                // before the kernel is ready. This means that any kernel-centric
+                // stuff will have to wait. E.g. messages, code exec calls.
+                
+                console.log('Jupyter ready?', Jupyter.notebook.kernel);
                 this.sidePanel = new KBaseNarrativeSidePanel($('#kb-side-panel'), {autorender: false});
                 // init the controller
                 this.narrController = new KBaseNarrativeWorkspace($('#notebook_panel'), {
@@ -660,8 +665,20 @@ define(
 
                 $([Jupyter.events]).on('kernel_ready.Kernel',
                     function () {
+                        
                         console.log('Kernel Ready! Initializing Job Channel...');
-                        this.sidePanel.$jobsWidget.initCommChannel();
+                        
+                        // TODO: This should be an event "kernel-ready", perhaps broadcast
+                        // on the default bus channel.
+                        this.sidePanel.$jobsWidget.initCommChannel()
+                            .catch(function (err) {
+                                // TODO: put the narrative into a terminal state
+                                console.error('ERROR initializing kbase comm channel', err);
+                                KBFatal('Narrative.ini', 'KBase communication channel could not be initiated with the back end. TODO');
+                                $('#kb-wait-for-ws').remove();
+                                // alert('KBase communication channel could not be initiated with the back end. TODO: This should result in a terminal state for the Narrative.');
+                            });
+
                         // this.initCommChannel();
                     }.bind(this)
                     );

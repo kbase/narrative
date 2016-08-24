@@ -14,7 +14,7 @@ define([
                     buttons: {
                         enabled: [],
                         disabled: ['run-app'],
-                        hidden: ['re-run-app', 'cancel', 'report-error']
+                        hidden: ['launching', 're-run-app', 'cancel', 'canceling', 'report-error']
                     },
                     elements: {
                         show: [],
@@ -40,7 +40,7 @@ define([
                     buttons: {
                         enabled: [],
                         disabled: ['run-app'],
-                        hidden: ['re-run-app', 'cancel', 'report-error']
+                        hidden: ['launching', 're-run-app', 'cancel', 'canceling', 'report-error']
                     },
                     elements: {
                         show: ['parameters-group', 'output-group'],
@@ -72,7 +72,7 @@ define([
                     buttons: {
                         enabled: ['run-app'],
                         disabled: [],
-                        hidden: ['re-run-app', 'cancel', 'report-error']
+                        hidden: ['launching', 're-run-app', 'cancel', 'canceling', 'report-error']
                     },
                     elements: {
                         show: ['parameters-group', 'output-group'],
@@ -134,9 +134,9 @@ define([
                 ],
                 ui: {
                     buttons: {
-                        enabled: ['cancel'],
-                        disabled: [],
-                        hidden: ['run-app', 're-run-app', 'report-error']
+                        enabled: [],
+                        disabled: ['launching'],
+                        hidden: ['cancel', 'canceling', 'run-app', 're-run-app', 'report-error']
                     },
                     elements: {
                         show: ['parameters-display-group', 'exec-group', 'output-group'],
@@ -173,7 +173,7 @@ define([
                 next: [
                     {
                         mode: 'processing',
-                        stage: 'launching'
+                        stage: 'launched'
                     },
                     {
                         mode: 'error'
@@ -191,13 +191,13 @@ define([
             {
                 state: {
                     mode: 'processing',
-                    stage: 'launching'
+                    stage: 'launched'
                 },
                 ui: {
                     buttons: {
-                        enabled: ['cancel'],
-                        disabled: [],
-                        hidden: ['run-app', 're-run-app', 'report-error']
+                        enabled: [],
+                        disabled: ['launching'],
+                        hidden: ['cancel', 'canceling', 'run-app', 're-run-app', 'report-error']
                     },
                     elements: {
                         show: ['parameters-display-group', 'exec-group', 'output-group'],
@@ -216,7 +216,7 @@ define([
                 next: [
                     {
                         mode: 'processing',
-                        stage: 'launching'
+                        stage: 'launched'
                     },
                     {
                         mode: 'processing',
@@ -226,6 +226,13 @@ define([
                         mode: 'processing',
                         stage: 'running'
                     },
+                    {
+                        mode: 'canceled'
+                    },
+                    {
+                        mode: 'canceling'
+                    },                    
+                    
                     {
                         mode: 'success'
                     },
@@ -252,7 +259,7 @@ define([
                     buttons: {
                         enabled: ['cancel'],
                         disabled: [],
-                        hidden: ['run-app', 're-run-app', 'report-error']
+                        hidden: ['launching', 'canceling', 'run-app', 're-run-app', 'report-error']
                     },
                     elements: {
                         show: ['parameters-display-group', 'exec-group', 'output-group'],
@@ -268,6 +275,12 @@ define([
                         mode: 'processing',
                         stage: 'queued'
                     },
+                    {
+                        mode: 'canceled'
+                    },                    
+                    {
+                        mode: 'canceling'
+                    },                    
                     {
                         mode: 'success'
                     },
@@ -294,7 +307,7 @@ define([
                     buttons: {
                         enabled: ['cancel'],
                         disabled: [],
-                        hidden: ['run-app', 're-run-app', 'report-error']
+                        hidden: ['launching', 'canceling', 'run-app', 're-run-app', 'report-error']
                     },
                     elements: {
                         show: ['parameters-display-group', 'exec-group', 'output-group'],
@@ -306,6 +319,13 @@ define([
                         mode: 'processing',
                         stage: 'running'
                     },
+                    {
+                        mode: 'canceled'
+                    },
+                    {
+                        mode: 'canceling'
+                    },
+                    
                     {
                         mode: 'success'
                     },
@@ -325,13 +345,83 @@ define([
             },
             {
                 state: {
+                    mode: 'canceling'                    
+                },
+                ui: {
+                    buttons: {
+                        enabled: [],
+                        disabled: ['canceling'],
+                        hidden: ['launching', 'cancel', 'run-app', 're-run-app', 'report-error']
+                    },
+                    elements: {
+                        show: [ 'exec-group', 'output-group'],
+                        hide: ['parameters-display-group', 'parameters-group']
+                    }
+                },
+                next: [
+                    {
+                        mode: 'canceled'
+                    },
+                    // In case the cancelation request was denied
+                    {
+                        mode: 'processing',
+                        stage: 'running'
+                    },
+                    // In case the cancelling request did not succeed and the job meanwhile finished.
+                    {
+                        mode: 'success'
+                    },
+                    
+                    {
+                        mode: 'error',
+                        stage: 'running'
+                    },
+                    {
+                        mode: 'editing',
+                        params: 'complete',
+                        code: 'built'
+                    },
+                    {
+                        mode: 'fatal-error'
+                    }
+                ]
+
+            },
+            {
+                state: {
+                    mode: 'canceled'
+                },
+                ui: {
+                    buttons: {
+                        enabled: ['re-run-app'],
+                        disabled: [],
+                        hidden: ['launching', 'canceling', 'run-app', 'cancel', 'report-error']
+                    },
+                    elements: {
+                        show: ['parameters-display-group', 'exec-group', 'output-group'],
+                        hide: ['parameters-group']
+                    }
+                },
+                next: [
+                    {
+                        mode: 'canceled'
+                    },
+                    {
+                        mode: 'editing',
+                        params: 'complete',
+                        code: 'built'
+                    }
+                ]
+            },
+            {
+                state: {
                     mode: 'success'
                 },
                 ui: {
                     buttons: {
                         enabled: ['re-run-app'],
                         disabled: [],
-                        hidden: ['run-app', 'cancel', 'report-error']
+                        hidden: ['launching', 'run-app', 'cancel', 'canceling', 'report-error']
                     },
                     elements: {
                         show: ['parameters-display-group', 'exec-group', 'output-group'],
@@ -370,7 +460,7 @@ define([
                     buttons: {
                         enabled: ['re-run-app', 'report-error'],
                         disabled: [],
-                        hidden: ['run-app', 'cancel']
+                        hidden: ['launching', 'run-app', 'cancel', 'canceling']
                     },
                     elements: {
                         show: ['parameters-display-group', 'exec-group', 'output-group'],
@@ -402,7 +492,7 @@ define([
                     buttons: {
                         enabled: ['re-run-app', 'report-error'],
                         disabled: [],
-                        hidden: ['run-app', 'cancel']
+                        hidden: ['launching', 'run-app', 'cancel', 'canceling']
                     },
                     elements: {
                         show: ['parameters-display-group', 'exec-group', 'output-group'],
@@ -434,7 +524,7 @@ define([
                     buttons: {
                         enabled: ['re-run-app', 'report-error'],
                         disabled: [],
-                        hidden: ['run-app', 'cancel']
+                        hidden: ['launching', 'run-app', 'cancel', 'canceling']
                     },
                     elements: {
                         show: ['parameters-display-group', 'exec-group', 'output-group'],
@@ -465,7 +555,7 @@ define([
                     buttons: {
                         enabled: ['re-run-app', 'report-error'],
                         disabled: [],
-                        hidden: ['run-app', 'cancel']
+                        hidden: ['launching', 'run-app', 'cancel', 'canceling']
                     },
                     elements: {
                         show: ['parameters-display-group', 'exec-group', 'output-group'],
@@ -495,7 +585,7 @@ define([
                     buttons: {
                         enabled: ['report-error'],
                         disabled: [],
-                        hidden: ['re-run-app', 'run-app', 'cancel']
+                        hidden: ['launching', 're-run-app', 'run-app', 'cancel', 'canceling']
                     },
                     elements: {
                         show: ['fatal-error'],

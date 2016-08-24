@@ -424,6 +424,10 @@ define([
                                 modal.show();
                                 break;
                             case 'cancel_job':
+                                this.sendJobMessage('job-cancel-error', content.job_id, {
+                                    jobId: content.job_id,
+                                    message: content.message
+                                });
                                 break;
                             case 'job_logs':
                                 this.sendJobMessage('job-log-deleted', content.job_id, {jobId: content.job_id});
@@ -471,7 +475,7 @@ define([
                         elements: [{
                             title: 'Detailed Error Information',
                             body: $('<table class="table table-bordered"><tr><th>code:</th><td>' + content.code +
-                                    '</td></tr><tr><th>error:</th><td>' + content.error +
+                                    '</td></tr><tr><th>error:</th><td>' + content.message +
                                     '</td></tr><tr><th>type:</th><td>' + content.name +
                                     '</td></tr><tr><th>source:</th><td>' + content.source + '</td></tr></table>')
                         }]

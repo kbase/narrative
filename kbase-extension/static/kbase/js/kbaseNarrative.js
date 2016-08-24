@@ -36,7 +36,8 @@ define(
         'text!kbase/templates/update_dialog_body.html',
         'narrativeLogin',
         'common/ui',
-        'common/html'
+        'common/html',
+        'narrativeTour'
     ], function (
     $,
     Bootstrap,
@@ -62,7 +63,8 @@ define(
     UpdateDialogBodyTemplate,
     NarrativeLogin,
     UI,
-    html
+    html,
+    Tour
     ) {
     'use strict';
 
@@ -199,7 +201,7 @@ define(
             html: true,
             placement: 'bottom',
             content: function () {
-                // we do not allow users to leave thier narratives untitled
+                // we do not allow users to leave their narratives untitled
                 if (Jupyter.notebook) {
                     var narrName = Jupyter.notebook.notebook_name;
                     if (narrName.trim().toLowerCase() === 'untitled' || narrName.trim().length === 0) {
@@ -581,6 +583,18 @@ define(
         });
     };
 
+    Narrative.prototype.initTour = function () {
+        try {
+            $('#kb-tour').click(function(e) {
+                var tour = new Tour.Tour();
+                tour.start();
+            });
+        }
+        catch (e) {
+            console.error(e);
+        }
+    };
+
     /**
      * This is the Narrative front end initializer. It should only be run directly after
      * the app_initialized.NotebookApp event has been fired.
@@ -599,6 +613,7 @@ define(
         this.initAboutDialog();
         this.initUpgradeDialog();
         this.initShutdownDialog();
+        this.initTour();
         // NAR-271 - Firefox needs to be told where the top of the page is. :P
         window.scrollTo(0, 0);
 

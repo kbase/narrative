@@ -6,9 +6,9 @@
  */
 
 (function( $, undefined ) {
-    $.KBWidget({
+    return KBWidget({
         name: "GenomeImportWidget",
-        parent: "kbaseTabbedInput",
+        parent : kbaseTabbedInput,
         version: "1.0.0",
         options: {
         },

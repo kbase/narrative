@@ -1,7 +1,7 @@
 *.DS_Store
 *.pyc
 /bin
-src/notebook/ipython_profiles/profile_narrative/kbase_templates/static/kbase/config.json
+kbase-extension/static/kbase/config/config.json
 kbase-extension/ipython/profile_default/history.sqlite
 kbase-extension/history.sqlite
 kbase-extension/db/
@@ -59,6 +59,7 @@ pip-log.txt
 pip-delete-this-directory.txt
 
 # Unit test / coverage reports
+/coverage/
 htmlcov/
 .tox/
 .coverage

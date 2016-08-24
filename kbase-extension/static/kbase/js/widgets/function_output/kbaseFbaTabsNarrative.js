@@ -1,9 +1,9 @@
 (function( $, undefined ) {
 
-$.KBWidget({
+return KBWidget({
     name: "kbaseFbaTabsNarrative",
     version: "1.0.0",
-    parent: "kbaseAuthenticatedWidget",
+    parent : kbaseAuthenticatedWidget,
     options: {
     },
     loadingImage: window.kbconfig.loading_gif,

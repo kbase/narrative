@@ -5,14 +5,23 @@
  * @public
  */
 
- define([
-        'jquery', 
-        'kbaseExpressionGenesetBaseWidget',      
-        'kbaseHeatmap'
-        ], function($) {
-    $.KBWidget({
+ define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'kbaseExpressionGenesetBaseWidget',
+		'kbaseHeatmap'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		kbaseExpressionGenesetBaseWidget,
+		kbaseHeatmap
+	) {
+    return KBWidget({
         name: 'kbaseExpressionPairwiseCorrelation',
-        parent: 'kbaseExpressionGenesetBaseWidget',
+        parent : kbaseExpressionGenesetBaseWidget,
         version: '1.0.0',
 
         maxRange: null,
@@ -92,8 +101,7 @@
             $containerDiv.append("<div style = 'width : 5px; height : 5px'></div>");
 
             // TODO: heatmap values out of range still scale color instead of just the max/min color
-            var hm = $heatmapDiv.kbaseHeatmap(
-                {
+            var hm =  new kbaseHeatmap($heatmapDiv, {
                     dataset : heatmap,
                     colors : ['#FFA500', '#FFFFFF', '#0066AA'],
                     minValue : self.minRange,

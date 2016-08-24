@@ -7,6 +7,24 @@
                 "ws": "KBasePublicGenomesV5",
                 "search": true
             },
+            "refseq_genomes": {
+                "name": "RefSeq Genomes",
+                "type": "KBaseGenomeAnnotations.GenomeAnnotation",
+                "ws": "RefSeq_Genomes",
+                "search": false
+            },
+            "phytozome_genomes": {
+                "name": "Phytozome Genomes",
+                "type": "KBaseGenomeAnnotations.GenomeAnnotation",
+                "ws": "Phytozome_Genomes",
+                "search": false
+            },
+            "ensembl_genomes": {
+                "name": "Ensembl Genomes",
+                "type": "KBaseGenomeAnnotations.GenomeAnnotation",
+                "ws": "ReferenceEnsemblPlantGenomeAnnotations",
+                "search": false
+            },
             "media": {
                 "name": "Media",
                 "type": "KBaseBiochem.Media",
@@ -17,6 +35,42 @@
                 "name": "Plant Genomes",
                 "type": "KBaseGenomes.Genome",
                 "ws": "PlantCSGenomes",
+                "search": false
+            },
+            "se_reads": {
+                "name": "RNA-seq Reads (single-end)",
+                "type": "KBaseAssembly.SingleEndLibrary",
+                "ws": "PlantCSGenomes",
+                "search": false
+            },
+            "pe_reads": {
+                "name": "RNA-seq Reads (paired-end)",
+                "type": "KBaseAssembly.PairedEndLibrary",
+                "ws": "PlantCSGenomes",
+                "search": false
+            },
+            "plant_rnaseq_anno": {
+                "name": "Plant RNA-seq Annotations",
+                "type": "KBaseRNASeq.ReferenceAnnotation",
+                "ws": "PlantCSGenomes",
+                "search": false
+            },
+            "plant_bowtie2_idx": {
+                "name": "Plant Bowtie2 Indexes",
+                "type": "KBaseRNASeq.Bowtie2Indexes",
+                "ws": "PlantCSGenomes",
+                "search": false
+            },
+            "ontology": {
+                "name": "Public ontologies",
+                "type": "KBaseOntology.OntologyDictionary",
+                "ws": "KBaseOntology",
+                "search": false
+            },
+            "ontology_translation": {
+                "name": "Ontology translations",
+                "type": "KBaseOntology.OntologyTranslation",
+                "ws": "KBaseOntology",
                 "search": false
             }
         },
@@ -35,8 +89,8 @@
                 {
                     "name": [
                         "ContigSet"
-                    ], 
-                    "displayName": "Example Contig Sets", 
+                    ],
+                    "displayName": "Example Contig Sets",
                     "header": "A set of DNA sequences"
                 },
                 {
@@ -64,7 +118,7 @@
                     "name": [
                         "ExpressionMatrix"
                     ],
-                    "displayName": "Example ExpressionMatrix", 
+                    "displayName": "Example ExpressionMatrix",
                     "header": "Gene expression data in a gene vs. condition matrix"
                 },
                 {
@@ -96,6 +150,30 @@
                 "type": "KBaseGenomes.Genome",
                 "ws": "PlantCSGenomes",
                 "search": false
+            },
+            "se_reads": {
+                "name": "RNA-seq Reads (single-end)",
+                "type": "KBaseAssembly.SingleEndLibrary",
+                "ws": "PlantCSGenomes",
+                "search": false
+            },
+            "pe_reads": {
+                "name": "RNA-seq Reads (paired-end)",
+                "type": "KBaseAssembly.PairedEndLibrary",
+                "ws": "PlantCSGenomes",
+                "search": false
+            },
+            "plant_rnaseq_anno": {
+                "name": "Plant RNA-seq Annotations",
+                "type": "KBaseRNASeq.ReferenceAnnotation",
+                "ws": "PlantCSGenomes",
+                "search": false
+            },
+            "plant_bowtie2_idx": {
+                "name": "Plant Bowtie2 Indexes",
+                "type": "KBaseRNASeq.Bowtie2Indexes",
+                "ws": "PlantCSGenomes",
+                "search": false
             }
         },
         "exampleData": {
@@ -113,8 +191,8 @@
                 {
                     "name": [
                         "ContigSet"
-                    ], 
-                    "displayName": "Example Contig Sets", 
+                    ],
+                    "displayName": "Example Contig Sets",
                     "header": "A set of DNA sequences"
                 },
                 {
@@ -142,7 +220,7 @@
                     "name": [
                         "ExpressionMatrix"
                     ],
-                    "displayName": "Example ExpressionMatrix", 
+                    "displayName": "Example ExpressionMatrix",
                     "header": "Gene expression data in a gene vs. condition matrix"
                 },
                 {
@@ -174,6 +252,30 @@
                 "type": "KBaseGenomes.Genome",
                 "ws": "PlantCSGenomes",
                 "search": false
+            },
+            "se_reads": {
+                "name": "RNA-seq Reads (single-end)",
+                "type": "KBaseAssembly.SingleEndLibrary",
+                "ws": "PlantCSGenomes",
+                "search": false
+            },
+            "pe_reads": {
+                "name": "RNA-seq Reads (paired-end)",
+                "type": "KBaseAssembly.PairedEndLibrary",
+                "ws": "PlantCSGenomes",
+                "search": false
+            },
+            "plant_rnaseq_anno": {
+                "name": "Plant RNA-seq Annotations",
+                "type": "KBaseRNASeq.ReferenceAnnotation",
+                "ws": "PlantCSGenomes",
+                "search": false
+            },
+            "plant_bowtie2_idx": {
+                "name": "Plant Bowtie2 Indexes",
+                "type": "KBaseRNASeq.Bowtie2Indexes",
+                "ws": "PlantCSGenomes",
+                "search": false
             }
         },
         "exampleData": {
@@ -191,8 +293,8 @@
                 {
                     "name": [
                         "ContigSet"
-                    ], 
-                    "displayName": "Example Contig Sets", 
+                    ],
+                    "displayName": "Example Contig Sets",
                     "header": "A set of DNA sequences"
                 },
                 {
@@ -220,7 +322,7 @@
                     "name": [
                         "ExpressionMatrix"
                     ],
-                    "displayName": "Example ExpressionMatrix", 
+                    "displayName": "Example ExpressionMatrix",
                     "header": "Gene expression data in a gene vs. condition matrix"
                 },
                 {

@@ -4,9 +4,16 @@
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
 
-define(['jquery','util/display'], function($,DisplayUtil) {
+define (
+	[
+		'jquery',
+		'util/display'
+	], function(
+		$,
+		DisplayUtil
+	) {
     'use strict';
-    
+
     describe('KBase Display Utility function module', function() {
 
 

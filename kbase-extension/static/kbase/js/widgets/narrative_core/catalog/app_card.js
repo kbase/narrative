@@ -1,7 +1,15 @@
-define([
-    'bluebird',
-    'jquery'
-], function (Promise, $) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'bluebird',
+		'jquery'
+	], function(
+		KBWidget,
+		bootstrap,
+		Promise,
+		$
+	) {
     'use strict';
 
     // favorites callback should accept:

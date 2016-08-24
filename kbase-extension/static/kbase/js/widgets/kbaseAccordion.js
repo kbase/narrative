@@ -28,7 +28,7 @@ Widget to create an accordion control. Easy to use!
 (function( $, undefined ) {
 
 
-    $.KBWidget({
+    return KBWidget({
         name : 'kbaseAccordion',
         version: "1.0.0",
         options: {

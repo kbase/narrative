@@ -9,9 +9,9 @@
  * @public
  */
 (function( $, undefined ) {
-    $.KBWidget({
+    return KBWidget({
         name: 'kbaseNarrativeDataTable',
-        parent: 'kbaseWidget',
+        
         version: '1.0.0',
         options: {
             noDataText: "No data found",

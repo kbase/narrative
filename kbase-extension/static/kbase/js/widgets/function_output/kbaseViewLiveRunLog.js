@@ -2,14 +2,23 @@
  * @public
  */
 
-define(['jquery', 
-        'kbwidget', 
-        'kbaseAuthenticatedWidget', 
-        'njs-wrapper-client-api'
-        ], function($) {
-    $.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'kbaseAuthenticatedWidget',
+		'njs-wrapper-client-api'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		kbaseAuthenticatedWidget,
+		njs_wrapper_client_api
+	) {
+    return KBWidget({
         name: 'kbaseViewLiveRunLog',
-        parent: 'kbaseAuthenticatedWidget',
+        parent : kbaseAuthenticatedWidget,
         version: '1.0.0',
         options: {
             job_id: null,

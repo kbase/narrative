@@ -1,6 +1,6 @@
 
 (function($, undefined) {
-    $.KBWidget({
+    return KBWidget({
         
         name: 'kbaseIntegrateGapfillOutput',
 
@@ -13,7 +13,7 @@
          * this.user_id() = the logged in user id
          * this.authToken() = the current authentication token
          */
-        parent: "kbaseAuthenticatedWidget",
+        parent : kbaseAuthenticatedWidget,
         version: '1.0.0',
         options: 
             {

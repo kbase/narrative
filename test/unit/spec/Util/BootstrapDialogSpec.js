@@ -4,7 +4,14 @@
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
 
-define(['jquery', 'util/bootstrapDialog'], function($, Dialog) {
+define (
+    [
+        'jquery',
+        'util/bootstrapDialog'
+    ], function(
+        $,
+        Dialog
+    ) {
     var $simpleBody = $('<div>').append('This is a body text');
     var simpleTitle = 'Title';
     var simpleButtons = [
@@ -22,8 +29,8 @@ define(['jquery', 'util/bootstrapDialog'], function($, Dialog) {
 
     beforeEach(function() {
         simpleDialog = new Dialog({
-            title: simpleTitle, 
-            body: $simpleBody, 
+            title: simpleTitle,
+            body: $simpleBody,
             buttons: simpleButtons
         });
         // simpleDialog.getElement().appendTo('body');

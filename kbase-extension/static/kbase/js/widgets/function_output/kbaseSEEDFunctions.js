@@ -7,16 +7,24 @@
  * will adapt this to work with the KBase SEED annotations
  */
 
-define(['jquery',
-        'narrativeConfig',
-        'kbwidget',
-        'd3'],
-function($,
-         Config) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'narrativeConfig',
+		'd3'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Config,
+		d3
+	) {
 
-    $.KBWidget({
+    return KBWidget({
         name: "KBaseSEEDFunctions",
-        parent: "kbaseAuthenticatedWidget",
+        parent : kbaseAuthenticatedWidget,
         version: "1.0.0",
 
         wsUrl: Config.url('workspace'),
@@ -280,7 +288,7 @@ function($,
 
         // open window with gene landing page
         if (d.children === undefined || (d._children === null && d.children === null)) {
-        var winPop = window.open("/#genes/" + this.options.wsNameOrId + "/" + this.options.objNameOrId + "/" + d.name);
+        var winPop = window.open("/#dataview/" + this.options.wsNameOrId + "/" + this.options.objNameOrId + "?sub=Feature&subid=" + d.name);
         }
         
         // expand tree

@@ -200,9 +200,9 @@ class NarrativeMethodStore(object):
                           [params])
         return resp[0]
 
-    def list_method_ids_and_names(self):
+    def list_method_ids_and_names(self, params):
         resp = self._call('NarrativeMethodStore.list_method_ids_and_names',
-                          [])
+                          [params])
         return resp[0]
 
     def list_apps(self, params):
@@ -279,3 +279,24 @@ class NarrativeMethodStore(object):
         resp = self._call('NarrativeMethodStore.validate_type',
                           [params])
         return resp[0]
+
+    def load_widget_java_script(self, params):
+        resp = self._call('NarrativeMethodStore.load_widget_java_script',
+                          [params])
+        return resp[0]
+
+    def register_repo(self, params):
+        self._call('NarrativeMethodStore.register_repo',
+                   [params])
+
+    def disable_repo(self, params):
+        self._call('NarrativeMethodStore.disable_repo',
+                   [params])
+
+    def enable_repo(self, params):
+        self._call('NarrativeMethodStore.enable_repo',
+                   [params])
+
+    def push_repo_to_tag(self, params):
+        self._call('NarrativeMethodStore.push_repo_to_tag',
+                   [params])

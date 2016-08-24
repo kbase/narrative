@@ -35,7 +35,7 @@ CSS should go in /kbase-extension/static/kbase/css/kbaseNarrative.css
     background-color: #FFFFFF;
 }
 
-.btn * { color: black; }
+/* .btn * { color: black; } */
 
 .celltoolbar {
     height: auto;
@@ -48,6 +48,8 @@ CSS should go in /kbase-extension/static/kbase/css/kbaseNarrative.css
 div.input_area {
     border: 1px solid #CECECE;
     border-radius: 0px;
+    /* a little padding to match the prompt */
+    padding-top: 4px;
 }
 
 div.text_cell_input {
@@ -61,7 +63,7 @@ div.text_cell_input {
 
 div.cell {
     margin: 8px 0 8px 0px;
-    padding: 0 0 6px 4px;
+    padding: 0 10px 6px 4px;
     border: 1px solid #CCC;
     border-radius: 0;
 }
@@ -112,7 +114,7 @@ span#notebook_name {
 
 span#notebook_name:hover {
     cursor: pointer;
-    background-color: #e0e0e0;    
+    background-color: #e0e0e0;
 }
 
 .prompt {
@@ -130,7 +132,7 @@ span#notebook_name:hover {
     position: fixed;
     left: 380px;
     top: 70px;
-    right: 0; 
+    right: 0;
     bottom: 0;
     overflow: auto;
     padding-bottom: 100px;
@@ -173,12 +175,23 @@ span#notebook_name:hover {
     background-color: #FFF;
 }
 */
+
 .notebook_app .celltoolbar > .button_container {
-    width: 100%;
+    flex: 0 auto;
+}
+
+.notebook_app .celltoolbar > .button_container:nth-child(1) {
+    flex: auto;
+}
+
+.notebook_app .celltoolbar_container {
+    xheight: 60px;
+    border-bottom: 1px silver solid;
 }
 
 .notebook_app .prompt {
-    font-size: 12px;
+    /* font-size: 12px; */
+    padding-top: 0px;
     color: silver;
     width: 75px;
 }
@@ -197,7 +210,7 @@ span#notebook_name:hover {
 .notebook_app .buttons .dropdown-menu {
     height: auto !important;
     overflow: visible !important;
-        
+
 }
 
 .notebook_app .btn.disabled .fa {
@@ -276,4 +289,32 @@ span#notebook_name:hover {
 
 .cell.unselected .btn-default {
     color: #CCC;
+}
+
+.cell.unselected  .kb-cell-toolbar .title-container {
+    opacity: 0.5;
+}
+.cell.unselected  .kb-cell-toolbar .buttons-container {
+    opacity: 0.2;
+}
+
+.kb-btn-icon {
+    display: inline-block;
+    padding: 4px;
+}
+.kb-btn-icon .fa {
+    opacity: 0.5
+}
+
+.kb-btn-icon:hover .fa {
+    opacity: 1.0
+}
+
+
+/*
+  For some reason Jupyter removes the bottom margin. This causes problems with
+   bootstrap, since bootstrap removes the top margin!
+*/
+p {
+    margin-bottom: 9px;
 }

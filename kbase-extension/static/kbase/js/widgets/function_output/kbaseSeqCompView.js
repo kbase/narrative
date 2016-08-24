@@ -3,18 +3,33 @@
  * @public
  */
 
-define(['jquery',
-        'util/string',
-        'narrativeConfig',
-        'd3',
-        'kbwidget',
-        'kbaseAuthenticatedWidget',
-        'kbaseTabs',
-        'jquery-dataTables',
-        'jquery-dataTables-bootstrap'], function($, StringUtil, Config) {
-    $.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'util/string',
+		'narrativeConfig',
+		'd3',
+		'kbaseAuthenticatedWidget',
+		'kbaseTabs',
+		'jquery-dataTables',
+		'jquery-dataTables-bootstrap'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		StringUtil,
+		Config,
+		d3,
+		kbaseAuthenticatedWidget,
+		kbaseTabs,
+		jquery_dataTables,
+		bootstrap
+	) {
+    return KBWidget({
         name: "kbaseSeqCompView",
-        parent: "kbaseAuthenticatedWidget",
+        parent : kbaseAuthenticatedWidget,
         version: "1.0.0",
         ws_id: null,
         ws_name: null,
@@ -72,12 +87,12 @@ define(['jquery',
             	    console.log(data);
             	    var tabPane = $('<div id="'+pref+'tab-content">');
             	    container.append(tabPane);
-            	    tabPane.kbaseTabs({canDelete : true, tabs : []});
+            	    var tabWidget = new kbaseTabs(tabPane, {canDelete : true, tabs : []});
             	    var tabNames = ['Legend', 'DNAdiff Comparisons'];
             	    var tabIds = ['legend', 'comparisons'];
             	    for (var i=0; i<tabIds.length; i++) {
             		var tabDiv = $('<div id="'+pref+tabIds[i]+'"> ');
-            		tabPane.kbaseTabs('addTab', {tab: tabNames[i], content: tabDiv, canDelete : false, show: (i == 0)});
+            		    tabWidget.addTab({tab: tabNames[i], content: tabDiv, canDelete : false, show: (i == 0)});
             	    }
 
             	    ////////////////////////////// Legend Tab //////////////////////////////

@@ -88,7 +88,7 @@
             }
         }
     },
-    
+
     "KBaseGenomes.ContigSet" : {
         "import_contigset_fasta_file" : {
             "external_type" : "FASTA.DNA.Assembly",
@@ -395,7 +395,7 @@
                     "format_type" : {
                         "type" : "string",
                         "value" : "Simple",
-                        "optional" : false                        
+                        "optional" : false
                     },
                     "fill_missing_values" : {
                         "type" : "int",
@@ -509,6 +509,151 @@
                     "type": "shock",
                     "param": "samplePropertyFile",
                     "optional": false
+                }
+            }
+        }
+    },
+
+    "KBaseOntology.OntologyDictionary": {
+        "import_ontologydictionary_obo_file": {
+            "external_type": "OBO.Ontology",
+            "kbase_type": "KBaseOntology.OntologyDictionary",
+            "object_name": "outputObject",
+            "optional_arguments": {
+                "validate": {},
+                "transform": {
+		    "output_file_name" : {
+		        "type": "string",
+                        "value" : "obo.json",
+                        "optional": false
+		    },
+		    "input_file_name" : {
+		        "type": "string",
+                        "param" : "oboFile",
+                        "optional": false
+		    }
+		}
+            },
+            "url_mapping": {
+                "OBO.Ontology": {
+                    "type": "shock",
+                    "param": "oboFile",
+                    "optional": false
+                }
+            }
+        }
+    },
+
+    "KBaseOntology.OntologyTranslation": {
+        "import_ontologytranslation_tsv_file": {
+            "external_type": "TSV.OntologyTranslation",
+            "kbase_type": "KBaseOntology.OntologyTranslation",
+            "object_name": "outputObject",
+            "optional_arguments": {
+                "validate": {},
+                "transform": {
+		    "output_file_name" : {
+		        "type": "string",
+                        "value" : "obo.json",
+                        "optional": false
+		    },
+		    "input_file_name" : {
+		        "type": "string",
+                        "param" : "tsvFile",
+                        "optional": false
+		    },
+		    "dictionary_1" : {
+			"type" : "string",
+			"param" : "dict1",
+			"optional" : false
+		    },
+		    "dictionary_2" : {
+		        "type" : "string",
+			"param" : "dict2",
+			"optional" : false
+		    }	
+		}
+            },
+            "url_mapping": {
+                "TSV.OntologyTranslation": {
+                    "type": "shock",
+                    "param": "tsvFile",
+                    "optional": false
+                }
+            }
+        }
+    },
+
+    "KBaseGenomeAnnotations.GenomeAnnotation" : {
+        "import_genomeannotation_gbk_file" : {
+            "external_type" : "Genbank.Genome",
+            "kbase_type" : "KBaseGenomeAnnotations.GenomeAnnotation",
+            "object_name" : "outputObject",
+            "optional_arguments" : {
+                "validate" : {},
+                "transform" : {}
+            },
+            "url_mapping" : {
+                "Genbank.Genome" : {
+                    "type" : "shock",
+                    "param" : "gbkFile",
+                    "optional" : false
+                }
+            }
+        },
+        "import_genomeannotation_gbk_ftp" : {
+            "external_type" : "Genbank.Genome",
+            "kbase_type" : "KBaseGenomeAnnotations.GenomeAnnotation",
+            "object_name" : "outputObject",
+            "optional_arguments" : {
+                "validate" : {},
+                "transform" : {}
+            },
+            "url_mapping" : {
+                "Genbank.Genome" : {
+                    "type" : "string",
+                    "param" : "ftpFolder",
+                    "optional" : false
+                }
+            }
+        }        
+    },
+    "KBaseGenomeAnnotations.Assembly" : {
+        "import_assembly_fasta_file" : {
+            "external_type" : "FASTA.DNA.Assembly",
+            "kbase_type" : "KBaseGenomeAnnotations.Assembly",
+            "object_name" : "outputObject",
+            "optional_arguments" : {
+                "validate" : {},
+                "transform" : {
+                    "fasta_reference_only" : {
+                        "type" : "boolean",
+                        "param" : "fastaReferenceOnly",
+                        "optional" : false
+                    }
+                }
+            },
+            "url_mapping" : {
+                "FASTA.DNA.Assembly" : {
+                    "type" : "shock",
+                    "param" : "fastaFile",
+                    "optional" : false
+                }
+            }
+        },
+        "import_assembly_fasta_ftp" : {
+            "external_type" : "FASTA.DNA.Assembly",
+            "kbase_type" : "KBaseGenomeAnnotations.Assembly",
+            "object_name" : "outputObject",
+            "optional_arguments" : {
+                "validate" : {},
+                "transform" : {}
+            },
+            "url_mapping" : {
+                "FASTA.DNA.Assembly" : {
+                    "type" : "string",
+                    "param" : "ftpFolder",
+                    "optional" : false
                 }
             }
         }

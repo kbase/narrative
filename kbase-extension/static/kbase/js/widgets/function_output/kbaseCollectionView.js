@@ -1,10 +1,23 @@
 /**
  * KBase widget to display a Metagenome Collection
  */
-define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbStandaloneTable'], function($) {
-    $.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'kbaseAuthenticatedWidget',
+		'kbStandaloneTable'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		kbaseAuthenticatedWidget,
+		kbStandaloneTable
+	) {
+    return KBWidget({
         name: 'CollectionView',
-        parent: "kbaseAuthenticatedWidget",
+        parent : kbaseAuthenticatedWidget,
         version: '1.0.0',
         token: null,
         options: {

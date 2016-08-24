@@ -2,7 +2,7 @@
  * KBase widget to download content.
  */
 (function($, undefined) {
-    $.KBWidget({
+    return KBWidget({
         name: 'DownloadFileWidget',
         version: '1.0.0',
         options: {

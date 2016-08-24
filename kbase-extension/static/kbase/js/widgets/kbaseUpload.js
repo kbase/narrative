@@ -11,7 +11,16 @@
  */
 
 // Jquery UI widget style
-define(['jquery', 'kbwidget'], function($) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery'
+	], function(
+		KBWidget,
+		bootstrap,
+		$
+	) {
     var MissingOptionError = function(argname) {
         var e = new Error("missing option: '" + argname + "'");
         e.name = "MissingOptionError";
@@ -24,9 +33,9 @@ define(['jquery', 'kbwidget'], function($) {
         return e;
     }
 
-	$.KBWidget({
+	return KBWidget({
         name: "kbaseUploadWidget", 
-        parent: 'kbaseWidget',
+        
 		version: "0.0.1",
         isLoggedIn: false,
 		options: { },

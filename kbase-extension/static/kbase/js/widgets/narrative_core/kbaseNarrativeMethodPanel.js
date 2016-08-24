@@ -11,40 +11,51 @@
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @public
  */
-define([
-        'jquery', 
-        'underscore',
-        'bluebird',
-        'handlebars',
-        'narrativeConfig',
-        'util/display',
-        'util/bootstrapDialog',
-        'text!kbase/templates/beta_warning_body.html',
-        'kbwidget',
-        'kbaseAccordion',
-        'kbaseNarrativeControlPanel',
-        'narrative_core/catalog/kbaseCatalogBrowser',
-        'kbaseNarrative',
-        'catalog-client-api',
-        'kbase-client-api',
-        'bootstrap'], 
-function ($, 
-          _,
-          Promise,
-          Handlebars,
-          Config,
-          DisplayUtil,
-          BootstrapDialog,
-          BetaWarningTemplate) {
+define (
+	[
+		'kbwidget',
+		'jquery',
+		'bluebird',
+		'handlebars',
+		'narrativeConfig',
+		'util/display',
+		'util/bootstrapDialog',
+		'text!kbase/templates/beta_warning_body.html',
+		'kbaseAccordion',
+		'kbaseNarrativeControlPanel',
+                'base/js/namespace',
+                'kb_service/client/narrativeMethodStore',
+                'uuid',
+
+		'narrative_core/catalog/kbaseCatalogBrowser',
+		'kbaseNarrative',
+		'catalog-client-api',
+		'kbase-client-api',
+		'bootstrap'
+	], function(
+		KBWidget,
+		$,
+		Promise,
+		Handlebars,
+		Config,
+		DisplayUtil,
+		BootstrapDialog,
+		BetaWarningTemplate,
+                kbaseAccordion,
+		kbaseNarrativeControlPanel,
+                Jupyter,
+                NarrativeMethodStore,
+                Uuid
+	) {
     'use strict';
-    $.KBWidget({
+    return KBWidget({
         name: 'kbaseNarrativeMethodPanel',
-        parent: 'kbaseNarrativeControlPanel',
+        parent : kbaseNarrativeControlPanel,
         version: '0.0.1',
         options: {
             loadingImage: Config.get('loading_gif'),
             autopopulate: true,
-            title: 'Apps & Methods',
+            title: 'Apps',
             methodStoreURL: Config.url('narrative_method_store'),
             catalogURL: Config.url('catalog'),
             moduleLink: '/#appcatalog/module/',
@@ -114,7 +125,7 @@ function ($,
                                 );
 
             this.$searchInput.on('keyup', function (e) {
-                if (e.keyCode == 27) {
+                if (e.keyCode === 27) {
                     this.$searchDiv.toggle({effect: 'blind', duration: 'fast'});
                 }
             }.bind(this));
@@ -239,10 +250,10 @@ function ($,
                            .addClass('btn btn-xs btn-default')
                            .append('<span class="fa fa-search"></span>')
                            .tooltip({
-                                title: 'Search for Apps & Methods',
+                                title: 'Search for Apps',
                                 container: 'body',
-                                delay: { 
-                                    show: Config.get('tooltip').showDelay, 
+                                delay: {
+                                    show: Config.get('tooltip').showDelay,
                                     hide: Config.get('tooltip').hideDelay
                                 }
                             })
@@ -256,17 +267,17 @@ function ($,
                            .addClass('btn btn-xs btn-default')
                            .append('<span class="glyphicon glyphicon-refresh">')
                            .tooltip({
-                                title: 'Refresh app/method listings', 
+                                title: 'Refresh app/method listings',
                                 container: 'body',
-                                delay: { 
-                                    show: Config.get('tooltip').showDelay, 
+                                delay: {
+                                    show: Config.get('tooltip').showDelay,
                                     hide: Config.get('tooltip').hideDelay
                                 }
                             })
                            .click(function(e) {
                                 var versionTag = 'release';
-                                if(this.versionState=='B') { versionTag='beta'; }
-                                else if(this.versionState=='D') { versionTag='dev'; }
+                                if(this.versionState === 'B') { versionTag='beta'; }
+                                else if(this.versionState === 'D') { versionTag='dev'; }
                                 this.refreshFromService(versionTag);
 
                                 if(this.appCatalog) {
@@ -283,8 +294,8 @@ function ($,
                 .tooltip({
                     title: toggleTooltipText,
                     container: 'body',
-                    delay: { 
-                        show: Config.get('tooltip').showDelay, 
+                    delay: {
+                        show: Config.get('tooltip').showDelay,
                         hide: Config.get('tooltip').hideDelay
                     }
                 })
@@ -293,6 +304,7 @@ function ($,
 
             var devMode = Config.get('dev_mode');
             var showBetaWarning = true;
+
             var betaWarningCompiled = Handlebars.compile(BetaWarningTemplate);
 
             this.betaWarningDialog = new BootstrapDialog({
@@ -341,7 +353,7 @@ function ($,
 
             this.$appCatalogBody = $('<div>');
             this.appCatalog = null;
-            
+
             this.$appCatalogContainer = $('<div>')
                                   .append($('<div>')
                                           .addClass('kb-side-header active')
@@ -352,11 +364,11 @@ function ($,
             this.$slideoutBtn = $('<button>')
                 .addClass('btn btn-xs btn-default')
                 .tooltip({
-                    title: 'Hide / Show App Catalog', 
-                    container: 'body', 
-                    delay: { 
-                        show: Config.get('tooltip').showDelay, 
-                        hide: Config.get('tooltip').hideDelay 
+                    title: 'Hide / Show App Catalog',
+                    container: 'body',
+                    delay: {
+                        show: Config.get('tooltip').showDelay,
+                        hide: Config.get('tooltip').hideDelay
                     }
                 })
                 .append('<span class="fa fa-arrow-right"></span>')
@@ -504,19 +516,21 @@ function ($,
                                         if(methods[i].module_name) {
                                             var idTokens = methods[i].id.split('/');
                                             self.methodSpecs[idTokens[0].toLowerCase() + '/' + idTokens[1]] = {info:methods[i]};
-                                        } else {
-                                            self.methodSpecs[methods[i].id] = {info:methods[i]};
+                                        // EAP - don't even consider methods without a module, they are obsolete.
+                                        //} else {
+                                        //    self.methodSpecs[methods[i].id] = {info:methods[i]};
                                         }
                                     }
                                 }));
 
-            loadingCalls.push(self.methClient.list_apps_spec({})
-                                .then(function(apps) {
-                                    self.appSpecs = {};
-                                    for (var i=0; i<apps.length; i++) {
-                                        self.appSpecs[apps[i].info.id] = apps[i];
-                                    }
-                                }));
+            //loadingCalls.push(self.methClient.list_apps_spec({})
+            //                    .then(function(apps) {
+            //                        self.appSpecs = {};
+             //                       for (var i=0; i<apps.length; i++) {
+            //                            self.appSpecs[apps[i].info.id] = apps[i];
+            //                        }
+            //                    }));
+                                
             loadingCalls.push(self.methClient.list_categories({})
                                 .then(function(categories) {
                                     self.categories = categories[0];
@@ -529,7 +543,7 @@ function ($,
                                     for(var k=0; k<favs.length; k++) {
                                         var fav = favs[k];
                                         var lookup = fav.id;
-                                        if(fav.module_name_lc != 'nms.legacy') {
+                                        if(fav.module_name_lc !== 'nms.legacy') {
                                             lookup = fav.module_name_lc + '/' + lookup
                                         }
                                         if(self.methodSpecs[lookup]) {
@@ -561,11 +575,16 @@ function ($,
                 if(!method['spec']) {
                     self.methClient.get_method_spec({ids:[method.info.id],tag:self.currentTag})
                         .then(function(spec){
-                            // todo: cache this sped into the methods list
-                            self.trigger('methodClicked.Narrative', spec);
-                        });
+                            // todo: cache this spec into the methods list
+                            self.trigger('methodClicked.Narrative', [spec[0], self.currentTag]);
+                        })
+                        .catch(function (err) {
+                            var errorId = new Uuid(4).format();
+                            console.error('Error getting method spec #' + errorId, err, method, self.currentTag);
+                            alert('Error getting method spec, see console for error info #' + errorId);
+                        })
                 } else {
-                    self.trigger('methodClicked.Narrative', method);
+                    self.trigger('methodClicked.Narrative', [method, self.currentTag]);
                 }
             };
 
@@ -643,7 +662,7 @@ function ($,
             // add icon (logo)
             var $logo = $('<div>');
 
-            if(icon=='A') {
+            if(icon === 'A') {
                 $logo.append( DisplayUtil.getAppIcon({ isApp: true , cursor: 'pointer', setColor:true }) );
             } else {
                 if(method.info.icon && method.info.icon.url) {
@@ -662,9 +681,9 @@ function ($,
                 }, this));
 
             var $star = $('<i>');
-            if(icon=='M') {
+            if(icon === 'M') {
                 if(method.favorite) {
-                    $star.addClass('fa fa-star kbcb-star-favorite').append('&nbsp;')
+                    $star.addClass('fa fa-star kbcb-star-favorite').append('&nbsp;');
                 } else {
                     $star.addClass('fa fa-star kbcb-star-nonfavorite').append('&nbsp;');
                 }
@@ -673,7 +692,7 @@ function ($,
                     var params = {};
                     if(method.info.module_name) {
                         params['module_name'] = method.info.module_name;
-                        params['id'] = method.info.id.split('/')[1]
+                        params['id'] = method.info.id.split('/')[1];
                     } else {
                         params['id'] = method.info.id;
                     }
@@ -717,7 +736,7 @@ function ($,
                                     }, this)));
             var versionStr = 'v'+method.info.ver; // note that method versions are meaningless right now; need to update!
             if (method.info.module_name) {
-                versionStr = '<a href="'+this.options.moduleLink+'/'+method.info.module_name+'" target="_blank">' + 
+                versionStr = '<a href="'+this.options.moduleLink+'/'+method.info.module_name+'" target="_blank">' +
                                 method.info.namespace + '</a> ' + versionStr;
             }
             var $version = $('<span>').addClass("kb-data-list-type").append($star).append(versionStr); // use type because it is a new line
@@ -822,7 +841,7 @@ function ($,
             // handle methods, we now have to fetch the specs since we don't keep them around
             if (specSet.methods && specSet.methods instanceof Array) {
                 results.methods = {};
-                // we need to fetch some methods, so don't 
+                // we need to fetch some methods, so don't
                 Promise.resolve(this.methClient.get_method_spec({ids: specSet.methods, tag:this.currentTag}))
                     .then(function(specs){
                         for(var k=0; k<specs.length; k++) {
@@ -941,7 +960,7 @@ function ($,
 
                 this.$errorPanel.append($details)
                                 .append($tracebackPanel);
-                $tracebackPanel.kbaseAccordion({ elements : tracebackAccordion });
+                 new kbaseAccordion($tracebackPanel, { elements : tracebackAccordion });
             }
 
             this.$functionPanel.hide();
@@ -995,14 +1014,14 @@ function ($,
                                             var $opened = $(this).closest('.panel').find('.in');
                                             var $target = $(this).next();
 
-                                            if ($opened != undefined) {
+                                            if ($opened !== undefined) {
                                                 $opened.collapse('hide');
                                                 var $i = $opened.parent().first().find('i');
                                                 $i.removeClass('fa fa-chevron-down');
                                                 $i.addClass('fa fa-chevron-right');
                                             }
 
-                                            if ($target.get(0) != $opened.get(0)) {
+                                            if ($target.get(0) !== $opened.get(0)) {
                                                 $target.collapse('show');
                                                 var $i = $(this).parent().find('i');
                                                 $i.removeClass('fa fa-chevron-right');
@@ -1104,11 +1123,11 @@ function ($,
                         }
                     }
                 }
-            }
+            };
             if (spec.steps) {
                 // ignoring apps right now
                 for (var i=0; i<spec.steps.length; i++) {
-                    var methodSpec = this.methodSpecs[spec.steps[i].method_id]; // don't need to make module LC, because this is for 
+                    var methodSpec = this.methodSpecs[spec.steps[i].method_id]; // don't need to make module LC, because this is for
                                                                                 // apps only so specs cannot be in an SDK module
                     if (!methodSpec || methodSpec === undefined || methodSpec === null) {
                     }
@@ -1119,7 +1138,7 @@ function ($,
             } else {
                 // this is a method-- things are easy now because this info is returned by the NMS!
                 // if style==object => check both input and output
-                if(style=='input' || style=='object') {
+                if(style === 'input' || style === 'object') {
                     if(spec.info.input_types) {
                         for(var k=0; k<spec.info.input_types.length; k++) {
                             if(spec.info.input_types[k].toLowerCase().indexOf(type) >=0) {
@@ -1127,7 +1146,7 @@ function ($,
                             }
                         }
                     }
-                } else if (style=='output' || style=='object') {
+                } else if (style === 'output' || style === 'object') {
                     if(spec.info.output_types) {
                         for(var k=0; k<spec.info.output_types.length; k++) {
                             if(spec.info.output_types[k].toLowerCase().indexOf(type) >=0) {
@@ -1174,7 +1193,7 @@ function ($,
                 for (var id in set) {
                     // have to make sure module names are in LC, annoying, I know!
                     var idTokens = id.split('/');
-                    if(idTokens.length==2) { // has a module name
+                    if(idTokens.length === 2) { // has a module name
                         id = idTokens[0].toLowerCase() + '/' + idTokens[1];
                     }
                     if (!filterFn(fnInput, set[id])) {
@@ -1222,6 +1241,6 @@ function ($,
         // Temporary pass-through for Jim's gallery widget
         toggleOverlay: function() {
             this.trigger('toggleSidePanelOverlay.Narrative');
-        },
+        }
     });
 });

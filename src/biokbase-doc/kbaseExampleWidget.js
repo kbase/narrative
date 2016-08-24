@@ -10,9 +10,9 @@
  * @author Bill Riehl <wjriehl@lbl.gov>
  */
 (function($, undefined) {
-	$.KBWidget({
+	return KBWidget({
 		name: "kbaseExampleWidget",
-		parent: "kbaseWidget",
+		
 		options: {
 			output: "Some output placeholder",
 		},

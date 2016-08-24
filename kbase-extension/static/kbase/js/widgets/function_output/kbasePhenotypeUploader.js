@@ -1,7 +1,7 @@
 (function( $, undefined ) {
-    $.KBWidget({
+    return KBWidget({
         name: "PhenotypeUploader",
-        parent: "kbaseAuthenticatedWidget",
+        parent : kbaseAuthenticatedWidget,
         version: "1.0.0",
         phenotype_id: null,
         genome_id: null,

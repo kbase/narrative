@@ -5,24 +5,34 @@
  * @author Roman Sutormin <rsutormin@lbl.gov>
  * @public
  */
-define(['jquery', 
-        'narrativeConfig',
-        'kbwidget', 
-        'kbaseAuthenticatedWidget', 
-        'select2',
-        'json!kbase/config/upload_config.json',
-        'util/string'], 
-function($,
-         Config,
-         kbwidget,
-         kbaseAuthenticatedWidget,
-         select2,
-         transformConfig,
-         StringUtil) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'narrativeConfig',
+		'kbaseAuthenticatedWidget',
+		'select2',
+		'json!kbase/config/upload_config.json',
+		'util/string',
+        'base/js/namespace',
+        'common/pythonInterop'
+	], function(
+        KBWidget,
+        bootstrap,
+        $,
+        Config,
+        kbaseAuthenticatedWidget,
+        select2,
+        transformConfig,
+        StringUtil,
+        Jupyter,
+        PythonInterop
+	) {
     'use strict';
-    $.KBWidget({
+    return KBWidget({
         name: "kbaseNarrativeSideImportTab",
-        parent: "kbaseAuthenticatedWidget",
+        parent : kbaseAuthenticatedWidget,
         version: "1.0.0",
         options: {
             ws_name: null
@@ -41,20 +51,20 @@ function($,
         types: null,            // {type_name -> type_spec}
         selectedType: null,     // selected type name
         widgetPanel: null,      // div for selected type
-        widgetPanelCard1: null, // first page with importer type combobox (this page will be put on widgetPanel) 
-        widgetPanelCard2: null, // second page with import widget (this page will be put on widgetPanel) 
+        widgetPanelCard1: null, // first page with importer type combobox (this page will be put on widgetPanel)
+        widgetPanelCard2: null, // second page with import widget (this page will be put on widgetPanel)
         infoPanel: null,
         inputWidget: null,      // {methodId -> widget for selected type}
         tabs: null,             // mapping {methodId -> div}
-	fileUploadInProgress: false,
-        
+        fileUploadInProgress: false,
+
         init: function(options) {
             this._super(options);
             this.wsName = Jupyter.narrative.getWorkspaceName();
 
             return this;
         },
-        
+
         render: function() {
             var self = this;
             this.inputWidget = {};
@@ -91,7 +101,7 @@ function($,
                                        self.back();
                                     }, this)
                                 );
-            
+
             self.$warningModal.append(
                 $('<div>').addClass('modal-dialog').append(
                     $('<div>').addClass('modal-content').append(
@@ -112,7 +122,7 @@ function($,
             this.widgetPanelCard1.append("<div class='kb-cell-run'><h2 class='collapse in'>" +
                     "Import data from your local computer or another data source. First, select the type of data you wish to import." +
                     "</h2></div><hr>");
-            
+
             var $nameDiv = $('<div>')
                            .addClass("kb-method-parameter-name")
                            .css("text-align", "left")
@@ -146,7 +156,7 @@ function($,
                 .append($hintDiv)
                 .append('<div style="height: 30px">')
                 .append($('<div>').append($nextButton));
-            
+
             this.widgetPanelCard2 = $('<div style="display: none; margin: 0px;">');
             this.widgetPanel.append(this.widgetPanelCard2);
 
@@ -158,7 +168,7 @@ function($,
             this.$mainPanel.append(this.infoPanel);
 
             this.methClient = new NarrativeMethodStore(this.methodStoreURL);
-            this.methClient.list_categories({'load_methods': 0, 'load_apps' : 0, 'load_types' : 1}, 
+            this.methClient.list_categories({'load_methods': 0, 'load_apps' : 0, 'load_types' : 1},
                 $.proxy(function(data) {
                     var aTypes = data[3];
                     var methodIds = [];
@@ -176,13 +186,13 @@ function($,
                             }
                         }
                     }
-                    self.methClient.get_method_full_info({ 'ids' : methodIds }, 
+                    self.methClient.get_method_full_info({ 'ids' : methodIds, 'tag' : 'dev' },
                         $.proxy(function(fullInfoList) {
                             self.methodFullInfo = {};
                             for (var i in fullInfoList) {
                                 self.methodFullInfo[fullInfoList[i].id] = fullInfoList[i];
                             }
-                            self.methClient.get_method_spec({ 'ids' : methodIds },
+                            self.methClient.get_method_spec({ 'ids' : methodIds, 'tag' : 'dev' },
                                 $.proxy(function(specs) {
                                     self.methods = {};
                                     for (var i in specs) {
@@ -194,7 +204,7 @@ function($,
                                     }
                                     keys.sort(function(a,b) {return self.types[a]["name"].localeCompare(self.types[b]["name"])});
                                     for (var keyPos in keys) {
-                                        addItem(keys[keyPos]);                                      
+                                        addItem(keys[keyPos]);
                                     }
                                     $dropdown.select2({
                                         minimumResultsForSearch: -1,
@@ -270,7 +280,7 @@ function($,
                     $cancelButton.show();
                 }
             };
-            
+
             $importButton.click(
                 $.proxy(function(event) {
                     event.preventDefault();
@@ -295,18 +305,18 @@ function($,
                         }
                 }, this)
             );
-            
+
             $cancelButton.click(function() {
                 self.stopTimer();
 		if (self.fileUploadInProgress)
 		{
 		    self.getInputWidget().cancelImport();
 		}
-		    
+
                 btnImport(true);
                 self.showInfo("Import job was cancelled");
             });
-            
+
             var $backButton = $('<button>')
                              .attr('id', this.cellId + '-back')
                              .attr('type', 'button')
@@ -331,7 +341,7 @@ function($,
             $cancelButton.hide();
             self.widgetPanelCard2.append($buttons);
         },
-        
+
         showTab: function(type, methodPos, $header, $body, numberOfTabs) {
             var self = this;
             var methodId = this.types[type]["import_method_ids"][methodPos];
@@ -340,7 +350,7 @@ function($,
             if (!inputWidgetName || inputWidgetName === 'null')
                 inputWidgetName = "kbaseNarrativeMethodInput";
             var methodJson = JSON.stringify(methodSpec);
-            
+
             var $inputDiv = $('<div>');
 
             // These are the 'delete' and 'run' buttons for the cell
@@ -362,7 +372,7 @@ function($,
                     .addClass('kb-func-desc')
                     .css({'margin' : '20px 0px 0px 20px', 'display' : 'none'})
                     .append(methodDescr);
-            if (methodDescr && methodDescr != '' && methodDescr != 'none' && 
+            if (methodDescr && methodDescr != '' && methodDescr != 'none' &&
                     methodDescr != methodTitle && (methodDescr + ".") != methodTitle) {
                 $overviewSwitch.click(function(){
                     $methodDescrPanel.toggle();
@@ -380,12 +390,14 @@ function($,
                     .append($inputDiv))
                     .append($('<div>')
                     .css({'overflow' : 'hidden', 'margin' : '0px 0px 0px 18px'}));
-                        
+
             var isShown = methodPos == 0;
             var tabName = methodSpec.info.name;
-            var params = {tab: tabName, 
-                          content: tab, 
-                          canDelete : false, 
+            if (methodId.indexOf('/') > 0)
+                tabName += " (SDK)";
+            var params = {tab: tabName,
+                          content: tab,
+                          canDelete : false,
                           show: isShown};
             if (numberOfTabs == 1) {
                 this.widgetPanelCard2.append(tab);
@@ -421,7 +433,7 @@ function($,
             // var wig = w1({ method: methodJson, isInSidePanel: true });
             var wig = $inputDiv[inputWidgetName]({ method: methodJson, isInSidePanel: true });
 	    this.inputWidget[methodId] = wig;
-            
+
             var onChange = function() {
                 var w = self.getInputWidget();
                 if (self.timer)
@@ -438,10 +450,10 @@ function($,
                 var paramId = paramValues[paramPos].id;
                 wig.addInputListener(paramId, onChange);
             }
-            
+
             this.tabs[methodId] = tab;
         },
-        
+
         getSelectedTabId: function() {
             var ret = null;
             for (var tabId in this.tabs) {
@@ -455,7 +467,7 @@ function($,
         getInputWidget: function() {
             return this.inputWidget[this.getSelectedTabId()];
         },
-        
+
         back: function() {
             var self = this;
             if (self.timer != null) {
@@ -470,7 +482,7 @@ function($,
             this.widgetPanelCard2.css('display', 'none');
             this.widgetPanelCard1.css('display', '');
         },
-        
+
 
         buildTransformParameters: function(objectType, methodId, params) {
             var self = this;
@@ -576,7 +588,7 @@ function($,
                 var paramValue = undefined;
 
                 // value overrides all! fetch it first
-                if (paramInfo.value) 
+                if (paramInfo.value)
                     paramValue = paramInfo.value;
                 // if no value, look for param attribute and resolve it
                 else if (paramInfo.param)
@@ -609,68 +621,130 @@ function($,
             return args;
         },
 
+        createImportStatusCell: function(methodName, jobId) {
+            var cellIndex = Jupyter.notebook.get_selected_index();
+            var cell = Jupyter.notebook.insert_cell_below('code', cellIndex);
+            var title = 'Import job status for ' + methodName;
+            var cellText = ['from biokbase.narrative.jobs.jobmanager import JobManager',
+                            'JobManager().get_job(' + jobId + ')'].join('\n');
+            cell.set_text(cellText);
+            var meta = {
+                    'kbase': {
+                        'attributes': {
+                            'status': 'new',
+                            'title': title
+                        },
+                        'type': 'output'
+                    }
+            };
+            cell.metadata = meta;
+            cell.execute();
+        },
+
         runImport: function(callback) {
             var self = this;
             var methodId = self.getSelectedTabId();
             var methodSpec = self.methods[methodId];
 
-	    /*
-	     * Invoke the runImport method on all parameters that have it.
-	     * Each returns a promise; when all are resolved, proceed to
-	     * process the import transform.
-	     */
-
-	    self.fileUploadInProgress = true;
-	    var promise = this.getInputWidget().runImport();
-	    self.showInfo("Transferring files...", true);
-	    promise.then(function(value) {
-
-		self.fileUploadInProgress = false;
-		self.showInfo("Files transferred. Creating transform job.", true);
-
-		var paramValueArray = self.getInputWidget().getParameters();
-		var params = {};
-		
-		for (var i in methodSpec.parameters) {
+            if (methodId.indexOf('/') > 0) {
+                var paramValueArray = self.getInputWidget().getParameters();
+                var params = {};
+                for (var i in methodSpec.parameters) {
                     var paramId = methodSpec.parameters[i].id;
                     var paramValue = paramValueArray[i];
                     params[paramId] = paramValue;
-		}
+                }
+                //var ver = methodSpec.info.git_commit_hash;
+                var pythonCode = PythonInterop.buildAppRunner(null, null,
+                        {tag: 'dev', version: null, id: methodId}, params);
+                pythonCode += ".job_id.encode('ascii','ignore')";
+                var callbacks = {
+                        shell: {
+                            reply: function(content) {},
+                            payload: { set_next_input: function(content) {} }
+                        },
+                        iopub: {
+                            output: function(ret) {
+                                var data = ret.content.data;
+                                if (!data)
+                                    return;
+                                var session = ret.header.session;
+                                var jobId = data['text/plain'];
+                                var methodName = methodSpec.info.name;
+                                self.createImportStatusCell(methodName, jobId);
+                            },
+                            clear_output: function(content) {}
+                        },
+                        input: function(content) {}
+                };
+                var executeOptions = {
+                        silent: false,
+                        user_expressions: {},
+                        allow_stdin: false,
+                        store_history: false
+                };
+                Jupyter.notebook.kernel.execute(pythonCode, callbacks, executeOptions);
+                self.showInfo("Your import job is submitted and accessible in \"Jobs\" tab");
+                callback(true);
+                return;
+            }
+            /*
+             * Invoke the runImport method on all parameters that have it.
+             * Each returns a promise; when all are resolved, proceed to
+             * process the import transform.
+             */
 
-		var args = null;
+            self.fileUploadInProgress = true;
+            var promise = this.getInputWidget().runImport();
+            self.showInfo("Transferring files...", true);
+            promise.then(function(value) {
 
-		try {
+                self.fileUploadInProgress = false;
+                self.showInfo("Files transferred. Creating transform job.", true);
+
+                var paramValueArray = self.getInputWidget().getParameters();
+                var params = {};
+
+                for (var i in methodSpec.parameters) {
+                    var paramId = methodSpec.parameters[i].id;
+                    var paramValue = paramValueArray[i];
+                    params[paramId] = paramValue;
+                }
+
+                var args = null;
+
+                try {
                     var args = self.buildTransformParameters(self.selectedType, methodId, params);
                     var uploaderClient = new Transform(self.uploaderURL, {'token': self.token});
 
                     if (args) {
-			console.log("Data to be sent to transform service:");
-			console.log(args);
+                        console.log("Data to be sent to transform service:");
+                        console.log(args);
 
-			self.showInfo("Submitting transform request...", true);
-			uploaderClient.upload(args,
-					      $.proxy(function(data) {
-						  console.log(data);
-						  self.waitForJob(data[1], callback);
-					      }, self),
-					      $.proxy(function(error) {
-						  self.showError(error);
-						  callback(false);
-					      }, self)
-					     );
+                        self.showInfo("Submitting transform request...", true);
+                        uploaderClient.upload(args,
+                                $.proxy(function(data) {
+                                    console.log(data);
+                                    self.waitForJob(data[1], callback);
+                                }, self),
+                                $.proxy(function(error) {
+                                    self.showError(error);
+                                    callback(false);
+                                }, self)
+                        );
                     } else {
-			callback(false);
+                        callback(false);
                     }
-		}
-		catch (error) {
+                }
+                catch (error) {
                     self.showError(error);
-		}
-	    }, function (reason) {
-		self.showError("File transfer failed: " + reason);
-		self.fileUploadInProgress = false;
-	    });
+                }
+            }, function (reason) {
+                self.showError("File transfer failed: " + reason);
+                self.fileUploadInProgress = false;
+            });
         },
-        
+
         asBool: function(val) {
             if (!val)
                 return false;
@@ -720,7 +794,7 @@ function($,
             self.timer = setInterval(timeLst, 5000);
             timeLst();
         },
-        
+
         stopTimer: function() {
             var self = this;
             if (self.timer != null) {
@@ -728,7 +802,7 @@ function($,
                 self.timer = null;
             }
         },
-        
+
         showError: function(error) {
             console.log(error);
             if (typeof error === 'object' && error.error) {

@@ -1,12 +1,21 @@
 /*global define*/
 /*jslint white: true*/
 
-define(['jquery',
-        'underscore',
-        'narrativeConfig',
-        'bluebird',
-        'kbase-client-api'],
-function($, _, Config, Promise, Clients) {
+define([
+    'jquery',
+    'underscore',
+    'narrativeConfig',
+    'bluebird',
+    
+    'kbwidget',
+    'bootstrap',
+    'kbase-client-api'
+], function (
+    $,
+    _,
+    Config,
+    Promise
+    ) {
     'use strict';
 
     /**
@@ -31,7 +40,7 @@ function($, _, Config, Promise, Clients) {
      *
      * would dump out the object with the five keys outlined above.
      */
-    function loadViewerInfo () {
+    function loadViewerInfo() {
         var viewers = {};
         var landingPageUrls = {};
         var typeNames = {};
@@ -39,12 +48,12 @@ function($, _, Config, Promise, Clients) {
         var methodIds = [];
 
         var methodStoreClient = new NarrativeMethodStore(Config.url('narrative_method_store'));
-        
+
         return Promise.resolve(methodStoreClient.list_categories({
             load_methods: 1,
             load_apps: 0,
             load_types: 1
-        })).then(function(data) {
+        })).then(function (data) {
             var methodInfo = data[1];
             var allTypes = data[3];
 
@@ -57,9 +66,9 @@ function($, _, Config, Promise, Clients) {
                 else if (val.view_method_ids && val.view_method_ids.length > 0) {
                     var methodId = val.view_method_ids[0];
                     if (!methodInfo[methodId]) {
-                        console.log('Can\'t find method info for id: ' + methodId);
+                        console.warn('Can\'t find method info for id: ' + methodId);
                     } else if (methodInfo[methodId].loading_error) {
-                        console.log('There is an error for method info with id [' + methodId + ']: ' + methodInfo[methodId].loading_error);
+                        console.warn('There is an error for method info with id [' + methodId + ']: ' + methodInfo[methodId].loading_error);
                     } else {
                         viewers[key] = methodId;
                         landingPageUrls[key] = val.landing_page_url_prefix;
@@ -75,11 +84,11 @@ function($, _, Config, Promise, Clients) {
             _.each(specs, function (val, key) {
                 specs[val.info.id] = val;
             });
-            return { viewers: viewers,
-                     landingPageUrls: landingPageUrls,
-                     typeNames: typeNames,
-                     specs: specs,
-                     methodIds: methodIds };
+            return {viewers: viewers,
+                landingPageUrls: landingPageUrls,
+                typeNames: typeNames,
+                specs: specs,
+                methodIds: methodIds};
         });
     }
 
@@ -91,19 +100,17 @@ function($, _, Config, Promise, Clients) {
      * createViewer(dataCell).then(function(result) {
      *    $('body').append(result.title).append(result.widget);
      * })
-     * 
+     *
      */
-    function createViewer (dataCell) {
+    function createViewer(dataCell) {
         var getParamValue = function (o, mapping) {
             var param = null;
 
             if (mapping.input_parameter) {
                 param = o.name;
-            }
-            else if (mapping.constant_value) {
+            } else if (mapping.constant_value) {
                 param = mapping.constant_value;
-            }
-            else if (mapping.narrative_system_variable) {
+            } else if (mapping.narrative_system_variable) {
                 switch (mapping.narrative_system_variable) {
                     case 'workspace':
                         param = o.ws_name;
@@ -111,8 +118,7 @@ function($, _, Config, Promise, Clients) {
                     default:
                         console.error('An error occurred');
                 }
-            }
-            else {
+            } else {
                 console.error('an error occurred');
             }
             return param;
@@ -134,14 +140,13 @@ function($, _, Config, Promise, Clients) {
             return param;
         }
 
-        return loadViewerInfo().then(function(viewerInfo) {
-            console.log(viewerInfo);
-            
+        return loadViewerInfo().then(function (viewerInfo) {
+
             var o = dataCell.obj_info;
             var methodId = viewerInfo.viewers[o.bare_type];
             if (!methodId) {
                 console.debug("No viewer found for type=" + o.bare_type);
-                return { widget: defaultViewer(dataCell), title: 'Unknown Data Type' };
+                return {widget: defaultViewer(dataCell), title: 'Unknown Data Type'};
             }
             var spec = viewerInfo.specs[methodId];
             var inputParamId = spec['parameters'][0]['id'];
@@ -175,17 +180,18 @@ function($, _, Config, Promise, Clients) {
             // XXX: Temporary until all widgets are loaded with Require.
             // First, try to load it from global space.
             var $elem = $('<div>');
+
             try {
                 w = $elem[outputWidget](output);
             }
-            // If that fails, try to load with require. 
+            // If that fails, try to load with require.
             // If THAT fails, fail with an error (though the error should be improved)
             catch (err) {
-                require([outputWidget], function () {
-                    w = $elem[outputWidget](output);
+                require([outputWidget], function (W) {
+                    w = new W($elem, output);
                     return w;
-                }, function () {
-                    console.error("error making widget: " + outputWidget);
+                }, function (reqErr) {
+                    console.error("errors occurred while making widget: " + outputWidget, {'firstTry': err, 'requireErr': reqErr});
                     $elem = defaultViewer(dataCell);
                     output.widgetTitle = 'Unknown Data Type';
                 });
@@ -202,7 +208,7 @@ function($, _, Config, Promise, Clients) {
      * Tries to add any object metadata (if available) to that viewer.
      * This returns a jquery node with a <pre> containing that info.
      */
-    function defaultViewer (dataCell) {
+    function defaultViewer(dataCell) {
         var o = dataCell.obj_info;
         var mdDesc = '';
 

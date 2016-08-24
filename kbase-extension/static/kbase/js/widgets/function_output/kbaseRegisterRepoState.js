@@ -5,14 +5,23 @@
  * @public
  */
 
-define(['jquery', 
-		'kbwidget', 
-		'kbaseAuthenticatedWidget', 
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'kbaseAuthenticatedWidget',
 		'catalog-client-api'
-		], function($) {
-	$.KBWidget({
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		kbaseAuthenticatedWidget,
+		catalog_client_api
+	) {
+	return KBWidget({
 		name: 'kbaseRegisterRepoState',
-		parent: 'kbaseAuthenticatedWidget',
+		parent : kbaseAuthenticatedWidget,
 		version: '1.0.0',
 		options: {
 		    git_url: null,

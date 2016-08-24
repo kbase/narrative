@@ -2,7 +2,7 @@
  * KBase widget to display workspace object JSON.
  */
 (function($, undefined) {
-    $.KBWidget({
+    return KBWidget({
         name: 'DataDump',
         version: '1.0.0',
         options: {

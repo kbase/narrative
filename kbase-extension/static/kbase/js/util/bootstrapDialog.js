@@ -1,12 +1,18 @@
 /*global define*/
 /*jslint white: true*/
-define(['jquery', 'bootstrap'], 
-function ($) {
+define (
+    [
+        'bootstrap',
+        'jquery'
+    ], function (
+        bootstrap,
+        $
+    ) {
     'use strict';
 
     /**
      * options:
-     * { 
+     * {
      *     title: string,
      *     body: jquery node
      *     buttons: array of jquery nodes
@@ -89,7 +95,7 @@ function ($) {
     };
 
     BootstrapDialog.prototype.getButtons = function () {
-        console.log("get buttons");
+        return this.$footer.children();
     };
 
     BootstrapDialog.prototype.getTitle = function () {
@@ -110,6 +116,15 @@ function ($) {
 
     BootstrapDialog.prototype.getElement = function() {
         return this.$modal;
+    };
+
+    /**
+     * Removes this modal from the DOM and removes any associated content.
+     */
+    BootstrapDialog.prototype.destroy = function() {
+        this.$modal.remove();
+        this.$modal = null;
+        return null;
     };
 
     return BootstrapDialog;

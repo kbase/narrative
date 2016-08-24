@@ -4,10 +4,21 @@
  * @public
  */
 
- define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function($) {
-    $.KBWidget({
+ define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'kbaseAuthenticatedWidget'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		kbaseAuthenticatedWidget
+	) {
+    return KBWidget({
         name: "kbaseAssemblyView",
-        parent: "kbaseAuthenticatedWidget",
+        parent : kbaseAuthenticatedWidget,
         version: "1.0.0",
         ws_id: null,
         ws_name: null,

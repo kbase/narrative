@@ -4,20 +4,43 @@
  * @public
  */
 
-define(['jquery',
+define (
+    [
+        'kbwidget',
+        'bootstrap',
+        'jquery',
+        'bluebird',
         'narrativeConfig',
         'ContigBrowserPanel',
-        'kbwidget',
+        'util/string',
         'kbaseAuthenticatedWidget',
         'kbaseTabs',
         'jquery-dataTables',
-        'jquery-dataTables-bootstrap'],
-function($,
-         Config,
-         ContigBrowserPanel) {
-    $.KBWidget({
+        'jquery-dataTables-bootstrap',
+
+        'GenomeAnnotationAPI-client-api',        
+        'AssemblyAPI-client-api',        
+        'TaxonAPI-client-api'
+
+    ], function(
+        KBWidget,
+        bootstrap,
+        $,
+        Promise,
+        Config,
+        ContigBrowserPanel,
+        StringUtil,
+        kbaseAuthenticatedWidget,
+        kbaseTabs,
+        jquery_dataTables,
+        bootstrap,
+        GenomeAnnotationAPI_client_api,
+        AssemblyAPI_client_api,
+        TaxonAPI_client_api
+    ) {
+    return KBWidget({
         name: "kbaseGenomeView",
-        parent: "kbaseAuthenticatedWidget",
+        parent : kbaseAuthenticatedWidget,
         version: "1.0.0",
         ws_id: null,
         ws_name: null,
@@ -83,9 +106,14 @@ function($,
                 var ids = ['overview', 'genes'];
 
                 //XXX plants baloney - but plants also get a CDS column.
-                if (genome.domain == 'Plant') {
+                if (genome.domain == 'Plant' || genome.domain == 'Eukaryota') {
                     names.push('CDS');
                     ids.push('cds');
+                }
+
+                if (genome.ontology_mappings.length) {
+                  names.push('Ontology');
+                  ids.push('ontology');
                 }
 
                 return {
@@ -94,42 +122,77 @@ function($,
                 };
             }
             else {
+
+                //normally, we just have an Overview, Contigs, and Genes tab.
+                var names = ['Overview', 'Contigs', 'Genes'];
+                var ids = ['overview', 'contigs', 'genes'];
+
+                //XXX plants baloney - but plants get different columns
+                if (genome.domain == 'Plant' || genome.domain == 'Eukaryota') {
+                    names = ['Overview', 'Genes', 'CDS'];
+                    ids = ['overview', 'genes', 'cds'];
+                }
+
+                if (genome.ontology_mappings.length) {
+                  names.push('Ontology');
+                  ids.push('ontology');
+                }
+
                 return {
-                    names : ['Overview', 'Contigs', 'Genes'],
-                    ids : ['overview', 'contigs', 'genes']
+                    names : names,
+                    ids : ids
                 };
             }
         },
 
         render: function() {
             var self = this;
-        	var pref = this.uuid();
+            var pref = StringUtil.uuid();
+
+            // Example of calling the new API
+            //var api = new GenomeAnnotationAPI(Config.url('service_wizard'),{'token':self.token});
+            //api.get_feature_ids(self.ws_name + "/" + self.ws_id, null, null)
+            //        .done(function(ids) {
+            //            console.log(ids);
+            //        });
 
             var container = this.$elem;
             if (self.token == null) {
-            	container.empty();
-            	container.append("<div>[Error] You're not logged in</div>");
-            	return;
+                container.empty();
+                container.append("<div>[Error] You're not logged in</div>");
+                return;
             }
 
             var kbws = new Workspace(self.wsUrl, {'token': self.token});
 
             var ready = function(gnm, ctg) {
-            		container.empty();
-            		var tabPane = $('<div id="'+pref+'tab-content">');
-            		container.append(tabPane);
-            		tabPane.kbaseTabs({canDelete : true, tabs : []});
+                    container.empty();
+                    var tabPane = $('<div id="'+pref+'tab-content">');
+                    container.append(tabPane);
+                    var tabObj = new kbaseTabs(tabPane, {canDelete : true, tabs : []});
 
                     var genomeType = self.genomeType(gnm);
 
-            		var tabData = self.tabData(gnm);
-            		var tabNames = tabData.names;
-            		var tabIds = tabData.ids;
+                    var ontology_mappings = [];
+                    $.each(
+                      gnm.features,
+                      function (i,f) {
+                        if (f.ontology_terms) {
+                          ontology_mappings.push(f);
+                        }
+                      }
+                    );
 
-            		for (var i=0; i<tabIds.length; i++) {
-            			var tabDiv = $('<div id="'+pref+tabIds[i]+'"> ');
-            			tabPane.kbaseTabs('addTab', {tab: tabNames[i], content: tabDiv, canDelete : false, show: (i == 0)});
-            		}
+                    gnm.ontology_mappings = ontology_mappings;
+
+                    var tabData = self.tabData(gnm);
+                    var tabNames = tabData.names;
+                    var tabIds = tabData.ids;
+
+                    for (var i=0; i<tabIds.length; i++) {
+                      var tabDiv = $('<div id="'+pref+tabIds[i]+'"> ');
+                      tabObj.addTab({tab: tabNames[i], content: tabDiv, canDelete : false, show: (i == 0)});
+                    }
 
                     var contigCount = 0;
                     if (gnm.contig_ids && gnm.contig_lengths && gnm.contig_ids.length == gnm.contig_lengths.length) {
@@ -165,13 +228,14 @@ function($,
                     //Plant genes need different information, and we want to display the gene and transcript counts separately
                     //so if the domain is plants, add on the extra label, pop off the existing length value, and push on the length of genes and
                     //transcripts individually.
-                    if (gnm.domain == 'Plant') {
+                    if (gnm.domain == 'Plant' || gnm.domain == 'Eukaryota') {
                         overviewLabels.push('Number of Transcripts');
                         var types = {};
                         $.each(gnm.features, function(i,v) {
                             if (types[v.type] == undefined) {types[v.type] = 0};
                             types[v.type]++;
                         });
+
                         overviewData.pop();
                         overviewData.push(types['locus']);
                         overviewData.push(types['CDS']);
@@ -184,7 +248,10 @@ function($,
                     //to do that right now. :-/
 
                     if (genomeType != 'genome') {
-                        overviewLabels.splice(3, 0, 'Subtype');
+                        //XXX plants baloney - don't display the subtype if it's plant or eukaryota domain
+                        if (gnm.domain != 'Plant' && gnm.domain != 'Eukaryota') {
+                          overviewLabels.splice(3, 0, 'Subtype');
+                        }
                         overviewData.splice(3, 0, genomeType);
                     }
 
@@ -206,6 +273,82 @@ function($,
                             overviewTable.append('<tr><td>'+overviewLabels[i]+'</td> \
                                     <td>'+overviewData[i]+'</td></tr>');
                         }
+                    }
+
+                    ////ontology tab - should be lazily loaded, but we can't since we need to check for existence to know if we display the tab at all.
+                    if (gnm.ontology_mappings.length) {
+                      var ontologyTab = $('#' + pref + 'ontology');
+                      ontologyTab.empty();
+                      ontologyTab.append('<table cellpadding="0" cellspacing="0" border="0" id="'+pref+'ontology-table" \
+                      class="table table-bordered table-striped" style="width: 100%; margin-left: 0px; margin-right: 0px;"/>');
+
+                      var ontologySettings = {
+                          "paginationType": "full_numbers",
+                          "displayLength": 10,
+                          "sorting": [[ 0, "asc" ], [1, "asc"]],
+                          "columns": [
+                              {title: "Gene ID", data: "id"},
+                              {title: "# of ontology terms", data: "num"},
+                              {title: "Ontology term name", data: "name"},
+                              {title: "Ontology term ID", data: "term"},
+                              {title: "Evidence count", data: "evidence_count"},
+                          ],
+                          createdRow: function (row, data, index) {
+
+                              var $linkCell = $('td', row).eq(3);
+                              var k = $linkCell.text();
+                              $linkCell.empty();
+
+                              $linkCell.append($.jqElem('a')
+                                        .on('click', function(e) {
+                                          var $tabDiv = $.jqElem('div').kbaseOntologyDictionary({ term_id : k});
+                                          tabObj.addTab({tab: k, content: $tabDiv.$elem, canDelete : true, show: true});
+                                        })
+                                        .append(k));
+
+                          }
+                      };
+
+                      var ontologyTable = $('#'+pref+'ontology-table').DataTable(ontologySettings);
+                      var ontologyData  = [];
+
+                      $.each(
+                        gnm.ontology_mappings,
+                        function(i, v) {
+                          //ick. Need to double loop to tally up number of terms in advance. There's gotta be a more efficient way to do this.
+                          v.num_terms = 0;
+                          $.each(
+                            v.ontology_terms,
+                            function (k, o) {
+                              v.num_terms += Object.keys(o).length
+                            }
+                          );
+                          $.each(
+                            v.ontology_terms,
+                            function (k, o) {
+                              $.each(
+                                v.ontology_terms[k],
+                                function (k, t) {
+                                  ontologyData.push(
+                                    {
+                                      'id' : v.id,
+                                      'num' : v.num_terms,
+                                      'term' : k,
+                                      'evidence_count' : t.evidence.length,
+                                      'name' : t.term_name,
+                                    }
+                                  )
+                                }
+                              )
+                            }
+                          )
+                        }
+                      );
+                      console.log("OD ", ontologyData[0]);
+
+                      //ontologyTable.fnAddData(ontologyData);
+                      ontologyTable.rows.add(ontologyData).draw();
+
                     }
 
                     ///////////////////// Contigs and Genes (lazy loading) /////////////////////
@@ -235,10 +378,11 @@ function($,
                             aElem.on('click', function() {
                                 if (!genesAreShown) {
                                     genesAreShown = true;
-                                    self.prepareGenesAndContigs(pref, kbws, gnm, tabPane);
+                                    self.prepareGenesAndContigs(pref, kbws, gnm, tabObj);
                                 }
                             });
                         }
+
                     }
             };
 
@@ -248,8 +392,9 @@ function($,
             var included = ["/complete","/contig_ids","/contig_lengths","contigset_ref","/dna_size",
                             "/domain","/gc_content","/genetic_code","/id","/md5","num_contigs",
                             "/scientific_name","/source","/source_id","/tax_id","/taxonomy",
-                            "/features/[*]/type", "/features/[*]/unknownfield", "/features/[*]/location"];
+                            "/features/[*]/type", "/features/[*]/unknownfield", "/features/[*]/location", "/features/[*]/ontology_terms","/features/[*]/id"];
             kbws.get_object_subset([{ref: self.ws_name + "/" + self.ws_id, included: included}], function(data) {
+            //kbws.get_object([{ref: self.ws_name + "/" + self.ws_id}], function(data) {
                 var gnm = data[0].data;
                 if (gnm.contig_ids && gnm.contig_lengths && gnm.contig_ids.length == gnm.contig_lengths.length) {
                     ready(gnm, null);
@@ -299,7 +444,8 @@ function($,
                 var geneMap = {};
                 var contigMap = {};
 
-                var cdsData = [] //XXX plants baloney. Extra tab for CDS data. See below on line 337 or so.
+                var cdsData = [] //XXX plants baloney. Extra tab for CDS data. See below on line 372 or so.
+                var mrnaData = [] //XXX plants baloney. We throw away mrnaData. See below on line 372 or so.
 
                 if (data.length > 1) {
                     var ctg = data[1].data;
@@ -328,6 +474,7 @@ function($,
 
                 for (var genePos in gnm.features) {
                     var gene = gnm.features[genePos];
+                    gene.arrPos = genePos;
                     var geneId = gene.id;
                     var contigName = null;
                     var geneStart = null;
@@ -352,13 +499,22 @@ function($,
                     //XXX plants baloney - if it's non plant, it just goes into the genes array.
                     //but if it is plants, then we split it up - same data, two different tabs.
                     //locus data goes on the genes tab, cds data goes on the cds tab.
-                    var dataArray = gnm.domain != 'Plant' || gene.type == 'locus'
-                        ? genesData
-                        : cdsData;
+                    //We're also creating an mrnaData array for mrna data, but we're just throwing that out later.
+
+                    var dataArray = [];
+                    if ((gnm.domain != 'Plant' && gnm.domain != 'Eukaryota') || gene.type == 'locus') {
+                      dataArray = genesData;
+                    }
+                    else if (gene.type == 'CDS') {
+                      dataArray = cdsData;
+                    }
+                    else if (gene.type == 'mRNA') {
+                      dataArray = mrnaData;
+                    }
 
                     dataArray.push({
-                        id: '<a href="/#dataview/'+self.ws_name+'/'+self.ws_id+'?sub=Feature&subid='+geneId+'" target="_blank">'+geneId+'</a>',
-                        // id: '<a class="'+pref+'gene-click" data-geneid="'+geneId+'">'+geneId+'</a>',
+                        // id: '<a href="/#dataview/'+self.ws_name+'/'+self.ws_id+'?sub=Feature&subid='+geneId+'" target="_blank">'+geneId+'</a>',
+                        id: '<a class="'+pref+'gene-click" data-geneid="'+geneId+'">'+geneId+'</a>',
                         // contig: contigName,
                         contig: '<a class="' + pref + 'contig-click" data-contigname="'+contigName+'">' + contigName + '</a>',
                         start: geneStart,
@@ -404,8 +560,8 @@ function($,
                                   "fnDrawCallback": function() { geneEvents(); contigEvents(); }
                 };
 
-
-                if (genomeType == 'transcriptome') {
+                //XXX plants baloney - plants are a special case. If it's in plants or eukaryota, then we use the simpler display with less data.
+                if (genomeType == 'transcriptome' || gnm.domain == 'Plant' || gnm.domain == 'Eukaryota') {
                     genesSettings.aoColumns = [
                         {sTitle: "Gene ID", mData: "id"},
                         {sTitle: "Length", mData: "len"},
@@ -413,7 +569,7 @@ function($,
                     ];
 
                     // XXX more plants baloney. Remove the length column
-                    if (gnm.domain == 'Plant') {
+                    if (gnm.domain == 'Plant' || gnm.domain == 'Eukaryota') {
                         genesSettings["aaSorting"] = [[ 0, "asc" ], [1, "asc"]];
                         genesSettings.aoColumns.splice(1,1);
                     }
@@ -421,10 +577,12 @@ function($,
                 }
 
                 var genesTable = $('#'+pref+'genes-table').dataTable(genesSettings);
-                genesTable.fnAddData(genesData);
+                if (genesData.length) {
+                    genesTable.fnAddData(genesData);
+                }
 
                 //XXX plants baloney - build up the CDS div, if necessary.
-                if (gnm.domain == 'Plant') {
+                if (gnm.domain == 'Plant' || gnm.domain == 'Eukaryota') {
 
                     var cdsTab = $('#'+pref+'cds');
                     cdsTab.empty();
@@ -442,10 +600,11 @@ function($,
                     };
 
                     var cdsTable = $('#'+pref+'cds-table').dataTable(cdsSettings);
-                    cdsTable.fnAddData(cdsData);
+                    if (cdsData.length) {
+                        cdsTable.fnAddData(cdsData);
+                    }
                 }
                 //XXX done with plants
-
 
                 ////////////////////////////// Contigs Tab //////////////////////////////
                 var contigTab = $('#'+pref+'contigs');
@@ -492,13 +651,14 @@ function($,
                 var lastElemTabNum = 0;
 
                 function openTabGetId(tabName) {
-                    if (tabPane.kbaseTabs('hasTab', tabName))
+                    if (tabPane.hasTab(tabName))
                         return null;
                     lastElemTabNum++;
                     var tabId = '' + pref + 'elem' + lastElemTabNum;
                     var tabDiv = $('<div id="'+tabId+'"> ');
-                    tabPane.kbaseTabs('addTab', {tab: tabName, content: tabDiv, canDelete : true, show: true, deleteCallback: function(name) {
-                        tabPane.kbaseTabs('removeTab', name);
+                    tabPane.addTab({tab: tabName, content: tabDiv, canDelete : true, show: true, deleteCallback: function(name) {
+                        tabPane.removeTab(name);
+                        tabPane.showTab(tabPane.activeTab());
                     }});
                     return tabId;
                 }
@@ -506,7 +666,7 @@ function($,
                 function showGene(geneId) {
                     var tabId = openTabGetId(geneId);
                     if (tabId == null) {
-                        tabPane.kbaseTabs('showTab', geneId);
+                        tabPane.showTab(geneId);
                         return;
                     }
                     var gene = geneMap[geneId];
@@ -544,16 +704,34 @@ function($,
                                     <td>'+elemData[i]+'</td></tr>');
                         }
                     }
+                    elemTable.append('<tr id="seq-loader"><td colspan=2><img src="' + self.loadingImage + '"></td></tr>');
+                    Promise.resolve(kbws.get_object_subset([{
+                        ref: self.ws_name + "/" + self.ws_id,
+                        included: ['/features/' + gene.arrPos + '/protein_translation',
+                                   '/features/' + gene.arrPos + '/dna_sequence']
+                    }])).then(function(data) {
+                        elemTable.find('#seq-loader').remove();
+                        data = data[0].data;
+                        if (data.features) {
+                            var f = data.features[0];
+                            if (f.protein_translation) {
+                                elemTable.append('<tr><td>Protein Translation</td><td><div class="kb-ga-seq">' + f.protein_translation + '</div></td></tr>');
+                            }
+                            if (f.dna_sequence) {
+                                elemTable.append('<tr><td>Nucleotide Sequence</td><td><div class="kb-ga-seq">' + f.dna_sequence + '</div></td></tr>');
+                            }
+                        }
+                    });
                     $('.'+tabId+'-click2').click(function() {
                         showContig($(this).data('contigname'));
                     });
-                    tabPane.kbaseTabs('showTab', geneId);
+                    tabPane.showTab(geneId);
                 }
 
                 function showContig(contigName) {
                     var tabId = openTabGetId(contigName);
                     if (tabId == null) {
-                        tabPane.kbaseTabs('showTab', contigName);
+                        tabPane.showTab(contigName);
                         return;
                     }
                     var contig = contigMap[contigName];
@@ -578,7 +756,7 @@ function($,
                     });
                     $('#'+tabId).append(cgb.data.$elem);
                     cgb.data.init();
-                    tabPane.kbaseTabs('showTab', contigName);
+                    tabPane.showTab(contigName);
                 }
             }, function(data) {
                 container.empty();
@@ -586,13 +764,8 @@ function($,
             });
         },
 
-        getData: function() {
-        	return {
-        		type: "NarrativeTempCard",
-        		id: this.ws_name + "." + this.ws_id,
-        		workspace: this.ws_name,
-        		title: "Temp Widget"
-        	};
+        showOntology : function(ontologyID) {
+
         },
 
         loggedInCallback: function(event, auth) {
@@ -606,13 +779,5 @@ function($,
             this.render();
             return this;
         },
-
-        uuid: function() {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,
-                function(c) {
-                    var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
-                    return v.toString(16);
-                });
-        }
     });
 });

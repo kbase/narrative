@@ -4,14 +4,23 @@
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @public
  */
-define(['jquery',
-        'narrativeConfig',
-        'kbwidget',
-        'kbaseNarrativeInput'],
-function($, Config) {
-    $.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'narrativeConfig',
+		'kbaseNarrativeInput'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Config,
+		kbaseNarrativeInput
+	) {
+    return KBWidget({
         name: "rastGenomeImportInput",
-        parent: "kbaseNarrativeInput",
+        parent : kbaseNarrativeInput,
         version: "1.0.0",
         options: {
             loadingImage: Config.get('loading_gif'),

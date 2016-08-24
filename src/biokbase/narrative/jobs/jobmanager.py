@@ -110,7 +110,7 @@ class JobManager(object):
                     'name': getattr(new_e, 'name', type(e).__name__)
                 }
                 self._send_comm_message('job_init_lookup_err', error)
-            raise new_e # should crash and burn on any of these.
+                raise new_e # should crash and burn on any of these.
 
         if not self._running_lookup_loop:
             # only keep one loop at a time in cause this gets called again!
@@ -300,6 +300,9 @@ class JobManager(object):
                     'code': getattr(new_e, "code", -1),
                     'source': getattr(new_e, "source", "JobManager")
                 }
+
+        if 'canceling' in self._running_jobs[job_id]:
+            state['job_state'] = 'canceling'
 
         return {'state': state,
                 'spec': app_spec,
@@ -518,26 +521,45 @@ class JobManager(object):
         Does NOT delete the job.
         Raises an exception if the current user doesn't have permission to cancel the job.
         """
+
         if job_id is None:
             raise ValueError('Job id required for cancellation!')
         if job_id not in self._running_jobs:
             self._send_comm_message('job_does_not_exist', {'job_id': job_id, 'source': 'cancel_job'})
             return
-            # raise ValueError('Attempting to cancel a Job that does not exist!')
 
         try:
             job = self.get_job(job_id)
             state = job.state()
-            if state.get('cancelled', 0) == 1 or state.get('finished', 0) == 1:
+            if state.get('canceled', 0) == 1 or state.get('finished', 0) == 1:
                 # It's already finished, don't try to cancel it again.
                 return
         except Exception as e:
             raise ValueError('Unable to get Job state')
 
+        # Stop updating the job status while we try to cancel.
+        # Also, set it to have a special state of 'canceling' while we're doing the cancel
+        is_refreshing = self._running_jobs[job_id].get('refresh', False)
+        self._running_jobs[job_id]['refresh'] = False
+        self._running_jobs[job_id]['canceling'] = True
         try:
             clients.get('job_service').cancel_job({'job_id': job_id})
         except Exception as e:
-            raise
+            new_e = transform_job_exception(e)
+            error = {
+                'error': 'Unable to get cancel job',
+                'message': getattr(new_e, 'message', 'Unknown reason'),
+                'code': getattr(new_e, 'code', -1),
+                'source': getattr(new_e, 'source', 'jobmanager'),
+                'name': getattr(new_e, 'name', type(e).__name__),
+                'request_type': 'cancel_job',
+                'job_id': job_id
+            }
+            self._send_comm_message('job_comm_error', error)
+            raise(e)
+        finally:
+            self._running_jobs[job_id]['refresh'] = is_refreshing
+            del self._running_jobs[job_id]['canceling']
 
         self._send_comm_message('job_canceled', {'job_id': job_id})
 

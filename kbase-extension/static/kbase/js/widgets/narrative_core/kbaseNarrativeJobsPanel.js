@@ -423,6 +423,8 @@ define([
                                 });
                                 modal.show();
                                 break;
+                            case 'cancel_job':
+                                break;
                             case 'job_logs':
                                 this.sendJobMessage('job-log-deleted', content.job_id, {jobId: content.job_id});
                                 break;

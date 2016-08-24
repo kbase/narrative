@@ -110,6 +110,11 @@ class Job(object):
         """
         try:
             state = self._njs.check_job(self.job_id)
+            if 'cancelled' in state:
+                state[u'canceled'] = state.get('cancelled', 0)
+                del state['cancelled']
+            if state.get('job_state', '') == 'cancelled':
+                state[u'job_state'] = 'canceled'
             state[u'cell_id'] = self.cell_id
             state[u'run_id'] = self.run_id
             return state

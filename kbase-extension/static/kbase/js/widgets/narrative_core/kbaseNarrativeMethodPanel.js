@@ -11,42 +11,40 @@
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @public
  */
-define (
-	[
-		'kbwidget',
-		'jquery',
-		'bluebird',
-		'handlebars',
-		'narrativeConfig',
-		'util/display',
-		'util/bootstrapDialog',
-		'text!kbase/templates/beta_warning_body.html',
-		'kbaseAccordion',
-		'kbaseNarrativeControlPanel',
-                'base/js/namespace',
-                'kb_service/client/narrativeMethodStore',
-                'uuid',
-
-		'narrative_core/catalog/kbaseCatalogBrowser',
-		'kbaseNarrative',
-		'catalog-client-api',
-		'kbase-client-api',
-		'bootstrap'
-	], function(
-		KBWidget,
-		$,
-		Promise,
-		Handlebars,
-		Config,
-		DisplayUtil,
-		BootstrapDialog,
-		BetaWarningTemplate,
-                kbaseAccordion,
-		kbaseNarrativeControlPanel,
-                Jupyter,
-                NarrativeMethodStore,
-                Uuid
-	) {
+define ([
+    'kbwidget',
+    'jquery',
+    'bluebird',
+    'handlebars',
+    'narrativeConfig',
+    'util/display',
+    'util/bootstrapDialog',
+    'text!kbase/templates/beta_warning_body.html',
+    'kbaseAccordion',
+    'kbaseNarrativeControlPanel',
+    'base/js/namespace',
+    'kb_service/client/narrativeMethodStore',
+    'uuid',
+    'narrative_core/catalog/kbaseCatalogBrowser',
+    'kbaseNarrative',
+    'catalog-client-api',
+    'kbase-client-api',
+    'bootstrap'
+], function(
+    KBWidget,
+    $,
+    Promise,
+    Handlebars,
+    Config,
+    DisplayUtil,
+    BootstrapDialog,
+    BetaWarningTemplate,
+    kbaseAccordion,
+    kbaseNarrativeControlPanel,
+    Jupyter,
+    NarrativeMethodStore,
+    Uuid
+) {
     'use strict';
     return KBWidget({
         name: 'kbaseNarrativeMethodPanel',
@@ -243,8 +241,6 @@ define (
                 }, this)
             );
 
-
-
             // Search button
             this.addButton($('<button>')
                            .addClass('btn btn-xs btn-default')
@@ -279,6 +275,7 @@ define (
                                 if(this.versionState === 'B') { versionTag='beta'; }
                                 else if(this.versionState === 'D') { versionTag='dev'; }
                                 this.refreshFromService(versionTag);
+                                this.refreshKernelSpecManager();
 
                                 if(this.appCatalog) {
                                     this.appCatalog.refreshAndRender();
@@ -344,6 +341,7 @@ define (
                 }
                 this.$toggleVersionBtn.html(this.versionState);
                 this.refreshFromService(versionTag);
+                this.refreshKernelSpecManager();
                 if (this.appCatalog) {
                     this.appCatalog.setTag(versionTag);
                 }
@@ -405,6 +403,16 @@ define (
             return this;
         },
 
+        refreshKernelSpecManager: function() {
+            try {
+                Jupyter.notebook.kernel.execute("from biokbase.narrative.jobs.specmanager import SpecManager\nSpecManager().reload()")
+            }
+            catch (e) {
+                alert(e);
+                console.log('REFRESH KERNEL SPEC MANAGER ERROR');
+                console.error(e);
+            }
+        },
 
         setListHeight: function(height, animate) {
             if(this.$methodList) {
@@ -469,33 +477,6 @@ define (
             $('body').append(this.help.$helpPanel);
         },
 
-        /**
-         * Shows a popup panel with a description of the clicked method.
-         * @param {object} method - the method containing a title and
-         * description for populating the popup.
-         * @private
-         */
-        // showTooltip: function(method, event) {
-        //     this.help.$helpTitle.text(method.name);
-        //     this.help.$helpVersion.text('v' + method.ver);
-        //     this.help.$helpBody.html(method.tooltip);
-        //     this.help.$helpLinkout.attr('href', this.options.methodHelpLink + method.id);
-        //     this.help.$helpPanel.css({
-        //                                'left':event.pageX,
-        //                                'top':event.pageY
-        //                              })
-        //                         .show();
-        // },
-
-        // showErrorTooltip: function(method, event) {
-        //     this.showTooltip({
-        //         'name' : method.name,
-        //         'ver' : method.ver,
-        //         'id' : method.id,
-        //         'tooltip' : "This method has an internal error and cannot currently be used.<br><br>The detailed error message is:<br>"+method.loading_error
-        //     }, event);
-        // },
-
         refreshFromService: function(versionTag) {
             var self = this;
             this.showLoadingMessage("Loading KBase Methods from service...");
@@ -523,14 +504,6 @@ define (
                                     }
                                 }));
 
-            //loadingCalls.push(self.methClient.list_apps_spec({})
-            //                    .then(function(apps) {
-            //                        self.appSpecs = {};
-             //                       for (var i=0; i<apps.length; i++) {
-            //                            self.appSpecs[apps[i].info.id] = apps[i];
-            //                        }
-            //                    }));
-                                
             loadingCalls.push(self.methClient.list_categories({})
                                 .then(function(categories) {
                                     self.categories = categories[0];
@@ -968,83 +941,83 @@ define (
             this.$errorPanel.show();
         },
 
-        /**
-         * @method
-         * Temp function borrowed from kbaseAccordion.js, so we can have access to the internal
-         * accordion bits that get generated. Maybe it'll change more!
-         */
-        buildAccordion : function (elements) {
-            var fontSize = '100%';
+        // /**
+        //  * @method
+        //  * Temp function borrowed from kbaseAccordion.js, so we can have access to the internal
+        //  * accordion bits that get generated. Maybe it'll change more!
+        //  */
+        // buildAccordion : function (elements) {
+        //     var fontSize = '100%';
 
-            var $block = $('<div></div>')
-                         .addClass('accordion')
-                         .css('font-size', fontSize)
-                         .attr('id', 'accordion');
+        //     var $block = $('<div></div>')
+        //                  .addClass('accordion')
+        //                  .css('font-size', fontSize)
+        //                  .attr('id', 'accordion');
 
-            var topElements = [];
+        //     var topElements = [];
 
-            $.each(elements,
-                $.proxy(
-                    function (idx, val) {
-                        var $topElem =
-                            $('<div></div>')
-                            .addClass('panel panel-default')
-                            .css('margin-bottom', '2px')
-                            .append($('<div></div>')
-                                    .addClass('panel-heading')
-                                    .css('padding', '0px')
-                                    .append($('<i></i>')
-                                            .css('margin-right', '5px')
-                                            .css('margin-left', '3px')
-                                            .addClass('fa fa-chevron-right')
-                                            .addClass('pull-left')
-                                            .css('height', '22px')
-                                            .css('line-height', '22px')
-                                            .css('color', 'gray'))
-                                    .append($('<a></a>')
-                                            .css('padding', '0px')
-                                            .attr('href', '#')
-                                            .attr('title', val.title)
-                                            .css('height', '22px')
-                                            .css('line-height', '22px')
-                                            .append(val.title))
-                                    .bind('click',
-                                        function(e) {
-                                            e.preventDefault();
-                                            var $opened = $(this).closest('.panel').find('.in');
-                                            var $target = $(this).next();
+        //     $.each(elements,
+        //         $.proxy(
+        //             function (idx, val) {
+        //                 var $topElem =
+        //                     $('<div></div>')
+        //                     .addClass('panel panel-default')
+        //                     .css('margin-bottom', '2px')
+        //                     .append($('<div></div>')
+        //                             .addClass('panel-heading')
+        //                             .css('padding', '0px')
+        //                             .append($('<i></i>')
+        //                                     .css('margin-right', '5px')
+        //                                     .css('margin-left', '3px')
+        //                                     .addClass('fa fa-chevron-right')
+        //                                     .addClass('pull-left')
+        //                                     .css('height', '22px')
+        //                                     .css('line-height', '22px')
+        //                                     .css('color', 'gray'))
+        //                             .append($('<a></a>')
+        //                                     .css('padding', '0px')
+        //                                     .attr('href', '#')
+        //                                     .attr('title', val.title)
+        //                                     .css('height', '22px')
+        //                                     .css('line-height', '22px')
+        //                                     .append(val.title))
+        //                             .bind('click',
+        //                                 function(e) {
+        //                                     e.preventDefault();
+        //                                     var $opened = $(this).closest('.panel').find('.in');
+        //                                     var $target = $(this).next();
 
-                                            if ($opened !== undefined) {
-                                                $opened.collapse('hide');
-                                                var $i = $opened.parent().first().find('i');
-                                                $i.removeClass('fa fa-chevron-down');
-                                                $i.addClass('fa fa-chevron-right');
-                                            }
+        //                                     if ($opened !== undefined) {
+        //                                         $opened.collapse('hide');
+        //                                         var $i = $opened.parent().first().find('i');
+        //                                         $i.removeClass('fa fa-chevron-down');
+        //                                         $i.addClass('fa fa-chevron-right');
+        //                                     }
 
-                                            if ($target.get(0) !== $opened.get(0)) {
-                                                $target.collapse('show');
-                                                var $i = $(this).parent().find('i');
-                                                $i.removeClass('fa fa-chevron-right');
-                                                $i.addClass('fa fa-chevron-down');
-                                            }
-                                        }
-                                    )
-                            )
-                            .append($('<div></div>')
-                                    .addClass('panel-body collapse')
-                                    .css('padding-top', '9px')
-                                    .css('padding-bottom', '9px')
-                                    .append(val.body));
-                        topElements[val.title] = $topElem;
-                        $block.append($topElem);
-                    },
-                    this
-                )
-            );
-            this._rewireIds($block, this);
+        //                                     if ($target.get(0) !== $opened.get(0)) {
+        //                                         $target.collapse('show');
+        //                                         var $i = $(this).parent().find('i');
+        //                                         $i.removeClass('fa fa-chevron-right');
+        //                                         $i.addClass('fa fa-chevron-down');
+        //                                     }
+        //                                 }
+        //                             )
+        //                     )
+        //                     .append($('<div></div>')
+        //                             .addClass('panel-body collapse')
+        //                             .css('padding-top', '9px')
+        //                             .css('padding-bottom', '9px')
+        //                             .append(val.body));
+        //                 topElements[val.title] = $topElem;
+        //                 $block.append($topElem);
+        //             },
+        //             this
+        //         )
+        //     );
+        //     this._rewireIds($block, this);
 
-            return [$block, topElements];
-        },
+        //     return [$block, topElements];
+        // },
 
         /**
          * A simple filter based on whether the given pattern string is present in the

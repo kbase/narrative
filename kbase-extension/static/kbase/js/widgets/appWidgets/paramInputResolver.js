@@ -22,7 +22,8 @@ define([
     './input/multiTextareaInput',
     './input/errorInput',
     './input/singleToggleButton',
-    './input/singleCustomSelect'
+    './input/singleCustomSelect',
+    './input/multiCustomSelect'
 ], function (
     SingleTextInputWidget,
     MultiTextInputWidget,
@@ -44,7 +45,8 @@ define([
     MultiTextareaInputWidget,
     ErrorInputWidget,
     SingleToggleButtonWidget,
-    SingleCustomSelectWidget
+    SingleCustomSelectWidget,
+    MultiCustomSelectWidget
     ) {
     'use strict';
 
@@ -267,7 +269,7 @@ define([
                             return CustomSubdataWidget;
                         case 'custom_widget':
                             if (parameterSpec.multipleItems()) {
-                                return UndefinedInputWidget;
+                                return MultiCustomSelectWidget;
                             }
                             return SingleCustomSelectWidget;
                         default:
@@ -318,7 +320,7 @@ define([
                             }
                             return SingleSubdataWidget;
                         case 'custom_widget':
-                            return UndefinedInputWidget;
+                            return SingleCustomSelectWidget;
                         case 'tab':
                             return UndefinedInputWidget;
                         default:

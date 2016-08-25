@@ -29,6 +29,7 @@ from biokbase.narrative.exception_util import (
     transform_job_exception
 )
 import traceback
+import sys
 
 class JobManager(object):
     """
@@ -44,7 +45,7 @@ class JobManager(object):
     _lookup_timer = None
     _comm = None
     _log = kblogging.get_logger(__name__)
-    _log.setLevel(logging.INFO)
+    # TODO: should this not be done globally?
     _running_lookup_loop = False
 
     def __new__(cls):
@@ -88,6 +89,7 @@ class JobManager(object):
             job_meta = info[10]
             try:
                 job_info = clients.get('job_service').get_job_params(job_id)[0]
+
                 self._running_jobs[job_id] = {
                     'refresh': True,
                     'job': Job.from_state(job_id,
@@ -98,6 +100,7 @@ class JobManager(object):
                                           cell_id=job_meta.get('cell_id', None),
                                           run_id=job_meta.get('run_id', None))
                 }
+                
             except Exception as e:
                 kblogging.log_event(self._log, 'init_error', {'err': str(e)})
                 new_e = transform_job_exception(e)
@@ -248,13 +251,11 @@ class JobManager(object):
         try:
             app_spec = job.app_spec()
         except Exception as e:
-            self._log.setLevel(logging.ERROR)
             kblogging.log_event(self._log, "lookup_job_status.error", {'err': str(e)})
 
         try:
             state = job.state()
         except Exception as e:
-            self._log.setLevel(logging.ERROR)
             kblogging.log_event(self._log, "lookup_job_status.error", {'err': str(e)})
 
             new_e = transform_job_exception(e)
@@ -290,7 +291,6 @@ class JobManager(object):
             except Exception as e:
                 # Can't get viewer params
                 new_e = transform_job_exception(e)
-                self._log.setLevel(logging.ERROR)
                 kblogging.log_event(self._log, "lookup_job_status.error", {'err': str(e)})
                 state['job_state'] = 'error'
                 state['error'] = {
@@ -399,9 +399,8 @@ class JobManager(object):
             remove the flag that gets set by stop_job_update (needs an accompanying 'job_id'
             field)
         """
-
+        
         if 'request_type' in msg['content']['data']:
-            self._log.setLevel(logging.INFO)
             r_type = msg['content']['data']['request_type']
             job_id = msg['content']['data'].get('job_id', None)
             if job_id is not None and job_id not in self._running_jobs:
@@ -561,13 +560,17 @@ class JobManager(object):
             self._running_jobs[job_id]['refresh'] = is_refreshing
             del self._running_jobs[job_id]['canceling']
 
-        self._send_comm_message('job_canceled', {'job_id': job_id})
+        #
+        # self._send_comm_message('job_canceled', {'job_id': job_id})
+        # Rather than a separate message, how about triggering a job-status message:
+        self._lookup_job_status(job_id)
 
     def _send_comm_message(self, msg_type, content):
         """
         Sends a ipykernel.Comm message to the KBaseJobs channel with the given msg_type
         and content. These just get encoded into the message itself.
         """
+
         msg = {
             'msg_type': msg_type,
             'content': content

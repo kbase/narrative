@@ -1088,7 +1088,6 @@ define([
             if (!jobId) {
                 return;
             }
-            console.log('req job status', jobId);
             runtime.bus().emit('request-job-status', {
                 jobId: jobId
             });
@@ -1220,7 +1219,7 @@ define([
                         case 'completed':
                             stopListeningForJobMessages();
                             return {mode: 'success'};
-                        case 'cancelled':
+                        case 'canceled':
                             stopListeningForJobMessages();
                             return {mode: 'canceled'};
                         case 'suspend':
@@ -1404,7 +1403,6 @@ define([
             });
             jobListeners.push(ev);
 
-            console.log('requesting job status...', jobId);
             runtime.bus().emit('request-job-status', {
                 jobId: jobId
             });
@@ -1783,7 +1781,6 @@ define([
                 // if we are in a running state, start listening for jobs
                 var state = model.getItem('fsm.currentState');
                 // var listeningForJobUpdates = false;
-                console.log('current state', state);
                 if (state) {
                     switch (state.mode) {
                         case 'editing':

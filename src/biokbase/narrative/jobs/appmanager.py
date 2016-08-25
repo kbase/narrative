@@ -51,7 +51,6 @@ class AppManager(object):
     ws_client = clients.get('workspace')
     spec_manager = SpecManager()
     _log = kblogging.get_logger(__name__)
-    _log.setLevel(logging.INFO)
     _comm = None
     viewer_count = 1
 
@@ -212,7 +211,6 @@ class AppManager(object):
             'username': system_variable('user_id'),
             'ws': system_variable('workspace')
         }
-        self._log.setLevel(logging.INFO)
         kblogging.log_event(self._log, "run_local_app", log_info)
 
         self._send_comm_message('run_status', {
@@ -313,7 +311,6 @@ class AppManager(object):
             'username': system_variable('user_id'),
             'ws': system_variable('workspace')
         }
-        self._log.setLevel(logging.INFO)
         kblogging.log_event(self._log, "run_widget_app", log_info)
 
         self._send_comm_message('run_status', {
@@ -550,16 +547,20 @@ class AppManager(object):
         kblogging.log_event(self._log, "run_app", log_info)
 
         try:
-            kblogging.log_event(self._log, 'run_job', {'msg': 'sending run_job request'})
             job_id = self.njs.run_job(job_runner_inputs)
-            kblogging.log_event(self._log, 'run_job', {'msg': 'sent run_job job request'})
         except Exception as e:
             log_info.update({'err': str(e)})
-            self._log.setLevel(logging.ERROR)
             kblogging.log_event(self._log, "run_app_error", log_info)
             raise transform_job_exception(e)
 
-        new_job = Job(job_id, app_id, [params], system_variable('user_id'), tag=tag, app_version=service_ver, cell_id=cell_id)
+        new_job = Job(job_id,
+                      app_id,
+                      [params],
+                      system_variable('user_id'),
+                      tag=tag,
+                      app_version=service_ver,
+                      cell_id=cell_id,
+                      run_id=run_id)
 
         self._send_comm_message('run_status', {
             'event': 'launched_job',

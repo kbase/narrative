@@ -956,7 +956,7 @@ define([
                     };
 
                     break;
-                case 'cancelled':
+                case 'canceled':
                     temporalState = 'finished';
                     executionState = 'canceled';
                     break;
@@ -1015,9 +1015,6 @@ define([
 
             var launchState = model.getItem('launchState');
             if (!launchState) {
-                if (launchEvent.event !== 'validating_app') {
-                    console.warn('Initializing launch time without validating_app (' + launchEvent.event + ')');
-                }
                 // These are always set on the first event.
                 launchState = {
                     runId: launchEvent.run_id,

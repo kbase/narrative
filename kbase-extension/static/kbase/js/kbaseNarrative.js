@@ -647,11 +647,6 @@ define(
                     this.workspaceId = wsInfo[1];
                 }
 
-                // Note that the stuff we are building here is being loaded
-                // before the kernel is ready. This means that any kernel-centric
-                // stuff will have to wait. E.g. messages, code exec calls.
-                
-                console.log('Jupyter ready?', Jupyter.notebook.kernel);
                 this.sidePanel = new KBaseNarrativeSidePanel($('#kb-side-panel'), {autorender: false});
                 // init the controller
                 this.narrController = new KBaseNarrativeWorkspace($('#notebook_panel'), {

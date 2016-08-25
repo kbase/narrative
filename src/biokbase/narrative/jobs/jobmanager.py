@@ -46,7 +46,6 @@ class JobManager(object):
     _comm = None
     _log = kblogging.get_logger(__name__)
     # TODO: should this not be done globally?
-    _log.setLevel(logging.INFO)
     _running_lookup_loop = False
 
     def __new__(cls):
@@ -93,7 +92,13 @@ class JobManager(object):
 
                 self._running_jobs[job_id] = {
                     'refresh': True,
-                    'job': Job.from_state(job_id, job_info, user_info[0], app_id=job_info.get('app_id'), tag=job_meta.get('tag', 'release'), cell_id=job_meta.get('cell_id', None))
+                    'job': Job.from_state(job_id,
+                                          job_info,
+                                          user_info[0],
+                                          app_id=job_info.get('app_id'),
+                                          tag=job_meta.get('tag', 'release'),
+                                          cell_id=job_meta.get('cell_id', None),
+                                          run_id=job_meta.get('run_id', None))
                 }
                 
             except Exception as e:
@@ -188,25 +193,25 @@ class JobManager(object):
         """
         return [j['job'] for j in self._running_jobs.values()]
 
-    def _get_existing_job(self, job_tuple):
-        """
-        creates a Job object from a job_id that already exists.
-        If no job exists, raises an Exception.
+    # def _get_existing_job(self, job_tuple):
+    #     """
+    #     creates a Job object from a job_id that already exists.
+    #     If no job exists, raises an Exception.
 
-        Parameters:
-        -----------
-        job_tuple : The expected 4-tuple representing a Job. The format is:
-            (job_id, set of job inputs (as JSON), version tag, cell id that started the job)
-        """
+    #     Parameters:
+    #     -----------
+    #     job_tuple : The expected 5-tuple representing a Job. The format is:
+    #         (job_id, set of job inputs (as JSON), version tag, cell id that started the job, run id of the job)
+    #     """
 
-        # remove the prefix (if present) and take the last element in the split
-        job_id = job_tuple[0].split(':')[-1]
-        try:
-            job_info = clients.get('job_service').get_job_params(job_id)[0]
-            return Job.from_state(job_id, job_info, app_id=job_tuple[1], tag=job_tuple[2], cell_id=job_tuple[3])
-        except Exception as e:
-            kblogging.log_event(self._log, "get_existing_job.error", {'job_id': job_id, 'err': str(e)})
-            raise
+    #     # remove the prefix (if present) and take the last element in the split
+    #     job_id = job_tuple[0].split(':')[-1]
+    #     try:
+    #         job_info = clients.get('job_service').get_job_params(job_id)[0]
+    #         return Job.from_state(job_id, job_info, app_id=job_tuple[1], tag=job_tuple[2], cell_id=job_tuple[3], run_id=job_tuple[4])
+    #     except Exception as e:
+    #         kblogging.log_event(self._log, "get_existing_job.error", {'job_id': job_id, 'err': str(e)})
+    #         raise
 
     def _construct_job_status(self, job_id):
         """
@@ -232,7 +237,9 @@ class JobManager(object):
                         'error_type': 'ValueError',
                         'error_stacktrace': ''
                     }
-                }
+                },
+                'cell_id': None,
+                'run_id': None
             }
             return {
                 'state': state,
@@ -273,7 +280,8 @@ class JobManager(object):
                     }
                 },
                 'creation_time': 0,
-                'cell_id': None,
+                'cell_id': job.cell_id,
+                'run_id': job.run_id,
                 'job_id': job_id
             }
 
@@ -292,6 +300,9 @@ class JobManager(object):
                     'code': getattr(new_e, "code", -1),
                     'source': getattr(new_e, "source", "JobManager")
                 }
+
+        if 'canceling' in self._running_jobs[job_id]:
+            state['job_state'] = 'canceling'
 
         return {'state': state,
                 'spec': app_spec,
@@ -388,7 +399,6 @@ class JobManager(object):
             remove the flag that gets set by stop_job_update (needs an accompanying 'job_id'
             field)
         """
-        kblogging.log_event(self._log, 'handle_comm_message', {'msg': msg})
         
         if 'request_type' in msg['content']['data']:
             r_type = msg['content']['data']['request_type']
@@ -510,31 +520,45 @@ class JobManager(object):
         Does NOT delete the job.
         Raises an exception if the current user doesn't have permission to cancel the job.
         """
+
         if job_id is None:
             raise ValueError('Job id required for cancellation!')
         if job_id not in self._running_jobs:
             self._send_comm_message('job_does_not_exist', {'job_id': job_id, 'source': 'cancel_job'})
             return
-            # raise ValueError('Attempting to cancel a Job that does not exist!')
 
         try:
             job = self.get_job(job_id)
             state = job.state()
-            # NB usage of English spelling with two els.
-            if state.get('cancelled', 0) == 1 or state.get('finished', 0) == 1:
-                # TODO: issue warning to user. The client may be in a "canceling" state
-                # 
+            if state.get('canceled', 0) == 1 or state.get('finished', 0) == 1:
                 # It's already finished, don't try to cancel it again.
                 return
         except Exception as e:
             raise ValueError('Unable to get Job state')
 
+        # Stop updating the job status while we try to cancel.
+        # Also, set it to have a special state of 'canceling' while we're doing the cancel
+        is_refreshing = self._running_jobs[job_id].get('refresh', False)
+        self._running_jobs[job_id]['refresh'] = False
+        self._running_jobs[job_id]['canceling'] = True
         try:
-            kblogging.log_event(self._log, 'cancel_job', {'msg': 'sending cancel job request'})
             clients.get('job_service').cancel_job({'job_id': job_id})
-            kblogging.log_event(self._log, 'cancel_job', {'msg': 'sent cancel job request'})
         except Exception as e:
-            raise
+            new_e = transform_job_exception(e)
+            error = {
+                'error': 'Unable to get cancel job',
+                'message': getattr(new_e, 'message', 'Unknown reason'),
+                'code': getattr(new_e, 'code', -1),
+                'source': getattr(new_e, 'source', 'jobmanager'),
+                'name': getattr(new_e, 'name', type(e).__name__),
+                'request_type': 'cancel_job',
+                'job_id': job_id
+            }
+            self._send_comm_message('job_comm_error', error)
+            raise(e)
+        finally:
+            self._running_jobs[job_id]['refresh'] = is_refreshing
+            del self._running_jobs[job_id]['canceling']
 
         #
         # self._send_comm_message('job_canceled', {'job_id': job_id})
@@ -546,7 +570,6 @@ class JobManager(object):
         Sends a ipykernel.Comm message to the KBaseJobs channel with the given msg_type
         and content. These just get encoded into the message itself.
         """
-        kblogging.log_event(self._log, "send_comm_message", {'at': 'send comm message', 'msg': 'sending'})
 
         msg = {
             'msg_type': msg_type,

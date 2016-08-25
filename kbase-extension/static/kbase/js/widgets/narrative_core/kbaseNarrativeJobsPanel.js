@@ -196,24 +196,18 @@ define([
             var bus = this.runtime.bus();
 
             bus.on('request-job-cancellation', function (message) {
-                // this.deleteJob(message.jobId);
-                console.log('REQUEST TO CANCEL JOB RECEIVED', message);
                 this.sendCommMessage(this.CANCEL_JOB, message.jobId);
             }.bind(this));
 
             bus.on('request-job-status', function (message) {
-                console.log('job status requested', message);
-
                 this.sendCommMessage(this.JOB_STATUS, message.jobId);
             }.bind(this));
 
             bus.on('request-job-log', function (message) {
-                console.log('job log requested', message);
                 this.sendCommMessage(this.JOB_LOGS, message.jobId, message.options);
             }.bind(this));
 
             bus.on('request-latest-job-log', function (message) {
-                console.log('latest job log requested', message);
                 this.sendCommMessage(this.JOB_LOGS_LATEST, message.jobId, message.options);
             }.bind(this));
         },
@@ -241,6 +235,7 @@ define([
 //                            this.sendCommMessage(msgType, jobId, options);
 //                        }.bind(this));
 //                }
+                // TODO: send specific error so that client can retry.
                 if (!this.comm) {
                     console.error('Comm channel not initialized, not sending message.');
                     throw new Error('Comm channel not initialized, not sending message.');
@@ -292,7 +287,6 @@ define([
                      * Notify the front end about the changed or new job
                      * states.
                      */
-                    // console.log('sending job-status', jobId, jobStateMessage.state, jobStateMessage.widget_info);
                     this.sendJobMessage('job-status', jobId, {
                         jobId: jobId,
                         jobState: jobStateMessage.state,
@@ -331,8 +325,6 @@ define([
                             owner: jobStateMessage.owner
                         };
 
-
-                        // console.log('sending job-status (all)', jobId, jobStateMessage.state, jobStateMessage.widget_info);
                         this.sendJobMessage('job-status', jobId, {
                             jobId: jobId,
                             jobState: jobStateMessage.state,
@@ -429,6 +421,12 @@ define([
                                 });
                                 modal.show();
                                 break;
+                            case 'cancel_job':
+                                this.sendJobMessage('job-cancel-error', content.job_id, {
+                                    jobId: content.job_id,
+                                    message: content.message
+                                });
+                                break;
                             case 'job_logs':
                                 this.sendJobMessage('job-log-deleted', content.job_id, {jobId: content.job_id});
                                 break;
@@ -473,9 +471,9 @@ define([
                     });
                     new kbaseAccordion($modalBody.find('div#kb-job-err-trace'), {
                         elements: [{
-                                title: 'Detailed Error Information',
-                                body: $('<table class="table table-bordered"><tr><th>code:</th><td>' + content.code +
-                                    '</td></tr><tr><th>error:</th><td>' + content.error +
+                            title: 'Detailed Error Information',
+                            body: $('<table class="table table-bordered"><tr><th>code:</th><td>' + content.code +
+                                    '</td></tr><tr><th>error:</th><td>' + content.message +
                                     '</td></tr><tr><th>type:</th><td>' + content.name +
                                     '</td></tr><tr><th>source:</th><td>' + content.source + '</td></tr></table>')
                             }]
@@ -517,7 +515,6 @@ define([
                                 //console.info('Jobs Panel: Found an existing channel!');
                                 //console.info(msg);
                                 this.comm = new JupyterComm.Comm(this.COMM_NAME, id);
-                                console.log('Comm set here?', this.comm);
                                 Jupyter.notebook.kernel.comm_manager.register_comm(this.comm);
                                 this.comm.on_msg(this.handleCommMessages.bind(this));
                             }
@@ -525,10 +522,8 @@ define([
                     }
                     if (this.comm === null) {
                         // console.info('Jobs Panel: setting up a new channel - ' + this.COMM_NAME);
-                        console.log('Registering ', this.COMM_NAME);
                         Jupyter.notebook.kernel.comm_manager.register_target(this.COMM_NAME, function (comm, msg) {
                             // console.info('Jobs Panel: new channel set up - ', comm);
-                            console.log('Comm set here?', this.comm);
                             this.comm = comm;
                             comm.on_msg(this.handleCommMessages.bind(this));
                         }.bind(this));
@@ -542,7 +537,6 @@ define([
                                 } else {
                                     resolve();
                                 }
-                                // console.log('REPLY', content);
                             }
                         }
                     };

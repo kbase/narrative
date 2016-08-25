@@ -67,7 +67,7 @@ define ([
         },
         id2Elem: {},
         methodSpecs: {},  // id -> spec
-        appSpecs: {},     // id -> spec
+        // appSpecs: {},     // id -> spec
         categories: {},   // id -> category info
 
         currentTag: null, // release/dev/beta; which version of the method spec to fetch.  default is release
@@ -488,30 +488,51 @@ define ([
             }
 
             var loadingCalls = [];
-            loadingCalls.push(self.methClient.list_methods(filterParams)
-                                .then(function(methods) {
-                                    self.methodSpecs = {};
-                                    self.methodInfo = {};
-                                    for (var i=0; i<methods.length; i++) {
-                                        // key should have LC module name if an SDK method
-                                        if(methods[i].module_name) {
-                                            var idTokens = methods[i].id.split('/');
-                                            self.methodSpecs[idTokens[0].toLowerCase() + '/' + idTokens[1]] = {info:methods[i]};
-                                        // EAP - don't even consider methods without a module, they are obsolete.
-                                        //} else {
-                                        //    self.methodSpecs[methods[i].id] = {info:methods[i]};
-                                        }
+            loadingCalls.push(
+                Promise.resolve(self.methClient.list_methods(filterParams))
+                       .then(function(methods) {
+                           self.methodSpecs = {};
+                           self.methodInfo = {};
+                           for (var i=0; i<methods.length; i++) {
+                           // key should have LC module name if an SDK method
+                                if(methods[i].module_name) {
+                                    var idTokens = methods[i].id.split('/');
+                                    self.methodSpecs[idTokens[0].toLowerCase() + '/' + idTokens[1]] = {info:methods[i]};
+                                    // EAP - don't even consider methods without a module, they are obsolete.
+                                    //} else {
+                                    //    self.methodSpecs[methods[i].id] = {info:methods[i]};
                                     }
-                                }));
+                                }
+                            }
+                        ));
 
-            loadingCalls.push(self.methClient.list_categories({})
-                                .then(function(categories) {
-                                    self.categories = categories[0];
-                                }));
+            loadingCalls.push(
+                Promise.resolve(self.methClient.list_categories({}))
+                       .then(function(categories) {
+                            self.categories = categories[0];
+                       }));
+
+            if (!versionTag || versionTag === 'release') {
+                loadingCalls.push(self.catalog.list_basic_module_info({})
+                    .then(function(moduleInfoList) {
+                        self.moduleVersions = {};
+                        return Promise.map(moduleInfoList, function(module) {
+                            if (module.dynamic_service === 0) {
+                                return Promise.resolve(
+                                    self.catalog.get_module_version({module_name: module.module_name})
+                                )
+                                .then(function(version) {
+                                    self.moduleVersions[version.module_name] = version.version;
+                                });
+                            }
+                        });
+                    })
+                );
+            }
 
             Promise.all(loadingCalls)
                 .then(function() {
-                    return self.catalog.list_favorites(self.auth().user_id)
+                    return Promise.resolve(self.catalog.list_favorites(self.auth().user_id))
                                 .then(function(favs) {
                                     for(var k=0; k<favs.length; k++) {
                                         var fav = favs[k];
@@ -523,33 +544,36 @@ define ([
                                             self.methodSpecs[lookup]['favorite'] = fav.timestamp; // this is when this was added as a favorite
                                         }
                                     }
-                                    self.parseMethodsAndApps(self.categories, self.methodSpecs, self.appSpecs);
+                                    self.parseMethods(self.categories, self.methodSpecs);
                                     self.showFunctionPanel();
                                     self.filterList(); // keep the filters
                                 })
-                                /* For some reason this is throwing a Bluebird error to include this error handler, but I don't know why right now -mike
+                                 // For some reason this is throwing a Bluebird error to include this error handler, but I don't know why right now -mike
                                 .catch(function(error) {
-                                    console.log('error getting favorites, but probably we can still try and proceed')
-                                    self.parseMethodsAndApps(self.categories, self.methodSpecs, self.appSpecs);
+                                    console.log('error getting favorites, but probably we can still try and proceed', error);
+                                    self.parseMethods(self.categories, self.methodSpecs);
                                     self.showFunctionPanel();
                                     self.filterList(); // keep the filters
-                                });*/
+                                });
                 })
                 .catch(function(error) {
-                    console.log("error'd!")
                     console.log(error);
                     self.showError(error);
                 });
         },
 
-        parseMethodsAndApps: function(catSet, methSet, appSet) {
+        parseMethods: function(catSet, methSet) {
             var self = this;
             var triggerMethod = function(method) {
                 if(!method['spec']) {
-                    self.methClient.get_method_spec({ids:[method.info.id],tag:self.currentTag})
-                        .then(function(spec){
+                    self.methClient.get_method_spec({ids:[method.info.id], tag:self.currentTag})
+                        .then(function(spec) {
                             // todo: cache this spec into the methods list
-                            self.trigger('methodClicked.Narrative', [spec[0], self.currentTag]);
+                            spec = spec[0];
+                            if (self.moduleVersions[spec.info.module_name]) {
+                                spec.info.ver = self.moduleVersions[spec.info.module_name];
+                            }
+                            self.trigger('methodClicked.Narrative', [spec, self.currentTag]);
                         })
                         .catch(function (err) {
                             var errorId = new Uuid(4).format();
@@ -559,10 +583,6 @@ define ([
                 } else {
                     self.trigger('methodClicked.Narrative', [method, self.currentTag]);
                 }
-            };
-
-            var triggerApp = function(app) {
-                self.trigger('appClicked.Narrative', app);
             };
 
             var generatePanel = function(catSet, fnSet, icon, callback) {
@@ -593,15 +613,19 @@ define ([
                     return a.info.name.localeCompare(b.info.name);
                 });
                 for (var i=0; i<fnList.length; i++) {
-                    var $fnElem = self.buildMethod(icon, fnList[i], callback);
-                    $fnPanel.append($fnElem);
                     // need the module name IDs to be lower case in the lookup table
                     var id = fnList[i].info.id;
                     if(fnList[i].info.module_name) {
                         var idTokens = fnList[i].info.id.split('/');
                         id = idTokens[0].toLowerCase() + '/' + idTokens[1];
+
+                        if (self.moduleVersions[fnList[i].info.module_name]) {
+                            fnList[i].info.ver = self.moduleVersions[fnList[i].info.module_name];
+                        }
                     }
+                    var $fnElem = self.buildMethod(icon, fnList[i], callback);
                     id2Elem[id] = $fnElem;
+                    $fnPanel.append($fnElem);
                 }
                 return [$fnPanel, id2Elem];
             };
@@ -611,12 +635,7 @@ define ([
             var $methodPanel = methodRender[0];
             this.id2Elem['method'] = methodRender[1];
 
-            var appRender = generatePanel(catSet, appSet, 'A', triggerApp);
-            var $appPanel = appRender[0];
-            this.id2Elem['app'] = appRender[1];
-
-            this.$methodList.empty().append($methodPanel).append($appPanel);
-            //console.log([Object.keys(this.appSpecs).length, Object.keys(this.methodSpecs).length]);
+            this.$methodList.empty().append($methodPanel); //.append($appPanel);
         },
 
         /**
@@ -804,13 +823,13 @@ define ([
             //console.debug("getFunctionSpecs(specSet=",specSet,")");
             var results = {};
             // handle legacy apps; we already have the specs
-            if (specSet.apps && specSet.apps instanceof Array) {
-                results.apps = {};
-                for (var i=0; i<specSet.apps.length; i++) {
-                    if (this.appSpecs[specSet.apps[i]])
-                        results.apps[specSet.apps[i]] = this.appSpecs[specSet.apps[i]];
-                }
-            }
+            // if (specSet.apps && specSet.apps instanceof Array) {
+            //     results.apps = {};
+            //     for (var i=0; i<specSet.apps.length; i++) {
+            //         if (this.appSpecs[specSet.apps[i]])
+            //             results.apps[specSet.apps[i]] = this.appSpecs[specSet.apps[i]];
+            //     }
+            // }
             // handle methods, we now have to fetch the specs since we don't keep them around
             if (specSet.methods && specSet.methods instanceof Array) {
                 results.methods = {};
@@ -940,84 +959,6 @@ define ([
             this.$loadingPanel.hide();
             this.$errorPanel.show();
         },
-
-        // /**
-        //  * @method
-        //  * Temp function borrowed from kbaseAccordion.js, so we can have access to the internal
-        //  * accordion bits that get generated. Maybe it'll change more!
-        //  */
-        // buildAccordion : function (elements) {
-        //     var fontSize = '100%';
-
-        //     var $block = $('<div></div>')
-        //                  .addClass('accordion')
-        //                  .css('font-size', fontSize)
-        //                  .attr('id', 'accordion');
-
-        //     var topElements = [];
-
-        //     $.each(elements,
-        //         $.proxy(
-        //             function (idx, val) {
-        //                 var $topElem =
-        //                     $('<div></div>')
-        //                     .addClass('panel panel-default')
-        //                     .css('margin-bottom', '2px')
-        //                     .append($('<div></div>')
-        //                             .addClass('panel-heading')
-        //                             .css('padding', '0px')
-        //                             .append($('<i></i>')
-        //                                     .css('margin-right', '5px')
-        //                                     .css('margin-left', '3px')
-        //                                     .addClass('fa fa-chevron-right')
-        //                                     .addClass('pull-left')
-        //                                     .css('height', '22px')
-        //                                     .css('line-height', '22px')
-        //                                     .css('color', 'gray'))
-        //                             .append($('<a></a>')
-        //                                     .css('padding', '0px')
-        //                                     .attr('href', '#')
-        //                                     .attr('title', val.title)
-        //                                     .css('height', '22px')
-        //                                     .css('line-height', '22px')
-        //                                     .append(val.title))
-        //                             .bind('click',
-        //                                 function(e) {
-        //                                     e.preventDefault();
-        //                                     var $opened = $(this).closest('.panel').find('.in');
-        //                                     var $target = $(this).next();
-
-        //                                     if ($opened !== undefined) {
-        //                                         $opened.collapse('hide');
-        //                                         var $i = $opened.parent().first().find('i');
-        //                                         $i.removeClass('fa fa-chevron-down');
-        //                                         $i.addClass('fa fa-chevron-right');
-        //                                     }
-
-        //                                     if ($target.get(0) !== $opened.get(0)) {
-        //                                         $target.collapse('show');
-        //                                         var $i = $(this).parent().find('i');
-        //                                         $i.removeClass('fa fa-chevron-right');
-        //                                         $i.addClass('fa fa-chevron-down');
-        //                                     }
-        //                                 }
-        //                             )
-        //                     )
-        //                     .append($('<div></div>')
-        //                             .addClass('panel-body collapse')
-        //                             .css('padding-top', '9px')
-        //                             .css('padding-bottom', '9px')
-        //                             .append(val.body));
-        //                 topElements[val.title] = $topElem;
-        //                 $block.append($topElem);
-        //             },
-        //             this
-        //         )
-        //     );
-        //     this._rewireIds($block, this);
-
-        //     return [$block, topElements];
-        // },
 
         /**
          * A simple filter based on whether the given pattern string is present in the
@@ -1182,7 +1123,7 @@ define ([
                 return numHidden;
             };
 
-            numHidden += filterSet(this.appSpecs, 'app');
+            // numHidden += filterSet(this.appSpecs, 'app');
             numHidden += filterSet(this.methodSpecs, 'method');
 
             if (numHidden > 0) {

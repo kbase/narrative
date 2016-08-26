@@ -4,20 +4,22 @@
 define([
 ], function () {
     'use strict';
-    
-    
+
+
     function KBError(arg) {
         this.type = arg.type;
         this.message = arg.message;
         this.reason = arg.reason;
         this.original = arg.original;
         this.detail = arg.detail;
-        this.info =arg.info;
+        this.info = arg.info;
         this.advice = arg.advice;
 
         this.blame = arg.blame;
         this.code = arg.code;
         this.suggestion = arg.suggestion;
+
+        this.severity = arg.severity || 'fatal';
     }
     KBError.prototype = new Error();
 

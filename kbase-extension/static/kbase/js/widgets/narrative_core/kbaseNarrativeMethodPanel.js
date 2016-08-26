@@ -744,14 +744,19 @@ define ([
                 moreLink = this.options.appHelpLink + method.info.id;
             }
             var $more = $('<div>')
-                        .addClass('kb-method-list-more-div')
-                        .append($('<div>')
-                                .append(method.info.subtitle))
-                        .append($('<div>')
-                                .append($('<a>')
-                                        .append('more...')
-                                        .attr('target', '_blank')
-                                        .attr('href', moreLink)));
+                        .addClass('kb-method-list-more-div');
+
+            if (self.currentTag && self.currentTag !== 'release') {
+                $more.append($('<div style="font-size:8pt">')
+                             .append(method.info.git_commit_hash));
+            }
+            $more.append($('<div>')
+                         .append(method.info.subtitle))
+                 .append($('<div>')
+                         .append($('<a>')
+                                 .append('more...')
+                                 .attr('target', '_blank')
+                                 .attr('href', moreLink)));
 
             var $moreBtn =
                     $('<button class="btn btn-xs btn-default pull-right" aria-hidden="true">')

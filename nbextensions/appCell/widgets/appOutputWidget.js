@@ -186,7 +186,7 @@ define([
                     return {
                         jobId: jobId,
                         cellId: output.cell.id,
-                        createdTime: new Date(output.cell.createdAt)
+                        createdTime: new Date(output.createdAt)
                     };
                 });
             }

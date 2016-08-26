@@ -524,6 +524,14 @@ define([
                     }, [
                         div({dataElement: 'widget', style: {display: 'block', width: '100%'}}, [
                             div({class: 'container-fluid'}, [
+                                div({
+                                    class: 'kb-app-warning alert alert-warning hidden',
+                                    dataElement: 'outdated',
+                                    role: 'alert'
+                                }, [
+                                    span({style: {'font-weight': 'bold'}}, 'Warning'),
+                                    ': this app appears to be out of date. Running it may cause undesired results. Add a new "<b>' + model.getItem('app.spec.info.name') + '</b>" App for the most recent version.'
+                                ]),
                                 ui.buildPanel({
                                     title: 'App Cell Settings',
                                     name: 'settings',
@@ -781,7 +789,8 @@ define([
                 case 'dev':
                     return {
                         id: app.id,
-                        tag: app.tag
+                        tag: app.tag,
+                        version: app.gitCommitHash
                     };
                 default:
                     throw new Error('Invalid tag for app ' + app.id);
@@ -1002,6 +1011,10 @@ define([
             renderNotifications();
             renderSettings();
             var state = fsm.getCurrentState();
+
+            if (model.getItem('outdated')) {
+                ui.showElement('outdated');
+            }
 
             // Button state
             state.ui.buttons.enabled.forEach(function (button) {
@@ -2327,7 +2340,8 @@ define([
             }
 
             if (cellAppSpec.info.git_commit_hash !== appSpec.info.git_commit_hash) {
-                throw new ToErr.KBError({
+                return new ToErr.KBError({
+                    severity: 'warning',
                     type: 'app-spec-mismatched-commit',
                     message: 'Mismatching app commit for ' + appSpec.info.id + ', tag=' + model.getItem('app.tag') + ' : ' + cellAppSpec.info.git_commit_hash + ' !== ' + appSpec.info.git_commit_hash,
                     info: {
@@ -2346,12 +2360,7 @@ define([
                 });
             }
 
-            // spec version shouldn't be used, just module.
-            // if (cellAppSpec.info.version !== appSpec.info.version) {
-            //     throw new Error('Mismatching app version: ' + cellAppSpec.info.version + ' !== ' + appSpec.info.version);
-            // }
-
-
+            return null;
         }
 
         function run(params) {
@@ -2367,9 +2376,14 @@ define([
             })
             .then(function (appSpec) {
                 // Ensure that the current app spec matches our existing one.
-                checkSpec(appSpec);
+                var warning = checkSpec(appSpec);
+                if (warning && warning.severity === 'warning') {
+                    if (warning.type === 'app-spec-mismatched-commit') {
+                        model.setItem('outdated', true);
+                    }
+                }
 
-                // Create a map of paramters for easy access
+                // Create a map of parameters for easy access
                 var parameterMap = {};
                 env.parameters = model.getItem('app.spec.parameters').map(function (parameterSpec) {
                     // tee hee

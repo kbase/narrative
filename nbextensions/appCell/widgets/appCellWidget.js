@@ -2346,9 +2346,10 @@ define([
                 });
             }
 
-            if (cellAppSpec.info.version !== appSpec.info.version) {
-                throw new Error('Mismatching app version: ' + cellAppSpec.info.version + ' !== ' + appSpec.info.version);
-            }
+            // spec version shouldn't be used, just module.
+            // if (cellAppSpec.info.version !== appSpec.info.version) {
+            //     throw new Error('Mismatching app version: ' + cellAppSpec.info.version + ' !== ' + appSpec.info.version);
+            // }
 
 
         }
@@ -2364,73 +2365,73 @@ define([
             return Promise.try(function () {
                 return getAppSpec();
             })
-                .then(function (appSpec) {
-                    // Ensure that the current app spec matches our existing one.
-                    checkSpec(appSpec);
+            .then(function (appSpec) {
+                // Ensure that the current app spec matches our existing one.
+                checkSpec(appSpec);
 
-                    // Create a map of paramters for easy access
-                    var parameterMap = {};
-                    env.parameters = model.getItem('app.spec.parameters').map(function (parameterSpec) {
-                        // tee hee
-                        var param = ParameterSpec.make({parameterSpec: parameterSpec});
-                        parameterMap[param.id()] = param;
-                        return param;
-                    });
-                    env.parameterMap = parameterMap;
-
-
-                    var appRef = [model.getItem('app.id'), model.getItem('app.tag')].filter(toBoolean).join('/'),
-                        url = '/#appcatalog/app/' + appRef;
-                    utils.setCellMeta(cell, 'kbase.attributes.title', model.getItem('app.spec.info.name'));
-                    utils.setCellMeta(cell, 'kbase.attributes.subtitle', model.getItem('app.spec.info.subtitle'));
-                    utils.setCellMeta(cell, 'kbase.attributes.info.url', url);
-                    utils.setCellMeta(cell, 'kbase.attributes.info.label', 'more...');
-                    return Promise.all([
-                        loadInputWidget(),
-                        loadInputViewWidget(),
-                        loadExecutionWidget(),
-                        loadOutputWidget()
-                    ]);
-                })
-                .then(function () {
-                    // this will not change, so we can just render it here.
-                    showAboutApp();
-                    showAppSpec();
-                    PR.prettyPrint(null, container);
-                    renderUI();
-                    // renderIcon();
-                })
-                .then(function () {
-                    // if we start out in 'new' state, then we need to promote to
-                    // editing...
-
-                    if (fsm.getCurrentState().state.mode === 'new') {
-                        fsm.newState({mode: 'editing', params: 'incomplete'});
-                        evaluateAppState();
-                        //
-                    } else {
-                        renderUI();
-                    }
-                    if (!Jupyter.notebook.writable || Jupyter.narrative.readonly) {
-                        toggleReadOnlyMode(true);
-                    }
-                })
-                .catch(function (err) {
-                    var error = ToErr.grokError(err);
-                    console.error('ERROR loading main widgets', error);
-                    addNotification('Error loading main widgets: ' + error.message);
-
-                    model.setItem('fatalError', {
-                        title: 'Error loading main widgets',
-                        message: error.message,
-                        advice: error.advice || [],
-                        info: error.info,
-                        detail: error.detail || 'no additional details'
-                    });
-                    syncFatalError();
-                    fsm.newState({mode: 'fatal-error'});
-                    renderUI();
+                // Create a map of paramters for easy access
+                var parameterMap = {};
+                env.parameters = model.getItem('app.spec.parameters').map(function (parameterSpec) {
+                    // tee hee
+                    var param = ParameterSpec.make({parameterSpec: parameterSpec});
+                    parameterMap[param.id()] = param;
+                    return param;
                 });
+                env.parameterMap = parameterMap;
+
+
+                var appRef = [model.getItem('app.id'), model.getItem('app.tag')].filter(toBoolean).join('/'),
+                    url = '/#appcatalog/app/' + appRef;
+                utils.setCellMeta(cell, 'kbase.attributes.title', model.getItem('app.spec.info.name'));
+                utils.setCellMeta(cell, 'kbase.attributes.subtitle', model.getItem('app.spec.info.subtitle'));
+                utils.setCellMeta(cell, 'kbase.attributes.info.url', url);
+                utils.setCellMeta(cell, 'kbase.attributes.info.label', 'more...');
+                return Promise.all([
+                    loadInputWidget(),
+                    loadInputViewWidget(),
+                    loadExecutionWidget(),
+                    loadOutputWidget()
+                ]);
+            })
+            .then(function () {
+                // this will not change, so we can just render it here.
+                showAboutApp();
+                showAppSpec();
+                PR.prettyPrint(null, container);
+                renderUI();
+                // renderIcon();
+            })
+            .then(function () {
+                // if we start out in 'new' state, then we need to promote to
+                // editing...
+
+                if (fsm.getCurrentState().state.mode === 'new') {
+                    fsm.newState({mode: 'editing', params: 'incomplete'});
+                    evaluateAppState();
+                    //
+                } else {
+                    renderUI();
+                }
+                if (!Jupyter.notebook.writable || Jupyter.narrative.readonly) {
+                    toggleReadOnlyMode(true);
+                }
+            })
+            .catch(function (err) {
+                var error = ToErr.grokError(err);
+                console.error('ERROR loading main widgets', error);
+                addNotification('Error loading main widgets: ' + error.message);
+
+                model.setItem('fatalError', {
+                    title: 'Error loading main widgets',
+                    message: error.message,
+                    advice: error.advice || [],
+                    info: error.info,
+                    detail: error.detail || 'no additional details'
+                });
+                syncFatalError();
+                fsm.newState({mode: 'fatal-error'});
+                renderUI();
+            });
         }
 
         /*

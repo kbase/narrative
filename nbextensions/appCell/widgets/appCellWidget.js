@@ -2379,7 +2379,7 @@ define([
                 var warning = checkSpec(appSpec);
                 if (warning && warning.severity === 'warning') {
                     if (warning.type === 'app-spec-mismatched-commit') {
-                        model.setItem('outdated', warning.catalogCommitHash);
+                        model.setItem('outdated', true);
                     }
                 }
 

@@ -107,7 +107,8 @@ define (
                 var objIdentityList = [];
                 if (tree.ws_refs) {
                 	for (var key in tree.ws_refs) {
-                		objIdentityList.push({ref: tree.ws_refs[key]['g'][0]});
+                	    if (tree.ws_refs[key]['g'] && tree.ws_refs[key]['g'].length > 0)
+                	        objIdentityList.push({ref: tree.ws_refs[key]['g'][0]});
                 	}
                 }
                 if (objIdentityList.length > 0) {

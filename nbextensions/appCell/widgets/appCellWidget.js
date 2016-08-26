@@ -781,7 +781,8 @@ define([
                 case 'dev':
                     return {
                         id: app.id,
-                        tag: app.tag
+                        tag: app.tag,
+                        version: app.gitCommitHash
                     };
                 default:
                     throw new Error('Invalid tag for app ' + app.id);

@@ -2378,11 +2378,12 @@ define([
                 // Ensure that the current app spec matches our existing one.
                 var warning = checkSpec(appSpec);
                 if (warning && warning.severity === 'warning') {
-                    console.warn('YOU HAVE BEEN WARNED.', warning);
-                    model.setItem('outdated', true);
+                    if (warning.type === 'app-spec-mismatched-commit') {
+                        model.setItem('outdated', warning.catalogCommitHash);
+                    }
                 }
 
-                // Create a map of paramters for easy access
+                // Create a map of parameters for easy access
                 var parameterMap = {};
                 env.parameters = model.getItem('app.spec.parameters').map(function (parameterSpec) {
                     // tee hee

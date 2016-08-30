@@ -35,3 +35,8 @@ end
 test_auth = function(self)
     ngx.say("testing auth!")
 end
+
+M.initialize = initialize
+M.test_auth = test_auth
+
+return M

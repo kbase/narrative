@@ -161,7 +161,8 @@ end
 dump_cache = function(self)
     response = {}
     keys = token_cache:get_keys()
-    for num = 1, #ids do
+    for num = 1, #keys do
+        local key = keys[num]
         local user_id = token_cache:get(key)
         table.insert(response, {
             user_id = user_id,

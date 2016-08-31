@@ -100,6 +100,7 @@ test_auth = function(self)
     local token = nil
     if cheader then
         token = string.match(cheader, auth_cookie_name.."=([%S]+);?")
+    end
 
     local table = {
         "hello, ",

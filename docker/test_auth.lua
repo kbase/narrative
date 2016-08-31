@@ -15,6 +15,13 @@ local max_token_lifespan = 5 * 60
 local auth_url = 'https://kbase.us/services/authorization/Sessions/Login'
 
 local initialize
+local get_user_from_cache
+local validate_and_cache_token
+local get_user
+local parse_cookie
+local url_decode
+local test_auth
+
 local initialized = nil
 
 M.lock_name = "token_lock"
@@ -110,6 +117,14 @@ parse_cookie = function(cookie)
     return nil
 end
 
+--
+-- simple URL decode function
+url_decode = function(str)
+    str = string.gsub (str, "+", " ")
+    str = string.gsub (str, "%%(%x%x)", function(h) return string.char(tonumber(h,16)) end)
+    str = string.gsub (str, "\r\n", "\n")
+    return str
+end
 
 test_auth = function(self)
     local headers = ngx.req.get_headers()
@@ -132,7 +147,9 @@ test_auth = function(self)
     ngx.say(table)
 end
 
+
 M.initialize = initialize
+M.get_user = get_user
 M.test_auth = test_auth
 
 return M

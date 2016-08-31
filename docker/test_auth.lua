@@ -158,9 +158,23 @@ test_auth = function(self)
     ngx.say(table)
 end
 
+dump_cache = function(self)
+    response = {}
+    keys = token_cache:get_keys()
+    for num = 1, #ids do
+        local user_id = token_cache:get(key)
+        table.insert(response, {
+            user_id = user_id,
+            token = key
+        })
+    end
+    ngx.say(json.encode(response))
+end
+
 
 M.initialize = initialize
 M.get_user = get_user
 M.test_auth = test_auth
+M.dump_cache = dump_cache
 
 return M

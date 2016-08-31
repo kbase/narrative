@@ -24,7 +24,7 @@ local test_auth
 
 local initialized = nil
 
-M.lock_name = "token_lock"
+M.lock_name = "lock_map"
 
 initialize = function(self, conf)
     if conf then
@@ -145,7 +145,7 @@ test_auth = function(self)
         end
     end
 
-    user = get_user(token)
+    user = get_user(self, token)
 
     local table = {
         {"token: ", token},

@@ -1,4 +1,6 @@
+-- This module
 local M = {}
+-- The auth token cookie name.
 local auth_cookie_name = "kbase_session"
 
 local json = require("json")
@@ -6,14 +8,18 @@ local locklib = require("resty.lock")
 local httplib = require("resty.http")
 local httpclient = httplib:new()
 
+-- Gets populated by Nginx - is a ngx.shared.dict
 local token_cache = nil
 
--- tokens live for up to 5 minutes
+-- tokens live for up to 5 minutes, then the shared dict kills them
 local max_token_lifespan = 5 * 60
 
+-- Non-blocking resty http requests can't deal with https.
+-- This routes through a proxy to KBase auth.
+-- Note that a server stanza must be set up to proxy this.
 local auth_url = 'http://127.0.0.1:65001'
--- local auth_url = 'https://kbase.us/services/authorization/Sessions/Login'
 
+-- Variable prototypes
 local initialize
 local get_user_from_cache
 local validate_and_cache_token
@@ -22,10 +28,17 @@ local parse_cookie
 local url_decode
 local test_auth
 
+-- Nginx likes to run :initialize twice. Set this flag
+-- to something truthy and prevent the second one.
 local initialized = nil
 
+-- name of ngx lock dict needed for locking token cache keys
+-- while editing them.
 M.lock_name = "lock_map"
 
+-- Initializes the module.
+-- Given a conf dict, this initializes the main variables.
+-- Mainly, this inits the token cache.
 initialize = function(self, conf)
     if conf then
         for k, v in pairs(conf) do
@@ -97,6 +110,10 @@ validate_and_cache_token = function(token)
     return user_id
 end
 
+-- From a user's auth token (generally passed in via cookie
+-- or AUTHORIZATION header), this validates it, gets the user id,
+-- and caches the token.
+-- If the token is invalid, return nil.
 get_user = function(self, token)
     if token then
         ngx.log(ngx.ERR, "Looking up a token")
@@ -112,6 +129,9 @@ get_user = function(self, token)
     end
 end
 
+-- TEMPORARY - rewrite when we change the token structure.
+-- This parses the expected cookie string and extracts the
+-- token out of it.
 parse_cookie = function(cookie)
     local token_dict = {}
     local cookie = string.gsub(cookie, ";$", "")
@@ -137,6 +157,9 @@ url_decode = function(str)
     return str
 end
 
+-- A simple auth tester for the general workflow.
+-- Scrapes the cookie, parses the token out of it,
+-- validates it, caches it, and returns the user id.
 test_auth = function(self)
     local headers = ngx.req.get_headers()
     local cheader = ngx.unescape_uri(headers['Cookie'])
@@ -158,6 +181,8 @@ test_auth = function(self)
     ngx.say(table)
 end
 
+-- Temporary test function that scrapes the token cache and dumps
+-- it to ngx.say. Hides the token, because that's what you do.
 dump_cache = function(self)
     response = {}
     keys = token_cache:get_keys()
@@ -166,7 +191,7 @@ dump_cache = function(self)
         local user_id = token_cache:get(key)
         table.insert(response, {
             user_id = user_id,
-            token = key
+            token = "Token Number "..num
         })
     end
     ngx.say(json.encode(response))

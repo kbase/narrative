@@ -449,7 +449,7 @@ end
 -- The intent is that this is a fast, specific reaping process, accessible from outside.
 -- It's set up as a REST call, but a valid user token is required, and that token must come
 -- from the user who's instance it's trying to shut down.
--- Only the GET and DELETE methods are implemented. GET returns some info, and DELETE 
+-- Only the GET and DELETE methods are implemented. GET returns some info, and DELETE
 -- will shutdown the container under 2 conditions:
 -- 1. A valid KBase auth token is given in the cookie given by auth_cookie_name
 -- 2. The user specified by that cookie is shutting down their own Narrative instance
@@ -725,7 +725,7 @@ set_proxy = function(self)
                     ngx.status = ngx.HTTP_NOT_FOUND
                 end
             end
-        else 
+        else
             response["error"] = "No valid session key specified"
             ngx.status = ngx.HTTP_NOT_FOUND
         end
@@ -1034,7 +1034,7 @@ use_proxy = function(self)
     -- get session
     -- If if fails for any reason (there are several possible) redirect to
     -- an end point which can authenticate and hopefully send them back here
-    -- NB although the key for the container is called various things through this 
+    -- NB although the key for the container is called various things through this
     -- file it is important that it is the USERNAME, and thus it is named in this
     -- function.
     local username = get_session()
@@ -1049,12 +1049,12 @@ use_proxy = function(self)
     if target == nil then
         session_lock = locklib:new(M.lock_name, lock_opts)
         elapsed, err = session_lock:lock(username)
-        if err then 
+        if err then
             ngx.log(ngx.ERR, string.format("Error obtaining key %s", err))
             return ngx.exit(ngx.HTTP_REQUEST_TIMEOUT, string.format("Error obtaining key %s", err))
         end
         target = session_map:get(username)
-        -- still missing, but we would expect that, as it is unlikely that 
+        -- still missing, but we would expect that, as it is unlikely that
         -- a session for this user would be created between the two calls.
         if target == nil then
             -- this updates docker_map with session info
@@ -1084,7 +1084,7 @@ use_proxy = function(self)
             -- route to the "loading" page which will wait until the container
             -- is ready before loading the narrative.
             local scheme = ngx.var.src_scheme and ngx.var.src_scheme or 'http'
-            local returnurl = string.format("%s://%s%s", scheme, ngx.var.http_host, ngx.var.request_uri)            
+            local returnurl = string.format("%s://%s%s", scheme, ngx.var.http_host, ngx.var.request_uri)
             return ngx.redirect(string.format(M.load_redirect, ngx.escape_uri(returnurl)))
         end
         session_lock:unlock()

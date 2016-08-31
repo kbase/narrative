@@ -11,8 +11,8 @@ local token_cache = nil
 -- tokens live for up to 5 minutes
 local max_token_lifespan = 5 * 60
 
--- local auth_url = 'http://127.0.0.1:65001/users/'
-local auth_url = 'https://kbase.us/services/authorization/Sessions/Login'
+local auth_url = 'http://127.0.0.1:65001'
+-- local auth_url = 'https://kbase.us/services/authorization/Sessions/Login'
 
 local initialize
 local get_user_from_cache
@@ -47,7 +47,7 @@ end
 -- If the given token is stored in the cache, and hasn't expired, this
 -- returns that user id.
 -- If it has expired, or the token doesn't exist, returns nil
-get_user_from_cache = function(self, token)
+get_user_from_cache = function(token)
     if token then
         -- TODO: hash that token
         return token_cache:get(token)
@@ -61,7 +61,11 @@ end
 -- If not, returns nil
 -- This uses the resty.lock to lock up that particular key while
 -- trying to validate.
-validate_and_cache_token = function(self, token)
+validate_and_cache_token = function(token)
+    if not token then
+        return nil
+    end
+
     local token_lock = locklib:new(M.lock_name)
     elapsed, err = token_lock:lock(token)
 
@@ -75,7 +79,7 @@ validate_and_cache_token = function(self, token)
 
     ngx.log(ngx.ERR, "Sending validation request: "..json.encode(user_request))
 
-    local ok, code, headers, status, body = httpclient:request(user_request)
+    local ok,code,headers,status,body = httpclient:request(user_request)
     if code >= 200 and code < 300 then
         local profile = json.decode(body)
         ngx.log(ngx.ERR, "Something? "..body)

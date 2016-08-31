@@ -94,12 +94,33 @@ get_user = function(self, token)
     end
 end
 
+parse_cookie = function(cookie)
+    local token_dict = nill
+    local cookie = string.gsub(cookie, ";$", "")
+    cookie = url_decode(cookie)
+    for k, v in string.gmatch(cookie, "([%w_]+)=([^|]+);?") do
+        token_dict[k] = v
+    end
+    if token_dict['token'] then
+        token_dict['token'] = string.gsub(token_dict['token'], "PIPESIGN", "|")
+        token_dict['token'] = string.gsub(token_dict['token'], "EQUALSSIGN", "=")
+        -- ngx.log( ngx.DEBUG, string.format("token[token] = %s",token['token']))
+        return token_dict['token']
+    end
+    return nil
+end
+
+
 test_auth = function(self)
     local headers = ngx.req.get_headers()
     local cheader = ngx.unescape_uri(headers['Cookie'])
+    local token_dict = {}
     local token = nil
     if cheader then
-        token = string.match(cheader, auth_cookie_name.."=([%S]+);?")
+        local session = string.match(cheader, auth_cookie_name.."=([%S]+);?")
+        if session then
+            token = parse_cookie(session)
+        end
     end
 
     local table = {

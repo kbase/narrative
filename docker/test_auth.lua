@@ -72,9 +72,11 @@ validate_and_cache_token = function(self, token)
         method = "POST",
         body = d
     }
+
     local ok, code, headers, status, body = httpclient:request(user_request)
     if code >= 200 and code < 300 then
         local profile = json.decode(body)
+        ngx.log(ngx.ERR, "Something? "..profile)
         if profile.user_id then
             user_id = profile.user_id
             token_cache:set(token_cache, token, user_id, M.max_token_lifespan)

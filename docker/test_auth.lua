@@ -102,7 +102,7 @@ get_user = function(self, token)
 end
 
 parse_cookie = function(cookie)
-    local token_dict = nill
+    local token_dict = {}
     local cookie = string.gsub(cookie, ";$", "")
     cookie = url_decode(cookie)
     for k, v in string.gmatch(cookie, "([%w_]+)=([^|]+);?") do
@@ -138,11 +138,11 @@ test_auth = function(self)
         end
     end
 
+    user = get_user(token)
+
     local table = {
-        "hello, ",
-        {"world: ", true, " or ", false,
-            {": ", nil}},
-        {"token: ", token}
+        {"token: ", token},
+        {"user_id: ", user}
     }
     ngx.say(table)
 end

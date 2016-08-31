@@ -49,11 +49,37 @@ get_user_from_cache = function(self, token)
     end
 end
 
-add_valid_token = function(self, token, user)
-    -- TODO: hash that token
-    if token and user then
-        token_cache:set(token_cache, token, user, M.max_token_lifespan)
+-- Validates the token by looking it up in the Auth service.
+-- If valid, adds it to the token cache and returns the user id.
+-- If not, returns nil
+-- This uses the resty.lock to lock up that particular key while
+-- trying to validate.
+validate_and_cache_token = function(self, token)
+    local token_lock = locklib:new(M.lock_name)
+    elapsed, err = token_lock:lock(token)
+
+    local user_id = nil
+    d = {token=token, fields='user_id'}
+    local user_request = {
+        url = auth_url,
+        method = "POST",
+        body = d
+    }
+    local ok, code, headers, status, body = httpclient:request(user_request)
+    if code >= 200 and code < 300 then
+        local profile = json.decode(body)
+        if profile.user_id then
+            user_id = profile.user_id
+            token_cache:set(token_cache, token, user_id, M.max_token_lifespan)
+        else
+            --error - missing user id from token lookup
+            ngx.log(ngx.ERR, "Error: auth token lookup doesn't return a user id")
+        end
+    else
+        ngx.log(ngx.ERR, "Error during token validation: "..status.." "..body)
     end
+    token_lock:unlock()
+    return user_id
 end
 
 get_user = function(self, token)
@@ -62,33 +88,24 @@ get_user = function(self, token)
         if user then
             return user
         else
-            d = {token=token, fields='user_id'}
-            local user_request = {
-                url = auth_url,
-                method = "POST",
-                body = d
-            }
-            local ok, code, headers, status, body = httpclient:request(user_request)
-            if code >= 200 and code < 300 then
-                local profile = json.decode(body)
-                if profile.user_id then
-                    M.add_valid_token(token, profile.user_id)
-                else
-                    --error - missing user id from token lookup
-                    ngx.log(ngx.ERR, "Error: auth token lookup doesn't return a user id")
-                end
-            else
-                ngx.log(ngx.ERR, "Error during token validation: "..status.." "..body)
-            end
+            user = validate_and_cache_token(token)
+            return user
         end
     end
 end
 
 test_auth = function(self)
+    local headers = ngx.req.get_headers()
+    local cheader = ngx.unescape_uri(headers['Cookie'])
+    local token = nil
+    if cheader then
+        token = string.match(cheader, auth_cookie_name.."=([%S]+);?")
+
     local table = {
         "hello, ",
         {"world: ", true, " or ", false,
-            {": ", nil}}
+            {": ", nil}},
+        {"token: ", token}
     }
     ngx.say(table)
 end

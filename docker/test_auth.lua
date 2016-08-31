@@ -73,10 +73,12 @@ validate_and_cache_token = function(self, token)
         body = d
     }
 
+    ngx.log(ngx.ERR, "Sending validation request: "..json.encode(user_request))
+
     local ok, code, headers, status, body = httpclient:request(user_request)
     if code >= 200 and code < 300 then
         local profile = json.decode(body)
-        ngx.log(ngx.ERR, "Something? "..profile)
+        ngx.log(ngx.ERR, "Something? "..body)
         if profile.user_id then
             user_id = profile.user_id
             token_cache:set(token_cache, token, user_id, M.max_token_lifespan)
@@ -93,10 +95,13 @@ end
 
 get_user = function(self, token)
     if token then
+        ngx.log(ngx.ERR, "Looking up a token")
         user = get_user_from_cache(token)
         if user then
+            ngx.log(ngx.ERR, "Found user! "..user)
             return user
         else
+            ngx.log(ngx.ERR, "Didn't find user, validating token...")
             user = validate_and_cache_token(token)
             return user
         end

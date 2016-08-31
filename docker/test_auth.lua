@@ -74,7 +74,7 @@ validate_and_cache_token = function(token)
     local user_request = {
         url = auth_url,
         method = "POST",
-        body = d
+        body = "token="..token.."&fields=user_id"
     }
 
     ngx.log(ngx.ERR, "Sending validation request: "..json.encode(user_request))
@@ -85,7 +85,7 @@ validate_and_cache_token = function(token)
         ngx.log(ngx.ERR, "Something? "..body)
         if profile.user_id then
             user_id = profile.user_id
-            token_cache:set(token_cache, token, user_id, M.max_token_lifespan)
+            token_cache:set(token, user_id, M.max_token_lifespan)
         else
             --error - missing user id from token lookup
             ngx.log(ngx.ERR, "Error: auth token lookup doesn't return a user id")

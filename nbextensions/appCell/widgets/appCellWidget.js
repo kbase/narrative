@@ -144,7 +144,7 @@ define([
 
         function getAppRef() {
             var app = model.getItem('app');
-            
+
             // Make sure the app info stored in the model is valid.
             if (!app || !app.spec || !app.spec.info) {
                 throw new ToErr.KBError({
@@ -158,7 +158,7 @@ define([
                         ]
                 });
             }
-            
+
             switch (app.tag) {
                 case 'release':
                     return {
@@ -180,7 +180,7 @@ define([
                     //        tag: 'release',
                     //        version: app.spec.info.ver
                     //    };
-                    //} 
+                    //}
                     console.error('Invalid tag', app);
                     throw new ToErr.KBError({
                         type: 'internal-app-cell-error',
@@ -193,11 +193,11 @@ define([
                         ]
                     });
             }
-            
+
         }
 
         function getAppSpec() {
-            var appRef = getAppRef(), 
+            var appRef = getAppRef(),
                 nms = new NarrativeMethodStore(runtime.config('services.narrative_method_store.url'), {
                     token: runtime.authToken()
                 });
@@ -272,7 +272,7 @@ define([
                 li = t('li');
             if (advice) {
                 // Note the 1.2em seems to be the de-facto work around to have a list
-                // align left with other blocks yet retain the bullet and the 
+                // align left with other blocks yet retain the bullet and the
                 // indentation for list items.
                 advice = ul({style: {paddingLeft: '1.2em'}}, advice.map(function (adv) {
                     return li(adv);
@@ -1135,7 +1135,7 @@ define([
                 });
         }
 
-       
+
 
         /*
          * Cancelling a job is the same as deleting it, and the effect of cancelling the job is the same as re-running it.
@@ -1158,7 +1158,7 @@ define([
                     var jobState = model.getItem('exec.jobState');
                     if (jobState) {
                         cancelJob(jobState.job_id);
-                        
+
                         fsm.newState({mode: 'canceling'});
                         renderUI();
                         // the job will be deleted form the notebook when the job cancellation
@@ -1227,7 +1227,7 @@ define([
                             stopListeningForJobMessages();
                             if (currentState.state.stage) {
                                 return {
-                                    mode: 'error', 
+                                    mode: 'error',
                                     stage: currentState.state.stage
                                 };
                             }
@@ -1307,8 +1307,8 @@ define([
 
         var jobListeners = [];
         function startListeningForJobMessages(jobId) {
-            
-            
+
+
             var ev;
 
             ev = runtime.bus().listen({
@@ -1353,7 +1353,7 @@ define([
                             jobId: newJobState.job_id
                         });
                     }
-                    
+
                     model.setItem('exec.jobStateUpdated', new Date().getTime());
 
                     updateFromJobState(newJobState);
@@ -1375,14 +1375,14 @@ define([
                         console.warn('in edit mode, so not resetting ui');
                         return;
                     }
-                    
-                    
+
+
 
                     resetToEditMode('job-canceled');
                 }
             });
             jobListeners.push(ev);
-            
+
             ev = runtime.bus().listen({
                 channel: {
                     jobId: jobId
@@ -1603,16 +1603,27 @@ define([
                 return;
             }
 
-            if (!skipOutputCell) {
+            /*
+              If the job output specifies that no output is to be shown to the user,
+              skip the output cell creation.
+            */
+            var cellInfo;
+            if (skipOutputCell) {
+              cellInfo = {
+                  created: false
+              };
+            } else {
                 // If not created yet, create it.
                 outputCellId = createOutputCell(jobId);
+                cellInfo = {
+                    id: outputCellId,
+                    created: true
+                };
             }
+            // TODO: insert job info as well.
             model.setItem(['output', 'byJob', jobId], {
-                cell: {
-                    id: null,
-                    created: false,
-                    createdAt: new Date().toGMTString()
-                },
+                cell: cellInfo,
+                createdAt: new Date().toGMTString(),
                 params: model.copyItem('params')
             });
 
@@ -1622,12 +1633,12 @@ define([
             });
             // bus.emit('output-created', )
         }
-        
+
         function doReportError() {
             alert('placeholder for reporting an error');
         }
 
-        
+
          function doRemove() {
             var confirmationMessage = div([
                 p('Continue to remove this app cell?')
@@ -1637,17 +1648,17 @@ define([
                     if (!confirmed) {
                         return;
                     }
-                   
+
                 });
         }
-        
+
         function doDeleteCell() {
             var content = div([
                 p([
                     'Deleting this cell will not remove any output cells or data objects it may have created. ',
                     'Any input parameters or other configuration of this cell will be lost.'
                 ]),
-                p('Deleting this cell will also cancel any pending jobs, but will leave generated output intact'),                
+                p('Deleting this cell will also cancel any pending jobs, but will leave generated output intact'),
                 blockquote([
                     'Note: It is not possible to "undo" the deletion of a cell, ',
                     'but if the Narrative has not been saved you can refresh the browser window ',
@@ -1660,7 +1671,7 @@ define([
                     if (!confirmed) {
                         return;
                     }
-                    
+
                     var jobState = model.getItem('exec.jobState');
                     if (jobState) {
                         cancelJob(jobState.job_id);
@@ -1671,13 +1682,13 @@ define([
                         var widget = widgets[widgetId];
                         widget.instance.bus().send('stop');
                     });
-                    
+
                     stop();
-                    
+
                     Jupyter.notebook.delete_cell(Jupyter.notebook.find_cell_index(cell));
                 });
         }
-        
+
         function start() {
             return Promise.try(function () {
                 /*
@@ -1830,14 +1841,14 @@ define([
                             status: message.event
                         }
                     });
-                    
+
                     saveNarrative();
 
                     cellBus.emit('launch-status', {
                         launchState: message
                     });
                 }));
-                
+
                 busEventManager.add(cellBus.on('delete-cell', function (message) {
                     doDeleteCell();
                 }));
@@ -1848,6 +1859,15 @@ define([
                     if (!output.byJob[message.jobId]) {
                         return;
                     }
+
+                    //addNotification('An output for this cell was deleted from the Narrative. The associated output record was modified to reflect this. The output may be reconstructed from the output record by clicking the "Recreated Output Cell" button.');
+
+                    //console.log(output.byJob[message.jobId]);
+
+
+
+                    //return;
+
                     delete output.byJob[message.jobId];
                     model.setItem('output', output);
                     widgets.outputWidget.instance.bus().emit('update', {
@@ -1957,7 +1977,7 @@ define([
                 return null;
             });
         }
-        
+
         function stop() {
             busEventManager.removeAll();
         }
@@ -2283,7 +2303,7 @@ define([
 
         function checkSpec(appSpec) {
             var cellAppSpec = model.getItem('app.spec');
-            
+
             if (!cellAppSpec) {
                 throw new ToErr.KBError({
                     type: 'app-cell-app-info',

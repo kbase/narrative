@@ -16,7 +16,8 @@ define (
 		'kbasePrompt',
 		'jquery-dataTables',
 		'jquery-dataTables-bootstrap',
-		'kbaseVenndiagram'
+		'kbaseVenndiagram',
+		'GenomeAnnotationAPI-client-api'
 	], function(
 		KBWidget,
 		bootstrap,
@@ -28,7 +29,8 @@ define (
 		kbasePrompt,
 		jquery_dataTables,
 		bootstrap,
-		kbaseVenndiagram
+		kbaseVenndiagram,
+		GenomeAnnotationAPI_client_api
 	) {
     return KBWidget({
         name: "kbasePanGenome",
@@ -43,9 +45,10 @@ define (
 
         pref: null,
         wsUrl: Config.url('workspace'),
+        swUrl: Config.url('service_wizard'),
         token: null,
         kbws: null,
-        geneIndex: {},   // {genome_ref -> {feature_id -> feature_index}}
+        genomeGeneCount: {},   // {genome_ref -> cds_count}
         genomeNames: {}, // {genome_ref -> genome_name}
         genomeRefs: {},  // {genome_ref -> workspace/genome_object_name}
         loaded: false,
@@ -54,7 +57,7 @@ define (
             this._super(options);
             this.pref = StringUtil.uuid();
             this.token = this.authToken();
-            this.geneIndex = {};
+            this.genomeGeneCount = {};
             this.genomeNames = {};
             this.genomeRefs = {};
         	var container = this.$elem;
@@ -78,6 +81,7 @@ define (
         	}
 
         	this.kbws = new Workspace(self.wsUrl, {'token': self.token});
+        	this.gaapi = new GenomeAnnotationAPI(self.swUrl, {'token':self.token});
 
         	var prom = this.kbws.get_objects([{workspace:ws, name: name}])
         	$.when(prom).done(function(data) {
@@ -85,7 +89,7 @@ define (
         			return;
         		var data = data[0].data;
 
-        		self.cacheGeneFunctions(data.genome_refs, function() {
+        		self.cacheGenomeProps(data.genome_refs, function() {
         			buildTable(data);
         		});
         	}).fail(function(e){
@@ -162,7 +166,7 @@ define (
         		}
         		var totalGenomes = 0;
         		var genomeOrder = [];  // [[genome_ref, genome_name, genome_num]]
-        		for (var genomeRef in self.geneIndex) {
+        		for (var genomeRef in self.genomeGeneCount) {
         			totalGenomes++;
         			genomeOrder.push([genomeRef, self.genomeNames[genomeRef], 0]);
         		}
@@ -193,9 +197,7 @@ define (
         				genesInOrth = stat[2];
         				genesInSingle = stat[3];
         			}
-        			var genesAll = 0;
-        			for (var i in self.geneIndex[genomeRef])
-        				genesAll++;
+        			var cdsCountAll = self.genomeGeneCount[genomeRef];  // Do we want to show this number?
             		tableOver.append('<tr><td>'+genomeName+'</td><td><b>'+(genesInOrth+genesInSingle)+'</b> proteins, <b>'+
             				genesInOrth+'</b> proteins are in <b>'+orthCount+'</b> homolog families, <b>'+
             				genesInSingle+'</b> proteins are in singleton families</td></tr>');
@@ -410,8 +412,12 @@ console.log("UNQ IS ", unique, selected_regions);
               }
             );
 
+            if (!venn.c1)
+                venn.c1 = {}
             venn.c1.ldy = '-1em';
             venn.c1.vdy = '0.5em';
+            if (!venn.c2)
+                venn.c2 = {}
             venn.c2.ldy = '1.5em';
             venn.c2.vdy = '3.0em';
 
@@ -431,24 +437,30 @@ console.log("UNQ IS ", unique, selected_regions);
         	return this;
         },
 
-        cacheGeneFunctions: function(genomeRefs, callback) {
+        cacheGenomeProps: function(genomeRefs, callback) {
         	var self = this;
-        	var req = [];
+        	var proms = [];
+        	var getInfoReq = [];
         	for (var i in genomeRefs) {
-        		req.push({ref: genomeRefs[i], included: ["scientific_name", "features/[*]/id"]});
+        	    getInfoReq.push({ref: genomeRefs[i]});
+        		proms.push(this.gaapi.get_combined_data({ref: genomeRefs[i], 
+        		    exclude_genes: 1, exclude_cdss: 1, exclude_protein_by_cds_id: 1, 
+        		    exclude_cds_ids_by_gene_id: 1}));
+        		proms.push(this.gaapi.get_feature_type_counts({ref: genomeRefs[i], 
+        		    feature_type_list: ['CDS']}))
         	}
-        	var prom = this.kbws.get_object_subset(req);
-        	$.when(prom).done(function(data) {
+        	proms.push(this.kbws.get_object_info_new({objects: getInfoReq}));
+        	$.when.apply($, proms).done(function() {
+        	    var data = arguments;
+        	    //console.log("cacheGenomeProps: ", genomeRefs, data);
         		for (var genomePos in genomeRefs) {
+        		    var summary = data[genomePos * 2].summary;
+        		    var feature_type_counts = data[genomePos * 2 + 1];
+        		    var info = data[genomeRefs.length * 2][genomePos];
         			var ref = genomeRefs[genomePos];
-        			self.genomeNames[ref] = data[genomePos].data.scientific_name;
-        			self.genomeRefs[ref] = data[genomePos].info[7] + "/" + data[genomePos].info[1];
-        			var geneIdToIndex = {};
-        			for (var genePos in data[genomePos].data.features) {
-        				var gene = data[genomePos].data.features[genePos];
-        				geneIdToIndex[gene.id] = genePos;
-        			}
-        			self.geneIndex[ref] = geneIdToIndex;
+        			self.genomeNames[ref] = summary.scientific_name;
+        			self.genomeRefs[ref] = info[7] + "/" + info[1];
+        			self.genomeGeneCount[ref] = feature_type_counts.CDS;
         		}
         		callback();
         	}).fail(function(e){
@@ -462,37 +474,58 @@ console.log("UNQ IS ", unique, selected_regions);
         buildOrthoTable: function(orth_id, ortholog) {
         	var self = this;
         	var tab = $("<div><img src=\""+this.options.loadingImage+"\">&nbsp;&nbsp;loading gene data...</div>");
-        	var req = [];
+        	var genomeRefToFeatureIdList = {};
         	for (var i in ortholog.orthologs) {
         		var genomeRef = ortholog.orthologs[i][2];
-        		var featureId = ortholog.orthologs[i][0];
-        		var featurePos = self.geneIndex[genomeRef][featureId];
-        		req.push({ref: genomeRef, included: ["features/" + featurePos]});
-        	}
-        	var prom = this.kbws.get_object_subset(req);
-        	$.when(prom).done(function(data) {
-        		var genes = [];
-        		for (var i in data) {
-        			var feature = data[i].data.features[0];
-        			var genomeRef = req[i].ref;
-        			feature["genome_ref"] = genomeRef;
-        			var ref = self.genomeRefs[genomeRef];
-        			var genome = self.genomeNames[genomeRef];
-        			var id = feature.id;
-        			var func = feature['function'];
-        			if (!func)
-        				func = '-';
-        			var seq = feature.protein_translation;
-        			var len = seq ? seq.length : 'no translation';
-        			genes.push({ref: ref, genome: genome, id: id, func: func, len: len, original: feature});
+        		var feature_id_list = genomeRefToFeatureIdList[genomeRef];
+        		if (!feature_id_list) {
+        		    feature_id_list = [];
+        		    genomeRefToFeatureIdList[genomeRef] = feature_id_list;
         		}
-        		self.buildOrthoTableLoaded(orth_id, genes, tab);
-        	}).fail(function(e){
-        		console.log("Error caching genes: " + e.error.message);
-        	});
-        	return tab;
+        		var featureId = ortholog.orthologs[i][0];
+        		feature_id_list.push(featureId);
+        	}
+            var genomeRefs = [];
+            var proms = [];
+            $.each(genomeRefToFeatureIdList,function(key, value) {
+                genomeRefs.push(key);
+                proms.push(self.gaapi.get_features2({ref: key, 
+                    feature_id_list: value, exclude_sequence: 1}));
+            });
+        	if (genomeRefs.length > 0) {
+                $.when.apply($, proms).done(function() {
+                    var allData = arguments;
+                    //console.log("buildOrthoTable: ", genomeRefs, allData);
+                    var genes = [];
+                    for (var genomePos in allData) {
+                        var genomeRef = genomeRefs[genomePos];
+                        var data = allData[genomePos];
+                        for (var id in data) {
+                            var feature = data[id];
+                            var ref = self.genomeRefs[genomeRef];
+                            var genome = self.genomeNames[genomeRef];
+                            var func = feature['feature_function'];
+                            if (!func)
+                                func = '-';
+                            var len = 0;
+                            for (var locPos in feature['feature_locations']) {
+                                var loc = feature['feature_locations'][locPos];
+                                len += loc['length'];
+                            }
+                            var protLen = Math.floor(len/3);
+                            genes.push({ref: ref, genome: genome, id: id, func: func, len: protLen, original: {}});
+                        }
+                    }
+                    self.buildOrthoTableLoaded(orth_id, genes, tab);
+                }).fail(function(e){
+                    console.log("Error loading genes: " + e.error.message);
+                });
+        	} else {
+                self.buildOrthoTableLoaded(orth_id, [], tab);
+        	}
+            return tab;
         },
-
+        
         buildOrthoTableLoaded: function(orth_id, genes, tab) {
         	var pref2 = StringUtil.uuid();
         	var self = this;

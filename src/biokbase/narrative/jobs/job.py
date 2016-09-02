@@ -25,11 +25,12 @@ class Job(object):
     app_id = None
     app_version = None
     cell_id = None
+    run_id = None
     inputs = None
     # _comm = None
     _job_logs = list()
 
-    def __init__(self, job_id, app_id, inputs, owner, tag='release', app_version=None, cell_id=None):
+    def __init__(self, job_id, app_id, inputs, owner, tag='release', app_version=None, cell_id=None, run_id=None):
         """
         Initializes a new Job with a given id, app id, and app app_version.
         The app_id and app_version should both align with what's available in
@@ -40,12 +41,13 @@ class Job(object):
         self.app_version = app_version
         self.tag = tag
         self.cell_id = cell_id
+        self.run_id = run_id
         self.inputs = inputs
         self.owner = owner
         self._njs = clients.get('job_service')
 
     @classmethod
-    def from_state(Job, job_id, job_info, owner, app_id, tag='release', cell_id=None):
+    def from_state(Job, job_id, job_info, owner, app_id, tag='release', cell_id=None, run_id=None):
         """
         Parameters:
         -----------
@@ -64,6 +66,7 @@ class Job(object):
         tag - string
             The Tag (release, beta, dev) used to start the job.
         cell_id - the cell associated with the job (optional)
+        run_id - the front-end id associated with the job (optional)
         """
         return Job(job_id,
                    app_id,
@@ -107,7 +110,13 @@ class Job(object):
         """
         try:
             state = self._njs.check_job(self.job_id)
+            if 'cancelled' in state:
+                state[u'canceled'] = state.get('cancelled', 0)
+                del state['cancelled']
+            if state.get('job_state', '') == 'cancelled':
+                state[u'job_state'] = 'canceled'
             state[u'cell_id'] = self.cell_id
+            state[u'run_id'] = self.run_id
             return state
         except Exception as e:
             raise Exception("Unable to fetch info for job {} - {}".format(self.job_id, e))

@@ -1,9 +1,14 @@
-/* Wrapper class 
+/* Wrapper class
   All classes below may be wrapped in this class to avoid polluting
   the Narrative styles.
 */
 .kb-app-cell {
 
+}
+
+.kb-app-cell .kb-app-warning {
+    font-family: 'Oxygen', sans-serif;
+    text-align: center;
 }
 
 /** new app parameter styling **/
@@ -82,7 +87,7 @@ in the column in which the icon lives, and does this by shrinking the select
 control with padding, and then scooting the icon back into its column.
 */
 /* .kb-app-cell .kb-app-parameter-input > div {
-     allow space for the required (red arrow), satisfied (green checkbox) icon 
+     allow space for the required (red arrow), satisfied (green checkbox) icon
     padding-right: 20px;
 }
 */

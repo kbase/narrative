@@ -12,7 +12,8 @@ define([
     'common/cellUtils',
     'common/pythonInterop',
     'kb_common/html',
-    'util/string'
+    'util/string',
+    './widgets/outputCell'
 ], function (
     Promise,
     $,
@@ -24,7 +25,8 @@ define([
     cellUtils,
     PythonInterop,
     html,
-    StringUtil
+    StringUtil,
+    OutputCell
     ) {
     'use strict';
 
@@ -108,6 +110,14 @@ define([
 
         // Update metadata.
         utils.setMeta(cell, 'attributes', 'lastLoaded', (new Date()).toUTCString());
+
+        var outputCell = OutputCell.make({
+            cell: cell
+        });
+        console.log('CELL', cell);
+        outputCell.bus.emit('run', {
+            node: cell.element
+        });
 
         // The output cell just needs to inhibit the input area.
         // The input code and associated output (a widget) is already

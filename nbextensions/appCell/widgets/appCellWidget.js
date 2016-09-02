@@ -144,7 +144,7 @@ define([
 
         function getAppRef() {
             var app = model.getItem('app');
-            
+
             // Make sure the app info stored in the model is valid.
             if (!app || !app.spec || !app.spec.info) {
                 throw new ToErr.KBError({
@@ -158,7 +158,7 @@ define([
                         ]
                 });
             }
-            
+
             switch (app.tag) {
                 case 'release':
                     return {
@@ -180,7 +180,7 @@ define([
                     //        tag: 'release',
                     //        version: app.spec.info.ver
                     //    };
-                    //} 
+                    //}
                     console.error('Invalid tag', app);
                     throw new ToErr.KBError({
                         type: 'internal-app-cell-error',
@@ -193,11 +193,11 @@ define([
                         ]
                     });
             }
-            
+
         }
 
         function getAppSpec() {
-            var appRef = getAppRef(), 
+            var appRef = getAppRef(),
                 nms = new NarrativeMethodStore(runtime.config('services.narrative_method_store.url'), {
                     token: runtime.authToken()
                 });
@@ -272,7 +272,7 @@ define([
                 li = t('li');
             if (advice) {
                 // Note the 1.2em seems to be the de-facto work around to have a list
-                // align left with other blocks yet retain the bullet and the 
+                // align left with other blocks yet retain the bullet and the
                 // indentation for list items.
                 advice = ul({style: {paddingLeft: '1.2em'}}, advice.map(function (adv) {
                     return li(adv);
@@ -524,6 +524,14 @@ define([
                     }, [
                         div({dataElement: 'widget', style: {display: 'block', width: '100%'}}, [
                             div({class: 'container-fluid'}, [
+                                div({
+                                    class: 'kb-app-warning alert alert-warning hidden',
+                                    dataElement: 'outdated',
+                                    role: 'alert'
+                                }, [
+                                    span({style: {'font-weight': 'bold'}}, 'Warning'),
+                                    ': this app appears to be out of date. Running it may cause undesired results. Add a new "<b>' + model.getItem('app.spec.info.name') + '</b>" App for the most recent version.'
+                                ]),
                                 ui.buildPanel({
                                     title: 'App Cell Settings',
                                     name: 'settings',
@@ -589,8 +597,28 @@ define([
                                             }
                                         }),
                                         ui.buildButton({
+                                            label: 'Launching...',
+                                            name: 'launching',
+                                            events: events,
+                                            type: 'primary',
+                                            icon: {
+                                                name: 'play-circle-o',
+                                                size: 2
+                                            }
+                                        }),
+                                        ui.buildButton({
                                             label: 'Cancel',
                                             name: 'cancel',
+                                            events: events,
+                                            type: 'danger',
+                                            icon: {
+                                                name: 'stop-circle-o',
+                                                size: 2
+                                            }
+                                        }),
+                                        ui.buildButton({
+                                            label: 'Canceling...',
+                                            name: 'canceling',
                                             events: events,
                                             type: 'danger',
                                             icon: {
@@ -761,7 +789,8 @@ define([
                 case 'dev':
                     return {
                         id: app.id,
-                        tag: app.tag
+                        tag: app.tag,
+                        version: app.gitCommitHash
                     };
                 default:
                     throw new Error('Invalid tag for app ' + app.id);
@@ -983,6 +1012,10 @@ define([
             renderSettings();
             var state = fsm.getCurrentState();
 
+            if (model.getItem('outdated')) {
+                ui.showElement('outdated');
+            }
+
             // Button state
             state.ui.buttons.enabled.forEach(function (button) {
                 ui.enableButton(button);
@@ -1054,36 +1087,6 @@ define([
             }, saveMaxFrequency);
         }
 
-        function deleteJob(jobId) {
-            return new Promise(function (resolve, reject) {
-                // NB the narrative callback code does not pass back error
-                // through the callback -- it is just logged to the console.
-                // Gulp!
-
-                // we don't really delete jobs here any more, just
-                // temporarily disable for now.
-
-                // This is now fire and forget.
-                // TODO: close the loop on this.
-                runtime.bus().emit('request-job-deletion', {
-                    jobId: jobId
-                });
-                resolve();
-
-
-//
-//
-//                function callback(value) {
-//                    resolve(value);
-//                }
-//                try {
-//                    $(document).trigger('cancelJob.Narrative', [jobId, callback]);
-//                } catch (err) {
-//                    reject(err);
-//                }
-            });
-        }
-
         /*
          * NB: the jobs panel takes care of removing the job info from the
          * narrative metadata.
@@ -1145,7 +1148,7 @@ define([
                 });
         }
 
-       
+
 
         /*
          * Cancelling a job is the same as deleting it, and the effect of cancelling the job is the same as re-running it.
@@ -1154,10 +1157,9 @@ define([
         function doCancel() {
             var confirmationMessage = div([
                 p([
-                    'Cancelling the job will halt the job processing.',
+                    'Canceling the job will halt the job processing.',
                     'Any output objects already created will remain in your narrative and can be removed from the Data panel.'
                 ]),
-                blockquote('Note that canceling the job will not delete the job, you will need to do that from the Jobs Panel.'),
                 p('Continue to Cancel the running job?')
             ]);
             ui.showConfirmDialog({title: 'Cancel Job?', body: confirmationMessage})
@@ -1169,9 +1171,13 @@ define([
                     var jobState = model.getItem('exec.jobState');
                     if (jobState) {
                         cancelJob(jobState.job_id);
+
+                        fsm.newState({mode: 'canceling'});
+                        renderUI();
                         // the job will be deleted form the notebook when the job cancellation
                         // event is received.
                     } else {
+                        alert('cannot cancel yet');
                         model.deleteItem('exec');
                         fsm.newState({mode: 'editing', params: 'complete', code: 'built'});
                         renderUI();
@@ -1198,14 +1204,10 @@ define([
             // Update FSM
             var newFsmState = (function () {
                 switch (message.event) {
-                    case 'validating_app':
-                    case 'validated_app':
-                    case 'launching_job':
-                        return {mode: 'processing', stage: 'launching'};
                     case 'launched_job':
                         // NEW: start listening for jobs.
                         startListeningForJobMessages(message.job_id);
-                        return {mode: 'processing', stage: 'launching'};
+                        return {mode: 'processing', stage: 'launched'};
                     case 'error':
                         return {mode: 'error', stage: 'launching'};
                     default:
@@ -1228,20 +1230,23 @@ define([
                         case 'in-progress':
                             return {mode: 'processing', stage: 'running'};
                         case 'completed':
-                        case 'cancelled':
                             stopListeningForJobMessages();
                             return {mode: 'success'};
+                        case 'canceled':
+                            stopListeningForJobMessages();
+                            return {mode: 'canceled'};
                         case 'suspend':
                         case 'error':
                             stopListeningForJobMessages();
                             if (currentState.state.stage) {
-                                return {mode: 'error', stage: currentState.state.stage};
+                                return {
+                                    mode: 'error',
+                                    stage: currentState.state.stage
+                                };
                             }
-                            return {mode: 'error'};
-                            // case 'canceled':
-                            // case 'cancelled':
-                            //     stopListeningForJobMessages();
-                            //     return {mode: 'canceled'};
+                            return {
+                                mode: 'error'
+                            };
                         default:
                             throw new Error('Invalid job state ' + jobState.job_state);
                     }
@@ -1315,6 +1320,8 @@ define([
 
         var jobListeners = [];
         function startListeningForJobMessages(jobId) {
+
+
             var ev;
 
             ev = runtime.bus().listen({
@@ -1359,8 +1366,8 @@ define([
                             jobId: newJobState.job_id
                         });
                     }
-                    model.setItem('exec.jobStateUpdated', new Date().getTime());
 
+                    model.setItem('exec.jobStateUpdated', new Date().getTime());
 
                     updateFromJobState(newJobState);
                 }
@@ -1372,7 +1379,7 @@ define([
                     jobId: jobId
                 },
                 key: {
-                    type: 'job-deleted'
+                    type: 'job-canceled'
                 },
                 handle: function (message) {
                     //  reset the cell into edit mode
@@ -1382,7 +1389,9 @@ define([
                         return;
                     }
 
-                    resetToEditMode('job-deleted');
+
+
+                    resetToEditMode('job-canceled');
                 }
             });
             jobListeners.push(ev);
@@ -1402,7 +1411,7 @@ define([
                         return;
                     }
 
-                    resetToEditMode('job-deleted');
+                    resetToEditMode('job-does-not-exist');
                 }
             });
             jobListeners.push(ev);
@@ -1607,18 +1616,29 @@ define([
                 return;
             }
 
-            if (!skipOutputCell) {
+            /*
+              If the job output specifies that no output is to be shown to the user,
+              skip the output cell creation.
+            */
+            var cellInfo;
+            if (skipOutputCell) {
+              cellInfo = {
+                  created: false
+              };
+            } else {
                 // If not created yet, create it.
                 outputCellId = createOutputCell(jobId);
-                model.setItem(['output', 'byJob', jobId], {
-                    cell: {
-                        id: outputCellId,
-                        created: true,
-                        createdAt: new Date().toGMTString()
-                    },
-                    params: model.copyItem('params')
-                });
+                cellInfo = {
+                    id: outputCellId,
+                    created: true
+                };
             }
+            // TODO: insert job info as well.
+            model.setItem(['output', 'byJob', jobId], {
+                cell: cellInfo,
+                createdAt: new Date().toGMTString(),
+                params: model.copyItem('params')
+            });
 
             widgets.outputWidget.instance.bus().emit('update', {
                 jobState: model.getItem('exec.jobState'),
@@ -1626,12 +1646,12 @@ define([
             });
             // bus.emit('output-created', )
         }
-        
+
         function doReportError() {
             alert('placeholder for reporting an error');
         }
 
-        
+
          function doRemove() {
             var confirmationMessage = div([
                 p('Continue to remove this app cell?')
@@ -1641,17 +1661,17 @@ define([
                     if (!confirmed) {
                         return;
                     }
-                   
+
                 });
         }
-        
+
         function doDeleteCell() {
             var content = div([
                 p([
                     'Deleting this cell will not remove any output cells or data objects it may have created. ',
                     'Any input parameters or other configuration of this cell will be lost.'
                 ]),
-                p('Deleting this cell will also cancel any pending jobs, but will leave generated output intact'),                
+                p('Deleting this cell will also cancel any pending jobs, but will leave generated output intact'),
                 blockquote([
                     'Note: It is not possible to "undo" the deletion of a cell, ',
                     'but if the Narrative has not been saved you can refresh the browser window ',
@@ -1664,7 +1684,7 @@ define([
                     if (!confirmed) {
                         return;
                     }
-                    
+
                     var jobState = model.getItem('exec.jobState');
                     if (jobState) {
                         cancelJob(jobState.job_id);
@@ -1675,13 +1695,13 @@ define([
                         var widget = widgets[widgetId];
                         widget.instance.bus().send('stop');
                     });
-                    
+
                     stop();
-                    
+
                     Jupyter.notebook.delete_cell(Jupyter.notebook.find_cell_index(cell));
                 });
         }
-        
+
         function start() {
             return Promise.try(function () {
                 /*
@@ -1788,15 +1808,12 @@ define([
                 if (state) {
                     switch (state.mode) {
                         case 'editing':
-                        case 'launching':
+                            break;
                         case 'processing':
                             switch (state.stage) {
-                                case 'launching':
-                                    // nothing to do.
-                                    break;
+                                case 'launched':
                                 case 'queued':
                                 case 'running':
-                                    // listeningForJobUpdates = true;
                                     startListeningForJobMessages(model.getItem('exec.jobState.job_id'));
                                     requestJobStatus(model.getItem('exec.jobState.job_id'));
                                     break;
@@ -1828,11 +1845,7 @@ define([
                     model.setItem('exec.launchState', message);
 
                     // Save this to the exec state change log.
-                    var execLog = model.getItem('exec.log');
-                    if (!execLog) {
-                        execLog = [];
-                    }
-                    execLog.push({
+                    model.pushItem('exec.log', {
                         timestamp: new Date(),
                         event: 'launch-status',
                         data: {
@@ -1841,13 +1854,14 @@ define([
                             status: message.event
                         }
                     });
-                    model.setItem('exec.log', execLog);
+
+                    saveNarrative();
 
                     cellBus.emit('launch-status', {
                         launchState: message
                     });
                 }));
-                
+
                 busEventManager.add(cellBus.on('delete-cell', function (message) {
                     doDeleteCell();
                 }));
@@ -1858,6 +1872,15 @@ define([
                     if (!output.byJob[message.jobId]) {
                         return;
                     }
+
+                    //addNotification('An output for this cell was deleted from the Narrative. The associated output record was modified to reflect this. The output may be reconstructed from the output record by clicking the "Recreated Output Cell" button.');
+
+                    //console.log(output.byJob[message.jobId]);
+
+
+
+                    //return;
+
                     delete output.byJob[message.jobId];
                     model.setItem('output', output);
                     widgets.outputWidget.instance.bus().emit('update', {
@@ -1967,7 +1990,7 @@ define([
                 return null;
             });
         }
-        
+
         function stop() {
             busEventManager.removeAll();
         }
@@ -2293,7 +2316,7 @@ define([
 
         function checkSpec(appSpec) {
             var cellAppSpec = model.getItem('app.spec');
-            
+
             if (!cellAppSpec) {
                 throw new ToErr.KBError({
                     type: 'app-cell-app-info',
@@ -2317,7 +2340,8 @@ define([
             }
 
             if (cellAppSpec.info.git_commit_hash !== appSpec.info.git_commit_hash) {
-                throw new ToErr.KBError({
+                return new ToErr.KBError({
+                    severity: 'warning',
                     type: 'app-spec-mismatched-commit',
                     message: 'Mismatching app commit for ' + appSpec.info.id + ', tag=' + model.getItem('app.tag') + ' : ' + cellAppSpec.info.git_commit_hash + ' !== ' + appSpec.info.git_commit_hash,
                     info: {
@@ -2336,11 +2360,7 @@ define([
                 });
             }
 
-            if (cellAppSpec.info.version !== appSpec.info.version) {
-                throw new Error('Mismatching app version: ' + cellAppSpec.info.version + ' !== ' + appSpec.info.version);
-            }
-
-
+            return null;
         }
 
         function run(params) {
@@ -2354,73 +2374,78 @@ define([
             return Promise.try(function () {
                 return getAppSpec();
             })
-                .then(function (appSpec) {
-                    // Ensure that the current app spec matches our existing one.
-                    checkSpec(appSpec);
-
-                    // Create a map of paramters for easy access
-                    var parameterMap = {};
-                    env.parameters = model.getItem('app.spec.parameters').map(function (parameterSpec) {
-                        // tee hee
-                        var param = ParameterSpec.make({parameterSpec: parameterSpec});
-                        parameterMap[param.id()] = param;
-                        return param;
-                    });
-                    env.parameterMap = parameterMap;
-
-
-                    var appRef = [model.getItem('app.id'), model.getItem('app.tag')].filter(toBoolean).join('/'),
-                        url = '/#appcatalog/app/' + appRef;
-                    utils.setCellMeta(cell, 'kbase.attributes.title', model.getItem('app.spec.info.name'));
-                    utils.setCellMeta(cell, 'kbase.attributes.subtitle', model.getItem('app.spec.info.subtitle'));
-                    utils.setCellMeta(cell, 'kbase.attributes.info.url', url);
-                    utils.setCellMeta(cell, 'kbase.attributes.info.label', 'more...');
-                    return Promise.all([
-                        loadInputWidget(),
-                        loadInputViewWidget(),
-                        loadExecutionWidget(),
-                        loadOutputWidget()
-                    ]);
-                })
-                .then(function () {
-                    // this will not change, so we can just render it here.
-                    showAboutApp();
-                    showAppSpec();
-                    PR.prettyPrint(null, container);
-                    renderUI();
-                    // renderIcon();
-                })
-                .then(function () {
-                    // if we start out in 'new' state, then we need to promote to
-                    // editing...
-
-                    if (fsm.getCurrentState().state.mode === 'new') {
-                        fsm.newState({mode: 'editing', params: 'incomplete'});
-                        evaluateAppState();
-                        //
-                    } else {
-                        renderUI();
+            .then(function (appSpec) {
+                // Ensure that the current app spec matches our existing one.
+                var warning = checkSpec(appSpec);
+                if (warning && warning.severity === 'warning') {
+                    if (warning.type === 'app-spec-mismatched-commit') {
+                        model.setItem('outdated', true);
                     }
-                    if (!Jupyter.notebook.writable || Jupyter.narrative.readonly) {
-                        toggleReadOnlyMode(true);
-                    }
-                })
-                .catch(function (err) {
-                    var error = ToErr.grokError(err);
-                    console.error('ERROR loading main widgets', error);
-                    addNotification('Error loading main widgets: ' + error.message);
+                }
 
-                    model.setItem('fatalError', {
-                        title: 'Error loading main widgets',
-                        message: error.message,
-                        advice: error.advice || [],
-                        info: error.info,
-                        detail: error.detail || 'no additional details'
-                    });
-                    syncFatalError();
-                    fsm.newState({mode: 'fatal-error'});
-                    renderUI();
+                // Create a map of parameters for easy access
+                var parameterMap = {};
+                env.parameters = model.getItem('app.spec.parameters').map(function (parameterSpec) {
+                    // tee hee
+                    var param = ParameterSpec.make({parameterSpec: parameterSpec});
+                    parameterMap[param.id()] = param;
+                    return param;
                 });
+                env.parameterMap = parameterMap;
+
+
+                var appRef = [model.getItem('app.id'), model.getItem('app.tag')].filter(toBoolean).join('/'),
+                    url = '/#appcatalog/app/' + appRef;
+                utils.setCellMeta(cell, 'kbase.attributes.title', model.getItem('app.spec.info.name'));
+                utils.setCellMeta(cell, 'kbase.attributes.subtitle', model.getItem('app.spec.info.subtitle'));
+                utils.setCellMeta(cell, 'kbase.attributes.info.url', url);
+                utils.setCellMeta(cell, 'kbase.attributes.info.label', 'more...');
+                return Promise.all([
+                    loadInputWidget(),
+                    loadInputViewWidget(),
+                    loadExecutionWidget(),
+                    loadOutputWidget()
+                ]);
+            })
+            .then(function () {
+                // this will not change, so we can just render it here.
+                showAboutApp();
+                showAppSpec();
+                PR.prettyPrint(null, container);
+                renderUI();
+                // renderIcon();
+            })
+            .then(function () {
+                // if we start out in 'new' state, then we need to promote to
+                // editing...
+
+                if (fsm.getCurrentState().state.mode === 'new') {
+                    fsm.newState({mode: 'editing', params: 'incomplete'});
+                    evaluateAppState();
+                    //
+                } else {
+                    renderUI();
+                }
+                if (!Jupyter.notebook.writable || Jupyter.narrative.readonly) {
+                    toggleReadOnlyMode(true);
+                }
+            })
+            .catch(function (err) {
+                var error = ToErr.grokError(err);
+                console.error('ERROR loading main widgets', error);
+                addNotification('Error loading main widgets: ' + error.message);
+
+                model.setItem('fatalError', {
+                    title: 'Error loading main widgets',
+                    message: error.message,
+                    advice: error.advice || [],
+                    info: error.info,
+                    detail: error.detail || 'no additional details'
+                });
+                syncFatalError();
+                fsm.newState({mode: 'fatal-error'});
+                renderUI();
+            });
         }
 
         /*

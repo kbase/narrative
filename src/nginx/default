@@ -79,10 +79,27 @@ server {
          set $uri_base '/narrative_shutdown';
          content_by_lua 'proxymgr:narrative_shutdown()';
     }
+    location /check_narrative/ {
+       	default_type 'text/plain';
+       	set $target '';
+       	access_by_lua 'proxymgr:check_proxy()';
 
-	location /narrative/ {
-	     default_type 'text/plain';
-  	     set $target '';
+        proxy_set_header X-Forwarded-Host $host;
+         proxy_set_header X-Real-IP $remote_addr;
+         proxy_set_header X-Forwarded-Server $host;
+         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+         proxy_set_header Host $http_host;
+         proxy_set_header X-NginX-Proxy true;
+         proxy_pass http://$target;
+         proxy_redirect off;
+         proxy_http_version 1.1;
+         # proxy_set_header Upgrade $http_upgrade;
+         # proxy_set_header Connection "upgrade";
+         proxy_read_timeout 86400;
+    }
+    location /narrative/ {
+        default_type 'text/plain';
+        set $target '';
          access_by_lua 'proxymgr:use_proxy()';
 
          proxy_set_header X-Forwarded-Host $host;

@@ -151,6 +151,8 @@ if a container was not found ... then not found ... don't think is possible to r
 
 This pathway in the code does not seem possible.
 
+#### 
+
 
 ## Upstream Errors
 
@@ -163,3 +165,19 @@ A docker error may affect the initial Narrative startup as well as the Loading l
 ### jupyter
 
 A Jupyter / Narrative app error will not affect the initial Narrative startup, but may affect the Loading loop. This is because an error in the Narrative server code itself may produce any number of http error conditions which would result in an Nginx proxy 502 error.
+
+
+
+## Non-Startup Errors
+
+Although not related to startup per se, in the user's mind Narrative access post-startup is no different. It should behave the same.
+
+There are generally two types of Narrative access errors: access and startup.
+
+Access errors are encountered when a user requests a Narrative, but before it is delivered.
+
+- no authorization
+- inadequate authorization
+- requested object is not a narrative
+- requested object does not exist at all
+- requested narrative is corrupt

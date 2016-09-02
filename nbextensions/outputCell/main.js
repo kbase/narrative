@@ -12,7 +12,8 @@ define([
     'common/cellUtils',
     'common/pythonInterop',
     'kb_common/html',
-    'util/string'
+    'util/string',
+    './widgets/outputCell'
 ], function (
     Promise,
     $,
@@ -24,7 +25,8 @@ define([
     cellUtils,
     PythonInterop,
     html,
-    StringUtil
+    StringUtil,
+    OutputCell
     ) {
     'use strict';
 
@@ -78,7 +80,7 @@ define([
             this.input.find('.input_prompt').hide();
             utils.horribleHackToHideElement(this, '.output_prompt', 10);
         };
-        cell.toggleCodeInputArea = function() {
+        cell.toggleCodeInputArea = function () {
             console.log('TOGGLING 2...');
             var codeInputArea = this.input.find('.input_area')[0];
             console.log('TOGGLING 3', codeInputArea);
@@ -108,6 +110,14 @@ define([
 
         // Update metadata.
         utils.setMeta(cell, 'attributes', 'lastLoaded', (new Date()).toUTCString());
+
+        var outputCell = OutputCell.make({
+            cell: cell
+        });
+        console.log('CELL', cell);
+        outputCell.bus.emit('run', {
+            node: cell.element
+        });
 
         // The output cell just needs to inhibit the input area.
         // The input code and associated output (a widget) is already
@@ -147,9 +157,8 @@ define([
             // We just need to generate, set, and execute the output
             // the first time (for now).
 
-              console.log('BUILDING OUTPUT', data);
-              outputCode = PythonInterop.buildOutputRunner(data.kbase.widget.name, data.kbase.widget.tag, cellId, data.kbase.widget.params);
-              cell.set_text(outputCode);
+            outputCode = PythonInterop.buildOutputRunner(data.kbase.widget.name, data.kbase.widget.tag, cellId, data.kbase.widget.params);
+            cell.set_text(outputCode);
             cell.execute();
 
             // all we do for now is set up the input area

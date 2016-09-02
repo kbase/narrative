@@ -5,7 +5,6 @@ define([
     'jquery',
     'bluebird',
     'uuid',
-    'base/js/namespace',
     'common/parameterSpec',
     'common/runtime',
     'common/events',
@@ -15,6 +14,7 @@ define([
     'common/pythonInterop',
     'common/utils',
     'common/ui',
+    'common/jupyter',
     'google-code-prettify/prettify',
     'css!google-code-prettify/prettify.css',
     'css!font-awesome.css'
@@ -22,7 +22,6 @@ define([
     $,
     Promise,
     Uuid,
-    Jupyter,
     ParameterSpec,
     Runtime,
     Events,
@@ -32,11 +31,12 @@ define([
     PythonInterop,
     utils,
     Ui,
+    Jupyter,
     PR
     ) {
     'use strict';
     var t = html.tag,
-        div = t('div'), span = t('span'), a = t('a'),
+        div = t('div'), span = t('span'), a = t('a'), p = t('p'), img = t('img'),
         table = t('table'), tr = t('tr'), th = t('th'), td = t('td'),
         pre = t('pre'), input = t('input');
 
@@ -48,19 +48,12 @@ define([
             //parentBus = config.bus,
             // TODO: the cell bus should be created and managed through main.js,
             // that is, the extension.
-            cellBus = runtime.bus().makeChannelBus({
-                cell: utils.getMeta(cell, 'attributes', 'id')
-            }, 'A cell channel'),
+            cellBus,
             bus = runtime.bus().makeChannelBus(null, 'A widget cell widget'),
             env = {},
             model,
             // HMM. Sync with metadata, or just keep everything there?
             settings = {
-                showAdvanced: {
-                    label: 'Show advanced parameters',
-                    defaultValue: false,
-                    type: 'custom'
-                },
                 showNotifications: {
                     label: 'Show the notifications panel',
                     defaultValue: false,
@@ -157,7 +150,7 @@ define([
                     return tr([
                         th('Module'),
                         td({dataElement: 'module'})
-                    ])
+                    ]);
                 }),
                 tr([
                     th('Id'),
@@ -436,7 +429,7 @@ define([
         function buildPython(cell, cellId, app, params) {
             var runId = new Uuid(4).format(),
                 app = fixApp(app),
-                code = PythonInterop.buildViewRunner(cellId, runId, app, params);
+                code = PythonInterop.buildCustomWidgetRunner(cellId, runId, app, params);
             // TODO: do something with the runId
             cell.set_text(code);
         }
@@ -448,22 +441,11 @@ define([
         // LIFECYCYLE API
 
         function doEditNotebookMetadata() {
-            Jupyter.notebook.edit_metadata({
-                notebook: Jupyter.notebook,
-                keyboard_manager: Jupyter.notebook.keyboard_manager
-            });
+            Jupyter.editNotebookMetadata();
         }
 
         function doEditCellMetadata() {
-            dialog.edit_metadata({
-                md: cell.metadata,
-                callback: function (md) {
-                    cell.metadata = md;
-                },
-                name: 'Cell',
-                notebook: Jupyter.notebook,
-                keyboard_manager: Jupyter.keyboard_manager
-            });
+            Jupyter.editCellMetadata(cell);
         }
 
         function initCodeInputArea() {
@@ -573,20 +555,64 @@ define([
             });
         }
 
-        function doRemove() {
-            var confirmed = ui.confirmDialog('Are you sure you want to remove this app cell? It will also remove any pending jobs, but will leave generated output intact', 'Yes', 'No way, dude');
-            if (!confirmed) {
+        function doDeleteCell() {
+            var content = div([
+                p([
+                    'Deleting this cell will remove the widget from the Narrative, ',
+                    'but will not delete the data object, which will still be avaiable ',
+                    'in the data panel.'
+                ]),
+                p('Continue to delete this cell?')
+            ]);
+            ui.showConfirmDialog({title: 'Confirm Cell Deletion', body: content})
+                .then(function (confirmed) {
+                    if (!confirmed) {
+                        return;
+                    }
+
+                    bus.emit('stop');
+
+                    Jupyter.deleteCell(cell);
+                });
+        }
+        
+        function makeIcon() {
+            // icon is in the spec ...
+            var appSpec = env.appSpec,
+                nmsBase = runtime.config('services.narrative_method_store_image.url'),
+                iconUrl = Props.getDataItem(appSpec, 'info.icon.url');
+
+            if (iconUrl) {
+                return span({class: 'fa-stack fa-2x', style: {padding: '2px'}}, [
+                    img({src: nmsBase + iconUrl, style: {maxWidth: '46px', maxHeight: '46px', margin: '2px'}})
+                ]);
+            }
+
+            return span({style: ''}, [
+                span({class: 'fa-stack fa-2x', style: {textAlign: 'center', color: 'rgb(103,58,183)'}}, [
+                    span({class: 'fa fa-square fa-stack-2x', style: {color: 'rgb(103,58,183)'}}),
+                    span({class: 'fa fa-inverse fa-stack-1x fa-cube'})
+                ])
+            ]);
+        }
+
+        function renderIcon() {
+            var prompt = cell.element[0].querySelector('.input_prompt');
+
+            if (!prompt) {
                 return;
             }
 
-            var jobState = model.getItem('exec.jobState');
-            if (jobState) {
-                cancelJob(jobState.job_id);
-                // the job will be deleted form the notebook when the job cancellation
-                // event is received.
-            }
+            prompt.innerHTML = div({
+                style: {textAlign: 'center'}
+            }, [
+                makeIcon()
+            ]);
+        }
 
-            $(document).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(cell));
+        function renderUI() {
+            renderNotifications();
+            renderSettings();
         }
 
         // LIFECYCLE API
@@ -613,6 +639,16 @@ define([
                     notifications: container.querySelector('[data-element="notifications"]'),
                     widget: container.querySelector('[data-element="widget"]')
                 };
+                
+                if (ui.isDeveloper()) {
+                    settings.showDeveloper = {
+                        label: 'Show Developer features',
+                        defaultValue: false,
+                        type: 'toggle',
+                        element: 'developer-options'
+                    };
+                }
+                
                 return null;
             });
         }
@@ -680,50 +716,48 @@ define([
                     bus.emit('reset-to-defaults');
                 });
 
+                // CELL MESSAGES
+
+                var cellId = Props.getDataItem(cell.metadata, 'kbase.attributes.id');
+                
+                cellBus = runtime.bus().makeChannelBus({
+                    cell: cellId
+                }, 'A cell channel');
+                
+                runtime.bus().channel({cell: cellId}).
+
+                cellBus.on('delete-cell', function () {
+                    doDeleteCell();
+                });
+                
+                cellBus.on('parameter-changed', function (message) {
+                    Props.setDataItem(cell.metadata, ['kbase', 'widgetCell', 'params', message.id], message.value);
+                    console.log('received...', message);
+                });
+
+                cellBus.on('sync-parameters', function (message) {
+                    var value = Props.getDataItem(cell.metadata, ['kbase', 'widgetCell', 'params', message.id]);
+                    cellBus.emit('parameter-value', {
+                        id: message.id,
+                        value: value
+                    });
+                });
+                
+                
+                //cellBus.on('parameter-changed', function (message) {
+                    // TODO: validate parameter
+                    
+                    // TODO: save parameter into model.
+                //    console.log('received...', message);
+                //});
+
                 showCodeInputArea();
 
                 return null;
             });
         }
 
-        function makeIcon() {
-            // icon is in the spec ...
-            var appSpec = env.appSpec,
-                nmsBase = runtime.config('services.narrative_method_store_image.url'),
-                iconUrl = Props.getDataItem(appSpec, 'info.icon.url');
-
-            if (iconUrl) {
-                return span({class: 'fa-stack fa-2x', style: {padding: '2px'}}, [
-                    img({src: nmsBase + iconUrl, style: {maxWidth: '46px', maxHeight: '46px', margin: '2px'}})
-                ]);
-            }
-
-            return span({style: ''}, [
-                span({class: 'fa-stack fa-2x', style: {textAlign: 'center', color: 'rgb(103,58,183)'}}, [
-                    span({class: 'fa fa-square fa-stack-2x', style: {color: 'rgb(103,58,183)'}}),
-                    span({class: 'fa fa-inverse fa-stack-1x fa-cube'})
-                ])
-            ]);
-        }
-
-        function renderIcon() {
-            var prompt = cell.element[0].querySelector('.input_prompt');
-
-            if (!prompt) {
-                return;
-            }
-
-            prompt.innerHTML = div({
-                style: {textAlign: 'center'}
-            }, [
-                makeIcon()
-            ]);
-        }
-
-        function renderUI() {
-            renderNotifications();
-            renderSettings();
-        }
+        
 
         function run(params) {
             // First get the app specs, which is stashed in the model,

@@ -82,29 +82,7 @@ define([
         }
 
         function doDeleteCell() {
-            //if (window.confirm('Delete cell?')) {
-            //    $(cell.element).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(cell));
-            //}
-            var content = div([
-                p([
-                    'Deleting this cell will not remove any output cells or data objects it may have created. ',
-                    'Any input parameters or other configuration of this cell will be lost.'
-                ]),
-                blockquote([
-                    'Note: It is not possible to "undo" the deletion of a cell, ',
-                    'but if the Narrative has not been saved you can refresh the browser window ',
-                    'to load the Narrative from its previous state.'
-                ]),
-                p('Continue to delete this cell?')
-            ]);
-            ui.showConfirmDialog('Confirm Cell Deletion', content, 'Yes', 'No')
-                .then(function (answer) {
-                    if (answer) {
-                        $(cell.element).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(cell));
-                    } else {
-                        // alert('Ok, will not delete the cell.');
-                    }
-                });
+            $(cell.element).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(cell));
         }
 
         function getCellTitle(cell) {

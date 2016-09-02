@@ -35,7 +35,7 @@ while 1:
     if not line:
         continue
     print(line)
-    if 'The IPython Notebook is running at: http://localhost:8888/':
+    if 'The Jupyter Notebook is running at: http://localhost:8888/' in line:
         break
     if 'is already in use' in line:
         raise ValueError(
@@ -54,7 +54,7 @@ def readlines():
 thread = threading.Thread(target=readlines)
 thread.setDaemon(True)
 thread.start()
-time.sleep(15)
+# time.sleep(15)
 
 test_command = ['grunt', 'test']
 

@@ -11,8 +11,9 @@ define([
     'common/props',
     'common/cellUtils',
     'common/pythonInterop',
+    'common/ui',
     'kb_common/html',
-    'util/string'
+    './widgets/dataCell'
 ], function (
     Promise,
     $,
@@ -23,18 +24,19 @@ define([
     Props,
     cellUtils,
     PythonInterop,
+    UI,
     html,
-    StringUtil
+    DataCell
     ) {
     'use strict';
 
     var t = html.tag, div = t('div');
-
+    
     function specializeCell(cell) {
         cell.minimize = function () {
             var inputArea = this.input.find('.input_area'),
                 outputArea = this.element.find('.output_wrapper'),
-                showCode = utils.getCellMeta(cell, 'kbase.outputCell.user-settings.showCodeInputArea');
+                showCode = utils.getCellMeta(cell, 'kbase.dataCell.user-settings.showCodeInputArea');
 
             if (showCode) {
                 inputArea.addClass('hidden');
@@ -45,28 +47,34 @@ define([
         cell.maximize = function () {
             var inputArea = this.input.find('.input_area'),
                 outputArea = this.element.find('.output_wrapper'),
-                showCode = utils.getCellMeta(cell, 'kbase.outputCell.user-settings.showCodeInputArea');
+                showCode = utils.getCellMeta(cell, 'kbase.dataCell.user-settings.showCodeInputArea');
 
             if (showCode) {
                 inputArea.removeClass('hidden');
             }
             outputArea.removeClass('hidden');
         };
+        
+        /*
+         * The data cell icon is derived by looking up the type in the 
+         * narrative configuration.
+         */
         cell.renderIcon = function () {
-            var inputPrompt = this.element[0].querySelector('[data-element="icon"]');
-
+            var inputPrompt = this.element[0].querySelector('[data-element="icon"]'),
+                type = Props.getDataItem(cell.metadata, 'kbase.dataCell.objectInfo.type');
+            
             if (inputPrompt) {
                 inputPrompt.innerHTML = div({
                     style: {textAlign: 'center'}
                 }, [
-                    AppUtils.makeGenericIcon('database')
+                    AppUtils.makeTypeIcon(type)
                 ]);
             }
         };
         cell.hidePrompts = function () {
             // Hide the code input area.
             this.input.find('.input_area').addClass('hidden');
-            utils.setCellMeta(this, 'kbase.outputCell.user-settings.showCodeInputArea', false);
+            utils.setCellMeta(this, 'kbase.dataCell.user-settings.showCodeInputArea', false);
 
             // And add our own!
             var prompt = document.createElement('div');
@@ -79,13 +87,11 @@ define([
             utils.horribleHackToHideElement(this, '.output_prompt', 10);
         };
         cell.toggleCodeInputArea = function() {
-            console.log('TOGGLING 2...');
             var codeInputArea = this.input.find('.input_area')[0];
-            console.log('TOGGLING 3', codeInputArea);
             if (codeInputArea) {
                 codeInputArea.classList.toggle('hidden');
             }
-        }
+        };
     }
 
     function setupCell(cell) {
@@ -108,7 +114,25 @@ define([
 
         // Update metadata.
         utils.setMeta(cell, 'attributes', 'lastLoaded', (new Date()).toUTCString());
-
+        
+        // Create our own input area for interaction with the user.
+        var cellInputNode = cell.input[0],
+            kbaseNode,
+            ui = UI.make({node: cellInputNode});
+        
+        kbaseNode = ui.createNode(div({
+            dataSubareaType: 'data-cell-input'
+        }));
+        
+        cellInputNode.appendChild(kbaseNode);
+        
+        var dataCell = DataCell.make({
+            cell: cell
+        });
+        dataCell.bus.emit('run', {
+            node: kbaseNode
+        });
+        
         // The output cell just needs to inhibit the input area.
         // The input code and associated output (a widget) is already
         // to be found in this cell (during insertion).
@@ -125,8 +149,6 @@ define([
                 outputCode, parentTitle,
                 cellId = data.kbase.cellId || (new Uuid(4).format());
 
-            console.log('upgrading data cell', data);
-
             // Set the initial metadata for the output cell.
             meta.kbase = {
                 type: 'data',
@@ -138,7 +160,8 @@ define([
                     icon: 'database',
                     title: 'Data Cell'
                 },
-                outputCell: {
+                dataCell: {
+                    objectInfo: data.objectInfo,
                     widget: data.kbase.widget
                 }
             };
@@ -154,13 +177,15 @@ define([
 
             // all we do for now is set up the input area
             cell.input.find('.input_area').addClass('hidden');
-            utils.setCellMeta(cell, 'kbase.outputCell.user-settings.showCodeInputArea', false);
+            utils.setCellMeta(cell, 'kbase.dataCell.user-settings.showCodeInputArea', false);
 
             // Get the title of the app which generated this output...
-            parentTitle = cellUtils.getTitle(Props.getDataItem(cell.metadata, 'kbase.outputCell.parentCellId'));
+            parentTitle = cellUtils.getTitle(Props.getDataItem(cell.metadata, 'kbase.dataCell.parentCellId'));
             if (parentTitle) {
-                Props.setDataItem(cell.metadata, 'kbase.attributes.title', 'Output from ' + parentTitle);
+                Props.setDataItem(cell.metadata, 'kbase.attributes.title', data.objectInfo.name);
             }
+            
+            // console.log('OBJ INF', data.objectInfo);
 
             setupCell(cell);
         });

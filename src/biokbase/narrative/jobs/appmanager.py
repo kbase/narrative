@@ -16,6 +16,9 @@ from biokbase.narrative.app_util import (
     system_variable,
     map_outputs_from_state
 )
+from biokbase.narrative.exception_util import (
+    transform_job_exception
+)
 from IPython.display import HTML
 from jinja2 import Template
 import json
@@ -48,7 +51,6 @@ class AppManager(object):
     ws_client = clients.get('workspace')
     spec_manager = SpecManager()
     _log = kblogging.get_logger(__name__)
-    _log.setLevel(logging.INFO)
     _comm = None
     viewer_count = 1
 
@@ -209,7 +211,6 @@ class AppManager(object):
             'username': system_variable('user_id'),
             'ws': system_variable('workspace')
         }
-        self._log.setLevel(logging.INFO)
         kblogging.log_event(self._log, "run_local_app", log_info)
 
         self._send_comm_message('run_status', {
@@ -310,7 +311,6 @@ class AppManager(object):
             'username': system_variable('user_id'),
             'ws': system_variable('workspace')
         }
-        self._log.setLevel(logging.INFO)
         kblogging.log_event(self._log, "run_widget_app", log_info)
 
         self._send_comm_message('run_status', {
@@ -322,7 +322,7 @@ class AppManager(object):
 
         # now just map onto outputs.
         custom_widget = spec.get('widgets', {}).get('input', None)
-        return WidgetManager().show_custom_widget(custom_widget, app_id, version, tag, spec)
+        return WidgetManager().show_custom_widget(custom_widget, app_id, version, tag, spec, cell_id)
 
     def _validate_parameters(self, app_id, tag, spec_params, params):
         """
@@ -420,6 +420,7 @@ class AppManager(object):
         --------
         run_app('MegaHit/run_megahit', version=">=1.0.0", read_library_name="My_PE_Library", output_contigset_name="My_Contig_Assembly")
         """
+
         try:
             if params is None:
                 params = dict()
@@ -428,6 +429,8 @@ class AppManager(object):
             e_type = type(e).__name__
             e_message = str(e).replace('<', '&lt;').replace('>', '&gt;')
             e_trace = traceback.format_exc().replace('<', '&lt;').replace('>', '&gt;')
+            e_code = getattr(e, 'code', -1)
+            e_source = getattr(e, 'source', 'appmanager')
             self._send_comm_message('run_status', {
                 'event': 'error',
                 'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
@@ -435,9 +438,10 @@ class AppManager(object):
                 'run_id': run_id,
                 'error_message': e_message,
                 'error_type': e_type,
-                'error_stacktrace': e_trace
+                'error_stacktrace': e_trace,
+                'error_code': e_code,
+                'error_source': e_source
             })
-            # raise
             print("Error while trying to start your app (run_app)!\n-------------------------------------\n" + str(e))
             return
 
@@ -464,13 +468,6 @@ class AppManager(object):
         --------
         my_job = mm.run_app('MegaHit/run_megahit', version=">=1.0.0", read_library_name="My_PE_Library", output_contigset_name="My_Contig_Assembly")
         """
-
-        self._send_comm_message('run_status', {
-            'event': 'validating_app',
-            'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
-            'cell_id': cell_id,
-            'run_id': run_id
-        })
 
         ### TODO: this needs restructuring so that we can send back validation failure
         ### messages. Perhaps a separate function and catch the errors, or return an
@@ -501,13 +498,6 @@ class AppManager(object):
         spec_params = self.spec_manager.app_params(spec)
 
         (params, ws_input_refs) = self._validate_parameters(app_id, tag, spec_params, params)
-
-        self._send_comm_message('run_status', {
-            'event': 'validated_app',
-            'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
-            'cell_id': cell_id,
-            'run_id': run_id
-        })
 
         ws_id = system_variable('workspace_id')
         if ws_id is None:
@@ -554,25 +544,23 @@ class AppManager(object):
             'username': system_variable('user_id'),
             'wsid': ws_id
         }
-        self._log.setLevel(logging.INFO)
         kblogging.log_event(self._log, "run_app", log_info)
-
-        self._send_comm_message('run_status', {
-            'event': 'launching_job',
-            'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
-            'cell_id': cell_id,
-            'run_id': run_id
-        })
 
         try:
             job_id = self.njs.run_job(job_runner_inputs)
         except Exception as e:
             log_info.update({'err': str(e)})
-            self._log.setLevel(logging.ERROR)
             kblogging.log_event(self._log, "run_app_error", log_info)
-            raise
+            raise transform_job_exception(e)
 
-        new_job = Job(job_id, app_id, [params], system_variable('user_id'), tag=tag, app_version=service_ver, cell_id=cell_id)
+        new_job = Job(job_id,
+                      app_id,
+                      [params],
+                      system_variable('user_id'),
+                      tag=tag,
+                      app_version=service_ver,
+                      cell_id=cell_id,
+                      run_id=run_id)
 
         self._send_comm_message('run_status', {
             'event': 'launched_job',

@@ -69,9 +69,6 @@ define([
         if (!workspaceId) {
             throw new Error('Workspace id required for the object widget');
         }
-        //if (!workspaceUrl) {
-        //    throw new Error('Workspace url is required for the object widget');
-        //}
 
         options.enabled = true;
 
@@ -110,9 +107,9 @@ define([
             if (!filter) {
                 return items;
             }
-            var re = new RegExp(filter);
+            var re = new RegExp(filter, 'i');
             return items.filter(function (item) {
-                if (item.text && item.text.match(re, 'i')) {
+                if (item.text && item.text.match(re)) {
                     return true;
                 }
                 return false;
@@ -165,7 +162,7 @@ define([
         }
 
         function doRemoveSelectedItem(indexOfitemToRemove) {
-            var selectedItems = model.getItem('value', []),
+            var selectedItems = model.getItem('value') || [],
                 prevAllowSelection = spec.spec.allow_multiple || selectedItems.length === 0;
             selectedItems.splice(indexOfitemToRemove, 1);
 
@@ -304,13 +301,11 @@ define([
         }
 
         function renderSelectedItems() {
-            var selectedItems = model.getItem('value', []),
+            var selectedItems = model.getItem('value') || [],
                 valuesMap = model.getItem('values.available.map', {}),
                 events = Events.make({node: container}),
                 content;
             
-            console.log('SELECTED', selectedItems);
-
             if (selectedItems.length === 0) {
                 content = div({style: {textAlign: 'center'}}, 'no selected values');
             } else {
@@ -384,9 +379,6 @@ define([
                 events = Events.make({node: container}),
                 content;
 
-            //if (items.length === 0) {
-            //    content = '';
-            //} else {
             content = input({
                 class: 'form-contol',
                 style: {xwidth: '100%'},
@@ -398,29 +390,9 @@ define([
                             handler: function (e) {
                                 doSearchKeyUp(e);
                             }
-                        },
-                        {
-                            type: 'focus',
-                            handler: function () {
-                                Jupyter.narrative.disableKeyboardManager();
-                            }
-                        },
-                        {
-                            type: 'blur',
-                            handler: function () {
-                                console.log('SingleSubData Search BLUR');
-                                // Jupyter.narrative.enableKeyboardManager();
-                            }
-                        },
-                        {
-                            type: 'click',
-                            handler: function () {
-                                Jupyter.narrative.disableKeyboardManager();
-                            }
                         }
                     ]})
             });
-            //}
 
             ui.setContent('search-box', content);
             events.attachEvents();
@@ -579,17 +551,6 @@ define([
                 size = 10;
                 multiple = true;
             }
-//            if (!availableValues) {
-//                return p({
-//                    class: 'form-control-static',
-//                    style: {
-//                        fontStyle: 'italic',
-//                        whiteSpace: 'normal',
-//                        padding: '3px',
-//                        border: '1px silver solid'
-//                    }
-//                }, 'Items will be available after selecting a value for ' + '?? fix me ??');
-//            }
 
             selectOptions = buildOptions();
 
@@ -632,24 +593,6 @@ define([
                     })
                 })
 
-//                div({class: 'row'}, [
-//                    div({class: 'col-md-6'},
-//                        div({
-//                            style: {
-//                                border: '1px silver solid',
-//                                xheight: '100px'
-//                            },
-//                            dataElement: 'available-items'
-//                        })),
-//                    div({class: 'col-md-6'},
-//                        div({
-//                            style: {
-//                                border: '1px silver solid',
-//                                xheight: '100px'
-//                            },
-//                            dataElement: 'selected-items'
-//                        }))
-//                ])
             ]);
         }
 
@@ -700,22 +643,11 @@ define([
          * values.
          */
         function getInputValue() {
-//            var control = ui.getElement('input-container.input');
-//            if (!control) {
-//                return null;
-//            }
-//            var input = control.selectedOptions,
-//                i, values = [];
-//            for (i = 0; i < input.length; i += 1) {
-//                values.push(input.item(i).value);
-//            }
-//            // cute ... allows selecting multiple values but does not expect a sequence...
-//            return values;
             return model.getItem('value');
         }
 
         function resetModelValue() {
-            model.reset();
+            // model.reset();
             if (spec.spec.default_values && spec.spec.default_values.length > 0) {
                 // nb i'm assuming here that this set of strings is actually comma
                 // separated string on the other side.
@@ -777,17 +709,13 @@ define([
         var subdataInfo = subdataMethodsManager.getSubdataInfo(appSpec, spec.spec);
 
         function fetchData() {
-            // var fetchInfo = getFetchInfo();
             var referenceObjectName = model.getItem('referenceObjectName'),
                 referenceObjectRef = workspaceId + '/' + referenceObjectName,
-                params = model.getItem('params');
+                params = model.getItem('required-params');
 
             if (!referenceObjectName) {
                 return;
             }
-
-            console.log('got fetch info!', subdataInfo, referenceObjectRef, params, model.getRawObject());
-
 
             return subdataMethodsManager.customFetchData({
                 referenceObjectRef: referenceObjectRef,
@@ -804,7 +732,7 @@ define([
             })
                 .then(function (data) {
                     if (!data) {
-                        return " no data? ";
+                        data = [];
                     }
                     // 
                     // The data represents the total available subdata, with all
@@ -837,7 +765,6 @@ define([
                     });
                 });
         }
-
 
         /*
          * Creates the markup
@@ -892,30 +819,6 @@ define([
             };
         }
         
-        function theUpdater() {
-            var required = subdataInfo.params.dependencies;
-            
-            if (required.some(function (paramId) {
-                return (model.getItem(['params', paramId], null) === null);
-            })) {
-                // If any params are missing, we cannot get more values,
-                // we just render the empty control.
-                console.log('Alas, no agreement, we shall reset');
-                resetModelValue();
-                model.setItem('selectedItems', []);
-                updateInputControl();
-            } else {
-                console.log('Ah, a quorum (sync)!', model.getItem('params'));
-                syncAvailableValues()
-                    .then(function () {
-                        updateInputControl();
-                    })
-                    .catch(function (err) {
-                        console.error('Error syncing control', err);
-                    });
-            }
-        }
-
         function updateParam(paramId, value) {
             var newValue;
             if (value === '') {
@@ -923,15 +826,28 @@ define([
             } else {
                 newValue = value;
             }
-            // model.reset();
+            
+            if (newValue === model.getItem(['required-params', paramId])) {
+                return;
+            }
             
             model.setItem('value', []);
-            model.setItem(['params', paramId], newValue);
-
+            model.setItem(['required-params', paramId], newValue);
+            
+            // If any of the required parameters are missing, we need to reset the
+            // primary value.
+            if (subdataInfo.params.dependencies.some(function (paramId) {
+                return (model.getItem(['required-params', paramId], null) === null);
+            })) {
+                resetModelValue();
+            }
+            
+            // If we have a change in the primary reference object, we need to 
+            // resync the values derived from it (available values).            
             if (paramId === subdataInfo.params.referenceObject) {
                 model.setItem('referenceObjectName', newValue);
+                return syncAvailableValues()
             }
-            theUpdater();
         }
 
         function registerEvents() {
@@ -953,8 +869,6 @@ define([
                 renderAvailableItems();
                 renderSelectedItems();
 
-                // updateInputControl('availableValues');
-                // updateInputControl('value');
             });
 
             /*
@@ -968,35 +882,9 @@ define([
                 if (!newValue || ( (typeof newValue === 'string') && newValue.length === 0) ) {
                     newValue = [];
                 }
-                console.log('UPDATING', newValue);
                 model.setItem('value', newValue);
                 updateInputControl('value');
             });
-            // NEW
-
-
-            //                bus.receive({
-            //                    test: function (message) {
-            //                        return (message.type === 'parameter-changed');
-            //                    },
-            //                    handle: function(message) {
-            //                        console.log('parameter changed', message);
-            //                   bus }
-            //                });
-
-
-
-            //bus.on('parameter-changed', function (message) {
-            //    if (message.parameter === subdataOptions.subdata_selection.parameter_id) {
-
-            /*
-             * Called when for an update to any param. This is necessary for
-             * any parameter which has a dependency upon any other.
-             *
-             */
-            // bus.on('parameter')
-
-            // var fetchInfo = getFetchInfo();
 
             if (subdataInfo.params.dependencies) {
                 subdataInfo.params.dependencies.forEach(function (paramId) {
@@ -1035,73 +923,19 @@ define([
                 });
             }
 
-//            bus.listen({
-//                key: {
-//                    type: 'parameter-changed',
-//                    parameter: subdataOptions.subdata_selection.parameter_id
-//                },
-//                handle: function (message) {
-//                    var newValue = message.newValue;
-//                    if (message.newValue === '') {
-//                        newValue = null;
-//                    }
-//                    // reset the entire model.
-//                    model.reset();
-//                    model.setItem('referenceObjectName', newValue);
-//                    syncAvailableValues()
-//                        .then(function () {
-//                            updateInputControl('availableValues');
-//                        })
-//                        .catch(function (err) {
-//                            console.error('ERROR syncing available values', err);
-//                        });
-//                }
-//            });
 
-//            bus.listen({
-//                key: {
-//                    type: 'parameter-value',
-//                    parameter: subdataOptions.subdata_selection.parameter_id
-//                },
-//                handle: function (message) {
-//                    var newValue = message.newValue;
-//                    if (message.newValue === '') {
-//                        newValue = null;
-//                    }
-//                    model.reset();
-//                    model.setItem('referenceObjectName', newValue);
-//                    syncAvailableValues()
-//                        .then(function () {
-//                            updateInputControl('availableValues');
-//                        })
-//                        .catch(function (err) {
-//                            console.error('ERROR syncing available values', err);
-//                        });
-//                }
-//            });
-
-            // This control has a dependency relationship in that its
-            // selection of available values is dependent upon a sub-property
-            // of an object referenced by another parameter.
-            // Rather than explicitly refer to that parameter, we have a
-            // generic capability to receive updates for that value, after
-            // which we re-fetch the values, and re-render the control.
-//            bus.on('update-reference-object', function (message) {
-//                model.setItem('referenceObjectName', value)
-//                setReferenceValue(message.objectRef);
-//            });
             bus.emit('sync');
 
-            bus.request({
-                parameterName: spec.id()
-            }, {
-                key: {
-                    type: 'get-parameter'
-                }
-            })
-                .then(function (message) {
-                    console.log('Now i got it again', message);
-                });
+            //bus.request({
+            //    parameterName: spec.id()
+            //}, {
+            //    key: {
+            //        type: 'get-parameter'
+            //    }
+            //})
+            //    .then(function (message) {
+            //        console.log('Now i got it again', message);
+            //    });
 
 
 
@@ -1126,8 +960,6 @@ define([
          */
 
 
-
-
         // LIFECYCLE API
 
         function start() {
@@ -1143,84 +975,16 @@ define([
                         theLayout = layout(events);
 
                     container.innerHTML = theLayout.content;
-//
-//                    bus.request({
-//                        parameter: subdataOptions.subdata_selection.parameter_id
-//                    }, {
-//                        type: 'get-parameter'
-//                    })
-//                        .then(function (message) {
-//                            model.setItem('referenceObjectName', message.value);
-//                            render();
-//                        })
-//                        .catch(function (err) {
-//                            console.error('ERROR getting parameter ' + subdataOptions.subdata_selection.parameter_id);
-//                        });
-//
 
                     render();
-
 
                     events.attachEvents(container);
 
                     registerEvents();
                     
-                    console.log('sending initial sync-params...', subdataInfo.params.dependencies);
                     bus.emit('sync-params', {
                         parameters: subdataInfo.params.dependencies
                     });
-                    
-//                    // Get initial data.
-//                    // Weird, but will make it look nicer.
-//                    Promise.all([
-//                        bus.request({
-//                            parameterName: spec.id()
-//                        },
-//                            {
-//                                key: {
-//                                    type: 'get-parameter'
-//                                }
-//                            }),
-//                        bus.request({
-//                            parameterName: fetchInfo.params.referenceObject
-//                        },
-//                            {
-//                                key: {
-//                                    type: 'get-parameter'
-//                                }
-//                            })
-//                    ])
-//                        .spread(function (paramValue, referencedParamValue) {
-//                            // hmm, the default value of a subdata is null, but that does
-//                            // not play nice with the model props defaulting mechanism which
-//                            // works with absent or undefined (null being considered an actual value, which
-//                            // it is of course!)
-//                            if (paramValue.value === null) {
-//                                model.setItem('selectedItems', []);
-//                            } else {
-//                                var selectedItems = paramValue.value;
-//                                if (!(selectedItems instanceof Array)) {
-//                                    selectedItems = [selectedItems];
-//                                }
-//                                model.setItem('selectedItems', selectedItems);
-//                            }
-//                            updateInputControl('value');
-//
-//                            if (referencedParamValue) {
-//                                model.setItem('referenceObjectName', referencedParamValue.value);
-//                            }
-//                            return syncAvailableValues()
-//                                .then(function () {
-//                                    updateInputControl('availableValues');
-//                                })
-//                                .catch(function (err) {
-//                                    console.error('ERROR syncing available values', err);
-//                                });
-//
-//                        })
-//                        .catch(function (err) {
-//                            console.error('ERROR fetching initial data', err);
-//                        });
                 });
             });
         }
@@ -1235,19 +999,12 @@ define([
                 value: null,
                 showFrom: 0,
                 showTo: 5
-            }
-            ,
+            },
             onUpdate: function (props) {
-                // cheap version
-                //renderSearchBox();
                 renderStats();
                 renderToolbar();
-
                 renderAvailableItems();
                 renderSelectedItems();
-                // renderNavbar();
-                // render();
-                // updateInputControl(props);
             }
         });
 

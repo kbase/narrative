@@ -42,7 +42,33 @@ define([
             var props = Props.make();
             props.setItem('pet', {type: 'dog', name: 'peet'});
             expect(props.getItem('pet')).toEqual({type: 'dog', name: 'peet'});
+        });       
+        it('Set two object propertyes', function () {
+            var props = Props.make();
+            props.setItem(['pet', 'coco'], 'yellow');
+            props.setItem(['pet', 'peet'], 'black');
+            expect(props.getItem('pet.coco')).toEqual('yellow');
+            expect(props.getItem('pet.peet')).toEqual('black');
         });
+        
+        it('Push a value onto a property', function () {
+            var props = Props.make();
+            props.setItem('array.prop', []);
+            props.pushItem('array.prop', 123);
+            expect(props.getItem('array.prop')).toEqual([123]);
+            expect(props.popItem('array.prop')).toEqual(123);
+            expect(props.getItem('array.prop')).toEqual([]);
+        });
+        
+        it('Push a value onto an empty', function () {
+            var props = Props.make();
+            props.pushItem('array.prop', 123);
+            expect(props.getItem('array.prop')).toEqual([123]);
+            expect(props.popItem('array.prop')).toEqual(123);
+            expect(props.getItem('array.prop')).toEqual([]);
+        });
+        
+        
         it('History should undefined', function () {
             var props = Props.make();
             expect(props.getHistoryCount()).toBeUndefined;

@@ -65,7 +65,6 @@ define([
                     ul([
                         li('Remove the output cell from the Narrative'),
                         li('Remove this output record'),
-                        li('Remove the associated job'),
                         li('Reset the app to edit mode')
                     ]),
                     p('Note: This action is not reversable.'),
@@ -78,14 +77,13 @@ define([
                     ul([
                         li('Remove the output cell from the Narrative'),
                         li('Remove this output record'),
-                        li('Remove the associated job')
                     ]),
                     p('Note: This action is not reversable.'),
                     p('Data produced in this output will remain in your narrative, and may be found in the Data panel.'),
                     p('Are you sure you want to remove the output cell?')
                 ]);
             }
-            ui.showConfirmDialog('Confirm Deletion of Cell Output', content, 'Yes', 'No')
+            ui.showConfirmDialog({title: 'Confirm Deletion of Cell Output', body: content})
                 .then(function (answer) {
                     if (!answer) {
                         return;
@@ -110,13 +108,6 @@ define([
                         },
                         key: {
                             type: 'output-cell-removed'
-                        }
-                    });
-                    bus.bus().send({
-                        jobId: output.jobId
-                    }, {
-                        key: {
-                            type: 'request-job-deletion'
                         }
                     });
                 });
@@ -195,7 +186,7 @@ define([
                     return {
                         jobId: jobId,
                         cellId: output.cell.id,
-                        createdTime: new Date(output.cell.createdAt)
+                        createdTime: new Date(output.createdAt)
                     };
                 });
             }

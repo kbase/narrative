@@ -373,7 +373,7 @@ class WidgetManager(object):
 
 
 
-    def show_custom_widget(self, widget_id, app_id, app_version, app_tag, spec):
+    def show_custom_widget(self, widget_id, app_id, app_version, app_tag, spec, cell_id):
         input_template = """
         element.html('<div id="{{widget_root_id}}" class="kb-custom-widget">');
 
@@ -385,7 +385,8 @@ class WidgetManager(object):
                 widgetParentNode = document.getElementById(widgetArg.env.rootId),
                 widget = CustomWidgetWrapper.make({
                     widget: widgetArg.widget,
-                    app: widgetArg.app
+                    app: widgetArg.app,
+                    cellId: widgetArg.env.cellId
                 });
 
             widget.start({root: widgetParentNode})
@@ -394,7 +395,7 @@ class WidgetManager(object):
                 })
                 .catch(function (err) {
                     console.error('ERROR', err);
-                    widgetParentNode.innerHTML = 'ERROR! ' + err.message);
+                    widgetParentNode.innerHTML = 'ERROR! ' + err.message;
                     // dataWidget.showErrorMessage(err.message);
                 });
         });
@@ -426,7 +427,8 @@ class WidgetManager(object):
                 'id': widget_id
             },
             'env': {
-                'rootId': widget_root_id
+                'rootId': widget_root_id,
+                'cellId': cell_id
             }
         }
 

@@ -24,8 +24,8 @@
 define([
     'base/js/namespace',
     'common/runtime',
+    'common/ui',
     'kbwidget',
-    'bootstrap',
     'jquery',
     'underscore',
     'bluebird',
@@ -40,13 +40,15 @@ define([
     'kbaseNarrativeDataPanel',
     'kbaseNarrativeOutputCell',
     'kbaseTabs',
-    'common/pythonInterop',
-    'kb_service/client/narrativeMethodStore'
+    'common/props',
+    'kb_service/client/narrativeMethodStore',
+    
+    'bootstrap',
 ], function(
     Jupyter,
     Runtime,
+    UI,
     KBWidget,
-    bootstrap,
     $,
     _,
     Promise,
@@ -61,7 +63,7 @@ define([
     kbaseNarrativeDataPanel,
     kbaseNarrativeOutputCell,
     kbaseTabs,
-    PythonInterop,
+    Props,
     NarrativeMethodStore
 ) {
     'use strict';
@@ -490,7 +492,10 @@ define([
 
             // A very small class of methods are just non-app-calling widgets.
             switch (spec.info.id) {
-                case 'edit_media':
+                //case 'model_support/edit_model':
+                case 'fba_tools/edit_metabolic_model':
+                case 'fba_tools/create_or_edit_media':
+                //case 'model_support/edit_media':
                     return 'widget';
             }
 
@@ -1502,7 +1507,57 @@ define([
          * @method deleteCell
          * @private
          */
-        deleteCell: function(index) {
+        
+        /*
+         * The new delete cell
+         * Delete cell needs to honor the new cells, but since we are using the
+         * new nb extension mechanism, and may have arbitrary cell types, we
+         * just look to see if it is indeed a kbase cell, and if so we punt
+         * to it.
+         */
+        deleteCell: function (index) {
+            if (index === undefined || index === null) {
+                return;
+            }
+            var cell = Jupyter.notebook.get_cell(index);
+            if (!cell) {
+                return;
+            }
+            var kbaseCellType = Props.getDataItem(cell.metadata, 'kbase.type');
+            
+            if (!kbaseCellType) {
+                // TODO: Delete anyway...
+                UI.make({node: this.$elem[0]}).showConfirmDialog({
+                    title: 'Confirm Cell Deletion',
+                    content: 'Are you sure you want to delete this cell?'                    
+                })
+                    .then(function (confirmed) {
+                        if (confirmed) {
+                            Jupyter.notebook.delete_cell(index);                            
+                        }
+                    });
+                return;
+            }
+            
+            var cellId = Props.getDataItem(cell.metadata, 'kbase.attributes.id');
+            if (!cellId) {
+                // TODO: delete anyway
+                alert('no cell id, do not know how to delete you');
+                console.warn('KBase cell without cell id. Not deleting', cell.metadata);
+                return;
+            }
+            console.log('letting cell know we want to delete it', cellId)
+            this.runtime.bus().send({}, {
+               channel: {
+                   cell: cellId
+               },
+               key: {
+                   type: 'delete-cell'
+               }
+            });
+        },
+        
+        xdeleteCell: function(index) {
             if (index !== undefined && index !== null) {
                 var cell = Jupyter.notebook.get_cell(index);
                 if (cell) {

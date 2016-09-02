@@ -147,7 +147,7 @@ define(
     };
 
     Narrative.prototype.enableKeyboardManager = function () {
-        Jupyter.keyboard_manager.enable();
+        // Jupyter.keyboard_manager.enable();
     };
 
     /**
@@ -175,7 +175,7 @@ define(
         // }.bind(this));
 
         $([Jupyter.events]).on('delete.Cell', function () {
-            this.enableKeyboardManager();
+            // this.enableKeyboardManager();
         }.bind(this));
 
         $([Jupyter.events]).on('notebook_save_failed.Notebook', function (event, data) {
@@ -322,7 +322,7 @@ define(
             body: renderSettingsDialog(existingSettings),
             buttons: [
                 {
-                    icon: 'file',
+                    type: 'primary',
                     label: 'Save Settings',
                     action: 'save',
                     handler: function (e) {
@@ -660,8 +660,20 @@ define(
 
                 $([Jupyter.events]).on('kernel_ready.Kernel',
                     function () {
+                        
                         console.log('Kernel Ready! Initializing Job Channel...');
-                        this.sidePanel.$jobsWidget.initCommChannel();
+                        
+                        // TODO: This should be an event "kernel-ready", perhaps broadcast
+                        // on the default bus channel.
+                        this.sidePanel.$jobsWidget.initCommChannel()
+                            .catch(function (err) {
+                                // TODO: put the narrative into a terminal state
+                                console.error('ERROR initializing kbase comm channel', err);
+                                KBFatal('Narrative.ini', 'KBase communication channel could not be initiated with the back end. TODO');
+                                $('#kb-wait-for-ws').remove();
+                                // alert('KBase communication channel could not be initiated with the back end. TODO: This should result in a terminal state for the Narrative.');
+                            });
+
                         // this.initCommChannel();
                     }.bind(this)
                     );

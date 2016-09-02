@@ -215,10 +215,10 @@ define([
                 }
             }
             $input.on('focus', function(e) {
-                Jupyter.narrative.disableKeyboardManager();
+                // Jupyter.narrative.disableKeyboardManager();
             })
             .on('blur', function(e) {
-                Jupyter.narrative.enableKeyboardManager();
+                // Jupyter.narrative.enableKeyboardManager();
             });
 
             var $feedbackTip = $("<span>").removeClass();
@@ -495,12 +495,12 @@ define([
                 )
                 .on("select2-focus",
                     function (e) {
-                        Jupyter.narrative.disableKeyboardManager();
+                        // Jupyter.narrative.disableKeyboardManager();
                     }
                 )
                 .on("select2-blur",
                     function (e) {
-                        Jupyter.narrative.enableKeyboardManager();
+                        // Jupyter.narrative.enableKeyboardManager();
                     }
                 );
 

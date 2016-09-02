@@ -4,8 +4,9 @@
 define([
     'kb_common/html',
     'common/props',
-    'common/runtime'
-], function (html, Props, Runtime) {
+    'common/runtime',
+    'narrativeConfig'
+], function (html, Props, Runtime, narrativeConfig) {
     'use strict';
 
     var t = html.tag,
@@ -41,9 +42,51 @@ define([
             ])
         ]);
     }
+    
+    function parseType(typeId) {
+        var parsed = typeId.split('-'),
+            typeId = parsed[0].split('.'),
+            module = typeId[0],
+            name = typeId[1],
+            version = parsed[1];
+        return {
+            name: name,
+            module: module,
+            version: version
+        };
+    }
+
+    function makeTypeIcon(typeId) {
+        var type = parseType(typeId),
+            iconSpec = narrativeConfig.get('icons'), 
+            color, iconDef, icon;
+        
+        if (iconSpec) {
+            color = iconSpec.color_mapping[type.name];
+            iconDef = iconSpec.data[type.name];
+        }
+        
+        if (iconDef) {
+            icon = iconDef[0];
+        } else {
+            icon = iconSpec.data.DEFAULT[0];
+        }
+        
+        if (!color) {
+            color = 'black';
+        }
+        
+        return span([
+            span({class: 'fa-stack fa-2x', style: {textAlign: 'center', color: color}}, [
+                span({class: 'fa fa-circle fa-stack-2x', style: {color: color}}),
+                span({class: 'fa fa-inverse fa-stack-1x ' + icon})
+            ])
+        ]);
+    }
 
     return {
         makeAppIcon: makeAppIcon,
-        makeGenericIcon: makeGenericIcon
+        makeGenericIcon: makeGenericIcon,
+        makeTypeIcon: makeTypeIcon
     };
 });

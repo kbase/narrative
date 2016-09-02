@@ -136,10 +136,15 @@ define([
                 type: 'primary',
                 classes: ['kb-panel-light'],
                 body: div({style: {paddingTop: '6px'}}, [
-                    div({class: 'row', dataElement: 'launch'}, [
-                        div({class: 'col-md-2', style: labelStyle}, span({dataElement: 'label'}, 'Launch')),
-                        div({class: 'col-md-2', style: dataStyle}, span({dataElement: 'elapsed', class: 'kb-elapsed-time'}))
+                    div({class: 'row', dataElement: 'last-updated'}, [
+                        div({class: 'col-md-2', style: labelStyle}, span({dataElement: 'label'}, 'Last updated')),
+                        div({class: 'col-md-2', style: dataStyle}, span({dataElement: 'elapsed', class: 'kb-elapsed-time'})),
+                        div({class: 'col-md-2', style: dataStyle}, span({dataElement: 'time'}))
                     ]),
+//                    div({class: 'row', dataElement: 'launch'}, [
+//                        div({class: 'col-md-2', style: labelStyle}, span({dataElement: 'label'}, 'Launch')),
+//                        div({class: 'col-md-2', style: dataStyle}, span({dataElement: 'elapsed', class: 'kb-elapsed-time'}))
+//                    ]),
                     div({class: 'row', dataElement: 'queue'}, [
                         div({class: 'col-md-2', style: labelStyle}, span({dataElement: 'label'}, 'Queue')),
                         div({class: 'col-md-2', style: dataStyle}, span({dataElement: 'elapsed', class: 'kb-elapsed-time'})),
@@ -167,23 +172,33 @@ define([
                 return;
             }
 
-            // LAUNCH
-            if (state.elapsedLaunchTime) {
+            // UPDATED
+            if (model.getItem('runStateLastUpdatedTime')) {
                 (function () {
-                    var label;
-                    if (state.temporalState === 'launching') {
-                        label = 'Launching';
-                        ui.addClass(['execStatus', 'launch', 'elapsed'], '-active');
-                    } else {
-                        label = 'Launched in';
-                        ui.removeClass(['execStatus', 'launch', 'elapsed'], '-active');
-                    }
-                    ui.setContent(['execStatus', 'launch', 'label'], label);
-                    ui.setContent(['execStatus', 'launch', 'elapsed'], format.elapsedTime(state.elapsedLaunchTime) || '');
+                    var now = new Date().getTime(),
+                        then = model.getItem('runStateLastUpdatedTime', now);
+                    ui.setContent(['execStatus', 'last-updated', 'elapsed'], format.elapsedTime(now - then));
+                    ui.setContent(['execStatus', 'last-updated', 'time'], format.niceElapsedTime(then));
                 }());
-            } else {
-                ui.setContent(['execStatus', 'launch', 'elapsed'], '-');
             }
+
+            // LAUNCH
+//            if (state.elapsedLaunchTime) {
+//                (function () {
+//                    var label;
+//                    if (state.temporalState === 'launching') {
+//                        label = 'Launching';
+//                        ui.addClass(['execStatus', 'launch', 'elapsed'], '-active');
+//                    } else {
+//                        label = 'Launched in';
+//                        ui.removeClass(['execStatus', 'launch', 'elapsed'], '-active');
+//                    }
+//                    ui.setContent(['execStatus', 'launch', 'label'], label);
+//                    ui.setContent(['execStatus', 'launch', 'elapsed'], format.elapsedTime(state.elapsedLaunchTime) || '');
+//                }());
+//            } else {
+//                ui.setContent(['execStatus', 'launch', 'elapsed'], '-');
+//            }
 
             // QUEUE
             if (state.elapsedQueueTime) {
@@ -191,7 +206,7 @@ define([
                     var label;
                     if (state.elapsedRunTime) {
                         ui.removeClass(['execStatus', 'queue', 'elapsed'], '-active');
-                        label = 'Was Queued for';
+                        label = 'Queued for';
                     } else {
                         ui.addClass(['execStatus', 'queue', 'elapsed'], '-active');
                         label = 'In Queue';
@@ -227,23 +242,34 @@ define([
                 ui.setContent(['execStatus', 'run', 'elapsed'], '-');
             }
 
-            if (state.success) {
-                ui.setContent(['execStatus', 'finish', 'state'], 'success');
-                ui.setContent(['execStatus', 'finish', 'finishedAt'], format.niceElapsedTime(state.completedTime));
-                // ui.showElement('job-report');
-                // showJobReport();
-                // showJobResult();
-            } else if (state.error) {
-                if (state.completedTime) {
-                    ui.setContent(['execStatus', 'finish', 'finishedAt'], format.niceElapsedTime(state.completedTime));
+            if (state.temporalState === 'finished') {
+                switch (state.executionState) {
+                    case 'success':
+                        ui.setContent(['execStatus', 'finish', 'state'], 'success');
+                        ui.setContent(['execStatus', 'finish', 'finishedAt'], format.niceElapsedTime(state.completedTime));
+                        // ui.showElement('job-report');
+                        // showJobReport();
+                        // showJobResult();
+                        break;
+                    case 'error':
+                        if (state.completedTime) {
+                            ui.setContent(['execStatus', 'finish', 'finishedAt'], format.niceElapsedTime(state.completedTime));
+                        }
+                        ui.setContent(['execStatus', 'finish', 'state'], 'error');
+                        ui.showElement(['run-error']);
+                        ui.setContent(['run-error', 'location'], state.error.location);
+                        ui.setContent(['run-error', 'type'], state.error.type);
+                        ui.setContent(['run-error', 'message'], state.error.message);
+                        ui.setContent(['run-error', 'detail'], state.error.detail);
+                        break;
+                    case 'canceled':
+                        ui.setContent(['execStatus', 'finish', 'state'], 'canceled');
+                        ui.setContent(['execStatus', 'finish', 'finishedAt'], format.niceElapsedTime(state.completedTime));
+                        break;
+                    default:
+                        ui.setContent(['execStatus', 'finish', 'state'], '-');
+                        ui.setContent(['execStatus', 'finish', 'finishedAt'], '-');
                 }
-                ui.setContent(['execStatus', 'finish', 'state'], 'error');
-                ui.showElement(['run-error']);
-                ui.setContent(['run-error', 'location'], state.error.location);
-                ui.setContent(['run-error', 'type'], state.error.type);
-                ui.setContent(['run-error', 'message'], state.error.message);
-                ui.setContent(['run-error', 'detail'], state.error.detail);
-                // console.error('ERROR', state.error);
             } else {
                 ui.setContent(['execStatus', 'finish', 'state'], '-');
                 ui.setContent(['execStatus', 'finish', 'finishedAt'], '-');
@@ -268,7 +294,6 @@ define([
                     table({class: 'table table-striped'}, [
                         tr([th('Job Id'), td({dataElement: 'id'})]),
                         tr([th('Status'), td({dataElement: 'status'})]),
-                        tr([th('Deleted?'), td({dataElement: 'deleted'})]),
                         tr([th('Submitted'), td({dataElement: 'submitted'})]),
                         tr([th('Started'), td({dataElement: 'started'})]),
                         tr([th('Completed'), td({dataElement: 'completed'})])
@@ -282,7 +307,6 @@ define([
                 details = {
                     id: jobState.job_id,
                     status: jobState.job_state,
-                    deleted: jobState.is_deleted ? 'yes' : 'no',
                     submitted: format.niceTime(jobState.creation_time ? new Date(jobState.creation_time) : null),
                     started: format.niceTime(jobState.exec_start_time ? new Date(jobState.exec_start_time) : null),
                     completed: format.niceTime(jobState.finish_time ? new Date(jobState.finish_time) : null),
@@ -471,7 +495,7 @@ define([
                             name: 'stats',
                             label: 'Stats',
                             content: renderExecStats(),
-                            icon: 'clock-o', 
+                            icon: 'clock-o',
                             events: [
                                 {
                                     type: 'shown',
@@ -701,36 +725,20 @@ define([
          */
 
         function updateRunStateFromLaunchState(launchState) {
-            var temporalState, executionState, canonicalState,
+            var temporalState, executionState,
                 error, now = new Date().getTime(),
                 launchStartTime = launchState.startTime,
-                elapsed = now - launchStartTime, newRunState;
+                elapsed = now - launchStartTime, newRunState,
+                oldRunState = model.getItem('runState', {});
 
             switch (launchState.event) {
-                case 'validating_app':
-                    temporalState = 'launching';
-                    executionState = 'processing';
-                    canonicalState = 'validating-request';
-                    break;
-                case 'validated_app':
-                    temporalState = 'launching';
-                    executionState = 'processing';
-                    canonicalState = 'validated-request';
-                    break;
-                case 'launching_job':
-                    temporalState = 'launching';
-                    executionState = 'processing';
-                    canonicalState = 'launching-request';
-                    break;
                 case 'launched_job':
                     temporalState = 'launching';
                     executionState = 'processing';
-                    canonicalState = 'launched-request';
                     break;
                 case 'error':
                     temporalState = 'launching';
                     executionState = 'error';
-                    canonicalState = 'launch-error';
                     error = {
                         location: 'launching',
                         type: launchState.error.type,
@@ -745,10 +753,8 @@ define([
             newRunState = {
                 runId: launchState.runId,
                 jobId: launchState.jobId,
-                lastUpdatedTime: new Date().getTime(),
                 temporalState: temporalState,
                 executionState: executionState,
-                canonicalState: canonicalState,
                 jobState: null,
                 elapsedLaunchTime: elapsed,
                 elapsedQueueTime: null,
@@ -770,6 +776,7 @@ define([
                 submitTime, startTime, completedTime,
                 elapsedQueueTime, elapsedRunTime,
                 position;
+
 
             if (!jobState) {
                 return;
@@ -824,7 +831,7 @@ define([
              position - position of the job in execution waiting queue;
              creation_time, exec_start_time and finish_time - time moments of submission, execution
              start and finish events in milliseconds since Unix Epoch.
-
+             
              typedef structure {
              string job_id;
              boolean finished;
@@ -848,12 +855,12 @@ define([
                 submitTime = jobState.creation_time;
 
                 // Need to adjust the launch time.
-                var launchState = model.getItem('launchState');
-                if (launchState && launchState.startTime) {
-                    runState.elapsedLaunchTime = submitTime - launchState.startTime;
-                } else {
-                    console.warn('STRANGE - no launchState', launchState);
-                }
+                //var launchState = model.getItem('launchState');
+                //if (launchState && launchState.startTime) {
+                //    runState.elapsedLaunchTime = submitTime - launchState.startTime;
+                //} else {
+                //    console.warn('STRANGE - no launchState', launchState);
+               // }
 
                 position = jobState.position;
                 if (jobState.exec_start_time) {
@@ -891,65 +898,6 @@ define([
                 errorInfo = jobState.error;
 
 
-            if (jobState.finished === 1) {
-
-                switch (jobState.job_state) {
-                    case 'suspend':
-                    case 'error':
-                        executionState = 'error';
-
-                        /*
-                         * Here we are simply creating a standardized error
-                         * view object.
-                         */
-                        var errorId = new Uuid(4).format();
-                        var errorType, errorMessage, errorDetail;
-                        if (errorInfo.error) {
-                            // Classic KBase rpc error message
-                            errorType = errorInfo.name;
-                            errorMessage = errorInfo.message;
-                            errorDetail = errorInfo.error;
-                        } else if (errorInfo.name) {
-                            errorType = 'unknown';
-                            errorMessage = errorInfo.name + ' (code: ' + String(errorInfo.code) + ')';
-                            errorDetail = 'This error occurred during execution of the app job.';
-                        } else {
-                            errorType = 'unknown';
-                            errorMessage = 'Unknown error (check console for ' + errorId + ')';
-                            errorDetail = 'There is no further information about this error';
-                        }
-
-                        error = {
-                            location: 'job execution',
-                            type: errorType,
-                            message: errorMessage,
-                            detail: errorDetail
-                        };
-                        break;
-                    case 'completed':
-                        executionState = 'success';
-                        success = {
-                            result: result
-                        };
-                        break;
-                    case 'cancelled':
-                        executionState = 'success';
-                        success = {
-
-                        };
-                        break;
-                    // case 'canceled':
-                    // case 'cancelled':
-                    //     executionState = 'canceled';
-                    //     break;
-                    default:
-                        console.error('Invalid job state for finished job', jobState)
-                        throw new Error('Invalid job state for finished job: ' + jobState.job_state);
-                }
-            } else {
-                executionState = 'processing';
-            }
-
             /*
              * Setting up the run status structure.
              * This is a view model used to provide information to the user
@@ -965,71 +913,70 @@ define([
             // TODO: get the preparation time.
             // todo: can we store the initial execution time in the job record
             // stored in the narrative?
-            var canonicalState;
-            temporalState = jobState.job_state;
-            switch (temporalState) {
-                case 'launching':
-                    switch (executionState) {
-                        case 'processing':
-                            canonicalState = 'preparing';
-                            break;
-                        case 'error':
-                            canonicalState = 'launchError';
-                            break;
-                        default:
-                            throw new Error('Invalid execution state ' + executionState + ' for temporal state ' + temporalState);
-                    }
-                    break;
+            switch (jobState.job_state) {
                 case 'queued':
-                    switch (executionState) {
-                        case 'processing':
-                            canonicalState = 'queued';
-                            break;
-                        case 'error':
-                            canonicalState = 'queingError';
-                            break;
-                        default:
-                            throw new Error('Invalid execution state ' + executionState + ' for temporal state ' + temporalState);
-                    }
+                    temporalState = 'queued';
+                    executionState = 'processing';
                     break;
                 case 'in-progress':
-                    switch (executionState) {
-                        case 'processing':
-                            canonicalState = 'running';
-                            break;
-                        default:
-                            // note that errors which occur during running are
-                            // converted into completed temporal state with
-                            // and error message.
-                            throw new Error('Invalid execution state ' + executionState + ' for temporal state ' + temporalState);
-                    }
+                    temporalState = 'running';
+                    executionState = 'processing';
                     break;
                 case 'suspend':
-                    canonicalState = 'runError';
+                case 'error':
+                    temporalState = 'finished';
+                    executionState = 'error';
+
+                    /*
+                     * Here we are simply creating a standardized error
+                     * view object.
+                     */
+                    var errorId = new Uuid(4).format();
+                    var errorType, errorMessage, errorDetail;
+                    if (errorInfo.error) {
+                        // Classic KBase rpc error message
+                        errorType = errorInfo.name;
+                        errorMessage = errorInfo.message;
+                        errorDetail = errorInfo.error;
+                    } else if (errorInfo.name) {
+                        errorType = 'unknown';
+                        errorMessage = errorInfo.name + ' (code: ' + String(errorInfo.code) + ')';
+                        errorDetail = 'This error occurred during execution of the app job.';
+                    } else {
+                        errorType = 'unknown';
+                        errorMessage = 'Unknown error (check console for ' + errorId + ')';
+                        errorDetail = 'There is no further information about this error';
+                    }
+
+                    error = {
+                        location: 'job execution',
+                        type: errorType,
+                        message: errorMessage,
+                        detail: errorDetail
+                    };
+
+                    break;
+                case 'canceled':
+                    temporalState = 'finished';
+                    executionState = 'canceled';
                     break;
                 case 'completed':
-                    switch (executionState) {
-                        case 'success':
-                            canonicalState = 'success';
-                            break;
-                        case 'error':
-                            canonicalState = 'runError';
-                            break;
-                        default:
-                            console.error('INVAL EXEC STATE', jobState);
-                            throw new Error('Invalid execution state ' + executionState + ' for temporal state ' + temporalState);
-                    }
+                    temporalState = 'finished';
+                    executionState = 'success';
+                    success = {
+                        result: result
+                    };
                     break;
+                default:
+                    console.error('Invalid job state for finished job', jobState)
+                    throw new Error('Invalid job state for finished job: ' + jobState.job_state);
             }
-
 
             var newRunState = {
                 runId: runState.runId,
                 jobId: jobState.job_id,
-                lastUpdatedTime: model.getItem('jobStateLastUpdatedTime'),
                 temporalState: temporalState,
                 executionState: executionState,
-                canonicalState: canonicalState,
                 jobState: jobState,
                 elapsedLaunchTime: runState.elapsedLaunchTime,
                 elapsedQueueTime: elapsedQueueTime,
@@ -1041,48 +988,6 @@ define([
             };
 
             model.setItem('runState', newRunState);
-        }
-
-
-        function updateRunLaunchStatus(runMessage) {
-            var runState = model.getItem('runState'),
-                now = new Date().getTime();
-            if (!runState) {
-                runState = makeRunStatus();
-            }
-            /*
-             * Once we have recorded a completed state, the run status should
-             * not be updated.
-             * Somewhere we must be protected from invald run updates ...
-             */
-            if (runState.completed) {
-                return;
-            }
-
-            // These apps are guaranteed to only happen once, and we should
-            // get every single event.
-            switch (runMessage.event) {
-                case 'validating_app':
-                    runState.state = 'validating',
-                        runState.launch = {
-                            start: new Date().getTime()
-                        };
-                    break;
-                case 'validated_app':
-                    runState.state = 'validated';
-                    runState.launch.elapsed = now - runState.launch.start;
-                    break;
-                case 'launching_job':
-                    runState.state = 'launching';
-                    runState.launch.elapsed = now - runState.launch.start;
-                    break;
-                case 'launched_job':
-                    runState.state = 'launched';
-                    runState.launch.elapsed = now - runState.launch.start;
-                    break;
-            }
-
-            model.setItem('runState', runState);
         }
 
         /*
@@ -1110,9 +1015,6 @@ define([
 
             var launchState = model.getItem('launchState');
             if (!launchState) {
-                if (launchEvent.event !== 'validating_app') {
-                    console.warn('Initializing launch time without validating_app (' + launchEvent.event + ')');
-                }
                 // These are always set on the first event.
                 launchState = {
                     runId: launchEvent.run_id,
@@ -1140,7 +1042,7 @@ define([
             renderRunState();
             showExecState();
         }
-        
+
         function renderRunState() {
             var runState = model.getItem('runState');
             if (runState && runState.executionState) {
@@ -1168,8 +1070,14 @@ define([
 
                         // flip to the result tab
                         break;
-                    case 'cancelled':
+                    case 'canceled':
                         // update the result tab
+                         ui.updateTab(tabsId, 'result', {
+                            label: 'Canceled',
+                            icon: 'exclamation',
+                            color: 'orange',
+                            select: true
+                        });
 
                         // flip to the result tab
                         break;
@@ -1188,10 +1096,10 @@ define([
             // for the incoming job notification, and compare it to our copy
             // of the most recent one, if any.
             // TODO: the controller should meter this for us!
-            model.setItem('jobStateLastUpdatedTime', new Date().getTime());
+            model.setItem('runStateLastUpdatedTime', new Date().getTime());
             var currentJobState = model.getItem('jobState');
             //if (!currentJobState || currentJobState.job_state !== jobState.job_state) {
-            model.setItem('jobStateLastUpdatedTime', new Date().getTime());
+            model.setItem('runStateLastUpdatedTime', new Date().getTime());
             model.setItem('jobState', jobState);
             updateRunStateFromJobState('process new job state');
 
@@ -1258,7 +1166,7 @@ define([
             // not sure if this is the wisest thing to do...
 
             ev = cellBus.on('job-state-updated', function (message) {
-                model.setItem('jobStateLastUpdatedTime', new Date().getTime());
+                model.setItem('runStateLastUpdatedTime', new Date().getTime());
             });
             listeners.push(ev);
 
@@ -1271,7 +1179,7 @@ define([
                 // return;
                 var runState = model.getItem('runState');
                 if (runState && runState.executionState === 'processing') {
-                    updateRunStateFromJobState('clock');
+                    updateRunStateFromJobState();
                 }
                 // renderRunState();
                 showExecState();

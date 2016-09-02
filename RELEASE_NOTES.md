@@ -3,6 +3,24 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v4.2.1 (more notes will follow).
 
+### Version 3.0.0-alpha-21
+__Changes__
+- Applied module release version to that module's method specs.
+- Fixed regression preventing cell deletion in some conditions.
+- Added module commit hash to App dropdowns in App Panel for beta and dev Apps.
+- Added 401 error when the Narrative handler is unauthenticated.
+- Addressed issues with job cancellation.
+
+### Version 3.0.0-alpha-20
+__Changes__
+- Fixed custom parameter widgets.
+- Improved error catching within App Cell.
+- Updated Docker container invocation methods on Narrative Server.
+- Updated Dockerfiles to use new versions of a few dependencies.
+- Fixed DomainAnnotation viewer widget.
+- Updated Data API-based widgets to use latest clients.
+- Added prompt with report option (not working yet) when the JobManager fails to initialize.
+
 ### Version 3.0.0-alpha-19
 __Changes__
 - add latest workspace python client

@@ -1,0 +1,40 @@
+.kb-tour {
+    background-color: #2196f3;
+}
+
+.kb-tour.popover.top > .arrow:after {
+    border-top-color: #2196f3;
+}
+
+.kb-tour.popover.bottom > .arrow:after {
+    border-bottom-color: #2196f3;
+}
+
+.kb-tour.popover.right > .arrow:after {
+    border-right-color: #2196f3;
+}
+
+.kb-tour.popover.left > .arrow:after {
+    border-left-color: #2196f3;
+}
+
+
+.kb-tour > h3.popover-title {
+    background-color: #2196f3;
+    color: #fff;
+    font-family: Oxygen, Arial, sans-serif;
+}
+
+.kb-tour > .popover-content {
+    background-color: #eee;
+}
+
+.kb-tour > .popover-navigation {
+    background-color: #eee;
+}
+
+.kb-tour > .close-btn {
+    position: absolute;
+    top: 7px;
+    right: 7px
+}

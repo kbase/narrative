@@ -33,27 +33,6 @@ define([
                 content: "You can use the left and right arrow keys to go backwards and forwards."
             },
             {
-                element: $('.kb-side-header[kb-data-id="0"]'),
-                title: 'Analyze Tab',
-                placement: 'bottom',
-                content: 'Get your analyze on!',
-                onShow: function(tour) {
-                    $('.kb-side-header[kb-data-id="0"]').click();
-                }
-            },
-            {
-                element: $('.kb-side-tab[kb-data-id="0"]').find('button > .fa-arrow-right').first(), //$('.kb-side-tab[kb-data-id="0"] > button > .fa-arrow-right'),
-                title: 'Data Slideout',
-                placement: 'left',
-                content: 'Slideout data browser - click to show and dismiss<p>whizbang!<p>Excelsior!',
-                onShow: function(tour) {
-                    $('.kb-side-header[kb-data-id="0"]').click();
-                    $('.kb-side-tab[kb-data-id="0"]').find('button > .fa-arrow-right')
-                                                     .first()
-                                                     .click();
-                }
-            },
-            {
                 element: "#notebook_name",
                 title: "Narrative Name",
                 placement: 'bottom',
@@ -106,6 +85,27 @@ define([
                 title: 'Profile and Logout',
                 placement: 'left',
                 content: 'Click here to produce a menu that will let you view your user profile or logout.'
+            },
+            {
+                element: $('.kb-side-header[kb-data-id="0"]'),
+                title: 'Analyze Tab',
+                placement: 'bottom',
+                content: 'Get your analyze on!',
+                onShow: function(tour) {
+                    $('.kb-side-header[kb-data-id="0"]').click();
+                }
+            },
+            {
+                element: $('.kb-side-tab[kb-data-id="0"]').find('button > .fa-arrow-right').first(), //$('.kb-side-tab[kb-data-id="0"] > button > .fa-arrow-right'),
+                title: 'Data Slideout',
+                placement: 'left',
+                content: 'Slideout data browser - click to show and dismiss.',
+                onShow: function(tour) {
+                    $('.kb-side-header[kb-data-id="0"]').click();
+                    $('.kb-side-tab[kb-data-id="0"]').find('button > .fa-arrow-right')
+                                                     .first()
+                                                     .click();
+                }
             },
 
 

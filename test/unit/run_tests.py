@@ -2,6 +2,11 @@
 # developebd by the Jupyter team here;
 # https://github.com/jupyter/jupyter-js-services/blob/master/test/run_test.py
 #
+# Also uses the flow where we assign a os process group id and shut down the
+# server based on that - since the subprocess actually executes the kbase-narrative
+# script.
+# (recipe here)
+# http://stackoverflow.com/questions/4789837/how-to-terminate-a-python-subprocess-launched-with-shell-true
 from __future__ import print_function
 
 import subprocess

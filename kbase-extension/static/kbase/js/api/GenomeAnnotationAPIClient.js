@@ -695,6 +695,34 @@ function GenomeAnnotationAPI(url, auth, auth_cb, timeout, async_job_check_time_m
         });
         return deferred;
     };
+ 
+     this.get_combined_data = function (params, _callback, _errorCallback) {
+        if (typeof params === 'function')
+            throw 'Argument params can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        var deferred = $.Deferred();
+        json_call_ajax(_url, 'ServiceWizard.get_service_status', [{'module_name' : "GenomeAnnotationAPI", 
+                'version' : self.service_version}], 1, function(service_status_ret) {
+            srv_url = service_status_ret['url'];
+            json_call_ajax(srv_url, "GenomeAnnotationAPI.get_combined_data", 
+                [params], 1, _callback, _errorCallback, null, deferred);
+        }, function(err) {
+            if (_errorCallback) {
+                _errorCallback(err);
+            } else {
+                deferred.reject({
+                    status: 500,
+                    error: err
+                });
+            }
+        });
+        return deferred;
+    };
   
     this.status = function (_callback, _errorCallback) {
         if (_callback && typeof _callback !== 'function')

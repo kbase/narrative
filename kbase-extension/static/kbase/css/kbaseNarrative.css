@@ -695,7 +695,7 @@ ul.pane-list li {
     text-align: justify;
 }
 
-.kb-method-list-more-div > div:nth-child(2) {
+.kb-method-list-more-div > div:last-child {
 	text-align: right;
 }
 

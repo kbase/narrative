@@ -524,6 +524,14 @@ define([
                     }, [
                         div({dataElement: 'widget', style: {display: 'block', width: '100%'}}, [
                             div({class: 'container-fluid'}, [
+                                div({
+                                    class: 'kb-app-warning alert alert-warning hidden',
+                                    dataElement: 'outdated',
+                                    role: 'alert'
+                                }, [
+                                    span({style: {'font-weight': 'bold'}}, 'Warning'),
+                                    ': this app appears to be out of date. Running it may cause undesired results. Add a new "<b>' + model.getItem('app.spec.info.name') + '</b>" App for the most recent version.'
+                                ]),
                                 ui.buildPanel({
                                     title: 'App Cell Settings',
                                     name: 'settings',
@@ -781,7 +789,8 @@ define([
                 case 'dev':
                     return {
                         id: app.id,
-                        tag: app.tag
+                        tag: app.tag,
+                        version: app.gitCommitHash
                     };
                 default:
                     throw new Error('Invalid tag for app ' + app.id);
@@ -1002,6 +1011,10 @@ define([
             renderNotifications();
             renderSettings();
             var state = fsm.getCurrentState();
+
+            if (model.getItem('outdated')) {
+                ui.showElement('outdated');
+            }
 
             // Button state
             state.ui.buttons.enabled.forEach(function (button) {
@@ -2327,7 +2340,8 @@ define([
             }
 
             if (cellAppSpec.info.git_commit_hash !== appSpec.info.git_commit_hash) {
-                throw new ToErr.KBError({
+                return new ToErr.KBError({
+                    severity: 'warning',
                     type: 'app-spec-mismatched-commit',
                     message: 'Mismatching app commit for ' + appSpec.info.id + ', tag=' + model.getItem('app.tag') + ' : ' + cellAppSpec.info.git_commit_hash + ' !== ' + appSpec.info.git_commit_hash,
                     info: {
@@ -2346,11 +2360,7 @@ define([
                 });
             }
 
-            if (cellAppSpec.info.version !== appSpec.info.version) {
-                throw new Error('Mismatching app version: ' + cellAppSpec.info.version + ' !== ' + appSpec.info.version);
-            }
-
-
+            return null;
         }
 
         function run(params) {
@@ -2364,73 +2374,78 @@ define([
             return Promise.try(function () {
                 return getAppSpec();
             })
-                .then(function (appSpec) {
-                    // Ensure that the current app spec matches our existing one.
-                    checkSpec(appSpec);
-
-                    // Create a map of paramters for easy access
-                    var parameterMap = {};
-                    env.parameters = model.getItem('app.spec.parameters').map(function (parameterSpec) {
-                        // tee hee
-                        var param = ParameterSpec.make({parameterSpec: parameterSpec});
-                        parameterMap[param.id()] = param;
-                        return param;
-                    });
-                    env.parameterMap = parameterMap;
-
-
-                    var appRef = [model.getItem('app.id'), model.getItem('app.tag')].filter(toBoolean).join('/'),
-                        url = '/#appcatalog/app/' + appRef;
-                    utils.setCellMeta(cell, 'kbase.attributes.title', model.getItem('app.spec.info.name'));
-                    utils.setCellMeta(cell, 'kbase.attributes.subtitle', model.getItem('app.spec.info.subtitle'));
-                    utils.setCellMeta(cell, 'kbase.attributes.info.url', url);
-                    utils.setCellMeta(cell, 'kbase.attributes.info.label', 'more...');
-                    return Promise.all([
-                        loadInputWidget(),
-                        loadInputViewWidget(),
-                        loadExecutionWidget(),
-                        loadOutputWidget()
-                    ]);
-                })
-                .then(function () {
-                    // this will not change, so we can just render it here.
-                    showAboutApp();
-                    showAppSpec();
-                    PR.prettyPrint(null, container);
-                    renderUI();
-                    // renderIcon();
-                })
-                .then(function () {
-                    // if we start out in 'new' state, then we need to promote to
-                    // editing...
-
-                    if (fsm.getCurrentState().state.mode === 'new') {
-                        fsm.newState({mode: 'editing', params: 'incomplete'});
-                        evaluateAppState();
-                        //
-                    } else {
-                        renderUI();
+            .then(function (appSpec) {
+                // Ensure that the current app spec matches our existing one.
+                var warning = checkSpec(appSpec);
+                if (warning && warning.severity === 'warning') {
+                    if (warning.type === 'app-spec-mismatched-commit') {
+                        model.setItem('outdated', true);
                     }
-                    if (!Jupyter.notebook.writable || Jupyter.narrative.readonly) {
-                        toggleReadOnlyMode(true);
-                    }
-                })
-                .catch(function (err) {
-                    var error = ToErr.grokError(err);
-                    console.error('ERROR loading main widgets', error);
-                    addNotification('Error loading main widgets: ' + error.message);
+                }
 
-                    model.setItem('fatalError', {
-                        title: 'Error loading main widgets',
-                        message: error.message,
-                        advice: error.advice || [],
-                        info: error.info,
-                        detail: error.detail || 'no additional details'
-                    });
-                    syncFatalError();
-                    fsm.newState({mode: 'fatal-error'});
-                    renderUI();
+                // Create a map of parameters for easy access
+                var parameterMap = {};
+                env.parameters = model.getItem('app.spec.parameters').map(function (parameterSpec) {
+                    // tee hee
+                    var param = ParameterSpec.make({parameterSpec: parameterSpec});
+                    parameterMap[param.id()] = param;
+                    return param;
                 });
+                env.parameterMap = parameterMap;
+
+
+                var appRef = [model.getItem('app.id'), model.getItem('app.tag')].filter(toBoolean).join('/'),
+                    url = '/#appcatalog/app/' + appRef;
+                utils.setCellMeta(cell, 'kbase.attributes.title', model.getItem('app.spec.info.name'));
+                utils.setCellMeta(cell, 'kbase.attributes.subtitle', model.getItem('app.spec.info.subtitle'));
+                utils.setCellMeta(cell, 'kbase.attributes.info.url', url);
+                utils.setCellMeta(cell, 'kbase.attributes.info.label', 'more...');
+                return Promise.all([
+                    loadInputWidget(),
+                    loadInputViewWidget(),
+                    loadExecutionWidget(),
+                    loadOutputWidget()
+                ]);
+            })
+            .then(function () {
+                // this will not change, so we can just render it here.
+                showAboutApp();
+                showAppSpec();
+                PR.prettyPrint(null, container);
+                renderUI();
+                // renderIcon();
+            })
+            .then(function () {
+                // if we start out in 'new' state, then we need to promote to
+                // editing...
+
+                if (fsm.getCurrentState().state.mode === 'new') {
+                    fsm.newState({mode: 'editing', params: 'incomplete'});
+                    evaluateAppState();
+                    //
+                } else {
+                    renderUI();
+                }
+                if (!Jupyter.notebook.writable || Jupyter.narrative.readonly) {
+                    toggleReadOnlyMode(true);
+                }
+            })
+            .catch(function (err) {
+                var error = ToErr.grokError(err);
+                console.error('ERROR loading main widgets', error);
+                addNotification('Error loading main widgets: ' + error.message);
+
+                model.setItem('fatalError', {
+                    title: 'Error loading main widgets',
+                    message: error.message,
+                    advice: error.advice || [],
+                    info: error.info,
+                    detail: error.detail || 'no additional details'
+                });
+                syncFatalError();
+                fsm.newState({mode: 'fatal-error'});
+                renderUI();
+            });
         }
 
         /*

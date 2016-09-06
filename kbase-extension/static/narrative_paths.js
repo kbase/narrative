@@ -4,6 +4,8 @@ require.config({
     // Jupyter does some magic where it merges its /static/ directory
     // with this one (kbase-profile/static)
     paths : {
+        dropzone                                : 'ext_components/dropzone/dist/dropzone-amd-module',
+        narrativeTour                           : 'kbase/js/tour',
         kbaseInputTest                          : 'kbase/js/widgets/function_input/kbaseInputTest',
         api                                     : 'kbase/js/api',
         bluebird                                : 'ext_components/bluebird/js/browser/bluebird.min',
@@ -46,8 +48,8 @@ require.config({
         'catalog-client-api'                    : 'kbase/js/api/Catalog',
 
         // Data API dynamic service clients
-        'GenomeAnnotationAPI-client-api'        : 'kbase/js/api/GenomeAnnotationAPIClient',        
-        'AssemblyAPI-client-api'                : 'kbase/js/api/AssemblyAPIClient',        
+        'GenomeAnnotationAPI-client-api'        : 'kbase/js/api/GenomeAnnotationAPIClient',
+        'AssemblyAPI-client-api'                : 'kbase/js/api/AssemblyAPIClient',
         'TaxonAPI-client-api'                   : 'kbase/js/api/TaxonAPIClient',
 
         'njs-wrapper-client-api'                : 'kbase/js/api/NarrativeJobServiceWrapper',
@@ -204,7 +206,7 @@ require.config({
         'kbaseGenomeView'                       : 'kbase/js/widgets/function_output/kbaseGenomeAnnotation',
         'kbaseGenomeAnnotationViewer'           : 'kbase/js/widgets/function_output/kbaseGenomeAnnotationViewer',
         'kbaseGenomeAnnotationAssembly'         : 'kbase/js/widgets/function_output/kbaseGenomeAnnotationAssembly',
-        
+
         'kbaseContigSetView'                    : 'kbase/js/widgets/function_output/kbaseContigSetView',
         'kbaseAssemblyView'                     : 'kbase/js/widgets/function_output/kbaseAssemblyView',
         'AssemblyWidget'                        : 'kbase/js/widgets/function_output/kbaseAssembly',

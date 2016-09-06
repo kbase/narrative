@@ -90,7 +90,7 @@ define([
                 element: $('.kb-side-header[kb-data-id="0"]'),
                 title: 'Analyze Tab',
                 placement: 'bottom',
-                content: 'Get your analyze on!',
+                content: 'Do some analysis!',
                 onShow: function(tour) {
                     $('.kb-side-header[kb-data-id="0"]').click();
                 }

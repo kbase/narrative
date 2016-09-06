@@ -2,6 +2,11 @@
 # developebd by the Jupyter team here;
 # https://github.com/jupyter/jupyter-js-services/blob/master/test/run_test.py
 #
+# Also uses the flow where we assign a os process group id and shut down the
+# server based on that - since the subprocess actually executes the kbase-narrative
+# script.
+# (recipe here)
+# http://stackoverflow.com/questions/4789837/how-to-terminate-a-python-subprocess-launched-with-shell-true
 from __future__ import print_function
 
 import subprocess
@@ -9,6 +14,8 @@ import sys
 import argparse
 import threading
 import time
+import os
+import signal
 
 KARMA_PORT = 9876
 
@@ -26,8 +33,11 @@ nb_command = ['kbase-narrative', '--no-browser', '--NotebookApp.allow_origin="*"
 if not hasattr(sys, 'real_prefix'):
     nb_command[0] = 'narrative-venv/bin/kbase-narrative'
 
-nb_server = subprocess.Popen(nb_command, shell=False, stderr=subprocess.STDOUT,
-                             stdout=subprocess.PIPE)
+nb_server = subprocess.Popen(nb_command,
+    stderr=subprocess.STDOUT,
+    stdout=subprocess.PIPE,
+    preexec_fn = os.setsid
+)
 
 # wait for notebook server to start up
 while 1:
@@ -38,6 +48,9 @@ while 1:
     if 'The Jupyter Notebook is running at: http://localhost:8888/' in line:
         break
     if 'is already in use' in line:
+        print("Pid: {}".format(nb_server.pid))
+        os.killpg(os.getpgid(nb_server.pid), signal.SIGTERM)
+        # nb_server.terminate()
         raise ValueError(
             'The port 8888 was already taken, kill running notebook servers'
         )
@@ -66,5 +79,7 @@ except subprocess.CalledProcessError:
     pass
 finally:
     print("Done running tests, killing server.")
-    nb_server.kill()
+    print("Pid: {}".format(nb_server.pid))
+    os.killpg(os.getpgid(nb_server.pid), signal.SIGTERM)
+    # nb_server.terminate()
 sys.exit(resp)

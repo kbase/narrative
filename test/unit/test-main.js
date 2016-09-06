@@ -19,6 +19,7 @@ requirejs.config({
     paths: {
         moment: 'components/moment/moment',
         codemirror: 'components/codemirror',
+        bootstraptour: 'components/bootstrap-tour/build/js/bootstrap-tour.min',
     },
     map: {
       '*':{

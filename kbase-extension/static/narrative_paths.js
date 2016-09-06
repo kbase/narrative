@@ -29,7 +29,7 @@ require.config({
         underscore                              : 'ext_components/underscore/underscore-min',
         'bootstrap-slider'                      : 'ext_components/bootstrap-slider/bootstrap-slider',
         'tipsy'                                 : 'ext_components/jquery.tipsy/js/jquery.tipsy',
-        'css'                                   : 'ext_components/require-css/css.min',
+        // 'css'                                   : 'ext_components/require-css/css.min',
 
         narrativeConfig                         : 'kbase/js/narrativeConfig',
         narrativeMain                           : 'narrativeMain',

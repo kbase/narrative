@@ -127,13 +127,12 @@ define([
         console.log("let's start the tour");
         this.tour.init();
         this.tour.start();
-        if (this.tour.ended())
-        {
+        if (this.tour.ended()) {
             this.tour.restart();
         }
     };
 
-    NarrativeTour.prototype.command_icon_hack =  function() {
+    NarrativeTour.prototype.command_icon_hack = function() {
         $('#modal_indicator').css('min-height', '18px');
     };
 

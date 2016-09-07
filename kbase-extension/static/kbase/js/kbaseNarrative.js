@@ -675,9 +675,9 @@ define(
 
                 $([Jupyter.events]).on('kernel_ready.Kernel',
                     function () {
-                        
+
                         console.log('Kernel Ready! Initializing Job Channel...');
-                        
+
                         // TODO: This should be an event "kernel-ready", perhaps broadcast
                         // on the default bus channel.
                         this.sidePanel.$jobsWidget.initCommChannel()

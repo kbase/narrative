@@ -795,10 +795,10 @@ define([
             return;
         };
 
-        keyboardManager.KeyboardManager.prototype.bind_events = function () {
-            // also NOOP
-            return;
-        }
+        // keyboardManager.KeyboardManager.prototype.bind_events = function () {
+        //     // also NOOP
+        //     return;
+        // }
     }());
 
 

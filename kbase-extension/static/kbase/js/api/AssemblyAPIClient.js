@@ -11,7 +11,9 @@ function AssemblyAPI(url, auth, auth_cb, timeout, async_job_check_time_ms, servi
     
     this.async_job_check_time_ms = async_job_check_time_ms;
     if (!this.async_job_check_time_ms)
-        this.async_job_check_time_ms = 5000;
+        this.async_job_check_time_ms = 100;
+    this.async_job_check_time_scale_percent = 150;
+    this.async_job_check_max_time_ms = 300000;  // 5 minutes
     this.service_version = service_version;
     if (!this.service_version)
         this.service_version = 'dev';

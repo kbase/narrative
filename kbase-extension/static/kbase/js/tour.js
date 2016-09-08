@@ -25,7 +25,7 @@ define([
                 element: "#notebook_name",
                 title: "Narrative Name",
                 placement: 'bottom',
-                content: "Click here to change the name for this Narrative."
+                content: "Start by naming your Narrative. By default, each new Narrative is named “Untitled.” Click on this name and enter a new title. "
             },
             {
                 element: '#kb-view-mode',
@@ -55,7 +55,7 @@ define([
                 element: $('#kb-share-btn .kb-nav-btn-txt'),
                 title: 'Share with others',
                 placement: 'bottom',
-                content: 'Clicking here will let you edit sharing privileges on this Narrative'
+                content: 'Click the “share” button to open a dialog box allowing you to search for and select KBase users you want to share with. You can give them view-only access, editing privileges, or the ability to edit and share the Narrative with other users.'
             },
             {
                 element: '#kb-settings-btn',
@@ -67,7 +67,7 @@ define([
                 element: '#kb-save-btn',
                 title: 'Save the Narrative',
                 placement: 'bottom',
-                content: 'Save any changes to the Narrative. Autosaves occur when an App is launched and finished, but other changes should be saved periodically.'
+                content: 'You should periodically save your Narrative by clicking the save icon. KBase does autosave your Narrative when an App is launched and finished, but other changes should be saved manually.'
             },
             {
                 element: '#signin-button',
@@ -79,7 +79,7 @@ define([
                 element: $('.kb-side-header[kb-data-id="0"]'),
                 title: 'Analyze Tab',
                 placement: 'bottom',
-                content: 'Do some analysis!',
+                content: 'A key feature of KBase is the ability to run complex analyses on your data within your Narrative.',
                 onShow: function(tour) {
                     $('.kb-side-header[kb-data-id="0"]').click();
                 }

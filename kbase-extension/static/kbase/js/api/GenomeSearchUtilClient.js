@@ -1,6 +1,6 @@
 
 
-function GenomeSearchUtil(url, auth, auth_cb, timeout, async_job_check_time_ms, service_version) {
+function GenomeSearchUtil(url, auth, auth_cb, timeout, async_job_check_time_ms, service_version, use_url_lookup) {
     var self = this;
 
     this.url = url;
@@ -17,6 +17,10 @@ function GenomeSearchUtil(url, auth, auth_cb, timeout, async_job_check_time_ms, 
     this.service_version = service_version;
     if (!this.service_version)
         this.service_version = 'dev';
+    this.use_url_lookup = true;
+    if(typeof use_url_lookup !== 'undefined') {
+        this.use_url_lookup = use_url_lookup;
+    }
 
     if (typeof(_url) != "string" || _url.length == 0) {
         _url = "https://kbase.us/services/service_wizard";
@@ -34,21 +38,26 @@ function GenomeSearchUtil(url, auth, auth_cb, timeout, async_job_check_time_ms, 
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
         var deferred = $.Deferred();
-        json_call_ajax(_url, 'ServiceWizard.get_service_status', [{'module_name' : "GenomeSearchUtil", 
-                'version' : self.service_version}], 1, function(service_status_ret) {
-            srv_url = service_status_ret['url'];
-            json_call_ajax(srv_url, "GenomeSearchUtil.search", 
-                [params], 1, _callback, _errorCallback, null, deferred);
-        }, function(err) {
-            if (_errorCallback) {
-                _errorCallback(err);
-            } else {
-                deferred.reject({
-                    status: 500,
-                    error: err
-                });
-            }
-        });
+        if(this.use_url_lookup) {
+            json_call_ajax(_url, 'ServiceWizard.get_service_status', [{'module_name' : "GenomeSearchUtil", 
+                    'version' : self.service_version}], 1, function(service_status_ret) {
+                srv_url = service_status_ret['url'];
+                json_call_ajax(srv_url, "GenomeSearchUtil.search", 
+                    [params], 1, _callback, _errorCallback, null, deferred);
+            }, function(err) {
+                if (_errorCallback) {
+                    _errorCallback(err);
+                } else {
+                    deferred.reject({
+                        status: 500,
+                        error: err
+                    });
+                }
+            });
+        } else {
+            json_call_ajax(_url, "GenomeSearchUtil.search", 
+                    [params], 1, _callback, _errorCallback, null, deferred);
+        }
         return deferred;
     };
   

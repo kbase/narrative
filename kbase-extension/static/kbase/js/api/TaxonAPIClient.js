@@ -11,7 +11,9 @@ function TaxonAPI(url, auth, auth_cb, timeout, async_job_check_time_ms, service_
     
     this.async_job_check_time_ms = async_job_check_time_ms;
     if (!this.async_job_check_time_ms)
-        this.async_job_check_time_ms = 5000;
+        this.async_job_check_time_ms = 100;
+    this.async_job_check_time_scale_percent = 150;
+    this.async_job_check_max_time_ms = 300000;  // 5 minutes
     this.service_version = service_version;
     if (!this.service_version)
         this.service_version = 'dev';
@@ -457,6 +459,90 @@ function TaxonAPI(url, auth, auth_cb, timeout, async_job_check_time_ms, service_
             srv_url = service_status_ret['url'];
             json_call_ajax(srv_url, "TaxonAPI.get_version", 
                 [ref], 1, _callback, _errorCallback, null, deferred);
+        }, function(err) {
+            if (_errorCallback) {
+                _errorCallback(err);
+            } else {
+                deferred.reject({
+                    status: 500,
+                    error: err
+                });
+            }
+        });
+        return deferred;
+    };
+ 
+     this.get_all_data = function (params, _callback, _errorCallback) {
+        if (typeof params === 'function')
+            throw 'Argument params can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        var deferred = $.Deferred();
+        json_call_ajax(_url, 'ServiceWizard.get_service_status', [{'module_name' : "TaxonAPI", 
+                'version' : self.service_version}], 1, function(service_status_ret) {
+            srv_url = service_status_ret['url'];
+            json_call_ajax(srv_url, "TaxonAPI.get_all_data", 
+                [params], 1, _callback, _errorCallback, null, deferred);
+        }, function(err) {
+            if (_errorCallback) {
+                _errorCallback(err);
+            } else {
+                deferred.reject({
+                    status: 500,
+                    error: err
+                });
+            }
+        });
+        return deferred;
+    };
+ 
+     this.get_decorated_scientific_lineage = function (params, _callback, _errorCallback) {
+        if (typeof params === 'function')
+            throw 'Argument params can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        var deferred = $.Deferred();
+        json_call_ajax(_url, 'ServiceWizard.get_service_status', [{'module_name' : "TaxonAPI", 
+                'version' : self.service_version}], 1, function(service_status_ret) {
+            srv_url = service_status_ret['url'];
+            json_call_ajax(srv_url, "TaxonAPI.get_decorated_scientific_lineage", 
+                [params], 1, _callback, _errorCallback, null, deferred);
+        }, function(err) {
+            if (_errorCallback) {
+                _errorCallback(err);
+            } else {
+                deferred.reject({
+                    status: 500,
+                    error: err
+                });
+            }
+        });
+        return deferred;
+    };
+ 
+     this.get_decorated_children = function (params, _callback, _errorCallback) {
+        if (typeof params === 'function')
+            throw 'Argument params can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        var deferred = $.Deferred();
+        json_call_ajax(_url, 'ServiceWizard.get_service_status', [{'module_name' : "TaxonAPI", 
+                'version' : self.service_version}], 1, function(service_status_ret) {
+            srv_url = service_status_ret['url'];
+            json_call_ajax(srv_url, "TaxonAPI.get_decorated_children", 
+                [params], 1, _callback, _errorCallback, null, deferred);
         }, function(err) {
             if (_errorCallback) {
                 _errorCallback(err);

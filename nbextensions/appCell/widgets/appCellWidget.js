@@ -102,7 +102,39 @@ define([
             inputBusMap = {},
             fsm,
             saveMaxFrequency = config.saveMaxFrequency || 5000,
-            controlBarTabs = {};
+            controlBarTabs = {},
+            actionButtons = {
+                current: {
+                    name: null,
+                    disabled: null
+                },
+                availableButtons: {
+                    runApp: {
+                        help: 'Run the app',
+                        type: 'primary',
+                        icon: {
+                            name: 'play',
+                            color: 'green'
+                        }
+                    },
+                    cancel: {
+                        help: 'Cancel the running app',
+                        type: 'danger',
+                        icon: {
+                            name: 'stop',
+                            color: 'red'
+                        }
+                    },
+                    reRunApp: {
+                        help: 'Edit and re-run the app',
+                        type: 'primary',
+                        icon: {
+                            name: 'refresh',
+                            color: 'blue'
+                        }
+                    }
+                }
+            };
 
 
         // NEW - TABS
@@ -809,38 +841,40 @@ define([
             selectedTab: null,
             tabs: {
                 configure: {
-                    title: 'Configure',
-                    icon: 'pencil',
+                    label: 'Configure',
+                    xicon: 'pencil',
                     widget: configureWidget()
                 },
                 viewConfigure: {
-                    title: 'Configure',
-                    icon: 'pencil',
+                    label: 'Configure',
+                    xicon: 'pencil',
                     widget: viewConfigureWidget()
                 },
-                logs: {
-                    title: 'Logs',
-                    icon: 'list',
-                    widget: logWidget()
-                },
                 runStats: {
-                    title: 'Run Stats',
-                    icon: 'bar-chart',
+                    label: 'Stats',
+                    xicon: 'bar-chart',
                     widget: runStatsWidget()
                 },
                 jobState: {
-                    title: 'Job State',
-                    icon: 'table',
+                    label: 'State',
+                    xicon: 'table',
+                    advanced: true,
                     widget: jobStateWidget()
                 },
+                logs: {
+                    label: 'Logs',
+                    xicon: 'list',
+                    widget: logWidget()
+                },
                 results: {
-                    title: 'Results',
-                    icon: 'file',
+                    label: 'Results',
+                    xicon: 'file',
                     widget: resultsWidget()
                 },
                 error: {
-                    title: 'Error',
-                    icon: 'exclamation',
+                    label: 'Error',
+                    xicon: 'exclamation',
+                    type: 'danger',
                     widget: errorWidget()
                 }
             }
@@ -1153,8 +1187,53 @@ define([
                 content = pre({class: 'prettyprint lang-json', style: {fontSize: '80%'}}, fixedText);
             ui.setContent('about-app.spec', content);
         }
-
+        
+        function doActionButton(data) {
+            switch (data.action) {
+                case 'runApp': 
+                    doRun();
+                    break;
+                case 'reRunApp':
+                    doRerun();
+                    break;
+                case 'cancel':
+                    doCancel();
+                    break;
+                default:
+                    alert('Undefined action:' + data.action);
+            }
+        }
+        
         function buildRunControlPanelRunButtons(events) {
+            return div({class: 'btn-group'}, 
+                Object.keys(actionButtons.availableButtons).map(function (key) {
+                    var button = actionButtons.availableButtons[key];
+                    return ui.buildButton({
+                        tip: button.help,
+                        name: key,
+                        events: events,
+                        type: button.type || 'default',
+                        hidden: true,
+                        event: {
+                            type: 'actionButton',
+                            data: {
+                                action: key
+                            }
+                        },
+                        icon: {
+                            name: button.icon.name,
+                            color: button.icon.color,
+                            size: 3
+                        },
+                        classes: [
+                            'kb-flat-btn'
+                        ]
+                    });
+                })
+            );
+        }
+
+        function xbuildRunControlPanelRunButtons(events) {
             return div({class: 'btn-group'}, [
                 ui.buildButton({
                     tip: 'Run the app',
@@ -1242,27 +1321,28 @@ define([
                     console.warn('Tab not defined: ' + key);
                     return;
                 }
-                if (typeof tab.icon === 'string') {
-                    icon = {
-                        name: tab.icon,
-                        size: 2
-                    };
-                } else {
-                    icon.size = 2;
+                if (tab.icon) {
+                    if (typeof tab.icon === 'string') {
+                        icon = {
+                            name: tab.icon,
+                            size: 2
+                        };
+                    } else {
+                        icon.size = 2;
+                    }
                 }
                 return ui.buildButton({
                     label: tab.label,
                     name: key,
                     events: events,
-                    type: 'primary',
+                    type: tab.type || 'primary',
                     hidden: true,
-                    eventType: 'control-panel-tab',
-                    eventData: {
-                        tab: key
-                    },
-                    icon: {
-                        name: tab.icon,
-                        size: 2
+                    event: {
+                        type: 'control-panel-tab',
+                        data: {
+                            tab: key
+                        },
+                        icon: icon
                     }
                 });
             }).filter(function (x) {
@@ -1801,18 +1881,32 @@ define([
             //if (state.ui.tabs.selected) {
             //    selectTab(state.ui.tabs.selected);
             // }
+            
+            if (state.ui.actionButton) {
+                if (actionButtons.current.name) {
+                    ui.hideButton(actionButtons.current.name);
+                }
+                var name = state.ui.actionButton.name;
+                ui.showButton(name);
+                actionButtons.current.name = name;
+                if (state.ui.actionButton.disabled) {
+                    ui.disableButton(name);
+                } else {
+                    ui.enableButton(name);
+                }
+            }
 
 
             // Button state
-            state.ui.buttons.enabled.forEach(function (button) {
-                ui.enableButton(button);
-            });
-            state.ui.buttons.disabled.forEach(function (button) {
-                ui.disableButton(button);
-            });
-            state.ui.buttons.hidden.forEach(function (button) {
-                ui.hideButton(button);
-            });
+//            state.ui.buttons.enabled.forEach(function (button) {
+//                ui.enableButton(button);
+//            });
+//            state.ui.buttons.disabled.forEach(function (button) {
+//                ui.disableButton(button);
+//            });
+//            state.ui.buttons.hidden.forEach(function (button) {
+//                ui.hideButton(button);
+//            });
 
 
             // Element state
@@ -2543,6 +2637,9 @@ define([
                     } else {
                         buttonNode.classList.remove('active');
                     }
+                }));
+                busEventManager.add(bus.on('actionButton', function (message) {
+                    doActionButton(message.data);
                 }));
                 busEventManager.add(bus.on('run-app', function () {
                     doRun();

@@ -391,13 +391,16 @@ define([
             if (arg.classes) {
                 buttonClasses = buttonClasses.concat(arg.classes);
             }
+            if (!arg.event) {
+                arg.event = {};
+            }
 
             return button({
                 type: 'button',
                 class: buttonClasses.join(' '),
                 title: title,
                 dataButton: arg.name,
-                id: addButtonClickEvent(events, arg.eventType || arg.name, arg.eventData)
+                id: addButtonClickEvent(events, arg.event.type || arg.name, arg.event.data)
             }, [icon, span({style: {verticalAlign: 'middle'}}, arg.label)].join('&nbsp;'));
         }
 

@@ -202,6 +202,7 @@ define (
         buildGeneSearchView: function(params) {
 
 
+
             console.log('BuildingGeneSearchView!!') 
 
             // parse parameters
@@ -217,7 +218,7 @@ define (
 
             // setup some defaults
             var limit = 10;
-            var start = 1;
+            var start = 0;
             var sort_by = ['feature_id', 1];
 
 
@@ -287,6 +288,10 @@ define (
                                             start: start,
                                             limit: limit
                                         })
+                                        .then(function(d) {
+                                            console.log('genomeSearchAPI.search()',d);
+                                            return d;
+                                        })
                                         .fail(function(e) {
                                             console.error(e);
                                             $loadingDiv.empty();
@@ -308,7 +313,7 @@ define (
 
             var showViewInfo = function(start, num_showing, num_found) {
                 $resultsInfoDiv.empty();
-                $resultsInfoDiv.append('Showing '+start + ' to ' + (start+num_showing-1)+' of '+num_found);
+                $resultsInfoDiv.append('Showing '+(start+1) + ' to ' + (start+num_showing)+' of '+num_found);
             };
             var showNoResultsView = function() {
                 $noResultsDiv.show();

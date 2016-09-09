@@ -27,6 +27,7 @@ define([
     'google-code-prettify/prettify',
     'narrativeConfig',
     './appCellWidget-fsm',
+    './appCellResults',
     'css!google-code-prettify/prettify.css',
     'css!font-awesome.css'
 ], function (
@@ -54,7 +55,8 @@ define([
     format,
     PR,
     narrativeConfig,
-    AppStates
+    AppStates,
+    ResultsWidget
     ) {
     'use strict';
     var t = html.tag,
@@ -439,40 +441,40 @@ define([
             }
         }
 
-        function resultsWidget() {
-            function factory(config) {
-                var container;
-                function start(arg) {
-                    return Promise.try(function () {
-                        container = arg.node;
+        // function resultsWidget() {
+        //     function factory(config) {
+        //         var container;
+        //         function start(arg) {
+        //             return Promise.try(function () {
+        //                 container = arg.node;
 
-                        // Very simple for now, just render the results json in a prettier than normal fashion.
-                        var result = model.getItem('exec.jobState.result');
+        //                 // Very simple for now, just render the results json in a prettier than normal fashion.
+        //                 var result = model.getItem('exec.jobState.result');
 
-                        var content = buildPresentableJson(result);
+        //                 var content = buildPresentableJson(result);
 
-                        container.innerHTML = content;
-                    });
-                }
+        //                 container.innerHTML = content;
+        //             });
+        //         }
 
-                function stop() {
-                    return Promise.try(function () {
-                        container.innerHTML = 'Bye from results';
-                    });
-                }
+        //         function stop() {
+        //             return Promise.try(function () {
+        //                 container.innerHTML = 'Bye from results';
+        //             });
+        //         }
 
-                return {
-                    start: start,
-                    stop: stop
-                };
-            }
+        //         return {
+        //             start: start,
+        //             stop: stop
+        //         };
+        //     }
 
-            return {
-                make: function (config) {
-                    return factory(config);
-                }
-            };
-        }
+        //     return {
+        //         make: function (config) {
+        //             return factory(config);
+        //         }
+        //     };
+        // }
 
         function formatError(errorInfo) {
             var errorId = new Uuid(4).format();
@@ -770,7 +772,8 @@ define([
             ui.getElement('run-control-panel.tab-pane.widget').appendChild(node);
 
             return controlBarTabs.selectedTab.widget.start({
-                node: node
+                node: node,
+                model: model
             });
         }
 
@@ -858,7 +861,7 @@ define([
                 results: {
                     label: 'Results',
                     xicon: 'file',
-                    widget: resultsWidget()
+                    widget: ResultsWidget
                 },
                 error: {
                     label: 'Error',

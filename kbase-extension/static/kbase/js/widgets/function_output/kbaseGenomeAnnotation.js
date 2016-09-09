@@ -496,7 +496,7 @@ define (
             setToLoad($loadingDiv);
 
             // Perform the first search
-            search('', 1, limit, sort_by).then(
+            search('', start, limit, sort_by).then(
                     function(results) {
                         console.log(results);
                         $("input").prop('disabled', false);

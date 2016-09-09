@@ -94,7 +94,6 @@ define (
             self.genericClient.sync_call("ServiceWizard.get_service_status",
                         [{'module_name': "GenomeSearchUtil", 'version': 'dev'}], 
                     function(status){
-                        console.log(status[0]);
                         self.genomeSearchAPI = new GenomeSearchUtil(status[0].url, token, null, null, null, null, false);
                     },
                     function(error){console.error(error);});
@@ -206,10 +205,6 @@ define (
 
         buildGeneSearchView: function(params) {
 
-
-
-            console.log('BuildingGeneSearchView!!') 
-
             // parse parameters
             var $div = params['$div'];
             if(!$div.is(':empty')) {
@@ -246,18 +241,17 @@ define (
             var $noResultsDiv = $('<div>').append('<center>No matching features found.</center>').hide();
             var $loadingDiv = $('<div>');
             var $errorDiv = $('<div>');
-            var $pagenateDiv = $('<div>');
+            var $pagenateDiv = $('<div>').css('text-align','right');
             var $resultsInfoDiv = $('<div>');
 
             var $container = $('<div>').addClass('container-fluid').css({'margin':'15px 0px', 'max-width':'100%'});
             $div.append($container);
             var $headerRow = $('<div>').addClass('row')
-                                .append($('<div>').addClass('col-md-8') )
+                                .append($('<div>').addClass('col-md-4') )
+                                .append($('<div>').addClass('col-md-4').append($loadingDiv))
                                 .append($('<div>').addClass('col-md-4').append($input));
             var $resultsRow = $('<div>').addClass('row').css({'margin-top':'15px'})
                                 .append($('<div>').addClass('col-md-12').append($resultDiv));
-            var $loadingRow = $('<div>').addClass('row')
-                                .append($('<div>').addClass('col-md-12').append($loadingDiv));
             var $noResultsRow = $('<div>').addClass('row')
                                 .append($('<div>').addClass('col-md-12').append($noResultsDiv));
             var $errorRow = $('<div>').addClass('row')
@@ -268,38 +262,51 @@ define (
             $container
                 .append($headerRow)
                 .append($resultsRow)
-                .append($loadingRow)
                 .append($errorDiv)
                 .append($noResultsRow)
                 .append($infoRow);
 
 
+
+            var $pageBack = $('<button class="btn btn-default">').append('<i class="fa fa-caret-left" aria-hidden="true">');
+            var $pageForward = $('<button class="btn btn-default">').append('<i class="fa fa-caret-right" aria-hidden="true">');
+
+            $pagenateDiv.append($pageBack);
+            $pagenateDiv.append($pageForward);
+            $pagenateDiv.hide();
+
+
             var clearInfo= function() {
                 $resultsInfoDiv.empty();
+                $pagenateDiv.hide();
             };
 
 
             // define the functions that do everything
             var setToLoad = function($panel) {
-                clearInfo();
+                //clearInfo();
                 $panel.empty();
-                var $loadingDiv = $('<div>').attr('align', 'center').append($('<i class="fa fa-spinner fa-spin fa-2x">'));
-                $panel.append('<br>').append($loadingDiv);
+                var $loadingDiv = $('<div>').attr('align', 'left').append($('<i class="fa fa-spinner fa-spin fa-2x">'));
+                $panel.append($loadingDiv);
                 window.setTimeout(function() {
-                        $loadingDiv.append('<br>').append('Building cache, please wait...');
+                        $loadingDiv.append('&nbsp; Building cache...');
                         window.setTimeout(function() {
-                            $loadingDiv.append('<br>').append('still working...')
-                        }, 30000);
-                    } , 5000);
+                            $loadingDiv.append(' almost there...')
+                        }, 25000);
+                    } , 2500);
             };
 
             var search = function(query, start, limit, sort_by) {
-                console.log(sort_by);
                 $errorDiv.empty();
+                var local_sort_by = [];
+                if(sort_by[0]==='start') {
+                    local_sort_by.push(['contig_id',1]);
+                }
+                local_sort_by.push(sort_by);
                 return genomeSearchAPI.search({
                                             ref: genome_ref,
                                             query: query,
-                                            sort_by: [sort_by],
+                                            sort_by: local_sort_by,
                                             start: start,
                                             limit: limit
                                         })
@@ -326,6 +333,11 @@ define (
                                         });
             };
 
+
+            var showPaginate = function() {
+                $pagenateDiv.show();
+            };
+
             var showViewInfo = function(start, num_showing, num_found) {
                 $resultsInfoDiv.empty();
                 $resultsInfoDiv.append('Showing '+(start+1) + ' to ' + (start+num_showing)+' of '+num_found);
@@ -333,7 +345,7 @@ define (
             var showNoResultsView = function() {
                 $noResultsDiv.show();
                 $resultsInfoDiv.empty();
-                $pagenateDiv.empty();
+                $pagenateDiv.hide();
             }
 
             var buildRow = function(rowData) {
@@ -353,12 +365,17 @@ define (
                 var $td = $('<td>');
                 if(rowData['aliases']) {
                     var aliases = rowData['aliases'];
+                    var $elem = $td;
+                    if(Object.keys(rowData['aliases']).length>4) {
+                        $elem = $('<div>').css({'resize':'vertical', 'overflow':'auto', 'height':'3em'});
+                        $td.append($elem);
+                    }
                     var isFirst = true;
                     for (var alias in aliases) {
                         if(isFirst) isFirst=false;
-                        else $td.append(', ');
+                        else $elem.append(', ');
                         if (aliases.hasOwnProperty(alias)) {
-                            $td.append(alias);
+                            $elem.append(alias);
                         }
                     }
                 } 
@@ -394,6 +411,7 @@ define (
                 $table.find("tr:gt(0)").remove();
                 $loadingDiv.empty();
                 $noResultsDiv.hide();
+                clearInfo();
 
                 var features = results['features']
                 if(features.length>0) {
@@ -401,6 +419,7 @@ define (
                         $table.append(buildRow(features[k]));
                     }
                     showViewInfo(results['start'], features.length, results['num_found']);
+                    showPaginate();
                 } else {
                     showNoResultsView();
                 }
@@ -416,12 +435,15 @@ define (
             var buildColumnHeader = function(name, id, click_event) {
                 var $sortIcon = $('<i>').css('margin-left','8px');
                 var $th = $('<th>')
-                            .css('cursor','pointer')
                             .append('<b>'+name+'</b>')
-                            .append($sortIcon)
-                            .on('click', function() {
-                                click_event(id, $sortIcon)
-                            });
+                            .append($sortIcon);
+                if(click_event) {
+                    $th
+                        .css('cursor','pointer')
+                        .on('click', function() {
+                            click_event(id, $sortIcon)
+                        });
+                }
                 return {
                     id: id,
                     name: name,
@@ -433,21 +455,22 @@ define (
             var buildTableHeader = function() {
                 var inFlight = false;
 
+                var $colgroup = $('<colgroup>');
+
                 var $tr = $('<tr>');
-                var ASC=1; var DESC=0; var ID=0; var DIR=1;
+                var ASC=0; var DESC=1; var ID=0; var DIR=1;
                 var cols = {};
                 var sortEvent = function(id, $sortIcon) {
                     if(inFlight) { return; } // skip if a sort call is already running
-                    console.log('sort click:' + id);
                     if(sort_by[ID] == id) {
-                        if(sort_by[DIR] === ASC) {
-                            sort_by[DIR] = DESC;
-                            $sortIcon.removeClass();
-                            $sortIcon.addClass('fa fa-sort-desc');
-                        } else {
+                        if(sort_by[DIR] === DESC) {
                             sort_by[DIR] = ASC;
                             $sortIcon.removeClass();
                             $sortIcon.addClass('fa fa-sort-asc');
+                        } else {
+                            sort_by[DIR] = DESC;
+                            $sortIcon.removeClass();
+                            $sortIcon.addClass('fa fa-sort-desc');
                         }
                     } else {
                         cols[sort_by[ID]].$sortIcon.removeClass();
@@ -456,43 +479,53 @@ define (
                         $sortIcon.addClass('fa fa-sort-desc');
                     }
 
-                    $table.find("tr:gt(0)").remove();
                     setToLoad($loadingDiv);
                     inFlight=true;
+                    start=0;
                     search($input.val(), start, limit, sort_by)
                         .then(function(result) {
                                 if(isLastQuery(result)) { renderResult($table, result); }
                                 inFlight=false;
-
+                                start=0;
                             })
                         .fail(function(){ inFlight=false; });
                 };
 
+                $colgroup.append($('<col span=1>').css('width','20%'))
                 var h = buildColumnHeader('Feature ID', 'feature_id', sortEvent);
                 $tr.append(h.$th);
-                h.$sortIcon.addClass('fa fa-sort-asc');
+                h.$sortIcon.addClass('fa fa-sort-desc');
                 cols[h.id] = h;
 
+                $colgroup.append($('<col span=1>').css('width','5%'))
                 var h = buildColumnHeader('Type', 'feature_type', sortEvent);
                 $tr.append(h.$th);
                 cols[h.id] = h;
 
+
+                $colgroup.append($('<col span=1>').css('width','20%'))
                 var h = buildColumnHeader('Function', 'function', sortEvent);
                 $tr.append(h.$th);
                 cols[h.id] = h;
 
-                var h = buildColumnHeader('Aliases', 'aliases', sortEvent);
+                $colgroup.append($('<col span=1>').css('width','20%'))
+                var h = buildColumnHeader('Aliases', 'aliases', null);
                 $tr.append(h.$th);
                 cols[h.id] = h;
 
+
+                $colgroup.append($('<col span=1>').css('width','5%'))
                 var h = buildColumnHeader('Start', 'start', sortEvent);
                 $tr.append(h.$th);
                 cols[h.id] = h;
 
+
+                $colgroup.append($('<col span=1>').css('width','5%'))
                 var h = buildColumnHeader('Strand', 'strand', sortEvent);
                 $tr.append(h.$th);
                 cols[h.id] = h;
 
+                $colgroup.append($('<col span=1>').css('width','5%'))
                 var h = buildColumnHeader('Length', 'length', sortEvent);
                 $tr.append(h.$th);
                 cols[h.id] = h;
@@ -501,11 +534,12 @@ define (
                 $tr.append(h.$th);
                 cols[h.id] = h;
 
-                return $tr;
+                return { $colgroup:$colgroup, $theader:$tr };
             }
             
-
-            $table.append(buildTableHeader());
+            var headers = buildTableHeader()
+            $table.append(headers.$colgroup);
+            $table.append(headers.$theader);
 
            
             // Ok, do stuff.  First show the loading icon
@@ -519,6 +553,30 @@ define (
                     });
 
 
+
+            $pageBack.on('click',function () {
+                if(start===0) return;
+                if((start-limit)<0) {
+                    start = 0;
+                } else {
+                    start = start-limit;
+                }
+                setToLoad($loadingDiv);
+                search($input.val(),start, limit, sort_by)
+                        .then(function(result) {
+                                if(isLastQuery(result)) { renderResult($table, result); }
+                            });
+            });
+            $pageForward.on('click',function () {
+                start = start+limit;
+                setToLoad($loadingDiv);
+                search($input.val(),start, limit, sort_by)
+                        .then(function(result) {
+                                if(isLastQuery(result)) { renderResult($table, result); }
+                            });
+            });
+
+
             //put in a slight delay so on rapid typing we don't make a flood of calls
             var fetchTimeout = null;
             var lastQuery = null;
@@ -527,9 +585,8 @@ define (
                 if(fetchTimeout) { window.clearTimeout(fetchTimeout); }
                 fetchTimeout = window.setTimeout(function() {
                     fetchTimeout = null;
-                    $table.find("tr:gt(0)").remove();
                     setToLoad($loadingDiv);
-                    console.log($input.val());
+                    start=0;
                     search($input.val(),start, limit, sort_by)
                         .then(function(result) {
                                 if(isLastQuery(result)) { renderResult($table, result); }

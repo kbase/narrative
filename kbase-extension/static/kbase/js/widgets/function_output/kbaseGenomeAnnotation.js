@@ -85,7 +85,7 @@ define (
 
         //Sam says that it's considered a transcriptome if there are no contigs, or if the features lack locations.
         genomeType : function(genome) {
-            //return 'genome';
+            return 'genome';
 
             if (
                 (! genome.contig_ids || genome.contig_ids.length == 0)
@@ -116,7 +116,6 @@ define (
             var type = this.genomeType(genome);
 
             if (type == 'transcriptome') {
-                alert('transcriptome alert');
                 //normally, we just have an Overview and a Genes tab.
                 var names = ['Overview', 'Genes'];
                 var ids = ['overview', 'genes'];
@@ -162,6 +161,21 @@ define (
         },
 
 
+
+     /*   getSortToggle: function(columns, default_column, ) {
+
+            var sortToggle = {
+                sort_by: []
+
+            }
+
+            sortToggle[''] = function()
+
+
+            return sortToggle
+        },*/
+
+
         /*
             input =>
             {
@@ -187,15 +201,20 @@ define (
             // setup some defaults
             var limit = 10;
             var start = 1;
-            var sort_by = [];
+            var sort_by = ['feature_id', 1];
 
 
             // setup the main search button and the results panel and layout
             var $input = $('<input type="text" class="form-control" placeholder="Search Features">');
             $("input").prop('disabled', true);
+
+            var $page_forward = $('<button class="btn">').append('next');
+            var $page_backward = $('<input class="btn">').append('last');
+            
             var $resultDiv = $('<div>');
             var $noResultsDiv = $('<div>').append('<center>No matching features found.</center>').hide();
             var $loadingDiv = $('<div>');
+            var $errorDiv = $('<div>');
             var $pagenateDiv = $('<div>');
             var $resultsInfoDiv = $('<div>');
 
@@ -210,21 +229,31 @@ define (
                                 .append($('<div>').addClass('col-md-12').append($loadingDiv));
             var $noResultsRow = $('<div>').addClass('row')
                                 .append($('<div>').addClass('col-md-12').append($noResultsDiv));
+            var $errorRow = $('<div>').addClass('row')
+                                .append($('<div>').addClass('col-md-8').append($errorDiv));
             var $infoRow = $('<div>').addClass('row')
                                 .append($('<div>').addClass('col-md-4').append($resultsInfoDiv))
                                 .append($('<div>').addClass('col-md-8').append($pagenateDiv));
             $container
                 .append($headerRow)
                 .append($resultsRow)
+                .append($loadingRow)
+                .append($errorDiv)
                 .append($noResultsRow)
                 .append($infoRow);
 
 
+            var clearInfo= function() {
+                $resultsInfoDiv.empty();
+            };
+
+
             // define the functions that do everything
             var setToLoad = function($panel) {
+                clearInfo();
                 $panel.empty();
                 var $loadingDiv = $('<div>').attr('align', 'center').append($('<i class="fa fa-spinner fa-spin fa-2x">'));
-                $panel.append('<br><br>').append($loadingDiv);
+                $panel.append('<br>').append($loadingDiv);
                 window.setTimeout(function() {
                         $loadingDiv.append('<br>').append('Building cache, please wait...');
                         window.setTimeout(function() {
@@ -234,39 +263,32 @@ define (
             };
 
             var search = function(query, start, limit, sort_by) {
+                console.log(sort_by);
+                $errorDiv.empty();
                 return genomeSearchAPI.search({
                                             ref: genome_ref,
                                             query: query,
-                                            sort_by: sort_by,
+                                            sort_by: [sort_by],
                                             start: start,
                                             limit: limit
+                                        })
+                                        .fail(function(e) {
+                                            console.error(e);
+                                            $loadingDiv.empty();
+                                            var errorMssg = '';
+                                            if(e['error']) {
+                                                errorMssg = JSON.stringify(e['error']);
+                                                if(e['error']['message']){
+                                                    errorMssg = e['error']['message'];
+                                                    if(e['error']['error']){
+                                                        errorMssg += '<br><b>Trace</b>:' + e['error']['error'];
+                                                    }
+                                                } else {
+                                                    errorMssg = JSON.stringify(e['error']);
+                                                }
+                                            } else { e['error']['message']; }
+                                            $errorDiv.append($('<div>').addClass('alert alert-danger').append(errorMssg));
                                         });
-            };
-
-            var buildTable = function() {
-                return $('<table>')
-                            .addClass('table table-striped table-bordered table-hover')
-                            .css({'margin-left':'auto', 'margin-right':'auto'})
-            };
-
-            
-            var buildTableHeader = function() {
-                var $tr = $('<tr>');
-                $tr.append($('<th>').append('<b>Feature ID</b>'));
-                $tr.append($('<th>').append('<b>Type</b>'));
-                $tr.append($('<th>').append('<b>Function</b>'));
-                $tr.append($('<th>').append('<b>Aliases</b>'));
-                $tr.append($('<th>').append('<b>Location</b>'));
-                return $tr;
-            }
-            var buildRow = function(rowData) {
-                var $tr = $('<tr>');
-                $tr.append($('<td>').append(rowData['feature_id']));
-                $tr.append($('<td>').append(rowData['feature_type']));
-                $tr.append($('<td>').append(rowData['function']));
-                $tr.append($('<td>').append(rowData['aliases']));
-                $tr.append($('<td>').append(rowData['location']));
-                return $tr;
             };
 
             var showViewInfo = function(start, num_showing, num_found) {
@@ -279,13 +301,17 @@ define (
                 $pagenateDiv.empty();
             }
 
+            var buildRow = function(rowData) {
+                var $tr = $('<tr>');
+                $tr.append($('<td>').append(rowData['feature_id']));
+                $tr.append($('<td>').append(rowData['feature_type']));
+                $tr.append($('<td>').append(rowData['function']));
+                $tr.append($('<td>').append(rowData['aliases']));
+                $tr.append($('<td>').append(rowData['location']));
+                return $tr;
+            };
 
-
-            var $table = buildTable();
-            $table.append(buildTableHeader());
-            $resultDiv.append($table);
-
-            var renderResult = function(results) {
+            var renderResult = function($table, results) {
                 $table.find("tr:gt(0)").remove();
                 $loadingDiv.empty();
                 $noResultsDiv.hide();
@@ -301,19 +327,104 @@ define (
                 }
             };
 
+            // Setup the actual table
+            var $table = $('<table>')
+                            .addClass('table table-striped table-bordered table-hover')
+                            .css({'margin-left':'auto', 'margin-right':'auto'})
+            $resultDiv.append($table);
+
+            
+            var buildColumnHeader = function(name, id, click_event) {
+                var $sortIcon = $('<i>').css('margin-left','8px');
+                var $th = $('<th>')
+                            .css('cursor','pointer')
+                            .append('<b>'+name+'</b>')
+                            .append($sortIcon)
+                            .on('click', function() {
+                                click_event(id, $sortIcon)
+                            });
+                return {
+                    id: id,
+                    name: name,
+                    $th: $th,
+                    $sortIcon: $sortIcon
+                };
+            };
+
+            var buildTableHeader = function() {
+                var inFlight = false;
+
+                var $tr = $('<tr>');
+                var ASC=1; var DESC=0; var ID=0; var DIR=1;
+                var cols = {};
+                var sortEvent = function(id, $sortIcon) {
+                    if(inFlight) { return; } // skip if a sort call is already running
+                    console.log('sort click:' + id);
+                    if(sort_by[ID] == id) {
+                        if(sort_by[DIR] === ASC) {
+                            sort_by[DIR] = DESC;
+                            $sortIcon.removeClass();
+                            $sortIcon.addClass('fa fa-sort-desc');
+                        } else {
+                            sort_by[DIR] = ASC;
+                            $sortIcon.removeClass();
+                            $sortIcon.addClass('fa fa-sort-asc');
+                        }
+                    } else {
+                        cols[sort_by[ID]].$sortIcon.removeClass();
+                        sort_by[ID] = id;
+                        sort_by[DIR] = 'desc';
+                        $sortIcon.addClass('fa fa-sort-desc');
+                    }
+
+                    $table.find("tr:gt(0)").remove();
+                    setToLoad($loadingDiv);
+                    inFlight=true;
+                    search($input.val(), start, limit, sort_by)
+                        .then(function(result) { 
+                                renderResult($table, result);
+                                inFlight=false;
+                            })
+                        .fail(function(){ inFlight=false; });
+                };
+
+                var h = buildColumnHeader('Feature ID', 'feature_id', sortEvent);
+                $tr.append(h.$th);
+                h.$sortIcon.addClass('fa fa-sort-asc');
+                cols[h.id] = h;
+
+                var h = buildColumnHeader('Type', 'feature_type', sortEvent);
+                $tr.append(h.$th);
+                cols[h.id] = h;
+
+                var h = buildColumnHeader('Function', 'function', sortEvent);
+                $tr.append(h.$th);
+                cols[h.id] = h;
+
+                var h = buildColumnHeader('Aliases', 'aliases', sortEvent);
+                $tr.append(h.$th);
+                cols[h.id] = h;
+
+                var h = buildColumnHeader('Location', 'location', sortEvent);
+                $tr.append(h.$th);
+                cols[h.id] = h;
+
+                return $tr;
+            }
             
 
+            $table.append(buildTableHeader());
 
-
+           
             // Ok, do stuff.  First show the loading icon
             setToLoad($loadingDiv);
 
             // Perform the first search
-            search('k', 1, limit, []).then(
+            search('', 1, limit, sort_by).then(
                     function(results) {
                         console.log(results);
                         $("input").prop('disabled', false);
-                        renderResult(results);
+                        renderResult($table, results);
                     });
 
 
@@ -325,10 +436,13 @@ define (
                 if(fetchTimeout) { window.clearTimeout(fetchTimeout); }
                 fetchTimeout = window.setTimeout(function() {
                     fetchTimeout = null;
+                    $table.find("tr:gt(0)").remove();
                     setToLoad($loadingDiv);
                     console.log($input.val());
                     search($input.val(),start, limit, sort_by)
-                        .then(renderResult);
+                        .then(function(result) { 
+                                renderResult($table, result);
+                            });
                 }, 300)
             });
 

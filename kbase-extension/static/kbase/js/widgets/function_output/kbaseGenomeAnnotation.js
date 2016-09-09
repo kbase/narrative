@@ -78,19 +78,24 @@ define (
                   self.ws_name = options.ws;
             }
 
-            self.kbws = new Workspace(Config.url('workspace'), {'token': self.auth().token});
-            self.genomeAPI = new GenomeAnnotationAPI(Config.url('service_wizard'), {'token': self.auth().token});
-            self.assemblyAPI = new AssemblyAPI(Config.url('service_wizard'), {'token': self.auth().token});
+            var token = null;
+            if(self.auth()) {
+                token = {'token': self.auth().token}
+            }
+
+            self.kbws = new Workspace(Config.url('workspace'), token);
+            self.genomeAPI = new GenomeAnnotationAPI(Config.url('service_wizard'), token);
+            self.assemblyAPI = new AssemblyAPI(Config.url('service_wizard'), token);
 
             
-            self.genomeSearchAPI = new GenomeSearchUtil(Config.url('service_wizard'), {'token': self.auth().token});
+            self.genomeSearchAPI = new GenomeSearchUtil(Config.url('service_wizard'), token);
 
-            self.genericClient = new GenericClient(Config.url('service_wizard'), {'token': self.auth().token }, null, false);
+            self.genericClient = new GenericClient(Config.url('service_wizard'), token, null, false);
             self.genericClient.sync_call("ServiceWizard.get_service_status",
                         [{'module_name': "GenomeSearchUtil", 'version': 'dev'}], 
                     function(status){
                         console.log(status[0]);
-                        self.genomeSearchAPI = new GenomeSearchUtil(status[0].url, {'token': self.auth().token}, null, null, null, null, false);
+                        self.genomeSearchAPI = new GenomeSearchUtil(status[0].url, token, null, null, null, null, false);
                     },
                     function(error){console.error(error);});
 

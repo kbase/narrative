@@ -318,7 +318,6 @@ define([
             function factory(config) {
                 var container,
                     widget;
-                console.log('view config', config);
                 function start(arg) {
                     container = arg.node;
                     return loadViewParamsWidget({
@@ -352,7 +351,6 @@ define([
 
         function loadLogViewer(args) {
             return new Promise(function (resolve, reject) {
-                console.log('loadLogViewer?...');
                 require(['nbextensions/appCell/widgets/jobLogViewer'], function (LogViewer) {
                     var logViewer = LogViewer.make();
                     widgets.logViewer = logViewer;
@@ -452,8 +450,6 @@ define([
                         var result = model.getItem('exec.jobState.result');
 
                         var content = buildPresentableJson(result);
-
-                        console.log('RESULT', result);
 
                         container.innerHTML = content;
                     });
@@ -571,8 +567,6 @@ define([
                         var result = model.getItem('exec.jobState');
 
                         var content = buildPresentableJson(result);
-
-                        console.log('RESULT', result);
 
                         container.innerHTML = content;
                     });
@@ -768,8 +762,6 @@ define([
                 widget: selectedTab.widget.make()
             };
 
-            console.log('START TAB', controlBarTabs.selectedTab);
-
             ui.activateButton(controlBarTabs.selectedTab.id);
 
             var node = document.createElement('div');
@@ -781,7 +773,6 @@ define([
         }
 
         function stopTab() {
-            console.log('STOP TAB', controlBarTabs.selectedTab);
             ui.deactivateButton(controlBarTabs.selectedTab.id);
 
             return controlBarTabs.selectedTab.widget.stop()
@@ -796,8 +787,6 @@ define([
         }
 
         function selectTab(tabId) {
-            console.log('HI');
-
             if (controlBarTabs.selectedTab) {
                 if (controlBarTabs.selectedTab.id === tabId) {
                     return;
@@ -822,8 +811,6 @@ define([
          * If tab open, close it, leaving no tabs open.
          */
         function toggleTab(tabId) {
-            console.log('TOGGLE', controlBarTabs.selectedTab);
-
             if (controlBarTabs.selectedTab) {
                 if (controlBarTabs.selectedTab.id === tabId) {
                     return stopTab();
@@ -1342,8 +1329,8 @@ define([
                         data: {
                             tab: key
                         },
-                        icon: icon
-                    }
+                    },
+                    icon: icon
                 });
             }).filter(function (x) {
                 return x ? true : false;
@@ -1821,7 +1808,6 @@ define([
          * Render the UI according to the FSM
          */
         function renderUI() {
-            console.log('RENDER UI');
             showFsmBar();
             renderNotifications();
             renderSettings();
@@ -2382,7 +2368,6 @@ define([
                     container.innerHTML = layout;
 
                     startTime = arg.startTime;
-                    console.log('starting clock...');
 
                     listeners.push(runtime.bus().on('clock-tick', function () {
                         renderClock();
@@ -2393,7 +2378,6 @@ define([
 
             function stop() {
                 return Promise.try(function () {
-                    console.log('stopping clock...');
                     listeners.forEach(function (listener) {
                         channel.bus().removeListener(listener);
                     });
@@ -2574,7 +2558,6 @@ define([
 
                     // tear down all the sub widgets.
                     Object.keys(widgets).forEach(function (widgetId) {
-                        console.log('STOPping', widgetId);
                         var widget = widgets[widgetId];
                         widget.instance.bus().send('stop');
                     });

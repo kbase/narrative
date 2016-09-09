@@ -1,0 +1,20 @@
+{% for container in containers %}
+
+<table width="100%" border="1">
+    <tr>
+        <td>
+            {{ container.id }}
+        </td>
+        <td>
+            {{ container.username }}
+        </td>
+        <td>
+            {{ container.accessCount }}
+        </td>
+        <td>
+            {{ container.status }}
+        </td>
+    </tr>
+</table>
+
+{% endfor %}

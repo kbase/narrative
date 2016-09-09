@@ -3,6 +3,14 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v4.2.1 (more notes will follow).
 
+### Version 3.0.0-alpha-22
+__Changes__
+- First pass at an inline clickable interface tour.
+- Fixed problems with Jupyter's command-mode shortcuts overriding whatever they wanted to.
+- Updated front end tests so they should function more seamlessly.
+- Add GenomeAnnotation support to genome, pangenome, and proteome comparison viewers.
+- Add warning for out of date apps.
+
 ### Version 3.0.0-alpha-21
 __Changes__
 - Applied module release version to that module's method specs.

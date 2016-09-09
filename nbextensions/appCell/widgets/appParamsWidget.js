@@ -485,48 +485,51 @@ define([
         }
 
         function start() {
-            // send parent the ready message
-            parentBus.emit('ready');
+            
+            return Promise.try(function () {
+                // send parent the ready message
+                parentBus.emit('ready');
 
-            // parent will send us our initial parameters
-            parentBus.on('run', function (message) {
-                doAttach(message.node);
+                // parent will send us our initial parameters
+                parentBus.on('run', function (message) {
+                    doAttach(message.node);
 
-                model.setItem('appSpec', message.appSpec);
-                model.setItem('parameters', message.parameters);
+                    model.setItem('appSpec', message.appSpec);
+                    model.setItem('parameters', message.parameters);
 
-                // we then create our widgets
-                renderParameters()
-                    .then(function () {
-                        // do something after success
-                        attachEvents();
-                    })
-                    .catch(function (err) {
-                        // do somethig with the error.
-                        console.error('ERROR in start', err);
+                    // we then create our widgets
+                    renderParameters()
+                        .then(function () {
+                            // do something after success
+                            attachEvents();
+                        })
+                        .catch(function (err) {
+                            // do somethig with the error.
+                            console.error('ERROR in start', err);
+                        });
+                });
+
+                parentBus.on('parameter-changed', function (message) {
+                    // Also, tell each of our inputs that a param has changed.
+                    // TODO: use the new key address and subscription
+                    // mechanism to make this more efficient.
+                    inputBusses.forEach(function (bus) {
+                        bus.send(message, {
+                            key: {
+                                type: 'parameter-changed',
+                                parameter: message.parameter
+                            }
+                        });
+                        // bus.emit('parameter-changed', message);
                     });
-            });
-
-            parentBus.on('parameter-changed', function (message) {
-                // Also, tell each of our inputs that a param has changed.
-                // TODO: use the new key address and subscription
-                // mechanism to make this more efficient.
-                inputBusses.forEach(function (bus) {
-                    bus.send(message, {
-                        key: {
-                            type: 'parameter-changed',
-                            parameter: message.parameter
-                        }
-                    });
-                    // bus.emit('parameter-changed', message);
                 });
             });
-
-
         }
 
         function stop() {
-
+            return Promise.try(function () {
+                // really unhook things here.
+            });
         }
 
         // CONSTRUCTION

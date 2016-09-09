@@ -259,6 +259,7 @@ define([
             });
         },
         handleCommMessages: function (msg) {
+            // console.log('handleCommMessages', msg);
             var msgType = msg.content.data.msg_type;
             switch (msgType) {
                 case 'new_job':
@@ -324,6 +325,8 @@ define([
                             widgetParameters: jobStateMessage.widget_info,
                             owner: jobStateMessage.owner
                         };
+                        
+                        // console.log('job-status (all)', jobId, jobStateMessage.state);
 
                         this.sendJobMessage('job-status', jobId, {
                             jobId: jobId,

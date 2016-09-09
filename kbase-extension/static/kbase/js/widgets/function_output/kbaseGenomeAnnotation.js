@@ -222,10 +222,20 @@ define (
             var sort_by = ['feature_id', 1];
 
 
+
             // setup the main search button and the results panel and layout
             var $input = $('<input type="text" class="form-control" placeholder="Search Features">');
-            $("input").prop('disabled', true);
+            $input.prop('disabled', true);
 
+            var isLastQuery = function(result) {
+                if(start !== result['start']) {
+                    return false;
+                }
+                if($input.val() !== result['query']) {
+                    return false;
+                }
+                return true;
+            };
             
             var $resultDiv = $('<div>');
             var $noResultsDiv = $('<div>').append('<center>No matching features found.</center>').hide();
@@ -445,9 +455,10 @@ define (
                     setToLoad($loadingDiv);
                     inFlight=true;
                     search($input.val(), start, limit, sort_by)
-                        .then(function(result) { 
-                                renderResult($table, result);
+                        .then(function(result) {
+                                if(isLastQuery(result)) { renderResult($table, result); }
                                 inFlight=false;
+
                             })
                         .fail(function(){ inFlight=false; });
                 };
@@ -498,8 +509,7 @@ define (
             // Perform the first search
             search('', start, limit, sort_by).then(
                     function(results) {
-                        console.log(results);
-                        $("input").prop('disabled', false);
+                        $input.prop('disabled', false);
                         renderResult($table, results);
                     });
 
@@ -516,8 +526,8 @@ define (
                     setToLoad($loadingDiv);
                     console.log($input.val());
                     search($input.val(),start, limit, sort_by)
-                        .then(function(result) { 
-                                renderResult($table, result);
+                        .then(function(result) {
+                                if(isLastQuery(result)) { renderResult($table, result); }
                             });
                 }, 300)
             });

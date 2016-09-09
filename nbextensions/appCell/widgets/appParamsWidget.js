@@ -229,7 +229,9 @@ define([
                     label: 'hide advanced',
                     type: 'link',
                     name: 'advanced-parameters-toggler',
-                    eventType: 'toggle-advanced',
+                    event: {
+                        type: 'toggle-advanced'
+                    },
                     events: events
                 });
                 
@@ -244,7 +246,9 @@ define([
                     label: 'show advanced',
                     type: 'link',
                     name: 'advanced-parameters-toggler',
-                    eventType: 'toggle-advanced',
+                    event: {
+                        type: 'toggle-advanced'
+                    },
                     events: events
                 });
                 
@@ -261,7 +265,19 @@ define([
                         type: 'default',
                         body: [
                             // ui.makeButton('Show Advanced', 'toggle-advanced', {events: events}),
-                            ui.makeButton('Reset to Defaults', 'reset-to-defaults', {events: events})
+                            div({
+                                class: 'btn-toolbar pull-right'
+                            }, [
+                                ui.buildButton({
+                                    events: events, 
+                                    name: 'reset-to-defaults',
+                                    icon: {
+                                        name: 'recycle'
+                                    },
+                                    label: 'Reset'
+                                })
+                                // ui.makeButton('Reset to Defaults', 'reset-to-defaults', {events: events})
+                            ])
                         ],
                         classes: ['kb-panel-light']
                     }),

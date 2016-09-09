@@ -664,6 +664,8 @@ define([
                         viewModel.run.elapsed = format.elapsedTime(now - jobState.exec_start_time);
                     }
                 } else {
+                    viewModel.run.label = 'Run';
+                    
                     viewModel.queue.active = true;
                     viewModel.queue.label = 'In Queue';
                     viewModel.queue.position = jobState.position;
@@ -1354,11 +1356,11 @@ define([
                                 height: '100px',
                                 borderRight: '3px silver solid'
                             }}, [
-                            div({dataElement: 'message', style: {height: '20px', textAlign: 'center'}}, 'status'),
-                            div({style: {height: '60px', textAlign: 'center', lineHeight: '60px', verticalAlign: 'middle'}}, [
-                                span({dataElement: 'icon', class: 'fa fa-question fa-2x', style: {lineHeight: '60px'}})
+                            div({style: {height: '40px', marginTop: '10px', textAlign: 'center', lineHeight: '40px', verticalAlign: 'middle'}}, [
+                                span({dataElement: 'icon', class: 'fa fa-question fa-2x', style: {lineHeight: '40px'}})
                             ]),
-                            div({dataElement: 'measure', style: {height: '20px', textAlign: 'center'}})
+                            div({dataElement: 'message', style: {height: '20px', marginTop: '5px', textAlign: 'center'}}, 'status'),
+                            div({dataElement: 'measure', style: {height: '20px', marginBotton: '5px',  textAlign: 'center'}})
                         ]),
                         div({dataElement: 'toolbar', style: {
                                 position: 'absolute', left: '100px', right: '100px', top: '0',
@@ -1372,12 +1374,26 @@ define([
                                 }}, [
                                 div({dataElement: 'message'})
                             ]),
-                            div({class: 'btn-toolbar',
-                                style: {
-                                    height: '50px'
-                                }}, buildRunControlPanelDisplayButtons(events))
+                            div({style: {
+                                    height: '50px',
+                                    lineHeight: '50px',
+                                    paddingLeft: '15px',
+                                    verticalAlign: 'bottom'
+                                }}, [
+                                    div({class: 'btn-toolbar',
+                                        style: {
+                                            display: 'inline-block',
+                                            verticalAlign: 'bottom'
+                                        }}, buildRunControlPanelDisplayButtons(events))
+                                ])
                         ]),
-                        div({style: {width: '100px', height: '100px', position: 'absolute', top: '0', right: '0', }}, [
+                        div({style: {
+                                width: '100px', 
+                                height: '100px', 
+                                position: 'absolute', 
+                                top: '0', 
+                                right: '0'
+                            }}, [
                             div({style: {
                                     height: '100px',
                                     textAlign: 'center',
@@ -1392,11 +1408,12 @@ define([
                 ]),
                 div({dataElement: 'tab-pane',
                     style: {
-                        borderLeft: '1px silver solid',
-                        borderRight: '1px silver solid',
-                        borderBottom: '1px silver solid',
+                        border: '1px rgb(32, 77, 16) solid',
+                        xborderLeft: '1px silver solid',
+                        xborderRight: '1px silver solid',
+                        xborderBottom: '1px silver solid',
                         padding: '4px',
-                        minHeight: '100px'
+                        xminHeight: '100px'
                     }}, [
                     div({dataElement: 'widget'})
                 ])

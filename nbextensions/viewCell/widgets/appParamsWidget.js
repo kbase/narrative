@@ -222,7 +222,9 @@ define([
                     label: 'hide advanced',
                     type: 'link',
                     name: 'advanced-parameters-toggler',
-                    eventType: 'toggle-advanced',
+                    event: {
+                        type: 'toggle-advanced'
+                    },
                     events: events
                 });
                 
@@ -237,7 +239,9 @@ define([
                     label: 'show advanced',
                     type: 'link',
                     name: 'advanced-parameters-toggler',
-                    eventType: 'toggle-advanced',
+                    event: {
+                        type: 'toggle-advanced'
+                    },
                     events: events
                 });
                 

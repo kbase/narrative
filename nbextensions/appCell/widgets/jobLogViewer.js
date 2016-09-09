@@ -487,6 +487,7 @@ define([
                     type: 'job-status'
                 },
                 handle: function (message) {
+                    // console.log('LOGS job-status', message)
                     // if the job is finished, we don't want to reflect
                     // this in the ui, and disable play/stop controls.
                     var jobStatus = message.jobState.job_state,
@@ -646,15 +647,13 @@ define([
             fsm.start();
         }
 
-
-
         function start() {
             return Promise.try(function () {
                 bus.on('run', function (message) {
                     var root = message.node;
                     container = root.appendChild(document.createElement('div'));
                     dom = Dom.make({node: container});
-
+                    
                     jobId = message.jobId;
 
                     var layout = renderLayout();

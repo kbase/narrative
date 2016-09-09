@@ -343,11 +343,11 @@ define([
 
         }
 
-        function addButtonClickEvent(events, eventName) {
+        function addButtonClickEvent(events, eventName, data) {
             return events.addEvent({
                 type: 'click',
                 handler: function (e) {
-                    bus.send({event: e}, {key: {type: eventName}});
+                    bus.send({event: e, button: e.target, data: data}, {key: {type: eventName}});
                 }
             });
         }
@@ -365,7 +365,9 @@ define([
 
         function buildButton(arg) {
             var klass = arg.type || 'default',
-                events = arg.events, icon;
+                buttonClasses = ['btn', 'btn-' + klass],
+                events = arg.events, icon,
+                title = arg.title || arg.tip || arg.label;
 
             if (arg.icon) {
                 if (!arg.icon.classes) {
@@ -375,29 +377,65 @@ define([
 
                 icon = buildIcon(arg.icon);
             }
+            
+            if (arg.hidden) {
+                buttonClasses.push('hidden');
+            }
+            if (arg.style) {
+                switch (arg.style) {
+                    case 'flat':
+                        buttonClasses.push('kb-flat-btn');
+                        break;
+                }
+            }
+            if (arg.classes) {
+                buttonClasses = buttonClasses.concat(arg.classes);
+            }
+            if (!arg.event) {
+                arg.event = {};
+            }
 
             return button({
                 type: 'button',
-                class: ['btn', 'btn-' + klass].join(' '),
+                class: buttonClasses.join(' '),
+                title: title,
                 dataButton: arg.name,
-                id: addButtonClickEvent(events, arg.eventType || arg.name)
+                id: addButtonClickEvent(events, arg.event.type || arg.name, arg.event.data)
             }, [icon, span({style: {verticalAlign: 'middle'}}, arg.label)].join('&nbsp;'));
         }
 
         function enableButton(name) {
-            getButton(name).classList.remove('hidden');
-            getButton(name).classList.remove('disabled');
+            var button = getButton(name);
+            button.classList.remove('hidden');
+            button.classList.remove('disabled');
+            button.removeAttribute('disabled');
         }
 
         function disableButton(name) {
-            getButton(name).classList.remove('hidden');
-            getButton(name).classList.add('disabled');
+            var button = getButton(name);
+            button.classList.remove('hidden');
+            button.classList.add('disabled');
+            button.setAttribute('disabled', true);
         }
+
+        function activateButton(name) {
+            getButton(name).classList.add('active');
+        }
+
+        function deactivateButton(name) {
+            getButton(name).classList.remove('active');
+        }
+
         function hideButton(name) {
-            getButton(name).classList.remove('disabled');
+            // getButton(name).classList.remove('disabled');
             getButton(name).classList.add('hidden');
         }
 
+        function showButton(name) {
+            // getButton(name).classList.remove('disabled');
+            getButton(name).classList.remove('hidden');
+        }
+        
         function setButtonLabel(name, label) {
             getButton(name).innerHTML = label;
         }
@@ -659,7 +697,7 @@ define([
         }
 
         function buildIcon(arg) {
-            var klasses = ['fa'], style = [];
+            var klasses = ['fa'], style = {verticalAlign: 'middle'};
             klasses.push('fa-' + arg.name);
             if (arg.rotate) {
                 klasses.push('fa-rotate-' + String(arg.rotate));
@@ -680,15 +718,21 @@ define([
                 });
             }
             if (arg.style) {
-                style = style.concat(arg.style);
+                Object.keys(arg.style).forEach(function(key) {
+                    style[key] = arg.style[key]; 
+                });
+            }
+            if (arg.color) {
+                style.color = arg.color;
             }
 
             return span({
                 dataElement: 'icon',
-                style: {verticalAlign: 'middle'},
+                style: style,
                 class: klasses.join(' ')
             });
         }
+        
         function reverse(arr) {
             var newArray = [], i, len = arr.length;
             for (i = len - 1; i >= 0; i -= 1) {
@@ -901,10 +945,9 @@ define([
             });
         }
 
-
-
-        return {
+        return Object.freeze({
             getElement: getElement,
+            getElements: getElements,
             getButton: getButton,
             // setButton: setButton,
             getNode: getNode,
@@ -912,7 +955,10 @@ define([
             buildButton: buildButton,
             enableButton: enableButton,
             disableButton: disableButton,
+            activateButton: activateButton,
+            deactivateButton: deactivateButton,
             hideButton: hideButton,
+            showButton: showButton,
             setButtonLabel: setButtonLabel,
             confirmDialog: confirmDialog,
             hideElement: hideElement,
@@ -942,7 +988,7 @@ define([
             enableTooltips: enableTooltips,
             updateTab: updateTab,
             buildGridTable: buildGridTable
-        };
+        });
     }
 
     return {

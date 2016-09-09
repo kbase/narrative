@@ -789,17 +789,12 @@ define([
      *
      */
 
-    (function () {
-        keyboardManager.KeyboardManager.prototype.register_events = function (e) {
-            // NOOP
-            return;
-        };
-
-        // keyboardManager.KeyboardManager.prototype.bind_events = function () {
-        //     // also NOOP
-        //     return;
-        // }
-    }());
+    // (function () {
+    //     keyboardManager.KeyboardManager.prototype.register_events = function (e) {
+    //         // NOOP
+    //         return;
+    //     };
+    // }());
 
 
 

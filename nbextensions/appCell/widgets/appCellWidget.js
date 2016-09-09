@@ -473,7 +473,7 @@ define([
                 }
             };
         }
-        
+
         function formatError(errorInfo) {
             var errorId = new Uuid(4).format();
             var errorType, errorMessage, errorDetail;
@@ -499,10 +499,10 @@ define([
                 detail: errorDetail
             };
         }
-        
+
         function renderErrorLayout() {
             return div([
-                
+
                 div({style: {fontWeight: 'bold'}}, [
                     'Type'
                 ]),
@@ -517,7 +517,7 @@ define([
                 div({dataElement: 'detail', style: {border: '0px silver solid', padding: '4px', xoverflowY: 'auto', wordBreak: 'break-word'}}),
             ]);
         }
-        
+
         function errorWidget() {
             function factory(config) {
                 var container, ui;
@@ -526,13 +526,13 @@ define([
                         container = arg.node;
 
                         // Very simple for now, just render the results json in a prettier than normal fashion.
-                        
+
                         container.innerHTML = renderErrorLayout();
-                        
+
                         ui = UI.make({node: container});
-                        
+
                         var viewModel = formatError(model.getItem('exec.jobState.error'));
-                        
+
                         updateFromViewModel(ui, viewModel);
                     });
                 }
@@ -665,7 +665,7 @@ define([
                     }
                 } else {
                     viewModel.run.label = 'Run';
-                    
+
                     viewModel.queue.active = true;
                     viewModel.queue.label = 'In Queue';
                     viewModel.queue.position = jobState.position;
@@ -1176,10 +1176,10 @@ define([
                 content = pre({class: 'prettyprint lang-json', style: {fontSize: '80%'}}, fixedText);
             ui.setContent('about-app.spec', content);
         }
-        
+
         function doActionButton(data) {
             switch (data.action) {
-                case 'runApp': 
+                case 'runApp':
                     doRun();
                     break;
                 case 'reRunApp':
@@ -1192,9 +1192,9 @@ define([
                     alert('Undefined action:' + data.action);
             }
         }
-        
+
         function buildRunControlPanelRunButtons(events) {
-            return div({class: 'btn-group'}, 
+            return div({class: 'btn-group'},
                 Object.keys(actionButtons.availableButtons).map(function (key) {
                     var button = actionButtons.availableButtons[key];
                     return ui.buildButton({
@@ -1388,10 +1388,10 @@ define([
                                 ])
                         ]),
                         div({style: {
-                                width: '100px', 
-                                height: '100px', 
-                                position: 'absolute', 
-                                top: '0', 
+                                width: '100px',
+                                height: '100px',
+                                position: 'absolute',
+                                top: '0',
                                 right: '0'
                             }}, [
                             div({style: {
@@ -1849,7 +1849,7 @@ define([
                 iconNode.classList.add('fa', 'fa-' + state.ui.icon.type, 'fa-3x');
                 iconNode.style.color = state.ui.icon.color;
             }
-            
+
             // Clear the measure
             // ui.setContent('run-control-panel.status.measure', '');
 
@@ -1884,7 +1884,7 @@ define([
             //if (state.ui.tabs.selected) {
             //    selectTab(state.ui.tabs.selected);
             // }
-            
+
             if (state.ui.actionButton) {
                 if (actionButtons.current.name) {
                     ui.hideButton(actionButtons.current.name);
@@ -2312,7 +2312,7 @@ define([
             jobListeners = [];
         }
 
-        
+
 
         function createOutputCell(jobId) {
             var cellId = utils.getMeta(cell, 'attributes', 'id'),
@@ -2457,7 +2457,7 @@ define([
                 widgets.runClock.stop();
             }
         }
-        
+
         function doExitSuccess() {
             ui.setContent('run-control-panel.status.measure', '');
         }
@@ -2468,7 +2468,7 @@ define([
                 outputCellId = model.getItem(['output', 'byJob', jobId, 'cell', 'id']),
                 outputCell, notification,
                 outputCreated = model.getItem(['exec', 'outputCreated']);
-            
+
             // Update the measurement in the control panel.
             var jobState = model.getItem('exec.jobState');
             var elapsedRunTime = format.elapsedTime(jobState.finish_time - jobState.exec_start_time);
@@ -3155,7 +3155,7 @@ define([
             data: utils.getMeta(cell, 'appCell'),
             onUpdate: function (props) {
                 utils.setMeta(cell, 'appCell', props.getRawObject());
-                saveNarrative();
+                // saveNarrative();
             }
         });
 

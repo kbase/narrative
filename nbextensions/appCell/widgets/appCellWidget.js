@@ -102,7 +102,39 @@ define([
             inputBusMap = {},
             fsm,
             saveMaxFrequency = config.saveMaxFrequency || 5000,
-            controlBarTabs = {};
+            controlBarTabs = {},
+            actionButtons = {
+                current: {
+                    name: null,
+                    disabled: null
+                },
+                availableButtons: {
+                    runApp: {
+                        help: 'Run the app',
+                        type: 'primary',
+                        icon: {
+                            name: 'play',
+                            color: 'green'
+                        }
+                    },
+                    cancel: {
+                        help: 'Cancel the running app',
+                        type: 'danger',
+                        icon: {
+                            name: 'stop',
+                            color: 'red'
+                        }
+                    },
+                    reRunApp: {
+                        help: 'Edit and re-run the app',
+                        type: 'primary',
+                        icon: {
+                            name: 'refresh',
+                            color: 'blue'
+                        }
+                    }
+                }
+            };
 
 
         // NEW - TABS
@@ -286,7 +318,6 @@ define([
             function factory(config) {
                 var container,
                     widget;
-                console.log('view config', config);
                 function start(arg) {
                     container = arg.node;
                     return loadViewParamsWidget({
@@ -320,7 +351,6 @@ define([
 
         function loadLogViewer(args) {
             return new Promise(function (resolve, reject) {
-                console.log('loadLogViewer?...');
                 require(['nbextensions/appCell/widgets/jobLogViewer'], function (LogViewer) {
                     var logViewer = LogViewer.make();
                     widgets.logViewer = logViewer;
@@ -420,8 +450,6 @@ define([
                         var result = model.getItem('exec.jobState.result');
 
                         var content = buildPresentableJson(result);
-
-                        console.log('RESULT', result);
 
                         container.innerHTML = content;
                     });
@@ -540,8 +568,6 @@ define([
 
                         var content = buildPresentableJson(result);
 
-                        console.log('RESULT', result);
-
                         container.innerHTML = content;
                     });
                 }
@@ -638,6 +664,8 @@ define([
                         viewModel.run.elapsed = format.elapsedTime(now - jobState.exec_start_time);
                     }
                 } else {
+                    viewModel.run.label = 'Run';
+                    
                     viewModel.queue.active = true;
                     viewModel.queue.label = 'In Queue';
                     viewModel.queue.position = jobState.position;
@@ -736,8 +764,6 @@ define([
                 widget: selectedTab.widget.make()
             };
 
-            console.log('START TAB', controlBarTabs.selectedTab);
-
             ui.activateButton(controlBarTabs.selectedTab.id);
 
             var node = document.createElement('div');
@@ -749,7 +775,6 @@ define([
         }
 
         function stopTab() {
-            console.log('STOP TAB', controlBarTabs.selectedTab);
             ui.deactivateButton(controlBarTabs.selectedTab.id);
 
             return controlBarTabs.selectedTab.widget.stop()
@@ -764,8 +789,6 @@ define([
         }
 
         function selectTab(tabId) {
-            console.log('HI');
-
             if (controlBarTabs.selectedTab) {
                 if (controlBarTabs.selectedTab.id === tabId) {
                     return;
@@ -790,8 +813,6 @@ define([
          * If tab open, close it, leaving no tabs open.
          */
         function toggleTab(tabId) {
-            console.log('TOGGLE', controlBarTabs.selectedTab);
-
             if (controlBarTabs.selectedTab) {
                 if (controlBarTabs.selectedTab.id === tabId) {
                     return stopTab();
@@ -809,38 +830,40 @@ define([
             selectedTab: null,
             tabs: {
                 configure: {
-                    title: 'Configure',
-                    icon: 'pencil',
+                    label: 'Configure',
+                    xicon: 'pencil',
                     widget: configureWidget()
                 },
                 viewConfigure: {
-                    title: 'Configure',
-                    icon: 'pencil',
+                    label: 'Configure',
+                    xicon: 'pencil',
                     widget: viewConfigureWidget()
                 },
-                logs: {
-                    title: 'Logs',
-                    icon: 'list',
-                    widget: logWidget()
-                },
                 runStats: {
-                    title: 'Run Stats',
-                    icon: 'bar-chart',
+                    label: 'Stats',
+                    xicon: 'bar-chart',
                     widget: runStatsWidget()
                 },
                 jobState: {
-                    title: 'Job State',
-                    icon: 'table',
+                    label: 'State',
+                    xicon: 'table',
+                    advanced: true,
                     widget: jobStateWidget()
                 },
+                logs: {
+                    label: 'Logs',
+                    xicon: 'list',
+                    widget: logWidget()
+                },
                 results: {
-                    title: 'Results',
-                    icon: 'file',
+                    label: 'Results',
+                    xicon: 'file',
                     widget: resultsWidget()
                 },
                 error: {
-                    title: 'Error',
-                    icon: 'exclamation',
+                    label: 'Error',
+                    xicon: 'exclamation',
+                    type: 'danger',
                     widget: errorWidget()
                 }
             }
@@ -1153,8 +1176,53 @@ define([
                 content = pre({class: 'prettyprint lang-json', style: {fontSize: '80%'}}, fixedText);
             ui.setContent('about-app.spec', content);
         }
-
+        
+        function doActionButton(data) {
+            switch (data.action) {
+                case 'runApp': 
+                    doRun();
+                    break;
+                case 'reRunApp':
+                    doRerun();
+                    break;
+                case 'cancel':
+                    doCancel();
+                    break;
+                default:
+                    alert('Undefined action:' + data.action);
+            }
+        }
+        
         function buildRunControlPanelRunButtons(events) {
+            return div({class: 'btn-group'}, 
+                Object.keys(actionButtons.availableButtons).map(function (key) {
+                    var button = actionButtons.availableButtons[key];
+                    return ui.buildButton({
+                        tip: button.help,
+                        name: key,
+                        events: events,
+                        type: button.type || 'default',
+                        hidden: true,
+                        event: {
+                            type: 'actionButton',
+                            data: {
+                                action: key
+                            }
+                        },
+                        icon: {
+                            name: button.icon.name,
+                            color: button.icon.color,
+                            size: 3
+                        },
+                        classes: [
+                            'kb-flat-btn'
+                        ]
+                    });
+                })
+            );
+        }
+
+        function xbuildRunControlPanelRunButtons(events) {
             return div({class: 'btn-group'}, [
                 ui.buildButton({
                     tip: 'Run the app',
@@ -1242,28 +1310,29 @@ define([
                     console.warn('Tab not defined: ' + key);
                     return;
                 }
-                if (typeof tab.icon === 'string') {
-                    icon = {
-                        name: tab.icon,
-                        size: 2
-                    };
-                } else {
-                    icon.size = 2;
+                if (tab.icon) {
+                    if (typeof tab.icon === 'string') {
+                        icon = {
+                            name: tab.icon,
+                            size: 2
+                        };
+                    } else {
+                        icon.size = 2;
+                    }
                 }
                 return ui.buildButton({
                     label: tab.label,
                     name: key,
                     events: events,
-                    type: 'primary',
+                    type: tab.type || 'primary',
                     hidden: true,
-                    eventType: 'control-panel-tab',
-                    eventData: {
-                        tab: key
+                    event: {
+                        type: 'control-panel-tab',
+                        data: {
+                            tab: key
+                        },
                     },
-                    icon: {
-                        name: tab.icon,
-                        size: 2
-                    }
+                    icon: icon
                 });
             }).filter(function (x) {
                 return x ? true : false;
@@ -1287,11 +1356,11 @@ define([
                                 height: '100px',
                                 borderRight: '3px silver solid'
                             }}, [
-                            div({dataElement: 'message', style: {height: '20px', textAlign: 'center'}}, 'status'),
-                            div({style: {height: '60px', textAlign: 'center', lineHeight: '60px', verticalAlign: 'middle'}}, [
-                                span({dataElement: 'icon', class: 'fa fa-question fa-2x', style: {lineHeight: '60px'}})
+                            div({style: {height: '40px', marginTop: '10px', textAlign: 'center', lineHeight: '40px', verticalAlign: 'middle'}}, [
+                                span({dataElement: 'icon', class: 'fa fa-question fa-2x', style: {lineHeight: '40px'}})
                             ]),
-                            div({dataElement: 'measure', style: {height: '20px', textAlign: 'center'}})
+                            div({dataElement: 'message', style: {height: '20px', marginTop: '5px', textAlign: 'center'}}, 'status'),
+                            div({dataElement: 'measure', style: {height: '20px', marginBotton: '5px',  textAlign: 'center'}})
                         ]),
                         div({dataElement: 'toolbar', style: {
                                 position: 'absolute', left: '100px', right: '100px', top: '0',
@@ -1305,12 +1374,26 @@ define([
                                 }}, [
                                 div({dataElement: 'message'})
                             ]),
-                            div({class: 'btn-toolbar',
-                                style: {
-                                    height: '50px'
-                                }}, buildRunControlPanelDisplayButtons(events))
+                            div({style: {
+                                    height: '50px',
+                                    lineHeight: '50px',
+                                    paddingLeft: '15px',
+                                    verticalAlign: 'bottom'
+                                }}, [
+                                    div({class: 'btn-toolbar',
+                                        style: {
+                                            display: 'inline-block',
+                                            verticalAlign: 'bottom'
+                                        }}, buildRunControlPanelDisplayButtons(events))
+                                ])
                         ]),
-                        div({style: {width: '100px', height: '100px', position: 'absolute', top: '0', right: '0', }}, [
+                        div({style: {
+                                width: '100px', 
+                                height: '100px', 
+                                position: 'absolute', 
+                                top: '0', 
+                                right: '0'
+                            }}, [
                             div({style: {
                                     height: '100px',
                                     textAlign: 'center',
@@ -1325,11 +1408,12 @@ define([
                 ]),
                 div({dataElement: 'tab-pane',
                     style: {
-                        borderLeft: '1px silver solid',
-                        borderRight: '1px silver solid',
-                        borderBottom: '1px silver solid',
+                        border: '1px rgb(32, 77, 16) solid',
+                        xborderLeft: '1px silver solid',
+                        xborderRight: '1px silver solid',
+                        xborderBottom: '1px silver solid',
                         padding: '4px',
-                        minHeight: '100px'
+                        xminHeight: '100px'
                     }}, [
                     div({dataElement: 'widget'})
                 ])
@@ -1741,7 +1825,6 @@ define([
          * Render the UI according to the FSM
          */
         function renderUI() {
-            console.log('RENDER UI');
             showFsmBar();
             renderNotifications();
             renderSettings();
@@ -1801,18 +1884,32 @@ define([
             //if (state.ui.tabs.selected) {
             //    selectTab(state.ui.tabs.selected);
             // }
+            
+            if (state.ui.actionButton) {
+                if (actionButtons.current.name) {
+                    ui.hideButton(actionButtons.current.name);
+                }
+                var name = state.ui.actionButton.name;
+                ui.showButton(name);
+                actionButtons.current.name = name;
+                if (state.ui.actionButton.disabled) {
+                    ui.disableButton(name);
+                } else {
+                    ui.enableButton(name);
+                }
+            }
 
 
             // Button state
-            state.ui.buttons.enabled.forEach(function (button) {
-                ui.enableButton(button);
-            });
-            state.ui.buttons.disabled.forEach(function (button) {
-                ui.disableButton(button);
-            });
-            state.ui.buttons.hidden.forEach(function (button) {
-                ui.hideButton(button);
-            });
+//            state.ui.buttons.enabled.forEach(function (button) {
+//                ui.enableButton(button);
+//            });
+//            state.ui.buttons.disabled.forEach(function (button) {
+//                ui.disableButton(button);
+//            });
+//            state.ui.buttons.hidden.forEach(function (button) {
+//                ui.hideButton(button);
+//            });
 
 
             // Element state
@@ -2288,7 +2385,6 @@ define([
                     container.innerHTML = layout;
 
                     startTime = arg.startTime;
-                    console.log('starting clock...');
 
                     listeners.push(runtime.bus().on('clock-tick', function () {
                         renderClock();
@@ -2299,7 +2395,6 @@ define([
 
             function stop() {
                 return Promise.try(function () {
-                    console.log('stopping clock...');
                     listeners.forEach(function (listener) {
                         channel.bus().removeListener(listener);
                     });
@@ -2480,7 +2575,6 @@ define([
 
                     // tear down all the sub widgets.
                     Object.keys(widgets).forEach(function (widgetId) {
-                        console.log('STOPping', widgetId);
                         var widget = widgets[widgetId];
                         widget.instance.bus().send('stop');
                     });
@@ -2543,6 +2637,9 @@ define([
                     } else {
                         buttonNode.classList.remove('active');
                     }
+                }));
+                busEventManager.add(bus.on('actionButton', function (message) {
+                    doActionButton(message.data);
                 }));
                 busEventManager.add(bus.on('run-app', function () {
                     doRun();

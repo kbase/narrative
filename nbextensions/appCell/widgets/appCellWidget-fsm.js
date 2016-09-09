@@ -36,10 +36,9 @@ define([
                         enabled: false
                     }
                 },
-                buttons: {
-                    enabled: [],
-                    disabled: ['run-app'],
-                    hidden: ['launching', 're-run-app', 'cancel', 'canceling']
+                actionButton: {
+                    name: 'runApp',
+                    disabled: true
                 },
                 elements: {
                     show: [],
@@ -94,10 +93,9 @@ define([
                         enabled: false
                     }
                 },
-                buttons: {
-                    enabled: [],
-                    disabled: ['run-app'],
-                    hidden: ['launching', 're-run-app', 'cancel', 'canceling']
+                actionButton: {
+                    name: 'runApp',
+                    disabled: true
                 },
                 elements: {
                     show: ['parameters-group', 'output-group'],
@@ -158,10 +156,9 @@ define([
                         enabled: false
                     }
                 },
-                buttons: {
-                    enabled: ['run-app'],
-                    disabled: [],
-                    hidden: ['launching', 're-run-app', 'cancel', 'canceling']
+                actionButton: {
+                    name: 'runApp',
+                    disabled: false
                 },
                 elements: {
                     show: ['parameters-group', 'output-group'],
@@ -254,10 +251,9 @@ define([
                         enabled: false
                     }
                 },
-                buttons: {
-                    enabled: [],
-                    disabled: ['launching'],
-                    hidden: ['cancel', 'canceling', 'run-app', 're-run-app']
+                actionButton: {
+                    name: 'cancel',
+                    disabled: true
                 },
                 elements: {
                     show: ['parameters-display-group', 'exec-group', 'output-group'],
@@ -347,10 +343,9 @@ define([
                         enabled: false
                     }
                 },
-                buttons: {
-                    enabled: [],
-                    disabled: ['launching'],
-                    hidden: ['cancel', 'canceling', 'run-app', 're-run-app']
+                actionButton: {
+                    name: 'cancel',
+                    disabled: true
                 },
                 elements: {
                     show: ['parameters-display-group', 'exec-group', 'output-group'],
@@ -439,11 +434,9 @@ define([
                     jobState: {
                         enabled: true
                     }
-                },
-                buttons: {
-                    enabled: ['cancel'],
-                    disabled: [],
-                    hidden: ['launching', 'canceling', 'run-app', 're-run-app']
+                },                
+                actionButton: {
+                    name: 'cancel'
                 },
                 elements: {
                     show: ['parameters-display-group', 'exec-group', 'output-group'],
@@ -542,11 +535,9 @@ define([
                     jobState: {
                         enabled: true
                     }
-                },
-                buttons: {
-                    enabled: ['cancel'],
-                    disabled: [],
-                    hidden: ['launching', 'canceling', 'run-app', 're-run-app']
+                },            
+                actionButton: {
+                    name: 'cancel'
                 },
                 elements: {
                     show: ['parameters-display-group', 'exec-group', 'output-group'],
@@ -639,11 +630,10 @@ define([
                     jobState: {
                         enabled: true
                     }
-                },
-                buttons: {
-                    enabled: [],
-                    disabled: ['canceling'],
-                    hidden: ['launching', 'cancel', 'run-app', 're-run-app']
+                },            
+                actionButton: {
+                    name: 'cancel',
+                    default: true
                 },
                 elements: {
                     show: ['exec-group', 'output-group'],
@@ -714,11 +704,9 @@ define([
                     jobState: {
                         enabled: true
                     }
-                },
-                buttons: {
-                    enabled: ['re-run-app'],
-                    disabled: [],
-                    hidden: ['launching', 'canceling', 'run-app', 'cancel']
+                },                            
+                actionButton: {
+                    name: 'reRunApp'
                 },
                 elements: {
                     show: ['parameters-display-group', 'exec-group', 'output-group'],
@@ -772,11 +760,9 @@ define([
                     jobState: {
                         enabled: true
                     }
-                },
-                buttons: {
-                    enabled: ['re-run-app'],
-                    disabled: [],
-                    hidden: ['launching', 'run-app', 'cancel', 'canceling']
+                },               
+                actionButton: {
+                    name: 'reRunApp'
                 },
                 elements: {
                     show: ['parameters-display-group', 'exec-group', 'output-group'],
@@ -857,11 +843,9 @@ define([
                     jobState: {
                         enabled: true
                     }
-                },
-                buttons: {
-                    enabled: ['re-run-app'],
-                    disabled: [],
-                    hidden: ['launching', 'run-app', 'cancel', 'canceling']
+                },               
+                actionButton: {
+                    name: 'reRunApp'
                 },
                 elements: {
                     show: ['parameters-display-group', 'exec-group', 'output-group'],
@@ -921,11 +905,9 @@ define([
                     jobState: {
                         enabled: true
                     }
-                },
-                buttons: {
-                    enabled: ['re-run-app'],
-                    disabled: [],
-                    hidden: ['launching', 'run-app', 'cancel', 'canceling']
+                },               
+                actionButton: {
+                    name: 'reRunApp'
                 },
                 elements: {
                     show: ['parameters-display-group', 'exec-group', 'output-group'],
@@ -985,11 +967,9 @@ define([
                     jobState: {
                         enabled: true
                     }
-                },
-                buttons: {
-                    enabled: ['re-run-app'],
-                    disabled: [],
-                    hidden: ['launching', 'run-app', 'cancel', 'canceling']
+                },               
+                actionButton: {
+                    name: 'reRunApp'
                 },
                 elements: {
                     show: ['parameters-display-group', 'exec-group', 'output-group'],
@@ -1048,11 +1028,9 @@ define([
                     jobState: {
                         enabled: true
                     }
-                },
-                buttons: {
-                    enabled: ['re-run-app'],
-                    disabled: [],
-                    hidden: ['launching', 'run-app', 'cancel', 'canceling']
+                },               
+                actionButton: {
+                    name: 'reRunApp'
                 },
                 elements: {
                     show: ['parameters-display-group', 'exec-group', 'output-group'],
@@ -1110,11 +1088,9 @@ define([
                     jobState: {
                         enabled: true
                     }
-                },
-                buttons: {
-                    enabled: [],
-                    disabled: [],
-                    hidden: ['launching', 're-run-app', 'run-app', 'cancel', 'canceling']
+                },               
+                actionButton: {
+                    name: 'reRunApp'
                 },
                 elements: {
                     show: ['fatal-error'],

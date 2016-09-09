@@ -21,6 +21,7 @@ define (
         'kbaseTabs',
         'util/string',
 
+        'kbase-generic-client-api',
         'GenomeAnnotationAPI-client-api',        
         'AssemblyAPI-client-api',        
         'TaxonAPI-client-api',
@@ -42,6 +43,7 @@ define (
         kbaseTabs,
         StringUtil,
         
+        GenericClient,
         GenomeAnnotationAPI_client_api,
         AssemblyAPI_client_api,
         TaxonAPI_client_api,
@@ -68,17 +70,29 @@ define (
         init: function(options) {
             this._super(options);
 
-            this.ws_name = options.ws_name;
-            this.ws_id = options.ws_id;
+            var self = this;
+            self.ws_name = options.ws_name;
+            self.ws_id = options.ws_id;
             if (options.ws && options.id) {
-                  this.ws_id = options.id;
-                  this.ws_name = options.ws;
+                  self.ws_id = options.id;
+                  self.ws_name = options.ws;
             }
 
-            this.kbws = new Workspace(Config.url('workspace'), {'token': this.auth().token});
-            this.genomeAPI = new GenomeAnnotationAPI(Config.url('service_wizard'), {'token': this.auth().token});
-            this.assemblyAPI = new AssemblyAPI(Config.url('service_wizard'), {'token': this.auth().token});
-            this.genomeSearchAPI = new GenomeSearchUtil(Config.url('service_wizard'), {'token': this.auth().token});
+            self.kbws = new Workspace(Config.url('workspace'), {'token': self.auth().token});
+            self.genomeAPI = new GenomeAnnotationAPI(Config.url('service_wizard'), {'token': self.auth().token});
+            self.assemblyAPI = new AssemblyAPI(Config.url('service_wizard'), {'token': self.auth().token});
+
+            
+            self.genomeSearchAPI = new GenomeSearchUtil(Config.url('service_wizard'), {'token': self.auth().token});
+
+            self.genericClient = new GenericClient(Config.url('service_wizard'), {'token': self.auth().token }, null, false);
+            self.genericClient.sync_call("ServiceWizard.get_service_status",
+                        [{'module_name': "GenomeSearchUtil", 'version': 'dev'}], 
+                    function(status){
+                        console.log(status[0]);
+                        self.genomeSearchAPI = new GenomeSearchUtil(status[0].url, {'token': self.auth().token}, null, null, null, null, false);
+                    },
+                    function(error){console.error(error);});
 
             return this;
         },
@@ -198,6 +212,9 @@ define (
             var genomeSearchAPI = params['genomeSearchAPI'];
             var genome_ref = params['ref'];
 
+            var idClick = null;
+            if(params['idClick']) { idClick = params['idClick']; }
+
             // setup some defaults
             var limit = 10;
             var start = 1;
@@ -208,8 +225,6 @@ define (
             var $input = $('<input type="text" class="form-control" placeholder="Search Features">');
             $("input").prop('disabled', true);
 
-            var $page_forward = $('<button class="btn">').append('next');
-            var $page_backward = $('<input class="btn">').append('last');
             
             var $resultDiv = $('<div>');
             var $noResultsDiv = $('<div>').append('<center>No matching features found.</center>').hide();
@@ -218,7 +233,7 @@ define (
             var $pagenateDiv = $('<div>');
             var $resultsInfoDiv = $('<div>');
 
-            var $container = $('<div>').addClass('container-fluid').css({'margin':'15px 0px'});
+            var $container = $('<div>').addClass('container-fluid').css({'margin':'15px 0px', 'max-width':'100%'});
             $div.append($container);
             var $headerRow = $('<div>').addClass('row')
                                 .append($('<div>').addClass('col-md-8') )
@@ -293,7 +308,7 @@ define (
 
             var showViewInfo = function(start, num_showing, num_found) {
                 $resultsInfoDiv.empty();
-                $resultsInfoDiv.append('Showing '+start + ' to ' + (start+num_showing)+' of '+num_found);
+                $resultsInfoDiv.append('Showing '+start + ' to ' + (start+num_showing-1)+' of '+num_found);
             };
             var showNoResultsView = function() {
                 $noResultsDiv.show();
@@ -303,11 +318,55 @@ define (
 
             var buildRow = function(rowData) {
                 var $tr = $('<tr>');
-                $tr.append($('<td>').append(rowData['feature_id']));
+                if(idClick) {
+                    var getCallback = function(rowData) { return function() {idClick(rowData);}};
+                    $tr.append($('<td>').append(
+                        $('<a>').css('cursor','pointer').append(rowData['feature_id'])
+                            .on('click',getCallback(rowData)))
+                    );
+                } else {
+                    $tr.append($('<td>').append(rowData['feature_id']));
+                }
                 $tr.append($('<td>').append(rowData['feature_type']));
                 $tr.append($('<td>').append(rowData['function']));
-                $tr.append($('<td>').append(rowData['aliases']));
-                $tr.append($('<td>').append(rowData['location']));
+
+                var $td = $('<td>');
+                if(rowData['aliases']) {
+                    var aliases = rowData['aliases'];
+                    var isFirst = true;
+                    for (var alias in aliases) {
+                        if(isFirst) isFirst=false;
+                        else $td.append(', ');
+                        if (aliases.hasOwnProperty(alias)) {
+                            $td.append(alias);
+                        }
+                    }
+                } 
+                $tr.append($td);
+
+
+                if(rowData['global_location']) {
+                    var loc = rowData['global_location'];
+                    $tr.append($('<td>').append(loc['start']));
+                    $tr.append($('<td>').append(loc['strand']));
+                    $tr.append($('<td>').append(loc['length']));
+                    $tr.append($('<td>').append(
+                        $('<div>').css('word-break','break-all').append(loc['contig_id'])));
+                }
+
+                /*var $td = $('<td>');
+                if(rowData['location']) {
+                    var locs = rowData['location'];
+                    console.log(locs);
+                    for(var i=0; i<locs.length; i++) {
+                        if(i>0) { $td.append('<br>'); }
+                        var loc = locs[i];
+                        $td.append(String(loc['start'])+'&nbsp;('+loc['strand']+'):&nbsp;'+loc['contig_id']);
+                    }
+                }
+                $tr.append($td);*/
+
+
                 return $tr;
             };
 
@@ -373,7 +432,7 @@ define (
                     } else {
                         cols[sort_by[ID]].$sortIcon.removeClass();
                         sort_by[ID] = id;
-                        sort_by[DIR] = 'desc';
+                        sort_by[DIR] = DESC;
                         $sortIcon.addClass('fa fa-sort-desc');
                     }
 
@@ -405,7 +464,19 @@ define (
                 $tr.append(h.$th);
                 cols[h.id] = h;
 
-                var h = buildColumnHeader('Location', 'location', sortEvent);
+                var h = buildColumnHeader('Start', 'start', sortEvent);
+                $tr.append(h.$th);
+                cols[h.id] = h;
+
+                var h = buildColumnHeader('Strand', 'strand', sortEvent);
+                $tr.append(h.$th);
+                cols[h.id] = h;
+
+                var h = buildColumnHeader('Length', 'length', sortEvent);
+                $tr.append(h.$th);
+                cols[h.id] = h;
+
+                var h = buildColumnHeader('Contig', 'contig_id', sortEvent);
                 $tr.append(h.$th);
                 cols[h.id] = h;
 
@@ -692,9 +763,11 @@ define (
                                 self.buildGeneSearchView({
                                     $div: $('#'+pref+'search'),
                                     genomeSearchAPI: self.genomeSearchAPI,
-                                    ref: self.ws_name + "/" + self.ws_id
+                                    ref: self.ws_name + "/" + self.ws_id,
+                                    idClick: null //function(feature) {
+                                    //    console.log(feature);
+                                    //}
                                 })
-                                //tabObj.addTab({tab: k, content: $tabDiv.$elem, canDelete : false, show: true});
                             });
                         }
 

@@ -73,20 +73,25 @@ define([
                 container = arg.node;
                 model = arg.model;
 
-                // Very simple for now, just render the results json in a prettier than normal fashion.
-                var result = model.getItem('exec.jobState.result');
                 var result = model.getItem('exec.outputWidgetInfo');
-                console.log('RESULT', result);
+                var finalJobState = model.getItem('exec.jobState');
+                var finishTime = model.getItem('exec.jobState.finish_time');
 
                 var content;
+                var finishedDate = new Date(finishTime);
+                container.innerHTML = div('Results from run finished at ' +
+                                          finishedDate.toLocaleDateString() + ', ' +
+                                          finishedDate.toLocaleTimeString());
                 // If there's a "report_ref" key in the results, load and show the report.
                 if (result.params.report_name) {
                     // do report widget.
-                    container.innerHTML = '<div></div>';
-                    new KBaseReportView($(container), result.params);
+                    var reportDiv = $('<div>');
+                    container.appendChild(reportDiv[0]);
+                    new KBaseReportView(reportDiv, result.params);
                 }
+                // Otherwise... placeholder?
                 else {
-                    container.innerHTML = buildPresentableJson(result);
+                    container.innerHTML += buildPresentableJson(result);
                 }
             });
         }

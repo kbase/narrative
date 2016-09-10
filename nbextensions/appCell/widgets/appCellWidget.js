@@ -441,41 +441,6 @@ define([
             }
         }
 
-        // function resultsWidget() {
-        //     function factory(config) {
-        //         var container;
-        //         function start(arg) {
-        //             return Promise.try(function () {
-        //                 container = arg.node;
-
-        //                 // Very simple for now, just render the results json in a prettier than normal fashion.
-        //                 var result = model.getItem('exec.jobState.result');
-
-        //                 var content = buildPresentableJson(result);
-
-        //                 container.innerHTML = content;
-        //             });
-        //         }
-
-        //         function stop() {
-        //             return Promise.try(function () {
-        //                 container.innerHTML = 'Bye from results';
-        //             });
-        //         }
-
-        //         return {
-        //             start: start,
-        //             stop: stop
-        //         };
-        //     }
-
-        //     return {
-        //         make: function (config) {
-        //             return factory(config);
-        //         }
-        //     };
-        // }
-
         function formatError(errorInfo) {
             var errorId = new Uuid(4).format();
             var errorType, errorMessage, errorDetail;
@@ -1412,11 +1377,8 @@ define([
                 div({dataElement: 'tab-pane',
                     style: {
                         border: '1px rgb(32, 77, 16) solid',
-                        xborderLeft: '1px silver solid',
-                        xborderRight: '1px silver solid',
-                        xborderBottom: '1px silver solid',
                         padding: '4px',
-                        xminHeight: '100px'
+                        backgroundColor: '#f5f5f5'
                     }}, [
                     div({dataElement: 'widget'})
                 ])
@@ -1497,14 +1459,14 @@ define([
                                     });
                                 }()),
                                 buildRunControlPanel(events),
-                                ui.buildCollapsiblePanel({
-                                    title: 'Output ' + span({class: 'fa fa-arrow-left'}),
-                                    name: 'output-group',
-                                    hidden: true,
-                                    type: 'default',
-                                    classes: ['kb-panel-container'],
-                                    body: div({dataElement: 'widget'})
-                                }),
+                                // ui.buildCollapsiblePanel({
+                                //     title: 'Output ' + span({class: 'fa fa-arrow-left'}),
+                                //     name: 'output-group',
+                                //     hidden: true,
+                                //     type: 'default',
+                                //     classes: ['kb-panel-container'],
+                                //     body: div({dataElement: 'widget'})
+                                // }),
                                 ui.buildPanel({
                                     title: 'Error',
                                     name: 'fatal-error',

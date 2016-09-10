@@ -170,7 +170,18 @@ control with padding, and then scooting the icon back into its column.
     padding: 3px 5px;
 }
 
+.kb-app-cell [data-element="tab-pane"] {
+    border: 1px solid rgb(32, 77, 16);
+    background-color: #f5f5f5;
+}
 
+.kb-app-cell [data-element="tab-pane"] > div:empty {
+    padding: 0px;
+}
+
+.kb-app-cell [data-element="tab-pane"] > div {
+    padding: 4px;
+}
 
 
 .kb-app-cell .panel-title > [data-toggle="collapse"]::before {

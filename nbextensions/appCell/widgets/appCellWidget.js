@@ -1375,11 +1375,12 @@ define([
                     ])
                 ]),
                 div({dataElement: 'tab-pane',
-                    style: {
-                        border: '1px rgb(32, 77, 16) solid',
-                        padding: '4px',
-                        backgroundColor: '#f5f5f5'
-                    }}, [
+                    // style: {
+                    //     border: '1px rgb(32, 77, 16) solid',
+                    //     padding: '4px',
+                    //     backgroundColor: '#f5f5f5'
+                    // }
+                }, [
                     div({dataElement: 'widget'})
                 ])
             ]);

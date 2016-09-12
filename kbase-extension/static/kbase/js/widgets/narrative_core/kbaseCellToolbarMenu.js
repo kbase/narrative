@@ -129,6 +129,14 @@ define([
             cell.element.trigger('toggleCellSettings.cell');
         }
 
+        function doShowInfoModal(e) {
+            e.preventDefault();
+            var title = getMeta(cell, 'attributes', 'title'),
+                version = utils.getCellMeta(cell, 'kbase.appCell.app.version'),
+                authors = utils.getCellMeta(cell, 'kbase.appCell.app.spec.info.authors');
+            console.log(title, version, authors);
+        }
+
         function renderToggleCodeView(events) {
             var runtime = Runtime.make();
             // Only render if actually a code cell and in dev mode.
@@ -238,7 +246,13 @@ define([
                             div({class: 'title', style: {display: 'inline-block'}}, [
                                 div({dataElement: 'title', class: 'title'}, [getCellTitle(cell)]),
                                 div({dataElement: 'subtitle', class: 'subtitle'}, [getCellSubtitle(cell)]),
-                                div({dataElement: 'title', class: 'info-link'}, [getCellInfoLink(cell)])
+                                div({dataElement: 'title',
+                                    class: 'info-link',
+                                    id: events.addEvent({
+                                        type: 'click',
+                                        handler: doShowInfoModal})
+                                },
+                                [getCellInfoLink(cell)])
                             ])
                         ]),
                         div({class: 'col-sm-4 buttons-container'}, buttons)

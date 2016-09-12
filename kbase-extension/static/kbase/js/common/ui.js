@@ -17,7 +17,8 @@ define([
     var t = html.tag,
         div = t('div'), span = t('span'),
         ul = t('ul'), li = t('li'), a = t('a'),
-        button = t('button'), pre = t('pre');
+        button = t('button'), pre = t('pre'),
+        table = t('table'), tr = t('tr'), th = t('th'), td = t('td');
 
     // "static" methods
     function na() {
@@ -944,6 +945,55 @@ define([
                 }));
             });
         }
+        
+        function updateFromViewModel(viewModel, path) {
+            if (!path) {
+                path = [];
+            }
+            if (typeof viewModel === 'string') {
+                setContent(path, viewModel);
+            } else if (typeof viewModel === 'number') {
+                setContent(path, String(viewModel));
+            } else if (viewModel === null) {
+                setContent(path, '-');
+            } else {
+                Object.keys(viewModel).forEach(function (key) {
+                    updateFromViewModel(viewModel[key], path.concat(key));
+                });
+            }
+        }
+
+        function buildPresentableJson(data) {
+            switch (typeof data) {
+                case 'string':
+                    return data;
+                case 'number':
+                    return String(data);
+                case 'boolean':
+                    return String(data);
+                case 'object':
+                    if (data === null) {
+                        return 'NULL';
+                    }
+                    if (data instanceof Array) {
+                        return table({class: 'table table-striped'},
+                            data.map(function (datum, index) {
+                                return tr([
+                                    th(String(index)),
+                                    td(buildPresentableJson(datum))
+                                ]);
+                            }).join('\n')
+                            );
+                    }
+                    return table({class: 'table table-striped'},
+                        Object.keys(data).map(function (key) {
+                            return tr([th(key), td(buildPresentableJson(data[key]))]);
+                        }).join('\n')
+                        );
+                default:
+                    return 'Not representable: ' + (typeof data);
+            }
+        }
 
         return Object.freeze({
             getElement: getElement,
@@ -987,7 +1037,9 @@ define([
             jsonBlockWidget: jsonBlockWidget(),
             enableTooltips: enableTooltips,
             updateTab: updateTab,
-            buildGridTable: buildGridTable
+            buildGridTable: buildGridTable,
+            updateFromViewModel: updateFromViewModel,
+            buildPresentableJson: buildPresentableJson
         });
     }
 

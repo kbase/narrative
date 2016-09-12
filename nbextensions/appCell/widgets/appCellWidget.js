@@ -27,7 +27,11 @@ define([
     'google-code-prettify/prettify',
     'narrativeConfig',
     './appCellWidget-fsm',
-    './appCellResults',
+    './tabs/runStatsTab',
+    './tabs/jobStateTab',
+    './tabs/resultsTab',
+    './tabs/logTab',
+    './tabs/errorTab',
     'css!google-code-prettify/prettify.css',
     'css!font-awesome.css'
 ], function (
@@ -56,7 +60,11 @@ define([
     PR,
     narrativeConfig,
     AppStates,
-    ResultsWidget
+    runStatsTabWidget,
+    jobStateTabWidget,
+    resultsTabWidget,
+    logTabWidget,
+    errorTabWidget
     ) {
     'use strict';
     var t = html.tag,
@@ -350,212 +358,16 @@ define([
                 }
             };
         }
-
-        function loadLogViewer(args) {
+        
+        function loadWidget(name) {
             return new Promise(function (resolve, reject) {
-                require(['nbextensions/appCell/widgets/jobLogViewer'], function (LogViewer) {
-                    var logViewer = LogViewer.make();
-                    widgets.logViewer = logViewer;
-                    logViewer.start()
-                        .then(function () {
-                            logViewer.bus.emit('run', {
-                                node: args.node,
-                                jobId: args.jobId
-                            });
-                            resolve(logViewer);
-                        })
-                        .catch(function (err) {
-                            reject(err);
-                        });
+                console.log('loading widget', name);
+                require('nbextensions/appCell/widgets/tabs/' + name, function (Widget) {
+                    resolve(Widget);
+                }, function (err) {
+                    reject(err);
                 });
             });
-        }
-
-        function logWidget() {
-            function factory(config) {
-                var container, widget;
-                function start(arg) {
-                    return Promise.try(function () {
-                        container = arg.node;
-                        return loadLogViewer({
-                            node: container,
-                            jobId: model.getItem('exec.jobState.job_id')
-                        })
-                            .then(function (w) {
-                                widget = w;
-                            });
-                    });
-                }
-
-                function stop() {
-                    return Promise.try(function () {
-                        if (widget) {
-                            return widget.stop();
-                        }
-                    });
-                }
-
-                return {
-                    start: start,
-                    stop: stop
-                };
-            }
-
-            return {
-                make: function (config) {
-                    return factory(config);
-                }
-            };
-        }
-
-
-        function buildPresentableJson(data) {
-            switch (typeof data) {
-                case 'string':
-                    return data;
-                case 'number':
-                    return String(data);
-                case 'boolean':
-                    return String(data);
-                case 'object':
-                    if (data === null) {
-                        return 'NULL';
-                    }
-                    if (data instanceof Array) {
-                        return table({class: 'table table-striped'},
-                            data.map(function (datum, index) {
-                                return tr([
-                                    th(String(index)),
-                                    td(buildPresentableJson(datum))
-                                ]);
-                            }).join('\n')
-                            );
-                    }
-                    return table({class: 'table table-striped'},
-                        Object.keys(data).map(function (key) {
-                        return tr([th(key), td(buildPresentableJson(data[key]))]);
-                    }).join('\n')
-                        );
-                default:
-                    return 'Not representable: ' + (typeof data);
-            }
-        }
-
-        function formatError(errorInfo) {
-            var errorId = new Uuid(4).format();
-            var errorType, errorMessage, errorDetail;
-            if (errorInfo.error) {
-                // Classic KBase rpc error message
-                errorType = errorInfo.name;
-                errorMessage = errorInfo.message;
-                errorDetail = errorInfo.error;
-            } else if (errorInfo.name) {
-                errorType = 'unknown';
-                errorMessage = errorInfo.name + ' (code: ' + String(errorInfo.code) + ')';
-                errorDetail = 'This error occurred during execution of the app job.';
-            } else {
-                errorType = 'unknown';
-                errorMessage = 'Unknown error (check console for ' + errorId + ')';
-                errorDetail = 'There is no further information about this error';
-            }
-
-            return {
-                location: 'job execution',
-                type: errorType,
-                message: errorMessage,
-                detail: errorDetail
-            };
-        }
-
-        function renderErrorLayout() {
-            return div([
-
-                div({style: {fontWeight: 'bold'}}, [
-                    'Type'
-                ]),
-                div({dataElement: 'type'}),
-                div({style: {fontWeight: 'bold', marginTop: '1em'}}, [
-                    'Message'
-                ]),
-                div({dataElement: 'message'}),
-                div({style: {fontWeight: 'bold', marginTop: '1em'}}, [
-                    'Detail'
-                ]),
-                div({dataElement: 'detail', style: {border: '0px silver solid', padding: '4px', xoverflowY: 'auto', wordBreak: 'break-word'}}),
-            ]);
-        }
-
-        function errorWidget() {
-            function factory(config) {
-                var container, ui;
-                function start(arg) {
-                    return Promise.try(function () {
-                        container = arg.node;
-
-                        // Very simple for now, just render the results json in a prettier than normal fashion.
-
-                        container.innerHTML = renderErrorLayout();
-
-                        ui = UI.make({node: container});
-
-                        var viewModel = formatError(model.getItem('exec.jobState.error'));
-
-                        updateFromViewModel(ui, viewModel);
-                    });
-                }
-
-                function stop() {
-                    return Promise.try(function () {
-                        container.innerHTML = 'Bye from error';
-                    });
-                }
-
-                return {
-                    start: start,
-                    stop: stop
-                };
-            }
-
-            return {
-                make: function (config) {
-                    return factory(config);
-                }
-            };
-        }
-
-        function jobStateWidget() {
-            function factory(config) {
-                var container;
-                function start(arg) {
-                    return Promise.try(function () {
-                        container = arg.node;
-
-                        // Very simple for now, just render the results json in a prettier than normal fashion.
-                        var result = model.getItem('exec.jobState');
-
-                        var content = buildPresentableJson(result);
-
-                        container.innerHTML = content;
-                    });
-                }
-
-                function stop() {
-                    return Promise.try(function () {
-                        container.innerHTML = 'Bye from results';
-                    });
-                }
-
-                return {
-                    start: start,
-                    stop: stop
-                };
-            }
-
-            return {
-                make: function (config) {
-                    return factory(config);
-                }
-            };
         }
 
         function updateFromViewModel(ui, viewModel, path) {
@@ -575,160 +387,32 @@ define([
             }
         }
 
-        function updateRunStats(ui, jobState, lastUpdated) {
-            if (!jobState) {
-                return;
-            }
-
-            var viewModel = {
-                lastUpdated: {
-                    elapsed: null,
-                    time: null
-                },
-                queue: {
-                    active: null,
-                    label: null,
-                    elapsed: null,
-                    position: null
-                },
-                run: {
-                    active: null,
-                    label: null,
-                    elapsed: null
-                },
-                finish: {
-                    active: null,
-                    state: null,
-                    when: null
-                }
-            },
-            now = new Date().getTime();
-
-            if (lastUpdated) {
-                viewModel.lastUpdated.time = format.niceElapsedTime(lastUpdated);
-                viewModel.lastUpdated.elapsed = format.elapsedTime(now - lastUpdated);
-            }
-
-            if (jobState.creation_time) {
-                if (jobState.exec_start_time) {
-                    // Queue is finished.
-                    viewModel.queue.active = false;
-                    viewModel.queue.label = 'Queued for';
-                    viewModel.queue.elapsed = format.elapsedTime(jobState.exec_start_time - jobState.creation_time);
-
-                    if (jobState.finish_time) {
-                        viewModel.run.active = false;
-                        viewModel.run.label = 'Ran in';
-                        viewModel.run.elapsed = format.elapsedTime(jobState.finish_time - jobState.exec_start_time);
-
-                        viewModel.finish.active = true;
-                        viewModel.finish.state = jobState.job_state;
-                        viewModel.finish.when = format.niceElapsedTime(jobState.finish_time);
-
-                    } else {
-                        viewModel.run.active = true;
-                        viewModel.run.label = 'Running for';
-                        viewModel.run.elapsed = format.elapsedTime(now - jobState.exec_start_time);
-                    }
-                } else {
-                    viewModel.run.label = 'Run';
-
-                    viewModel.queue.active = true;
-                    viewModel.queue.label = 'In Queue';
-                    viewModel.queue.position = jobState.position;
-                    viewModel.queue.elapsed = format.elapsedTime(now - jobState.creation_time);
-                }
-            }
-
-            updateFromViewModel(ui, viewModel);
-        }
-
-        function renderRunStats() {
-            var labelStyle = {
-                textAlign: 'right',
-                border: '1px transparent solid',
-                padding: '4px'
-            },
-            dataStyle = {
-                border: '1px silver solid',
-                padding: '4px',
-                display: 'inline-block',
-                minWidth: '20px',
-                backgroundColor: 'gray',
-                color: '#FFF'
-            };
-            return div({dataElement: 'run-stats', style: {paddingTop: '6px'}}, [
-                div({class: 'row', dataElement: 'lastUpdated'}, [
-                    div({class: 'col-md-2', style: labelStyle}, span({dataElement: 'label'}, 'Last updated')),
-                    div({class: 'col-md-2', style: dataStyle}, span({dataElement: 'elapsed', class: 'kb-elapsed-time'})),
-                    div({class: 'col-md-2', style: dataStyle}, span({dataElement: 'time'}))
-                ]),
-                div({class: 'row', dataElement: 'queue'}, [
-                    div({class: 'col-md-2', style: labelStyle}, span({dataElement: 'label'}, 'Queue')),
-                    div({class: 'col-md-2', style: dataStyle}, span({dataElement: 'elapsed', class: 'kb-elapsed-time'})),
-                    div({class: 'col-md-2', style: labelStyle}, 'Position'),
-                    div({class: 'col-md-2', style: dataStyle}, span({dataElement: 'position'}))
-                ]),
-                div({class: 'row', dataElement: 'run'}, [
-                    div({class: 'col-md-2', style: labelStyle}, span({dataElement: 'label'}, 'Run')),
-                    div({class: 'col-md-2', style: dataStyle}, span({dataElement: 'elapsed', class: 'kb-elapsed-time'}))
-                ]),
-                div({class: 'row', dataElement: 'finish'}, [
-                    div({class: 'col-md-2', style: labelStyle}, 'Finish'),
-                    div({class: 'col-md-2', style: dataStyle}, span({dataElement: 'state'})),
-                    div({class: 'col-md-2', style: labelStyle}, 'When'),
-                    div({class: 'col-md-2', style: dataStyle}, span({dataElement: 'when'}))
-                ])
-            ]);
-        }
-
-        function runStatsWidget() {
-            function factory(config) {
-                var container, ui, listeners = [];
-                function start(arg) {
-                    return Promise.try(function () {
-                        container = arg.node;
-                        ui = UI.make({node: container});
-
-                        var jobState = model.getItem('exec.jobState');
-                        var lastUpdated = model.getItem('exec.jobStateUpdated');
-
-                        container.innerHTML = renderRunStats();
-
-                        updateRunStats(ui, jobState, lastUpdated);
-
-                        listeners.push(runtime.bus().on('clock-tick', function () {
-                            updateRunStats(ui, model.getItem('exec.jobState'), model.getItem('exec.jobStateUpdated'));
-                        }));
-
-                    });
-                }
-
-                function stop() {
-                    return Promise.try(function () {
-                        runtime.bus().removeListeners(listeners);
-                    });
-                }
-
-                return {
-                    start: start,
-                    stop: stop
-                };
-            }
-
-            return {
-                make: function (config) {
-                    return factory(config);
-                }
-            };
-        }
-
         function startTab(tabId) {
             var selectedTab = controlBarTabs.tabs[tabId];
+            
+            if (selectedTab.widgetModule) {
+                return loadWidget(selectedTab.widgetModule)
+                    .then(function (Widget) {
+                        controlBarTabs.selectedTab = {
+                            id: tabId,
+                            widget: Widget.make()
+                        };
 
+                        ui.activateButton(controlBarTabs.selectedTab.id);
+
+                        var node = document.createElement('div');
+                        ui.getElement('run-control-panel.tab-pane.widget').appendChild(node);
+
+                        return controlBarTabs.selectedTab.widget.start({
+                            node: node
+                        });
+                    });
+            }      
             controlBarTabs.selectedTab = {
                 id: tabId,
-                widget: selectedTab.widget.make()
+                widget: selectedTab.widget.make({
+                    model: model
+                })
             };
 
             ui.activateButton(controlBarTabs.selectedTab.id);
@@ -810,29 +494,29 @@ define([
                 runStats: {
                     label: 'Stats',
                     xicon: 'bar-chart',
-                    widget: runStatsWidget()
+                    widget: runStatsTabWidget
                 },
                 jobState: {
                     label: 'State',
                     xicon: 'table',
                     advanced: true,
-                    widget: jobStateWidget()
+                    widget: jobStateTabWidget
                 },
                 logs: {
                     label: 'Logs',
                     xicon: 'list',
-                    widget: logWidget()
+                    widget: logTabWidget
                 },
                 results: {
                     label: 'Results',
                     xicon: 'file',
-                    widget: ResultsWidget
+                    widget: resultsTabWidget
                 },
                 error: {
                     label: 'Error',
                     xicon: 'exclamation',
                     type: 'danger',
-                    widget: errorWidget()
+                    widget: errorTabWidget
                 }
             }
         };
@@ -2642,9 +2326,9 @@ define([
                     doExitSuccess();
                 }));
 
-                busEventManager.add(bus.on('sync-all-display-parameters', function () {
-                    widgets.paramsDisplayWidget.bus.emit('sync-all-parameters');
-                }));
+                //busEventManager.add(bus.on('sync-all-display-parameters', function () {
+                //    widgets.paramsDisplayWidget.bus.emit('sync-all-parameters');
+                //}));
 
                 // Events from widgets...
 

@@ -42,7 +42,7 @@ define([
     'kbaseTabs',
     'common/props',
     'kb_service/client/narrativeMethodStore',
-    
+
     'bootstrap',
 ], function(
     Jupyter,
@@ -1507,7 +1507,7 @@ define([
          * @method deleteCell
          * @private
          */
-        
+
         /*
          * The new delete cell
          * Delete cell needs to honor the new cells, but since we are using the
@@ -1524,29 +1524,24 @@ define([
                 return;
             }
             var kbaseCellType = Props.getDataItem(cell.metadata, 'kbase.type');
-            
-            if (!kbaseCellType) {
-                // TODO: Delete anyway...
+            var cellId = Props.getDataItem(cell.metadata, 'kbase.attributes.id');
+
+            if (!kbaseCellType || !cellId) {
                 UI.make({node: this.$elem[0]}).showConfirmDialog({
                     title: 'Confirm Cell Deletion',
-                    content: 'Are you sure you want to delete this cell?'                    
+                    content: 'Are you sure you want to delete this cell?'
                 })
-                    .then(function (confirmed) {
-                        if (confirmed) {
-                            Jupyter.notebook.delete_cell(index);                            
+                .then(function (confirmed) {
+                    if (confirmed) {
+                        if (kbaseCellType && !cellId) {
+                            console.warn('KBase cell without cell id, DELETING ANYWAY!', cell.metadata);
                         }
-                    });
+                        Jupyter.notebook.delete_cell(index);
+                    }
+                });
                 return;
             }
-            
-            var cellId = Props.getDataItem(cell.metadata, 'kbase.attributes.id');
-            if (!cellId) {
-                // TODO: delete anyway
-                alert('no cell id, do not know how to delete you');
-                console.warn('KBase cell without cell id. Not deleting', cell.metadata);
-                return;
-            }
-            console.log('letting cell know we want to delete it', cellId)
+
             this.runtime.bus().send({}, {
                channel: {
                    cell: cellId
@@ -1556,7 +1551,7 @@ define([
                }
             });
         },
-        
+
         xdeleteCell: function(index) {
             if (index !== undefined && index !== null) {
                 var cell = Jupyter.notebook.get_cell(index);

@@ -36,7 +36,8 @@ define(
         'text!kbase/templates/update_dialog_body.html',
         'narrativeLogin',
         'common/ui',
-        'common/html'
+        'common/html',
+        'narrativeTour'
     ], function (
     $,
     Bootstrap,
@@ -62,7 +63,8 @@ define(
     UpdateDialogBodyTemplate,
     NarrativeLogin,
     UI,
-    html
+    html,
+    Tour
     ) {
     'use strict';
 
@@ -143,7 +145,29 @@ define(
 
     // Wrappers for the Jupyter/Jupyter function so we only maintain it in one place.
     Narrative.prototype.disableKeyboardManager = function () {
-        Jupyter.keyboard_manager.disable();
+        // Jupyter.keyboard_manager.disable();
+
+        var killTheseShortcuts = ['a', 'b', 'm', 'f', 'y', 'r',
+                                  '1', '2', '3', '4', '5', '6',
+                                  'k', 'j', 'b', 'x', 'c', 'v',
+                                  'z', 'd,d', 's', 'l', 'o', 'h',
+                                  'i', '0,0', 'q'];
+
+        for (var i=0; i<killTheseShortcuts.length; i++) {
+            var shortcut = killTheseShortcuts[i];
+            try {
+                Jupyter.keyboard_manager.command_shortcuts.remove_shortcut(shortcut);
+            }
+            catch (err) {
+                //pass
+            }
+            try {
+                Jupyter.notebook.keyboard_manager.command_shortcuts.remove_shortcut(shortcut);
+            }
+            catch (err) {
+                //pass
+            }
+        }
     };
 
     Narrative.prototype.enableKeyboardManager = function () {
@@ -199,7 +223,7 @@ define(
             html: true,
             placement: 'bottom',
             content: function () {
-                // we do not allow users to leave thier narratives untitled
+                // we do not allow users to leave their narratives untitled
                 if (Jupyter.notebook) {
                     var narrName = Jupyter.notebook.notebook_name;
                     if (narrName.trim().toLowerCase() === 'untitled' || narrName.trim().length === 0) {
@@ -581,6 +605,18 @@ define(
         });
     };
 
+    Narrative.prototype.initTour = function () {
+        try {
+            $('#kb-tour').click(function(e) {
+                var tour = new Tour.Tour();
+                tour.start();
+            });
+        }
+        catch (e) {
+            console.error(e);
+        }
+    };
+
     /**
      * This is the Narrative front end initializer. It should only be run directly after
      * the app_initialized.NotebookApp event has been fired.
@@ -599,6 +635,7 @@ define(
         this.initAboutDialog();
         this.initUpgradeDialog();
         this.initShutdownDialog();
+        this.initTour();
         // NAR-271 - Firefox needs to be told where the top of the page is. :P
         window.scrollTo(0, 0);
 
@@ -660,9 +697,9 @@ define(
 
                 $([Jupyter.events]).on('kernel_ready.Kernel',
                     function () {
-                        
+
                         console.log('Kernel Ready! Initializing Job Channel...');
-                        
+
                         // TODO: This should be an event "kernel-ready", perhaps broadcast
                         // on the default bus channel.
                         this.sidePanel.$jobsWidget.initCommChannel()

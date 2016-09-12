@@ -126,8 +126,8 @@ define([
                 padding: '4px',
                 display: 'inline-block',
                 minWidth: '20px',
-                backgroundColor: 'gray',
-                color: '#FFF'
+                backgroundColor: '#EEE',
+                color: '#000'
             };
             return ui.buildPanel({
                 // title: 'Execution Status',
@@ -831,7 +831,7 @@ define([
              position - position of the job in execution waiting queue;
              creation_time, exec_start_time and finish_time - time moments of submission, execution
              start and finish events in milliseconds since Unix Epoch.
-             
+
              typedef structure {
              string job_id;
              boolean finished;

@@ -772,29 +772,29 @@ define([
             //     "header will appear as the cell title." +
             //     "-->"
     };
-    
+
     // KEYBOARD MANAGER
-    
+
     /*
      * Ensure that the keyboard manager does not reactivate during interaction
      * with the Narrative.
-     * 
-     * Although we disable the keyboard manager at the outset, Jupyter will 
+     *
+     * Although we disable the keyboard manager at the outset, Jupyter will
      * hook into the blur event for inputs  within an inserted dom node.
      * This causes havoc when kbase widgets manipulate the dom by inserting
      * form controls.
-     * 
+     *
      * So ... we just disable this behavior by overriding the register_events
      * method.
-     * 
+     *
      */
-    
-    (function () {
-        keyboardManager.KeyboardManager.prototype.register_events = function (e) {
-            // NOOP
-            return;
-        };
-    }());
+
+    // (function () {
+    //     keyboardManager.KeyboardManager.prototype.register_events = function (e) {
+    //         // NOOP
+    //         return;
+    //     };
+    // }());
 
 
 

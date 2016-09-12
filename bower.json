@@ -19,6 +19,7 @@
     "handlebars": "^4.0.5",
     "bootstrap-slider": "*",
     "jquery.tipsy": "*",
-    "requirejs-plugins": "^1.0.3"
+    "requirejs-plugins": "^1.0.3",
+    "dropzone": "^4.3.0"
   }
 }

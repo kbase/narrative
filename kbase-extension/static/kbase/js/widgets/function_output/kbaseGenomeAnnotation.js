@@ -19,6 +19,7 @@ define (
         'kbase-client-api',
         'kbaseTable',
         'kbaseTabs',
+        'ContigBrowserPanel',
         'util/string',
 
         'kbase-generic-client-api',
@@ -41,6 +42,7 @@ define (
         kbase_client_api,
         kbaseTable,
         kbaseTabs,
+        ContigBrowserPanel,
         StringUtil,
         
         GenericClient,
@@ -357,7 +359,7 @@ define (
                             .on('click',getCallback(rowData)))
                     );
                 } else {
-                    $tr.append($('<td>').append(rowData['feature_id']));
+                    $tr.append($('<td>').append($('<div>').css('word-break','break-all').append(rowData['feature_id'])));
                 }
                 $tr.append($('<td>').append(rowData['feature_type']));
                 $tr.append($('<td>').append(rowData['function']));
@@ -390,20 +392,6 @@ define (
                     $tr.append($('<td>').append(
                         $('<div>').css('word-break','break-all').append(loc['contig_id'])));
                 }
-
-                /*var $td = $('<td>');
-                if(rowData['location']) {
-                    var locs = rowData['location'];
-                    console.log(locs);
-                    for(var i=0; i<locs.length; i++) {
-                        if(i>0) { $td.append('<br>'); }
-                        var loc = locs[i];
-                        $td.append(String(loc['start'])+'&nbsp;('+loc['strand']+'):&nbsp;'+loc['contig_id']);
-                    }
-                }
-                $tr.append($td);*/
-
-
                 return $tr;
             };
 
@@ -837,19 +825,17 @@ define (
                             });
                         } else if (dataTab === 'Search' ) {
                             aElem.on('click', function() {
+                                var genome_ref = self.ws_name + "/" + self.ws_id;
                                 self.buildGeneSearchView({
                                     $div: $('#'+pref+'search'),
                                     genomeSearchAPI: self.genomeSearchAPI,
-                                    ref: self.ws_name + "/" + self.ws_id,
-                                    idClick: null //function(feature) {
-                                    //    console.log(feature);
-                                    //}
+                                    ref: genome_ref,
+                                    idClick: function(featureData) {
+                                                self.showFeatureTab(genome_ref, featureData, pref, tabObj);
+                                            }
                                 })
                             });
                         }
-
-
-
                     }
 
 
@@ -893,6 +879,273 @@ define (
             });
             return this;
         },
+
+
+        showFeatureTab: function(genome_ref, featureData, pref, tabPane) {
+            var self = this;
+
+            var lastElemTabNum = 0;
+
+            function openTabGetId(tabName) {
+                    if (tabPane.hasTab(tabName))
+                        return null;
+                    lastElemTabNum++;
+                    var tabId = '' + pref + 'elem' + lastElemTabNum;
+                    var tabDiv = $('<div id="'+tabId+'"> ');
+                    tabPane.addTab({tab: tabName, content: tabDiv, canDelete : true, show: true, deleteCallback: function(name) {
+                        tabPane.removeTab(name);
+                        tabPane.showTab(tabPane.activeTab());
+                    }});
+                    return tabId;
+                }
+
+
+            function printProtein(sequence, charWrap) {
+                var $span = $('<span>').css({'font-family': '"Lucida Console", Monaco, monospace'});
+                
+                $span.append($('<span>').css({color:'orange'}).append('Small Nonpolar'));
+                $span.append(' | ');
+                $span.append($('<span>').css({color:'green'}).append('Hyrdrophobic'));
+                $span.append(' | ');
+                $span.append($('<span>').css({color:'magenta'}).append('Polar'));
+                $span.append(' | ');
+                $span.append($('<span>').css({color:'red'}).append('Neg Charged'));
+                $span.append(' | ');
+                $span.append($('<span>').css({color:'blue'}).append('Pos Charged'));
+                $span.append('<br><br>');
+
+                for (var i = 0; i < sequence.length; i++) {
+                    if(i>0 && i%charWrap===0) {
+                        $span.append('<br>');
+                        //$span.append($('<span>').css({color:'#777'}).append(i+1));
+                    } else if (i==0) {
+                        //$span.append($('<span>').css({color:'#777'}).append(i+1));
+                    }
+
+                    var color = '#000';
+                    /*http://www.bioinformatics.nl/~berndb/aacolour.html
+                    The colour scheme in Lesk, Introduction to Bioinformatics, uses 5 groups (note Histidine):
+                    Small nonpolar  G, A, S, T  Orange
+                    Hydrophobic C, V, I, L, P, F, Y, M, W   Green
+                    Polar   N, Q, H Magenta
+                    Negatively charged  D, E    Red
+                    Positively charged  K, R    Blue*/
+                    var aa = sequence[i];
+                    if(aa==='G' || aa==='A' || aa==='S' || aa==='T') color='orange';
+                    if(aa==='C' || aa==='V' || aa==='I' || aa==='L' || aa==='P' || 
+                       aa==='F' || aa==='Y' || aa==='M' || aa==='W' ) color='green';
+                    if(aa==='N' || aa==='Q' || aa==='H') color='magenta';
+                    if(aa==='D' || aa==='E') color='red';
+                    if(aa==='K' || aa==='R') color='blue';
+                    $span.append($('<span>').css({'color':color}).append(sequence[i]));
+                }
+                return $span;
+            }
+
+
+            function showGene(featureData) {
+                    var fid = featureData['feature_id'];
+                    var tabId = openTabGetId(fid);
+                    if (tabId == null) {
+                        tabPane.showTab(fid);
+                        return;
+                    }
+
+                    var $div = $('#'+tabId);
+
+                    var $contigRow = $('<div>')
+                    var $tbl = $('<table>').addClass('table table-striped table-bordered')
+                                .css({'margin-left':'auto', 'margin-right':'auto'});
+
+                    // basic layout
+                    var $container = $('<div>').addClass('container-fluid').css({'margin':'15px 0px', 'max-width':'100%'});
+                    $div.append($container);
+                    var $tblRow = $('<div>').addClass('row').css({'margin-top':'15px'})
+                                        .append($('<div>').addClass('col-md-12').append($tbl));
+                    var $contigRow = $('<div>').addClass('row').css({'margin-top':'15px'})
+                                .append($('<div>').addClass('col-md-12').append($contigRow));
+                    $container.append($tblRow).append($contigRow);
+
+                    var tblLabels = [];
+                    var tblData = [];
+
+
+                    tblLabels.push('Feature ID');
+                    tblData.push('<a href="/#dataview/'+self.ws_name+'/'+self.ws_id+'?sub=Feature&subid='+fid+'" target="_blank">'+fid+'</a>');
+
+
+                    tblLabels.push('Aliases');
+                    var $aliases = $('<div>');
+                    if(featureData['aliases']) {
+                        var aliases = featureData['aliases'];
+                        var isFirst = true;
+                        for (var alias in aliases) {
+                            if (aliases.hasOwnProperty(alias)) {
+                                if(isFirst) isFirst=false;
+                                else $aliases.append(', ');
+                                $aliases.append(alias);
+                            }
+                        }
+                        if(isFirst) {
+                            $aliases.append('None');
+                        }
+                    } 
+                    tblData.push($aliases);
+
+
+                    tblLabels.push('Type');
+                    tblData.push(featureData['feature_type']);
+
+
+                    tblLabels.push('Function');
+                    tblData.push(featureData['function']);
+
+
+                    tblLabels.push('Location');
+                    var $loc = $('<div>');
+                    if(featureData['location']) {
+                        var locs = featureData['location'];
+                        console.log(locs);
+                        for(var i=0; i<locs.length; i++) {
+                            if(i>0) { $loc.append('<br>'); }
+                            var loc = locs[i];
+                            $loc.append(String(loc['start'])+'&nbsp;('+loc['strand']+'):&nbsp;'+loc['contig_id']);
+                        }
+                    }
+                    tblData.push($loc);
+
+
+                   /* var $dnaLen = $('<div>');
+                    tblLabels.push('DNA Length');
+                    tblData.push($dnaLen);
+
+                    var $dnaSeq = $('<div>').append($('<i class="fa fa-spinner fa-spin fa-2x">'));
+                    tblLabels.push('DNA Sequence');
+                    tblData.push($dnaSeq); */
+
+
+                    var $protLen = $('<div>');
+                    tblLabels.push('Protein Length');
+                    tblData.push($protLen);
+
+                    var $protSeq = $('<div>').append($('<i class="fa fa-spinner fa-spin">'))
+                                            .append(' &nbsp;fetching sequence data...');
+                    tblLabels.push('Protein Translation');
+                    tblData.push($protSeq);
+
+
+                    self.genomeAPI
+                            .get_genome_v1({ 
+                                genomes: [{
+                                    ref: genome_ref,
+                                    included_feature_position_index: [featureData['feature_idx']]
+                                }]
+                            })
+                            .then(function(data) {
+                                console.log(data)
+                                featureFullRecord = data.genomes[0].data.features[0];
+                                if(featureFullRecord['protein_translation']) {
+                                    $protLen.empty().append(featureFullRecord['protein_translation'].length);
+                                    $protSeq.empty().append(printProtein(featureFullRecord['protein_translation'],50));
+                                }
+                            })
+
+                    /*var elemLabels = [
+                        'Feature ID',
+                        'Contig name', 'Location', 'Strand', 'Gene length', "Gene type", "Function", "Annotations"];
+                    var elemData = ['<a href="/#dataview/'+self.ws_name+'/'+self.ws_id+'?sub=Feature&subid='+geneId+'" target="_blank">'+geneId+'</a>',
+                                    '<a class="'+tabId+'-click2" data-contigname="'+contigName+'">' + contigName + '</a>',
+                                    geneStart, geneDir, geneLen, geneType, geneFunc, geneAnn];
+                    var elemTable = $('#'+tabId+'-table');*/
+
+                    for (var i=0; i<tblLabels.length; i++) {
+                        $tbl.append($('<tr>')
+                                        .append($('<td>').append(tblLabels[i]))
+                                        .append($('<td>').append(tblData[i])));
+                    }
+
+
+/*var $td = $('<td>');
+                if(rowData['location']) {
+                    var locs = rowData['location'];
+                    console.log(locs);
+                    for(var i=0; i<locs.length; i++) {
+                        if(i>0) { $td.append('<br>'); }
+                        var loc = locs[i];
+                        $td.append(String(loc['start'])+'&nbsp;('+loc['strand']+'):&nbsp;'+loc['contig_id']);
+                    }
+                }
+                $tr.append($td);*/
+
+
+
+                    /*Draw a table and render what we have */
+
+                   /* var gene = geneMap[geneId];
+                    var contigName = null;
+                    var geneStart = null;
+                    var geneDir = null;
+                    var geneLen = null;
+                    if (gene.location && gene.location.length > 0) {
+                        contigName = gene.location[0][0];
+                        geneStart = gene.location[0][1];
+                        geneDir = gene.location[0][2];
+                        geneLen = gene.location[0][3];
+                    }
+                    var geneType = gene.type;
+                    var geneFunc = gene['function'];
+                    var geneAnn = '';
+                    if (gene['annotations'])
+                        geneAnn = gene['annotations'];
+                    $('#'+tabId).append('<table class="table table-striped table-bordered" \
+                            style="margin-left: auto; margin-right: auto;" id="'+tabId+'-table"/>');
+                    var elemLabels = ['Gene ID', 'Contig name', 'Gene start', 'Strand', 'Gene length', "Gene type", "Function", "Annotations"];
+                    var elemData = ['<a href="/#dataview/'+self.ws_name+'/'+self.ws_id+'?sub=Feature&subid='+geneId+'" target="_blank">'+geneId+'</a>',
+                                    '<a class="'+tabId+'-click2" data-contigname="'+contigName+'">' + contigName + '</a>',
+                                    geneStart, geneDir, geneLen, geneType, geneFunc, geneAnn];
+                    var elemTable = $('#'+tabId+'-table');
+                    for (var i=0; i<elemData.length; i++) {
+                        if (elemLabels[i] === 'Function') {
+                            elemTable.append('<tr><td>' + elemLabels[i] + '</td> \
+                                    <td><textarea style="width:100%;" cols="2" rows="3" readonly>'+elemData[i]+'</textarea></td></tr>');
+                        } else if (elemLabels[i] === 'Annotations') {
+                            elemTable.append('<tr><td>' + elemLabels[i] + '</td> \
+                                    <td><textarea style="width:100%;" cols="2" rows="3" readonly>'+elemData[i]+'</textarea></td></tr>');
+                        } else {
+                            elemTable.append('<tr><td>'+elemLabels[i]+'</td> \
+                                    <td>'+elemData[i]+'</td></tr>');
+                        }
+                    }
+                    elemTable.append('<tr id="seq-loader"><td colspan=2><img src="' + self.loadingImage + '"></td></tr>');
+                    Promise.resolve(kbws.get_object_subset([{
+                        ref: self.ws_name + "/" + self.ws_id,
+                        included: ['/features/' + gene.arrPos + '/protein_translation',
+                                   '/features/' + gene.arrPos + '/dna_sequence']
+                    }])).then(function(data) {
+                        elemTable.find('#seq-loader').remove();
+                        data = data[0].data;
+                        if (data.features) {
+                            var f = data.features[0];
+                            if (f.protein_translation) {
+                                elemTable.append('<tr><td>Protein Translation</td><td><div class="kb-ga-seq">' + f.protein_translation + '</div></td></tr>');
+                            }
+                            if (f.dna_sequence) {
+                                elemTable.append('<tr><td>Nucleotide Sequence</td><td><div class="kb-ga-seq">' + f.dna_sequence + '</div></td></tr>');
+                            }
+                        }
+                    });
+                    $('.'+tabId+'-click2').click(function() {
+                        showContig($(this).data('contigname'));
+                    });*/
+                    tabPane.showTab(fid);
+                }
+
+                showGene(featureData);
+
+
+
+        },
+
 
         prepareGenesAndContigs: function(pref, kbws, gnm, tabPane) {
             var self = this;
@@ -1217,6 +1470,7 @@ define (
                     for (var i=0; i<elemData.length; i++) {
                         elemTable.append('<tr><td>'+elemLabels[i]+'</td><td>'+elemData[i]+'</td></tr>');
                     }
+                    console.log('asdf')
                     var cgb = new ContigBrowserPanel();
                     cgb.data.options.contig = contig;
                     cgb.data.options.svgWidth = self.width - 28;

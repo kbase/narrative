@@ -52,8 +52,7 @@ function(
                 return catalog.get_module_info({'module_name': appModule});
             })
             .then(function(moduleInfo) {
-                panelInfo['updateDate'] = new Date(moduleInfo[tag].timestamp).toLocaleDateString(),
-
+                panelInfo['updateDate'] = new Date(moduleInfo[tag].timestamp).toLocaleDateString();
                 container.html(infoPanel(panelInfo));
             });
         }

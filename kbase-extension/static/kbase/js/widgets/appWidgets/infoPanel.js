@@ -1,5 +1,13 @@
 /*global define*/
 /*jslint white:true,browser:true*/
+/**
+ * Creates an informational panel for Apps, based on some general app info.
+ * Needs the following keys in its config:
+ * appId - the full id of the app (module/app_name)
+ * appModule - the name of the module that the app comes from
+ * tag - the tag of the app to display (release, beta, or dev)
+ * node - the jQuery node (I know...) where this panel should show itself
+ */
 define([
     'bluebird',
     'common/runtime',
@@ -23,8 +31,6 @@ function(
             nms = new NarrativeMethodStore(runtime.config('services.narrative_method_store.url')),
             catalog = new Catalog(runtime.config('services.catalog.url')),
             appId = config.appId,
-            appVersion = config.appVersion,
-            appAuthors = config.appAuthors,
             appModule = config.appModule,
             tag = config.tag || 'release',
             infoPanel = Handlebars.compile(appInfoPanelTmpl),
@@ -78,7 +84,9 @@ function(
                 return Promise.all(infoProms);
             })
             .then(function() {
-                container.html(infoPanel(info));
+                return Promise.try(function() {
+                    container.html(infoPanel(info));
+                });
             });
         }
 

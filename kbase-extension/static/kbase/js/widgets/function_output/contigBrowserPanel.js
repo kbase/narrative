@@ -378,7 +378,6 @@ define (
             },
 
             renderFromRange : function(features) {
-                console.log('RENDERING FROM RANGE');
                 features = this.processFeatures(features);
 
                 // expose 'this' to d3 anonymous functions through closure
@@ -434,7 +433,6 @@ define (
 
 
 
-                console.log(self.options.start);
                 self.xScale = self.xScale
                                   .domain([self.options.start, self.options.start + self.options.length]);
 

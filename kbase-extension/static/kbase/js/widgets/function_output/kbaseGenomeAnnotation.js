@@ -83,6 +83,7 @@ define (
 
         init: function(options) {
             this._super(options);
+            console.log(options);
 
             var self = this;
             self.ws_name = options.ws_name;
@@ -347,7 +348,7 @@ define (
                 } else {
                     $tr.append($('<td>')).append($('<td>')).append($('<td>')).append($('<td>'));
                 }
-                
+
                 return $tr;
             };
 
@@ -561,6 +562,11 @@ define (
                 return;
             }
 
+
+
+
+
+
             var ready = function(genomeData, ctg) {
                     var genomeObjInfo = genomeData['info'];
                     var gnm = genomeData['data'];
@@ -620,47 +626,29 @@ define (
                         gc_content = "Unknown";
                     }*/
 
-                    var id = '';
-                    if(gnm.id) {
-                        id = '<a href="/#dataview/'+genome_ref+'" target="_blank">' + gnm.id + '</a>'
-                    }
+                    var id = '<a href="/#dataview/'+gnm.ref+'" target="_blank">' + gnm.ws_obj_name + '</a>'
 
-                    var scientific_name = '';
-                    if(gnm.scientific_name) {
-                        scientific_name = gnm.scientific_name
-                    }
+                    var scientific_name = gnm.scientific_name
 
-                    var domain = '';
-                    if(gnm.domain) {
-                        domain = gnm.domain;
-                    }
+                    var domain = gnm.domain;
 
-                    var genetic_code = '';
-                    if(gnm.genetic_code) {
-                        genetic_code = gnm.genetic_code;
-                    }
+                    var genetic_code = gnm.genetic_code;
 
-                    var source = '';
-                    if(gnm.source) {
-                        source = gnm.source;
-                    }
+                    var source = gnm.source;
 
-                    var source_id = '';
-                    if(gnm.source_id) {
-                        source_id = gnm.source_id;
-                    }
+                    var source_id = gnm.source_id;
 
                     var taxonomy = $('<div>');
-                    if(gnm.taxonomy) {
-                        var taxLevels = gnm.taxonomy.split(';');
-                        for(var t=0; t<taxLevels.length; t++) {
-                            for(var space=0; space<t; space++) {
-                                if(space===0) { taxonomy.append('<br>'); }
-                                taxonomy.append('&nbsp;&nbsp;');
-                            }
-                            taxonomy.append(taxLevels[t]);
+                    var taxLevels = gnm.taxonomy.split(';');
+                    for(var t=0; t<taxLevels.length; t++) {
+                        for(var space=0; space<t; space++) {
+                            if(space===0) { taxonomy.append('<br>'); }
+                            taxonomy.append('&nbsp;&nbsp;');
                         }
+                        taxonomy.append(taxLevels[t]);
                     }
+
+                    var n_features = gnm.n_features;
 
                     var overviewLabels = [
                             'KBase Object Name',
@@ -669,7 +657,8 @@ define (
                             'Genetic Code',
                             'Source',
                             'Source ID',
-                            'Taxonomy'
+                            'Taxonomy',
+                            'Number of Features'
                         ];
 
                     var overviewData = [
@@ -679,7 +668,8 @@ define (
                             genetic_code,
                             source,
                             source_id,
-                            taxonomy
+                            taxonomy,
+                            n_features
                         ];
 
                     //XXX baloney Plants hack.
@@ -821,17 +811,21 @@ define (
             var included = ["complete","contig_ids","contig_lengths","contigset_ref","assembly_ref", "dna_size",
                             "domain","gc_content","genetic_code","id","md5","num_contigs",
                             "scientific_name","source","source_id","tax_id","taxonomy"];
+
+
+
             self.genomeAPI
                         .get_genome_v1({ 
                             genomes: [{
                                 ref: genome_ref
                             }],
-                            included_fields: included
+                            //included_fields: included
+                            'no_data':1
                         })
                         .then(function(data) {
-                            console.log('genomeAPI.get_genome_v1(ref='+genome_ref+')',data)
+                            console.log('genomeAPI.get_genome_v1(ref='+genome_ref+')',data['genomes'][0])
                             var genomeData = {
-                                'data': data['genomes'][0]['data'],
+                                'data': self.normalizeGenomeData(data['genomes'][0]),
                                 'info': data['genomes'][0]['info']
                             };
                             ready(genomeData,null);
@@ -854,35 +848,52 @@ define (
                             container.append($('<div>').addClass('alert alert-danger').append(errorMssg));
                         });
 
-
-            /*self.kbws.get_object_subset([{ref: self.ws_name + "/" + self.ws_id, included: included}], function(data) {
-                var gnm = data[0].data;
-                if (gnm.contig_ids && gnm.contig_lengths && gnm.contig_ids.length == gnm.contig_lengths.length) {
-                    ready(gnm, null);
-                } else {
-                    var contigSetRef = gnm.contigset_ref;
-                    if (gnm.contigset_ref) {
-                        kbws.get_object_subset([{ref: contigSetRef, included: ['contigs/[*]/unknownfield']}], function(data2) {
-                            var ctg = data2[0].data;
-                            ready(gnm, ctg);
-                        }, function(data2) {
-                            container.empty();
-                            container.append('<p>[Error] ' + data2.error.message + '</p>');
-                        });
-                    } else if (gnm.assembly_ref) {
-
-                        ready(gnm,null);
-                    } else {
-                        container.empty();
-                        container.append('Genome object has unsupported structure (no contig-set or assembly)!');
-                    }
-                }
-            }, function(data) {
-                container.empty();
-                container.append('<p>[Error] ' + data.error.message + '</p>');
-            });*/
             return this;
         },
+
+
+        normalizeGenomeData: function(wsReturnedData) {
+            var genomeData = {
+                ref: '',
+                version: '',
+                ws_obj_name: '',
+                scientific_name: '',
+                domain: '',
+                genetic_code: '',
+                source: '',
+                source_id: '',
+                taxonomy: '',
+                n_features: ''
+            };
+            var info = wsReturnedData['info'];
+            var metadata = info[10];
+
+            genomeData.ws_obj_name = info[1];
+            genomeData.version = info[4];
+            genomeData.ref = info[6] + '/' + info[1] + '/' + info[4];
+
+            if(metadata['Name']) {
+                genomeData.scientific_name = metadata['Name'];
+            }
+            if(metadata['Domain']) {
+                genomeData.domain = metadata['Domain'];
+            }
+            if(metadata['Genetic code']) {
+                genomeData.genetic_code = metadata['Genetic code'];
+            }
+            if(metadata['Source']) {
+                genomeData.n_features = metadata['Source'];
+            }
+            if(metadata['Source ID']) {
+                genomeData.n_features = metadata['Source ID'];
+            }
+            if(metadata['Number features']) {
+                genomeData.n_features = metadata['Number features'];
+            }
+            return genomeData;
+        },
+
+
 
         showContigTab: function(genome_ref, contigId, pref, tabPane) {
 
@@ -1386,6 +1397,7 @@ define (
                         }
                     }
                     cbFormat['function'] = featureData['function'];
+                    console.log(cbFormat);
                     return cbFormat;
                 }
 

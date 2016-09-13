@@ -1064,7 +1064,7 @@ define (
                 $tbl.append($id);
 
                 // Length
-                var $len = $('<tr>')
+                /*var $len = $('<tr>')
                             .append($('<td>').append('Length'))
                             .append($('<td>').append(numberWithCommas(contigData['length'])));
                 $tbl.append($len);
@@ -1079,7 +1079,7 @@ define (
                 var $nFeatures = $('<tr>')
                             .append($('<td>').append('Number of Features'))
                             .append($('<td>').append(contigData['n_features']));
-                $tbl.append($nFeatures);
+                $tbl.append($nFeatures);*/
 
 
                 // Browser
@@ -1293,6 +1293,7 @@ define (
                 var $loc = $('<div>');
                 $loc.append('Contig:&nbsp;');
                 $loc.append($('<a>').append(featureData['global_location']['contig_id'])
+                                .css({'cursor':'pointer'})
                                 .on('click', function() {
                                     self.showContigTab(genome_ref, featureData['global_location']['contig_id'], pref, tabPane);
                                 }));

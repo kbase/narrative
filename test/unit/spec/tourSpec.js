@@ -4,16 +4,16 @@
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
 
-define (
-    [
-        'jquery',
-        'narrativeTour',
-        'bootstraptour'
-    ], function(
-        $,
-        Tour,
-        BSTour
-    ) {
+define ([
+    'jquery',
+    'narrativeTour',
+    'bootstraptour'
+], function (
+    $,
+    Tour,
+    BSTour
+) {
+    'use strict';
     describe('Test the narrativeTour module', function() {
         it('Loaded the Tour module', function() {
             expect(Tour).not.toBe(null);
@@ -26,13 +26,13 @@ define (
 
         it('Can be instantiated', function() {
             var tourInstance = new Tour.Tour();
-            expect(tourInstance).not.toBe.null;
+            expect(tourInstance).not.toBe(null);
         });
 
         it('Can be started', function() {
             var tourInstance = new Tour.Tour();
             tourInstance.start();
-            expect($.find('.kb-tour')).toBe.truthy;
+            expect($.find('.kb-tour')).toBeTruthy();
         });
     });
 });

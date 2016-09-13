@@ -5,7 +5,6 @@ define([
     'common/runtime',
     'kb_service/client/catalog',
     'kb_service/client/narrativeMethodStore',
-    'util/timeFormat',
     'handlebars',
     'text!kbase/templates/app_info_panel.html'
 ],
@@ -14,7 +13,6 @@ function(
     Runtime,
     Catalog,
     NarrativeMethodStore,
-    TimeFormat,
     Handlebars,
     appInfoPanelTmpl
 ) {
@@ -30,34 +28,50 @@ function(
             appModule = config.appModule,
             tag = config.tag || 'release',
             infoPanel = Handlebars.compile(appInfoPanelTmpl),
-            info = {}
+            info = {};
 
         function start(arg) {
             return Promise.try(function () {
                 container = arg.node;
 
                 var infoProms = [
+                    /* Get the method full info so we can populate the description */
                     nms.get_method_full_info({'ids': [appId], 'tag': tag})
                     .then(function(methodInfo) {
-                        methodInfo = methodInfo[0]
+                        methodInfo = methodInfo[0] || {};
                         return Promise.try(function() {
-                            info.description = new Handlebars.SafeString(methodInfo.description);
-                            info.authorList = methodInfo.authors.join(', ');
-                            info.multiAuthors = methodInfo.authors.length > 1;
+                            var desc = methodInfo.description || "";
+                            info.description = new Handlebars.SafeString(desc);
+
+                            var authorList = methodInfo.authors || [];
+                            info.authorList = authorList.join(', ');
+                            info.multiAuthors = authorList.length > 1;
                         });
                     }),
 
+                    /* Get the method stats so we know how many times it was run. */
                     catalog.get_exec_aggr_stats({'full_app_ids': [appId]})
                     .then(function(appStats) {
                         return Promise.try(function() {
-                            info.runCount = appStats[0]['number_of_calls'];
+                            appStats = appStats[0] || {};
+                            info.runCount = appStats.number_of_calls || 'unknown';
                         });
                     }),
 
+                    /* Get the module info so we know when it was last updated. */
                     catalog.get_module_info({'module_name': appModule})
                     .then(function(moduleInfo) {
                         return Promise.try(function() {
-                            info.updateDate = new Date(moduleInfo[tag].timestamp).toLocaleDateString();
+                            moduleInfo = moduleInfo[tag] || {};
+                            var timestamp = moduleInfo.timestamp || 'unknown';
+                            var dateString = 'unknown';
+                            try {
+                                dateString = new Date(timestamp).toLocaleDateString();
+                            }
+                            catch (e) {
+                                //pass
+                            }
+                            info.updateDate = dateString;
                         });
                     })
                 ];
@@ -70,7 +84,7 @@ function(
 
         function stop() {
             return Promise.try(function () {
-                container.innerHTML = '';
+                container.html('');
             });
         }
 

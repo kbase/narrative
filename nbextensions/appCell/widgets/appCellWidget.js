@@ -358,7 +358,7 @@ define([
                 }
             };
         }
-        
+
         function loadWidget(name) {
             return new Promise(function (resolve, reject) {
                 console.log('loading widget', name);
@@ -389,7 +389,7 @@ define([
 
         function startTab(tabId) {
             var selectedTab = controlBarTabs.tabs[tabId];
-            
+
             if (selectedTab.widgetModule) {
                 return loadWidget(selectedTab.widgetModule)
                     .then(function (Widget) {
@@ -407,7 +407,7 @@ define([
                             node: node
                         });
                     });
-            }      
+            }
             controlBarTabs.selectedTab = {
                 id: tabId,
                 widget: selectedTab.widget.make({

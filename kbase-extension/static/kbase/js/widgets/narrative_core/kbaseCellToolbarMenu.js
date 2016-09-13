@@ -222,7 +222,7 @@ define([
                 return cell.getIcon();
             }
             return span({class: 'fa fa-file fa-2x', style: {
-                    verticalAlign: 'top', 
+                    verticalAlign: 'top',
                     xlineHeight: '56px'
                 }
             });
@@ -289,13 +289,14 @@ define([
                 content = div({class: 'kb-cell-toolbar container-fluid'}, [
                     div({class: 'row', style: {height: '56px'}}, [
                         div({class: 'col-sm-8 title-container'}, [
-                            div({class: 'title', style: {display: 'inline-block', height: '56px', lineHeight: '56px'}}, [
+                            div({class: 'title', style: {display: 'inline-block', height: '56px'}}, [
                                 div({dataElement: 'icon', class: 'icon', style: {position: 'relative', top: '0', left: '0', display: 'inline-block', height: '56px', lineHeight: '56px'}}, [
                                     buildIcon(cell)
                                 ]),
                                 div({style: {display: 'inline-block'}}, [
                                     div({dataElement: 'title', class: 'title', style: {lineHeight: '20px'}}, [getCellTitle(cell)]),
-                                    div({dataElement: 'subtitle', class: 'subtitle', style: {lineHeight: '20px'}}, [getCellSubtitle(cell)])
+                                    div({dataElement: 'subtitle', class: 'subtitle', style: {lineHeight: '20px'}}, [getCellSubtitle(cell)]),
+                                    div({dataElement: 'info-link', class: 'info-link'}, [getCellInfoLink(cell, events)])
                                 ])
                             ])
                         ]),
@@ -314,7 +315,7 @@ define([
 
         /*
          * We are going to try to make this work by creating the layout once,
-         * and then allowing the toolbar widgets to refresh themselves 
+         * and then allowing the toolbar widgets to refresh themselves
          * upon an event emitted at callback time.
          */
         function callback(toolbarDiv, parentCell) {

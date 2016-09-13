@@ -1,8 +1,17 @@
 /**
  * Output widget for visualization of genome annotation.
- * @author Roman Sutormin <rsutormin@lbl.gov>
  * @public
  */
+
+/*
+
+Known issues:
+1) resize window sets svg width to zero of contig browser of non-visible tabs, so they dissappear
+2) we don't know the length of the contig when rendering the gene context browser, so scale goes
+   beyond the actual contig
+
+*/
+
 
 define (
     [
@@ -250,13 +259,13 @@ define (
             var $noResultsDiv = $('<div>').append('<center>No matching features found.</center>').hide();
             var $loadingDiv = $('<div>');
             var $errorDiv = $('<div>');
-            var $pagenateDiv = $('<div>').css('text-align','right');
+            var $pagenateDiv = $('<div>').css('text-align','left');
             var $resultsInfoDiv = $('<div>');
 
             var $container = $('<div>').addClass('container-fluid').css({'margin':'15px 0px', 'max-width':'100%'});
             $div.append($container);
             var $headerRow = $('<div>').addClass('row')
-                                .append($('<div>').addClass('col-md-4') )
+                                .append($('<div>').addClass('col-md-4').append($pagenateDiv) )
                                 .append($('<div>').addClass('col-md-4').append($loadingDiv))
                                 .append($('<div>').addClass('col-md-4').append($input));
             var $resultsRow = $('<div>').addClass('row').css({'margin-top':'15px'})
@@ -267,7 +276,7 @@ define (
                                 .append($('<div>').addClass('col-md-8').append($errorDiv));
             var $infoRow = $('<div>').addClass('row')
                                 .append($('<div>').addClass('col-md-4').append($resultsInfoDiv))
-                                .append($('<div>').addClass('col-md-8').append($pagenateDiv));
+                                .append($('<div>').addClass('col-md-8'));
             $container
                 .append($headerRow)
                 .append($resultsRow)
@@ -983,11 +992,6 @@ define (
                             });
                             $div.append(cgb.data.$elem);
                             cgb.data.init();
-
-                            cgb.resize();
-                            $(window).resize(function() {
-                                cgb.resize();
-                            });
                         })
                         .fail(function(e) {
                                 console.error(e);
@@ -1079,11 +1083,41 @@ define (
 
 
                 // Browser
-                $browserCtrlDiv.append('buttons');
-                $browserRow.append('browser');
+                $browserRow.append($('<i class="fa fa-spinner fa-spin fa-2x">'));
+                var start = 0;
+                var tenKb = 10000;
+                var twentyKb = 20000;
+                var length = twentyKb;
+                var contig_length = start + twentyKb;
 
 
-                getFeaturesInRegionAndRenderBrowser(genome_ref, contig_id, 0, 10000, 10000, $browserRow);
+
+
+                var $contigScrollBack = $('<button class="btn btn-default">')
+                                            .append('<i class="fa fa-caret-left" aria-hidden="true">')
+                                            .append(' back 20kb')
+                                            .on('click', function() {
+                                                if(start-twentyKb < 0) { return; }
+                                                $browserRow.append($('<i class="fa fa-spinner fa-spin fa-2x">'));
+                                                start = start - twentyKb;
+                                                length = twentyKb;
+                                                contig_length = start + twentyKb;
+                                                getFeaturesInRegionAndRenderBrowser(genome_ref, contig_id, start, length, contig_length, $browserRow);
+                                            });
+                var $contigScrollForward = $('<button class="btn btn-default">')
+                                            .append('forward 20kb ')
+                                            .append('<i class="fa fa-caret-right" aria-hidden="true">')
+                                            .on('click', function() {
+                                                $browserRow.append($('<i class="fa fa-spinner fa-spin fa-2x">'));
+                                                start = start + twentyKb;
+                                                length = twentyKb;
+                                                contig_length = start + twentyKb;
+                                                getFeaturesInRegionAndRenderBrowser(genome_ref, contig_id, start, length, contig_length, $browserRow);
+                                            });
+
+                $browserCtrlDiv.append($contigScrollBack).append($contigScrollForward);
+
+                getFeaturesInRegionAndRenderBrowser(genome_ref, contig_id, start, length, contig_length, $browserRow);
 
             }
 
@@ -1257,7 +1291,11 @@ define (
 
                 tblLabels.push('Location');
                 var $loc = $('<div>');
-                $loc.append('Contig:&nbsp;'+featureData['global_location']['contig_id']);
+                $loc.append('Contig:&nbsp;');
+                $loc.append($('<a>').append(featureData['global_location']['contig_id'])
+                                .on('click', function() {
+                                    self.showContigTab(genome_ref, featureData['global_location']['contig_id'], pref, tabPane);
+                                }));
                 $loc.append('<br>');
 
                 if(featureData['location']) {
@@ -1417,10 +1455,6 @@ define (
                                         });
                                         $contigBrowser.append(cgb.data.$elem);
                                         cgb.data.init();
-                                        cgb.resize();
-                                        $(window).resize(function() {
-                                            cgb.resize();
-                                        });
 
                                     })
                                     .fail(function(e) {

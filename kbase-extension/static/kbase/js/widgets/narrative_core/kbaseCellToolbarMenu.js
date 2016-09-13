@@ -147,7 +147,7 @@ define([
                 appStoreUrl = utils.getCellMeta(cell, 'kbase.attributes.info.url');
             var dialog = new BootstrapDialog({
                 title: title,
-                body: $('<div>body</div>'),
+                body: $('<div class="container"></div>'),
                 buttons: [
                     $('<a href="' + appStoreUrl + '" target="_blank" type="button" class="btn btn-default">View on App Store</a>'),
                     $('<button type="button" class="btn btn-primary">Close</button>').click(function() { dialog.hide(); })

@@ -30,13 +30,15 @@ function(
         function start(arg) {
             return Promise.try(function () {
                 container = arg.node;
-                // var info = {
-                //     description: 'Lorem ipsum dolor sit amit... yadda yadda yadda. This is a description and stuff.',
-                //     authorList: appAuthors.join(', '),
-                //     updateDate: 'NEVER',
-                //     runCount: 42
-                // };
-                // container.html(infoPanel(info));
+                console.log(appAuthors);
+                var info = {
+                    description: 'Lorem ipsum dolor sit amit... yadda yadda yadda. This is a description and stuff.',
+                    authorList: appAuthors.join(', '),
+                    updateDate: 'NEVER',
+                    runCount: 42,
+                    multiAuthors: false
+                };
+                container.html(infoPanel(info));
             });
         }
 

@@ -30,30 +30,41 @@ function(
             appModule = config.appModule,
             tag = config.tag || 'release',
             infoPanel = Handlebars.compile(appInfoPanelTmpl),
-            panelInfo = {}
+            info = {}
 
         function start(arg) {
             return Promise.try(function () {
                 container = arg.node;
 
-                return nms.get_method_full_info({'ids': [appId], 'tag': tag});
+                var infoProms = [
+                    nms.get_method_full_info({'ids': [appId], 'tag': tag})
+                    .then(function(methodInfo) {
+                        methodInfo = methodInfo[0]
+                        return Promise.try(function() {
+                            info.description = new Handlebars.SafeString(methodInfo.description);
+                            info.authorList = methodInfo.authors.join(', ');
+                            info.multiAuthors = methodInfo.authors.length > 1;
+                        });
+                    }),
+
+                    catalog.get_exec_aggr_stats({'full_app_ids': [appId]})
+                    .then(function(appStats) {
+                        return Promise.try(function() {
+                            info.runCount = appStats[0]['number_of_calls'];
+                        });
+                    }),
+
+                    catalog.get_module_info({'module_name': appModule})
+                    .then(function(moduleInfo) {
+                        return Promise.try(function() {
+                            info.updateDate = new Date(moduleInfo[tag].timestamp).toLocaleDateString();
+                        });
+                    })
+                ];
+                return Promise.all(infoProms);
             })
-            .then(function(methodInfo) {
-                methodInfo = methodInfo[0];
-                panelInfo = {
-                    description: new Handlebars.SafeString(methodInfo.description),
-                    authorList: methodInfo.authors.join(', '),
-                    multiAuthors: methodInfo.authors.length > 1
-                };
-                return catalog.get_exec_aggr_stats({'full_app_ids': [appId]});
-            })
-            .then(function(appStats) {
-                panelInfo['runCount'] = appStats[0]['number_of_calls'];
-                return catalog.get_module_info({'module_name': appModule});
-            })
-            .then(function(moduleInfo) {
-                panelInfo['updateDate'] = new Date(moduleInfo[tag].timestamp).toLocaleDateString();
-                container.html(infoPanel(panelInfo));
+            .then(function() {
+                container.html(infoPanel(info));
             });
         }
 

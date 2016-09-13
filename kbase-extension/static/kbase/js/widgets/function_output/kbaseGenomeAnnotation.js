@@ -558,15 +558,16 @@ define (
                 return;
             }
 
-            var kbws = new Workspace(self.wsUrl, {'token': self.token});
+            var ready = function(genomeData, ctg) {
+                    var genomeObjInfo = genomeData['info'];
+                    var gnm = genomeData['data'];
 
-            var ready = function(gnm, ctg) {
                     container.empty();
                     var $tabPane = $('<div id="'+pref+'tab-content">');
                     container.append($tabPane);
                     var tabObj = new kbaseTabs($tabPane, {canDelete : true, tabs : []});
 
-                    var ontology_mappings = [];
+                    /*var ontology_mappings = [];
                     $.each(
                       gnm.features,
                       function (i,f) {
@@ -575,8 +576,9 @@ define (
                         }
                       }
                     );
-
-                    gnm.ontology_mappings = ontology_mappings;
+    
+                    gnm.ontology_mappings = ontology_mappings;*/
+                    gnm.ontology_mappings = [];
 
                     var tabData = self.tabData(gnm);
                     var tabNames = tabData.names;
@@ -587,12 +589,12 @@ define (
                       tabObj.addTab({tab: tabNames[i], content: tabDiv, canDelete : false, show: (i == 0)});
                     }
 
-                    var contigCount = 0;
+                    /*var contigCount = 0;
                     if (gnm.contig_ids && gnm.contig_lengths && gnm.contig_ids.length == gnm.contig_lengths.length) {
                         contigCount = gnm.contig_ids.length;
                     } else if (ctg && ctg.contigs) {
                         contigCount = ctg.contigs.length;
-                    }
+                    }*/
 
                     ////////////////////////////// Overview Tab //////////////////////////////
                     var $overviewPanel = $('#'+pref+'overview');
@@ -602,10 +604,7 @@ define (
                     $overviewPanel.append($('<div>').css('margin-top','15px').append($overviewTable));
 
 
-                    var overviewLabels = ['KBase ID', 'Name', 'Domain', 'Genetic code', 'Source', "Source ID", "GC", "Taxonomy", "Size",
-                                          "Number of Contigs", "Number of Genes"];
-
-                    var tax = gnm.taxonomy;
+                    /*var tax = gnm.taxonomy;
                     if (tax == null)
                         tax = '';
                     var gc_content = gnm.gc_content;
@@ -616,11 +615,69 @@ define (
                         gc_content = gc_content.toFixed(2) + " %";
                     } else {
                         gc_content = "Unknown";
+                    }*/
+
+                    var id = '';
+                    if(gnm.id) {
+                        id = '<a href="/#dataview/'+genome_ref+'" target="_blank">' + gnm.id + '</a>'
                     }
 
-                    var overviewData = [gnm.id, '<a href="/#dataview/'+self.ws_name+'/'+self.ws_id+'" target="_blank">'+gnm.scientific_name+'</a>',
-                                        gnm.domain, gnm.genetic_code, gnm.source, gnm.source_id, gc_content, tax, gnm.dna_size,
-                                        contigCount, gnm.features.length];
+                    var scientific_name = '';
+                    if(gnm.scientific_name) {
+                        scientific_name = gnm.scientific_name
+                    }
+
+                    var domain = '';
+                    if(gnm.domain) {
+                        domain = gnm.domain;
+                    }
+
+                    var genetic_code = '';
+                    if(gnm.genetic_code) {
+                        genetic_code = gnm.genetic_code;
+                    }
+
+                    var source = '';
+                    if(gnm.source) {
+                        source = gnm.source;
+                    }
+
+                    var source_id = '';
+                    if(gnm.source_id) {
+                        source_id = gnm.source_id;
+                    }
+
+                    var taxonomy = $('<div>');
+                    if(gnm.taxonomy) {
+                        var taxLevels = gnm.taxonomy.split(';');
+                        for(var t=0; t<taxLevels.length; t++) {
+                            for(var space=0; space<t; space++) {
+                                if(space===0) { taxonomy.append('<br>'); }
+                                taxonomy.append('&nbsp;&nbsp;');
+                            }
+                            taxonomy.append(taxLevels[t]);
+                        }
+                    }
+
+                    var overviewLabels = [
+                            'KBase Object Name',
+                            'Scientific Name',
+                            'Domain',
+                            'Genetic Code',
+                            'Source',
+                            'Source ID',
+                            'Taxonomy'
+                        ];
+
+                    var overviewData = [
+                            id,
+                            scientific_name,
+                            domain,
+                            genetic_code,
+                            source,
+                            source_id,
+                            taxonomy
+                        ];
 
                     //XXX baloney Plants hack.
                     //Plant genes need different information, and we want to display the gene and transcript counts separately
@@ -640,16 +697,11 @@ define (
                     }*/
                     //XXX end plants baloney here. There's more below for the Genes table.
 
-
-
                     for (var i=0; i<overviewData.length; i++) {
-                        if (overviewLabels[i] === 'Taxonomy') {
-                            $overviewTable.append('<tr><td  width="33%">' + overviewLabels[i] + '</td> \
-                                    <td><textarea style="width:100%;" cols="2" rows="3" readonly>'+overviewData[i]+'</textarea></td></tr>');
-                        } else {
-                            $overviewTable.append('<tr><td>'+overviewLabels[i]+'</td> \
-                                    <td>'+overviewData[i]+'</td></tr>');
-                        }
+                        $overviewTable.append(
+                            $('<tr>')
+                                .append($('<td>').append(overviewLabels[i]))
+                                .append($('<td>').append(overviewData[i])));
                     }
 
                     ////ontology tab - should be lazily loaded, but we can't since we need to check for existence to know if we display the tab at all.
@@ -757,13 +809,50 @@ define (
             };
 
             container.empty();
-            container.append("<div><img src=\""+self.loadingImage+"\">&nbsp;&nbsp;loading genome data...</div>");
+            container.append($('<div>').attr('align', 'center').append($('<i class="fa fa-spinner fa-spin fa-2x">')));
 
-            var included = ["/complete","/contig_ids","/contig_lengths","contigset_ref","assembly_ref", "/dna_size",
-                            "/domain","/gc_content","/genetic_code","/id","/md5","num_contigs",
-                            "/scientific_name","/source","/source_id","/tax_id","/taxonomy",
-                            "/features/[*]/type", "/features/[*]/unknownfield", "/features/[*]/location", "/features/[*]/ontology_terms","/features/[*]/id"];
-            kbws.get_object_subset([{ref: self.ws_name + "/" + self.ws_id, included: included}], function(data) {
+
+            var genome_ref = self.ws_name + "/" + self.ws_id;
+
+            // get sequence and other information
+            var included = ["complete","contig_ids","contig_lengths","contigset_ref","assembly_ref", "dna_size",
+                            "domain","gc_content","genetic_code","id","md5","num_contigs",
+                            "scientific_name","source","source_id","tax_id","taxonomy"];
+            self.genomeAPI
+                        .get_genome_v1({ 
+                            genomes: [{
+                                ref: genome_ref
+                            }],
+                            included_fields: included
+                        })
+                        .then(function(data) {
+                            console.log('genomeAPI.get_genome_v1(ref='+genome_ref+')',data)
+                            var genomeData = {
+                                'data': data['genomes'][0]['data'],
+                                'info': data['genomes'][0]['info']
+                            };
+                            ready(genomeData,null);
+                        })
+                        .fail(function(e) {
+                            console.error(e);
+                            var errorMssg = '';
+                            if(e['error']) {
+                                errorMssg = JSON.stringify(e['error']);
+                                if(e['error']['message']){
+                                    errorMssg = e['error']['message'];
+                                    if(e['error']['error']){
+                                        errorMssg += '<br><b>Trace</b>:' + e['error']['error'];
+                                    }
+                                } else {
+                                    errorMssg = JSON.stringify(e['error']);
+                                }
+                            }
+                            container.empty();
+                            container.append($('<div>').addClass('alert alert-danger').append(errorMssg));
+                        });
+
+
+            /*self.kbws.get_object_subset([{ref: self.ws_name + "/" + self.ws_id, included: included}], function(data) {
                 var gnm = data[0].data;
                 if (gnm.contig_ids && gnm.contig_lengths && gnm.contig_ids.length == gnm.contig_lengths.length) {
                     ready(gnm, null);
@@ -788,7 +877,7 @@ define (
             }, function(data) {
                 container.empty();
                 container.append('<p>[Error] ' + data.error.message + '</p>');
-            });
+            });*/
             return this;
         },
 

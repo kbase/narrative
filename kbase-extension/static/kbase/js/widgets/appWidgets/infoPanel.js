@@ -5,6 +5,7 @@ define([
     'common/runtime',
     'kb_service/client/catalog',
     'kb_service/client/narrativeMethodStore',
+    'util/timeFormat',
     'handlebars',
     'text!kbase/templates/app_info_panel.html'
 ],
@@ -13,6 +14,7 @@ function(
     Runtime,
     Catalog,
     NarrativeMethodStore,
+    TimeFormat,
     Handlebars,
     appInfoPanelTmpl
 ) {
@@ -25,20 +27,34 @@ function(
             appId = config.appId,
             appVersion = config.appVersion,
             appAuthors = config.appAuthors,
-            infoPanel = Handlebars.compile(appInfoPanelTmpl);
+            appModule = config.appModule,
+            tag = config.tag || 'release',
+            infoPanel = Handlebars.compile(appInfoPanelTmpl),
+            panelInfo = {}
 
         function start(arg) {
             return Promise.try(function () {
                 container = arg.node;
-                console.log(appAuthors);
-                var info = {
-                    description: 'Lorem ipsum dolor sit amit... yadda yadda yadda. This is a description and stuff.',
-                    authorList: appAuthors.join(', '),
-                    updateDate: 'NEVER',
-                    runCount: 42,
-                    multiAuthors: false
+
+                return nms.get_method_full_info({'ids': [appId], 'tag': tag});
+            })
+            .then(function(methodInfo) {
+                methodInfo = methodInfo[0];
+                panelInfo = {
+                    description: new Handlebars.SafeString(methodInfo.description),
+                    authorList: methodInfo.authors.join(', '),
+                    multiAuthors: methodInfo.authors.length > 1
                 };
-                container.html(infoPanel(info));
+                return catalog.get_exec_aggr_stats({'full_app_ids': [appId]});
+            })
+            .then(function(appStats) {
+                panelInfo['runCount'] = appStats[0]['number_of_calls'];
+                return catalog.get_module_info({'module_name': appModule});
+            })
+            .then(function(moduleInfo) {
+                panelInfo['updateDate'] = new Date(moduleInfo[tag].timestamp).toLocaleDateString(),
+
+                container.html(infoPanel(panelInfo));
             });
         }
 

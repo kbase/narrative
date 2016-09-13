@@ -183,7 +183,6 @@ control with padding, and then scooting the icon back into its column.
     padding: 4px;
 }
 
-
 .kb-app-cell .panel-title > [data-toggle="collapse"]::before {
     display: inline-block;
     margin-left: 0px;
@@ -221,4 +220,27 @@ control with padding, and then scooting the icon back into its column.
 }
 .kb-elapsed-time.-active {
     color: lime;
+}
+
+.kb-app-cell-info-desc {
+    border: 1px solid #777;
+    padding: 10px;
+    margin-right: 10px;
+    min-height: 100px;
+}
+
+.kb-app-cell-info {
+    color: #777;
+    font-family: 'Oxygen', sans-serif;
+    font-size: 12pt;
+}
+
+.kb-app-cell-info .header {
+    border-bottom: 1px solid #777;
+    padding: 5px 0;
+    margin-bottom: 8px;
+}
+
+.kb-app-cell-info .value {
+    color: #000;
 }

@@ -144,7 +144,9 @@ define([
             var version = utils.getCellMeta(cell, 'kbase.appCell.app.version'),
                 authors = utils.getCellMeta(cell, 'kbase.appCell.app.spec.info.authors'),
                 title = getMeta(cell, 'attributes', 'title') + ' v' + version,
-                appStoreUrl = utils.getCellMeta(cell, 'kbase.attributes.info.url');
+                appStoreUrl = utils.getCellMeta(cell, 'kbase.attributes.info.url'),
+                tag = utils.getCellMeta(cell, 'kbase.appCell.app.tag'),
+                module = utils.getCellMeta(cell, 'kbase.appCell.app.spec.info.module_name');
             var dialog = new BootstrapDialog({
                 title: title,
                 body: $('<div class="container"></div>'),
@@ -159,7 +161,9 @@ define([
             var infoPanel = AppInfoPanel.make({
                 appId: utils.getCellMeta(cell, 'kbase.appCell.app.id'),
                 appVersion: version,
-                appAuthors: authors
+                appAuthors: authors,
+                appModule: module,
+                tag: tag
             });
             infoPanel.start({node: dialog.getBody()});
 

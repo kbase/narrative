@@ -1,11 +1,11 @@
 <div class="row">
-    <div class="col-md-5" style="border: 1px solid #cecece; padding: 10px; margin-right: 10px">
+    <div class="col-md-5 kb-app-cell-info-desc">
         {{description}}
     </div>
-    <div class="col-md-3">
-        <div style="border-bottom: 1px solid #cecece; padding: 10px 0; margin-bottom: 10px">Information</div>
-        Author{{#if multiAuthors}}s{{/if}}: {{authorList}}<br>
-        Updated: {{updateDate}}<br>
-        Run count: {{runCount}}
+    <div class="col-md-3 kb-app-cell-info">
+        <div class="header">Information</div>
+        Author{{#if multiAuthors}}s{{/if}}: <span class="value">{{authorList}}</span><br>
+        Updated: <span class="value">{{updateDate}}</span><br>
+        Run count: <span class="value">{{runCount}}</span>
     </div>
 </div>

@@ -496,12 +496,12 @@ define([
                     xicon: 'bar-chart',
                     widget: runStatsTabWidget
                 },
-                jobState: {
-                    label: 'State',
-                    xicon: 'table',
-                    advanced: true,
-                    widget: jobStateTabWidget
-                },
+//                jobState: {
+//                    label: 'State',
+//                    xicon: 'table',
+//                    features: ['developer'],
+//                    widget: jobStateTabWidget
+//                },
                 logs: {
                     label: 'Logs',
                     xicon: 'list',
@@ -978,11 +978,12 @@ define([
                     events: events,
                     type: tab.type || 'primary',
                     hidden: true,
+                    features: tab.features,
                     event: {
                         type: 'control-panel-tab',
                         data: {
                             tab: key
-                        },
+                        }
                     },
                     icon: icon
                 });
@@ -1659,7 +1660,7 @@ define([
 
         function doRerun() {
             var confirmationMessage = div([
-                p('This action will clear the App Execution area and restore the Input Area to edit mode. You may then change inputs and run the app again. (Any output you have already produced will be left intact.)'),
+                p('This action will clear the Results and re-enable the Configure tab for editing. You may then change inputs and run the app again. (Any output you have already produced will be left intact.)'),
                 p('Proceed to Resume Editing?')
             ]);
             ui.showConfirmDialog({title: 'Edit and Re-Run?', body: confirmationMessage})
@@ -1668,21 +1669,10 @@ define([
                         return;
                     }
 
-                    // No longer delete job state. This will be done if/when
-                    // the user deletes the ouput.
-                    //var jobState = model.getItem('exec.jobState');
-                    //if (jobState) {
-                    //    cancelJob(jobState.job_id);
-                    // the job will be deleted form the notebook when the job cancellation
-                    // event is received.
-                    //}
-
                     // Remove all of the execution state when we reset the app.
                     resetToEditMode('do rerun');
                 });
         }
-
-
 
         /*
          * Cancelling a job is the same as deleting it, and the effect of cancelling the job is the same as re-running it.
@@ -1716,16 +1706,6 @@ define([
                         fsm.newState({mode: 'editing', params: 'complete', code: 'built'});
                         renderUI();
                     }
-
-                    // Remove all of the execution state when we reset the app.
-                    //model.deleteItem('exec');
-
-                    //reloadExecutionWidget();
-
-                    // TODO: evaluate the params again before we do this.
-                    //fsm.newState({mode: 'editing', params: 'complete', code: 'built'});
-
-                    //renderUI();
                 });
         }
 
@@ -1854,8 +1834,6 @@ define([
 
         var jobListeners = [];
         function startListeningForJobMessages(jobId) {
-
-
             var ev;
 
             ev = runtime.bus().listen({

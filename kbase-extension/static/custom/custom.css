@@ -318,3 +318,7 @@ span#notebook_name:hover {
 p {
     margin-bottom: 9px;
 }
+
+.prompt {
+    display: none !important;
+}

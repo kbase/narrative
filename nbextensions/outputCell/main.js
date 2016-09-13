@@ -65,6 +65,10 @@ define([
                 ]);
             }
         };
+        cell.getIcon = function () {
+            var icon = AppUtils.makeToolbarGenericIcon('arrow-left');
+            return icon;
+        };
         cell.hidePrompts = function () {
             // Hide the code input area.
             this.input.find('.input_area').addClass('hidden');

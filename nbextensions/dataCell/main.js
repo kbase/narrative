@@ -71,6 +71,11 @@ define([
                 ]);
             }
         };
+        cell.getIcon = function () {
+            var type = Props.getDataItem(cell.metadata, 'kbase.dataCell.objectInfo.type'), 
+                icon = AppUtils.makeToolbarTypeIcon(type);
+            return icon;
+        };
         cell.hidePrompts = function () {
             // Hide the code input area.
             this.input.find('.input_area').addClass('hidden');

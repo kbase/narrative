@@ -10,6 +10,9 @@ Known issues:
 2) we don't know the length of the contig when rendering the gene context browser, so scale goes
    beyond the actual contig
 
+
+
+
 */
 
 
@@ -559,9 +562,9 @@ define (
 
             var ready = function(gnm, ctg) {
                     container.empty();
-                    var tabPane = $('<div id="'+pref+'tab-content">');
-                    container.append(tabPane);
-                    var tabObj = new kbaseTabs(tabPane, {canDelete : true, tabs : []});
+                    var $tabPane = $('<div id="'+pref+'tab-content">');
+                    container.append($tabPane);
+                    var tabObj = new kbaseTabs($tabPane, {canDelete : true, tabs : []});
 
                     var ontology_mappings = [];
                     $.each(
@@ -592,8 +595,13 @@ define (
                     }
 
                     ////////////////////////////// Overview Tab //////////////////////////////
-                    $('#'+pref+'overview').append('<table class="table table-striped table-bordered" \
-                            style="margin-left: auto; margin-right: auto;" id="'+pref+'overview-table"/>');
+                    var $overviewPanel = $('#'+pref+'overview');
+                    var $overviewTable = $('<table>')
+                                            .addClass('table table-striped table-bordered table-hover')
+                                            .css({'margin-left':'auto', 'margin-right':'auto'});
+                    $overviewPanel.append($('<div>').css('margin-top','15px').append($overviewTable));
+
+
                     var overviewLabels = ['KBase ID', 'Name', 'Domain', 'Genetic code', 'Source', "Source ID", "GC", "Taxonomy", "Size",
                                           "Number of Contigs", "Number of Genes"];
 
@@ -634,13 +642,12 @@ define (
 
 
 
-                    var overviewTable = $('#'+pref+'overview-table');
                     for (var i=0; i<overviewData.length; i++) {
                         if (overviewLabels[i] === 'Taxonomy') {
-                            overviewTable.append('<tr><td  width="33%">' + overviewLabels[i] + '</td> \
+                            $overviewTable.append('<tr><td  width="33%">' + overviewLabels[i] + '</td> \
                                     <td><textarea style="width:100%;" cols="2" rows="3" readonly>'+overviewData[i]+'</textarea></td></tr>');
                         } else {
-                            overviewTable.append('<tr><td>'+overviewLabels[i]+'</td> \
+                            $overviewTable.append('<tr><td>'+overviewLabels[i]+'</td> \
                                     <td>'+overviewData[i]+'</td></tr>');
                         }
                     }
@@ -721,7 +728,7 @@ define (
 
                     }
 
-                    var liElems = tabPane.find('li');
+                    var liElems = $tabPane.find('li');
                     for (var liElemPos = 0; liElemPos < liElems.length; liElemPos++) {
                         var liElem = $(liElems.get(liElemPos));
                         var aElem = liElem.find('a');
@@ -924,7 +931,7 @@ define (
                 // basic layout
                 var $container = $('<div>').addClass('container-fluid').css({'margin':'15px 0px', 'max-width':'100%'});
                 $div.append($container);
-                var $tblRow = $('<div>').addClass('row').css({'margin-top':'15px'})
+                var $tblRow = $('<div>').addClass('row')
                                         .append($('<div>').addClass('col-md-12').append($tbl));
                 var $browserCtrlRow = $('<div>').addClass('row').css({'margin-top':'15px'})
                                         .append($('<div>').addClass('col-md-12').append($browserCtrlDiv));
@@ -1127,7 +1134,7 @@ define (
                 // basic layout
                 var $container = $('<div>').addClass('container-fluid').css({'margin':'15px 0px', 'max-width':'100%'});
                 $div.append($container);
-                var $tblRow = $('<div>').addClass('row').css({'margin-top':'15px'})
+                var $tblRow = $('<div>').addClass('row')
                                     .append($('<div>').addClass('col-md-12').append($tbl));
                 $container.append($tblRow);
 

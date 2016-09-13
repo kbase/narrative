@@ -1,0 +1,12 @@
+<div class="row">
+    <div class="col-md-8" style="border: 1px solid #f5f5f5; margin: 10px">
+        {{ description }}
+    </div>
+    <div class="col-md-4">
+        <p>Information</p>
+        <hr>
+        Author{{ #if multiAuthors }}s{{ /if }}: {{ authors }}<br>
+        Updated: {{ updateDate }}<br>
+        Run count: {{ runCount }}
+    </div>
+</div>

@@ -7,8 +7,10 @@ define([
     'base/js/namespace',
     'common/utils',
     'common/runtime',
-    'common/ui'
-], function ($, html, Events, Jupyter, utils, Runtime, UI) {
+    'common/ui',
+    'util/bootstrapDialog',
+    'kbase/js/widgets/appWidgets/infoPanel'
+], function ($, html, Events, Jupyter, utils, Runtime, UI, BootstrapDialog, AppInfoPanel) {
     'use strict';
 
     var t = html.tag,
@@ -106,12 +108,20 @@ define([
             return '';
         }
 
-        function getCellInfoLink(cell) {
+        function getCellInfoLink(cell, events) {
             var url = utils.getCellMeta(cell, 'kbase.attributes.info.url'),
                 label = utils.getCellMeta(cell, 'kbase.attributes.info.label');
 
             if (url) {
-                return a({href: url, target: '_blank'}, label || 'ref');
+                return a({
+                    href: url,
+                    target: '_blank',
+                    id: events.addEvent({
+                        type: 'click',
+                        handler: doShowInfoModal
+                    })
+                },
+                label || 'ref');
             }
             return '';
         }
@@ -131,10 +141,32 @@ define([
 
         function doShowInfoModal(e) {
             e.preventDefault();
-            var title = getMeta(cell, 'attributes', 'title'),
-                version = utils.getCellMeta(cell, 'kbase.appCell.app.version'),
-                authors = utils.getCellMeta(cell, 'kbase.appCell.app.spec.info.authors');
-            console.log(title, version, authors);
+            var version = utils.getCellMeta(cell, 'kbase.appCell.app.version'),
+                authors = utils.getCellMeta(cell, 'kbase.appCell.app.spec.info.authors'),
+                title = getMeta(cell, 'attributes', 'title') + ' v' + version,
+                appStoreUrl = utils.getCellMeta(cell, 'kbase.attributes.info.url');
+            var dialog = new BootstrapDialog({
+                title: title,
+                body: $('<div>body</div>'),
+                buttons: [
+                    $('<a href="' + appStoreUrl + '" target="_blank" type="button" class="btn btn-default">View on App Store</a>'),
+                    $('<button type="button" class="btn btn-primary">Close</button>').click(function() { dialog.hide(); })
+                ],
+                enterToTrigger: true,
+                closeButton: true
+            });
+
+            var infoPanel = AppInfoPanel.make({
+                appId: utils.getCellMeta(cell, 'kbase.appCell.app.id'),
+                appVersion: version,
+                appAuthors: authors
+            });
+            infoPanel.start({node: dialog.getBody()});
+
+            dialog.getElement().on('hidden.bs.modal', function () {
+                dialog.destroy();
+            });
+            dialog.show();
         }
 
         function renderToggleCodeView(events) {
@@ -247,12 +279,9 @@ define([
                                 div({dataElement: 'title', class: 'title'}, [getCellTitle(cell)]),
                                 div({dataElement: 'subtitle', class: 'subtitle'}, [getCellSubtitle(cell)]),
                                 div({dataElement: 'title',
-                                    class: 'info-link',
-                                    id: events.addEvent({
-                                        type: 'click',
-                                        handler: doShowInfoModal})
+                                    class: 'info-link'
                                 },
-                                [getCellInfoLink(cell)])
+                                [getCellInfoLink(cell, events)])
                             ])
                         ]),
                         div({class: 'col-sm-4 buttons-container'}, buttons)

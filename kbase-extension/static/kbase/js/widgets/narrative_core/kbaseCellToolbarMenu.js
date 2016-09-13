@@ -201,7 +201,7 @@ define([
         function renderToggleCellSettings(events) {
             // Only kbase cells have cell settings.
             if (!cell.metadata || !cell.metadata.kbase || !cell.metadata.kbase.type) {
-                return
+                return;
             }
 
             return button({
@@ -217,75 +217,86 @@ define([
             ]);
         }
 
-        function render() {
+        function buildIcon(cell) {
+            if (cell && cell.getIcon) {
+                return cell.getIcon();
+            }
+            return span({class: 'fa fa-file fa-2x', style: {
+                    verticalAlign: 'top', 
+                    xlineHeight: '56px'
+                }
+            });
+        }
+
+        function render(cell) {
             var events = Events.make({node: container}),
                 toggleMinMax = utils.getCellMeta(cell, 'kbase.cellState.toggleMinMax', 'maximized'),
                 toggleIcon = (toggleMinMax === 'maximized' ? 'minus' : 'plus'),
                 buttons = Jupyter.narrative.readonly ? [] : [
-                    div({class: 'buttons pull-right'}, [
-                        span({class: 'kb-func-timestamp'}),
-                        span({class: 'fa fa-circle-o-notch fa-spin', style: {color: 'rgb(42, 121, 191)', display: 'none'}}),
-                        span({class: 'fa fa-exclamation-triangle', style: {color: 'rgb(255, 0, 0)', display: 'none'}}),
-                        renderToggleCodeView(events),
-                        renderToggleCellSettings(events),
-
-                        button({
-                            type: 'button',
-                            class: 'btn btn-default btn-xs',
-                            dataToggle: 'tooltip',
-                            dataPlacement: 'left',
-                            title: true,
-                            dataOriginalTitle: 'Move Cell Up',
-                            id: events.addEvent({type: 'click', handler: doMoveCellUp})
-                        }, [
-                            span({class: 'fa fa-arrow-up', style: 'font-size: 14pt'})
-                        ]),
-                        button({
-                            type: 'button',
-                            class: 'btn btn-default btn-xs',
-                            dataToggle: 'tooltip',
-                            dataPlacement: 'left',
-                            title: true,
-                            dataOriginalTitle: 'Move Cell Down',
-                            id: events.addEvent({type: 'click', handler: doMoveCellDown})
-                        }, [
-                            span({class: 'fa fa-arrow-down', style: 'font-size: 14pt'})
-                        ]),
-                        button({
-                            type: 'button',
-                            class: 'btn btn-default btn-xs',
-                            dataToggle: 'tooltip',
-                            dataPlacement: 'left',
-                            title: true,
-                            dataOriginalTitle: 'Delete Cell',
-                            id: events.addEvent({type: 'click', handler: doDeleteCell})
-                        }, [
-                            span({class: 'fa fa-times-circle', style: {fontSize: '14pt', color: 'red'}})
-                        ]),
-                        button({
-                            type: 'button',
-                            class: 'btn btn-default btn-xs',
-                            dataToggle: 'tooltip',
-                            dataPlacement: 'left',
-                            title: true,
-                            dataOriginalTitle: toggleMinMax === 'maximized' ? 'Collapse Cell' : 'Expand Cell',
-                            id: events.addEvent({type: 'click', handler: doToggleMinMaxCell})
-                        }, [
-                            span({class: 'fa fa-' + toggleIcon + '-square-o', style: {fontSize: '14pt', color: 'orange'}})
-                        ])
-
+                div({class: 'buttons pull-right'}, [
+                    span({class: 'kb-func-timestamp'}),
+                    span({class: 'fa fa-circle-o-notch fa-spin', style: {color: 'rgb(42, 121, 191)', display: 'none'}}),
+                    span({class: 'fa fa-exclamation-triangle', style: {color: 'rgb(255, 0, 0)', display: 'none'}}),
+                    renderToggleCodeView(events),
+                    renderToggleCellSettings(events),
+                    button({
+                        type: 'button',
+                        class: 'btn btn-default btn-xs',
+                        dataToggle: 'tooltip',
+                        dataPlacement: 'left',
+                        title: true,
+                        dataOriginalTitle: 'Move Cell Up',
+                        id: events.addEvent({type: 'click', handler: doMoveCellUp})
+                    }, [
+                        span({class: 'fa fa-arrow-up', style: 'font-size: 14pt'})
+                    ]),
+                    button({
+                        type: 'button',
+                        class: 'btn btn-default btn-xs',
+                        dataToggle: 'tooltip',
+                        dataPlacement: 'left',
+                        title: true,
+                        dataOriginalTitle: 'Move Cell Down',
+                        id: events.addEvent({type: 'click', handler: doMoveCellDown})
+                    }, [
+                        span({class: 'fa fa-arrow-down', style: 'font-size: 14pt'})
+                    ]),
+                    button({
+                        type: 'button',
+                        class: 'btn btn-default btn-xs',
+                        dataToggle: 'tooltip',
+                        dataPlacement: 'left',
+                        title: true,
+                        dataOriginalTitle: 'Delete Cell',
+                        id: events.addEvent({type: 'click', handler: doDeleteCell})
+                    }, [
+                        span({class: 'fa fa-times-circle', style: {fontSize: '14pt', color: 'red'}})
+                    ]),
+                    button({
+                        type: 'button',
+                        class: 'btn btn-default btn-xs',
+                        dataToggle: 'tooltip',
+                        dataPlacement: 'left',
+                        title: true,
+                        dataOriginalTitle: toggleMinMax === 'maximized' ? 'Collapse Cell' : 'Expand Cell',
+                        id: events.addEvent({type: 'click', handler: doToggleMinMaxCell})
+                    }, [
+                        span({class: 'fa fa-' + toggleIcon + '-square-o', style: {fontSize: '14pt', color: 'orange'}})
                     ])
-                ],
+
+                ])
+            ],
                 content = div({class: 'kb-cell-toolbar container-fluid'}, [
-                    div({class: 'row'}, [
+                    div({class: 'row', style: {height: '56px'}}, [
                         div({class: 'col-sm-8 title-container'}, [
-                            div({class: 'title', style: {display: 'inline-block'}}, [
-                                div({dataElement: 'title', class: 'title'}, [getCellTitle(cell)]),
-                                div({dataElement: 'subtitle', class: 'subtitle'}, [getCellSubtitle(cell)]),
-                                div({dataElement: 'title',
-                                    class: 'info-link'
-                                },
-                                [getCellInfoLink(cell, events)])
+                            div({class: 'title', style: {display: 'inline-block', height: '56px', lineHeight: '56px'}}, [
+                                div({dataElement: 'icon', class: 'icon', style: {position: 'relative', top: '0', left: '0', display: 'inline-block', height: '56px', lineHeight: '56px'}}, [
+                                    buildIcon(cell)
+                                ]),
+                                div({style: {display: 'inline-block'}}, [
+                                    div({dataElement: 'title', class: 'title', style: {lineHeight: '20px'}}, [getCellTitle(cell)]),
+                                    div({dataElement: 'subtitle', class: 'subtitle', style: {lineHeight: '20px'}}, [getCellSubtitle(cell)])
+                                ])
                             ])
                         ]),
                         div({class: 'col-sm-4 buttons-container'}, buttons)
@@ -301,12 +312,17 @@ define([
             };
         }
 
+        /*
+         * We are going to try to make this work by creating the layout once,
+         * and then allowing the toolbar widgets to refresh themselves 
+         * upon an event emitted at callback time.
+         */
         function callback(toolbarDiv, parentCell) {
             try {
                 container = toolbarDiv[0];
                 ui = UI.make({node: container});
                 cell = parentCell;
-                var rendered = render();
+                var rendered = render(parentCell);
                 container.innerHTML = rendered.content;
                 $(container).find('button').tooltip();
                 rendered.events.attachEvents();

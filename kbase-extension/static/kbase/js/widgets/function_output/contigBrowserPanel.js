@@ -210,7 +210,8 @@ define (
             setContig : function() {
             	var self = this;
                 self.contigLength = self.options.contig.length;
-                self.options.start = 0;
+                if(!self.options.start)
+                    self.options.start = 0;
                 if (self.options.length > self.contigLength)
                 	self.options.length = self.contigLength;
 
@@ -226,8 +227,9 @@ define (
                 // if we're getting a new center feature, make sure to update the operon features, too.
                 if (centerFeature)
                     this.options.centerFeature = centerFeature;
+                this.update();
 
-                var self = this;
+               /* var self = this;
                 this.proteinInfoClient.fids_to_operons([this.options.centerFeature],
                     // on success
                     function(operonGenes) {
@@ -236,9 +238,10 @@ define (
                     },
                     // on error
                     function(error) {
+                        console.error(error);
                         self.throwError(error);
                     }
-                );
+                );*/
             },
 
             setRange : function(start, length) {
@@ -357,7 +360,7 @@ define (
             		}
             		//console.log('gene: start=' + start + ', stop=' + stop + ', maxStart=' + maxStart + ", minStop=" + minStop);
             		if (start < maxStart && stop > minStop) {
-            			features.push({feature_id : gene.id, feature_location: gene.location,
+            			features.push({original_data: gene, feature_id : gene.id, feature_location: gene.location,
             				isInOperon: 0, feature_function: gene['function']});
             		}
             	}
@@ -375,6 +378,7 @@ define (
             },
 
             renderFromRange : function(features) {
+                console.log('RENDERING FROM RANGE');
                 features = this.processFeatures(features);
 
                 // expose 'this' to d3 anonymous functions through closure
@@ -395,6 +399,7 @@ define (
                              .on("mouseover",
                                     function(d) {
                                         d3.select(this).style("fill", d3.rgb(d3.select(this).style("fill")).darker());
+                                        d3.select(this).style("cursor", "pointer")
                                         self.tooltip = self.tooltip.text(d.feature_id + ": " + d.feature_function);
                                         return self.tooltip.style("visibility", "visible");
                                     }
@@ -402,6 +407,7 @@ define (
                              .on("mouseout",
                                     function() {
                                         d3.select(this).style("fill", d3.rgb(d3.select(this).style("fill")).brighter());
+                                        d3.select(this).style("cursor", "default")
                                         return self.tooltip.style("visibility", "hidden");
                                     }
                                 )
@@ -428,7 +434,7 @@ define (
 
 
 
-
+                console.log(self.options.start);
                 self.xScale = self.xScale
                                   .domain([self.options.start, self.options.start + self.options.length]);
 

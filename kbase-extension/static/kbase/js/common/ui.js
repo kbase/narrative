@@ -368,7 +368,8 @@ define([
             var klass = arg.type || 'default',
                 buttonClasses = ['btn', 'btn-' + klass],
                 events = arg.events, icon,
-                title = arg.title || arg.tip || arg.label;
+                title = arg.title || arg.tip || arg.label,
+                attribs;;
 
             if (arg.icon) {
                 if (!arg.icon.classes) {
@@ -395,14 +396,22 @@ define([
             if (!arg.event) {
                 arg.event = {};
             }
-
-            return button({
+            
+            attribs = {
                 type: 'button',
                 class: buttonClasses.join(' '),
                 title: title,
                 dataButton: arg.name,
                 id: addButtonClickEvent(events, arg.event.type || arg.name, arg.event.data)
-            }, [icon, span({style: {verticalAlign: 'middle'}}, arg.label)].join('&nbsp;'));
+            };
+            
+            if (arg.features) {
+                arg.features.forEach(function (feature) {
+                    attribs['data-feature-' + feature] = true;
+                });
+            }
+
+            return button(attribs, [icon, span({style: {verticalAlign: 'middle'}}, arg.label)].join('&nbsp;'));
         }
 
         function enableButton(name) {

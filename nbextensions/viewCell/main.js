@@ -397,6 +397,10 @@ define([
                 ]);
             }
         };
+        cell.getIcon = function () {
+           var icon = AppUtils.makeToolbarAppIcon(utils.getCellMeta(cell, 'kbase.appCell.app.spec'));
+            return icon;
+        };
     }
 
     function setupCell(cell) {

@@ -190,15 +190,6 @@ define([
 //                        id: events.addEvent({type: 'click', handler: doHelp})
 //                    },
                     {
-                        name: 'delete-cell',
-                        label: 'Delete',
-                        icon: {
-                            type: 'times',
-                            color: 'red'
-                        },
-                        id: events.addEvent({type: 'click', handler: doDeleteCell})
-                    },
-                    {
                         name: 'toggle-collapse',
                         label: toggleMinMax === 'maximized' ? 'Collapse' : 'Expand',
                         icon: {
@@ -232,6 +223,20 @@ define([
                     id: events.addEvent({type: 'click', handler: doToggleCodeView})
                 });
             }
+            
+            menuItems.push({
+                type: 'separator'
+            });
+            menuItems.push({
+                name: 'delete-cell',
+                label: 'Delete cell',
+                icon: {
+                    type: 'times',
+                    color: 'red'
+                },
+                id: events.addEvent({type: 'click', handler: doDeleteCell})
+            });
+
 
             return span({class: 'dropdown'}, [
                 button({
@@ -244,17 +249,25 @@ define([
                 }, [span({class: 'fa fa-ellipsis-h fa-lg'})]),
                 ul({class: 'dropdown-menu dropdown-menu-right', ariaLabelledby: dropdownId}, [
                     menuItems.map(function (item) {
-                        return li(button({
-                            class: 'btn btn-default',
-                            id: item.id
-                        }, [
-                            span({style: {
-                                    display: 'inline-block',
-                                    width: '25px',
-                                    textAlign: 'left',
-                                    marginRight: '4px'
-                                }}, renderIcon(item.icon)),
-                            span(item.label)]));
+                        switch (item.type) {
+                            case 'separator':
+                                return li({
+                                    role: 'separator',
+                                    class: 'divider'
+                                });
+                            default:
+                                return li(button({
+                                    class: 'btn btn-default',
+                                    id: item.id
+                                }, [
+                                    span({style: {
+                                            display: 'inline-block',
+                                            width: '25px',
+                                            textAlign: 'left',
+                                            marginRight: '4px'
+                                        }}, renderIcon(item.icon)),
+                                    span(item.label)]));
+                        }
                     }).join('')
                 ])
             ]);
@@ -277,8 +290,7 @@ define([
                 div({class: 'buttons pull-right'}, [
                     span({class: 'kb-func-timestamp'}),
                     span({class: 'fa fa-circle-o-notch fa-spin', style: {color: 'rgb(42, 121, 191)', display: 'none'}}),
-                    span({class: 'fa fa-exclamation-triangle', style: {color: 'rgb(255, 0, 0)', display: 'none'}}),
-                    renderOptions(cell, events),
+                    span({class: 'fa fa-exclamation-triangle', style: {color: 'rgb(255, 0, 0)', display: 'none'}}),                   
                     button({
                         type: 'button',
                         class: 'btn btn-default btn-xs',
@@ -300,7 +312,8 @@ define([
                         id: events.addEvent({type: 'click', handler: doMoveCellDown})
                     }, [
                         span({class: 'fa fa-arrow-down fa-lg', style: 'xfont-size: 18px'})
-                    ])
+                    ]),
+                    renderOptions(cell, events)
 //                    button({
 //                        type: 'button',
 //                        class: 'btn btn-default btn-xs',

@@ -31,9 +31,6 @@ define([
                     error: {
                         enabled: false,
                         hidden: true
-                    },
-                    jobState: {
-                        enabled: false
                     }
                 },
                 actionButton: {
@@ -88,9 +85,6 @@ define([
                     error: {
                         enabled: false,
                         hidden: true
-                    },
-                    jobState: {
-                        enabled: false
                     }
                 },
                 actionButton: {
@@ -106,7 +100,7 @@ define([
                     type: 'pencil'
                 },
                 label: 'editing',
-                message: 'You may edit the parameters for this App and then run it'
+                message: 'You may edit the parameters for this App. All required parameters are not currently entered. When they are complete, you will be able to run the app.'
             },
             next: [
                 {
@@ -151,9 +145,6 @@ define([
                     error: {
                         enabled: false,
                         hidden: true
-                    },
-                    jobState: {
-                        enabled: false
                     }
                 },
                 actionButton: {
@@ -246,9 +237,6 @@ define([
                     error: {
                         enabled: false,
                         hidden: true
-                    },
-                    jobState: {
-                        enabled: false
                     }
                 },
                 actionButton: {
@@ -338,9 +326,6 @@ define([
                     error: {
                         enabled: false,
                         hidden: true
-                    },
-                    jobState: {
-                        enabled: false
                     }
                 },
                 actionButton: {
@@ -430,9 +415,6 @@ define([
                     error: {
                         enabled: false,
                         hidden: true
-                    },
-                    jobState: {
-                        enabled: true
                     }
                 },                
                 actionButton: {
@@ -531,9 +513,6 @@ define([
                     error: {
                         enabled: false,
                         hidden: true
-                    },
-                    jobState: {
-                        enabled: true
                     }
                 },            
                 actionButton: {
@@ -626,9 +605,6 @@ define([
                     error: {
                         enabled: false,
                         hidden: true
-                    },
-                    jobState: {
-                        enabled: true
                     }
                 },            
                 actionButton: {
@@ -700,9 +676,6 @@ define([
                     error: {
                         enabled: false,
                         hidden: true
-                    },
-                    jobState: {
-                        enabled: true
                     }
                 },                            
                 actionButton: {
@@ -756,9 +729,6 @@ define([
                     error: {
                         enabled: false,
                         hidden: true
-                    },
-                    jobState: {
-                        enabled: true
                     }
                 },               
                 actionButton: {
@@ -839,9 +809,6 @@ define([
                     error: {
                         enabled: true,
                         selected: true
-                    },
-                    jobState: {
-                        enabled: true
                     }
                 },               
                 actionButton: {
@@ -901,9 +868,6 @@ define([
                     error: {
                         enabled: true,
                         selected: true
-                    },
-                    jobState: {
-                        enabled: true
                     }
                 },               
                 actionButton: {
@@ -963,9 +927,6 @@ define([
                     error: {
                         enabled: true,
                         selected: true
-                    },
-                    jobState: {
-                        enabled: true
                     }
                 },               
                 actionButton: {
@@ -1024,9 +985,6 @@ define([
                     error: {
                         enabled: true,
                         selected: true
-                    },
-                    jobState: {
-                        enabled: true
                     }
                 },               
                 actionButton: {
@@ -1084,9 +1042,6 @@ define([
                     error: {
                         enabled: true,
                         selected: true
-                    },
-                    jobState: {
-                        enabled: true
                     }
                 },               
                 actionButton: {

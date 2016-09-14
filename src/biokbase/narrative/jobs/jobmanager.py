@@ -78,7 +78,8 @@ class JobManager(object):
                 'message': getattr(new_e, 'message', 'Unknown reason'),
                 'code': getattr(new_e, 'code', -1),
                 'source': getattr(new_e, 'source', 'jobmanager'),
-                'name': getattr(new_e, 'name', type(e).__name__)
+                'name': getattr(new_e, 'name', type(e).__name__),
+                'service': 'user_and_job_state'
             }
             self._send_comm_message('job_init_err', error)
             raise new_e
@@ -110,7 +111,8 @@ class JobManager(object):
                     'message': getattr(new_e, 'message', 'Unknown reason'),
                     'code': getattr(new_e, 'code', -1),
                     'source': getattr(new_e, 'source', 'jobmanager'),
-                    'name': getattr(new_e, 'name', type(e).__name__)
+                    'name': getattr(new_e, 'name', type(e).__name__),
+                    'service': 'job_service'
                 }
                 self._send_comm_message('job_init_lookup_err', error)
                 raise new_e # should crash and burn on any of these.

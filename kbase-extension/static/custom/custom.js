@@ -597,6 +597,18 @@ define([
 //                icon
 //            ]);
         };
+        
+        p.getIcon = function () {
+            return span();
+//            var iconColor = 'silver';
+//
+//            return span({style: ''}, [
+//                span({class: 'fa-stack fa-2x', style: {textAlign: 'center', color: iconColor}}, [
+//                    span({class: 'fa fa-square fa-stack-2x', style: {color: iconColor}}),
+//                    span({class: 'fa fa-inverse fa-stack-1x fa-' + 'paragraph'})
+//                ])
+//            ]);
+        };
 
 
 
@@ -843,6 +855,17 @@ define([
             }
 
             prompt.innerHTML = 'prompt here';
+        };
+        
+        p.getIcon = function () {
+            var iconColor = 'silver';
+
+            return span({style: ''}, [
+                span({class: 'fa-stack fa-2x', style: {textAlign: 'center', color: iconColor}}, [
+                    span({class: 'fa fa-square fa-stack-2x', style: {color: iconColor}}),
+                    span({class: 'fa fa-inverse fa-stack-1x fa-' + 'file-o'})
+                ])
+            ]);
         };
 
         originalMethod = codeCell.CodeCell.prototype.bind_events;

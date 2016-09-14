@@ -17,7 +17,8 @@ define([
     var t = html.tag,
         div = t('div'), span = t('span'),
         ul = t('ul'), li = t('li'), a = t('a'),
-        button = t('button'), pre = t('pre');
+        button = t('button'), pre = t('pre'),
+        table = t('table'), tr = t('tr'), th = t('th'), td = t('td');
 
     // "static" methods
     function na() {
@@ -367,7 +368,8 @@ define([
             var klass = arg.type || 'default',
                 buttonClasses = ['btn', 'btn-' + klass],
                 events = arg.events, icon,
-                title = arg.title || arg.tip || arg.label;
+                title = arg.title || arg.tip || arg.label,
+                attribs;;
 
             if (arg.icon) {
                 if (!arg.icon.classes) {
@@ -394,14 +396,22 @@ define([
             if (!arg.event) {
                 arg.event = {};
             }
-
-            return button({
+            
+            attribs = {
                 type: 'button',
                 class: buttonClasses.join(' '),
                 title: title,
                 dataButton: arg.name,
                 id: addButtonClickEvent(events, arg.event.type || arg.name, arg.event.data)
-            }, [icon, span({style: {verticalAlign: 'middle'}}, arg.label)].join('&nbsp;'));
+            };
+            
+            if (arg.features) {
+                arg.features.forEach(function (feature) {
+                    attribs['data-feature-' + feature] = true;
+                });
+            }
+
+            return button(attribs, [icon, span({style: {verticalAlign: 'middle'}}, arg.label)].join('&nbsp;'));
         }
 
         function enableButton(name) {
@@ -944,6 +954,55 @@ define([
                 }));
             });
         }
+        
+        function updateFromViewModel(viewModel, path) {
+            if (!path) {
+                path = [];
+            }
+            if (typeof viewModel === 'string') {
+                setContent(path, viewModel);
+            } else if (typeof viewModel === 'number') {
+                setContent(path, String(viewModel));
+            } else if (viewModel === null) {
+                setContent(path, '-');
+            } else {
+                Object.keys(viewModel).forEach(function (key) {
+                    updateFromViewModel(viewModel[key], path.concat(key));
+                });
+            }
+        }
+
+        function buildPresentableJson(data) {
+            switch (typeof data) {
+                case 'string':
+                    return data;
+                case 'number':
+                    return String(data);
+                case 'boolean':
+                    return String(data);
+                case 'object':
+                    if (data === null) {
+                        return 'NULL';
+                    }
+                    if (data instanceof Array) {
+                        return table({class: 'table table-striped'},
+                            data.map(function (datum, index) {
+                                return tr([
+                                    th(String(index)),
+                                    td(buildPresentableJson(datum))
+                                ]);
+                            }).join('\n')
+                            );
+                    }
+                    return table({class: 'table table-striped'},
+                        Object.keys(data).map(function (key) {
+                            return tr([th(key), td(buildPresentableJson(data[key]))]);
+                        }).join('\n')
+                        );
+                default:
+                    return 'Not representable: ' + (typeof data);
+            }
+        }
 
         return Object.freeze({
             getElement: getElement,
@@ -987,7 +1046,9 @@ define([
             jsonBlockWidget: jsonBlockWidget(),
             enableTooltips: enableTooltips,
             updateTab: updateTab,
-            buildGridTable: buildGridTable
+            buildGridTable: buildGridTable,
+            updateFromViewModel: updateFromViewModel,
+            buildPresentableJson: buildPresentableJson
         });
     }
 

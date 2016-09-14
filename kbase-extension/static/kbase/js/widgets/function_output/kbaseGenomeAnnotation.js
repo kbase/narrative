@@ -84,7 +84,6 @@ define (
 
         init: function(options) {
             this._super(options);
-            console.log(options);
 
             var self = this;
             self.ws_name = options.ws_name;
@@ -195,7 +194,7 @@ define (
             };
             
             var $resultDiv = $('<div>');
-            var $noResultsDiv = $('<div>').append('<center>No matching contigs found.</center>').hide();
+            var $noResultsDiv = $('<div>').append('<center>No matching features found.</center>').hide();
             var $loadingDiv = $('<div>');
             var $errorDiv = $('<div>');
             var $pagenateDiv = $('<div>').css('text-align','left');
@@ -603,7 +602,7 @@ define (
             };
             
             var $resultDiv = $('<div>');
-            var $noResultsDiv = $('<div>').append('<center>No matching features found.</center>').hide();
+            var $noResultsDiv = $('<div>').append('<center>No matching contigs found.</center>').hide();
             var $loadingDiv = $('<div>');
             var $errorDiv = $('<div>');
             var $pagenateDiv = $('<div>').css('text-align','left');
@@ -665,7 +664,7 @@ define (
                 $errorDiv.empty();
                 return genomeSearchAPI.search_contigs({
                                             ref: genome_ref,
-                                            query: "",
+                                            query: query,
                                             sort_by: [sort_by],
                                             start: start,
                                             limit: limit
@@ -719,8 +718,8 @@ define (
                 } else {
                     $tr.append($('<td>').append(rowData['contig_id']));
                 }
-                $tr.append($('<td>').append(rowData['length']));
-                $tr.append($('<td>').append(rowData['feature_count']));
+                $tr.append($('<td>').append(numberWithCommas(rowData['length'])));
+                $tr.append($('<td>').append(numberWithCommas(rowData['feature_count'])));
 
                 return $tr;
             };
@@ -883,6 +882,7 @@ define (
                     fetchTimeout = null;
                     setToLoad($loadingDiv);
                     start=0;
+                    console.log('sending request:', $input.val());
                     search_contigs($input.val(),start, limit, sort_by)
                         .then(function(result) {
                                 if(isLastQuery(result)) { renderResult($table, result); }
@@ -1431,9 +1431,9 @@ define (
                 $div.append($container);
                 var $tblRow = $('<div>').addClass('row')
                                         .append($('<div>').addClass('col-md-12').append($tbl));
-                var $browserCtrlRow = $('<div>').addClass('row').css({'margin-top':'15px'})
+                var $browserCtrlRow = $('<div>').addClass('row').css({'margin-top':'15px', 'text-align':'center'})
                                         .append($('<div>').addClass('col-md-12').append($browserCtrlDiv));
-                var $browserRow = $('<div>').addClass('row').css({'margin-top':'15px'})
+                var $browserRow = $('<div>').addClass('row').css({'margin-top':'15px', 'text-align':'center'})
                                         .append($('<div>').addClass('col-md-12').append($browserDiv));
                 $container.append($tblRow).append($browserCtrlRow).append($browserRow);
 

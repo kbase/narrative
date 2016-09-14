@@ -258,6 +258,7 @@ define([
                             default:
                                 return li(button({
                                     class: 'btn btn-default',
+                                    style: {width: '100%'},
                                     id: item.id
                                 }, [
                                     span({style: {

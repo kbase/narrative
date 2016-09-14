@@ -607,9 +607,9 @@ define(
     Narrative.prototype.initTour = function () {
         try {
             $('#kb-tour').click(function(e) {
-                var tour = new Tour.Tour();
+                var tour = new Tour.Tour(this);
                 tour.start();
-            });
+            }.bind(this));
         }
         catch (e) {
             console.error(e);
@@ -922,6 +922,14 @@ define(
                 $('#notebook-container').animate({left: 380}, {easing: 'swing', duration: delay});
             });
         }
+    };
+
+    Narrative.prototype.showDataOverlay = function () {
+        $(document).trigger('showSidePanelOverlay.Narrative', this.sidePanel.$dataWidget.$overlayPanel);
+    };
+
+    Narrative.prototype.hideOverlay = function() {
+        $(document).trigger('hideSidePanelOverlay.Narrative');
     };
 
     /**

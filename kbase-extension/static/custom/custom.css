@@ -221,10 +221,6 @@ span#notebook_name:hover {
     color: silver;
 }
 
-.notebook_app .cell .celltoolbar .btn {
-    xbackground-color: transparent;
-}
-
 .text_cell.kb-cell .rendered_html table {
     border: 1px solid #ddd;
 }

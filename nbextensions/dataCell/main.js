@@ -71,6 +71,11 @@ define([
                 ]);
             }
         };
+        cell.getIcon = function () {
+            var type = Props.getDataItem(cell.metadata, 'kbase.dataCell.objectInfo.type'), 
+                icon = AppUtils.makeToolbarTypeIcon(type);
+            return icon;
+        };
         cell.hidePrompts = function () {
             // Hide the code input area.
             this.input.find('.input_area').addClass('hidden');
@@ -90,6 +95,8 @@ define([
             var codeInputArea = this.input.find('.input_area')[0];
             if (codeInputArea) {
                 codeInputArea.classList.toggle('hidden');
+                // NB purely for side effect - toolbar refresh
+                cell.metadata = cell.metadata;
             }
         };
     }
@@ -184,8 +191,6 @@ define([
             if (parentTitle) {
                 Props.setDataItem(cell.metadata, 'kbase.attributes.title', data.objectInfo.name);
             }
-            
-            // console.log('OBJ INF', data.objectInfo);
 
             setupCell(cell);
         });
@@ -193,7 +198,6 @@ define([
 
     function load() {
         $([Jupyter.events]).on('inserted.Cell', function (event, data) {
-          console.log('inserted!', data);
             if (data.kbase && data.kbase.type === 'data') {
                 upgradeCell(data)
                     .catch(function (err) {

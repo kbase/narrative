@@ -188,8 +188,20 @@ define([
             outputArea.removeClass('hidden');
             viewInputArea.removeClass('hidden');
         };
+        cell.getIcon = function () {
+            var icon = AppUtils.makeToolbarAppIcon(utils.getCellMeta(cell, 'kbase.appCell.app.spec'));
+            return icon;
+        };
         cell.renderIcon = function () {
-            var inputPrompt = this.element[0].querySelector('[data-element="prompt"]');
+            var iconNode = this.element[0].querySelector('.celltoolbar [data-element="icon"]'),
+                icon = AppUtils.makeToolbarAppIcon(utils.getCellMeta(cell, 'kbase.appCell.app.spec'))
+            if (iconNode) {
+                iconNode.innerHTML = AppUtils.makeToolbarAppIcon(utils.getCellMeta(cell, 'kbase.appCell.app.spec'));
+            } 
+            return;
+            
+            
+            var inputPrompt = this.element[0].querySelector('.celltoolbar [data-element="icon"]');
 
             if (inputPrompt) {
                 inputPrompt.innerHTML = div({

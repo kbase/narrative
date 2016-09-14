@@ -380,7 +380,7 @@ define([
 
             this.renderMinMax();
 
-            utils.setCellMeta(this, 'kbase.cellState.toggleMinMax', toggleMode);
+            utils.setCellMeta(this, 'kbase.cellState.toggleMinMax', toggleMode, true);
         };
 
         (function () {
@@ -597,6 +597,18 @@ define([
 //                icon
 //            ]);
         };
+        
+        p.getIcon = function () {
+            return span();
+//            var iconColor = 'silver';
+//
+//            return span({style: ''}, [
+//                span({class: 'fa-stack fa-2x', style: {textAlign: 'center', color: iconColor}}, [
+//                    span({class: 'fa fa-square fa-stack-2x', style: {color: iconColor}}),
+//                    span({class: 'fa fa-inverse fa-stack-1x fa-' + 'paragraph'})
+//                ])
+//            ]);
+        };
 
 
 
@@ -789,17 +801,12 @@ define([
      *
      */
 
-    (function () {
-        keyboardManager.KeyboardManager.prototype.register_events = function (e) {
-            // NOOP
-            return;
-        };
-
-        keyboardManager.KeyboardManager.prototype.bind_events = function () {
-            // also NOOP
-            return;
-        }
-    }());
+    // (function () {
+    //     keyboardManager.KeyboardManager.prototype.register_events = function (e) {
+    //         // NOOP
+    //         return;
+    //     };
+    // }());
 
 
 
@@ -849,6 +856,17 @@ define([
 
             prompt.innerHTML = 'prompt here';
         };
+        
+        p.getIcon = function () {
+            var iconColor = 'silver';
+
+            return span({style: ''}, [
+                span({class: 'fa-stack fa-2x', style: {textAlign: 'center', color: iconColor}}, [
+                    span({class: 'fa fa-square fa-stack-2x', style: {color: iconColor}}),
+                    span({class: 'fa fa-inverse fa-stack-1x fa-' + 'terminal'})
+                ])
+            ]);
+        };
 
         originalMethod = codeCell.CodeCell.prototype.bind_events;
         p.bind_events = function () {
@@ -888,14 +906,23 @@ define([
             if (codeInputArea) {
                 codeInputArea.classList.add('hidden');
             }
-        }
+        };
+        
+        p.isCodeShowing = function () {
+            var codeInputArea = this.input.find('.input_area')[0];
+            if (codeInputArea) {
+                return !codeInputArea.classList.contains('hidden');
+            }
+            return false;            
+        };
 
         p.toggleCodeInputArea = function() {
             var codeInputArea = this.input.find('.input_area')[0];
             if (codeInputArea) {
                 codeInputArea.classList.toggle('hidden');
+                this.metadata = this.metadata;
             }
-        }
+        };
     }());
 
     /*

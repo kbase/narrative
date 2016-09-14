@@ -20,6 +20,7 @@ requirejs.config({
         moment: 'components/moment/moment',
         codemirror: 'components/codemirror',
         bootstraptour: 'components/bootstrap-tour/build/js/bootstrap-tour.min',
+        bootstrap: 'components/bootstrap/js/bootstrap.min'
     },
     map: {
       '*':{
@@ -28,6 +29,17 @@ requirejs.config({
     },
 
     deps: tests,
+
+    shim: {
+        bootstraptour: {
+            deps: ['bootstrap'],
+            exports: 'Tour'
+        },
+        bootstrap: {
+            deps: ['jquery'],
+            exports: 'Bootstrap'
+        }
+    },
 
     callback: window.__karma__.start
 });

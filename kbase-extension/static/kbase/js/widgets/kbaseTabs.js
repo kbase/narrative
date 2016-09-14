@@ -208,7 +208,8 @@ define (
                             .css('margin-left', '10px')
                             .css('font-size', '10px')
                             .css('margin-bottom', '3px')
-                            .attr('title', this.deleteTabToolTip(tab.tab))
+                            .css('border', '0')
+                            //.attr('title', this.deleteTabToolTip(tab.tab))
                             .tooltip()
                             .bind('click', $.proxy(function (e) {
                                 e.preventDefault();

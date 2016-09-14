@@ -145,7 +145,28 @@ define(
 
     // Wrappers for the Jupyter/Jupyter function so we only maintain it in one place.
     Narrative.prototype.disableKeyboardManager = function () {
-        Jupyter.keyboard_manager.disable();
+        var killTheseShortcuts = ['a', 'b', 'm', 'f', 'y', 'r',
+                                  '1', '2', '3', '4', '5', '6',
+                                  'k', 'j', 'b', 'x', 'c', 'v',
+                                  'z', 'd,d', 's', 'l', 'o', 'h',
+                                  'i', '0,0', 'q', 'shift-j', 'shift-k',
+                                  'shift-h', 'shift-m', 'shift-o', 'shift-v'];
+
+        for (var i=0; i<killTheseShortcuts.length; i++) {
+            var shortcut = killTheseShortcuts[i];
+            try {
+                Jupyter.keyboard_manager.command_shortcuts.remove_shortcut(shortcut);
+            }
+            catch (err) {
+                //pass
+            }
+            try {
+                Jupyter.notebook.keyboard_manager.command_shortcuts.remove_shortcut(shortcut);
+            }
+            catch (err) {
+                //pass
+            }
+        }
     };
 
     Narrative.prototype.enableKeyboardManager = function () {
@@ -675,9 +696,9 @@ define(
 
                 $([Jupyter.events]).on('kernel_ready.Kernel',
                     function () {
-                        
+
                         console.log('Kernel Ready! Initializing Job Channel...');
-                        
+
                         // TODO: This should be an event "kernel-ready", perhaps broadcast
                         // on the default bus channel.
                         this.sidePanel.$jobsWidget.initCommChannel()

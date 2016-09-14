@@ -255,6 +255,12 @@ define([
                 });
             }
         }
+        
+        function removeListeners(ids) {
+            ids.forEach(function (id) {
+                removeListener(id);
+            });
+        }
 
         // PROCESSING ENGINE 
 
@@ -615,7 +621,8 @@ define([
             makeChannel: makeChannel,
             removeChannel: removeChannel,
             logMessages: logMessages,
-            removeListener: removeListener
+            removeListener: removeListener,
+            removeListeners: removeListeners
         };
 
         return api;

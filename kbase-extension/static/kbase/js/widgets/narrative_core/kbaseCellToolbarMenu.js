@@ -5,18 +5,15 @@ define([
     'kb_common/html',
     'common/events',
     'base/js/namespace',
-    'common/utils'
-], function (
-    $,
-    html,
-    Events,
-    Jupyter,
-    utils) {
+    'common/utils',
+    'util/bootstrapDialog',
+    'kbase/js/widgets/appWidgets/infoPanel'
+], function ($, html, Events, Jupyter, utils, BootstrapDialog, AppInfoPanel) {
     'use strict';
 
     var t = html.tag,
         div = t('div'), a = t('a'),
-        button = t('button'), p = t('p'), 
+        button = t('button'), p = t('p'),
         span = t('span'), ul = t('ul'), li = t('li');
 
     function getMeta(cell, group, name) {
@@ -68,12 +65,20 @@ define([
             return '';
         }
 
-        function getCellInfoLink(cell) {
+        function getCellInfoLink(cell, events) {
             var url = utils.getCellMeta(cell, 'kbase.attributes.info.url'),
                 label = utils.getCellMeta(cell, 'kbase.attributes.info.label');
 
             if (url) {
-                return a({href: url, target: '_blank'}, label || 'ref');
+                return a({
+                    href: url,
+                    target: '_blank',
+                    id: events.addEvent({
+                        type: 'click',
+                        handler: doShowInfoModal
+                    })
+                },
+                    label || 'ref');
             }
             return '';
         }
@@ -91,6 +96,41 @@ define([
                 return cell.isCodeShowing();
             }
             return null;
+        }
+        function doShowInfoModal(e) {
+            e.preventDefault();
+            var version = utils.getCellMeta(cell, 'kbase.appCell.app.version'),
+                authors = utils.getCellMeta(cell, 'kbase.appCell.app.spec.info.authors'),
+                title = getMeta(cell, 'attributes', 'title') + ' v' + version,
+                appStoreUrl = utils.getCellMeta(cell, 'kbase.attributes.info.url'),
+                tag = utils.getCellMeta(cell, 'kbase.appCell.app.tag'),
+                module = utils.getCellMeta(cell, 'kbase.appCell.app.spec.info.module_name');
+            var dialog = new BootstrapDialog({
+                title: title,
+                body: $('<div class="container"></div>'),
+                buttons: [
+                    $('<a href="' + appStoreUrl + '" target="_blank" type="button" class="btn btn-default">View on App Store</a>'),
+                    $('<button type="button" class="btn btn-primary">Close</button>').click(function () {
+                        dialog.hide();
+                    })
+                ],
+                enterToTrigger: true,
+                closeButton: true
+            });
+
+            var infoPanel = AppInfoPanel.make({
+                appId: utils.getCellMeta(cell, 'kbase.appCell.app.id'),
+                appVersion: version,
+                appAuthors: authors,
+                appModule: module,
+                tag: tag
+            });
+            infoPanel.start({node: dialog.getBody()});
+
+            dialog.getElement().on('hidden.bs.modal', function () {
+                dialog.destroy();
+            });
+            dialog.show();
         }
 
         function doToggleCellSettings() {
@@ -289,13 +329,14 @@ define([
                 content = div({class: 'kb-cell-toolbar container-fluid'}, [
                     div({class: 'row', style: {height: '56px'}}, [
                         div({class: 'col-sm-8 title-container'}, [
-                            div({class: 'title', style: {display: 'inline-block', height: '56px', lineHeight: '56px'}}, [
+                            div({class: 'title', style: {display: 'inline-block', height: '56px'}}, [
                                 div({dataElement: 'icon', class: 'icon', style: {position: 'relative', top: '0', left: '0', display: 'inline-block', height: '56px', lineHeight: '56px'}}, [
                                     buildIcon(cell)
                                 ]),
                                 div({style: {display: 'inline-block'}}, [
                                     div({dataElement: 'title', class: 'title', style: {lineHeight: '20px'}}, [getCellTitle(cell)]),
-                                    div({dataElement: 'subtitle', class: 'subtitle', style: {lineHeight: '20px'}}, [getCellSubtitle(cell)])
+                                    div({dataElement: 'subtitle', class: 'subtitle', style: {lineHeight: '20px'}}, [getCellSubtitle(cell)]),
+                                    div({dataElement: 'info-link', class: 'info-link'}, [getCellInfoLink(cell, events)])
                                 ])
                             ])
                         ]),

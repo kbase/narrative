@@ -22,7 +22,8 @@ define([
                 title: "Welcome to the Narrative Tour", // add a grayed out background.
                 placement: 'bottom',
                 orphan: true,
-                content: "Welcome to KBase—the Department of Energy Systems Biology Knowledgebase! This tour will demonstrate how to find and use KBase’s Narrative User Interface to begin creating Narratives for data analysis. Narratives contain all the data, analysis steps, results, and discussions for a research project. Think of a Narrative as an advanced lab notebook that contains all of your data, analyses, thought processes, procedural notes, visualizations, custom scripts, and results. Use the left and right arrow button to go backwards and forwards through this tour. Press the right arrow to continue."
+                content: "Welcome to KBase—the Department of Energy Systems Biology Knowledgebase! This tour will demonstrate how to find and use KBase’s Narrative User Interface to begin creating Narratives for data analysis. Narratives contain all the data, analysis steps, results, and discussions for a research project. Think of a Narrative as an advanced lab notebook that contains all of your data, analyses, thought processes, procedural notes, visualizations, custom scripts, and results. Use the left and right arrow button to go backwards and forwards through this tour. Press the right arrow to continue.",
+                backdrop: true
             },
             {
                 element: "#notebook_name",
@@ -171,24 +172,31 @@ define([
                 element: '.kb-side-header[kb-data-id="1"]',
                 title: 'Narratives Tab',
                 placement: 'bottom',
-                content: 'To manage your Narratives within the Narrative Interface, click the Narratives tab above your Data Panel. This reveals options for both creating a new, empty Narrative and copying the current Narrative, complete with all its data and contents. You also can copy public Narratives or others that have been shared with you. Copying a Narrative allows you to run your own analyses using the data within that Narrative without changing the original version.<p>The Narratives tab also lists all your Narratives and those that have been shared with you. Click the name of any of these Narratives to open them in a new window. Hovering over a Narrative will reveal options for viewing its history, reverting to an earlier version, and copying or deleting it. Be aware that once you delete a Narrative, its data and contents cannot be recovered.',
+                content: '<p>To manage your Narratives within the Narrative Interface, click the Narratives tab above your Data Panel. This reveals options for both creating a new, empty Narrative and copying the current Narrative, complete with all its data and contents. You also can copy public Narratives or others that have been shared with you. Copying a Narrative allows you to run your own analyses using the data within that Narrative without changing the original version.<p>The Narratives tab also lists all your Narratives and those that have been shared with you. Click the name of any of these Narratives to open them in a new window. Hovering over a Narrative will reveal options for viewing its history, reverting to an earlier version, and copying or deleting it. Be aware that once you delete a Narrative, its data and contents cannot be recovered.',
                 onShow: function(tour) {
                     $('.kb-side-header[kb-data-id="1"]').click();
                 }
             },
             {
-                element: $('#kb-add-md-cell'),
+                element: '#kb-add-md-cell',
                 title: 'Markdown Cells',
                 placement: 'left',
                 content: 'You also can include formatted text in your Narratives to capture notes, hypotheses, conclusions, and explanations of analysis steps. This text is added using markdown cells, which can be inserted by clicking the paragraph icon at the bottom of the Narrative. These cells can contain raw text, HTML, or LaTeX to communicate the content of your Narrative.'
             },
-
             {
-                title: "Fin.",
+                title: "End of Basic Features Tour",
                 placement: 'bottom',
                 orphan: true,
-                content: "This concludes the KBase Narrative User Interface Tour. Happy bioinformaticising!"
+                content: "<p>You now have been introduced to the basic features of the Narrative Interface. We hope you conduct interesting and creative research using these tools and are able to expand your collaborator network with other KBase users. If you have any questions or feature requests, please follow the Contact Us link in the hamburger menu.<p>To learn about advanced features of the Narrative Interface, click the right arrow button to proceed. Click the exit button to return to your Narrative.",
+                backdrop: true
+            },
+            {
+                title: 'Advanced Features of the Narrative Interface',
+                placement: 'bottom',
+                orphan: true,
+                content: 'This section of the Narrative Tour will introduce you to some features of the Narrative Interface that are useful to advanced users and developers.'
             }
+
         ];
 
         this.tour = new Tour({

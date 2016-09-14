@@ -218,7 +218,7 @@ span#notebook_name:hover {
 }
 
 .notebook_app .cell .celltoolbar .btn {
-    background-color: transparent;
+    xbackground-color: transparent;
 }
 
 .text_cell.kb-cell .rendered_html table {

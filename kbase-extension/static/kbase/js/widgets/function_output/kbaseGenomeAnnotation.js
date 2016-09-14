@@ -11,6 +11,7 @@ Known issues:
    beyond the actual contig
 
 
+#TODL: 
 
 
 */
@@ -253,6 +254,7 @@ define (
                     local_sort_by.push(['contig_id',1]);
                 }
                 local_sort_by.push(sort_by);
+                console.log(local_sort_by)
                 return genomeSearchAPI.search({
                                             ref: genome_ref,
                                             query: query,
@@ -882,10 +884,13 @@ define (
                 genomeData.genetic_code = metadata['Genetic code'];
             }
             if(metadata['Source']) {
-                genomeData.n_features = metadata['Source'];
+                genomeData.source = metadata['Source'];
             }
             if(metadata['Source ID']) {
-                genomeData.n_features = metadata['Source ID'];
+                genomeData.source_id = metadata['Source ID'];
+            }
+            if(metadata['Taxonomy']) {
+                genomeData.taxonomy = metadata['Taxonomy'];
             }
             if(metadata['Number features']) {
                 genomeData.n_features = metadata['Number features'];
@@ -895,7 +900,7 @@ define (
 
 
 
-        showContigTab: function(genome_ref, contigId, pref, tabPane) {
+        showContigTab: function(genome_ref, contig_id, pref, tabPane) {
 
             var self = this;
 
@@ -942,7 +947,7 @@ define (
 
 
             function getFeaturesInRegionAndRenderBrowser(genome_ref, contig_id, start, length, contig_length, $div) {
-                self.genomeSearchAPI
+                return self.genomeSearchAPI
                         .search_region({
                             ref: genome_ref,
                             query_contig_id: contig_id,
@@ -1001,26 +1006,55 @@ define (
             };
 
 
-            function getContigData(genome_ref, contigId) {
-                return {contig_id:contigId, length:500, gc_content:'50%', n_features:'3' };
+            function renderContigData(genome_ref, contig_id, outputDivs) {
 
-                /*self.genomeSearchAPI
-                        .search_region({
+                var $length = outputDivs.$length;
+                var $n_features = outputDivs.$n_features;
+                return self.genomeSearchAPI
+                        .search_contigs({
                             ref: genome_ref,
-                            query_contig_id: contig_id,
-                            query_region_start: start,
-                            query_region_length: length,
-                            page_start: 0,
-                            page_limit: 2000
+                            query: contig_id
                         })
-                        .then(function(result) {*/
-
+                        .then(function(result) {
+                            console.log('genomeSearchAPI.search_contigs()',result);
+                            var contigData = {};
+                            if(result['contigs'].length ==0) {
+                                $length.append('Information not available.')
+                                $n_features.append('Information not available.')
+                            } else {
+                                for(var c=0; c<result['contigs'].length; c++) {
+                                    if(contig_id === result['contigs'][c]['contig_id']) {
+                                        contigData = result['contigs'][c];
+                                        $length.append(numberWithCommas(result['contigs'][c]['length']));
+                                        $n_features.append(numberWithCommas(result['contigs'][c]['feature_count']));
+                                        break;
+                                    }
+                                }
+                            }
+                            return contigData;
+                        })
+                        .fail(function(e) {
+                                console.error(e);
+                                $length.empty();
+                                var errorMssg = '';
+                                if(e['error']) {
+                                    errorMssg = JSON.stringify(e['error']);
+                                    if(e['error']['message']){
+                                        errorMssg = e['error']['message'];
+                                        if(e['error']['error']){
+                                            errorMssg += '<br><b>Trace</b>:' + e['error']['error'];
+                                        }
+                                    } else {
+                                        errorMssg = JSON.stringify(e['error']);
+                                    }
+                                }
+                                $length.append($('<div>').addClass('alert alert-danger').append(errorMssg));
+                        });
             };
 
 
-            function showContig(contigData) {
+            function showContig(genome_ref, contig_id) {
 
-                var contig_id = contigData['contig_id'];
                 var $div = openTabGetId(contig_id);
                 if ($div === null) {
                     tabPane.showTab(contig_id);
@@ -1052,65 +1086,65 @@ define (
                 $tbl.append($id);
 
                 // Length
-                /*var $len = $('<tr>')
+                var $lengthField = $('<div>');
+                var $len = $('<tr>')
                             .append($('<td>').append('Length'))
-                            .append($('<td>').append(numberWithCommas(contigData['length'])));
+                            .append($('<td>').append($lengthField));
                 $tbl.append($len);
 
-                // GC
-                var $gc = $('<tr>')
-                            .append($('<td>').append('GC Content'))
-                            .append($('<td>').append(contigData['gc_content']));
-                $tbl.append($gc);
-
                 // N Features
-                var $nFeatures = $('<tr>')
+                var $featureField = $('<div>');
+                var $nf = $('<tr>')
                             .append($('<td>').append('Number of Features'))
-                            .append($('<td>').append(contigData['n_features']));
-                $tbl.append($nFeatures);*/
+                            .append($('<td>').append($featureField));
+                $tbl.append($nf);
 
+                var contigDataPromise = renderContigData(
+                    genome_ref, contig_id,
+                    {
+                        $length:$lengthField,
+                        $n_features:$featureField
+                    });
 
-                // Browser
-                $browserRow.append($('<i class="fa fa-spinner fa-spin fa-2x">'));
-                var start = 0;
-                var tenKb = 10000;
-                var twentyKb = 20000;
-                var length = twentyKb;
-                var contig_length = start + twentyKb;
+                contigDataPromise.then(function(contigData) {
+                    console.log(contigData);
+                    // Browser
+                    $browserRow.append($('<i class="fa fa-spinner fa-spin fa-2x">'));
+                    var start = 0;
+                    var tenKb = 10000;
+                    var twentyKb = 20000;
+                    var length = twentyKb;
+                    var contig_length = contigData['length'];
 
+                    var $contigScrollBack = $('<button class="btn btn-default">')
+                                                .append('<i class="fa fa-caret-left" aria-hidden="true">')
+                                                .append(' back 20kb')
+                                                .on('click', function() {
+                                                    if(start-twentyKb < 0) { return; }
+                                                    $browserRow.append($('<i class="fa fa-spinner fa-spin fa-2x">'));
+                                                    start = start - twentyKb;
+                                                    length = twentyKb;
+                                                    getFeaturesInRegionAndRenderBrowser(genome_ref, contig_id, start, length, contig_length, $browserRow);
+                                                });
+                    var $contigScrollForward = $('<button class="btn btn-default">')
+                                                .append('forward 20kb ')
+                                                .append('<i class="fa fa-caret-right" aria-hidden="true">')
+                                                .on('click', function() {
+                                                    if(start+twentyKb>contig_length) { return; }
+                                                    $browserRow.append($('<i class="fa fa-spinner fa-spin fa-2x">'));
+                                                    if(start+twentyKb>contig_length) { return; }
+                                                    start = start + twentyKb;
+                                                    length = twentyKb;
+                                                    getFeaturesInRegionAndRenderBrowser(genome_ref, contig_id, start, length, contig_length, $browserRow);
+                                                });
 
+                    $browserCtrlDiv.append($contigScrollBack).append($contigScrollForward);
 
-
-                var $contigScrollBack = $('<button class="btn btn-default">')
-                                            .append('<i class="fa fa-caret-left" aria-hidden="true">')
-                                            .append(' back 20kb')
-                                            .on('click', function() {
-                                                if(start-twentyKb < 0) { return; }
-                                                $browserRow.append($('<i class="fa fa-spinner fa-spin fa-2x">'));
-                                                start = start - twentyKb;
-                                                length = twentyKb;
-                                                contig_length = start + twentyKb;
-                                                getFeaturesInRegionAndRenderBrowser(genome_ref, contig_id, start, length, contig_length, $browserRow);
-                                            });
-                var $contigScrollForward = $('<button class="btn btn-default">')
-                                            .append('forward 20kb ')
-                                            .append('<i class="fa fa-caret-right" aria-hidden="true">')
-                                            .on('click', function() {
-                                                $browserRow.append($('<i class="fa fa-spinner fa-spin fa-2x">'));
-                                                start = start + twentyKb;
-                                                length = twentyKb;
-                                                contig_length = start + twentyKb;
-                                                getFeaturesInRegionAndRenderBrowser(genome_ref, contig_id, start, length, contig_length, $browserRow);
-                                            });
-
-                $browserCtrlDiv.append($contigScrollBack).append($contigScrollForward);
-
-                getFeaturesInRegionAndRenderBrowser(genome_ref, contig_id, start, length, contig_length, $browserRow);
-
+                    getFeaturesInRegionAndRenderBrowser(genome_ref, contig_id, start, length, contig_length, $browserRow);
+                });
             }
 
-            var contigData = getContigData(genome_ref, contigId);
-            showContig(contigData);
+            showContig(genome_ref, contig_id);
 
         },
 
@@ -1401,76 +1435,124 @@ define (
                     return cbFormat;
                 }
 
+                // returns a promise with an arg that gives you the contig length
+                function getContigData(genome_ref, contig_id) {
+                    return self.genomeSearchAPI
+                        .search_contigs({
+                            ref: genome_ref,
+                            query: contig_id
+                        })
+                        .then(function(result) {
+                            console.log('genomeSearchAPI.search_contigs()',result);
+                            var contigData = {};
+                            if(result['contigs'].length>0) {
+                                for(var c=0; c<result['contigs'].length; c++) {
+                                    if(contig_id === result['contigs'][c]['contig_id']) {
+                                        contigData = result['contigs'][c];
+                                        break;
+                                    }
+                                }
+                            }
+                            return contigData;
+                        })
+                        .fail(function(e) {
+                                console.error(e);
+                                /*$length.empty();
+                                var errorMssg = '';
+                                if(e['error']) {
+                                    errorMssg = JSON.stringify(e['error']);
+                                    if(e['error']['message']){
+                                        errorMssg = e['error']['message'];
+                                        if(e['error']['error']){
+                                            errorMssg += '<br><b>Trace</b>:' + e['error']['error'];
+                                        }
+                                    } else {
+                                        errorMssg = JSON.stringify(e['error']);
+                                    }
+                                }
+                                $length.append($('<div>').addClass('alert alert-danger').append(errorMssg));*/
+                        });
+
+                }
+
 
                 if(!featureData['global_location']['contig_id']) {
                     $contigBrowser.empty().append('Genomic context is not available.');
                 } else {
-                    var contigData = {
-                        name: featureData['global_location']['contig_id'],
-                        genes: [translate_feature_data(featureData)]
-                    }
+                    getContigData(genome_ref, featureData['global_location']['contig_id'])
+                        .then(function(contigData) {
+                            console.log('casdfa', contigData)
+                            var contigDataForBrowser = {
+                                name: featureData['global_location']['contig_id'],
+                                genes: [translate_feature_data(featureData)]
+                            }
 
-                    var range = 10000; //10kb
-                    var bounds = getFeatureLocationBounds(featureData['global_location']);
+                            var range = 10000; //10kb
+                            var bounds = getFeatureLocationBounds(featureData['global_location']);
 
-                    var search_start = bounds.start-range;
-                    if(search_start < 0) {
-                        search_start = 0;
-                    }
-                    var search_stop = bounds.end+range;
-                    var search_length = search_stop - search_start;
-                    contigData['length'] = search_stop;
+                            var search_start = bounds.start-range;
+                            if(search_start < 0) {
+                                search_start = 0;
+                            }
+                            var search_stop = bounds.end+range;
+                            var search_length = search_stop - search_start;
+                            contigDataForBrowser['length'] = search_stop;
+                            if(contigData['length']) {
+                                contigDataForBrowser['length'] = contigData['length'];
+                            }
 
-                    self.genomeSearchAPI.search_region({
-                                            ref: genome_ref,
-                                            query_contig_id: featureData['global_location']['contig_id'],
-                                            query_region_start: search_start,
-                                            query_region_length: search_length,
-                                            page_start: 0,
-                                            page_limit: 2000
-                                        })
-                                        .then(function(result) {
-                                            $contigBrowser.empty();
-                                            console.log('genomeSearchAPI.search_region()',result);
-                                            for(var f=0; f<result['features'].length; f++) {
-                                                contigData['genes'].push(translate_feature_data(result['features'][f]));
-                                            }
-                                            var cgb = new ContigBrowserPanel();
-                                            cgb.data.options.contig = contigData;
-                                            //cgb.data.options.svgWidth = self.width - 28;
-                                            cgb.data.options.onClickFunction = function(svgElement, feature) {
-                                                self.showFeatureTab(genome_ref, feature['original_data']['raw'], pref, tabPane);
-                                            };
-                                            cgb.data.options.start= search_start;
-                                            cgb.data.options.length= search_length;
-                                            cgb.data.options.centerFeature = featureData['feature_id'];
-                                            cgb.data.options.showButtons = false;
-                                            cgb.data.options.token = self.token;
-                                            cgb.data.$elem = $('<div style="width:100%; height: 120px;"/>');
-                                            cgb.data.$elem.show(function(){
-                                                cgb.data.update();
-                                            });
-                                            $contigBrowser.append(cgb.data.$elem);
-                                            cgb.data.init();
-
-                                        })
-                                        .fail(function(e) {
-                                            console.error(e);
-                                            $contigBrowser.empty();
-                                            var errorMssg = '';
-                                            if(e['error']) {
-                                                errorMssg = JSON.stringify(e['error']);
-                                                if(e['error']['message']){
-                                                    errorMssg = e['error']['message'];
-                                                    if(e['error']['error']){
-                                                        errorMssg += '<br><b>Trace</b>:' + e['error']['error'];
+                            self.genomeSearchAPI.search_region({
+                                                    ref: genome_ref,
+                                                    query_contig_id: featureData['global_location']['contig_id'],
+                                                    query_region_start: search_start,
+                                                    query_region_length: search_length,
+                                                    page_start: 0,
+                                                    page_limit: 2000
+                                                })
+                                                .then(function(result) {
+                                                    $contigBrowser.empty();
+                                                    console.log('genomeSearchAPI.search_region()',result);
+                                                    for(var f=0; f<result['features'].length; f++) {
+                                                        contigDataForBrowser['genes'].push(translate_feature_data(result['features'][f]));
                                                     }
-                                                } else {
-                                                    errorMssg = JSON.stringify(e['error']);
-                                                }
-                                            } else { e['error']['message']; }
-                                            $contigBrowser.append($('<div>').addClass('alert alert-danger').append(errorMssg));
-                                        });
+                                                    var cgb = new ContigBrowserPanel();
+                                                    cgb.data.options.contig = contigDataForBrowser;
+                                                    //cgb.data.options.svgWidth = self.width - 28;
+                                                    cgb.data.options.onClickFunction = function(svgElement, feature) {
+                                                        self.showFeatureTab(genome_ref, feature['original_data']['raw'], pref, tabPane);
+                                                    };
+                                                    cgb.data.options.start= search_start;
+                                                    cgb.data.options.length= search_length;
+                                                    cgb.data.options.centerFeature = featureData['feature_id'];
+                                                    cgb.data.options.showButtons = false;
+                                                    cgb.data.options.token = self.token;
+                                                    cgb.data.$elem = $('<div style="width:100%; height: 120px;"/>');
+                                                    cgb.data.$elem.show(function(){
+                                                        cgb.data.update();
+                                                    });
+                                                    $contigBrowser.append(cgb.data.$elem);
+                                                    cgb.data.init();
+
+                                                })
+                                                .fail(function(e) {
+                                                    console.error(e);
+                                                    $contigBrowser.empty();
+                                                    var errorMssg = '';
+                                                    if(e['error']) {
+                                                        errorMssg = JSON.stringify(e['error']);
+                                                        if(e['error']['message']){
+                                                            errorMssg = e['error']['message'];
+                                                            if(e['error']['error']){
+                                                                errorMssg += '<br><b>Trace</b>:' + e['error']['error'];
+                                                            }
+                                                        } else {
+                                                            errorMssg = JSON.stringify(e['error']);
+                                                        }
+                                                    } else { e['error']['message']; }
+                                                    $contigBrowser.append($('<div>').addClass('alert alert-danger').append(errorMssg));
+                                                });
+                        });
+                    
                     }
 
                     tabPane.showTab(fid);

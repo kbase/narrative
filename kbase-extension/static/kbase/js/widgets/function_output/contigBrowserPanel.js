@@ -212,8 +212,8 @@ define (
                 self.contigLength = self.options.contig.length;
                 if(!self.options.start)
                     self.options.start = 0;
-                if (self.options.length > self.contigLength)
-                	self.options.length = self.contigLength;
+                if (self.options.length + self.options.start > self.contigLength)
+                	self.options.length = self.contigLength-self.options.start;
 
                 if (this.options.centerFeature) {
                     this.setCenterFeature();

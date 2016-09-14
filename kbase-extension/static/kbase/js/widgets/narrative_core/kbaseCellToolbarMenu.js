@@ -256,12 +256,14 @@ define([
                                     class: 'divider'
                                 });
                             default:
-                                return li(a({
+                                return li(button({
                                     class: 'btn btn-default',
-                                    id: item.id,
+                                    type: 'button',
                                     style: {
+                                        width: '100%',
                                         textAlign: 'left'
-                                    }
+                                    },
+                                    id: item.id
                                 }, [
                                     span({style: {
                                             display: 'inline-block',

@@ -95,6 +95,8 @@ define([
             var codeInputArea = this.input.find('.input_area')[0];
             if (codeInputArea) {
                 codeInputArea.classList.toggle('hidden');
+                // NB purely for side effect - toolbar refresh
+                cell.metadata = cell.metadata;
             }
         };
     }
@@ -189,8 +191,6 @@ define([
             if (parentTitle) {
                 Props.setDataItem(cell.metadata, 'kbase.attributes.title', data.objectInfo.name);
             }
-            
-            // console.log('OBJ INF', data.objectInfo);
 
             setupCell(cell);
         });
@@ -198,7 +198,6 @@ define([
 
     function load() {
         $([Jupyter.events]).on('inserted.Cell', function (event, data) {
-          console.log('inserted!', data);
             if (data.kbase && data.kbase.type === 'data') {
                 upgradeCell(data)
                     .catch(function (err) {

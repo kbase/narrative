@@ -195,7 +195,6 @@ define([
         cell.renderIcon = function () {
             var iconNode = this.element[0].querySelector('.celltoolbar [data-element="icon"]'),
                 icon = AppUtils.makeToolbarAppIcon(utils.getCellMeta(cell, 'kbase.appCell.app.spec'))
-            console.log('ICON', iconNode, icon);
             if (iconNode) {
                 iconNode.innerHTML = AppUtils.makeToolbarAppIcon(utils.getCellMeta(cell, 'kbase.appCell.app.spec'));
             } 

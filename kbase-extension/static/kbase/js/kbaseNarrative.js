@@ -145,13 +145,12 @@ define(
 
     // Wrappers for the Jupyter/Jupyter function so we only maintain it in one place.
     Narrative.prototype.disableKeyboardManager = function () {
-        // Jupyter.keyboard_manager.disable();
-
         var killTheseShortcuts = ['a', 'b', 'm', 'f', 'y', 'r',
                                   '1', '2', '3', '4', '5', '6',
                                   'k', 'j', 'b', 'x', 'c', 'v',
                                   'z', 'd,d', 's', 'l', 'o', 'h',
-                                  'i', '0,0', 'q'];
+                                  'i', '0,0', 'q', 'shift-j', 'shift-k',
+                                  'shift-h', 'shift-m', 'shift-o', 'shift-v'];
 
         for (var i=0; i<killTheseShortcuts.length; i++) {
             var shortcut = killTheseShortcuts[i];

@@ -121,8 +121,8 @@ define (
 
         tabData : function(genome) {
             //normally, we just have an Overview, Contigs, and Genes tab.
-            var names = ['Overview', 'Browse Features'];
-            var ids = ['overview', 'browse_features'];
+            var names = ['Overview', 'Browse Features', 'Browse Contigs'];
+            var ids = ['overview', 'browse_features', 'browse_contigs'];
 
             /*if (genome.ontology_mappings.length) {
                 names.push('Ontology');
@@ -548,6 +548,343 @@ define (
 
 
 
+         /*
+            input =>
+            {
+                genomeSearchAPI: genomeSearchAPI Client
+                $div:  JQuery div that I can render on
+                contigClick: callback when a contig id is clicked
+
+            }
+        */
+        buildContigSearchView: function(params) {
+
+            // parse parameters
+            var $div = params['$div'];
+            if(!$div.is(':empty')) {
+                return; // if it has content, then do not rerender
+            }
+            var genomeSearchAPI = params['genomeSearchAPI'];
+            var genome_ref = params['ref'];
+
+            var contigClick = null;
+            if(params['contigClick']) { contigClick = params['contigClick']; }
+
+            // setup some defaults and variables (should be moved to class variables)
+            var limit = 10;
+            var start = 0;
+            var sort_by = ['contig_id', 1];
+
+            var n_results = 0;
+
+            function numberWithCommas(x) {
+                return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            }
+
+
+            // setup the main search button and the results panel and layout
+            var $input = $('<input type="text" class="form-control" placeholder="Search Contigs">');
+            $input.prop('disabled', true);
+
+            var isLastQuery = function(result) {
+                if(start !== result['start']) {
+                    return false;
+                }
+                if($input.val() !== result['query']) {
+                    return false;
+                }
+                return true;
+            };
+            
+            var $resultDiv = $('<div>');
+            var $noResultsDiv = $('<div>').append('<center>No matching features found.</center>').hide();
+            var $loadingDiv = $('<div>');
+            var $errorDiv = $('<div>');
+            var $pagenateDiv = $('<div>').css('text-align','left');
+            var $resultsInfoDiv = $('<div>');
+
+            var $container = $('<div>').addClass('container-fluid').css({'margin':'15px 0px', 'max-width':'100%'});
+            $div.append($container);
+            var $headerRow = $('<div>').addClass('row')
+                                .append($('<div>').addClass('col-md-4').append($pagenateDiv) )
+                                .append($('<div>').addClass('col-md-4').append($loadingDiv))
+                                .append($('<div>').addClass('col-md-4').append($input));
+            var $resultsRow = $('<div>').addClass('row').css({'margin-top':'15px'})
+                                .append($('<div>').addClass('col-md-12').append($resultDiv));
+            var $noResultsRow = $('<div>').addClass('row')
+                                .append($('<div>').addClass('col-md-12').append($noResultsDiv));
+            var $errorRow = $('<div>').addClass('row')
+                                .append($('<div>').addClass('col-md-8').append($errorDiv));
+            var $infoRow = $('<div>').addClass('row')
+                                .append($('<div>').addClass('col-md-4').append($resultsInfoDiv))
+                                .append($('<div>').addClass('col-md-8'));
+            $container
+                .append($headerRow)
+                .append($resultsRow)
+                .append($errorDiv)
+                .append($noResultsRow)
+                .append($infoRow);
+
+
+
+            var $pageBack = $('<button class="btn btn-default">').append('<i class="fa fa-caret-left" aria-hidden="true">');
+            var $pageForward = $('<button class="btn btn-default">').append('<i class="fa fa-caret-right" aria-hidden="true">');
+
+            $pagenateDiv.append($pageBack);
+            $pagenateDiv.append($pageForward);
+            $pagenateDiv.hide();
+
+
+            var clearInfo= function() {
+                $resultsInfoDiv.empty();
+                $pagenateDiv.hide();
+            };
+
+
+            // define the functions that do everything
+            var setToLoad = function($panel) {
+                //clearInfo();
+                $panel.empty();
+                var $loadingDiv = $('<div>').attr('align', 'left').append($('<i class="fa fa-spinner fa-spin fa-2x">'));
+                $panel.append($loadingDiv);
+                window.setTimeout(function() {
+                        $loadingDiv.append('&nbsp; Building cache...');
+                        window.setTimeout(function() {
+                            $loadingDiv.append(' almost there...')
+                        }, 25000);
+                    } , 2500);
+            };
+
+            var search = function(query, start, limit, sort_by) {
+                $errorDiv.empty();
+                return genomeSearchAPI.search_contigs({
+                                            ref: genome_ref,
+                                            query: "a",
+                                            sort_by: sort_by,
+                                            start: start,
+                                            limit: limit
+                                        })
+                                        .then(function(d) {
+                                            console.log('genomeSearchAPI.search_contigs()',d);
+                                            return d;
+                                        })
+                                        .fail(function(e) {
+                                            console.error(e);
+                                            $loadingDiv.empty();
+                                            var errorMssg = '';
+                                            if(e['error']) {
+                                                errorMssg = JSON.stringify(e['error']);
+                                                if(e['error']['message']){
+                                                    errorMssg = e['error']['message'];
+                                                    if(e['error']['error']){
+                                                        errorMssg += '<br><b>Trace</b>:' + e['error']['error'];
+                                                    }
+                                                } else {
+                                                    errorMssg = JSON.stringify(e['error']);
+                                                }
+                                            } else { e['error']['message']; }
+                                            $errorDiv.append($('<div>').addClass('alert alert-danger').append(errorMssg));
+                                        });
+            };
+
+
+            var showPaginate = function() {
+                $pagenateDiv.show();
+            };
+
+            var showViewInfo = function(start, num_showing, num_found) {
+                $resultsInfoDiv.empty();
+                $resultsInfoDiv.append('Showing '+(start+1) + ' to ' + (start+num_showing)+' of '+num_found);
+            };
+            var showNoResultsView = function() {
+                $noResultsDiv.show();
+                $resultsInfoDiv.empty();
+                $pagenateDiv.hide();
+            }
+
+            var buildRow = function(rowData) {
+                var $tr = $('<tr>');
+                if(contigClick) {
+                    var getCallback = function(rowData) { return function() {contigClick(rowData);}};
+                    $tr.append($('<td>').append(
+                        $('<a>').css('cursor','pointer').append(rowData['contig_id'])
+                            .on('click',getCallback(rowData)))
+                    );
+                } else {
+                    $tr.append($('<td>').append(rowData['contig_id']));
+                }
+                $tr.append($('<td>').append(rowData['length']));
+                $tr.append($('<td>').append(rowData['feature_count']));
+
+                return $tr;
+            };
+
+            var renderResult = function($table, results) {
+                $table.find("tr:gt(0)").remove();
+                $loadingDiv.empty();
+                $noResultsDiv.hide();
+                clearInfo();
+
+                var contigs = results['contigs']
+                if(contigs.length>0) {
+                    for(var k=0; k<contigs.length; k++) {
+                        $table.append(buildRow(contigs[k]));
+                    }
+                    n_results = contigs['num_found'];
+                    showViewInfo(contigs['start'], contigs.length, results['num_found']);
+                    showPaginate(results['num_found']);
+                } else {
+                    showNoResultsView();
+                }
+            };
+
+            // Setup the actual table
+            var $table = $('<table>')
+                            .addClass('table table-striped table-bordered table-hover')
+                            .css({'margin-left':'auto', 'margin-right':'auto'})
+            $resultDiv.append($table);
+
+            
+            var buildColumnHeader = function(name, id, click_event) {
+                var $sortIcon = $('<i>').css('margin-left','8px');
+                var $th = $('<th>')
+                            .append('<b>'+name+'</b>')
+                            .append($sortIcon);
+                if(click_event) {
+                    $th
+                        .css('cursor','pointer')
+                        .on('click', function() {
+                            click_event(id, $sortIcon)
+                        });
+                }
+                return {
+                    id: id,
+                    name: name,
+                    $th: $th,
+                    $sortIcon: $sortIcon
+                };
+            };
+
+            var buildTableHeader = function() {
+                var inFlight = false;
+
+                var $colgroup = $('<colgroup>');
+
+                var $tr = $('<tr>');
+                var ASC=0; var DESC=1; var ID=0; var DIR=1;
+                var cols = {};
+                var sortEvent = function(id, $sortIcon) {
+                    if(inFlight) { return; } // skip if a sort call is already running
+                    if(sort_by[ID] == id) {
+                        if(sort_by[DIR] === DESC) {
+                            sort_by[DIR] = ASC;
+                            $sortIcon.removeClass();
+                            $sortIcon.addClass('fa fa-sort-asc');
+                        } else {
+                            sort_by[DIR] = DESC;
+                            $sortIcon.removeClass();
+                            $sortIcon.addClass('fa fa-sort-desc');
+                        }
+                    } else {
+                        cols[sort_by[ID]].$sortIcon.removeClass();
+                        sort_by[ID] = id;
+                        sort_by[DIR] = DESC;
+                        $sortIcon.addClass('fa fa-sort-desc');
+                    }
+
+                    setToLoad($loadingDiv);
+                    inFlight=true;
+                    start=0;
+                    search($input.val(), start, limit, sort_by)
+                        .then(function(result) {
+                                if(isLastQuery(result)) { renderResult($table, result); }
+                                inFlight=false;
+                                start=0;
+                            })
+                        .fail(function(){ inFlight=false; });
+                };
+
+                $colgroup.append($('<col span=1>').css('width','20%'))
+                var h = buildColumnHeader('Contig ID', 'contig_id', sortEvent);
+                $tr.append(h.$th);
+                h.$sortIcon.addClass('fa fa-sort-desc');
+                cols[h.id] = h;
+
+                $colgroup.append($('<col span=1>').css('width','5%'))
+                var h = buildColumnHeader('Length', 'length', sortEvent);
+                $tr.append(h.$th);
+                cols[h.id] = h;
+
+
+                $colgroup.append($('<col span=1>').css('width','20%'))
+                var h = buildColumnHeader('Feature Count', 'feature_count', sortEvent);
+                $tr.append(h.$th);
+                cols[h.id] = h;
+
+                return { $colgroup:$colgroup, $theader:$tr };
+            }
+            
+            var headers = buildTableHeader()
+            $table.append(headers.$colgroup);
+            $table.append(headers.$theader);
+
+           
+            // Ok, do stuff.  First show the loading icon
+            setToLoad($loadingDiv);
+
+            // Perform the first search
+            search('', start, limit, sort_by).then(
+                    function(results) {
+                        $input.prop('disabled', false);
+                        renderResult($table, results);
+                    });
+
+
+
+            $pageBack.on('click',function () {
+                if(start===0) return;
+                if((start-limit)<0) {
+                    start = 0;
+                } else {
+                    start = start-limit;
+                }
+                setToLoad($loadingDiv);
+                search($input.val(),start, limit, sort_by)
+                        .then(function(result) {
+                                if(isLastQuery(result)) { renderResult($table, result); }
+                            });
+            });
+            $pageForward.on('click',function () {
+                if(start+limit>n_results) {
+                    return;
+                }
+                start = start+limit;
+                setToLoad($loadingDiv);
+                search($input.val(),start, limit, sort_by)
+                        .then(function(result) {
+                                if(isLastQuery(result)) { renderResult($table, result); }
+                            });
+            });
+
+
+            //put in a slight delay so on rapid typing we don't make a flood of calls
+            var fetchTimeout = null;
+            var lastQuery = null;
+            $input.on('input', function() {
+                // if we were waiting on other input, cancel that request
+                if(fetchTimeout) { window.clearTimeout(fetchTimeout); }
+                fetchTimeout = window.setTimeout(function() {
+                    fetchTimeout = null;
+                    setToLoad($loadingDiv);
+                    start=0;
+                    search($input.val(),start, limit, sort_by)
+                        .then(function(result) {
+                                if(isLastQuery(result)) { renderResult($table, result); }
+                            });
+                }, 300)
+            });
+
+        },
 
 
 
@@ -781,9 +1118,9 @@ define (
                         if (aElem.length != 1)
                             continue;
                         var dataTab = aElem.attr('data-tab');
+                        var genome_ref = self.ws_name + "/" + self.ws_id;
                         if (dataTab === 'Browse Features' ) {
                             aElem.on('click', function() {
-                                var genome_ref = self.ws_name + "/" + self.ws_id;
                                 self.buildGeneSearchView({
                                     $div: $('#'+pref+'browse_features'),
                                     genomeSearchAPI: self.genomeSearchAPI,
@@ -791,6 +1128,17 @@ define (
                                     idClick: function(featureData) {
                                                 self.showFeatureTab(genome_ref, featureData, pref, tabObj);
                                             },
+                                    contigClick: function(contigId) {
+                                                self.showContigTab(genome_ref, contigId, pref, tabObj);
+                                            }
+                                })
+                            });
+                        } else if (dataTab === 'Browse Contigs' ) {
+                            aElem.on('click', function() {
+                                self.buildContigSearchView({
+                                    $div: $('#'+pref+'browse_contigs'),
+                                    genomeSearchAPI: self.genomeSearchAPI,
+                                    ref: genome_ref,
                                     contigClick: function(contigId) {
                                                 self.showContigTab(genome_ref, contigId, pref, tabObj);
                                             }

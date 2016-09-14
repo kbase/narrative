@@ -49,24 +49,12 @@ define([
                     $('#kb-update-btn').hide();
                 }
             },
-            // {
-            //     element: '#kb-ipy-menu',
-            //     title: 'Kernel Controls',
-            //     placement: 'bottom',
-            //     content: 'Control the Jupyter kernel'
-            // },
             {
                 element: $('#kb-share-btn .kb-nav-btn-txt'),
                 title: 'Share with others',
                 placement: 'bottom',
                 content: 'Click the “share” button to open a dialog box allowing you to search for and select KBase users you want to share with. You can give them view-only access, editing privileges, or the ability to edit and share the Narrative with other users. By default, each Narrative you create is private. You can choose to make your Narrative public or share it with certain collaborators.'
             },
-            // {
-            //     element: '#kb-settings-btn',
-            //     title: 'Adjust global settings',
-            //     placement: 'bottom',
-            //     content: 'Change some global options'
-            // },
             {
                 element: '#kb-save-btn',
                 title: 'Save the Narrative',
@@ -185,16 +173,39 @@ define([
             },
             {
                 title: "End of Basic Features Tour",
-                placement: 'bottom',
                 orphan: true,
                 content: "<p>You now have been introduced to the basic features of the Narrative Interface. We hope you conduct interesting and creative research using these tools and are able to expand your collaborator network with other KBase users. If you have any questions or feature requests, please follow the Contact Us link in the hamburger menu.<p>To learn about advanced features of the Narrative Interface, click the right arrow button to proceed. Click the exit button to return to your Narrative.",
                 backdrop: true
             },
+            // {
+            //     title: 'Advanced Features',
+            //     // orphan: true,
+            //     content: 'This section of the Narrative Tour will introduce you to some features of the Narrative Interface that are useful to advanced users and developers.',
+            //     backdrop: true
+            // },
             {
-                title: 'Advanced Features of the Narrative Interface',
+                element: '#kb-ipy-menu',
+                title: 'Kernel Controls',
                 placement: 'bottom',
+                content: 'Access control options for the Jupyter kernel that controls the Narrative Interface. This is useful for restarting or reconnecting to KBase after your network connection has been disrupted.',
+            },
+            {
+                element: '#kb-settings-btn',
+                title: 'Adjust Global Settings',
+                placement: 'bottom',
+                content: ' Enable advanced or developer features for your Narrative in the Settings Menu. These option are enabled for individual Narratives. Refresh your browser to enable these settings for your Narrative.'
+            },
+            {
+                element: '#kb-add-code-cell',
+                title: 'Code Cells',
+                placement: 'left',
+                content: 'Code Cells allow you to use Python and other coding languages to create custom scripts in your Narrative.'
+            },
+            {
+                title: 'End of Advanced Features Tour',
                 orphan: true,
-                content: 'This section of the Narrative Tour will introduce you to some features of the Narrative Interface that are useful to advanced users and developers.'
+                content: 'You have now been introduced to the advanced features of the Narrative Interface. The <a href="http://kbase.us/narrative-guide/">Narrative User Guide</a> has more information. If you have any questions or feature requests, please follow the Contact Us link in the hamburger menu.',
+                backdrop: true
             }
 
         ];

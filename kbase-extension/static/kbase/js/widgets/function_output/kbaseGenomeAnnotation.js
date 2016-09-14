@@ -254,7 +254,6 @@ define (
                     local_sort_by.push(['contig_id',1]);
                 }
                 local_sort_by.push(sort_by);
-                console.log(local_sort_by)
                 return genomeSearchAPI.search({
                                             ref: genome_ref,
                                             query: query,
@@ -1431,7 +1430,6 @@ define (
                         }
                     }
                     cbFormat['function'] = featureData['function'];
-                    console.log(cbFormat);
                     return cbFormat;
                 }
 
@@ -1457,22 +1455,7 @@ define (
                         })
                         .fail(function(e) {
                                 console.error(e);
-                                /*$length.empty();
-                                var errorMssg = '';
-                                if(e['error']) {
-                                    errorMssg = JSON.stringify(e['error']);
-                                    if(e['error']['message']){
-                                        errorMssg = e['error']['message'];
-                                        if(e['error']['error']){
-                                            errorMssg += '<br><b>Trace</b>:' + e['error']['error'];
-                                        }
-                                    } else {
-                                        errorMssg = JSON.stringify(e['error']);
-                                    }
-                                }
-                                $length.append($('<div>').addClass('alert alert-danger').append(errorMssg));*/
                         });
-
                 }
 
 
@@ -1481,7 +1464,6 @@ define (
                 } else {
                     getContigData(genome_ref, featureData['global_location']['contig_id'])
                         .then(function(contigData) {
-                            console.log('casdfa', contigData)
                             var contigDataForBrowser = {
                                 name: featureData['global_location']['contig_id'],
                                 genes: [translate_feature_data(featureData)]
@@ -1552,12 +1534,9 @@ define (
                                                     $contigBrowser.append($('<div>').addClass('alert alert-danger').append(errorMssg));
                                                 });
                         });
-                    
                     }
-
                     tabPane.showTab(fid);
                 }
-
 
                 showGene(featureData);
         },

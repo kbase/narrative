@@ -94,6 +94,12 @@ define (
                   self.ws_name = options.ws;
             }
 
+            self.genome_ref = self.ws_name + '/' + self.ws_id;
+            if(options._obj_info) {
+                self.genome_info = options._obj_info;
+                self.genome_ref = self.genome_info['ws_id'] + '/' + self.genome_info['id'] + '/' + self.genome_info['version'];
+            }
+
             var token = null;
             if(self.auth()) {
                 token = {'token': self.auth().token};
@@ -189,7 +195,7 @@ define (
             };
             
             var $resultDiv = $('<div>');
-            var $noResultsDiv = $('<div>').append('<center>No matching features found.</center>').hide();
+            var $noResultsDiv = $('<div>').append('<center>No matching contigs found.</center>').hide();
             var $loadingDiv = $('<div>');
             var $errorDiv = $('<div>');
             var $pagenateDiv = $('<div>').css('text-align','left');
@@ -655,12 +661,12 @@ define (
                     } , 2500);
             };
 
-            var search = function(query, start, limit, sort_by) {
+            var search_contigs = function(query, start, limit, sort_by) {
                 $errorDiv.empty();
                 return genomeSearchAPI.search_contigs({
                                             ref: genome_ref,
-                                            query: "a",
-                                            sort_by: sort_by,
+                                            query: "",
+                                            sort_by: [sort_by],
                                             start: start,
                                             limit: limit
                                         })
@@ -705,7 +711,7 @@ define (
             var buildRow = function(rowData) {
                 var $tr = $('<tr>');
                 if(contigClick) {
-                    var getCallback = function(rowData) { return function() {contigClick(rowData);}};
+                    var getCallback = function(rowData) { return function() { contigClick(rowData['contig_id']); }};
                     $tr.append($('<td>').append(
                         $('<a>').css('cursor','pointer').append(rowData['contig_id'])
                             .on('click',getCallback(rowData)))
@@ -725,13 +731,13 @@ define (
                 $noResultsDiv.hide();
                 clearInfo();
 
-                var contigs = results['contigs']
+                var contigs = results['contigs'];
                 if(contigs.length>0) {
                     for(var k=0; k<contigs.length; k++) {
                         $table.append(buildRow(contigs[k]));
                     }
-                    n_results = contigs['num_found'];
-                    showViewInfo(contigs['start'], contigs.length, results['num_found']);
+                    n_results = results['num_found'];
+                    showViewInfo(results['start'], contigs.length, results['num_found']);
                     showPaginate(results['num_found']);
                 } else {
                     showNoResultsView();
@@ -795,7 +801,7 @@ define (
                     setToLoad($loadingDiv);
                     inFlight=true;
                     start=0;
-                    search($input.val(), start, limit, sort_by)
+                    search_contigs($input.val(), start, limit, sort_by)
                         .then(function(result) {
                                 if(isLastQuery(result)) { renderResult($table, result); }
                                 inFlight=false;
@@ -833,7 +839,7 @@ define (
             setToLoad($loadingDiv);
 
             // Perform the first search
-            search('', start, limit, sort_by).then(
+            search_contigs('', start, limit, sort_by).then(
                     function(results) {
                         $input.prop('disabled', false);
                         renderResult($table, results);
@@ -849,7 +855,7 @@ define (
                     start = start-limit;
                 }
                 setToLoad($loadingDiv);
-                search($input.val(),start, limit, sort_by)
+                search_contigs($input.val(),start, limit, sort_by)
                         .then(function(result) {
                                 if(isLastQuery(result)) { renderResult($table, result); }
                             });
@@ -860,7 +866,7 @@ define (
                 }
                 start = start+limit;
                 setToLoad($loadingDiv);
-                search($input.val(),start, limit, sort_by)
+                search_contigs($input.val(),start, limit, sort_by)
                         .then(function(result) {
                                 if(isLastQuery(result)) { renderResult($table, result); }
                             });
@@ -877,7 +883,7 @@ define (
                     fetchTimeout = null;
                     setToLoad($loadingDiv);
                     start=0;
-                    search($input.val(),start, limit, sort_by)
+                    search_contigs($input.val(),start, limit, sort_by)
                         .then(function(result) {
                                 if(isLastQuery(result)) { renderResult($table, result); }
                             });
@@ -901,20 +907,16 @@ define (
             }
 
 
-
-
-
-
             var ready = function(genomeData, ctg) {
-                    var genomeObjInfo = genomeData['info'];
-                    var gnm = genomeData['data'];
+                    var gnm = genomeData;
 
                     container.empty();
                     var $tabPane = $('<div id="'+pref+'tab-content">');
                     container.append($tabPane);
                     var tabObj = new kbaseTabs($tabPane, {canDelete : true, tabs : []});
 
-                    /*var ontology_mappings = [];
+                    /* Skip Ontologies info for now- need to add this to caching service.
+                    var ontology_mappings = [];
                     $.each(
                       gnm.features,
                       function (i,f) {
@@ -924,8 +926,8 @@ define (
                       }
                     );
     
-                    gnm.ontology_mappings = ontology_mappings;*/
-                    gnm.ontology_mappings = [];
+                    gnm.ontology_mappings = ontology_mappings;
+                    gnm.ontology_mappings = [];*/
 
                     var tabData = self.tabData(gnm);
                     var tabNames = tabData.names;
@@ -1036,7 +1038,7 @@ define (
                     }
 
                     ////ontology tab - should be lazily loaded, but we can't since we need to check for existence to know if we display the tab at all.
-                    if (gnm.ontology_mappings.length) {
+                    /*if (gnm.ontology_mappings.length) {
                       var ontologyTab = $('#' + pref + 'ontology');
                       ontologyTab.empty();
                       ontologyTab.append('<table cellpadding="0" cellspacing="0" border="0" id="'+pref+'ontology-table" \
@@ -1108,8 +1110,8 @@ define (
 
                       //ontologyTable.fnAddData(ontologyData);
                       ontologyTable.rows.add(ontologyData).draw();
-
-                    }
+                      
+                    }*/
 
                     var liElems = $tabPane.find('li');
                     for (var liElemPos = 0; liElemPos < liElems.length; liElemPos++) {
@@ -1118,7 +1120,7 @@ define (
                         if (aElem.length != 1)
                             continue;
                         var dataTab = aElem.attr('data-tab');
-                        var genome_ref = self.ws_name + "/" + self.ws_id;
+                        var genome_ref = self.genome_ref;
                         if (dataTab === 'Browse Features' ) {
                             aElem.on('click', function() {
                                 self.buildGeneSearchView({
@@ -1154,30 +1156,27 @@ define (
             container.append($('<div>').attr('align', 'center').append($('<i class="fa fa-spinner fa-spin fa-2x">')));
 
 
-            var genome_ref = self.ws_name + "/" + self.ws_id;
-
-            // get sequence and other information
-            var included = ["complete","contig_ids","contig_lengths","contigset_ref","assembly_ref", "dna_size",
-                            "domain","gc_content","genetic_code","id","md5","num_contigs",
-                            "scientific_name","source","source_id","tax_id","taxonomy"];
+            var genome_ref = self.genome_ref;
 
 
 
-            self.genomeAPI
+            if(self.genome_info) {
+                ready(self.normalizeGenomeDataFromNarrative(self.genome_info),null);
+            } else {
+                // get info
+                //var included = ["complete","contig_ids","contig_lengths","contigset_ref","assembly_ref", "dna_size",
+                //            "domain","gc_content","genetic_code","id","md5","num_contigs",
+                //            "scientific_name","source","source_id","tax_id","taxonomy"];
+                self.genomeAPI
                         .get_genome_v1({ 
                             genomes: [{
-                                ref: genome_ref
+                                ref: self.genome_ref
                             }],
-                            //included_fields: included
                             'no_data':1
                         })
                         .then(function(data) {
-                            console.log('genomeAPI.get_genome_v1(ref='+genome_ref+')',data['genomes'][0])
-                            var genomeData = {
-                                'data': self.normalizeGenomeData(data['genomes'][0]),
-                                'info': data['genomes'][0]['info']
-                            };
-                            ready(genomeData,null);
+                            console.log('genomeAPI.get_genome_v1(ref='+genome_ref+')',data['genomes'][0]);
+                            ready(self.normalizeGenomeDataFromQuery(data['genomes'][0]),null);
                         })
                         .fail(function(e) {
                             console.error(e);
@@ -1196,16 +1195,35 @@ define (
                             container.empty();
                             container.append($('<div>').addClass('alert alert-danger').append(errorMssg));
                         });
+            }
 
             return this;
         },
 
 
-        normalizeGenomeData: function(wsReturnedData) {
+        normalizeGenomeDataFromNarrative: function(genome_info) {
+            var self = this;
+            var genomeData = self.normalizeGenomeMetadata(genome_info['meta']);
+            genomeData['ws_obj_name'] = genome_info['name'];
+            genomeData['version'] = genome_info['version'];
+            genomeData['ref'] = genome_info['ws_id'] + '/' + genome_info['name'] + '/' + genome_info['version'];
+            console.log(genomeData);
+            return genomeData;
+        },
+
+        normalizeGenomeDataFromQuery: function(wsReturnedData) {
+            var self = this;
+            var info = wsReturnedData['info'];
+            var metadata = info[10];
+            var genomeData = self.normalizeGenomeMetadata(metadata, genomeData);
+            genomeData['ws_obj_name'] = info[1];
+            genomeData['version'] = info[4];
+            genomeData['ref'] = info[6] + '/' + info[1] + '/' + info[4];
+            return genomeData;
+        },
+
+        normalizeGenomeMetadata: function(metadata) {
             var genomeData = {
-                ref: '',
-                version: '',
-                ws_obj_name: '',
                 scientific_name: '',
                 domain: '',
                 genetic_code: '',
@@ -1214,12 +1232,6 @@ define (
                 taxonomy: '',
                 n_features: ''
             };
-            var info = wsReturnedData['info'];
-            var metadata = info[10];
-
-            genomeData.ws_obj_name = info[1];
-            genomeData.version = info[4];
-            genomeData.ref = info[6] + '/' + info[1] + '/' + info[4];
 
             if(metadata['Name']) {
                 genomeData.scientific_name = metadata['Name'];
@@ -1629,7 +1641,7 @@ define (
 
 
                 tblLabels.push('Feature ID');
-                tblData.push('<a href="/#dataview/'+self.ws_name+'/'+self.ws_id+'?sub=Feature&subid='+fid+'" target="_blank">'+fid+'</a>');
+                tblData.push('<a href="/#dataview/'+self.genome_ref+'?sub=Feature&subid='+fid+'" target="_blank">'+fid+'</a>');
 
                 tblLabels.push('Aliases');
                 var $aliases = $('<div>');

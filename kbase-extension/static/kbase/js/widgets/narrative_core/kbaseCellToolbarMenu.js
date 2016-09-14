@@ -223,7 +223,7 @@ define([
                     id: events.addEvent({type: 'click', handler: doToggleCodeView})
                 });
             }
-            
+
             menuItems.push({
                 type: 'separator'
             });
@@ -258,13 +258,16 @@ define([
                             default:
                                 return li(button({
                                     class: 'btn btn-default',
-                                    style: {width: '100%'},
+                                    type: 'button',
+                                    style: {
+                                        width: '100%',
+                                        textAlign: 'left'
+                                    },
                                     id: item.id
                                 }, [
                                     span({style: {
                                             display: 'inline-block',
                                             width: '25px',
-                                            textAlign: 'left',
                                             marginRight: '4px'
                                         }}, renderIcon(item.icon)),
                                     span(item.label)]));
@@ -291,7 +294,7 @@ define([
                 div({class: 'buttons pull-right'}, [
                     span({class: 'kb-func-timestamp'}),
                     span({class: 'fa fa-circle-o-notch fa-spin', style: {color: 'rgb(42, 121, 191)', display: 'none'}}),
-                    span({class: 'fa fa-exclamation-triangle', style: {color: 'rgb(255, 0, 0)', display: 'none'}}),                   
+                    span({class: 'fa fa-exclamation-triangle', style: {color: 'rgb(255, 0, 0)', display: 'none'}}),
                     button({
                         type: 'button',
                         class: 'btn btn-default btn-xs',

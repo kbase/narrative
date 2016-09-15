@@ -223,6 +223,20 @@ define([
                     id: events.addEvent({type: 'click', handler: doToggleCodeView})
                 });
             }
+            
+            if (cell.showInfo) {
+                menuItems.push({
+                    name: 'info',
+                    label: 'Info',
+                    icon: {
+                        type: 'info',
+                        color: 'orange'
+                    },
+                    id: events.addEvent({type: 'click', handler: function () {
+                        cell.showInfo();
+                    }})
+                });
+            }
 
             menuItems.push({
                 type: 'separator'
@@ -345,19 +359,30 @@ define([
             ],
                 content = div({class: 'kb-cell-toolbar container-fluid'}, [
                     div({class: 'row', style: {height: '56px'}}, [
-                        div({class: 'col-sm-8 title-container'}, [
-                            div({class: 'title', style: {display: 'inline-block', height: '56px'}}, [
-                                div({dataElement: 'icon', class: 'icon', style: {position: 'relative', top: '0', left: '0', display: 'inline-block', height: '56px', lineHeight: '56px'}}, [
+                        div({class: 'col-sm-9 title-container'}, [
+                            div({class: 'title', style: {display: 'flex', height: '56px'}}, [
+                                div({dataElement: 'icon', 
+                                    class: 'icon', 
+                                    style: {
+                                        xposition: 'relative', 
+                                        xtop: '0', 
+                                        xleft: '0', 
+                                        xdisplay: 'inline-block', 
+                                        flexShrink: "0",
+                                        width: '56px',
+                                        height: '56px', 
+                                        lineHeight: '56px'
+                                    }}, [
                                     buildIcon(cell)
                                 ]),
-                                div({style: {display: 'inline-block'}}, [
-                                    div({dataElement: 'title', class: 'title', style: {lineHeight: '20px'}}, [getCellTitle(cell)]),
-                                    div({dataElement: 'subtitle', class: 'subtitle', style: {lineHeight: '20px'}}, [getCellSubtitle(cell)]),
-                                    div({dataElement: 'info-link', class: 'info-link'}, [getCellInfoLink(cell, events)])
+                                div({style: {flexGrow: "1"}}, [
+                                    div({dataElement: 'title', class: 'title', style: {lineHeight: '20px', height: '20px', marginTop: '8px', overflow: 'hidden'}}, [getCellTitle(cell)]),
+                                    div({dataElement: 'subtitle', class: 'subtitle', style: {lineHeight: '20px', height: '20px', overflow: 'hidden'}}, [getCellSubtitle(cell)])
+                                    // div({dataElement: 'info-link', class: 'info-link'}, [getCellInfoLink(cell, events)])
                                 ])
                             ])
                         ]),
-                        div({class: 'col-sm-4 buttons-container'}, buttons)
+                        div({class: 'col-sm-3 buttons-container'}, buttons)
                     ])
                 ]);
             if (Jupyter.narrative.readonly) {

@@ -177,12 +177,6 @@ define([
                 content: "<p>You now have been introduced to the basic features of the Narrative Interface. We hope you conduct interesting and creative research using these tools and are able to expand your collaborator network with other KBase users. If you have any questions or feature requests, please follow the Contact Us link in the hamburger menu.<p>To learn about advanced features of the Narrative Interface, click the right arrow button to proceed. Click the exit button to return to your Narrative.",
                 backdrop: true
             },
-            // {
-            //     title: 'Advanced Features',
-            //     // orphan: true,
-            //     content: 'This section of the Narrative Tour will introduce you to some features of the Narrative Interface that are useful to advanced users and developers.',
-            //     backdrop: true
-            // },
             {
                 element: '#kb-ipy-menu',
                 title: 'Kernel Controls',

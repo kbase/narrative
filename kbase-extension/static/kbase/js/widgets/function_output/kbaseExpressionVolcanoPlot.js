@@ -21,7 +21,7 @@ define(['jquery',
               KBaseTabs) {
     $.KBWidget({
           name: "kbaseExpressionVolcanoPlot",
-          parent: KBaseAuthenticatedWidget,
+          parent: "kbaseAuthenticatedWidget",
           version: "1.0.0",
           ws_id: null,
           ws_name: null,

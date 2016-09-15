@@ -25,6 +25,7 @@ define([
     'base/js/namespace',
     'common/runtime',
     'common/ui',
+    'common/html',
     'kbwidget',
     'jquery',
     'underscore',
@@ -48,6 +49,7 @@ define([
     Jupyter,
     Runtime,
     UI,
+    html,
     KBWidget,
     $,
     _,
@@ -344,7 +346,7 @@ define([
                             }
                             $doCopyBtn.prop('disabled', false);
                             $cancelBtn.prop('disabled', false);
-                        })
+                        });
                 }.bind(this));
 
             var $cancelBtn = $('<button>')
@@ -1525,11 +1527,15 @@ define([
             }
             var kbaseCellType = Props.getDataItem(cell.metadata, 'kbase.type');
             var cellId = Props.getDataItem(cell.metadata, 'kbase.attributes.id');
+            var p = html.tag('p');
 
             if (!kbaseCellType || !cellId) {
                 UI.make({node: this.$elem[0]}).showConfirmDialog({
                     title: 'Confirm Cell Deletion',
-                    content: 'Are you sure you want to delete this cell?'
+                    body: [
+                        p('Cell deletion is permanent. There is no "undo" feature to recover this cell once it is deleted.'),
+                        p('Are you sure you want to delete this cell?')
+                    ]
                 })
                 .then(function (confirmed) {
                     if (confirmed) {

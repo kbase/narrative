@@ -122,25 +122,25 @@ define([
                     runApp: {
                         help: 'Run the app',
                         type: 'primary',
+                        classes: ['-run'],
                         icon: {
-                            name: 'play',
-                            color: 'green'
+                            name: 'play'
                         }
                     },
                     cancel: {
                         help: 'Cancel the running app',
                         type: 'danger',
+                        classes: ['-cancel'],
                         icon: {
-                            name: 'stop',
-                            color: 'red'
+                            name: 'stop'
                         }
                     },
                     reRunApp: {
                         help: 'Edit and re-run the app',
                         type: 'primary',
+                        classes: ['-rerun'],
                         icon: {
-                            name: 'refresh',
-                            color: 'blue'
+                            name: 'refresh'
                         }
                     }
                 }
@@ -459,6 +459,24 @@ define([
                 return stopTab();
             }
         }
+        
+        function hidePane() {
+            return Promise.try(function () {
+                var paneNode = ui.getElement('run-control-panel.tab-pane');
+                if (paneNode) {
+                    paneNode.classList.add('hidden');
+                }
+            });
+        }
+
+        function showPane() {
+            return Promise.try(function () {
+                var paneNode = ui.getElement('run-control-panel.tab-pane');
+                if (paneNode) {
+                    paneNode.classList.remove('hidden');
+                }
+            });
+        }
 
         /*
          * If tab not open, close any open one and open it.
@@ -467,14 +485,22 @@ define([
         function toggleTab(tabId) {
             if (controlBarTabs.selectedTab) {
                 if (controlBarTabs.selectedTab.id === tabId) {
-                    return stopTab();
+                    return stopTab()
+                        .then(function () {
+                            // hide the pane, since we just closed the only open
+                            //tab.
+                            return hidePane();
+                        })
                 }
                 return stopTab()
                     .then(function () {
                         return startTab(tabId);
                     });
             }
-            return startTab(tabId);
+            return showPane()
+                .then(function () {
+                    startTab(tabId);
+                });
         }
 
 
@@ -848,12 +874,14 @@ define([
         function buildRunControlPanelRunButtons(events) {
             return div({class: 'btn-group'},
                 Object.keys(actionButtons.availableButtons).map(function (key) {
-                    var button = actionButtons.availableButtons[key];
+                    var button = actionButtons.availableButtons[key],
+                        classes = ['kb-flat-btn', 'kb-btn-action'].concat(button.classes);
                     return ui.buildButton({
                         tip: button.help,
                         name: key,
                         events: events,
                         type: button.type || 'default',
+                        classes: classes,
                         hidden: true,
                         event: {
                             type: 'actionButton',
@@ -863,96 +891,11 @@ define([
                         },
                         icon: {
                             name: button.icon.name,
-                            color: button.icon.color,
                             size: 3
-                        },
-                        classes: [
-                            'kb-flat-btn'
-                        ]
+                        }
                     });
                 })
             );
-        }
-
-        function xbuildRunControlPanelRunButtons(events) {
-            return div({class: 'btn-group'}, [
-                ui.buildButton({
-                    tip: 'Run the app',
-                    name: 'run-app',
-                    events: events,
-                    type: 'primary',
-                    hidden: true,
-                    icon: {
-                        name: 'play',
-                        size: 3,
-                        color: 'green'
-                    },
-                    classes: [
-                        'kb-flat-btn'
-                    ]
-                }),
-                ui.buildButton({
-                    tip: 'Launching the app...',
-                    name: 'launching',
-                    events: events,
-                    type: 'primary',
-                    hidden: true,
-                    disabled: true,
-                    icon: {
-                        name: 'play',
-                        size: 3,
-                        color: 'green'
-                    },
-                    classes: [
-                        'kb-flat-btn'
-                    ]
-                }),
-                ui.buildButton({
-                    tip: 'Cancel the running app',
-                    name: 'cancel',
-                    events: events,
-                    type: 'danger',
-                    hidden: true,
-                    icon: {
-                        name: 'stop',
-                        size: 3,
-                        color: 'red'
-                    },
-                    classes: [
-                        'kb-flat-btn'
-                    ]
-                }),
-                ui.buildButton({
-                    tip: 'Canceling the app...',
-                    name: 'canceling',
-                    events: events,
-                    type: 'danger',
-                    hidden: true,
-                    icon: {
-                        name: 'stop',
-                        size: 3,
-                        color: 'red'
-                    },
-                    classes: [
-                        'kb-flat-btn'
-                    ]
-                }),
-                ui.buildButton({
-                    tip: 'Edit and re-run the app',
-                    name: 're-run-app',
-                    events: events,
-                    type: 'primary',
-                    hidden: true,
-                    icon: {
-                        name: 'refresh',
-                        size: 3,
-                        color: 'blue'
-                    },
-                    classes: [
-                        'kb-flat-btn'
-                    ]
-                })
-            ]);
         }
 
         function buildRunControlPanelDisplayButtons(events) {
@@ -979,6 +922,7 @@ define([
                     type: tab.type || 'primary',
                     hidden: true,
                     features: tab.features,
+                    classes: ['kb-app-cell-btn'],
                     event: {
                         type: 'control-panel-tab',
                         data: {
@@ -1010,7 +954,9 @@ define([
                                 borderRight: '3px silver solid'
                             }}, [
                             div({style: {height: '40px', marginTop: '10px', textAlign: 'center', lineHeight: '40px', verticalAlign: 'middle'}}, [
-                                span({dataElement: 'icon', class: 'fa fa-question fa-2x', style: {lineHeight: '40px'}})
+                                span({dataElement: 'indicator'}, [
+                                    span({dataElement: 'icon', class: 'fa fa-question fa-2x', style: {lineHeight: '40px'}})
+                                ])
                             ]),
                             div({dataElement: 'message', style: {height: '20px', marginTop: '5px', textAlign: 'center'}}, 'status'),
                             div({dataElement: 'measure', style: {height: '20px', marginBotton: '5px',  textAlign: 'center'}})
@@ -1492,13 +1438,21 @@ define([
 
             ui.setContent('run-control-panel.status.message', state.ui.label);
 
-            var iconNode = ui.getElement('run-control-panel.status.icon');
+            var indicatorNode = ui.getElement('run-control-panel.status.indicator');
+            var iconNode = ui.getElement('run-control-panel.status.indicator.icon');
             if (iconNode) {
                 // clear the classes
-                iconNode.className = '';
+                
+                indicatorNode.className = state.ui.appStatus.classes.join(' ');
+                //var classes = ['fa', 'fa-' + state.ui.appStatus.icon.type, 'fa-3x'].concat(state.ui.appStatus.classes);
+                //classes.forEach(function(klass) {
+                //    iconNode.classList.add(klass);
+                //});
+                // iconNode.classList.add.apply(iconNode.classList, classes);
 
-                iconNode.classList.add('fa', 'fa-' + state.ui.icon.type, 'fa-3x');
-                iconNode.style.color = state.ui.icon.color;
+                iconNode.className = '';
+                iconNode.classList.add('fa', 'fa-' + state.ui.appStatus.icon.type, 'fa-3x');
+                // iconNode.style.color = state.ui.icon.color;
             }
 
             // Clear the measure

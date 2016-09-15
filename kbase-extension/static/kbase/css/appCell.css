@@ -170,22 +170,7 @@ control with padding, and then scooting the icon back into its column.
     padding: 3px 5px;
 }
 
-.kb-app-cell [data-element="run-control-panel"] {
-    padding-left: 8px;
-}
 
-.kb-app-cell [data-element="tab-pane"] {
-    border: 1px solid rgb(32, 77, 16);
-    background-color: #f5f5f5;
-}
-
-.kb-app-cell [data-element="tab-pane"] > div:empty {
-    padding: 0px;
-}
-
-.kb-app-cell [data-element="tab-pane"] > div {
-    padding: 4px;
-}
 
 .kb-app-cell .panel-title > [data-toggle="collapse"]::before {
     display: inline-block;
@@ -247,4 +232,121 @@ control with padding, and then scooting the icon back into its column.
 
 .kb-app-cell-info .value {
     color: #000;
+}
+
+
+/*
+New button color scheme
+
+blue for border, backgrounds, text: rgb(0, 147, 255))
+
+disabled color for border, text
+
+enabled run color - (green) -  rgb(2,140,10))
+
+or 
+
+ rgb(42,190,159) which is the lighter variant. both used in mocks (but depends where you sample).
+
+disabled run color - (green) -
+
+error color - red - rgb(209,82,65)
+
+disabled (gray) - 205,205,205
+
+warning: orange
+
+*/
+
+.btn.kb-app-cell-btn.btn-primary {
+    color: rgb(0, 147, 255)
+}
+.btn.kb-app-cell-btn.btn-primary:hover {
+    border: 2px rgb(0, 147, 255) solid;
+    background-color: rgb(0, 147, 255);
+    color: white;
+    border-bottom: 6px rgb(0, 147, 255) solid;
+    margin-bottom: 0;
+}
+.btn.kb-app-cell-btn.btn-primary.active:hover {
+    color: rgb(0, 147, 255);
+    background-color: #DDD;
+    border-bottom: 2px rgb(0, 147, 255) solid;
+    margin-bottom: 4px;
+}
+.btn.kb-app-cell-btn.btn-primary:active {
+    background-color: rgb(0, 147, 255);
+    color: #FFF;
+}
+
+.btn.kb-app-cell-btn {
+    border: 2px rgb(0, 147, 255) solid;
+    background-color: #FFF;
+    color: blue;
+    margin-bottom: 4px
+}
+
+.btn.kb-app-cell-btn.btn-primary.disabled:hover {
+    color: #888;
+    background-color: #FFF;
+    border-bottom: 2px #888 solid;
+    margin-bottom: 4px;
+}
+.btn.kb-app-cell-btn.disabled {
+    border: 2px #888 solid;
+    color: #888;
+}
+
+.btn.kb-app-cell-btn.active {
+    border: 2px rgb(0, 147, 255) solid;
+    background-color: rgb(0, 147, 255);
+    color: white;
+    border-bottom: 6px rgb(0, 147, 255) solid;
+    margin-bottom: 0;
+}
+
+.kb-app-cell [data-element="run-control-panel"] {
+    xpadding-left: 8px;
+    width: 100%;
+}
+
+.kb-app-cell [data-element="tab-pane"] {
+    border-top: 2px rgb(0, 147, 255) solid;
+    xborder: 1px solid rgb(32, 77, 16);
+    xbackground-color: #f5f5f5;
+}
+
+.kb-app-cell [data-element="tab-pane"] > div:empty {
+    padding: 0px;
+}
+
+.kb-app-cell [data-element="tab-pane"] > div {
+    padding: 4px;
+}
+
+.kb-app-cell .btn-primary.kb-btn-action.-rerun {
+    color: rgb(0, 147, 255)
+}
+
+
+.kb-app-cell .btn-primary.kb-btn-action.-run {
+    color: rgb(42,190,159)
+}
+
+
+.kb-app-cell .btn-danger.kb-btn-action.-cancel {
+    color: rgb(209,82,65)
+}
+
+.kb-app-status-ok {
+    color:  rgb(2,140,10);
+}
+.kb-app-status-warning {
+    color:  orange;
+}
+.kb-app-status-danger {
+    color:  rgb(209,82,65);
+}
+.kb-app-status-default {
+    color:  rgb(0, 147, 255);
 }

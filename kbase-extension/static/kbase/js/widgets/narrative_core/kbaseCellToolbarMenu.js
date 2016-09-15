@@ -6,17 +6,15 @@ define([
     'common/events',
     'base/js/namespace',
     'common/utils',
-    'common/runtime',
-    'common/ui',
     'util/bootstrapDialog',
     'kbase/js/widgets/appWidgets/infoPanel'
-], function ($, html, Events, Jupyter, utils, Runtime, UI, BootstrapDialog, AppInfoPanel) {
+], function ($, html, Events, Jupyter, utils, BootstrapDialog, AppInfoPanel) {
     'use strict';
 
     var t = html.tag,
         div = t('div'), a = t('a'),
-        button = t('button'), p = t('p'), blockquote = t('blockquote'),
-        span = t('span');
+        button = t('button'), p = t('p'),
+        span = t('span'), ul = t('ul'), li = t('li');
 
     function getMeta(cell, group, name) {
         if (!cell.metadata.kbase) {
@@ -32,55 +30,14 @@ define([
     }
     function factory(config) {
         var container,
-            cell,
-            ui;
+            cell;
 
-        function doMoveCellUp(e) {
+        function doMoveCellUp() {
             Jupyter.notebook.move_cell_up();
         }
-        function doMoveCellDown(e) {
+
+        function doMoveCellDown() {
             Jupyter.notebook.move_cell_down();
-        }
-        function doInsertCellAbove(e) {
-            Jupyter.narrative.insertAndSelectCellAbove('markdown');
-        }
-        function doInsertCellBelow(e) {
-            Jupyter.narrative.insertAndSelectCellBelow('markdown');
-        }
-        function doToggleCellType(e) {
-            if (this.options.cell.cell_type === "markdown") {
-                Jupyter.notebook.to_code();
-            } else {
-                Jupyter.notebook.to_markdown();
-            }
-        }
-        function doToggleCell(e) {
-            // Tell the associated cell to toggle.
-            // the toolbar should be re-rendered when the cell metadata changes,
-            // so it will naturally pick up the toggle state...
-            $(e.target).trigger('toggle.cell');
-        }
-
-        function renderToggleState() {
-            var toggleState = utils.getMeta(cell, 'cellState', 'toggleState'),
-                toggleIcon = container.querySelector('[data-button="toggle"] > span'),
-                openIcon = 'fa-chevron-down',
-                closedIcon = 'fa-chevron-right';
-
-            switch (toggleState) {
-                case 'open':
-                    toggleIcon.classList.remove(closedIcon);
-                    toggleIcon.classList.add(openIcon);
-                    break;
-                case 'closed':
-                    toggleIcon.classList.remove(openIcon);
-                    toggleIcon.classList.add(closedIcon);
-                    break;
-                default:
-                    toggleIcon.classList.remove(closedIcon);
-                    toggleIcon.classList.add(openIcon);
-                    // console.warn('INVALID TOGGLE STATE, ASSUMING OPEN', toggleState);
-            }
         }
 
         function doDeleteCell() {
@@ -121,7 +78,7 @@ define([
                         handler: doShowInfoModal
                     })
                 },
-                label || 'ref');
+                    label || 'ref');
             }
             return '';
         }
@@ -132,13 +89,14 @@ define([
 
         function doToggleCodeView() {
             cell.element.trigger('toggleCodeArea.cell');
-            // $(cell.element).find('.input_area').toggle();
         }
 
-        function doToggleCellSettings() {
-            cell.element.trigger('toggleCellSettings.cell');
+        function isCodeShowing(cell) {
+            if (cell.isCodeShowing) {
+                return cell.isCodeShowing();
+            }
+            return null;
         }
-
         function doShowInfoModal(e) {
             e.preventDefault();
             var version = utils.getCellMeta(cell, 'kbase.appCell.app.version'),
@@ -152,7 +110,9 @@ define([
                 body: $('<div class="container"></div>'),
                 buttons: [
                     $('<a href="' + appStoreUrl + '" target="_blank" type="button" class="btn btn-default">View on App Store</a>'),
-                    $('<button type="button" class="btn btn-primary">Close</button>').click(function() { dialog.hide(); })
+                    $('<button type="button" class="btn btn-primary">Close</button>').click(function () {
+                        dialog.hide();
+                    })
                 ],
                 enterToTrigger: true,
                 closeButton: true
@@ -173,29 +133,8 @@ define([
             dialog.show();
         }
 
-        function renderToggleCodeView(events) {
-            var runtime = Runtime.make();
-            // Only render if actually a code cell and in dev mode.
-            // TODO: add cell extension to toggle code view, since this may
-            // depend on cell state (or subtype)
-            if (cell.cell_type !== 'code') {
-                return;
-            }
-            // if (!ui.isDeveloper()) {
-            //     return;
-            // }
-
-            return button({
-                type: 'button',
-                class: 'btn btn-default btn-xs',
-                dataToggle: 'tooltip',
-                dataPlacement: 'left',
-                title: true,
-                dataOriginalTitle: 'Toggle Code',
-                id: events.addEvent({type: 'click', handler: doToggleCodeView})
-            }, [
-                span({class: 'fa fa-terminal', style: 'font-size: 14pt'})
-            ]);
+        function doToggleCellSettings() {
+            cell.element.trigger('toggleCellSettings.cell');
         }
 
         function renderToggleCellSettings(events) {
@@ -217,6 +156,127 @@ define([
             ]);
         }
 
+        function renderIcon(icon) {
+            return span({
+                class: 'fa fa-' + icon.type + ' fa-sm',
+                style: {color: icon.color || '#000'}
+            });
+        }
+
+        function isKBaseCell(cell) {
+            if (!cell.metadata || !cell.metadata.kbase || !cell.metadata.kbase.type) {
+                return false;
+            }
+            return true;
+        }
+
+        function doHelp() {
+            alert('help here...');
+        }
+
+        function renderOptions(cell, events) {
+            var toggleMinMax = utils.getCellMeta(cell, 'kbase.cellState.toggleMinMax', 'maximized'),
+                toggleIcon = (toggleMinMax === 'maximized' ? 'minus' : 'plus'),
+                dropdownId = html.genId(),
+                menuItems = [
+                    // we can always dream.
+//                    {
+//                        name: 'help',
+//                        label: 'Help',
+//                        icon: {
+//                            type: 'question',
+//                            color: 'black'
+//                        },
+//                        id: events.addEvent({type: 'click', handler: doHelp})
+//                    },
+                    {
+                        name: 'toggle-collapse',
+                        label: toggleMinMax === 'maximized' ? 'Collapse' : 'Expand',
+                        icon: {
+                            type: toggleIcon + '-square-o',
+                            color: 'orange'
+                        },
+                        id: events.addEvent({type: 'click', handler: doToggleMinMaxCell})
+                    }
+                ];
+
+// we can always dream
+//            if (isKBaseCell(cell)) {
+//                menuItems.push({
+//                    name: 'settings',
+//                    label: 'Settings',
+//                    icon: {
+//                        type: 'gear',
+//                        color: 'black'
+//                    }
+//                });
+//            }
+
+            if (cell.cell_type === 'code') {
+                menuItems.push({
+                    name: 'code-view',
+                    label: isCodeShowing(cell) ? 'Hide code' : 'Show code',
+                    icon: {
+                        type: 'terminal',
+                        color: 'black'
+                    },
+                    id: events.addEvent({type: 'click', handler: doToggleCodeView})
+                });
+            }
+
+            menuItems.push({
+                type: 'separator'
+            });
+            menuItems.push({
+                name: 'delete-cell',
+                label: 'Delete cell',
+                icon: {
+                    type: 'times',
+                    color: 'red'
+                },
+                id: events.addEvent({type: 'click', handler: doDeleteCell})
+            });
+
+
+            return span({class: 'dropdown'}, [
+                button({
+                    class: 'btn btn-xs btn-default dropdown-toggle',
+                    type: 'button',
+                    id: dropdownId,
+                    dataToggle: 'dropdown',
+                    ariaHaspopup: 'true',
+                    ariaExpanded: 'true'
+                }, [span({class: 'fa fa-ellipsis-h fa-lg'})]),
+                ul({class: 'dropdown-menu dropdown-menu-right', ariaLabelledby: dropdownId}, [
+                    menuItems.map(function (item) {
+                        switch (item.type) {
+                            case 'separator':
+                                return li({
+                                    role: 'separator',
+                                    class: 'divider'
+                                });
+                            default:
+                                return li(button({
+                                    class: 'btn btn-default',
+                                    type: 'button',
+                                    style: {
+                                        width: '100%',
+                                        textAlign: 'left'
+                                    },
+                                    id: item.id
+                                }, [
+                                    span({style: {
+                                            display: 'inline-block',
+                                            width: '25px',
+                                            marginRight: '4px'
+                                        }}, renderIcon(item.icon)),
+                                    span(item.label)]));
+                        }
+                    }).join('')
+                ])
+            ]);
+        }
+
         function buildIcon(cell) {
             if (cell && cell.getIcon) {
                 return cell.getIcon();
@@ -230,15 +290,11 @@ define([
 
         function render(cell) {
             var events = Events.make({node: container}),
-                toggleMinMax = utils.getCellMeta(cell, 'kbase.cellState.toggleMinMax', 'maximized'),
-                toggleIcon = (toggleMinMax === 'maximized' ? 'minus' : 'plus'),
                 buttons = Jupyter.narrative.readonly ? [] : [
                 div({class: 'buttons pull-right'}, [
                     span({class: 'kb-func-timestamp'}),
                     span({class: 'fa fa-circle-o-notch fa-spin', style: {color: 'rgb(42, 121, 191)', display: 'none'}}),
                     span({class: 'fa fa-exclamation-triangle', style: {color: 'rgb(255, 0, 0)', display: 'none'}}),
-                    renderToggleCodeView(events),
-                    renderToggleCellSettings(events),
                     button({
                         type: 'button',
                         class: 'btn btn-default btn-xs',
@@ -248,7 +304,7 @@ define([
                         dataOriginalTitle: 'Move Cell Up',
                         id: events.addEvent({type: 'click', handler: doMoveCellUp})
                     }, [
-                        span({class: 'fa fa-arrow-up', style: 'font-size: 14pt'})
+                        span({class: 'fa fa-arrow-up fa-lg'})
                     ]),
                     button({
                         type: 'button',
@@ -259,30 +315,31 @@ define([
                         dataOriginalTitle: 'Move Cell Down',
                         id: events.addEvent({type: 'click', handler: doMoveCellDown})
                     }, [
-                        span({class: 'fa fa-arrow-down', style: 'font-size: 14pt'})
+                        span({class: 'fa fa-arrow-down fa-lg', style: 'xfont-size: 18px'})
                     ]),
-                    button({
-                        type: 'button',
-                        class: 'btn btn-default btn-xs',
-                        dataToggle: 'tooltip',
-                        dataPlacement: 'left',
-                        title: true,
-                        dataOriginalTitle: 'Delete Cell',
-                        id: events.addEvent({type: 'click', handler: doDeleteCell})
-                    }, [
-                        span({class: 'fa fa-times-circle', style: {fontSize: '14pt', color: 'red'}})
-                    ]),
-                    button({
-                        type: 'button',
-                        class: 'btn btn-default btn-xs',
-                        dataToggle: 'tooltip',
-                        dataPlacement: 'left',
-                        title: true,
-                        dataOriginalTitle: toggleMinMax === 'maximized' ? 'Collapse Cell' : 'Expand Cell',
-                        id: events.addEvent({type: 'click', handler: doToggleMinMaxCell})
-                    }, [
-                        span({class: 'fa fa-' + toggleIcon + '-square-o', style: {fontSize: '14pt', color: 'orange'}})
-                    ])
+                    renderOptions(cell, events)
+//                    button({
+//                        type: 'button',
+//                        class: 'btn btn-default btn-xs',
+//                        dataToggle: 'tooltip',
+//                        dataPlacement: 'left',
+//                        title: true,
+//                        dataOriginalTitle: 'Delete Cell',
+//                        id: events.addEvent({type: 'click', handler: doDeleteCell})
+//                    }, [
+//                        span({class: 'fa fa-times-circle', style: {fontSize: '14pt', color: 'red'}})
+//                    ]),
+//                    button({
+//                        type: 'button',
+//                        class: 'btn btn-default btn-xs',
+//                        dataToggle: 'tooltip',
+//                        dataPlacement: 'left',
+//                        title: true,
+//                        dataOriginalTitle: toggleMinMax === 'maximized' ? 'Collapse Cell' : 'Expand Cell',
+//                        id: events.addEvent({type: 'click', handler: doToggleMinMaxCell})
+//                    }, [
+//                        span({class: 'fa fa-' + toggleIcon + '-square-o', style: {fontSize: '14pt', color: 'orange'}})
+//                    ])
 
                 ])
             ],
@@ -303,25 +360,19 @@ define([
                         div({class: 'col-sm-4 buttons-container'}, buttons)
                     ])
                 ]);
-            var readOnly = Jupyter.narrative.readonly;
-            if (readOnly) {
+            if (Jupyter.narrative.readonly) {
                 $(content).find('.buttons-container').hide();
             }
+
             return {
                 events: events,
                 content: content
             };
         }
 
-        /*
-         * We are going to try to make this work by creating the layout once,
-         * and then allowing the toolbar widgets to refresh themselves
-         * upon an event emitted at callback time.
-         */
         function callback(toolbarDiv, parentCell) {
             try {
                 container = toolbarDiv[0];
-                ui = UI.make({node: container});
                 cell = parentCell;
                 var rendered = render(parentCell);
                 container.innerHTML = rendered.content;

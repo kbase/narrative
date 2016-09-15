@@ -41,9 +41,12 @@ define([
                     show: [],
                     hide: ['fatal-error', 'parameters-group', 'output-group', 'parameters-display-group', 'exec-group']
                 },
-                icon: {
-                    color: 'black',
-                    type: 'minus'
+                appStatus: {
+                    classes: ['kb-app-status-default'],                    
+                    icon: {
+                        xcolor: 'black',
+                        type: 'minus'
+                    }
                 },
                 label: 'new',
                 message: ''
@@ -95,9 +98,12 @@ define([
                     show: ['parameters-group', 'output-group'],
                     hide: ['fatal-error', 'parameters-display-group', 'exec-group']
                 },
-                icon: {
-                    color: 'orange',
-                    type: 'pencil'
+                appStatus: {
+                    classes: ['kb-app-status-warning'],
+                    icon: {
+                        xcolor: 'orange',
+                        type: 'pencil'
+                    }
                 },
                 label: 'editing',
                 message: 'You may edit the parameters for this App. All required parameters are not currently entered. When they are complete, you will be able to run the app.'
@@ -155,9 +161,12 @@ define([
                     show: ['parameters-group', 'output-group'],
                     hide: ['fatal-error', 'parameters-display-group', 'exec-group']
                 },
-                icon: {
-                    color: 'green',
-                    type: 'pencil'
+                appStatus: {
+                    classes: ['kb-app-status-ok'],
+                    icon: {
+                        xcolor: 'green',
+                        type: 'pencil'
+                    }
                 },
                 label: 'editing',
                 message: 'You have completed the required parameters for this App; you may run it or continue to edit parameters.'
@@ -258,11 +267,14 @@ define([
                         }
                     }
                 ],
-                icon: {
-                    color: 'blue',
-                    type: 'rocket'
+                appStatus: {
+                    classes: ['kb-app-status-primary'],
+                    icon: {
+                        color: 'blue',
+                        type: 'rocket'
+                    }
                 },
-                label: 'launching...',
+                label: 'sending...',
                 message: 'Launching the app...'
             },
             on: {
@@ -336,9 +348,12 @@ define([
                     show: ['parameters-display-group', 'exec-group', 'output-group'],
                     hide: ['parameters-group']
                 },
-                icon: {
-                    color: 'green',
-                    type: 'rocket'
+                appStatus: {
+                    classes: ['kb-app-status-ok'],
+                    icon: {
+                        xcolor: 'green',
+                        type: 'rocket'
+                    }
                 },
                 label: 'executing...',
                 message: 'The app has now entered the execution engine'
@@ -424,9 +439,12 @@ define([
                     show: ['parameters-display-group', 'exec-group', 'output-group'],
                     hide: ['parameters-group']
                 },
-                icon: {
-                    color: 'green',
-                    type: 'list'
+                appStatus: {
+                    classes: ['kb-app-status-ok'],
+                    icon: {
+                        xcolor: 'green',
+                        type: 'list'
+                    }
                 },
                 label: 'queued...',
                 message: 'The app is queued for running.'
@@ -522,9 +540,12 @@ define([
                     show: ['parameters-display-group', 'exec-group', 'output-group'],
                     hide: ['parameters-group']
                 },
-                icon: {
-                    color: 'green',
-                    type: 'bolt'
+                appStatus: {
+                    classes: ['kb-app-status-ok'],
+                    icon: {
+                        xcolor: 'green',
+                        type: 'bolt'
+                    }
                 },
                 label: 'running...',
                 message: 'The app is now running.'
@@ -615,9 +636,12 @@ define([
                     show: ['exec-group', 'output-group'],
                     hide: ['parameters-display-group', 'parameters-group']
                 },
-                icon: {
-                    color: 'orange',
-                    type: 'bolt'
+                appStatus: {
+                    classes: ['kb-app-status-warning'],
+                    icon: {
+                        xcolor: 'orange',
+                        type: 'bolt'
+                    }
                 },
                 label: 'canceling...',
                 message: 'Canceling the app...'
@@ -685,9 +709,12 @@ define([
                     show: ['parameters-display-group', 'exec-group', 'output-group'],
                     hide: ['parameters-group']
                 },
-                icon: {
-                    color: 'red',
-                    type: 'ban'
+                appStatus: {
+                    classes: ['kb-app-status-error'],
+                    icon: {
+                        xcolor: 'red',
+                        type: 'ban'
+                    }
                 },
                 label: 'canceled',
                 message: 'The app execution has been successfully canceled'
@@ -738,9 +765,12 @@ define([
                     show: ['parameters-display-group', 'exec-group', 'output-group'],
                     hide: ['parameters-group']
                 },
-                icon: {
-                    color: 'green',
-                    type: 'check'
+                appStatus: {
+                    classes: ['kb-app-status-ok'],
+                    icon: {
+                        xcolor: 'green',
+                        type: 'check'
+                    }
                 },
                 label: 'completed',
                 message: 'The app has successfully run'
@@ -818,9 +848,12 @@ define([
                     show: ['parameters-display-group', 'exec-group', 'output-group'],
                     hide: ['parameters-group']
                 },
-                icon: {
-                    color: 'red',
-                    type: 'exclamation-circle'
+                appStatus: {
+                    classes: ['kb-app-status-danger'],
+                    icon: {
+                        xcolor: 'red',
+                        type: 'exclamation-circle'
+                    }
                 },
                 label: 'error',
                 message: 'There was an error launching the app'
@@ -877,9 +910,12 @@ define([
                     show: ['parameters-display-group', 'exec-group', 'output-group'],
                     hide: ['parameters-group']
                 },
-                icon: {
-                    color: 'red',
-                    type: 'exclamation-circle'
+                appStatus: {
+                    classes: ['kb-app-status-danger'],
+                    icon: {
+                        xcolor: 'red',
+                        type: 'exclamation-circle'
+                    }
                 },
                 label: 'error',
                 message: 'An error was encountered while the app was queued'
@@ -936,9 +972,12 @@ define([
                     show: ['parameters-display-group', 'exec-group', 'output-group'],
                     hide: ['parameters-group']
                 },
-                icon: {
-                    color: 'red',
-                    type: 'exclamation-circle'
+                appStatus: {
+                    classes: ['kb-app-status-danger'],
+                    icon: {
+                        xcolor: 'red',
+                        type: 'exclamation-circle'
+                    }
                 },
                 label: 'error',
                 message: 'An error was encountered running the app'
@@ -994,9 +1033,12 @@ define([
                     show: ['parameters-display-group', 'exec-group', 'output-group'],
                     hide: ['parameters-group']
                 },
-                icon: {
-                    color: 'red',
-                    type: 'exclamation-circle'
+                appStatus: {
+                    classes: ['kb-status-danger'],                    
+                    icon: {
+                        xcolor: 'red',
+                        type: 'exclamation-circle'
+                    }
                 },
                 label: 'error',
                 message: 'An error was encountered'
@@ -1051,9 +1093,12 @@ define([
                     show: ['fatal-error'],
                     hide: ['parameters-group', 'parameters-display-group', 'exec-group', 'output-group']
                 },
-                icon: {
-                    color: 'red',
-                    type: 'exclamation-circle'
+                appStatus: {
+                    classes: ['kb-status-danger'],                    
+                    icon: {
+                        xcolor: 'red',
+                        type: 'exclamation-circle'
+                    }
                 },
                 label: 'error',
                 message: 'A fatal error was encountered'

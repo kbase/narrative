@@ -84,12 +84,19 @@ define([
             this.input.find('.input_prompt').hide();
             utils.horribleHackToHideElement(this, '.output_prompt', 10);
         };
-        cell.toggleCodeInputArea = function () {
-            console.log('TOGGLING 2...');
+        cell.isCodeShowing = function () {
             var codeInputArea = this.input.find('.input_area')[0];
-            console.log('TOGGLING 3', codeInputArea);
+            if (codeInputArea) {
+                return !codeInputArea.classList.contains('hidden');
+            }
+            return false;            
+        };
+        cell.toggleCodeInputArea = function () {
+            var codeInputArea = this.input.find('.input_area')[0];
             if (codeInputArea) {
                 codeInputArea.classList.toggle('hidden');
+                // NB purely for side effect - toolbar refresh
+                cell.metadata = cell.metadata;
             }
         }
     }
@@ -118,7 +125,6 @@ define([
         var outputCell = OutputCell.make({
             cell: cell
         });
-        console.log('CELL', cell);
         outputCell.bus.emit('run', {
             node: cell.element
         });

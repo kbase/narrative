@@ -9,10 +9,15 @@ Known issues:
 1) resize window sets svg width to zero of contig browser of non-visible tabs, so they dissappear
 2) we don't know the length of the contig when rendering the gene context browser, so scale goes
    beyond the actual contig
+3) color the features based on type, other things?
+4) adjust height based on number of tracks
 
 
-#TODL: 
-
+#TODO
+- sequence that is too many lines / location that are too many lines
+   - place in scroll pane
+- feature that is longer than 30kb, don't show genome browser
+- Show assembly information
 
 */
 
@@ -882,7 +887,6 @@ define (
                     fetchTimeout = null;
                     setToLoad($loadingDiv);
                     start=0;
-                    console.log('sending request:', $input.val());
                     search_contigs($input.val(),start, limit, sort_by)
                         .then(function(result) {
                                 if(isLastQuery(result)) { renderResult($table, result); }
@@ -906,6 +910,9 @@ define (
                 return;
             }
 
+            function numberWithCommas(x) {
+                return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            }
 
             var ready = function(genomeData, ctg) {
                     var gnm = genomeData;
@@ -989,6 +996,9 @@ define (
                     }
 
                     var n_features = gnm.n_features;
+                    if(n_features) {
+                        n_features = numberWithCommas(n_features);
+                    }
 
                     var overviewLabels = [
                             'KBase Object Name',
@@ -1161,12 +1171,9 @@ define (
 
 
             if(self.genome_info) {
-                ready(self.normalizeGenomeDataFromNarrative(self.genome_info),null);
+                ready(self.normalizeGenomeDataFromNarrative(self.genome_info, genome_ref, ready),null);
             } else {
-                // get info
-                //var included = ["complete","contig_ids","contig_lengths","contigset_ref","assembly_ref", "dna_size",
-                //            "domain","gc_content","genetic_code","id","md5","num_contigs",
-                //            "scientific_name","source","source_id","tax_id","taxonomy"];
+                // get info from metadata
                 self.genomeAPI
                         .get_genome_v1({ 
                             genomes: [{
@@ -1176,7 +1183,7 @@ define (
                         })
                         .then(function(data) {
                             console.log('genomeAPI.get_genome_v1(ref='+genome_ref+')',data['genomes'][0]);
-                            ready(self.normalizeGenomeDataFromQuery(data['genomes'][0]),null);
+                            ready(self.normalizeGenomeDataFromQuery(data['genomes'][0], genome_ref, ready),null);
                         })
                         .fail(function(e) {
                             console.error(e);
@@ -1201,9 +1208,9 @@ define (
         },
 
 
-        normalizeGenomeDataFromNarrative: function(genome_info) {
+        normalizeGenomeDataFromNarrative: function(genome_info, genome_ref, noDataCallback) {
             var self = this;
-            var genomeData = self.normalizeGenomeMetadata(genome_info['meta']);
+            var genomeData = self.normalizeGenomeMetadata(genome_info['meta'], genome_ref, noDataCallback);
             genomeData['ws_obj_name'] = genome_info['name'];
             genomeData['version'] = genome_info['version'];
             genomeData['ref'] = genome_info['ws_id'] + '/' + genome_info['name'] + '/' + genome_info['version'];
@@ -1211,18 +1218,19 @@ define (
             return genomeData;
         },
 
-        normalizeGenomeDataFromQuery: function(wsReturnedData) {
+        normalizeGenomeDataFromQuery: function(wsReturnedData, genome_ref, noDataCallback) {
             var self = this;
             var info = wsReturnedData['info'];
             var metadata = info[10];
-            var genomeData = self.normalizeGenomeMetadata(metadata, genomeData);
+            var genomeData = self.normalizeGenomeMetadata(metadata, genome_ref, noDataCallback);
             genomeData['ws_obj_name'] = info[1];
             genomeData['version'] = info[4];
             genomeData['ref'] = info[6] + '/' + info[1] + '/' + info[4];
             return genomeData;
         },
 
-        normalizeGenomeMetadata: function(metadata) {
+        normalizeGenomeMetadata: function(metadata, genome_ref, noDataCallback) {
+            var self = this;
             var genomeData = {
                 scientific_name: '',
                 domain: '',
@@ -1235,6 +1243,9 @@ define (
 
             if(metadata['Name']) {
                 genomeData.scientific_name = metadata['Name'];
+            } else {
+                // no scientific name, so ug.  we should refetch and get the basic information
+                self.getGenomeDataDirectly(genome_ref, noDataCallback);
             }
             if(metadata['Domain']) {
                 genomeData.domain = metadata['Domain'];
@@ -1255,6 +1266,51 @@ define (
                 genomeData.n_features = metadata['Number features'];
             }
             return genomeData;
+        },
+
+        getGenomeDataDirectly: function(genome_ref, noDataCallback) {
+            var self = this;
+
+            var included = ["domain","genetic_code","id","num_features",
+                            "scientific_name","source","source_id","taxonomy"];
+            self.genomeAPI
+                        .get_genome_v1({ 
+                            genomes: [{
+                                ref: self.genome_ref
+                            }],
+                            'included_fields' : included
+                        })
+                        .then(function(data) {
+                            console.log('genomeAPI.get_genome_v1(ref='+genome_ref+')',data['genomes'][0]);
+
+                            var info = data['genomes'][0]['info'];
+                            var genomeData = data['genomes'][0]['data'];
+                            genomeData['ws_obj_name'] = info[1];
+                            genomeData['version'] = info[4];
+                            genomeData['ref'] = info[6] + '/' + info[1] + '/' + info[4];
+
+                            // normalize these data fields too
+                            if(!genomeData['domain']) {
+                                genomeData.domain = '';
+                            }
+                            if(!genomeData['genetic_code']) {
+                                genomeData.genetic_code = '';
+                            }
+                            if(!genomeData['source']) {
+                                genomeData.source = '';
+                            }
+                            if(!genomeData['source_id']) {
+                                genomeData.source_id = '';
+                            }
+                            if(!genomeData['taxonomy']) {
+                                genomeData.taxonomy = '';
+                            }
+                            if(!genomeData['num_features']) {
+                                genomeData.n_features = '';
+                            }
+
+                            noDataCallback(genomeData);
+                        });
         },
 
 
@@ -1466,7 +1522,6 @@ define (
                     });
 
                 contigDataPromise.then(function(contigData) {
-                    console.log(contigData);
                     // Browser
                     $browserRow.append($('<i class="fa fa-spinner fa-spin fa-2x">'));
                     var start = 0;
@@ -1543,15 +1598,16 @@ define (
                 $div.append($('<span>').css({color:'blue'}).append('Pos Charged'));
                 $div.append('<br>');
 
-                var $posTD = $('<td>').css({'text-align': 'right', 'border':'0'});
+                var $posTD = $('<td>').css({'text-align': 'right', 'border':'0', 'color':'#777'});
                 var $seqTD = $('<td>').css({'border':'0'});
+                var lines = 1;
                 for (var i = 0; i < sequence.length; i++) {
                     if(i>0 && i%charWrap===0) {
-                        $posTD.append('<br>');
+                        $posTD.append('<br>').append(i+1).append(':&nbsp;');
                         $seqTD.append('<br>');
-                        $posTD.append($('<span>').css({color:'#777'}).append(i+1).append(':&nbsp;'));
+                        lines++;
                     } else if (i==0) {
-                        $posTD.append($('<span>').css({color:'#777'}).append(i+1).append(':&nbsp;'));
+                        $posTD.append(i+1).append(':&nbsp;');
                     }
 
                     var color = '#000';
@@ -1574,29 +1630,34 @@ define (
                 $div.append($('<table>').css({'border':'0','border-collapse':'collapse'}).append(
                         $('<tr>').css({'border':'0'}).append($posTD).append($seqTD)));
 
+                if(lines>10) {
+                    $div.css({'height':'10em', 'overflow':'auto', 'resize':'vertical'});
+                }
                 return $div;
             }
 
             function printDNA(sequence, charWrap) {
                 var $div = $('<div>').css({'font-family': '"Lucida Console", Monaco, monospace'});
                 
-                var $posTD = $('<td>').css({'text-align': 'right', 'border':'0'});
-                var $seqTD = $('<td>').css({'border':'0'});
+                var $posTD = $('<td>').css({'text-align': 'right', 'border':'0', 'color':'#777'});
+                var $seqTD = $('<td>').css({'border':'0', 'color':'#000'});
+                var lines=1;
                 for (var i = 0; i < sequence.length; i++) {
                     if(i>0 && i%charWrap===0) {
-                        $posTD.append('<br>');
+                        $posTD.append('<br>').append(i+1).append(':&nbsp;');
                         $seqTD.append('<br>');
-                        $posTD.append($('<span>').css({color:'#777'}).append(i+1).append(':&nbsp;'));
+                        lines++;
                     } else if (i==0) {
-                        $posTD.append($('<span>').css({color:'#777'}).append(i+1).append(':&nbsp;'));
+                        $posTD.append(i+1).append(':&nbsp;');
                     }
-
-                    var color = '#000';
                     var base = sequence[i];
-                    $seqTD.append($('<span>').css({'color':color}).append(base));
+                    $seqTD.append(base);
                 }
                 $div.append($('<table>').css({'border':'0','border-collapse':'collapse'}).append(
                         $('<tr>').css({'border':'0'}).append($posTD).append($seqTD)));
+                if(lines>5) {
+                    $div.css({'height':'6em', 'overflow':'auto', 'resize':'vertical'});
+                }
 
                 return $div;
             }
@@ -1841,6 +1902,10 @@ define (
                             contigDataForBrowser['length'] = search_stop;
                             if(contigData['length']) {
                                 contigDataForBrowser['length'] = contigData['length'];
+                            }
+                            // do not get a range any larger than 40kb.
+                            if(search_length>40000) {
+                                search_length = 40000;
                             }
 
                             self.genomeSearchAPI.search_region({

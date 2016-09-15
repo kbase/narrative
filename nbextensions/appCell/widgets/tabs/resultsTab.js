@@ -113,9 +113,6 @@ define([
             });
             if (apps.length > 0) {
                 appList = apps.map(function(app, index) {
-                    if (!app.info.module_name) {
-                        return;
-                    }
                     return div([
                         a({
                             id: events.addEvent({
@@ -126,7 +123,7 @@ define([
                             })},
                             app.info.name
                         ),
-                        span(' - ' + (app.info.module_name || '(legacy app - will not run.)'))
+                        span(' - ' + app.info.module_name)
                     ]);
                 }).join('\n');
             }

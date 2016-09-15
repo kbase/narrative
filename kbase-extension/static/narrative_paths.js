@@ -25,6 +25,8 @@ require.config({
         select2                                 : 'kbase/js/patched-components/select2/select2',
         bootstrap                               : 'components/bootstrap/js/bootstrap.min',
         underscore                              : 'ext_components/underscore/underscore-min',
+        'bootstrap-slider'                      : 'ext_components/bootstrap-slider/bootstrap-slider',
+        'tipsy'                                 : 'ext_components/jquery.tipsy/js/jquery.tipsy',
 
         narrativeConfig                         : 'kbase/js/narrativeConfig',
         narrativeMain                           : 'narrativeMain',

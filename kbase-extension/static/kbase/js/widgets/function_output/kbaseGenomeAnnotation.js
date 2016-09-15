@@ -5,19 +5,13 @@
 
 /*
 
-Known issues:
+Known issues/tasks:
 1) resize window sets svg width to zero of contig browser of non-visible tabs, so they dissappear
 2) we don't know the length of the contig when rendering the gene context browser, so scale goes
    beyond the actual contig
 3) color the features based on type, other things?
 4) adjust height based on number of tracks
-
-
-#TODO
-- sequence that is too many lines / location that are too many lines
-   - place in scroll pane
-- feature that is longer than 30kb, don't show genome browser
-- Show assembly information
+5) show assembly info on overview tab
 
 */
 
@@ -1735,11 +1729,18 @@ define (
                     $loc.append('<br>');
                     if(featureData['location']) {
                         var locs = featureData['location'];
+                        var $locDiv = $('<div>');
+                        var crop = false;
                         for(var i=0; i<locs.length; i++) {
-                            if(i>0) { $loc.append('<br>'); }
+                            if(i>0) { $locDiv.append('<br>'); }
+                            if(i>6) { crop=true; }
                             var loc = locs[i];
                             var bounds = getFeatureLocationBounds(loc);
-                            $loc.append(numberWithCommas(bounds['start'])+'&nbsp;-&nbsp;' +numberWithCommas(bounds['end'])+'&nbsp;('+loc['strand']+'&nbsp;Strand)');
+                            $locDiv.append(numberWithCommas(bounds['start'])+'&nbsp;-&nbsp;' +numberWithCommas(bounds['end'])+'&nbsp;('+loc['strand']+'&nbsp;Strand)');
+                        }
+                        $loc.append($locDiv);
+                        if(crop) {
+                            $locDiv.css({'height':'10em', 'overflow':'auto', 'resize':'vertical'});
                         }
                     }
                 } else {

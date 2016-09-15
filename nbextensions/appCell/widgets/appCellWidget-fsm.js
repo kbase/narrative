@@ -39,7 +39,7 @@ define([
                 },
                 elements: {
                     show: [],
-                    hide: ['fatal-error', 'parameters-group', 'output-group', 'parameters-display-group', 'exec-group']
+                    hide: ['internal-error', 'parameters-group', 'output-group', 'parameters-display-group', 'exec-group']
                 },
                 appStatus: {
                     classes: ['kb-app-status-default'],                    
@@ -53,7 +53,7 @@ define([
             },
             next: [
                 {
-                    mode: 'fatal-error'
+                    mode: 'internal-error'
                 },
                 {
                     mode: 'editing',
@@ -96,7 +96,7 @@ define([
                 },
                 elements: {
                     show: ['parameters-group', 'output-group'],
-                    hide: ['fatal-error', 'parameters-display-group', 'exec-group']
+                    hide: ['internal-error', 'parameters-display-group', 'exec-group']
                 },
                 appStatus: {
                     classes: ['kb-app-status-warning'],
@@ -119,7 +119,7 @@ define([
                     params: 'incomplete'
                 },
                 {
-                    mode: 'fatal-error'
+                    mode: 'internal-error'
                 }
             ]
         },
@@ -159,7 +159,7 @@ define([
                 },
                 elements: {
                     show: ['parameters-group', 'output-group'],
-                    hide: ['fatal-error', 'parameters-display-group', 'exec-group']
+                    hide: ['internal-error', 'parameters-display-group', 'exec-group']
                 },
                 appStatus: {
                     classes: ['kb-app-status-ok'],
@@ -211,7 +211,7 @@ define([
                     mode: 'error'
                 },
                 {
-                    mode: 'fatal-error'
+                    mode: 'internal-error'
                 }
             ]
         },
@@ -307,7 +307,7 @@ define([
                     code: 'built'
                 },
                 {
-                    mode: 'fatal-error'
+                    mode: 'internal-error'
                 }
             ]
         },
@@ -399,7 +399,7 @@ define([
                     code: 'built'
                 },
                 {
-                    mode: 'fatal-error'
+                    mode: 'internal-error'
                 }
             ]
         },
@@ -494,13 +494,22 @@ define([
                     mode: 'error',
                     stage: 'queued'
                 },
+                // This can happen if there is no in-progress message received
+                // before an error occurs.
+                {
+                    mode: 'error',
+                    stage: 'running'
+                },
+                // This can happen if the job disappeared while the app thinks
+                // it is queued, yet the user still wants to cancel (which can't really
+                // cancel, it just has to return to editing mode.
                 {
                     mode: 'editing',
                     params: 'complete',
                     code: 'built'
                 },
                 {
-                    mode: 'fatal-error'
+                    mode: 'internal-error'
                 }
             ]
         },
@@ -597,7 +606,7 @@ define([
                     code: 'built'
                 },
                 {
-                    mode: 'fatal-error'
+                    mode: 'internal-error'
                 }
             ]
         },
@@ -669,7 +678,7 @@ define([
                     code: 'built'
                 },
                 {
-                    mode: 'fatal-error'
+                    mode: 'internal-error'
                 }
             ]
 
@@ -808,7 +817,7 @@ define([
                     code: 'built'
                 },
                 {
-                    mode: 'fatal-error'
+                    mode: 'internal-error'
                 }
             ]
         },
@@ -869,7 +878,7 @@ define([
                     code: 'built'
                 },
                 {
-                    mode: 'fatal-error'
+                    mode: 'internal-error'
                 }
             ]
 
@@ -931,7 +940,7 @@ define([
                     code: 'built'
                 },
                 {
-                    mode: 'fatal-error'
+                    mode: 'internal-error'
                 }
             ]
 
@@ -954,7 +963,7 @@ define([
                         enabled: true
                     },
                     runStats: {
-                        enabled: false
+                        enabled: true
                     },
                     results: {
                         enabled: true,
@@ -993,7 +1002,7 @@ define([
                     code: 'built'
                 },
                 {
-                    mode: 'fatal-error'
+                    mode: 'internal-error'
                 }
             ]
         },
@@ -1053,14 +1062,14 @@ define([
                     code: 'built'
                 },
                 {
-                    mode: 'fatal-error'
+                    mode: 'internal-error'
                 }
             ]
         },
         // A fatal error represents an app cell which cannot operate.
         {
             state: {
-                mode: 'fatal-error'
+                mode: 'internal-error'
             },
             ui: {
                 tabs: {
@@ -1087,10 +1096,10 @@ define([
                     }
                 },               
                 actionButton: {
-                    name: 'reRunApp'
+                    name: 'resetApp'
                 },
                 elements: {
-                    show: ['fatal-error'],
+                    show: ['internal-error'],
                     hide: ['parameters-group', 'parameters-display-group', 'exec-group', 'output-group']
                 },
                 appStatus: {
@@ -1101,11 +1110,15 @@ define([
                     }
                 },
                 label: 'error',
-                message: 'A fatal error was encountered'
+                message: 'An internal error was encountered'
             },
             next: [
                 {
-                    mode: 'fatal-error'
+                    mode: 'internal-error'
+                },
+                // We will let a user attempt to reset the app.
+                {
+                    mode: 'new'
                 }
             ]
         }

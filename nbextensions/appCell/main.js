@@ -33,6 +33,9 @@ define([
 //    './widgets/codeCellRunWidget',
     'kb_service/utils',
     'kb_service/client/workspace',
+    'kbase/js/widgets/appWidgets/infoPanel',
+    './widgets/appInfoDialog',
+        
     'css!kbase/css/appCell.css',
     'css!./styles/main.css',
     'bootstrap'
@@ -51,7 +54,9 @@ define([
     Props,
     AppUtils,
     serviceUtils,
-    Workspace
+    Workspace,
+    AppInfoPanel,
+    appInfoDialog
     ) {
     'use strict';
     var t = html.tag,
@@ -162,6 +167,8 @@ define([
         cell.renderIcon();
     }
 
+    
+
     function specializeCell(cell) {
         cell.minimize = function () {
             var inputArea = this.input.find('.input_area'),
@@ -189,28 +196,23 @@ define([
             viewInputArea.removeClass('hidden');
         };
         cell.getIcon = function () {
-            var icon = AppUtils.makeToolbarAppIcon(utils.getCellMeta(cell, 'kbase.appCell.app.spec'));
-            return icon;
+            return AppUtils.makeToolbarAppIcon(utils.getCellMeta(cell, 'kbase.appCell.app.spec'));
         };
         cell.renderIcon = function () {
-            var iconNode = this.element[0].querySelector('.celltoolbar [data-element="icon"]'),
-                icon = AppUtils.makeToolbarAppIcon(utils.getCellMeta(cell, 'kbase.appCell.app.spec'))
+            var iconNode = this.element[0].querySelector('.celltoolbar [data-element="icon"]');
             if (iconNode) {
                 iconNode.innerHTML = AppUtils.makeToolbarAppIcon(utils.getCellMeta(cell, 'kbase.appCell.app.spec'));
-            } 
-            return;
-            
-            
-            var inputPrompt = this.element[0].querySelector('.celltoolbar [data-element="icon"]');
-
-            if (inputPrompt) {
-                inputPrompt.innerHTML = div({
-                    style: {textAlign: 'center'}
-                }, [
-                    // AppUtils.makeAppIcon(utils.getCellMeta(cell, 'kbase.widgetCell.app.spec'))
-                    AppUtils.makeAppIcon(utils.getCellMeta(cell, 'kbase.appCell.app.spec'))
-                ]);
             }
+        };
+        cell.showInfo = function () {
+            var app = utils.getCellMeta(cell, 'kbase.appCell.app');
+            console.log('APP', app);
+            appInfoDialog.show({
+                id: app.spec.info.id,
+                version: app.spec.info.ver,
+                module: app.spec.info.module_name,
+                tag: app.tag
+            });
         };
     }
 
@@ -218,15 +220,12 @@ define([
         return Promise.try(function () {
             // Only handle kbase cells.
             if (cell.cell_type !== 'code') {
-                // console.log('not a code cell!');
                 return;
             }
             if (!cell.metadata.kbase) {
-                // console.log('not a kbase code cell');
                 return;
             }
             if (cell.metadata.kbase.type !== 'app') {
-                // console.log('not a kbase app cell, ignoring');
                 return;
             }
 
@@ -283,7 +282,6 @@ define([
                     });
                 })
                 .then(function () {
-                    // AppCellController.start();
                     cell.renderMinMax();
 
                     return {

@@ -914,7 +914,7 @@ define (
                 return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
             }
 
-            var ready = function(genomeData, ctg) {
+            var ready = function(genomeData) {
                     var gnm = genomeData;
 
                     container.empty();
@@ -944,13 +944,6 @@ define (
                       var tabDiv = $('<div id="'+pref+tabIds[i]+'"> ');
                       tabObj.addTab({tab: tabNames[i], content: tabDiv, canDelete : false, show: (i == 0)});
                     }
-
-                    /*var contigCount = 0;
-                    if (gnm.contig_ids && gnm.contig_lengths && gnm.contig_ids.length == gnm.contig_lengths.length) {
-                        contigCount = gnm.contig_ids.length;
-                    } else if (ctg && ctg.contigs) {
-                        contigCount = ctg.contigs.length;
-                    }*/
 
                     ////////////////////////////// Overview Tab //////////////////////////////
                     var $overviewPanel = $('#'+pref+'overview');
@@ -1171,7 +1164,7 @@ define (
 
 
             if(self.genome_info) {
-                ready(self.normalizeGenomeDataFromNarrative(self.genome_info, genome_ref, ready),null);
+                ready(self.normalizeGenomeDataFromNarrative(self.genome_info, genome_ref, ready));
             } else {
                 // get info from metadata
                 self.genomeAPI
@@ -1183,7 +1176,7 @@ define (
                         })
                         .then(function(data) {
                             console.log('genomeAPI.get_genome_v1(ref='+genome_ref+')',data['genomes'][0]);
-                            ready(self.normalizeGenomeDataFromQuery(data['genomes'][0], genome_ref, ready),null);
+                            ready(self.normalizeGenomeDataFromQuery(data['genomes'][0], genome_ref, ready));
                         })
                         .fail(function(e) {
                             console.error(e);

@@ -676,6 +676,9 @@ define (
             };
             cell.metadata = meta;
             cell.execute();
+            Jupyter.narrative.hideOverlay();
+            this.showInfo(''); // clear the info message when we close the overlay
+            Jupyter.narrative.scrollToCell(cell, true);
         },
 
         runImport: function(callback, methods) {
@@ -721,7 +724,7 @@ define (
                         store_history: false
                 };
                 Jupyter.notebook.kernel.execute(pythonCode, callbacks, executeOptions);
-                self.showInfo("Your import job is submitted and accessible in \"Jobs\" tab");
+                self.showInfo("Your import job is being submitted and you will be directed to it shortly.");
                 callback(true);
                 return;
             }

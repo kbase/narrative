@@ -17,6 +17,7 @@ define([
     function factory(config) {
         var allStates = config.states,
             initialState = config.initialState,
+            fallbackState = config.fallbackState,
             currentState,
             api,
             timer, newStateHandler = config.onNewState,
@@ -98,7 +99,14 @@ define([
             }
             var state = findState(startingState);
             if (!state) {
-                throw new Error('Cannot find initial state');
+                //if (fallbackState) {
+                    //console.warn('Initial state not found, trying fallback', startingState, fallbackState);
+                    //state = findState(fallbackState);
+                    //if (!state) {
+                        console.error('FSM: initial state could not be found', startingState);
+                        throw new Error('Cannot find initial state');
+                    //}
+                //}
             }
 
             // make it the current state

@@ -679,6 +679,7 @@ define (
             Jupyter.narrative.hideOverlay();
             this.showInfo(''); // clear the info message when we close the overlay
             Jupyter.narrative.scrollToCell(cell, true);
+            this.back();
         },
 
         runImport: function(callback, methods) {

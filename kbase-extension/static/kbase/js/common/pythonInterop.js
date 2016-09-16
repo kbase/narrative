@@ -14,7 +14,7 @@ define([
 
     function escapeString(stringValue, delimiter) {
         var delimiterRegex = new RegExp(delimiter, 'g');
-        return stringValue.replace(delimiterRegex, '\\'+delimiter).replace(/\n/, '\\n');
+        return stringValue.replace(delimiterRegex, '\\'+delimiter).replace(/\n/g, '\\n');
     }
 
     function autoDelimiter(value) {
@@ -162,7 +162,7 @@ define([
     function buildCustomWidgetRunner(cellId, runId, app) {
         var positionalArgs = [
                 pythonifyValue(app.id)
-            ],            
+            ],
             namedArgs = objectToNamedArgs({
                 tag: app.tag,
                 version: app.version,

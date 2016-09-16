@@ -220,9 +220,17 @@ define (
             return this;
         },
         
+        getVersionTag: function() {
+            var tag = Jupyter.narrative.sidePanel.$methodsWidget.currentTag;
+            if (!tag) {
+                tag = "release";
+            }
+            return tag;
+        },
+        
         getMethodSpecs: function(callback, errorCallback) {
             var self = this;
-            var tag = Jupyter.narrative.sidePanel.$methodsWidget.currentTag;
+            var tag = self.getVersionTag();
             if (self.allMethodIds[tag] && self.methodFullInfo[tag] && self.methods[tag]) {
                 callback(self.methodFullInfo[tag], self.methods[tag]);
                 return;
@@ -695,7 +703,7 @@ define (
                     var paramValue = paramValueArray[i];
                     params[paramId] = paramValue;
                 }
-                var tag = Jupyter.narrative.sidePanel.$methodsWidget.currentTag;
+                var tag = self.getVersionTag();
                 var pythonCode = PythonInterop.buildAppRunner(null, null,
                         {tag: tag, version: null, id: methodId}, params);
                 pythonCode += ".job_id.encode('ascii','ignore')";

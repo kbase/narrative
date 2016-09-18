@@ -8,7 +8,9 @@ define([
     'common/utils',
     'common/runtime',
     'common/html',
+    'common/dom',
     'common/appUtils',
+    'common/jupyter',
     './widgets/appInfoDialog',
     './widgets/appCellWidget'
 ], function (
@@ -18,7 +20,9 @@ define([
     utils,
     Runtime,
     html,
+    Dom,
     AppUtils,
+    jupyter,
     appInfoDialog,
     AppCellWidget
     ) {
@@ -66,6 +70,7 @@ define([
                     viewInputArea = this.element.find('[data-subarea-type="app-cell-input"]'),
                     showCode = utils.getCellMeta(cell, 'kbase.appCell.user-settings.showCodeInputArea');
 
+                console.log('minimize', outputArea, viewInputArea);
                 if (showCode) {
                     inputArea.addClass('hidden');
                 }
@@ -131,27 +136,27 @@ define([
                         runtime: runtime,
                         workspaceInfo: workspaceInfo
                     }),
-                    kbaseNode = document.createElement('div');
-
-                kbaseNode.innerHTML = div({dataSubareaType: 'app-cell-input'});
+                    dom = Dom.make({node: cell.input[0]}),
+                    kbaseNode = dom.createNode(div({dataSubareaType: 'app-cell-input'}));
                 // inserting after, with raw dom, means telling the parent node
                 // to insert a node before the node following the one we are 
                 // referencing. If there is no next sibling, the null value
                 // causes insertBefore to actually ... insert at the end!
                 cell.input[0].parentNode.insertBefore(kbaseNode, cell.input[0].nextSibling);
+                
+                /*
+                 * This is required for all KBase cells in order to disable the 
+                 * Jupyter keyboard management. Although a app startup code remaps
+                 * some of the more dangerous Jupyter keys (change cell type, delete cel,
+                 * etc.), there are keys that we need to keep enabled because 
+                 * they are part of the standard Jupyter functionality, such as
+                 * shift-enter, ctrl-enter for code cells, 
+                 */
+                jupyter.disableKeyListenersForCell(cell);
 
                 cell.kbase.node = kbaseNode;
                 // cell.kbase.$node = $(kbaseNode);
 
-
-                // Hide the prompt...
-                // hidePrompts(cell);
-
-                // And add our own!
-                // addPrompt(cell);
-
-
-                // console.log('APP EXEC CODE HIDDEN?', cell.input.find('.input_area'));
                 return appCellWidget.init()
                     .then(function () {
                         return appCellWidget.attach(kbaseNode);

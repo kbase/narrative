@@ -22,7 +22,7 @@ define([
                 title: "Welcome to the Narrative Tour", // add a grayed out background.
                 placement: 'bottom',
                 orphan: true,
-                content: 'This tour will demonstrate how to use KBase’s Narrative User Interface to begin creating Narratives for data analysis. Think of a Narrative as an advanced lab notebook that contains all of your data, analyses, notes, visualizations, custom scripts, and results.',
+                content: '<p>This tour will demonstrate how to use KBase’s Narrative User Interface to begin creating Narratives for data analysis. Think of a Narrative as an advanced lab notebook that contains all of your data, analyses, notes, visualizations, custom scripts, and results.<p>Use the left and right arrow buttons to go backwards and forwards through this tour.',
                 backdrop: true
             },
             {

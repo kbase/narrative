@@ -22,26 +22,26 @@ define([
                 title: "Welcome to the Narrative Tour", // add a grayed out background.
                 placement: 'bottom',
                 orphan: true,
-                content: "Welcome to KBase—the Department of Energy Systems Biology Knowledgebase! This tour will demonstrate how to find and use KBase’s Narrative User Interface to begin creating Narratives for data analysis. Narratives contain all the data, analysis steps, results, and discussions for a research project. Think of a Narrative as an advanced lab notebook that contains all of your data, analyses, thought processes, procedural notes, visualizations, custom scripts, and results. Use the left and right arrow button to go backwards and forwards through this tour. Press the right arrow to continue.",
+                content: '<p>This tour will demonstrate how to use KBase’s Narrative User Interface to begin creating Narratives for data analysis. Think of a Narrative as an advanced lab notebook that contains all of your data, analyses, notes, visualizations, custom scripts, and results.<p>Use the left and right arrow buttons to go backwards and forwards through this tour.',
                 backdrop: true
             },
             {
                 element: "#notebook_name",
                 title: "Narrative Name",
                 placement: 'bottom',
-                content: "Start by naming your Narrative. By default, each new Narrative is named “Untitled.” Click on this name and enter a new title."
+                content: 'By default, each new Narrative is named “Untitled.” Click on this name and enter a new title.'
             },
             {
                 element: '#kb-view-mode',
                 title: 'Toggle View Only',
                 placement: 'bottom',
-                content: 'Click here to change view mode.'
+                content: 'If you have edit permission for this Narrative, you can choose View Only (uneditable) or Edit mode'
             },
             {
                 element: '#kb-update-btn',
                 title: 'Narrative Update',
                 placement: 'bottom',
-                content: 'If there\'s an update to the Narrative, this button will appear. Click on it, and it will guide you through refreshing your Narrative environment.',
+                content: 'If there\'s an update to the Narrative Interface, this button will appear. Click it before you start working on your Narrative.',
                 onShow: function(tour) {
                     $('#kb-update-btn').show();
                 },
@@ -53,25 +53,25 @@ define([
                 element: $('#kb-share-btn .kb-nav-btn-txt'),
                 title: 'Share with others',
                 placement: 'bottom',
-                content: 'Click the “share” button to open a dialog box allowing you to search for and select KBase users you want to share with. You can give them view-only access, editing privileges, or the ability to edit and share the Narrative with other users. By default, each Narrative you create is private. You can choose to make your Narrative public or share it with certain collaborators.'
+                content: 'Click the Share button to open a dialog box allowing you to search for and select KBase users you want to share with. You can give them view-only access, editing privileges, or the ability to edit and share the Narrative with other users. By default, each Narrative you create is private. You can choose to make your Narrative public or share it with certain collaborators.'
             },
             {
                 element: '#kb-save-btn',
                 title: 'Save the Narrative',
                 placement: 'bottom',
-                content: 'You should periodically save your Narrative by clicking the save icon. KBase does autosave your Narrative when an App is launched and finished, but other changes should be saved manually.'
+                content: 'You should periodically save your Narrative by clicking the save button. KBase does autosave your Narrative whenever an App is run, but other changes should be saved manually.'
             },
             {
                 element: '#signin-button',
                 title: 'Profile and Logout',
                 placement: 'left',
-                content: 'Click here to produce a menu that will let you view your user profile or logout.'
+                content: 'Click here for a menu that will let you view and edit your user profile or log out.'
             },
             {
                 element: '.kb-side-header[kb-data-id="0"]',
                 title: 'Analyze Tab',
                 placement: 'bottom',
-                content: 'A key feature of KBase is the ability to run complex analyses on your data within your Narrative. The Analyze tab contains both your data and the analysis tools in KBase - called Apps.',
+                content: 'The Analyze tab contains both the data you have added to this Narrative and the analysis tools in KBase--called Apps.',
                 onShow: function(tour) {
                     $('.kb-side-header[kb-data-id="0"]').click();
                 }
@@ -80,7 +80,7 @@ define([
                 element: $('.kb-side-tab[kb-data-id="0"]').find('button > .fa-arrow-right').first(), //$('.kb-side-tab[kb-data-id="0"] > button > .fa-arrow-right'),
                 title: 'Data Slideout',
                 placement: 'left',
-                content: 'Clicking the “Add Data” button opens the data slideout, which allow you to add Data into your Narrative from a variety of sources.',
+                content: 'This button opens the data slideout, which allows you to add data to your Narrative from a variety of sources.',
                 onShow: function(tour) {
                     that.openDataSlideout(true);
                 }
@@ -99,7 +99,7 @@ define([
                 element: '.kb-side-overlay-container .kb-side-header:nth-child(2)', // shared with me tab
                 title: 'Shared With Me',
                 placement: 'bottom',
-                content: 'The <i>Shared With Me</i> tab contains data from Narratives that have been shared with you by collaborators. It also will be empty if no Narratives have been shared with you.',
+                content: 'The <i>Shared With Me</i> tab contains data from any Narratives that have been shared with you by collaborators.',
                 onShow: function(tour) {
                     that.openDataSlideout(true);
                     $('.kb-side-overlay-container .kb-side-header:nth-child(2)').click();
@@ -119,7 +119,7 @@ define([
                 element: '.kb-side-overlay-container .kb-side-header:nth-child(4)', // example tab
                 title: 'Example Data',
                 placement: 'bottom',
-                content: 'The <i>Example</i> tab contains sample data that can be used to demonstrate KBase analysis tools.',
+                content: 'The <i>Example</i> tab contains sample data that can be used to try out KBase analysis tools.',
                 onShow: function(tour) {
                     that.openDataSlideout(true);
                     $('.kb-side-overlay-container .kb-side-header:nth-child(4)').click();
@@ -129,7 +129,7 @@ define([
                 element: '.kb-side-overlay-container .kb-side-header:nth-child(5)', // import tab
                 title: 'Import Data',
                 placement: 'bottom',
-                content: 'Finally, the <i>Import</i> tab allows you to upload your own data for analysis. This and other data you add are private unless you choose to share your Narrative. Click the drop-down menu to see a list of currently uploadable data types.',
+                content: 'Finally, the <i>Import</i> tab allows you to upload your own data for analysis. This and other data you add are private unless you choose to share your Narrative. Click the drop-down menu to see a list of currently uploadable data typestab allows you to upload your own data for analysis. This and other data you add are private unless you choose to share your Narrative. Click the drop-down menu to see a list of currently uploadable data types.',
                 onShow: function(tour) {
                     that.openDataSlideout(true);
                     $('.kb-side-overlay-container .kb-side-header:nth-child(5)').click();
@@ -139,7 +139,7 @@ define([
                 element: '.kb-narr-side-panel-set > .kb-side-separator:nth-child(2)', // The 'Apps' area
                 title: 'Apps in KBase',
                 placement: 'right',
-                content: 'All of the Apps available in KBase are listed just below the Data Panel. Each App performs a specific analysis function on a particular type of data input, generating an output data object or a visualization. The output of each App can be used in downstream analysis with other Apps, meaning that you can chain together several Apps to perform a sophisticated analysis workflow on your initial data.',
+                content: 'In KBase, you can run complex analyses on the data in your Narrative by using Apps. All of the Apps available in KBase are listed just below the Data Panel. Click an App name to add it to your Narrative, or click the “...” that appears to the right of the name to see more information about the App.',
                 onShow: function(tour) {
                     $('.kb-side-header[kb-data-id="0"]').click();
                     that.openDataSlideout(false);
@@ -149,7 +149,7 @@ define([
                 element: '.kb-side-separator:nth-child(2) .kb-function-body .kb-data-list-obj-row:first', //'.kb-narr-side-panel-set > .kb-side-separator:nth-child(2)', // [...] or more... btn on first app
                 title: 'App Information',
                 placement: 'right',
-                content: 'To see a brief description of an app or method, click under its name. The “more” link at the end of this description will open in another tab a page with detailed information about the app or method.',
+                content: 'To see a brief description of an App, click the short description under its name. The more... link at the end of this description will open another tab with detailed information about the App.',
                 onShow: function(tour) {
                     $('.kb-side-header[kb-data-id="0"]').click();
                     $('.kb-side-separator:nth-child(2) .kb-function-body .kb-data-list-obj-row:first').click();
@@ -160,7 +160,7 @@ define([
                 element: '.kb-side-header[kb-data-id="1"]',
                 title: 'Narratives Tab',
                 placement: 'bottom',
-                content: '<p>To manage your Narratives within the Narrative Interface, click the Narratives tab above your Data Panel. This reveals options for both creating a new, empty Narrative and copying the current Narrative, complete with all its data and contents. You also can copy public Narratives or others that have been shared with you. Copying a Narrative allows you to run your own analyses using the data within that Narrative without changing the original version.<p>The Narratives tab also lists all your Narratives and those that have been shared with you. Click the name of any of these Narratives to open them in a new window. Hovering over a Narrative will reveal options for viewing its history, reverting to an earlier version, and copying or deleting it. Be aware that once you delete a Narrative, its data and contents cannot be recovered.',
+                content: '<p>This tab lists all your Narratives and those that have been shared with you. Click the name of any Narrative to open it in a new window. Hovering over a Narrative name will reveal options for viewing its history, reverting to an earlier version, and copying or deleting it. This tab also lets you create a new, empty Narrative or copy a Narrative, complete with all its data and contents.',
                 onShow: function(tour) {
                     $('.kb-side-header[kb-data-id="1"]').click();
                 }
@@ -169,25 +169,25 @@ define([
                 element: '#kb-add-md-cell',
                 title: 'Markdown Cells',
                 placement: 'left',
-                content: 'You also can include formatted text in your Narratives to capture notes, hypotheses, conclusions, and explanations of analysis steps. This text is added using markdown cells, which can be inserted by clicking the paragraph icon at the bottom of the Narrative. These cells can contain raw text, HTML, or LaTeX to communicate the content of your Narrative.'
+                content: 'You can include formatted text in your Narratives in markdown cells, which can be inserted by clicking the paragraph icon at the bottom of the Narrative. These cells can contain raw text, HTML, or LaTeX.'
             },
             {
                 title: "End of Basic Features Tour",
                 orphan: true,
-                content: "<p>You now have been introduced to the basic features of the Narrative Interface. We hope you conduct interesting and creative research using these tools and are able to expand your collaborator network with other KBase users. If you have any questions or feature requests, please follow the Contact Us link in the hamburger menu.<p>To learn about advanced features of the Narrative Interface, click the right arrow button to proceed. Click the exit button to return to your Narrative.",
+                content: "<p>You have now been introduced to the basic features of the Narrative Interface. We hope you conduct interesting and creative research using these tools and are able to expand your collaborator network with other KBase users. If you have any questions or feature requests, please follow the Contact Us link in the hamburger menu at the top left. <p>To learn about advanced features of the Narrative Interface, click the right arrow button to proceed. Click the exit button to return to your Narrative.",
                 backdrop: true
             },
             {
                 element: '#kb-ipy-menu',
                 title: 'Kernel Controls',
                 placement: 'bottom',
-                content: 'Access control options for the Jupyter kernel that controls the Narrative Interface. This is useful for restarting or reconnecting to KBase after your network connection has been disrupted.',
+                content: 'Access control options for the Jupyter kernel that powers the Narrative Interface. This is useful for restarting or reconnecting to KBase after your network connection has been disrupted.',
             },
             {
                 element: '#kb-settings-btn',
                 title: 'Adjust Global Settings',
                 placement: 'bottom',
-                content: ' Enable advanced or developer features for your Narrative in the Settings Menu. These option are enabled for individual Narratives. Refresh your browser to enable these settings for your Narrative.'
+                content: 'Enable advanced or developer features for your Narrative in the Settings Menu. These option are enabled for individual Narratives. Refresh your browser to enable these settings for your Narrative.'
             },
             {
                 element: '#kb-add-code-cell',

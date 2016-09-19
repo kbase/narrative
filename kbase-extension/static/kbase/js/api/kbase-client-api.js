@@ -10585,14 +10585,14 @@ function NarrativeMethodStore(url, auth, auth_cb) {
         return json_call_ajax("NarrativeMethodStore.list_methods_spec", [params], 1, _callback, _error_callback);
     };
 
-    this.list_method_ids_and_names = function (_callback, _errorCallback) {
+    this.list_method_ids_and_names = function (params, _callback, _errorCallback) {
     return json_call_ajax("NarrativeMethodStore.list_method_ids_and_names",
-        [], 1, _callback, _errorCallback);
+        [params], 1, _callback, _errorCallback);
 };
 
-    this.list_method_ids_and_names_async = function (_callback, _error_callback) {
+    this.list_method_ids_and_names_async = function (params, _callback, _error_callback) {
         deprecationWarning();
-        return json_call_ajax("NarrativeMethodStore.list_method_ids_and_names", [], 1, _callback, _error_callback);
+        return json_call_ajax("NarrativeMethodStore.list_method_ids_and_names", [params], 1, _callback, _error_callback);
     };
 
     this.list_apps = function (params, _callback, _errorCallback) {

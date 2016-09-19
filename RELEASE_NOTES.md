@@ -3,6 +3,24 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v4.2.1 (more notes will follow).
 
+### Version 3.0.0-alpha-23
+__Changes__
+- Major updates to the App Cell UI
+    - Restructured so each view is a separate tab.
+    - Added a status icon for each App state.
+    - Adjusted failure modes to be more descriptive.
+    - Integrated Report view under Results tab.
+    - Moved many of the sprawling toolbar buttons into a dropdown menu.
+    - Added a modal Info dialog for each app (in toolbar menu).
+    - Remove Juptyer's prompt area... which might cause more problems.
+- Fixed various problems with Jupyter's command-mode shortcuts (again).
+- Import panel should disappear and scroll to running import Job on Import.
+- Changes to improve performance and visibility of Genome Viewer widget.
+- Added an interactive tour for the Narrative (in the hamburger menu).
+- Cells should now all be deleteable in all cases.
+- Updated Ontology view widgets to use tabs.
+- Fixed automated front end test apparatus.
+
 ### Version 3.0.0-alpha-22
 __Changes__
 - First pass at an inline clickable interface tour.

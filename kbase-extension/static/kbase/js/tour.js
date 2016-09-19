@@ -41,7 +41,7 @@ define([
                 element: '#kb-update-btn',
                 title: 'Narrative Update',
                 placement: 'bottom',
-                content: 'If there's an update to the Narrative Interface, this button will appear. Click it before you start working on your Narrative.',
+                content: 'If there\'s an update to the Narrative Interface, this button will appear. Click it before you start working on your Narrative.',
                 onShow: function(tour) {
                     $('#kb-update-btn').show();
                 },

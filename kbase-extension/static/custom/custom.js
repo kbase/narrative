@@ -599,15 +599,14 @@ define([
         };
         
         p.getIcon = function () {
-            return span();
-//            var iconColor = 'silver';
-//
-//            return span({style: ''}, [
-//                span({class: 'fa-stack fa-2x', style: {textAlign: 'center', color: iconColor}}, [
-//                    span({class: 'fa fa-square fa-stack-2x', style: {color: iconColor}}),
-//                    span({class: 'fa fa-inverse fa-stack-1x fa-' + 'paragraph'})
-//                ])
-//            ]);
+            var iconColor = 'silver';
+
+            return span({style: ''}, [
+                span({class: 'fa-stack fa-2x', style: {textAlign: 'center', color: iconColor}}, [
+                    span({class: 'fa fa-square fa-stack-2x', style: {color: iconColor}}),
+                    span({class: 'fa fa-inverse fa-stack-1x fa-' + 'paragraph'})
+                ])
+            ]);
         };
 
 
@@ -731,9 +730,9 @@ define([
 
                 // if (title) {
                 // cell.setCellState('title', title);
-                utils.setCellMeta(cell, 'kbase.attributes.title', title);
-
-                this.renderPrompt();
+                utils.setCellMeta(cell, 'kbase.attributes.title', title, true);
+                
+                // this.renderPrompt();
 
                 // Extract title from h1, if any. otheriwse, first 50 characters
                 //var title = $html.filter('h1').first().first().text();
@@ -899,6 +898,24 @@ define([
             $cellNode.on('hideCodeArea.cell', function () {
                 thisCell.hideCodeInputArea();
             });
+            
+            if (this.code_mirror) {
+                this.code_mirror.on("change", function(cm, change) {
+                    // alert(' Rendering code cell ', cm, change);
+                    var lineCount = cm.lineCount(),
+                        commentRe = /^\.*?\#\s*(.*)$/;
+                    for (var i = 0; i < lineCount; i += 1) {
+                        var line = cm.getLine(i),
+                            m = commentRe.exec(line);
+                        if (m) {
+                            utils.setCellMeta(thisCell, 'kbase.attributes.title', m[1], true);
+                            break;
+                        }
+                    }
+                    // console.log('Code mirror?', cm, change);
+                    // utils.setCellMeta(cell, 'kbase.attributes.title', 'some title');
+                });
+            }
         };
 
         p.hideCodeInputArea = function () {
@@ -913,7 +930,7 @@ define([
             if (codeInputArea) {
                 return !codeInputArea.classList.contains('hidden');
             }
-            return false;            
+            return false;
         };
 
         p.toggleCodeInputArea = function() {

@@ -46,8 +46,10 @@ define (
         uploaderURL: Config.url('transform'),
         ujsURL: Config.url('user_and_job_state'),
         shockURL: Config.url('shock'),
-        methods: null,          // {method_id -> method_spec}
-        methodFullInfo: null,   // {method_id -> method_full_info}
+        methodIds: null,        // [method_id] that are involved in type importers
+        allMethodIds: {},       // {tag -> {method_id -> method_name}}
+        methods: {},            // {tag -> {method_id -> method_spec}}
+        methodFullInfo: {},     // {tag -> {method_id -> method_full_info}}
         types: null,            // {type_name -> type_spec}
         selectedType: null,     // selected type name
         widgetPanel: null,      // div for selected type
@@ -146,7 +148,11 @@ define (
                 $.proxy(function(event) {
                     event.preventDefault();
                     var selectedType = $dropdown.val();
-                    self.showWidget(selectedType);
+                    self.getMethodSpecs(function(methodFullInfo, methods) {
+                        self.showWidget(selectedType, methodFullInfo, methods);
+                    }, function(error) {
+                        self.showError(error);
+                    });
                 }, this)
             );
             this.widgetPanelCard1
@@ -171,7 +177,7 @@ define (
             this.methClient.list_categories({'load_methods': 0, 'load_apps' : 0, 'load_types' : 1},
                 $.proxy(function(data) {
                     var aTypes = data[3];
-                    var methodIds = [];
+                    self.methodIds = [];
                     self.types = {};
                     for (var key in aTypes) {
                         if (aTypes[key]["loading_error"]) {
@@ -182,52 +188,30 @@ define (
                             self.types[key] = aTypes[key];
                             for (var methodPos in aTypes[key]["import_method_ids"]) {
                                 var methodId = aTypes[key]["import_method_ids"][methodPos];
-                                methodIds.push(methodId);
+                                self.methodIds.push(methodId);
                             }
                         }
                     }
-                    self.methClient.get_method_full_info({ 'ids' : methodIds, 'tag' : 'dev' },
-                        $.proxy(function(fullInfoList) {
-                            self.methodFullInfo = {};
-                            for (var i in fullInfoList) {
-                                self.methodFullInfo[fullInfoList[i].id] = fullInfoList[i];
-                            }
-                            self.methClient.get_method_spec({ 'ids' : methodIds, 'tag' : 'dev' },
-                                $.proxy(function(specs) {
-                                    self.methods = {};
-                                    for (var i in specs) {
-                                        self.methods[specs[i].info.id] = specs[i];
-                                    }
-                                    var keys = [];
-                                    for (var key in self.types) {
-                                        keys.push(key);
-                                    }
-                                    keys.sort(function(a,b) {return self.types[a]["name"].localeCompare(self.types[b]["name"])});
-                                    for (var keyPos in keys) {
-                                        addItem(keys[keyPos]);
-                                    }
-                                    $dropdown.select2({
-                                        minimumResultsForSearch: -1,
-                                        formatSelection: function(object, container) {
-                                            var display = '<span class="kb-parameter-data-selection">'+object.text+'</span>';
-                                            return display;
-                                        }
-                                    });
+                    var keys = [];
+                    for (var key in self.types) {
+                        keys.push(key);
+                    }
+                    keys.sort(function(a,b) {return self.types[a]["name"].localeCompare(self.types[b]["name"])});
+                    for (var keyPos in keys) {
+                        addItem(keys[keyPos]);
+                    }
+                    $dropdown.select2({
+                        minimumResultsForSearch: -1,
+                        formatSelection: function(object, container) {
+                            var display = '<span class="kb-parameter-data-selection">'+object.text+'</span>';
+                            return display;
+                        }
+                    });
 
-                                    function addItem(key) {
-                                        var name = self.types[key]["name"];
-                                        $dropdown.append($('<option value="'+key+'">').append(name));
-                                    }
-                                }, this),
-                                $.proxy(function(error) {
-                                    self.showError(error);
-                                }, this)
-                            );
-                        }, this),
-                        $.proxy(function(error) {
-                            self.showError(error);
-                        }, this)
-                    );
+                    function addItem(key) {
+                        var name = self.types[key]["name"];
+                        $dropdown.append($('<option value="'+key+'">').append(name));
+                    }
                 }, this),
                 $.proxy(function(error) {
                     self.showError(error);
@@ -235,8 +219,57 @@ define (
             );
             return this;
         },
-
-        showWidget: function(type) {
+        
+        getVersionTag: function() {
+            var tag = Jupyter.narrative.sidePanel.$methodsWidget.currentTag;
+            if (!tag) {
+                tag = "release";
+            }
+            return tag;
+        },
+        
+        getMethodSpecs: function(callback, errorCallback) {
+            var self = this;
+            var tag = self.getVersionTag();
+            if (self.allMethodIds[tag] && self.methodFullInfo[tag] && self.methods[tag]) {
+                callback(self.methodFullInfo[tag], self.methods[tag]);
+                return;
+            }
+            self.methClient.list_method_ids_and_names({'tag': tag}, function(methodIdToName) {
+                self.allMethodIds[tag] = methodIdToName;
+                var methodIds = [];
+                for (var i in self.methodIds) {
+                    var methodId = self.methodIds[i];
+                    if (self.allMethodIds[tag][methodId]) {
+                        methodIds.push(methodId);
+                    } else {
+                        console.log("Importer method id=" + methodId + " is skipped for " + 
+                                "tag \"" + tag + "\"");
+                    }
+                }
+                var prom1 = self.methClient.get_method_full_info({'ids': methodIds, 
+                    'tag' : tag});
+                var prom2 = self.methClient.get_method_spec({'ids': methodIds, 
+                    'tag' : tag});
+                $.when(prom1, prom2).done(function(fullInfoList, specs) {
+                    self.methodFullInfo[tag] = {};
+                    for (var i in fullInfoList) {
+                        self.methodFullInfo[tag][fullInfoList[i].id] = fullInfoList[i];
+                    }
+                    self.methods[tag] = {};
+                    for (var i in specs) {
+                        self.methods[tag][specs[i].info.id] = specs[i];
+                    }
+                    callback(self.methodFullInfo[tag], self.methods[tag]);
+                }).fail(function(error) {
+                    errorCallback(error);
+                });
+            }, function(error) {
+                errorCallback(error);
+            });
+        },
+        
+        showWidget: function(type, methodFullInfo, methods) {
             var self = this;
             this.selectedType = type;
             this.widgetPanelCard1.css('display', 'none');
@@ -244,14 +277,23 @@ define (
             this.widgetPanelCard2.empty();
             var $header = null;
             var $body = null;
-            var numberOfTabs = this.types[type]["import_method_ids"].length;
+            var importMethodIds = [];
+            for (var methodPos in self.types[type]["import_method_ids"]) {
+                var methodId = this.types[type]["import_method_ids"][methodPos];
+                if (methods[methodId]) {
+                    importMethodIds.push(methodId);
+                }
+            }
+            var numberOfTabs = importMethodIds.length;
             if (numberOfTabs > 1) {
                 var $header = $('<div>');
                 var $body = $('<div>');
                 this.widgetPanelCard2.append($header).append($body);
             }
-            for (var methodPos in this.types[type]["import_method_ids"]) {
-                self.showTab(type, methodPos, $header, $body, numberOfTabs);
+
+            for (var methodPos in importMethodIds) {
+                self.showTab(importMethodIds, methodPos, $header, $body, 
+                        numberOfTabs, methodFullInfo, methods);
             }
             var $importButton = $('<button>')
                              .attr('id', this.cellId + '-run')
@@ -289,7 +331,7 @@ define (
                         btnImport(false);
                         self.runImport(function() {
                             btnImport(true);
-                        });
+                        }, methods);
                     } else {
                         var errorCount = 1;
                         self.$errorModalContent.empty();
@@ -342,10 +384,13 @@ define (
             self.widgetPanelCard2.append($buttons);
         },
 
-        showTab: function(type, methodPos, $header, $body, numberOfTabs) {
+        showTab: function(importMethodIds, methodPos, $header, $body, 
+                numberOfTabs, methodFullInfo, methods) {
             var self = this;
-            var methodId = this.types[type]["import_method_ids"][methodPos];
-            var methodSpec = this.methods[methodId];
+            var methodId = importMethodIds[methodPos];
+            var methodSpec = methods[methodId];
+            if (!methodSpec)
+                return;
             var inputWidgetName = methodSpec.widgets.input;
             if (!inputWidgetName || inputWidgetName === 'null')
                 inputWidgetName = "kbaseNarrativeMethodInput";
@@ -358,7 +403,7 @@ define (
             var methodUuid = 'import-method-details-'+StringUtil.uuid();
             var buttonLabel = 'details';
             var methodTitle = methodSpec.info.tooltip.trim();
-            var methodDescr = this.methodFullInfo[methodId].description.trim();
+            var methodDescr = methodFullInfo[methodId].description.trim();
             var $overviewSwitch = $("<a/>").html('more...');
             var $methodInfo = $('<div>')
                     .addClass('kb-func-desc')
@@ -639,12 +684,16 @@ define (
             };
             cell.metadata = meta;
             cell.execute();
+            Jupyter.narrative.hideOverlay();
+            this.showInfo(''); // clear the info message when we close the overlay
+            Jupyter.narrative.scrollToCell(cell, true);
+            this.back();
         },
 
-        runImport: function(callback) {
+        runImport: function(callback, methods) {
             var self = this;
             var methodId = self.getSelectedTabId();
-            var methodSpec = self.methods[methodId];
+            var methodSpec = methods[methodId];
 
             if (methodId.indexOf('/') > 0) {
                 var paramValueArray = self.getInputWidget().getParameters();
@@ -654,9 +703,9 @@ define (
                     var paramValue = paramValueArray[i];
                     params[paramId] = paramValue;
                 }
-                //var ver = methodSpec.info.git_commit_hash;
+                var tag = self.getVersionTag();
                 var pythonCode = PythonInterop.buildAppRunner(null, null,
-                        {tag: 'dev', version: null, id: methodId}, params);
+                        {tag: tag, version: null, id: methodId}, params);
                 pythonCode += ".job_id.encode('ascii','ignore')";
                 var callbacks = {
                         shell: {
@@ -684,7 +733,7 @@ define (
                         store_history: false
                 };
                 Jupyter.notebook.kernel.execute(pythonCode, callbacks, executeOptions);
-                self.showInfo("Your import job is submitted and accessible in \"Jobs\" tab");
+                self.showInfo("Your import job is being submitted and you will be directed to it shortly.");
                 callback(true);
                 return;
             }

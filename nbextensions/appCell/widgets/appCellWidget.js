@@ -122,27 +122,36 @@ define([
                     runApp: {
                         help: 'Run the app',
                         type: 'primary',
+                        classes: ['-run'],
                         icon: {
-                            name: 'play',
-                            color: 'green'
+                            name: 'play'
                         }
                     },
                     cancel: {
                         help: 'Cancel the running app',
                         type: 'danger',
+                        classes: ['-cancel'],
                         icon: {
-                            name: 'stop',
-                            color: 'red'
+                            name: 'stop'
                         }
                     },
                     reRunApp: {
                         help: 'Edit and re-run the app',
                         type: 'primary',
+                        classes: ['-rerun'],
                         icon: {
-                            name: 'refresh',
-                            color: 'blue'
+                            name: 'refresh'
+                        }
+                    },
+                    resetApp: {
+                        help: 'Reset the app and return to Edit mode',
+                        type: 'danger',
+                        classes: ['-reset'],
+                        icon: {
+                            name: 'refresh'
                         }
                     }
+
                 }
             };
 
@@ -460,6 +469,24 @@ define([
             }
         }
 
+        function hidePane() {
+            return Promise.try(function () {
+                var paneNode = ui.getElement('run-control-panel.tab-pane');
+                if (paneNode) {
+                    paneNode.classList.add('hidden');
+                }
+            });
+        }
+
+        function showPane() {
+            return Promise.try(function () {
+                var paneNode = ui.getElement('run-control-panel.tab-pane');
+                if (paneNode) {
+                    paneNode.classList.remove('hidden');
+                }
+            });
+        }
+
         /*
          * If tab not open, close any open one and open it.
          * If tab open, close it, leaving no tabs open.
@@ -467,14 +494,22 @@ define([
         function toggleTab(tabId) {
             if (controlBarTabs.selectedTab) {
                 if (controlBarTabs.selectedTab.id === tabId) {
-                    return stopTab();
+                    return stopTab()
+                        .then(function () {
+                            // hide the pane, since we just closed the only open
+                            //tab.
+                            return hidePane();
+                        })
                 }
                 return stopTab()
                     .then(function () {
                         return startTab(tabId);
                     });
             }
-            return startTab(tabId);
+            return showPane()
+                .then(function () {
+                    startTab(tabId);
+                });
         }
 
 
@@ -503,7 +538,7 @@ define([
 //                    widget: jobStateTabWidget
 //                },
                 logs: {
-                    label: 'Logs',
+                    label: 'Log',
                     xicon: 'list',
                     widget: logTabWidget
                 },
@@ -596,6 +631,7 @@ define([
         // RENDER API
 
         function syncFatalError() {
+            return;
             var advice = model.getItem('fatalError.advice'),
                 info = model.getItem('fatalError.info'),
                 ul = t('ul'),
@@ -837,6 +873,9 @@ define([
                 case 'reRunApp':
                     doRerun();
                     break;
+                case 'resetApp':
+                    doResetApp();
+                    break;
                 case 'cancel':
                     doCancel();
                     break;
@@ -848,111 +887,28 @@ define([
         function buildRunControlPanelRunButtons(events) {
             return div({class: 'btn-group'},
                 Object.keys(actionButtons.availableButtons).map(function (key) {
-                    var button = actionButtons.availableButtons[key];
-                    return ui.buildButton({
-                        tip: button.help,
-                        name: key,
-                        events: events,
-                        type: button.type || 'default',
-                        hidden: true,
-                        event: {
-                            type: 'actionButton',
-                            data: {
-                                action: key
-                            }
-                        },
-                        icon: {
-                            name: button.icon.name,
-                            color: button.icon.color,
-                            size: 3
-                        },
-                        classes: [
-                            'kb-flat-btn'
-                        ]
-                    });
-                })
-            );
-        }
-
-        function xbuildRunControlPanelRunButtons(events) {
-            return div({class: 'btn-group'}, [
-                ui.buildButton({
-                    tip: 'Run the app',
-                    name: 'run-app',
+                var button = actionButtons.availableButtons[key],
+                    classes = ['kb-flat-btn', 'kb-btn-action'].concat(button.classes);
+                return ui.buildButton({
+                    tip: button.help,
+                    name: key,
                     events: events,
-                    type: 'primary',
+                    type: button.type || 'default',
+                    classes: classes,
                     hidden: true,
-                    icon: {
-                        name: 'play',
-                        size: 3,
-                        color: 'green'
+                    event: {
+                        type: 'actionButton',
+                        data: {
+                            action: key
+                        }
                     },
-                    classes: [
-                        'kb-flat-btn'
-                    ]
-                }),
-                ui.buildButton({
-                    tip: 'Launching the app...',
-                    name: 'launching',
-                    events: events,
-                    type: 'primary',
-                    hidden: true,
-                    disabled: true,
                     icon: {
-                        name: 'play',
-                        size: 3,
-                        color: 'green'
-                    },
-                    classes: [
-                        'kb-flat-btn'
-                    ]
-                }),
-                ui.buildButton({
-                    tip: 'Cancel the running app',
-                    name: 'cancel',
-                    events: events,
-                    type: 'danger',
-                    hidden: true,
-                    icon: {
-                        name: 'stop',
-                        size: 3,
-                        color: 'red'
-                    },
-                    classes: [
-                        'kb-flat-btn'
-                    ]
-                }),
-                ui.buildButton({
-                    tip: 'Canceling the app...',
-                    name: 'canceling',
-                    events: events,
-                    type: 'danger',
-                    hidden: true,
-                    icon: {
-                        name: 'stop',
-                        size: 3,
-                        color: 'red'
-                    },
-                    classes: [
-                        'kb-flat-btn'
-                    ]
-                }),
-                ui.buildButton({
-                    tip: 'Edit and re-run the app',
-                    name: 're-run-app',
-                    events: events,
-                    type: 'primary',
-                    hidden: true,
-                    icon: {
-                        name: 'refresh',
-                        size: 3,
-                        color: 'blue'
-                    },
-                    classes: [
-                        'kb-flat-btn'
-                    ]
-                })
-            ]);
+                        name: button.icon.name,
+                        size: 3
+                    }
+                });
+            })
+                );
         }
 
         function buildRunControlPanelDisplayButtons(events) {
@@ -979,6 +935,7 @@ define([
                     type: tab.type || 'primary',
                     hidden: true,
                     features: tab.features,
+                    classes: ['kb-app-cell-btn'],
                     event: {
                         type: 'control-panel-tab',
                         data: {
@@ -1007,18 +964,20 @@ define([
                                 position: 'absolute', left: '0', top: '0',
                                 width: '100px',
                                 height: '100px',
-                                borderRight: '3px silver solid'
+                                borderRight: '1px silver solid'
                             }}, [
                             div({style: {height: '40px', marginTop: '10px', textAlign: 'center', lineHeight: '40px', verticalAlign: 'middle'}}, [
-                                span({dataElement: 'icon', class: 'fa fa-question fa-2x', style: {lineHeight: '40px'}})
+                                span({dataElement: 'indicator'}, [
+                                    span({dataElement: 'icon', class: 'fa fa-question fa-2x', style: {lineHeight: '40px'}})
+                                ])
                             ]),
                             div({dataElement: 'message', style: {height: '20px', marginTop: '5px', textAlign: 'center'}}, 'status'),
-                            div({dataElement: 'measure', style: {height: '20px', marginBotton: '5px',  textAlign: 'center'}})
+                            div({dataElement: 'measure', style: {height: '20px', marginBotton: '5px', textAlign: 'center'}})
                         ]),
                         div({dataElement: 'toolbar', style: {
                                 position: 'absolute', left: '100px', right: '100px', top: '0',
                                 height: '100px',
-                                borderRight: '0px silver solid'
+                                borderRight: '1px silver solid'
                             }}, [
                             div({style: {
                                     height: '50px',
@@ -1033,12 +992,12 @@ define([
                                     paddingLeft: '15px',
                                     verticalAlign: 'bottom'
                                 }}, [
-                                    div({class: 'btn-toolbar',
-                                        style: {
-                                            display: 'inline-block',
-                                            verticalAlign: 'bottom'
-                                        }}, buildRunControlPanelDisplayButtons(events))
-                                ])
+                                div({class: 'btn-toolbar',
+                                    style: {
+                                        display: 'inline-block',
+                                        verticalAlign: 'bottom'
+                                    }}, buildRunControlPanelDisplayButtons(events))
+                            ])
                         ]),
                         div({style: {
                                 width: '100px',
@@ -1144,46 +1103,46 @@ define([
                                         ]
                                     });
                                 }()),
-                                buildRunControlPanel(events),
-                                // ui.buildCollapsiblePanel({
-                                //     title: 'Output ' + span({class: 'fa fa-arrow-left'}),
-                                //     name: 'output-group',
-                                //     hidden: true,
-                                //     type: 'default',
-                                //     classes: ['kb-panel-container'],
-                                //     body: div({dataElement: 'widget'})
-                                // }),
-                                ui.buildPanel({
-                                    title: 'Error',
-                                    name: 'fatal-error',
-                                    hidden: true,
-                                    type: 'danger',
-                                    classes: ['kb-panel-container'],
-                                    body: div([
-                                        div({class: 'alert alert-danger'}, 'This App cell could not load due to errors described below'),
-                                        ui.buildGridTable({
-                                            row: {
-                                                style: {marginBottom: '6px'}
-                                            },
-                                            cols: [
-                                                {
-                                                    width: 2,
-                                                    style: {fontWeight: 'bold'}
-                                                },
-                                                {
-                                                    width: 10
-                                                }
-                                            ],
-                                            table: [
-                                                ['Title', div({dataElement: 'title'})],
-                                                ['Message', div({dataElement: 'message'})],
-                                                ['Advice', div({dataElement: 'advice'})],
-                                                ['Info', div({dataElement: 'info'})],
-                                                ['Details', div({dataElement: 'detail', style: {maxHeight: '300px', maxWidth: '100%', overflow: 'scroll', fontFamily: 'monospace'}})]
-                                            ]
-                                        })
-                                    ])
-                                })
+                                buildRunControlPanel(events)
+                                    // ui.buildCollapsiblePanel({
+                                    //     title: 'Output ' + span({class: 'fa fa-arrow-left'}),
+                                    //     name: 'output-group',
+                                    //     hidden: true,
+                                    //     type: 'default',
+                                    //     classes: ['kb-panel-container'],
+                                    //     body: div({dataElement: 'widget'})
+                                    // }),
+//                                ui.buildPanel({
+//                                    title: 'Error',
+//                                    name: 'fatal-error',
+//                                    hidden: true,
+//                                    type: 'danger',
+//                                    classes: ['kb-panel-container'],
+//                                    body: div([
+//                                        div({class: 'alert alert-danger'}, 'This App cell could not load due to errors described below'),
+//                                        ui.buildGridTable({
+//                                            row: {
+//                                                style: {marginBottom: '6px'}
+//                                            },
+//                                            cols: [
+//                                                {
+//                                                    width: 2,
+//                                                    style: {fontWeight: 'bold'}
+//                                                },
+//                                                {
+//                                                    width: 10
+//                                                }
+//                                            ],
+//                                            table: [
+//                                                ['Title', div({dataElement: 'title'})],
+//                                                ['Message', div({dataElement: 'message'})],
+//                                                ['Advice', div({dataElement: 'advice'})],
+//                                                ['Info', div({dataElement: 'info'})],
+//                                                ['Details', div({dataElement: 'detail', style: {maxHeight: '300px', maxWidth: '100%', overflow: 'scroll', fontFamily: 'monospace'}})]
+//                                            ]
+//                                        })
+//                                    ])
+//                                })
                             ])
                         ])
                     ])
@@ -1310,7 +1269,23 @@ define([
                 },
                 bus: bus
             });
-            fsm.start(currentState);
+            try {
+                fsm.start(currentState);
+            } catch (ex) {
+                // TODO should be explicit exception if want to continue with solution
+                model.setItem('internalError', {
+                    title: 'Error initializing app state',
+                    message: ex.message,
+                    advice: [
+                        'Reset the app with the red recycle button and try again.',
+                        'If that fails, delete the app cell and re-insert it.'
+                    ],
+                    info: null,
+                    detail: null
+                });
+                syncFatalError();
+                fsm.start({mode: 'internal-error'});
+            }
         }
 
         // LIFECYCYLE API
@@ -1492,13 +1467,21 @@ define([
 
             ui.setContent('run-control-panel.status.message', state.ui.label);
 
-            var iconNode = ui.getElement('run-control-panel.status.icon');
+            var indicatorNode = ui.getElement('run-control-panel.status.indicator');
+            var iconNode = ui.getElement('run-control-panel.status.indicator.icon');
             if (iconNode) {
                 // clear the classes
-                iconNode.className = '';
 
-                iconNode.classList.add('fa', 'fa-' + state.ui.icon.type, 'fa-3x');
-                iconNode.style.color = state.ui.icon.color;
+                indicatorNode.className = state.ui.appStatus.classes.join(' ');
+                //var classes = ['fa', 'fa-' + state.ui.appStatus.icon.type, 'fa-3x'].concat(state.ui.appStatus.classes);
+                //classes.forEach(function(klass) {
+                //    iconNode.classList.add(klass);
+                //});
+                // iconNode.classList.add.apply(iconNode.classList, classes);
+
+                iconNode.className = '';
+                iconNode.classList.add('fa', 'fa-' + state.ui.appStatus.icon.type, 'fa-3x');
+                // iconNode.style.color = state.ui.icon.color;
             }
 
             // Clear the measure
@@ -1564,12 +1547,15 @@ define([
 
 
             // Element state
-            state.ui.elements.show.forEach(function (element) {
-                ui.showElement(element);
-            });
-            state.ui.elements.hide.forEach(function (element) {
-                ui.hideElement(element);
-            });
+
+            // DISABLE for now, as the tabs have taken over most of this
+            // functionality. May still be useful...
+//            state.ui.elements.show.forEach(function (element) {
+//                ui.showElement(element);
+//            });
+//            state.ui.elements.hide.forEach(function (element) {
+//                ui.hideElement(element);
+//            });
 
             // Emit messages for this state.
 //            if (state.ui.messages) {
@@ -1657,6 +1643,25 @@ define([
 
             renderUI();
         }
+        
+         function resetAppAndEdit(source) {
+            // only do this if we are not editing.
+            alert('Sorry, reset and edit not implemented yet. Real soon. For now delete the app and re-insert it.');
+            return;
+
+            model.deleteItem('exec');
+
+            // Also ensure that the exec widget is reset
+            // widgets.execWidget.bus.emit('reset');
+            // reloadExecutionWidget();
+
+            // TODO: evaluate the params again before we do this.
+            fsm.newState({mode: 'editing', params: 'incomplete'});
+
+            clearOutput();
+
+            renderUI();
+        }
 
         function doRerun() {
             var confirmationMessage = div([
@@ -1671,6 +1676,22 @@ define([
 
                     // Remove all of the execution state when we reset the app.
                     resetToEditMode('do rerun');
+                });
+        }
+
+        function doResetApp() {
+            var confirmationMessage = div([
+                p('This action will clear all parameters, run statistics, and logs and place the app into Edit mode.'),
+                p('Proceed to Reset the app and Resume Editing?')
+            ]);
+            ui.showConfirmDialog({title: 'Reset App?', body: confirmationMessage})
+                .then(function (confirmed) {
+                    if (!confirmed) {
+                        return;
+                    }
+
+                    // Remove all of the execution state when we reset the app.
+                    resetAppAndEdit('do reset');
                 });
         }
 
@@ -1701,7 +1722,10 @@ define([
                         // the job will be deleted form the notebook when the job cancellation
                         // event is received.
                     } else {
-                        alert('cannot cancel yet');
+                        // Hmm this is a rather odd case, but it has been seen in the wild.
+                        // E.g. it could (logically) occur during launch phase (although the cancel button should not be available.)
+                        // In erroneous conditions it could occur if a job failed or was 
+                        // cancelled but the state machine got confused.
                         model.deleteItem('exec');
                         fsm.newState({mode: 'editing', params: 'complete', code: 'built'});
                         renderUI();
@@ -1752,10 +1776,22 @@ define([
                         case 'suspend':
                         case 'error':
                             stopListeningForJobMessages();
-                            if (currentState.state.stage) {
+
+                            // Due to the course granularity of job status
+                            // messages, we don't can't rely on the prior state
+                            // to inform us about what procesing stage the
+                            // error occured in -- we need to inspect the job state.
+                            var errorStage;
+                            if (jobState.exec_start_time) {
+                                errorStage = 'running';
+                            } else if (jobState.creation_time) {
+                                errorStage = 'queued';
+                            }
+                            console.log('ERROR???', jobState, errorStage);
+                            if (errorStage) {
                                 return {
                                     mode: 'error',
-                                    stage: currentState.state.stage
+                                    stage: errorStage
                                 };
                             }
                             return {
@@ -2202,9 +2238,18 @@ define([
                     }
 
                     // tear down all the sub widgets.
+                    // TODO: make all widget behavior consistent. Either message or promise.
                     Object.keys(widgets).forEach(function (widgetId) {
-                        var widget = widgets[widgetId];
-                        widget.instance.bus().send('stop');
+                        try {
+                            var widget = widgets[widgetId];
+                            if (widget.stop) {
+                                widget.stop();
+                            } else {
+                                widget.instance.bus().send('stop');
+                            }
+                        } catch (ex) {
+                            console.error('ERROR stopping widget', widgetId, ex);
+                        }
                     });
 
                     stop();
@@ -2222,7 +2267,7 @@ define([
                 // DOM EVENTS
                 cell.element.on('toggleCodeArea.cell', function () {
                     toggleCodeInputArea(cell);
-                })
+                });
                 // the settings toggle is now emitted from the toolbar, which
                 // doesn't have a reference to the bus (yet).
                 cell.element.on('toggleCellSettings.cell', function () {
@@ -2767,7 +2812,7 @@ define([
                         detail: error.detail || 'no additional details'
                     });
                     syncFatalError();
-                    fsm.newState({mode: 'fatal-error'});
+                    fsm.newState({mode: 'internal-error'});
                     renderUI();
                 });
         }

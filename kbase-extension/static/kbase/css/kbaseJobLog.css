@@ -14,27 +14,18 @@
 }
 
 .kblog-line {
-    position: relative;
-    display: block;
+    display: flex;
     font-family: monospace;
-    font-size: 9pt;
+    font-size: 85%;
 }
 
 .kblog-num-wrapper {
-    position: absolute;
-    background: none !important;
-    border: none !important;
-    font-size: 9pt;
-    z-index: 4;
-    user-select: none;
-    -moz-user-select: none;
-    -webkit-user-select: none;
+    font-size: 85%;
 }
 
 .kblog-line-num {
-    left: 0;
-    position: relative;
-    min-width: 25px;
+    flex-shrink: 0;
+    width: 9ex;
     text-align: right;
     color: #999;
     white-space: nowrap;
@@ -47,9 +38,8 @@
 
 .kblog-text {
     word-wrap: break-word;
-    position: relative;
-    padding-left: 32px;
-    z-index: 2;
+    flex: 1;
+    margin-left: 6px;
 }
 
 .kb-error {

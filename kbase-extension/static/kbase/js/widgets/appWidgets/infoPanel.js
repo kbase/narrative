@@ -99,12 +99,12 @@ function(
         return {
             start: start,
             stop: stop
-        }
+        };
     }
 
     return {
         make: function(config) {
             return factory(config);
         }
-    }
+    };
 });

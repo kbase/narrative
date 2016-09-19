@@ -92,24 +92,15 @@ return KBWidget({
         var cmpIsLoaded = function() {
         	container.empty();
             container.append("<div><img src=\""+self.loadingImage+"\">&nbsp;&nbsp;loading comparison data...</div>");
-            var genomeRefs = [self.cmp.genome1ref, self.cmp.genome2ref];
-            var proms = [];
-            var getInfoReq = [];
-            for (var i in genomeRefs) {
-                var genomeRef = genomeRefs[i];
-                getInfoReq.push({ref: genomeRef});
-                proms.push(gaapi.get_combined_data({ref: genomeRef, exclude_genes: 1, exclude_cdss: 1, 
-                    exclude_protein_by_cds_id: 1, exclude_cds_ids_by_gene_id: 1}));
-            }
-            proms.push(kbws.get_object_info_new({objects: getInfoReq}));
-            $.when.apply($, proms).done(function() {
-                var data = arguments;
-        		self.genome1wsName = data[2][0][7];
-        		self.genome1objName = data[2][0][1];
-            	var genome1id = data[0].summary.scientific_name;
-        		self.genome2wsName = data[2][1][7];
-            	self.genome2objName = data[2][1][1];
-            	var genome2id = data[1].summary.scientific_name;
+            $.when(gaapi.get_genome_v1({genomes: [{ref: self.cmp.genome1ref}, {ref: self.cmp.genome2ref}], 
+                    included_fields: ["scientific_name"]})).done(function(data) {
+                genomes = data.genomes;
+        		self.genome1wsName = genomes[0].info[7];
+        		self.genome1objName = genomes[0].info[1];
+            	var genome1id = genomes[0].data.scientific_name;
+        		self.genome2wsName = genomes[1].info[7];
+            	self.genome2objName = genomes[1].info[1];
+            	var genome2id = genomes[1].data.scientific_name;
         		container.empty();
                 var $nc = $('#notebook-container');
                 $nc.append("<div id='widget-tooltip"+self.pref+"' class='ipython_tooltip' style='display:none; min-height: 25px; position: absolute;'>Test message</div>");

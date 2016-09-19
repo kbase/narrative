@@ -10,9 +10,9 @@ define([
     'use strict';
 
     var t = html.tag,
-        div = t('div');
+        div = t('div'), ul = t('ul'), li = t('li');
 
-    function formatError(errorInfo) {
+    function convertJobError(errorInfo) {
         var errorId = new Uuid(4).format(),
             errorType, errorMessage, errorDetail;
         if (errorInfo.error) {
@@ -38,6 +38,19 @@ define([
         };
     }
 
+    function convertInternalError(errorInfo) {
+        return {
+            location: 'app cell',
+            type: errorInfo.title,
+            message: errorInfo.message,
+            advice: ul({style: {paddingLeft: '1.2em'}}, errorInfo.advice.map(function (adv) {
+                return li(adv);
+            })),
+            detail: errorInfo.detail
+                // info:  errorInfo ? html.makeObjTable(errorInfo.info, {rotated: true, classes: []}) : null
+        };
+    }
+
     function renderErrorLayout() {
         return div([
             div({style: {fontWeight: 'bold'}}, [
@@ -49,6 +62,10 @@ define([
             ]),
             div({dataElement: 'message'}),
             div({style: {fontWeight: 'bold', marginTop: '1em'}}, [
+                'Advice'
+            ]),
+            div({dataElement: 'advice'}),
+            div({style: {fontWeight: 'bold', marginTop: '1em'}}, [
                 'Detail'
             ]),
             div({dataElement: 'detail',
@@ -57,7 +74,11 @@ define([
                     padding: '4px',
                     xoverflowY: 'auto',
                     wordBreak: 'break-word'
-                }})
+                }}),
+            div({style: {fontWeight: 'bold', marginTop: '1em'}}, [
+                'Info'
+            ]),
+            div({dataElement: 'info'})
         ]);
     }
 
@@ -73,7 +94,20 @@ define([
 
                 ui = UI.make({node: container});
 
-                var viewModel = formatError(model.getItem('exec.jobState.error'));
+                var viewModel;
+                if (model.hasItem('exec.jobState.error')) {
+                    viewModel = convertJobError(model.getItem('exec.jobState.error'));
+                } else if (model.hasItem('internalError')) {
+                    viewModel = convertInternalError(model.getItem('internalError'));
+                } else {
+                    viewModel = {
+                        location: 'unknown',
+                        type: 'unknown',
+                        message: 'An unknown error was detected',
+                        detail: ''
+                    };
+                }
+                console.log('to err...', viewModel);
 
                 ui.updateFromViewModel(viewModel);
             });

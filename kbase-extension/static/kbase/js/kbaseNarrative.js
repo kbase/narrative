@@ -1,5 +1,5 @@
 /*global define,KBError,KBFatal,window*/
-/*jslint white: true,browser: true*/
+/*jslint white:true,browser:true*/
 
 /**
  * This is the entry point for the Narrative's front-end. It initializes
@@ -13,7 +13,6 @@
 define(
     [
         'jquery',
-        'bootstrap',
         'bluebird',
         'handlebars',
         'narrativeConfig',
@@ -37,10 +36,13 @@ define(
         'narrativeLogin',
         'common/ui',
         'common/html',
-        'narrativeTour'
+        'narrativeTour',
+        
+        // for effect
+        'bootstrap',
+
     ], function (
     $,
-    Bootstrap,
     Promise,
     Handlebars,
     Config,
@@ -130,7 +132,7 @@ define(
         // key = cell id, value = Widget object itself.
         this.kbaseWidgets = {};
 
-        Jupyter.keyboard_manager.disable();
+        //Jupyter.keyboard_manager.disable();
         return this;
     };
 
@@ -144,29 +146,74 @@ define(
     };
 
     // Wrappers for the Jupyter/Jupyter function so we only maintain it in one place.
-    Narrative.prototype.disableKeyboardManager = function () {
-        var killTheseShortcuts = ['a', 'b', 'm', 'f', 'y', 'r',
-                                  '1', '2', '3', '4', '5', '6',
-                                  'k', 'j', 'b', 'x', 'c', 'v',
-                                  'z', 'd,d', 's', 'l', 'o', 'h',
-                                  'i', '0,0', 'q', 'shift-j', 'shift-k',
-                                  'shift-h', 'shift-m', 'shift-o', 'shift-v'];
+    Narrative.prototype.patchKeyboardMapping = function () {
+        var commonShortcuts = [
+            'a', 'b', 'm', 'f', 'y', 'r',
+            '1', '2', '3', '4', '5', '6',
+            'k', 'j', 'b', 'x', 'c', 'v',
+            'z', 'd,d', 's', 'l', 'o', 'h',
+            'i,i', '0,0', 'q', 'shift-j', 'shift-k',
+            'shift-h', 'shift-m', 'shift-o', 'shift-v'
+        ],
+            commandShortcuts = [],
+            editShortcuts = [
+                // remove the command palette 
+                // since it exposes commands we have "disabled"
+                // by removing keyboard mappings
+                'cmdtrl-shift-p',
+            ];
 
-        for (var i=0; i<killTheseShortcuts.length; i++) {
-            var shortcut = killTheseShortcuts[i];
+        commonShortcuts.forEach(function (shortcut) {
             try {
                 Jupyter.keyboard_manager.command_shortcuts.remove_shortcut(shortcut);
-            }
-            catch (err) {
-                //pass
+            } catch (ex) {
+                console.warn('Error removing shortcut "'  + shortcut +'"', ex);
             }
             try {
-                Jupyter.notebook.keyboard_manager.command_shortcuts.remove_shortcut(shortcut);
+                Jupyter.notebook.keyboard_manager.edit_shortcuts.remove_shortcut(shortcut);
+            } catch (ex) {
+                console.warn('Error removing shortcut "'  + shortcut +'"', ex);
             }
-            catch (err) {
-                //pass
+        });
+
+        commandShortcuts.forEach(function (shortcut) {
+            try {
+                Jupyter.keyboard_manager.command_shortcuts.remove_shortcut(shortcut);
+            } catch (ex) {
+                console.warn('Error removing shortcut "'  + shortcut +'"', ex);
             }
-        }
+        });
+
+        editShortcuts.forEach(function (shortcut) {
+            try {
+                Jupyter.notebook.keyboard_manager.edit_shortcuts.remove_shortcut(shortcut);
+            } catch (ex) {
+                console.warn('Error removing shortcut "'  + shortcut +'"', ex);
+            }
+        });
+
+
+//        for (var i=0; i<killTheseShortcuts.length; i++) {
+//            var shortcut = killTheseShortcuts[i];
+//            try {
+//                Jupyter.keyboard_manager.command_shortcuts.remove_shortcut(shortcut);
+//                Jupyter.notebook.keyboard_manager.edit_shortcuts.remove_shortcut(shortcut);
+//            }
+//            catch (err) {
+//                //pass
+//            }
+//            try {
+//                Jupyter.notebook.keyboard_manager.command_shortcuts.remove_shortcut(shortcut);
+//                Jupyter.notebook.keyboard_manager.edit_shortcuts.remove_shortcut(shortcut);
+//            }
+//            catch (err) {
+//                //pass
+//            }
+//        }
+    };
+
+    Narrative.prototype.disableKeyboardManager = function () {
+        Jupyter.keyboard_manager.disable();
     };
 
     Narrative.prototype.enableKeyboardManager = function () {
@@ -271,7 +318,7 @@ define(
                     ]),
                     div({class: 'col-md-4'})
                 ]),
-               div({class: 'form-group'}, [
+                div({class: 'form-group'}, [
                     div({class: 'col-md-8 checkbox'}, [
                         label([
                             input({
@@ -606,12 +653,11 @@ define(
 
     Narrative.prototype.initTour = function () {
         try {
-            $('#kb-tour').click(function(e) {
+            $('#kb-tour').click(function (e) {
                 var tour = new Tour.Tour(this);
                 tour.start();
             }.bind(this));
-        }
-        catch (e) {
+        } catch (e) {
             console.error(e);
         }
     };
@@ -630,6 +676,7 @@ define(
     // This should not be run until AFTER the notebook has been loaded!
     // It depends on elements of the Notebook metadata.
     Narrative.prototype.init = function () {
+        Jupyter.narrative.patchKeyboardMapping();
         this.registerEvents();
         this.initAboutDialog();
         this.initUpgradeDialog();
@@ -829,7 +876,7 @@ define(
      */
     Narrative.prototype.getCellIndexByKbaseId = function (id) {
         var cells = Jupyter.notebook.get_cells();
-        for (var i=0; i<cells.length; i++) {
+        for (var i = 0; i < cells.length; i++) {
             var c = cells[i];
             if (c.metadata.kbase &&
                 c.metadata.kbase.attributes &&
@@ -928,7 +975,7 @@ define(
         $(document).trigger('showSidePanelOverlay.Narrative', this.sidePanel.$dataWidget.$overlayPanel);
     };
 
-    Narrative.prototype.hideOverlay = function() {
+    Narrative.prototype.hideOverlay = function () {
         $(document).trigger('hideSidePanelOverlay.Narrative');
     };
 

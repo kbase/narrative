@@ -7,10 +7,10 @@ define([
     'uuid',
     'base/js/namespace',
     'common/utils',
-    'common/runtime',
     'common/ui',
     'common/props',
     'common/appUtils',
+    'common/jupyter',
     'kb_common/html',
     'common/pythonInterop',
     './widgets/widgetCellWidget'
@@ -20,10 +20,10 @@ define([
     Uuid,
     Jupyter,
     utils,
-    Runtime,
     UI,
     Props,
     AppUtils,
+    jupyter,
     html,
     PythonInterop,
     WidgetCellWidget
@@ -70,22 +70,6 @@ define([
                 ]);
             }
         };
-        cell.hidePrompts = function () {
-            // Hide the code input area.
-            this.input.find('.input_area').addClass('hidden');
-            utils.setCellMeta(this, 'kbase.widgetCell.user-settings.showCodeInputArea', false);
-
-            // And add our own!
-            var prompt = document.createElement('div');
-            prompt.innerHTML = div({dataElement: 'icon', class: 'prompt'});
-            cell.input.find('.input_prompt').after($(prompt));
-
-
-            // Hide the prompt...
-            this.input.find('.input_prompt').hide();
-            utils.horribleHackToHideElement(this, '.output_prompt', 10);
-        };
-
     }
 
     // This is the python/kernel driven version
@@ -127,7 +111,7 @@ define([
         cell.kbase.node = kbaseNode;
         cell.kbase.$node = $(kbaseNode);
 
-        cell.hidePrompts();
+        jupyter.disableKeyListenersForCell(cell);
 
         cell.renderIcon();
 

@@ -154,7 +154,6 @@ define([
 
             Jupyter.narrative = new Narrative();
             Jupyter.narrative.init();
-            Jupyter.narrative.disableKeyboardManager();
 
             /*
              * Override the move-cursor-down-or-next-cell and
@@ -800,12 +799,12 @@ define([
      *
      */
 
-    // (function () {
-    //     keyboardManager.KeyboardManager.prototype.register_events = function (e) {
-    //         // NOOP
-    //         return;
-    //     };
-    // }());
+     (function () {
+         keyboardManager.KeyboardManager.prototype.register_events = function (e) {
+             // NOOP
+             return;
+         };
+     }());
 
 
 

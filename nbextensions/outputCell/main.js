@@ -11,6 +11,7 @@ define([
     'common/props',
     'common/cellUtils',
     'common/pythonInterop',
+    'common/jupyter',
     'kb_common/html',
     'util/string',
     './widgets/outputCell'
@@ -24,6 +25,7 @@ define([
     Props,
     cellUtils,
     PythonInterop,
+    jupyter,
     html,
     StringUtil,
     OutputCell
@@ -65,27 +67,23 @@ define([
                 ]);
             }
         };
-        cell.hidePrompts = function () {
-            // Hide the code input area.
-            this.input.find('.input_area').addClass('hidden');
-            utils.setCellMeta(this, 'kbase.outputCell.user-settings.showCodeInputArea', false);
-
-            // And add our own!
-            var prompt = document.createElement('div');
-            prompt.innerHTML = div({dataElement: 'icon', class: 'prompt'});
-            cell.input.find('.input_prompt').after($(prompt));
-
-
-            // Hide the prompt...
-            this.input.find('.input_prompt').hide();
-            utils.horribleHackToHideElement(this, '.output_prompt', 10);
+        cell.getIcon = function () {
+            var icon = AppUtils.makeToolbarGenericIcon('arrow-left');
+            return icon;
+        };
+        cell.isCodeShowing = function () {
+            var codeInputArea = this.input.find('.input_area')[0];
+            if (codeInputArea) {
+                return !codeInputArea.classList.contains('hidden');
+            }
+            return false;            
         };
         cell.toggleCodeInputArea = function () {
-            console.log('TOGGLING 2...');
             var codeInputArea = this.input.find('.input_area')[0];
-            console.log('TOGGLING 3', codeInputArea);
             if (codeInputArea) {
                 codeInputArea.classList.toggle('hidden');
+                // NB purely for side effect - toolbar refresh
+                cell.metadata = cell.metadata;
             }
         }
     }
@@ -102,7 +100,7 @@ define([
         }
 
         specializeCell(cell);
-
+        
         // The kbase property is only used for managing runtime state of the cell
         // for kbase. Anything to be persistent should be on the metadata.
         cell.kbase = {
@@ -114,16 +112,11 @@ define([
         var outputCell = OutputCell.make({
             cell: cell
         });
-        console.log('CELL', cell);
         outputCell.bus.emit('run', {
             node: cell.element
         });
 
-        // The output cell just needs to inhibit the input area.
-        // The input code and associated output (a widget) is already
-        // to be found in this cell (during insertion).
-
-        cell.hidePrompts();
+        jupyter.disableKeyListenersForCell(cell);
         cell.renderMinMax();
         cell.renderIcon();
     }

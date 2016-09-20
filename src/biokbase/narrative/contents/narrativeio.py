@@ -37,6 +37,7 @@ obj_ref_regex = re.compile('^(?P<wsid>\d+)\/(?P<objid>\d+)(\/(?P<ver>\d+))?$')
 
 MAX_METADATA_STRING_BYTES = 900
 MAX_METADATA_SIZE_BYTES = 16000
+WORKSPACE_TIMEOUT = 30  # seconds
 
 class PermissionsError(ServerError):
     """Raised if user does not have permission to
@@ -74,7 +75,7 @@ class KBaseWSManagerMixin(object):
             raise HTTPError(500, u'Unable to connect to workspace service at {}: {}'.format(self.ws_uri, e))
 
     def ws_client(self):
-        return WorkspaceClient.Workspace(self.ws_uri)
+        return WorkspaceClient.Workspace(self.ws_uri, timeout=WORKSPACE_TIMEOUT)
 
     def _test_obj_ref(self, obj_ref):
         m = obj_ref_regex.match(obj_ref)

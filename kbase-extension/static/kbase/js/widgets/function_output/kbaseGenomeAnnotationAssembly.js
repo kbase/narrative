@@ -129,7 +129,7 @@ define (
                     tabs : [
                         {
                             tab : 'Assembly Summary',                               //name of the tab
-                            content : $('<div>').append($overviewTable),  //jquery object to stuff into the content
+                            content : $('<div>').css('margin-top','15px').append($overviewTable),  //jquery object to stuff into the content
                             canDelete : false,                             //override the canDelete param on a per tab basis
                             show : true,      
                         }, {

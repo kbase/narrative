@@ -15,7 +15,7 @@
             },
             "phytozome_genomes": {
                 "name": "Phytozome Genomes",
-                "type": "KBaseGenomeAnnotations.GenomeAnnotation",
+                "type": "KBaseGenomes.Genome",
                 "ws": "Phytozome_Genomes",
                 "search": false
             },

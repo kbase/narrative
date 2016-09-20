@@ -48,17 +48,17 @@ define([
             options = {},
             fieldId = html.genId(),
             spec = config.parameterSpec;
-        
+
         try {
             inputControl = inputControlFactory.make({
-                    bus: config.bus,
-                    initialValue: config.initialValue,
-                    appSpec: config.appSpec,
-                    parameterSpec: config.parameterSpec,
-                    workspaceInfo: config.workspaceInfo,
-                    workspaceId: config.workspaceId,
-                    fieldSpec: config.fieldSpec
-                });
+                bus: config.bus,
+                initialValue: config.initialValue,
+                appSpec: config.appSpec,
+                parameterSpec: config.parameterSpec,
+                workspaceInfo: config.workspaceInfo,
+                workspaceId: config.workspaceId,
+                fieldSpec: config.fieldSpec
+            });
         } catch (ex) {
             inputControl = ErrorControlFactory.make({
                 message: ex.message
@@ -121,7 +121,7 @@ define([
         function setWarning(warning) {
             var component = buildInputMessage({
                 title: 'Warning',
-                type: 'warning', 
+                type: 'warning',
                 message: warning.message,
                 id: warning.id
             });
@@ -340,12 +340,8 @@ define([
                 advanced = '';
             }
 
-            var content = div({class: ['form-horizontal', 'kb-app-parameter-row', advanced].join(' '), dataAdvancedParameter: spec.isAdvanced(), style: {marginTop: '8px'}, id: fieldId}, [
-                div({class: 'form-group kb-app-parameter-input', dataElement: 'field-panel', style: {marginBottom: '0'}}, [
-//                    label({class: 'xcol-md-12 xcontrol-label kb-app-parameter-name'}, [
-//                        spec.label() || spec.id()
-//                    ]),
-                    //div({class: 'xcol-md-12'}, div({class: ''}, [
+            var content = div({class: ['form-horizontal', 'kb-app-parameter-row', 'parameter-panel', advanced].join(' '), dataAdvancedParameter: spec.isAdvanced(), style: {marginTop: '8px'}, id: fieldId}, [
+                div({class: 'form-group kb-app-parameter-input field-panel', dataElement: 'field-panel', style: {marginBottom: '0'}}, [
                     label({class: 'col-md-3 xcontrol-label kb-app-parameter-name control-label'}, [
                         spec.label() || spec.id()
                     ]),
@@ -361,18 +357,12 @@ define([
                                 id: events.addEvent({
                                     type: 'click',
                                     handler: function (e) {
-                                        var // info = document.getElementById(infoId),
-                                            // littleTip = container.querySelector('[data-element="little-tip"]'),
-                                            bigTip = container.querySelector('[data-element="big-tip"]');
+                                        var bigTip = container.querySelector('[data-element="big-tip"]');
                                         // the info button is used to switch between two different
-                                        // displays -- a compact display of type and a
-                                        // tabview with richer info to explore.
                                         if (bigTip.style.display === 'none') {
                                             bigTip.style.display = 'block';
-                                            // littleTip.style.display = 'block';
                                         } else {
                                             bigTip.style.display = 'none';
-                                            // littleTip.style.display = 'none';
                                         }
                                     }
                                 })
@@ -381,19 +371,16 @@ define([
                                 ))
                         ])
                     ])
-                        //]))
-
-
                 ]),
-                div({class: 'hidden', dataElement: 'message-panel'}, [
+                div({class: 'message-panel hidden', dataElement: 'message-panel'}, [
                     div({class: 'col-md-3'}),
                     div({class: 'col-md-9'}, div({
                         class: 'message',
                         dataElement: 'message'
                     }))
                 ]),
-                div({class: 'row', dataElement: 'info-panel'}, [
-                    div({class: 'col-md-12', style: {paddingBottom: '10px'}}, div({id: infoId}, [
+                div({class: 'info-panel row', dataElement: 'info-panel'}, [
+                    div({class: 'col-md-12'}, div({id: infoId}, [
                         renderInfoTip()
                     ]))
 

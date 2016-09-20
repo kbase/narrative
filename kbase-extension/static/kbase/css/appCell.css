@@ -65,7 +65,7 @@
     vertical-align:middle;
     xwhite-space: nowrap;
     xpadding-left:10px;
-    border-bottom: 1px #ccc dotted;
+    xborder-bottom: 1px #ccc dotted;
 }
 .kb-app-cell .kb-app-parameter-input input {
     xfont-weight: bold;
@@ -172,7 +172,6 @@ control with padding, and then scooting the icon back into its column.
 
 
 
-
 .kb-app-cell .panel-title > [data-toggle="collapse"]::before {
     display: inline-block;
     margin-left: 0px;
@@ -210,4 +209,215 @@ control with padding, and then scooting the icon back into its column.
 }
 .kb-elapsed-time.-active {
     color: lime;
+}
+
+.kb-app-cell-info-desc {
+    border: 1px solid #777;
+    padding: 10px;
+    margin-right: 10px;
+    min-height: 100px;
+}
+
+.kb-app-cell-info {
+    color: #777;
+    font-family: 'Oxygen', sans-serif;
+    font-size: 12pt;
+}
+
+.kb-app-cell-info .header {
+    border-bottom: 1px solid #777;
+    padding: 5px 0;
+    margin-bottom: 8px;
+}
+
+.kb-app-cell-info .value {
+    color: #000;
+}
+
+
+/*
+New button color scheme
+
+blue for border, backgrounds, text: rgb(0, 147, 255))
+
+official kbase color: rgb(33,150,243)
+
+disabled color for border, text
+
+enabled run color - (green) -  rgb(2,140,10)
+official kbase green:
+
+rgb(75,184,86)
+
+or 
+
+ rgb(42,190,159) which is the lighter variant. both used in mocks (but depends where you sample).
+
+disabled run color - (green) -
+
+error color - red - rgb(209,82,65)
+
+disabled (gray) - 205,205,205
+
+warning: orange
+
+*/
+
+
+.btn.kb-app-cell-btn {
+    color: rgb(33, 150, 243);
+    background-color: #FFF;
+    border: 2px rgb(33, 150, 243) solid;
+    margin-bottom: 4px
+}
+
+
+/* Primary Button Style */
+.btn.kb-app-cell-btn.btn-primary {
+    color: rgb(33, 150, 243);
+    border: 2px rgb(33, 150, 243) solid;
+}
+.btn.kb-app-cell-btn.btn-primary:hover {
+    color: #FFF;
+    background-color: rgb(33, 150, 243);
+    border-bottom: 6px rgb(33, 150, 243) solid;
+    margin-bottom: 0;
+}
+.btn.kb-app-cell-btn.btn-primary:active {
+    color: #FFF;
+    background-color: rgb(33, 150, 243);
+}
+/* Hovering over an active cell is different, it tries to make the tab look
+   disassociated but using a gray background so it doesnt look like an inactive
+   tab */
+.btn.kb-app-cell-btn.btn-primary.active {
+    color: white;
+    background-color: rgb(33, 150, 243);
+    border: 2px rgb(33, 150, 243) solid;
+    border-bottom: 6px rgb(33, 150, 243) solid;
+    margin-bottom: 0;
+}
+.btn.kb-app-cell-btn.btn-primary.active:hover {
+    color: rgb(33, 150, 243);
+    background-color: #DDD;
+    border-bottom: 2px rgb(33, 150, 243) solid;
+    margin-bottom: 4px;   
+}
+
+
+
+/* DANGER - for error */
+.btn.kb-app-cell-btn.btn-danger {
+    color: rgb(209,82,65);
+    border: 2px rgb(209,82,65) solid;
+}
+.btn.kb-app-cell-btn.btn-danger:hover {
+   color: #FFF;
+    background-color: rgb(209,82,65);
+    border-bottom: 6px rgb(209,82,65) solid;
+    margin-bottom: 0;
+}
+.btn.kb-app-cell-btn.btn-danger.active:hover {
+    color:  rgb(209,82,65);
+    background-color: #DDD;
+    border-bottom: 2px  rgb(209,82,65) solid;
+    margin-bottom: 4px;
+}
+.btn.kb-app-cell-btn.btn-danger.active {
+    color: white;
+    background-color: rgb(209,82,65);
+    border: 2px rgb(209,82,65) solid;
+    border-bottom: 6px rgb(209,82,65) solid;
+    margin-bottom: 0;
+}
+.btn.kb-app-cell-btn.btn-danger.active:hover {
+    color: rgb(209,82,65);
+    background-color: #DDD;
+    border-bottom: 2px rgb(209,82,65) solid;
+    margin-bottom: 4px;   
+}
+
+
+
+/* DISABLED is gray border and text */
+/*
+.btn.kb-app-cell-btn.btn-primary.disabled:hover {
+    color: #888;
+    background-color: #FFF;
+    border-bottom: 2px #888 solid;
+    margin-bottom: 4px;
+}
+*/
+
+.btn.kb-app-cell-btn.disabled, .btn.kb-app-cell-btn.disabled:hover, .btn.kb-app-cell-btn.disabled:active {
+    color: #888;
+    background-color: #FFF;
+    border: 2px #888 solid;
+    margin-bottom: 4px;    
+}
+
+
+
+
+.kb-app-cell [data-element="run-control-panel"] {
+    xpadding-left: 8px;
+    width: 100%;
+}
+
+.kb-app-cell [data-element="tab-pane"] {
+    border-top: 2px rgb(33, 150, 243) solid;
+    xborder: 1px solid rgb(32, 77, 16);
+    xbackground-color: #f5f5f5;
+}
+
+.kb-app-cell [data-element="tab-pane"] > div:empty {
+    padding: 0px;
+}
+
+.kb-app-cell [data-element="tab-pane"] > div {
+    padding: 4px;
+}
+
+.kb-app-cell .btn.disabled {
+    background-color: #FFF;
+}
+
+.kb-app-cell .btn-primary.kb-btn-action.-rerun {
+    color: rgb(33, 150, 243)
+}
+
+
+.kb-app-cell .btn-primary.kb-btn-action.-run {
+    color: rgb(75,184,86)
+}
+
+
+.kb-app-cell .btn-danger.kb-btn-action.-cancel {
+    color: rgb(209,82,65)
+}
+
+.kb-app-cell .btn-danger.kb-btn-action.-reset {
+    color: rgb(209,82,65)
+}
+
+.kb-app-status-ok {
+    color:  rgb(75,184,86);
+}
+.kb-app-status-warning {
+    color:  orange;
+}
+.kb-app-status-danger, .kb-app-status-error {
+    color:  rgb(209,82,65);
+}
+.kb-app-status-default {
+    color:  rgb(33, 150, 243);
+}
+
+/* app cell panels */
+
+/* TODO: higher level selector */
+
+.parameter-panel .info-panel {
+    padding-top: 4px;
+    background-color: #FFF;
 }

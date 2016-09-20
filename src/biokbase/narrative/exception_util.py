@@ -33,7 +33,7 @@ def transform_job_exception(e):
         code = e.response.status_code
         if code == 404 or code == 502 or code == 503:
             # service not found
-            msg = 'The KBase App service is currently unavailable.'
+            msg = 'A KBase service is currently unavailable.'
         elif code == 504 or code == 598 or code == 599:
             # service timeout
             msg = 'There was a temporary network connection error.'

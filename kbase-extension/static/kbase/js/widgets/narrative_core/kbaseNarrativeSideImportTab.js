@@ -13,7 +13,6 @@ define (
 		'narrativeConfig',
 		'kbaseAuthenticatedWidget',
 		'select2',
-		'json!kbase/config/upload_config.json',
 		'util/string',
         'base/js/namespace',
         'common/pythonInterop'
@@ -24,7 +23,6 @@ define (
         Config,
         kbaseAuthenticatedWidget,
         select2,
-        transformConfig,
         StringUtil,
         Jupyter,
         PythonInterop
@@ -148,8 +146,8 @@ define (
                 $.proxy(function(event) {
                     event.preventDefault();
                     var selectedType = $dropdown.val();
-                    self.getMethodSpecs(function(methodFullInfo, methods) {
-                        self.showWidget(selectedType, methodFullInfo, methods);
+                    self.getMethodSpecs(function(methodFullInfo, methods, tag) {
+                        self.showWidget(selectedType, methodFullInfo, methods, tag);
                     }, function(error) {
                         self.showError(error);
                     });
@@ -188,7 +186,8 @@ define (
                             self.types[key] = aTypes[key];
                             for (var methodPos in aTypes[key]["import_method_ids"]) {
                                 var methodId = aTypes[key]["import_method_ids"][methodPos];
-                                self.methodIds.push(methodId);
+                                if (methodId.indexOf('/') > 0)
+                                    self.methodIds.push(methodId);
                             }
                         }
                     }
@@ -232,7 +231,7 @@ define (
             var self = this;
             var tag = self.getVersionTag();
             if (self.allMethodIds[tag] && self.methodFullInfo[tag] && self.methods[tag]) {
-                callback(self.methodFullInfo[tag], self.methods[tag]);
+                callback(self.methodFullInfo[tag], self.methods[tag], tag);
                 return;
             }
             self.methClient.list_method_ids_and_names({'tag': tag}, function(methodIdToName) {
@@ -260,7 +259,7 @@ define (
                     for (var i in specs) {
                         self.methods[tag][specs[i].info.id] = specs[i];
                     }
-                    callback(self.methodFullInfo[tag], self.methods[tag]);
+                    callback(self.methodFullInfo[tag], self.methods[tag], tag);
                 }).fail(function(error) {
                     errorCallback(error);
                 });
@@ -269,7 +268,7 @@ define (
             });
         },
         
-        showWidget: function(type, methodFullInfo, methods) {
+        showWidget: function(type, methodFullInfo, methods, tag) {
             var self = this;
             this.selectedType = type;
             this.widgetPanelCard1.css('display', 'none');
@@ -302,36 +301,13 @@ define (
                              .addClass('kb-primary-btn')
                              .append('Import');
 
-            var $cancelButton = $('<button>')
-                             .attr('id', this.cellId + '-run')
-                             .attr('type', 'button')
-                             .attr('value', 'Cancel')
-                             .addClass('kb-primary-btn')
-                             .append('Cancel');
-
-	    /*
-	     * Invoke btnImport(true) to show the import buttoon and hide cancel,
-	     * or btnImport(false) to show the cancel button and hide import.
-	     */
-            var btnImport = function(show) {
-                if (show) {
-                    $importButton.show();
-                    $cancelButton.hide();
-                } else {
-                    $importButton.hide();
-                    $cancelButton.show();
-                }
-            };
-
             $importButton.click(
                 $.proxy(function(event) {
                     event.preventDefault();
                     var v = self.getInputWidget().isValid();
                     if (v.isValid) {
-                        btnImport(false);
-                        self.runImport(function() {
-                            btnImport(true);
-                        }, methods);
+                        $importButton.prop('disabled', true);
+                        self.runImport(methods, tag);
                     } else {
                         var errorCount = 1;
                         self.$errorModalContent.empty();
@@ -344,20 +320,16 @@ define (
                         }
                         self.$errorModalContent.append($errorStep);
                         self.$errorModal.modal('show');
-                        }
+                    }
                 }, this)
             );
-
-            $cancelButton.click(function() {
-                self.stopTimer();
-		if (self.fileUploadInProgress)
-		{
-		    self.getInputWidget().cancelImport();
-		}
-
-                btnImport(true);
-                self.showInfo("Import job was cancelled");
-            });
+            if (numberOfTabs == 0) {
+                $importButton.hide();
+                self.widgetPanelCard2.append(
+                        "<div class='kb-cell-run' style='margin: 30px 30px 0px 33px;'>" +
+                        "<h2 class='collapse in'>" +
+                        "No import methods available for \"" + tag + "\" tag.</h2><hr></div>");
+            }
 
             var $backButton = $('<button>')
                              .attr('id', this.cellId + '-back')
@@ -376,11 +348,9 @@ define (
                            .addClass('buttons')
                            .append($importButton)
                            .append('&nbsp;')
-                           .append($cancelButton)
                            .append('&nbsp;')
                            .append($backButton);
 
-            $cancelButton.hide();
             self.widgetPanelCard2.append($buttons);
         },
 
@@ -397,8 +367,6 @@ define (
             var methodJson = JSON.stringify(methodSpec);
 
             var $inputDiv = $('<div>');
-
-            // These are the 'delete' and 'run' buttons for the cell
 
             var methodUuid = 'import-method-details-'+StringUtil.uuid();
             var buttonLabel = 'details';
@@ -438,8 +406,6 @@ define (
 
             var isShown = methodPos == 0;
             var tabName = methodSpec.info.name;
-            if (methodId.indexOf('/') > 0)
-                tabName += " (SDK)";
             var params = {tab: tabName,
                           content: tab,
                           canDelete : false,
@@ -474,10 +440,8 @@ define (
                     }
                 }, this));
             }
-            // var w1 = $inputDiv[inputWidgetName];
-            // var wig = w1({ method: methodJson, isInSidePanel: true });
             var wig = $inputDiv[inputWidgetName]({ method: methodJson, isInSidePanel: true });
-	    this.inputWidget[methodId] = wig;
+            this.inputWidget[methodId] = wig;
 
             var onChange = function() {
                 var w = self.getInputWidget();
@@ -528,144 +492,6 @@ define (
             this.widgetPanelCard1.css('display', '');
         },
 
-
-        buildTransformParameters: function(objectType, methodId, params) {
-            var self = this;
-
-            console.log('building transform params');
-            console.log(transformConfig);
-            // if no objectType known in the config, that's a paddlin'.
-            if (!transformConfig[objectType]) {
-                throw "Import for [" + objectType + "] type is not supported yet.";
-            }
-            // if the type's there, but not the method, that's a paddlin'.
-            if (!transformConfig[objectType][methodId]) {
-                throw methodId + " import mode for this object type is not supported yet.";
-            }
-            var mapping = transformConfig[objectType][methodId];
-
-            // start with the easy part.
-            var args = {
-                external_type: mapping.external_type,
-                kbase_type: mapping.kbase_type,
-                object_name: params[mapping.object_name],
-                workspace_name: this.wsName
-            };
-
-            // do the optional args.
-            var optional_args = {
-                validate: {},
-                transform: {}
-            };
-
-            var url_mapping = {};
-
-            /**
-             * mapping has five (ish?) possible keys:
-             * type = string, int, boolean
-             * param = which method parameter name to map to
-             * value = an explicit value to use (takes precedence over 'param' key)
-             * optional = true or false
-             * default - this is its own block with some similar keys:
-             *     param - as above, maps to a method parameter
-             *     value - as above, takes precedence as above, too
-             *     prefix - a prefix string to put in front of the string
-             *     suffix - a suffix string to append to the string
-             * the 'default' parameter takes effect only if no value can be resolved
-             * from the other options.
-             */
-            var resolveParameter = function(mapping, params) {
-                var val = undefined;
-                if (mapping.hasOwnProperty('value')) {
-                    val = mapping.value;
-                }
-                else if (mapping.hasOwnProperty('param') && params.hasOwnProperty(mapping.param)) {
-                    val = params[mapping.param];
-                }
-                if ((!val || val.length === 0) && mapping.hasOwnProperty('default')) {
-                    // go deeper!
-                    val = resolveParameter(mapping.default, params);
-                }
-
-                if (val != undefined) {
-                    if (mapping.hasOwnProperty('prefix'))
-                        val = mapping.prefix + String(val);
-                    if (mapping.hasOwnProperty('suffix'))
-                        val = String(val) + mapping.suffix;
-
-                    if (mapping.type === 'int')
-                        val = self.asInt(val);
-                    else if (mapping.type === 'boolean')
-                        val = self.asBool(val);
-                }
-                return val;
-            };
-
-            // do optional_arguments (some aren't really optional but w/e)
-            for (var argType in mapping.optional_arguments) {
-                for (var paramName in mapping.optional_arguments[argType]) {
-                    // paramName = name of optional arguments parameter
-                    // paramInfo = hash of information about that parameter
-                    // params = big set of params
-                    var paramInfo = mapping.optional_arguments[argType][paramName];
-                    var val = resolveParameter(paramInfo, params);
-                    if (val != undefined) {
-                        optional_args[argType][paramName] = val;
-                    }
-                    else if (val === undefined && !paramInfo.optional) {
-                        // fail!
-                    }
-                }
-            }
-
-            /* do url mapping.
-             * A couple options:
-             * 1. type = shock
-             * 1.a. has 'param' attribute -- resolve the shock url with params[mapping.param] on the end
-             * 1.b. has 'value' attribute -- resolve the shock url with mapping.value on the end
-             *
-             * 2. type = string
-             * 2.a. has 'param' attribute -- url = params[mapping.param]
-             * 2.b. has 'value' attribute -- url = mapping.value
-             */
-            for (var objType in mapping.url_mapping) {
-                var paramInfo = mapping.url_mapping[objType];
-                var paramValue = undefined;
-
-                // value overrides all! fetch it first
-                if (paramInfo.value)
-                    paramValue = paramInfo.value;
-                // if no value, look for param attribute and resolve it
-                else if (paramInfo.param)
-                    paramValue = params[paramInfo.param];
-
-                // if there's still no param value, it might be optional. if not = error!
-                if (!paramValue) {
-                    if (paramInfo.optional === true)
-                        continue;
-                    else
-                        // error!
-                        continue;
-                }
-
-                var url = undefined;
-                if (paramValue && paramValue.length > 0) {
-                    if (paramInfo.type.toLowerCase() === 'shock') {
-                        url = self.shockURL + '/node/' + paramValue;
-                    }
-                    else if (paramInfo.type.toLowerCase() === 'string') {
-                        url = paramValue;
-                    }
-                }
-                if (url)
-                    url_mapping[objType] = url;
-            }
-            args.optional_arguments = optional_args;
-            args.url_mapping = url_mapping;
-
-            return args;
-        },
-
         createImportStatusCell: function(methodName, jobId) {
             var cellIndex = Jupyter.notebook.get_selected_index();
             var cell = Jupyter.notebook.insert_cell_below('code', cellIndex);
@@ -690,108 +516,48 @@ define (
             this.back();
         },
 
-        runImport: function(callback, methods) {
+        runImport: function(methods, tag) {
             var self = this;
             var methodId = self.getSelectedTabId();
             var methodSpec = methods[methodId];
 
-            if (methodId.indexOf('/') > 0) {
-                var paramValueArray = self.getInputWidget().getParameters();
-                var params = {};
-                for (var i in methodSpec.parameters) {
-                    var paramId = methodSpec.parameters[i].id;
-                    var paramValue = paramValueArray[i];
-                    params[paramId] = paramValue;
-                }
-                var tag = self.getVersionTag();
-                var pythonCode = PythonInterop.buildAppRunner(null, null,
-                        {tag: tag, version: null, id: methodId}, params);
-                pythonCode += ".job_id.encode('ascii','ignore')";
-                var callbacks = {
-                        shell: {
-                            reply: function(content) {},
-                            payload: { set_next_input: function(content) {} }
-                        },
-                        iopub: {
-                            output: function(ret) {
-                                var data = ret.content.data;
-                                if (!data)
-                                    return;
-                                var session = ret.header.session;
-                                var jobId = data['text/plain'];
-                                var methodName = methodSpec.info.name;
-                                self.createImportStatusCell(methodName, jobId);
-                            },
-                            clear_output: function(content) {}
-                        },
-                        input: function(content) {}
-                };
-                var executeOptions = {
-                        silent: false,
-                        user_expressions: {},
-                        allow_stdin: false,
-                        store_history: false
-                };
-                Jupyter.notebook.kernel.execute(pythonCode, callbacks, executeOptions);
-                self.showInfo("Your import job is being submitted and you will be directed to it shortly.");
-                callback(true);
-                return;
+            var paramValueArray = self.getInputWidget().getParameters();
+            var params = {};
+            for (var i in methodSpec.parameters) {
+                var paramId = methodSpec.parameters[i].id;
+                var paramValue = paramValueArray[i];
+                params[paramId] = paramValue;
             }
-            /*
-             * Invoke the runImport method on all parameters that have it.
-             * Each returns a promise; when all are resolved, proceed to
-             * process the import transform.
-             */
-
-            self.fileUploadInProgress = true;
-            var promise = this.getInputWidget().runImport();
-            self.showInfo("Transferring files...", true);
-            promise.then(function(value) {
-
-                self.fileUploadInProgress = false;
-                self.showInfo("Files transferred. Creating transform job.", true);
-
-                var paramValueArray = self.getInputWidget().getParameters();
-                var params = {};
-
-                for (var i in methodSpec.parameters) {
-                    var paramId = methodSpec.parameters[i].id;
-                    var paramValue = paramValueArray[i];
-                    params[paramId] = paramValue;
-                }
-
-                var args = null;
-
-                try {
-                    var args = self.buildTransformParameters(self.selectedType, methodId, params);
-                    var uploaderClient = new Transform(self.uploaderURL, {'token': self.token});
-
-                    if (args) {
-                        console.log("Data to be sent to transform service:");
-                        console.log(args);
-
-                        self.showInfo("Submitting transform request...", true);
-                        uploaderClient.upload(args,
-                                $.proxy(function(data) {
-                                    console.log(data);
-                                    self.waitForJob(data[1], callback);
-                                }, self),
-                                $.proxy(function(error) {
-                                    self.showError(error);
-                                    callback(false);
-                                }, self)
-                        );
-                    } else {
-                        callback(false);
-                    }
-                }
-                catch (error) {
-                    self.showError(error);
-                }
-            }, function (reason) {
-                self.showError("File transfer failed: " + reason);
-                self.fileUploadInProgress = false;
-            });
+            var pythonCode = PythonInterop.buildAppRunner(null, null,
+                    {tag: tag, version: null, id: methodId}, params);
+            pythonCode += ".job_id.encode('ascii','ignore')";
+            var callbacks = {
+                    shell: {
+                        reply: function(content) {},
+                        payload: { set_next_input: function(content) {} }
+                    },
+                    iopub: {
+                        output: function(ret) {
+                            var data = ret.content.data;
+                            if (!data)
+                                return;
+                            var session = ret.header.session;
+                            var jobId = data['text/plain'];
+                            var methodName = methodSpec.info.name;
+                            self.createImportStatusCell(methodName, jobId);
+                        },
+                        clear_output: function(content) {}
+                    },
+                    input: function(content) {}
+            };
+            var executeOptions = {
+                    silent: false,
+                    user_expressions: {},
+                    allow_stdin: false,
+                    store_history: false
+            };
+            Jupyter.notebook.kernel.execute(pythonCode, callbacks, executeOptions);
+            self.showInfo("Your import job is being submitted and you will be directed to it shortly.");
         },
 
         asBool: function(val) {
@@ -806,42 +572,6 @@ define (
             if (val == 1 || val === "1")
                 return 1;
             return 0;
-        },
-
-        waitForJob: function(jobId, callback) {
-            var self = this;
-            var jobSrv = new UserAndJobState(self.ujsURL, {'token': self.token});
-            var timeLst = function(event) {
-                jobSrv.get_job_status(jobId, function(data) {
-                    console.log(data);
-                    var status = data[2];
-                    var complete = data[5];
-                    var wasError = data[6];
-                    if (complete === 1) {
-                        self.stopTimer();
-                        callback(wasError === 0);
-                        if (wasError === 0) {
-                            self.trigger('updateDataList.Narrative');
-                            self.showInfo("Import job is done");
-                        } else {
-                            self.showError('loading detailed error...');
-                            jobSrv.get_detailed_error(jobId, function(data) {
-                                self.showError(data);
-                            }, function(data) {
-                                self.showError(data.error.message);
-                            });
-                        }
-                    } else {
-                        self.showInfo("Import job has status: " + status, true);
-                    }
-                }, function(data) {
-                    self.stopTimer();
-                    self.showError(data.error.message);
-                    callback(false);
-                });
-            };
-            self.timer = setInterval(timeLst, 5000);
-            timeLst();
         },
 
         stopTimer: function() {

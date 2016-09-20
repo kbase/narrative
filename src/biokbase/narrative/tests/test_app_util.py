@@ -6,9 +6,15 @@ __author__ = 'Bill Riehl <wjriehl@lbl.gov>'
 import unittest
 from biokbase.narrative.app_util import (
     check_tag,
-    system_variable
+    system_variable,
+    get_result_sub_path
 )
 import os
+import mock
+
+class DummyWorkspace():
+    def get_workspace_info(*args, **kwargs):
+        return [12345]
 
 class AppUtilTestCase(unittest.TestCase):
     @classmethod
@@ -21,7 +27,6 @@ class AppUtilTestCase(unittest.TestCase):
         self.good_fake_token = "un={}|tokenid=12345|expiry=1592895594|client_id={}|token_type=bearer|SigningSubject=whaaaaaaaaaaat".format(self.user_id, self.user_id)
         self.bad_fake_token = "NotAGoodTokenLOL"
         self.workspace = "{}:12345".format(self.user_id)
-        os.environ['KB_WORKSPACE_ID'] = self.workspace
 
     def test_check_tag_good(self):
         self.assertTrue(check_tag(self.good_tag))
@@ -37,12 +42,29 @@ class AppUtilTestCase(unittest.TestCase):
         os.environ['KB_AUTH_TOKEN'] = self.good_fake_token
         self.assertEquals(system_variable('user_id'), self.user_id)
 
+    def test_sys_var_no_ws(self):
+        if 'KB_WORKSPACE_ID' in os.environ:
+            del os.environ['KB_WORKSPACE_ID']
+        self.assertIsNone(system_variable('workspace'))
+
     def test_sys_var_workspace(self):
+        os.environ['KB_WORKSPACE_ID'] = self.workspace
         self.assertEquals(system_variable('workspace'), self.workspace)
 
     def test_sys_var_token(self):
         os.environ['KB_AUTH_TOKEN'] = self.good_fake_token
         self.assertEquals(system_variable('token'), self.good_fake_token)
+
+    def test_sys_var_no_ws_id(self):
+        if 'KB_WORKSPACE_ID' in os.environ:
+            del os.environ['KB_WORKSPACE_ID']
+        self.assertIsNone(system_variable('workspace_id'))
+
+    @mock.patch('biokbase.narrative.app_util._ws_client')
+    def test_sys_var_workspace_id(self, m):
+        os.environ['KB_WORKSPACE_ID'] = self.workspace
+        m.get_workspace_info.return_value = [12345, 'foo', 'bar']
+        self.assertEquals(system_variable('workspace_id'), 12345)
 
     def test_sys_var_bad_token(self):
         if 'KB_AUTH_TOKEN' in os.environ:
@@ -60,6 +82,32 @@ class AppUtilTestCase(unittest.TestCase):
 
     def test_sys_var_bad(self):
         self.assertIsNone(system_variable(self.bad_tag))
+
+    def test_get_result_sub_path(self):
+        result = [{'report': 'this_is_a_report', 'report_ref': '123/456/7'}]
+        path = [0, 'report_ref']
+        self.assertEquals(get_result_sub_path(result, path), '123/456/7')
+
+    def test_get_result_sub_path_deep_list(self):
+        result = ['foo', 'bar', 'baz']
+        path = [2]
+        self.assertEquals(get_result_sub_path(result, path), 'baz')
+
+    def test_get_result_sub_path_deep_obj(self):
+        result = ['foo', {'bar': 'baz'}, 'foobar']
+        path = [1, 'bar']
+        self.assertEquals(get_result_sub_path(result, path), 'baz')
+
+    def test_get_result_obj_path(self):
+        result = ['foo', 0, {'bar': {'baz': [10, 11, 12, 13]}}]
+        path = [2, 'bar', 'baz', 3]
+        self.assertEquals(get_result_sub_path(result, path), 13)
+
+
+    def test_get_reuslt_sub_path_fail(self):
+        result = ['foo']
+        path = [2]
+        self.assertIsNone(get_result_sub_path(result, path))
 
 
 if __name__ == '__main__':

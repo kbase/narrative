@@ -170,25 +170,6 @@ def map_outputs_from_state(state, params, app_spec):
 
 def get_result_sub_path(result, path):
     """
-    Try this again...
-    This time ...
-    """
-    # When we have an empty path, it is the identity of the result.
-    if len(path) == 0:
-        return result
-
-    # if we have a list, assume the first element of the path is an integer
-    # in string's clothing
-    path_head = path[0]
-    path_tail = path[1:]
-    if isinstance(result, list):
-        return get_result_sub_path(result[int(path_head)], path_tail)
-    return get_result_sub_path(result.get(path_head), path_tail)
-
-
-
-def xget_result_sub_path(result, path, pos):
-    """
     Peels the right value out of the result with the given path.
     result - list
         This is a list of objects - each object is either a singleton, list, or object.
@@ -223,9 +204,18 @@ def xget_result_sub_path(result, path, pos):
     In total, we use path to get to the exact value we want out of the result list.
     Kinda complex for a few lines of code.
     """
-    if pos >= len(path) or not isinstance(result, list):
+    # When we have an empty path, it is the identity of the result.
+    if len(path) == 0:
         return result
+
+    # if we have a list, assume the first element of the path is an integer
+    # in string's clothing
+    path_head = path[0]
+    path_tail = path[1:]
     if isinstance(result, list):
-        listPos = int(path[pos])
-        return get_result_sub_path(result[listPos], path, pos + 1)
-    return get_result_sub_path(result[path[pos]], path, pos + 1)
+        elem = int(path_head)
+        if elem >= len(result):
+            return None
+        else:
+            return get_result_sub_path(result[elem], path_tail)
+    return get_result_sub_path(result.get(path_head), path_tail)

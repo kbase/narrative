@@ -44,9 +44,9 @@ define (
             $self.link_ref = $self.obj_ref;
 
             if(options._obj_info) {
-                self.assembly_info = options._obj_info;
-                self.obj_ref = self.assembly_info['ws_id'] + '/' + self.assembly_info['id'] + '/' + self.assembly_info['version'];
-                $self.link_ref = self.assembly_info['ws_id'] + '/' + self.assembly_info['name'] + '/' + self.assembly_info['version'];
+                $self.assembly_info = options._obj_info;
+                $self.obj_ref = $self.assembly_info['ws_id'] + '/' + $self.assembly_info['id'] + '/' + $self.assembly_info['version'];
+                $self.link_ref = $self.assembly_info['ws_id'] + '/' + $self.assembly_info['name'] + '/' + $self.assembly_info['version'];
             }
 
             $self.assembly = new AssemblyAPI(Config.url('service_wizard'),{'token':$self.authToken()});

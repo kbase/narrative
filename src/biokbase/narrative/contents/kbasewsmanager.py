@@ -51,7 +51,7 @@ from .narrativeio import (
 from .kbasecheckpoints import KBaseCheckpoints
 import biokbase.narrative.ws_util as ws_util
 from biokbase.workspace.client import Workspace
-import biokbase.narrative.common.service as service
+from biokbase.narrative.common.url_config import URLS
 from biokbase.narrative.common import util
 import biokbase.auth
 
@@ -97,7 +97,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
     }
 
     """
-    kbasews_uri = Unicode(service.URLS.workspace, config=True, help='Workspace service endpoint URI')
+    kbasews_uri = Unicode(URLS.workspace, config=True, help='Workspace service endpoint URI')
 
     ipynb_type = Unicode('ipynb')
     allowed_formats = List([u'json'])

@@ -16,7 +16,6 @@ import biokbase.auth
 import os
 import re
 from tornado.web import HTTPError
-import biokbase.narrative.common.service as service
 import ConfigParser
 import narrative_test_helper as test_util
 

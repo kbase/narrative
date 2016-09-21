@@ -7,7 +7,9 @@ import unittest
 from biokbase.narrative.app_util import (
     check_tag,
     system_variable,
-    get_result_sub_path
+    get_result_sub_path,
+    map_inputs_from_job,
+    map_outputs_from_state
 )
 import os
 import mock
@@ -66,6 +68,12 @@ class AppUtilTestCase(unittest.TestCase):
         m.get_workspace_info.return_value = [12345, 'foo', 'bar']
         self.assertEquals(system_variable('workspace_id'), 12345)
 
+    @mock.patch('biokbase.narrative.app_util._ws_client')
+    def test_sys_var_workspace_id_except(self, m):
+        os.environ['KB_WORKSPACE_ID'] = '12345'
+        m.get_workspace_info.side_effect = Exception('not found')
+        self.assertIsNone(system_variable('workspace_id'))
+
     def test_sys_var_bad_token(self):
         if 'KB_AUTH_TOKEN' in os.environ:
             del os.environ['KB_AUTH_TOKEN']
@@ -103,11 +111,152 @@ class AppUtilTestCase(unittest.TestCase):
         path = [2, 'bar', 'baz', 3]
         self.assertEquals(get_result_sub_path(result, path), 13)
 
-
-    def test_get_reuslt_sub_path_fail(self):
+    def test_get_result_sub_path_list_fail(self):
         result = ['foo']
         path = [2]
         self.assertIsNone(get_result_sub_path(result, path))
+
+    def test_get_result_sub_path_key_fail(self):
+        result = {'foo': 'bar'}
+        path = ['baz']
+        self.assertIsNone(get_result_sub_path(result, path))
+
+    def test_map_inputs_from_job(self):
+        inputs = [
+            'input1',
+            {
+                'ws': 'my_workspace',
+                'foo': 'bar',
+                'auth_token': 'abcde'
+            },
+            'some_ref/obj_id',
+            [
+                'ref/num_1',
+                'ref/num_2',
+                'num_3'
+            ],
+            123
+        ]
+        app_spec = {
+            'behavior': {
+                'kb_service_input_mapping': [
+                    {
+                        'target_position': 0,
+                        'input_parameter': 'an_input'
+                    },
+                    {
+                        'target_position': 1,
+                        'target_property': 'ws',
+                        'input_parameter': 'workspace'
+                    },
+                    {
+                        'target_position': 1,
+                        'target_property': 'foo',
+                        'input_parameter': 'baz'
+                    },
+                    {
+                        'target_position': 1,
+                        'narrative_system_variable': 'token',
+                        'target_property': 'auth_token'
+                    },
+                    {
+                        'target_position': 2,
+                        'input_parameter': 'ref_input',
+                        'target_type_transform': 'ref'
+                    },
+                    {
+                        'target_position': 3,
+                        'input_parameter': 'a_list',
+                        'target_type_transform': 'list<ref>'
+                    },
+                    {
+                        'target_position': 4,
+                        'input_parameter': 'a_num',
+                        'target_type_transform': 'int'
+                    }
+                ],
+            }
+        }
+        expected = {
+            'an_input': 'input1',
+            'workspace': 'my_workspace',
+            'baz': 'bar',
+            'ref_input': 'obj_id',
+            'a_list': ['num_1', 'num_2', 'num_3'],
+            'a_num': 123
+        }
+        self.assertDictEqual(map_inputs_from_job(inputs, app_spec), expected)
+
+    def test_map_outputs_from_state_simple(self):
+        os.environ['KB_WORKSPACE_ID'] = self.workspace
+        app_spec = {
+            'behavior': {
+                'output_mapping': [
+                    {
+                        'narrative_system_variable': 'workspace'
+                    }
+                ]
+            }
+        }
+        self.assertTupleEqual(map_outputs_from_state(None, None, app_spec), ('kbaseDefaultNarrativeOutput', self.workspace))
+
+    def test_map_outputs_from_state(self):
+        os.environ['KB_WORKSPACE_ID'] = self.workspace
+        app_spec = {
+            'widgets': {
+                'input': None,
+                'output': 'testOutputWidget'
+            },
+            'behavior': {
+                'kb_service_output_mapping': [
+                    {
+                        'narrative_system_variable': 'workspace',
+                        'target_property': 'ws'
+                    },
+                    {
+                        'constant_value': 5,
+                        'target_property': 'a_constant'
+                    },
+                    {
+                        'service_method_output_path': [1],
+                        'target_property': 'a_path_ref'
+                    },
+                    {
+                        'input_parameter': 'an_input',
+                        'target_property': 'an_input'
+                    }
+                ]
+            }
+        }
+        params = {
+            'an_input': 'input_val'
+        }
+        state = {
+            'result': ['foo', 'bar']
+        }
+        expected = (
+            'testOutputWidget',
+            {
+                'ws': self.workspace,
+                'a_constant': 5,
+                'a_path_ref': 'bar',
+                'an_input': 'input_val'
+            }
+        )
+        self.assertTupleEqual(map_outputs_from_state(state, params, app_spec), expected)
+
+    def test_map_outputs_from_state_bad_spec(self):
+        os.environ['KB_WORKSPACE_ID'] = self.workspace
+        app_spec = {
+            'not': 'really'
+        }
+        params = {
+            'an_input': 'input_val'
+        }
+        state = {}
+        with self.assertRaises(ValueError) as e:
+            map_outputs_from_state(state, params, app_spec)
+
 
 
 if __name__ == '__main__':

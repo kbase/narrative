@@ -203,6 +203,9 @@ def get_result_sub_path(result, path):
 
     In total, we use path to get to the exact value we want out of the result list.
     Kinda complex for a few lines of code.
+
+    Returns None if the expected value isn't there - either the key doesn't exist or
+    the array element is out of range.
     """
     # When we have an empty path, it is the identity of the result.
     if len(path) == 0:

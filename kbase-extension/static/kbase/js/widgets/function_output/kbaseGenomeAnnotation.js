@@ -1216,7 +1216,6 @@ define (
             genomeData['ws_obj_name'] = genome_info['name'];
             genomeData['version'] = genome_info['version'];
             genomeData['ref'] = genome_info['ws_id'] + '/' + genome_info['name'] + '/' + genome_info['version'];
-            console.log(genomeData);
             return genomeData;
         },
 

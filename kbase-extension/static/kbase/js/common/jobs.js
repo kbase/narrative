@@ -85,12 +85,13 @@ define([
     }
 
     function deleteJob(jobId) {
-        var command = [
+        /*var command = [
             'from biokbase.narrative.common.kbjob_manager import KBjobManager',
             'jm = KBjobManager()',
             'print jm.delete_jobs(["' + jobId + '"], as_json=True)'
         ].join('\n');
-        return runPython(command);
+        return runPython(command);*/
+        throw new Error("Method is not supported anymore");
     }
 
     /*
@@ -98,7 +99,7 @@ define([
      * which will deliver an array of strings.
      */
     function getLogData(jobId, skip) {
-        var command = [
+        /*var command = [
             'from biokbase.narrative.common.kbjob_manager import KBjobManager',
             'import json',
             'job_manager = KBjobManager()',
@@ -107,7 +108,8 @@ define([
         return runPython(command)
             .then(function (data) {
                 return data.lines;
-            });
+            });*/
+        throw new Error("Method is not supported anymore");
     }
 
 

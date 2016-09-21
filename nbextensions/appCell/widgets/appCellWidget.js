@@ -1646,8 +1646,6 @@ define([
         
          function resetAppAndEdit(source) {
             // only do this if we are not editing.
-            alert('Sorry, reset and edit not implemented yet. Real soon. For now delete the app and re-insert it.');
-            return;
 
             model.deleteItem('exec');
 

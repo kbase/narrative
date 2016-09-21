@@ -22,7 +22,6 @@ define([
     'kbaseAuthenticatedWidget',
     'kbaseNarrativeCellMenu',
     'kbaseTabs',
-    'kbaseViewLiveRunLog',
     'kbaseReportView'
 ], function (
     KBWidget,
@@ -37,7 +36,6 @@ define([
     kbaseAuthenticatedWidget,
     kbaseNarrativeCellMenu,
     kbaseTabs,
-    kbaseViewLiveRunLog,
     kbaseReportView
 ) {
     'use strict';
@@ -576,8 +574,7 @@ define([
                     this.hasLogsPanelLoaded = true;
                     this.$jobProcessTabs.kbaseTabs('addTab', {tab: 'Console Log', showContentCallback:
                         function() {
-                            var $jobLogsPanel = $('<div>');
-                             new kbaseViewLiveRunLog($jobLogsPanel, {'job_id': jobId, 'show_loading_error': false});
+                            var $jobLogsPanel = $('<div>ERROR: this component is not supported anymore.</div>');
                             return $jobLogsPanel;
                         },
                         canDelete: false, show: false});

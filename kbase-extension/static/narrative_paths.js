@@ -280,7 +280,6 @@ require.config({
         'kbaseBlastOutput'                      : 'kbase/js/widgets/function_output/kbaseBlastOutput',
 
         'kbaseRegisterRepoState'                : 'kbase/js/widgets/function_output/kbaseRegisterRepoState',
-        'kbaseViewLiveRunLog'                   : 'kbase/js/widgets/function_output/kbaseViewLiveRunLog',
         'kbaseReportView'                       : 'kbase/js/widgets/function_output/kbaseReportView',
         'kbaseExpressionVolcanoPlot'            : 'kbase/js/widgets/function_output/kbaseExpressionVolcanoPlot',
 

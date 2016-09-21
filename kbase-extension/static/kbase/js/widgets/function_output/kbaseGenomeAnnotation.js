@@ -943,8 +943,19 @@ define (
                     var $overviewPanel = $('#'+pref+'overview');
                     var $overviewTable = $('<table>')
                                             .addClass('table table-striped table-bordered table-hover')
-                                            .css({'margin-left':'auto', 'margin-right':'auto'});
-                    $overviewPanel.append($('<div>').css('margin-top','15px').append($overviewTable));
+                                            .css({'margin-left':'auto', 'margin-right':'auto'})
+                                            .css({'word-wrap':'break-word', 'table-layout':'fixed'})
+                                            .append($('<colgroup>')
+                                                        .append($('<col span="1" style="width: 25%;">')));
+
+                    var $tableDiv = $('<div>').addClass('col-md-8').append($overviewTable);
+                    var $taxonomyDiv = $('<div>').addClass('col-md-4');
+                    var $layout = $('<div>').addClass('row')
+                                                    .append($tableDiv)
+                                                    .append($taxonomyDiv);
+
+                    $overviewPanel.append($('<div>').css('margin-top','15px').append($layout));
+
 
 
                     /*var tax = gnm.taxonomy;
@@ -972,7 +983,7 @@ define (
 
                     var source_id = gnm.source_id;
 
-                    var taxonomy = $('<div>');
+                    var taxonomy = $('<td>');
                     var taxLevels = gnm.taxonomy.split(';');
                     for(var t=0; t<taxLevels.length; t++) {
                         for(var space=0; space<t; space++) {
@@ -981,6 +992,12 @@ define (
                         }
                         taxonomy.append(taxLevels[t]);
                     }
+                    if(taxonomy.html()==='') {
+                        taxonomy.empty().append('None available.');
+                    }
+                    $taxonomyDiv.append($('<table>').addClass('table table-striped table-bordered table-hover')
+                                            .append($('<tr>').append($('<td>').append('<b>Taxonomy</b>')))
+                                            .append($('<tr>').append(taxonomy)));
 
                     var n_features = gnm.n_features;
                     if(n_features) {
@@ -994,7 +1011,6 @@ define (
                             'Genetic Code',
                             'Source',
                             'Source ID',
-                            'Taxonomy',
                             'Number of Features'
                         ];
 
@@ -1005,7 +1021,6 @@ define (
                             genetic_code,
                             source,
                             source_id,
-                            taxonomy,
                             n_features
                         ];
 
@@ -1030,7 +1045,7 @@ define (
                     for (var i=0; i<overviewData.length; i++) {
                         $overviewTable.append(
                             $('<tr>')
-                                .append($('<td>').append(overviewLabels[i]))
+                                .append($('<td>').append($('<b>').append(overviewLabels[i])))
                                 .append($('<td>').append(overviewData[i])));
                     }
 

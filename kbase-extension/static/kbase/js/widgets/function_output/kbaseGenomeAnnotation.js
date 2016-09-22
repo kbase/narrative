@@ -959,20 +959,6 @@ define (
                     container.append($tabPane);
                     var tabObj = new kbaseTabs($tabPane, {canDelete : true, tabs : []});
 
-                    /* Skip Ontologies info for now- need to add this to caching service.
-                    var ontology_mappings = [];
-                    $.each(
-                      gnm.features,
-                      function (i,f) {
-                        if (f.ontology_terms) {
-                          ontology_mappings.push(f);
-                        }
-                      }
-                    );
-    
-                    gnm.ontology_mappings = ontology_mappings;
-                    gnm.ontology_mappings = [];*/
-
                     var tabData = self.tabData(gnm);
                     var tabNames = tabData.names;
                     var tabIds = tabData.ids;
@@ -1000,30 +986,12 @@ define (
                     $overviewPanel.append($('<div>').css('margin-top','15px').append($layout));
 
 
-
-                    /*var tax = gnm.taxonomy;
-                    if (tax == null)
-                        tax = '';
-                    var gc_content = gnm.gc_content;
-                    if (gc_content) {
-                        gc_content = Number(gc_content);
-                        if (gc_content < 1.0)
-                            gc_content *= 100;
-                        gc_content = gc_content.toFixed(2) + " %";
-                    } else {
-                        gc_content = "Unknown";
-                    }*/
-
                     var id = '<a href="/#dataview/'+gnm.ref+'" target="_blank">' + gnm.ws_obj_name + '</a>'
 
                     var scientific_name = gnm.scientific_name
-
                     var domain = gnm.domain;
-
                     var genetic_code = gnm.genetic_code;
-
                     var source = gnm.source;
-
                     var source_id = gnm.source_id;
 
                     var taxonomy = $('<td>');
@@ -1067,106 +1035,12 @@ define (
                             n_features
                         ];
 
-                    //XXX baloney Plants hack.
-                    //Plant genes need different information, and we want to display the gene and transcript counts separately
-                    //so if the domain is plants, add on the extra label, pop off the existing length value, and push on the length of genes and
-                    //transcripts individually.
-                   /* if (gnm.domain == 'Plant' || gnm.domain == 'Eukaryota') {
-                        overviewLabels.push('Number of Transcripts');
-                        var types = {};
-                        $.each(gnm.features, function(i,v) {
-                            if (types[v.type] == undefined) {types[v.type] = 0};
-                            types[v.type]++;
-                        });
-
-                        overviewData.pop();
-                        overviewData.push(types['locus']);
-                        overviewData.push(types['CDS']);
-                    }*/
-                    //XXX end plants baloney here. There's more below for the Genes table.
-
                     for (var i=0; i<overviewData.length; i++) {
                         $overviewTable.append(
                             $('<tr>')
                                 .append($('<td>').append($('<b>').append(overviewLabels[i])))
                                 .append($('<td>').append(overviewData[i])));
                     }
-
-                    ////ontology tab - should be lazily loaded, but we can't since we need to check for existence to know if we display the tab at all.
-                    /*if (gnm.ontology_mappings.length) {
-                      var ontologyTab = $('#' + pref + 'ontology');
-                      ontologyTab.empty();
-                      ontologyTab.append('<table cellpadding="0" cellspacing="0" border="0" id="'+pref+'ontology-table" \
-                      class="table table-bordered table-striped" style="width: 100%; margin-left: 0px; margin-right: 0px;"/>');
-
-                      var ontologySettings = {
-                          "paginationType": "full_numbers",
-                          "displayLength": 10,
-                          "sorting": [[ 0, "asc" ], [1, "asc"]],
-                          "columns": [
-                              {title: "Gene ID", data: "id"},
-                              {title: "# of ontology terms", data: "num"},
-                              {title: "Ontology term name", data: "name"},
-                              {title: "Ontology term ID", data: "term"},
-                              {title: "Evidence count", data: "evidence_count"},
-                          ],
-                          createdRow: function (row, data, index) {
-
-                              var $linkCell = $('td', row).eq(3);
-                              var k = $linkCell.text();
-                              $linkCell.empty();
-
-                              $linkCell.append($.jqElem('a')
-                                        .on('click', function(e) {
-                                          var $tabDiv = $.jqElem('div').kbaseOntologyDictionary({ term_id : k});
-                                          tabObj.addTab({tab: k, content: $tabDiv.$elem, canDelete : true, show: true});
-                                        })
-                                        .append(k));
-
-                          }
-                      };
-
-                      var ontologyTable = $('#'+pref+'ontology-table').DataTable(ontologySettings);
-                      var ontologyData  = [];
-
-                      $.each(
-                        gnm.ontology_mappings,
-                        function(i, v) {
-                          //ick. Need to double loop to tally up number of terms in advance. There's gotta be a more efficient way to do this.
-                          v.num_terms = 0;
-                          $.each(
-                            v.ontology_terms,
-                            function (k, o) {
-                              v.num_terms += Object.keys(o).length
-                            }
-                          );
-                          $.each(
-                            v.ontology_terms,
-                            function (k, o) {
-                              $.each(
-                                v.ontology_terms[k],
-                                function (k, t) {
-                                  ontologyData.push(
-                                    {
-                                      'id' : v.id,
-                                      'num' : v.num_terms,
-                                      'term' : k,
-                                      'evidence_count' : t.evidence.length,
-                                      'name' : t.term_name,
-                                    }
-                                  )
-                                }
-                              )
-                            }
-                          )
-                        }
-                      );
-                      console.log("OD ", ontologyData[0]);
-
-                      //ontologyTable.fnAddData(ontologyData);
-                      ontologyTable.rows.add(ontologyData).draw();
-                      
-                    }*/
 
                     var liElems = $tabPane.find('li');
                     for (var liElemPos = 0; liElemPos < liElems.length; liElemPos++) {

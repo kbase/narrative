@@ -1,4 +1,4 @@
-/*global define,KBError,KBFatal,window*/
+/*global define,KBError,KBFatal,window,console,document*/
 /*jslint white:true,browser:true*/
 
 /**
@@ -37,7 +37,7 @@ define(
         'common/ui',
         'common/html',
         'narrativeTour',
-        
+
         // for effect
         'bootstrap',
 
@@ -157,7 +157,7 @@ define(
         ],
             commandShortcuts = [],
             editShortcuts = [
-                // remove the command palette 
+                // remove the command palette
                 // since it exposes commands we have "disabled"
                 // by removing keyboard mappings
                 'cmdtrl-shift-p',
@@ -374,7 +374,7 @@ define(
         var existingSettings = Jupyter.notebook.metadata.kbase.userSettings;
         Object.keys(settings).forEach(function (key) {
             existingSettings[key] = settings[key];
-        })
+        });
         Jupyter.notebook.metadata.kbase.userSettings = existingSettings;
         Jupyter.notebook.save_checkpoint();
     }
@@ -419,7 +419,7 @@ define(
             return;
         }
 
-        settingsButtonNode.addEventListener('click', function (e) {
+        settingsButtonNode.addEventListener('click', function () {
             showSettingsDialog();
         });
 
@@ -440,7 +440,7 @@ define(
         var $upgradeBtn = $('<button type="button" data-dismiss="modal">')
             .addClass('btn btn-success')
             .append('Update and Reload')
-            .click(function (e) {
+            .click(function () {
                 this.updateVersion();
             }.bind(this));
 
@@ -551,7 +551,7 @@ define(
         var $verAccordionDiv = $('<div style="margin-top:15px">');
         $versionDiv.append($verAccordionDiv);
 
-        var verAccordion = new KBaseAccordion($verAccordionDiv, {
+        new KBaseAccordion($verAccordionDiv, {
             elements: [{
                     title: 'KBase Service URLs',
                     body: $versionTable

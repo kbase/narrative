@@ -240,7 +240,7 @@ define([
             this.narrative.hideOverlay();
             // $(document).trigger('hideSidePanelOverlay.Narrative');
         }
-    }
+    };
 
     NarrativeTour.prototype.start = function () {
         console.log("let's start the tour");
@@ -267,4 +267,3 @@ define([
     return {'Tour': NarrativeTour};
 
 });
-

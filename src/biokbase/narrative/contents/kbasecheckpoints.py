@@ -1,12 +1,16 @@
+"""
+A (currently stubby) class for managing Narrative checkpoints.
+"""
+
 import os
 from tornado.web import HTTPError
-
 from notebook.services.contents.checkpoints import (
     Checkpoints,
     GenericCheckpointsMixin
 )
-from .narrativeio import KBaseWSManagerMixin
+from narrativeio import KBaseWSManagerMixin
 from notebook.services.contents import tz
+
 
 class KBaseCheckpoints(KBaseWSManagerMixin, Checkpoints):
     def create_checkpoint(self, contents_mgr, path):

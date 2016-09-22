@@ -19,56 +19,6 @@ function NarrativeJobService(url, auth, auth_cb) {
     var _auth_cb = auth_cb;
 
 
-    this.run_app = function (app, _callback, _errorCallback) {
-    return json_call_ajax("NarrativeJobService.run_app",
-        [app], 1, _callback, _errorCallback);
-};
-
-    this.run_app_async = function (app, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("NarrativeJobService.run_app", [app], 1, _callback, _error_callback);
-    };
-
-    this.check_app_state = function (job_id, _callback, _errorCallback) {
-    return json_call_ajax("NarrativeJobService.check_app_state",
-        [job_id], 1, _callback, _errorCallback);
-};
-
-    this.check_app_state_async = function (job_id, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("NarrativeJobService.check_app_state", [job_id], 1, _callback, _error_callback);
-    };
-
-    this.suspend_app = function (job_id, _callback, _errorCallback) {
-    return json_call_ajax("NarrativeJobService.suspend_app",
-        [job_id], 1, _callback, _errorCallback);
-};
-
-    this.suspend_app_async = function (job_id, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("NarrativeJobService.suspend_app", [job_id], 1, _callback, _error_callback);
-    };
-
-    this.resume_app = function (job_id, _callback, _errorCallback) {
-    return json_call_ajax("NarrativeJobService.resume_app",
-        [job_id], 1, _callback, _errorCallback);
-};
-
-    this.resume_app_async = function (job_id, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("NarrativeJobService.resume_app", [job_id], 1, _callback, _error_callback);
-    };
-
-    this.delete_app = function (job_id, _callback, _errorCallback) {
-    return json_call_ajax("NarrativeJobService.delete_app",
-        [job_id], 1, _callback, _errorCallback);
-};
-
-    this.delete_app_async = function (job_id, _callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("NarrativeJobService.delete_app", [job_id], 1, _callback, _error_callback);
-    };
-
     this.list_config = function (_callback, _errorCallback) {
     return json_call_ajax("NarrativeJobService.list_config",
         [], 1, _callback, _errorCallback);
@@ -97,16 +47,6 @@ function NarrativeJobService(url, auth, auth_cb) {
     this.status_async = function (_callback, _error_callback) {
         deprecationWarning();
         return json_call_ajax("NarrativeJobService.status", [], 1, _callback, _error_callback);
-    };
-
-    this.list_running_apps = function (_callback, _errorCallback) {
-    return json_call_ajax("NarrativeJobService.list_running_apps",
-        [], 1, _callback, _errorCallback);
-};
-
-    this.list_running_apps_async = function (_callback, _error_callback) {
-        deprecationWarning();
-        return json_call_ajax("NarrativeJobService.list_running_apps", [], 1, _callback, _error_callback);
     };
 
     this.run_job = function (params, _callback, _errorCallback) {

@@ -113,7 +113,7 @@ define (
 
             self.genericClient = new GenericClient(Config.url('service_wizard'), token, null, false);
             self.genericClient.sync_call("ServiceWizard.get_service_status",
-                        [{'module_name': "GenomeSearchUtil", 'version': 'dev'}], 
+                        [{'module_name': "GenomeSearchUtil", 'version': 'release'}], 
                     function(status){
                         self.genomeSearchAPI = new GenomeSearchUtil(status[0].url, token, null, null, null, null, false);
                     },

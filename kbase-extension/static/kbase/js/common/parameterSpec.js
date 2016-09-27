@@ -108,6 +108,9 @@ define([
                     if (spec.dropdown_options) {
                         return '[]string';
                     }
+                    break;
+                // case 'reads_group_editor':
+                //     return 'reads_group_editor';
             }
 
             /*
@@ -118,7 +121,7 @@ define([
                 if (spec.allow_multiple) {
                     return '[]string';
                 }
-                return 'string';                
+                return 'string';
             }
             var validateAs = spec.text_options.validate_as;
             if (validateAs) {
@@ -128,7 +131,7 @@ define([
                     return validateAs;
             }
 
-            // Some parameter specs have valid_ws_types as an empty set, which 
+            // Some parameter specs have valid_ws_types as an empty set, which
             // does not mean what it could, it means that it is not an option.
             if (spec.text_options.valid_ws_types && spec.text_options.valid_ws_types.length > 0) {
                 if (spec.allow_multiple) {
@@ -192,7 +195,7 @@ define([
                     return defaultValue;
             }
         }
-        
+
         /*
          * Coerce a string, undefined, or null to an "integer boolean" value --
          * an integer which is 1 for true, 0 for false.
@@ -230,7 +233,7 @@ define([
         function defaultValue() {
             var defaultValues = spec.default_values;
             // No default value and not required? null value
-            
+
             // special special cases.
             switch (spec.field_type) {
                 case 'checkbox':
@@ -240,7 +243,7 @@ define([
                      * TODO: more cases of bad default value? Or a generic
                      * default value validator?
                      */
-                    if (!defaultValues || 
+                    if (!defaultValues ||
                         defaultValues.length === 0) {
                         return spec.checkbox_options.unchecked_value;
                     } else {
@@ -248,11 +251,11 @@ define([
                     }
                 case 'custom_textsubdata':
                     if (!defaultValues) {
-                        
+
                     }
             }
-            
-            
+
+
             if (!defaultValues && !required()) {
                 return nullValue();
             }
@@ -309,7 +312,7 @@ define([
             var fieldType = spec.field_type;
 
             // NOTE:
-            // field_type is text or dropdown, but does not always correspond to the 
+            // field_type is text or dropdown, but does not always correspond to the
             // type of control to build. E.g. selecting a workspace object is actually
             // a dropdown even though the field_type is 'text'.
 
@@ -543,7 +546,7 @@ define([
 
             }
         }
-        
+
         /*
          * The parameter class is either input, output, or parameter.
          * This method both determines the class and ensures that the param
@@ -555,14 +558,14 @@ define([
         function setupParamClass() {
             // The primary flag for the param class is the ui_class property.
             // Perhaps not the best name for this property.
-            
+
             var paramClassName = spec.ui_class;
             if (!paramClassName) {
                 throw new Error('Parameter ' + spec.id + ' has no ui_class set');
             }
-            
+
             switch (paramClassName) {
-                case 'input': 
+                case 'input':
                     // do stuff
                     if (spec.text_options && spec.text_options.is_output_name) {
                         throw new Error('Parameter ' + spec.id + ' is an input type, but has text_options.is_output_name specified');
@@ -593,21 +596,21 @@ define([
                     }
                     break;
             }
-            
+
             attributes.paramClass = paramClassName;
-            
+
         }
-        
+
         function paramClass() {
             return attributes.paramClass;
         }
-        
+
         setupParamClass();
-        
+
         // NEW -- validate and completely set up normalized param first,
         // so that errors are caught early.
-        
-        
+
+
 
         return {
             id: id,

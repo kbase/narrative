@@ -10,15 +10,12 @@ from biokbase.narrative.contents.narrativeio import (
     KBaseWSManagerMixin,
     PermissionsError
 )
-from biokbase.workspace.client import (
-    Workspace,
-    ServerError
-)
+from biokbase.workspace.client import Workspace
+from biokbase.workspace.baseclient import ServerError
 import biokbase.auth
 import os
 import re
 from tornado.web import HTTPError
-import biokbase.narrative.common.service as service
 import ConfigParser
 import narrative_test_helper as test_util
 
@@ -80,23 +77,23 @@ class NarrIOTestCase(unittest.TestCase):
         biokbase.auth.set_environ_token(None)
 
     def test_mixin_instantiated(self):
-        self.assertIsInstance(self.mixin, biokbase.narrative.narrativeio.KBaseWSManagerMixin)
+        self.assertIsInstance(self.mixin, biokbase.narrative.contents.narrativeio.KBaseWSManagerMixin)
 
-    # test we can get a workspace client while logged out, and it's anonymous
-    def test_get_wsclient_anon(self):
-        ws_client = self.mixin.ws_client()
-        # it's anon if the header doesn't have an AUTHORIZATION field, or
-        # that has a None value
-        self.assertTrue('AUTHORIZATION' not in ws_client._headers or
-                        ws_client._headers['AUTHORIZATION'] is None)
+    # # test we can get a workspace client while logged out, and it's anonymous
+    # def test_get_wsclient_anon(self):
+    #     ws_client = self.mixin.ws_client()
+    #     # it's anon if the header doesn't have an AUTHORIZATION field, or
+    #     # that has a None value
+    #     self.assertTrue('AUTHORIZATION' not in ws_client._headers or
+    #                     ws_client._headers['AUTHORIZATION'] is None)
 
-    # test we get a ws client when logged in, and it's authorized
-    def test_get_wsclient_auth(self):
-        self.login()
-        ws_client = self.mixin.ws_client()
-        self.assertTrue('AUTHORIZATION' in ws_client._headers and
-                        ws_client._headers['AUTHORIZATION'] is not None)
-        self.logout()
+    # # test we get a ws client when logged in, and it's authorized
+    # def test_get_wsclient_auth(self):
+    #     self.login()
+    #     ws_client = self.mixin.ws_client()
+    #     self.assertTrue('AUTHORIZATION' in ws_client._headers and
+    #                     ws_client._headers['AUTHORIZATION'] is not None)
+    #     self.logout()
 
     # test we know what a narrative ref looks like with ws and obj ids
     def test_obj_ref_ws_obj(self):
@@ -161,7 +158,7 @@ class NarrIOTestCase(unittest.TestCase):
         if with_meta:
             if not nar['info'][10]:
                 return "Narrative metadata not returned when expected"
-            meta_keys = set(['creator', 'data_dependencies', 'description', 'format', 'job_info', 'methods', 'name', 'type', 'ws_name'])
+            meta_keys = set(['creator', 'data_dependencies', 'description', 'format', 'job_info', 'name', 'type', 'ws_name'])
             missing_keys = meta_keys - set(nar['info'][10])
             if missing_keys:
                 return "Narrative metadata is missing the following keys: {}".format(', '.join(missing_keys))

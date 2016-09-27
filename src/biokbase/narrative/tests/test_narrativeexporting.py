@@ -7,7 +7,7 @@ __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
 from biokbase.narrative.contents.narrativeio import PermissionsError
 from biokbase.narrative.exporter.exporter import NarrativeExporter
-from biokbase.narrative.tests.util import read_narrative_file
+from biokbase.narrative.tests.util import read_json_file
 import unittest
 import os
 import ConfigParser
@@ -32,7 +32,7 @@ def mock_read_narrative(style):
     style will raise a NarrativeIO.PermissionsError.
     """
     if style == test_narrative_ref:
-        return read_narrative_file(config.get('narrative_refs', 'narr_file'))
+        return read_json_file(config.get('narrative_refs', 'narr_file'))
     elif style == bad_narrative_ref:
         raise ValueError('Bad Narrative!')
     elif style == private_narrative_ref:

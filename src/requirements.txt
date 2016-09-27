@@ -28,3 +28,4 @@ simplegeneric
 bokeh
 markupsafe
 plotly
+mock

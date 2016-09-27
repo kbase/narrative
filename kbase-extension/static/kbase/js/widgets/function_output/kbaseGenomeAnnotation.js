@@ -113,7 +113,7 @@ define (
 
             self.genericClient = new GenericClient(Config.url('service_wizard'), token, null, false);
             self.genericClient.sync_call("ServiceWizard.get_service_status",
-                        [{'module_name': "GenomeSearchUtil", 'version': 'dev'}], 
+                        [{'module_name': "GenomeSearchUtil", 'version': 'release'}], 
                     function(status){
                         self.genomeSearchAPI = new GenomeSearchUtil(status[0].url, token, null, null, null, null, false);
                     },
@@ -124,21 +124,25 @@ define (
 
 
         tabData : function(genome) {
-            //normally, we just have an Overview, Contigs, and Genes tab.
             var names = ['Overview', 'Browse Features', 'Browse Contigs'];
             var ids = ['overview', 'browse_features', 'browse_contigs'];
-
-            /*if (genome.ontology_mappings.length) {
-                names.push('Ontology');
-                ids.push('ontology');
-            }*/
-
             return {
                 names : names,
                 ids : ids
             };
         },
 
+        link_to_ontology : function(id) {
+            var goUrl = 'http://amigo.geneontology.org/amigo/term/';
+            var tokens = id.split(':');
+            if(tokens.length > 1) {
+                if(tokens[0]==='GO') {
+                    return $('<a href="'+goUrl+id+'" target="_blank">')
+                                .append(id);
+                }
+            }
+            return id;
+        },
 
         /*
             input =>
@@ -150,8 +154,10 @@ define (
 
             }
         */
-
         buildGeneSearchView: function(params) {
+            var self = this;
+
+            var BIG_COL_WIDTH = '25%';
 
             // parse parameters
             var $div = params['$div'];
@@ -176,7 +182,6 @@ define (
             function numberWithCommas(x) {
                 return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
             }
-
 
             // setup the main search button and the results panel and layout
             var $input = $('<input type="text" class="form-control" placeholder="Search Features">');
@@ -305,6 +310,10 @@ define (
 
             var buildRow = function(rowData) {
                 var $tr = $('<tr>');
+                var hasFunc = false;
+                var hasOntology = false;
+                var hasAlias = false;
+
                 if(idClick) {
                     var getCallback = function(rowData) { return function() {idClick(rowData);}};
                     $tr.append($('<td>').append(
@@ -316,6 +325,27 @@ define (
                 }
                 $tr.append($('<td>').append(rowData['feature_type']));
                 $tr.append($('<td>').append(rowData['function']));
+                if(rowData['function']) { hasFunc = true; }
+
+                var $td = $('<td>');
+                if(rowData['ontology_terms']) {
+                    var o_terms = rowData['ontology_terms'];
+                    var $elem = $td;
+                    if(Object.keys(rowData['ontology_terms']).length>2) {
+                        $elem = $('<div>').css({'resize':'vertical', 'overflow':'auto', 'height':'3em'});
+                        $td.append($elem);
+                    }
+                    var isFirst = true;
+                    for (var term in o_terms) {
+                        if(isFirst) isFirst=false;
+                        else $elem.append('<br>');
+                        if (o_terms.hasOwnProperty(term)) {
+                            $elem.append(self.link_to_ontology(term)).append('- ' + o_terms[term]);
+                            hasOntology = true;
+                        }
+                    }
+                } 
+                $tr.append($td);
 
                 var $td = $('<td>');
                 if(rowData['aliases']) {
@@ -331,6 +361,7 @@ define (
                         else $elem.append(', ');
                         if (aliases.hasOwnProperty(alias)) {
                             $elem.append(alias);
+                            hasAlias = true;
                         }
                     }
                 } 
@@ -344,9 +375,9 @@ define (
                     if(contigClick) {
                         var getCallback = function(rowData) { return function() {contigClick(loc['contig_id']);}};
                         $tr.append($('<td>').append(
-                            $('<a>').css('cursor','pointer').append(loc['contig_id'])
-                                .on('click',getCallback(loc['contig_id'])))
-                        );
+                            $('<div>').css({'word-break':'break-all'}).append(
+                                $('<a>').css('cursor','pointer').append(loc['contig_id'])
+                                    .on('click',getCallback(loc['contig_id'])))));
                     } else {
                         $tr.append($('<td>').append($('<div>').css('word-break','break-all').append(loc['contig_id'])));
                     }
@@ -354,7 +385,12 @@ define (
                     $tr.append($('<td>')).append($('<td>')).append($('<td>')).append($('<td>'));
                 }
 
-                return $tr;
+                return {
+                    $tr:$tr,
+                    hasFunc: hasFunc,
+                    hasOntology: hasOntology,
+                    hasAlias: hasAlias
+                };
             };
 
             var renderResult = function($table, results) {
@@ -365,12 +401,36 @@ define (
 
                 var features = results['features']
                 if(features.length>0) {
+                    var hasFunc = false;
+                    var hasOntology = false;
+                    var hasAlias = false;
                     for(var k=0; k<features.length; k++) {
-                        $table.append(buildRow(features[k]));
+                        var row = buildRow(features[k]);
+                        $table.append(row.$tr);
+                        if(row.hasFunc) { hasFunc = true; }
+                        if(row.hasOntology) { hasOntology = true; }
+                        if(row.hasAlias) { hasAlias = true; }
                     }
                     n_results = results['num_found'];
                     showViewInfo(results['start'], features.length, results['num_found']);
                     showPaginate(results['num_found']);
+                    console.log('here');
+                    if(hasFunc) {
+                        $table.find('.feature-tbl-function').css('width',BIG_COL_WIDTH);
+                    } else {
+                        $table.find('.feature-tbl-function').css('width','1%');
+                    }
+                    if(hasOntology) {
+                        $table.find('.feature-tbl-ontology_terms').css('width',BIG_COL_WIDTH);
+                    } else {
+                        $table.find('.feature-tbl-ontology_terms').css('width','1%');
+                    }
+                    if(hasAlias) {
+                        $table.find('.feature-tbl-aliases').css('width',BIG_COL_WIDTH);
+                    } else {
+                        $table.find('.feature-tbl-aliases').css('width','1%');
+                    }
+
                 } else {
                     showNoResultsView();
                 }
@@ -442,48 +502,31 @@ define (
                         .fail(function(){ inFlight=false; });
                 };
 
-                $colgroup.append($('<col span=1>').css('width','20%'))
-                var h = buildColumnHeader('Feature ID', 'feature_id', sortEvent);
-                $tr.append(h.$th);
-                h.$sortIcon.addClass('fa fa-sort-desc');
-                cols[h.id] = h;
+                var buildSingleColHeader = function(key, title, width, showSortedIcon, sortEvent, target) {
+                    target.$colgroup.append($('<col span=1>').addClass('feature-tbl-'+key).css('width',width))
+                    var h = buildColumnHeader(title, key, sortEvent);
+                    target.$tr.append(h.$th);
+                    if(showSortedIcon) {
+                        h.$sortIcon.addClass('fa fa-sort-desc');
+                    }
+                    target.cols[h.id] = h;
+                }
 
-                $colgroup.append($('<col span=1>').css('width','5%'))
-                var h = buildColumnHeader('Type', 'feature_type', sortEvent);
-                $tr.append(h.$th);
-                cols[h.id] = h;
+                var target = {
+                    $colgroup: $colgroup,
+                    $tr: $tr,
+                    cols: cols
+                };
 
-
-                $colgroup.append($('<col span=1>').css('width','20%'))
-                var h = buildColumnHeader('Function', 'function', sortEvent);
-                $tr.append(h.$th);
-                cols[h.id] = h;
-
-                $colgroup.append($('<col span=1>').css('width','20%'))
-                var h = buildColumnHeader('Aliases', 'aliases', null);
-                $tr.append(h.$th);
-                cols[h.id] = h;
-
-
-                $colgroup.append($('<col span=1>').css('width','5%'))
-                var h = buildColumnHeader('Start', 'start', sortEvent);
-                $tr.append(h.$th);
-                cols[h.id] = h;
-
-
-                $colgroup.append($('<col span=1>').css('width','5%'))
-                var h = buildColumnHeader('Strand', 'strand', sortEvent);
-                $tr.append(h.$th);
-                cols[h.id] = h;
-
-                $colgroup.append($('<col span=1>').css('width','5%'))
-                var h = buildColumnHeader('Length', 'length', sortEvent);
-                $tr.append(h.$th);
-                cols[h.id] = h;
-
-                var h = buildColumnHeader('Contig', 'contig_id', sortEvent);
-                $tr.append(h.$th);
-                cols[h.id] = h;
+                buildSingleColHeader('feature_id', 'Feature&nbsp;ID', '1%', true, sortEvent, target);
+                buildSingleColHeader('feature_type', 'Type', '1%', false, sortEvent, target);
+                buildSingleColHeader('function', 'Function', BIG_COL_WIDTH, false, sortEvent, target);
+                buildSingleColHeader('ontology_terms', 'Ontology', BIG_COL_WIDTH, false, null, target);
+                buildSingleColHeader('aliases', 'Aliases', BIG_COL_WIDTH, false, null, target);
+                buildSingleColHeader('start', 'Start', '1%', false, sortEvent, target);
+                buildSingleColHeader('strand', 'Strand', '1%', false, sortEvent, target);
+                buildSingleColHeader('length', 'Length', '1%', false, sortEvent, target);
+                buildSingleColHeader('contig_id', 'Contig', '5%', true, sortEvent, target);
 
                 return { $colgroup:$colgroup, $theader:$tr };
             }
@@ -916,20 +959,6 @@ define (
                     container.append($tabPane);
                     var tabObj = new kbaseTabs($tabPane, {canDelete : true, tabs : []});
 
-                    /* Skip Ontologies info for now- need to add this to caching service.
-                    var ontology_mappings = [];
-                    $.each(
-                      gnm.features,
-                      function (i,f) {
-                        if (f.ontology_terms) {
-                          ontology_mappings.push(f);
-                        }
-                      }
-                    );
-    
-                    gnm.ontology_mappings = ontology_mappings;
-                    gnm.ontology_mappings = [];*/
-
                     var tabData = self.tabData(gnm);
                     var tabNames = tabData.names;
                     var tabIds = tabData.ids;
@@ -957,30 +986,12 @@ define (
                     $overviewPanel.append($('<div>').css('margin-top','15px').append($layout));
 
 
-
-                    /*var tax = gnm.taxonomy;
-                    if (tax == null)
-                        tax = '';
-                    var gc_content = gnm.gc_content;
-                    if (gc_content) {
-                        gc_content = Number(gc_content);
-                        if (gc_content < 1.0)
-                            gc_content *= 100;
-                        gc_content = gc_content.toFixed(2) + " %";
-                    } else {
-                        gc_content = "Unknown";
-                    }*/
-
                     var id = '<a href="/#dataview/'+gnm.ref+'" target="_blank">' + gnm.ws_obj_name + '</a>'
 
                     var scientific_name = gnm.scientific_name
-
                     var domain = gnm.domain;
-
                     var genetic_code = gnm.genetic_code;
-
                     var source = gnm.source;
-
                     var source_id = gnm.source_id;
 
                     var taxonomy = $('<td>');
@@ -1024,106 +1035,12 @@ define (
                             n_features
                         ];
 
-                    //XXX baloney Plants hack.
-                    //Plant genes need different information, and we want to display the gene and transcript counts separately
-                    //so if the domain is plants, add on the extra label, pop off the existing length value, and push on the length of genes and
-                    //transcripts individually.
-                   /* if (gnm.domain == 'Plant' || gnm.domain == 'Eukaryota') {
-                        overviewLabels.push('Number of Transcripts');
-                        var types = {};
-                        $.each(gnm.features, function(i,v) {
-                            if (types[v.type] == undefined) {types[v.type] = 0};
-                            types[v.type]++;
-                        });
-
-                        overviewData.pop();
-                        overviewData.push(types['locus']);
-                        overviewData.push(types['CDS']);
-                    }*/
-                    //XXX end plants baloney here. There's more below for the Genes table.
-
                     for (var i=0; i<overviewData.length; i++) {
                         $overviewTable.append(
                             $('<tr>')
                                 .append($('<td>').append($('<b>').append(overviewLabels[i])))
                                 .append($('<td>').append(overviewData[i])));
                     }
-
-                    ////ontology tab - should be lazily loaded, but we can't since we need to check for existence to know if we display the tab at all.
-                    /*if (gnm.ontology_mappings.length) {
-                      var ontologyTab = $('#' + pref + 'ontology');
-                      ontologyTab.empty();
-                      ontologyTab.append('<table cellpadding="0" cellspacing="0" border="0" id="'+pref+'ontology-table" \
-                      class="table table-bordered table-striped" style="width: 100%; margin-left: 0px; margin-right: 0px;"/>');
-
-                      var ontologySettings = {
-                          "paginationType": "full_numbers",
-                          "displayLength": 10,
-                          "sorting": [[ 0, "asc" ], [1, "asc"]],
-                          "columns": [
-                              {title: "Gene ID", data: "id"},
-                              {title: "# of ontology terms", data: "num"},
-                              {title: "Ontology term name", data: "name"},
-                              {title: "Ontology term ID", data: "term"},
-                              {title: "Evidence count", data: "evidence_count"},
-                          ],
-                          createdRow: function (row, data, index) {
-
-                              var $linkCell = $('td', row).eq(3);
-                              var k = $linkCell.text();
-                              $linkCell.empty();
-
-                              $linkCell.append($.jqElem('a')
-                                        .on('click', function(e) {
-                                          var $tabDiv = $.jqElem('div').kbaseOntologyDictionary({ term_id : k});
-                                          tabObj.addTab({tab: k, content: $tabDiv.$elem, canDelete : true, show: true});
-                                        })
-                                        .append(k));
-
-                          }
-                      };
-
-                      var ontologyTable = $('#'+pref+'ontology-table').DataTable(ontologySettings);
-                      var ontologyData  = [];
-
-                      $.each(
-                        gnm.ontology_mappings,
-                        function(i, v) {
-                          //ick. Need to double loop to tally up number of terms in advance. There's gotta be a more efficient way to do this.
-                          v.num_terms = 0;
-                          $.each(
-                            v.ontology_terms,
-                            function (k, o) {
-                              v.num_terms += Object.keys(o).length
-                            }
-                          );
-                          $.each(
-                            v.ontology_terms,
-                            function (k, o) {
-                              $.each(
-                                v.ontology_terms[k],
-                                function (k, t) {
-                                  ontologyData.push(
-                                    {
-                                      'id' : v.id,
-                                      'num' : v.num_terms,
-                                      'term' : k,
-                                      'evidence_count' : t.evidence.length,
-                                      'name' : t.term_name,
-                                    }
-                                  )
-                                }
-                              )
-                            }
-                          )
-                        }
-                      );
-                      console.log("OD ", ontologyData[0]);
-
-                      //ontologyTable.fnAddData(ontologyData);
-                      ontologyTable.rows.add(ontologyData).draw();
-                      
-                    }*/
 
                     var liElems = $tabPane.find('li');
                     for (var liElemPos = 0; liElemPos < liElems.length; liElemPos++) {
@@ -1497,21 +1414,21 @@ define (
 
                 // ID
                 var $id = $('<tr>')
-                            .append($('<td>').append('Contig ID'))
+                            .append($('<td>').append('<b>Contig ID</b>'))
                             .append($('<td>').append(contig_id));
                 $tbl.append($id);
 
                 // Length
                 var $lengthField = $('<div>');
                 var $len = $('<tr>')
-                            .append($('<td>').append('Length'))
+                            .append($('<td>').append('<b>Length</b>'))
                             .append($('<td>').append($lengthField));
                 $tbl.append($len);
 
                 // N Features
                 var $featureField = $('<div>');
                 var $nf = $('<tr>')
-                            .append($('<td>').append('Number of Features'))
+                            .append($('<td>').append('<b>Number of Features</b>'))
                             .append($('<td>').append($featureField));
                 $tbl.append($nf);
 
@@ -1701,7 +1618,6 @@ define (
                 var tblLabels = [];
                 var tblData = [];
 
-
                 tblLabels.push('Feature ID');
                 tblData.push('<a href="/#dataview/'+self.genome_ref+'?sub=Feature&subid='+fid+'" target="_blank">'+fid+'</a>');
 
@@ -1723,13 +1639,33 @@ define (
                 } 
                 tblData.push($aliases);
 
-
                 tblLabels.push('Type');
                 tblData.push(featureData['feature_type']);
 
-
                 tblLabels.push('Function');
-                tblData.push(featureData['function']);
+                if(featureData['function']) {
+                    tblData.push(featureData['function']);
+                } else {
+                    tblData.push('None');
+                }
+
+                tblLabels.push('Ontology Terms');
+                var $ontology_terms = $('<div>');
+                if(featureData['ontology_terms']) {
+                    var o_terms = featureData['ontology_terms'];
+                    var isFirst = true;
+                    for (var term in o_terms) {
+                        if (o_terms.hasOwnProperty(term)) {
+                            if(isFirst) isFirst=false;
+                            else $ontology_terms.append('<br>');
+                            $ontology_terms.append(self.link_to_ontology(term)).append('- ' + o_terms[term]);
+                        }
+                    }
+                    if(isFirst) {
+                        $ontology_terms.append('None');
+                    }
+                } 
+                tblData.push($ontology_terms);
 
                 tblLabels.push('Location');
                 var $loc = $('<div>');
@@ -1790,7 +1726,7 @@ define (
 
                 for (var i=0; i<tblLabels.length; i++) {
                     $tbl.append($('<tr>')
-                                    .append($('<td>').append(tblLabels[i]))
+                                    .append($('<td>').append($('<b>').append(tblLabels[i])))
                                     .append($('<td>').append(tblData[i])));
                 }
 

@@ -17,7 +17,7 @@ function GenomeSearchUtil(url, auth, auth_cb, timeout, async_job_check_time_ms, 
     this.async_job_check_max_time_ms = 300000;  // 5 minutes
     this.service_version = service_version;
     if (!this.service_version)
-        this.service_version = 'dev';
+        this.service_version = 'release';
     this.use_url_lookup = true;
     if(typeof use_url_lookup !== 'undefined') {
         this.use_url_lookup = use_url_lookup;

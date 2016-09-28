@@ -34,7 +34,11 @@ define (
 		'jquery',
 		'kbaseAuthenticatedWidget',
                 'narrativeConfig',
-                'kbase-client-api'
+                'kbase-client-api',
+		'jquery-dataTables',
+		'jquery-dataTables-bootstrap',
+	        'kbaseTabs',
+	        'kbaseTable'
 	], function(
                 Promise,
 		KBWidget,
@@ -42,7 +46,11 @@ define (
 		$,
 		kbaseAuthenticatedWidget,
                 Config,
-                KBaseClientApi
+                KBaseClientApi,
+		jquery_dataTables,
+		jquery_dataTables_bootstrap,
+                kbaseTabs,
+	        kbaseTable
 	) {
     return KBWidget({
         /* 
@@ -52,6 +60,7 @@ define (
         parent : kbaseAuthenticatedWidget,
         version: "1.0.0",
         token: null,
+	width: 1150,
         options: {
             wsId: null,
             wsName: null,
@@ -87,7 +96,6 @@ define (
              */
             this._super(options);
 	    this.wsUrl = Config.url('workspace');
-
             /*
              * It is required to return this.
              */
@@ -101,26 +109,171 @@ define (
          */
         render: function() {
             var s = this.options.data;
-	    this.$elem.append('<div><b>hello!</b></div>');
 	    
-	    alert(this.options.objId);
-	    Promise.resolve(this.wsClient.get_objects([{ref: this.options.wsName + '/' + this.options.objId}]))
+	    this.reference =  this.options.wsName + '/' + this.options.objId;
+	    Promise.resolve(this.wsClient.get_objects([{ref: this.reference}]))
             .then(function(results) {
-                var reads = results[0];
-                this.$elem.append('<div>' + JSON.stringify(reads) + '</div>');
-                console.log(reads);
+                this.reads = results[0];
+//		this.$elem.append('<div>' + JSON.stringify(this.reads) + '</div>');
+		this.renderBasicTable();
+		console.log(this.reads);
             }.bind(this))
             .catch(function(error) {
+		console.error(error);
 		alert('An error happened');
             });
-
-//	    var readsObject =
 
             return this;
         },
 
+        renderBasicTable: function() {
+            var $self = this;
+            var $container = this.$elem;
+//            $container.empty();
+
+            var $tabPane = $('<div>');
+            $container.append($tabPane);
+
+            // Build the overview table
+            var $overviewTable = $('<table class="table table-striped table-bordered table-hover" style="margin-left: auto; margin-right: auto;"/>');
+
+            function get_table_row(key, value) {
+                return $('<tr>').append($('<td>').append(key)).append($('<td>').append(value));
+            }
+
+	    if (this.reads["info"][2].startsWith("KBaseFile.PairedEndLibrary")){
+		$overviewTable.append(get_table_row(
+		    'KBase Object Name',
+                    '<a href="/#dataview/' + this.reference + '" target="_blank">' 
+			+ this.reads["info"][1] +'</a>' ));
+                // leave out version for now, because that is not passed into data widgets
+		if (this.reads["data"].hasOwnProperty("strain")){
+		    $overviewTable.append(get_table_row('Genus', this.reads["data"]['strain']['genus'] ));
+		    $overviewTable.append(get_table_row('Species', this.reads["data"]['strain']['species'] ));
+		    $overviewTable.append(get_table_row('Strain', this.reads["data"]['strain']['strain'] ));
+		}
+		else{
+		    $overviewTable.append(get_table_row('Genus', 'Not specified' ));
+		    $overviewTable.append(get_table_row('Species', 'Not specified' ));
+		    $overviewTable.append(get_table_row('Strain', 'Not specified' ));
+		}
+		if (this.reads["data"].hasOwnProperty("source")){
+		    if(this.reads["data"]["source"].hasOwnProperty("source")){
+			$overviewTable.append(get_table_row('Source', this.reads["data"]['source']['source']));
+		    }else{
+			$overviewTable.append(get_table_row('Source', "Not Specified"));
+		    }
+
+		    if(this.reads["data"]["source"].hasOwnProperty("source_id")){
+			$overviewTable.append(get_table_row('Source ID', this.reads["data"]['source']['source_id']));
+		    }else{
+			$overviewTable.append(get_table_row('Source ID', "Not Specified"));
+		    }
+
+		    if(this.reads["data"]["source"].hasOwnProperty("project_id")){
+			$overviewTable.append(get_table_row('Project ID', this.reads["data"]['source']['project_id']));
+		    }else{
+			$overviewTable.append(get_table_row('Project ID', "Not Specified"));
+		    }
+		}else{
+		    $overviewTable.append(get_table_row('Source', 'Not specified' ));
+		    $overviewTable.append(get_table_row('Source ID', 'Not specified' ));
+		    $overviewTable.append(get_table_row('Project ID', 'Not specified' ));
+		}
+		
+		$overviewTable.append(get_table_row('Platform', this.reads["data"]['sequencing_tech'] ));
+
+		if(this.reads["data"].hasOwnProperty("read_count")){
+		    $overviewTable.append(get_table_row('Read Count', this.reads["data"]['read_count'] ));
+		}else{
+		    $overviewTable.append(get_table_row('Read Count', "Not Specified"));
+		}
+
+		if(this.reads["data"].hasOwnProperty("read_size")){
+		    $overviewTable.append(get_table_row('Read Size', this.reads["data"]['read_size'] ));
+		}else{
+		    $overviewTable.append(get_table_row('Read Size', "Not Specified"));
+		}
+
+		if(this.reads["data"].hasOwnProperty("insert_size_mean")){
+		    $overviewTable.append(get_table_row('Insert Size Mean', this.reads["data"]['insert_size_mean'] ));
+		}else{
+		    $overviewTable.append(get_table_row('Insert Size Mean', "Not Specified"));
+		}
+
+		if(this.reads["data"].hasOwnProperty("insert_size_std_dev")){
+		    $overviewTable.append(get_table_row('Insert Size Std Dev', this.reads["data"]['insert_size_std_dev'] ));
+		}else{
+		    $overviewTable.append(get_table_row('Insert Size Std Dev', "Not Specified"));
+		}
+
+		if(this.reads["data"].hasOwnProperty("gc_content")){
+		    $overviewTable.append(get_table_row('GC Content', this.reads["data"]['gc_content'] ));
+		}else{
+		    $overviewTable.append(get_table_row('GC Content', "Not Specified"));
+		}
+
+		var display_value = "No";//temp value for display purposes
+
+		if(this.reads["data"].hasOwnProperty("single_genome")){
+		    display_value = "No";
+		    if (this.reads["data"]['read_size'] === 1 ){
+			display_value = "Yes";
+		    }
+		    $overviewTable.append(get_table_row('Single Genome', display_value ));
+		}else{
+		    $overviewTable.append(get_table_row('Single Genome', "Not Specified"));
+		}
+
+		if(this.reads["data"].hasOwnProperty("read_orientation_outward")){
+		    display_value = "No";
+		    if (this.reads["data"]['read_orientation_outward'] === 1 ){
+			display_value = "Yes";
+		    }
+		    $overviewTable.append(get_table_row('Outward Read Orientation', display_value ));
+		}else{
+		    $overviewTable.append(get_table_row('Outward Read Orientation', "Not Specified"));
+		}
+		
+		if(this.reads["data"].hasOwnProperty("interleaved")){
+		    display_value = "No";
+		    if (this.reads["data"]['interleaved'] === 1 ){
+			display_value = "Yes";
+		    }
+		    $overviewTable.append(get_table_row('Interleaved', display_value ));
+		}else{
+		    $overviewTable.append(get_table_row('Interleaved', "Not Specified"));
+		}
+		
+		var library_1_label = "Library"
+		if(this.reads["data"].hasOwnProperty("lib2")){
+		    library_1_label = "Left Library"
+		}
+		$overviewTable.append(get_table_row(library_1_label + ' Type', this.reads["data"]["lib1"]["type"]));
+		$overviewTable.append(get_table_row(library_1_label + ' File Size', this.reads["data"]["lib1"]["size"]));
+		if(this.reads["data"]["lib1"]["file"].hasOwnProperty("file_name")){
+		    $overviewTable.append(get_table_row(library_1_label + ' File Name', this.reads["data"]["lib1"]["file"]["file_name"]));
+		}else{
+		    $overviewTable.append(get_table_row(library_1_label + ' File Name', "Not Specified"));
+		}
+
+		if(this.reads["data"].hasOwnProperty("lib2")){
+		    $overviewTable.append(get_table_row('Right Library Type', this.reads["data"]["lib2"]["type"]));
+		    $overviewTable.append(get_table_row('Right Library File Size', this.reads["data"]["lib2"]["size"]));
+		    if(this.reads["data"]["lib1"]["file"].hasOwnProperty("file_name")){
+			$overviewTable.append(get_table_row('Right Library File Name', this.reads["data"]["lib2"]["file"]["file_name"]));
+		    }else{
+			$overviewTable.append(get_table_row('Right Lbrary File Name', "Not Specified"));
+		    }
+		}
+	    }
+
+	    $container.append($overviewTable);
+	},
+
         loggedInCallback: function(event, auth) {
             this.token = auth.token;
+
 	    this.wsClient = new Workspace(this.wsUrl, auth);
             this.render();
             return this;

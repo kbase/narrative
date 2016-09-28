@@ -1,5 +1,6 @@
-/*global define*/
+/*global define, document*/
 /*jslint white:true,browser:true,devel:true*/
+/*eslint-env browser*/
 
 /**
  * Top-level 'widget' for the workspace interaction with the KBase narrative.
@@ -43,8 +44,7 @@ define([
     'kbaseTabs',
     'common/props',
     'kb_service/client/narrativeMethodStore',
-
-    'bootstrap',
+    'bootstrap'
 ], function(
     Jupyter,
     Runtime,
@@ -146,7 +146,7 @@ define([
             );
 
             $(document).on('dataUpdated.Narrative',
-                function(event) {
+                function() {
                     if (Jupyter && Jupyter.notebook) {
                         // XXX: This is a hell of a hack. I hate
                         // using the 'first time' bit like this,
@@ -475,6 +475,10 @@ define([
         },
 
         determineMethodCellType: function(spec) {
+            if (spec.info.id === 'NarrativeTest/test_editor') {
+                return 'editor';
+            }
+
             // An app will execute via the method described in the behavior. If
             // such a method is not described, it is by definition not an
             // executing app.
@@ -497,23 +501,14 @@ define([
                 //case 'model_support/edit_model':
                 case 'fba_tools/edit_metabolic_model':
                 case 'fba_tools/create_or_edit_media':
+                case 'NarrativeTest/test_editor':
                 //case 'model_support/edit_media':
                     return 'widget';
             }
 
             // ... while in reality, ANY app which does not execute is for now
             // considered a viewer.
-
             return 'view';
-
-            //            if (!spec.parameters.some(function (parameter) {
-            //                return (parameter.ui_class === 'output');
-            //            })) {
-            //                return 'app';
-            //            };
-            //
-            //            console.error('ERROR - could not determine cell type', spec);
-            //            throw new Error('Could not determine cell type');
         },
 
 

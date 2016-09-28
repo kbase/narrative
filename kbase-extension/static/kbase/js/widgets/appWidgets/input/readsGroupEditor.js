@@ -4,11 +4,15 @@ define([
     'bluebird',
     'jquery',
     'common/validation',
+    'common/props',
+    '../inputUtils',
     'css!font-awesome'
 ], function(
     Promise,
     $,
-    Validation
+    Validation,
+    Props,
+    inputUtils
 ) {
     'use strict';
 
@@ -22,29 +26,8 @@ define([
 
         options.enabled = true;
 
-        /*
-         * If the parameter is optional, and is empty, return null.
-         * If it allows multiple values, wrap single results in an array
-         * There is a weird twist where if it ...
-         * well, hmm, the only consumer of this, isValid, expects the values
-         * to mirror the input rows, so we shouldn't really filter out any
-         * values.
-         */
-        //  function render() {
-        //      Promise.try(function () {
-        //          var events = Events.make(),
-        //              inputControl = makeInputControl(model.getItem('value'), events, bus);
-         //
-        //          dom.setContent('input-container', inputControl);
-        //          events.attachEvents(container);
-        //      })
-        //      .then(function () {
-        //          return autoValidate();
-        //      });
-        //  }
-
         function getInputValue() {
-            return 'my-value';
+            return $(container).find('input').val();
         }
 
         function resetModelValue() {
@@ -54,17 +37,6 @@ define([
                 model.setItem('value', undefined);
             }
         }
-
-        // function autoValidate() {
-        //     return validate()
-        //         .then(function (result) {
-        //             bus.send({
-        //                 type: 'validation',
-        //                 errorMessage: result.errorMessage,
-        //                 diagnosis: result.diagnosis
-        //             });
-        //         });
-        // }
 
         function validate() {
             return Promise.try(function () {
@@ -90,8 +62,36 @@ define([
                     parent = message.node;
                     container = parent.appendChild(document.createElement('div'));
 
-                    $(container).append('<input type="text">');
-                    // container.innerHTML = "<b>YEAH WOO EDITOR!</b>";
+                    var $input = $('<input type="text" placeholder="I am a reads group editor" style="width:100%">')
+                        .on('change', function() {
+                            validate()
+                            .then(function(result) {
+                                if (result.isValid) {
+                                    model.setItem('value', result.parsedValue);
+                                    bus.emit('changed', {
+                                        newValue: result.parsedValue
+                                    });
+                                } else if (result.diagnosis === 'required-missing') {
+                                    model.setItem('value', result.parsedValue);
+                                    bus.emit('changed', {
+                                        newValue: result.parsedValue
+                                    });
+                                } else {
+                                    if (config.showOwnMessage) {
+                                        var message = inputUtils.buildMessageAlert({
+                                            title: 'ERROR',
+                                            type: 'danger',
+                                            id: result.messageId,
+                                            message: result.errorMessage
+                                        });
+                                        $message.html(message.content);
+                                        message.events.attachEvents();
+                                    }
+                                }
+                            });
+                        });
+                    var $message = $('<div>');
+                    $(container).append($input).append($message);
                     bus.on('reset-to-defaults', function () {
                         resetModelValue();
                     });
@@ -100,12 +100,24 @@ define([
                     });
                     bus.on('stop', function () {
                         bus.stop();
-                    })
+                    });
                     bus.emit('sync');
                 });
             });
         }
 
+        function render() {
+
+        }
+
+        model = Props.make({
+            data: {
+                value: null
+            },
+            onUpdate: function(props) {
+                render();
+            }
+        });
         // function run(params) {
         //     return Promise.try(function () {
         //         return render(params);

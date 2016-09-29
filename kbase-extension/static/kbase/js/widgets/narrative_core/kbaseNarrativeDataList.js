@@ -92,6 +92,105 @@ define([
         downloadSpecCache: {tag: 'dev'},
 
         my_user_id: null,
+
+        /* ----------------------------------------------------
+            Changes for hierarchical data panel (KBASE-4566)
+        */
+        setItems: { }, // item_id -> {set_id -> 1, ..}
+        setInfo: { }, // set_id -> { count: , ..set info.. }
+        MOCK_SET_ID: 666, // hardcoded workspace set object id
+
+        // Test if given type name is one of the set types
+        isSetType: function(type_name) {
+            var t = ['SingleEndLibrarySet', 'PairedEndLibrarySet'];
+            return (_.contains(t, type_name));
+        },
+
+        // Utility function to portably return the identifier to
+        // use for a single data object
+        itemId: function(item) { return item[0]; },
+
+        // Extract, into 'setItems' and 'setInfo', the
+        // the data items in the input list which are set types.
+        // The input list is unchanged, but the output list
+        // is a copy with any items contained in a set, removed.
+        extractSets: function(data_list) {
+            // clear out member variables
+            this.setItems = {}; 
+            this.setInfo = {};
+            // find and extract
+            var ws_id = data_list[6]; // current workspace
+            _.each(
+                this.getWorkspaceSets(ws_id),
+                // for each set type, add mappings of item_id -> set_id
+                // to the instance 'setItems' object
+                // and info to 'setInfo'
+                function(item) {
+                    var set_id = this.itemId(item);
+                    var set_items = this.getWorkspaceSetMembers(set_id);
+                    _.each(set_items, function(value) {
+                        var item_id = this.itemId(item);
+                        if (!_.has(this.setItems, item_id)) {
+                            this.setItems[item_id] = {};
+                        }
+                        this.setItems[item_id][set_id] = 1;
+                    });
+                    this.setInfo[set_id] = {
+                        'count': set_items.length
+                    };
+                }
+            );
+            // return input array with any items that are inside
+            // a set filtered out (but not the set objects themselves)
+            return _.filter(data_list, function(item) {
+                return !_.has(this.setItems, this.itemId(item));
+            });
+        },
+
+        // Return a list of workspace items which are set/group types
+        getWorkspaceSets: function(ws_id) {
+            return this.mock_getWorkspaceSets(ws_id);
+        },
+
+        mock_getWorkspaceSets: function(ws_id) {
+            return [
+                    this.MOCK_SET_ID, 'foo', 'FooType.PairedEndLibrarySet-X', '2010-09-06',
+                    1, 'dangunter', ws_id, 'FooWorkspace', '00DEADBEEFBADDECAF00',
+                    1234, {}
+                ];
+        },
+
+        // Return all items inside a given set
+        getWorkspaceSetMembers: function(set_id) {
+            return this.mock_getWorkspaceSetMembers(set_id);
+        },
+        // Hardcoded, fake object info list for PairedEndLibrary objects
+        // within the hardcoded, fake PairedEndLibrarySet from mock_getWorkspaceSets()
+        mock_getWorkspaceSetMembers: function(set_id) {
+            var objs = [];
+            for (var i=1; i <= 100; i++) {
+                var x =  [this.MOCK_SET_ID + i, 'foo-member-' + i, 'FooType.PairedEndLibrary-Y',
+                          '2010-09-06', 1, 'dangunter', this.mock_ws_id, 'FooWorkspace',
+                          '00DEADBEEFBADDECAF00', 1234, {}];
+                objs.push(x);
+            }
+            return objs;
+        },
+
+        // Get the hardcoded workspace set objects
+        mock_list_objects: function(ws_id) {
+            var objs = this.mock_getWorkspaceSetMembers(ws_id);
+            objs.push(this.mock_getWorkspaceSets(ws_id));
+            return objs;
+        },
+
+        /* 
+            END: Changes for hierarchical data panel (KBASE-4566)
+            ----------------------------------------------------
+        */
+
+
+
         /**
          * @method init
          * Builds the DOM structure for the widget.
@@ -319,6 +418,13 @@ define([
                         maxObjectID: minId + this.options.ws_chunk_size
                     }))
                         .then(function (infoList) {
+
+                            /* Changes for hierarchical data panel (KBASE-4566) */
+                            // Add mock objects
+                            console.info('@@ Add mock objects');
+                            infoList = infoList.concat(this.mock_list_objects(infoList[0][6]));
+                            /* END Changed for KBASE-4566 */
+
                             // object_info:
                             // [0] : obj_id objid
                             // [1] : obj_name name

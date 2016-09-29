@@ -43,6 +43,12 @@ define (
             $self.obj_ref = $self.options.wsNameOrId + '/' + $self.options.objNameOrId;
             $self.link_ref = $self.obj_ref;
 
+            if(options._obj_info) {
+                $self.assembly_info = options._obj_info;
+                $self.obj_ref = $self.assembly_info['ws_id'] + '/' + $self.assembly_info['id'] + '/' + $self.assembly_info['version'];
+                $self.link_ref = $self.assembly_info['ws_id'] + '/' + $self.assembly_info['name'] + '/' + $self.assembly_info['version'];
+            }
+
             $self.assembly = new AssemblyAPI(Config.url('service_wizard'),{'token':$self.authToken()});
             $self.ws = new Workspace(Config.url('workspace'),{'token':$self.authToken()});
             
@@ -129,7 +135,7 @@ define (
                     tabs : [
                         {
                             tab : 'Assembly Summary',                               //name of the tab
-                            content : $('<div>').append($overviewTable),  //jquery object to stuff into the content
+                            content : $('<div>').css('margin-top','15px').append($overviewTable),  //jquery object to stuff into the content
                             canDelete : false,                             //override the canDelete param on a per tab basis
                             show : true,      
                         }, {

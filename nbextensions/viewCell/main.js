@@ -30,6 +30,7 @@ define([
     'common/dom',
     'common/props',
     'common/appUtils',
+    'common/jupyter',
 //    './widgets/codeCellRunWidget',
     'kb_service/utils',
     'kb_service/client/workspace',
@@ -50,6 +51,7 @@ define([
     Dom,
     Props,
     AppUtils,
+    jupyter,
     serviceUtils,
     Workspace
     ) {
@@ -94,196 +96,6 @@ define([
      *
      *
      */
-
-    var appStates = [
-        {
-            state: {
-                mode: 'editing',
-                params: 'incomplete'
-            },
-            next: [
-                {
-                    mode: 'editing',
-                    params: 'complete'
-                },
-                {
-                    mode: 'editing',
-                    params: 'incomplete'
-                }
-            ]
-        },
-        {
-            state: {
-                mode: 'editing',
-                params: 'complete'
-            },
-            next: [
-                {
-                    mode: 'editing',
-                    params: 'complete',
-                    code: 'built'
-                }
-            ]
-        },
-        {
-            state: {
-                mode: 'editing',
-                params: 'complete',
-                code: 'built'
-            },
-            next: [
-                {
-                    mode: 'editing',
-                    params: 'incomplete'
-                },
-                {
-                    mode: 'editing',
-                    params: 'complete',
-                    code: 'built'
-                },
-                {
-                    mode: 'processing',
-                    stage: 'launching'
-                }
-            ]
-        },
-        {
-            state: {
-                mode: 'processing',
-                stage: 'launching'
-            },
-            next: [
-                {
-                    mode: 'processing',
-                    stage: 'queued'
-                },
-                {
-                    mode: 'processing',
-                    stage: 'launching'
-                },
-                {
-                    mode: 'error',
-                    stage: 'launching'
-                },
-                {
-                    mode: 'editing',
-                    params: 'complete',
-                    code: 'built'
-                }
-            ]
-        },
-        {
-            state: {
-                mode: 'processing',
-                stage: 'queued'
-            },
-            next: [
-                {
-                    mode: 'processing',
-                    stage: 'running'
-                },
-                {
-                    mode: 'processing',
-                    stage: 'queued'
-                },
-                {
-                    mode: 'error',
-                    stage: 'queued'
-                },
-                {
-                    mode: 'editing',
-                    params: 'complete',
-                    code: 'built'
-                }
-            ]
-        },
-        {
-            state: {
-                mode: 'processing',
-                stage: 'running'
-            },
-            next: [
-                {
-                    mode: 'success'
-                },
-                {
-                    mode: 'error',
-                    stage: 'running'
-                },
-                {
-                    mode: 'editing',
-                    params: 'complete',
-                    code: 'built'
-                }
-            ]
-        },
-        {
-            state: {
-                mode: 'success'
-            },
-            next: [
-                {
-                    mode: 'success'
-                },
-                {
-                    mode: 'editing',
-                    params: 'complete',
-                    code: 'built'
-                }
-            ]
-        },
-        {
-            state: {
-                mode: 'error',
-                stage: 'launching'
-            },
-            next: [
-                {
-                    mode: 'editing',
-                    params: 'complete',
-                    code: 'built'
-                }
-            ]
-
-        },
-        {
-            state: {
-                mode: 'error',
-                stage: 'queued'
-            },
-            next: [
-                {
-                    mode: 'editing',
-                    params: 'complete',
-                    code: 'built'
-                }
-            ]
-
-        },
-        {
-            state: {
-                mode: 'error',
-                stage: 'running'
-            },
-            next: [
-                {
-                    mode: 'editing',
-                    params: 'complete',
-                    code: 'built'
-                }
-            ]
-
-        }
-    ];
-
-    function intialAppState() {
-        return {
-            mode: 'editing'
-        };
-    }
-    function stateTransition(existingState, changes) {
-
-    }
 
     /*
      * Should only be called when a cell is first inserted into a narrative.
@@ -342,24 +154,6 @@ define([
             });
     }
 
-    function hidePrompts(cell) {
-        // Hide the code input area.
-        cell.input.find('.input_area').addClass('hidden');
-        utils.setCellMeta(cell, 'kbase.widgetCell.user-settings.showCodeInputArea', false);
-
-        // Hide the prompt...
-        cell.input.find('.input_prompt').hide();
-        cell.element.find('.output_area > div:nth-child(1)').css('visibility', 'hidden');
-        // horribleHackToHideElement(cell, '.output_prompt', 10);
-    }
-
-    function addPrompt(cell) {
-        var prompt = document.createElement('div');
-        prompt.innerHTML = div({dataElement: 'prompt', class: 'prompt'});
-        cell.input.find('.input_prompt').after($(prompt));
-        cell.renderIcon();
-    }
-
     function specializeCell(cell) {
         cell.minimize = function () {
             var inputArea = this.input.find('.input_area'),
@@ -396,6 +190,10 @@ define([
                     AppUtils.makeAppIcon(utils.getCellMeta(cell, 'kbase.viewCell.app.spec'))
                 ]);
             }
+        };
+        cell.getIcon = function () {
+            var icon = AppUtils.makeToolbarAppIcon(utils.getCellMeta(cell, 'kbase.appCell.app.spec'));
+            return icon;
         };
     }
 
@@ -447,8 +245,7 @@ define([
             cell.kbase.node = kbaseNode;
             cell.kbase.$node = $(kbaseNode);
 
-            hidePrompts(cell);
-            addPrompt(cell);
+            jupyter.disableKeyListenersForCell(cell);
 
             return viewCellWidget.init()
                 .then(function () {

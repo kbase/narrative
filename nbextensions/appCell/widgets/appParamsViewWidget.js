@@ -277,29 +277,33 @@ define([
 
         function start() {
             // send parent the ready message
-            parentBus.emit('ready');
+            return Promise.try(function () {
+                parentBus.emit('ready');
 
-            // parent will send us our initial parameters
-            parentBus.on('run', function (message) {
-                doAttach(message.node);
+                // parent will send us our initial parameters
+                parentBus.on('run', function (message) {
+                    doAttach(message.node);
 
-                model.setItem('parameters', message.parameters);
+                    model.setItem('parameters', message.parameters);
 
-                // we then create our widgets
-                renderParameters()
-                    .then(function () {
-                        // do something after success
-                        attachEvents();
-                    })
-                    .catch(function (err) {
-                        // do somethig with the error.
-                        console.error('ERROR in start', err);
-                    });
+                    // we then create our widgets
+                    renderParameters()
+                        .then(function () {
+                            // do something after success
+                            attachEvents();
+                        })
+                        .catch(function (err) {
+                            // do somethig with the error.
+                            console.error('ERROR in start', err);
+                        });
+                });
             });
         }
 
         function stop() {
-
+            return Promise.try(function () {
+                // unregister listerrs...
+            });
         }
 
         // CONSTRUCTION

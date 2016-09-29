@@ -4,6 +4,8 @@ require.config({
     // Jupyter does some magic where it merges its /static/ directory
     // with this one (kbase-profile/static)
     paths : {
+        dropzone                                : 'ext_components/dropzone/dist/dropzone-amd-module',
+        narrativeTour                           : 'kbase/js/tour',
         kbaseInputTest                          : 'kbase/js/widgets/function_input/kbaseInputTest',
         api                                     : 'kbase/js/api',
         bluebird                                : 'ext_components/bluebird/js/browser/bluebird.min',
@@ -27,7 +29,7 @@ require.config({
         underscore                              : 'ext_components/underscore/underscore-min',
         'bootstrap-slider'                      : 'ext_components/bootstrap-slider/bootstrap-slider',
         'tipsy'                                 : 'ext_components/jquery.tipsy/js/jquery.tipsy',
-        'css'                                   : 'ext_components/require-css/css.min',
+        // 'css'                                   : 'ext_components/require-css/css.min',
 
         narrativeConfig                         : 'kbase/js/narrativeConfig',
         narrativeMain                           : 'narrativeMain',
@@ -46,9 +48,10 @@ require.config({
         'catalog-client-api'                    : 'kbase/js/api/Catalog',
 
         // Data API dynamic service clients
-        'GenomeAnnotationAPI-client-api'        : 'kbase/js/api/GenomeAnnotationAPIClient',        
-        'AssemblyAPI-client-api'                : 'kbase/js/api/AssemblyAPIClient',        
+        'GenomeAnnotationAPI-client-api'        : 'kbase/js/api/GenomeAnnotationAPIClient',
+        'AssemblyAPI-client-api'                : 'kbase/js/api/AssemblyAPIClient',
         'TaxonAPI-client-api'                   : 'kbase/js/api/TaxonAPIClient',
+        'GenomeSearchUtil-client-api'           : 'kbase/js/api/GenomeSearchUtilClient',
 
         'njs-wrapper-client-api'                : 'kbase/js/api/NarrativeJobServiceWrapper',
         kbaseNarrativeJobStatus                 : 'kbase/js/widgets/narrative_core/kbaseNarrativeJobStatus',
@@ -204,7 +207,7 @@ require.config({
         'kbaseGenomeView'                       : 'kbase/js/widgets/function_output/kbaseGenomeAnnotation',
         'kbaseGenomeAnnotationViewer'           : 'kbase/js/widgets/function_output/kbaseGenomeAnnotationViewer',
         'kbaseGenomeAnnotationAssembly'         : 'kbase/js/widgets/function_output/kbaseGenomeAnnotationAssembly',
-        
+
         'kbaseContigSetView'                    : 'kbase/js/widgets/function_output/kbaseContigSetView',
         'kbaseAssemblyView'                     : 'kbase/js/widgets/function_output/kbaseAssemblyView',
         'AssemblyWidget'                        : 'kbase/js/widgets/function_output/kbaseAssembly',
@@ -277,7 +280,6 @@ require.config({
         'kbaseBlastOutput'                      : 'kbase/js/widgets/function_output/kbaseBlastOutput',
 
         'kbaseRegisterRepoState'                : 'kbase/js/widgets/function_output/kbaseRegisterRepoState',
-        'kbaseViewLiveRunLog'                   : 'kbase/js/widgets/function_output/kbaseViewLiveRunLog',
         'kbaseReportView'                       : 'kbase/js/widgets/function_output/kbaseReportView',
         'kbaseExpressionVolcanoPlot'            : 'kbase/js/widgets/function_output/kbaseExpressionVolcanoPlot',
 

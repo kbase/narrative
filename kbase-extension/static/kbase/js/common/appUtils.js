@@ -11,6 +11,35 @@ define([
 
     var t = html.tag,
         span = t('span'), img = t('img');
+        
+    function makeToolbarAppIcon(appSpec) {
+        // icon is in the spec ...
+        var runtime = Runtime.make(),
+            nmsBase = runtime.config('services.narrative_method_store_image.url'),
+            iconUrl = Props.getDataItem(appSpec, 'info.icon.url');
+
+        if (iconUrl) {
+            return span({style: {padding: '3px 3px 3px 3px'}}, [
+                img({src: nmsBase + iconUrl, style: {maxWidth: '50px', maxHeight: '50px', margin: '0x'}})
+            ]);
+        }
+
+        return span({class: 'fa-stack fa-2x', style: {verticalAlign: 'top', textAlign: 'center', color: 'rgb(103,58,183)', lineHeight: '56px'}}, [
+                span({class: 'fa fa-square fa-stack-2x', style: {color: 'rgb(103,58,183)', lineHeight: '56px'}}),
+                span({class: 'fa fa-inverse fa-stack-1x fa-cube'})
+            ]);
+    }
+    
+     function makeToolbarGenericIcon(fontAwesomeIconName, color) {
+        var iconColor = color || 'silver';
+
+        return span({style: ''}, [
+            span({class: 'fa-stack fa-2x', style: {verticalAlign: 'top', padding: '0', lineHeight: '56px'}}, [
+                span({class: 'fa fa-square fa-stack-2x', style: {color: iconColor, lineHeight: '56px'}}),
+                span({class: 'fa fa-inverse fa-stack-1x fa-' + fontAwesomeIconName})
+            ])
+        ]);
+    }
 
     function makeAppIcon(appSpec) {
         // icon is in the spec ...
@@ -19,7 +48,7 @@ define([
             iconUrl = Props.getDataItem(appSpec, 'info.icon.url');
 
         if (iconUrl) {
-            return span({class: 'fa-stack fa-2x', style: {padding: '2px 3px 3px 3px'}}, [
+            return span({style: {padding: '3px 3px 3px 3px'}}, [
                 img({src: nmsBase + iconUrl, style: {maxWidth: '50px', maxHeight: '50px', margin: '0x'}})
             ]);
         }
@@ -83,10 +112,41 @@ define([
             ])
         ]);
     }
+    
+    function makeToolbarTypeIcon(typeId) {
+        var type = parseType(typeId),
+            iconSpec = narrativeConfig.get('icons'), 
+            color, iconDef, icon;
+        
+        if (iconSpec) {
+            color = iconSpec.color_mapping[type.name];
+            iconDef = iconSpec.data[type.name];
+        }
+        
+        if (iconDef) {
+            icon = iconDef[0];
+        } else {
+            icon = iconSpec.data.DEFAULT[0];
+        }
+        
+        if (!color) {
+            color = 'black';
+        }
+        
+        return span([
+            span({class: 'fa-stack fa-2x', style: {textAlign: 'center', color: color, lineHeight: '56px'}}, [
+                span({class: 'fa fa-circle fa-stack-2x', style: {color: color, lineHeight: '56px'}}),
+                span({class: 'fa fa-inverse fa-stack-1x ' + icon})
+            ])
+        ]);
+    }
 
     return {
         makeAppIcon: makeAppIcon,
         makeGenericIcon: makeGenericIcon,
-        makeTypeIcon: makeTypeIcon
+        makeToolbarAppIcon: makeToolbarAppIcon,
+        makeToolbarGenericIcon: makeToolbarGenericIcon,
+        makeTypeIcon: makeTypeIcon,
+        makeToolbarTypeIcon: makeToolbarTypeIcon
     };
 });

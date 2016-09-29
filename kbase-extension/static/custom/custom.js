@@ -154,7 +154,6 @@ define([
 
             Jupyter.narrative = new Narrative();
             Jupyter.narrative.init();
-            Jupyter.narrative.disableKeyboardManager();
 
             /*
              * Override the move-cursor-down-or-next-cell and
@@ -380,7 +379,7 @@ define([
 
             this.renderMinMax();
 
-            utils.setCellMeta(this, 'kbase.cellState.toggleMinMax', toggleMode);
+            utils.setCellMeta(this, 'kbase.cellState.toggleMinMax', toggleMode, true);
         };
 
         (function () {
@@ -597,6 +596,17 @@ define([
 //                icon
 //            ]);
         };
+        
+        p.getIcon = function () {
+            var iconColor = 'silver';
+
+            return span({style: ''}, [
+                span({class: 'fa-stack fa-2x', style: {textAlign: 'center', color: iconColor}}, [
+                    span({class: 'fa fa-square fa-stack-2x', style: {color: iconColor}}),
+                    span({class: 'fa fa-inverse fa-stack-1x fa-' + 'paragraph'})
+                ])
+            ]);
+        };
 
 
 
@@ -719,9 +729,9 @@ define([
 
                 // if (title) {
                 // cell.setCellState('title', title);
-                utils.setCellMeta(cell, 'kbase.attributes.title', title);
-
-                this.renderPrompt();
+                utils.setCellMeta(cell, 'kbase.attributes.title', title, true);
+                
+                // this.renderPrompt();
 
                 // Extract title from h1, if any. otheriwse, first 50 characters
                 //var title = $html.filter('h1').first().first().text();
@@ -772,29 +782,29 @@ define([
             //     "header will appear as the cell title." +
             //     "-->"
     };
-    
+
     // KEYBOARD MANAGER
-    
+
     /*
      * Ensure that the keyboard manager does not reactivate during interaction
      * with the Narrative.
-     * 
-     * Although we disable the keyboard manager at the outset, Jupyter will 
+     *
+     * Although we disable the keyboard manager at the outset, Jupyter will
      * hook into the blur event for inputs  within an inserted dom node.
      * This causes havoc when kbase widgets manipulate the dom by inserting
      * form controls.
-     * 
+     *
      * So ... we just disable this behavior by overriding the register_events
      * method.
-     * 
+     *
      */
-    
-    (function () {
-        keyboardManager.KeyboardManager.prototype.register_events = function (e) {
-            // NOOP
-            return;
-        };
-    }());
+
+     (function () {
+         keyboardManager.KeyboardManager.prototype.register_events = function (e) {
+             // NOOP
+             return;
+         };
+     }());
 
 
 
@@ -844,6 +854,17 @@ define([
 
             prompt.innerHTML = 'prompt here';
         };
+        
+        p.getIcon = function () {
+            var iconColor = 'silver';
+
+            return span({style: ''}, [
+                span({class: 'fa-stack fa-2x', style: {textAlign: 'center', color: iconColor}}, [
+                    span({class: 'fa fa-square fa-stack-2x', style: {color: iconColor}}),
+                    span({class: 'fa fa-inverse fa-stack-1x fa-' + 'terminal'})
+                ])
+            ]);
+        };
 
         originalMethod = codeCell.CodeCell.prototype.bind_events;
         p.bind_events = function () {
@@ -876,6 +897,24 @@ define([
             $cellNode.on('hideCodeArea.cell', function () {
                 thisCell.hideCodeInputArea();
             });
+            
+            if (this.code_mirror) {
+                this.code_mirror.on("change", function(cm, change) {
+                    // alert(' Rendering code cell ', cm, change);
+                    var lineCount = cm.lineCount(),
+                        commentRe = /^\.*?\#\s*(.*)$/;
+                    for (var i = 0; i < lineCount; i += 1) {
+                        var line = cm.getLine(i),
+                            m = commentRe.exec(line);
+                        if (m) {
+                            utils.setCellMeta(thisCell, 'kbase.attributes.title', m[1], true);
+                            break;
+                        }
+                    }
+                    // console.log('Code mirror?', cm, change);
+                    // utils.setCellMeta(cell, 'kbase.attributes.title', 'some title');
+                });
+            }
         };
 
         p.hideCodeInputArea = function () {
@@ -883,14 +922,23 @@ define([
             if (codeInputArea) {
                 codeInputArea.classList.add('hidden');
             }
-        }
+        };
+        
+        p.isCodeShowing = function () {
+            var codeInputArea = this.input.find('.input_area')[0];
+            if (codeInputArea) {
+                return !codeInputArea.classList.contains('hidden');
+            }
+            return false;
+        };
 
         p.toggleCodeInputArea = function() {
             var codeInputArea = this.input.find('.input_area')[0];
             if (codeInputArea) {
                 codeInputArea.classList.toggle('hidden');
+                this.metadata = this.metadata;
             }
-        }
+        };
     }());
 
     /*

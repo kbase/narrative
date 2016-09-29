@@ -259,6 +259,7 @@ define([
             });
         },
         handleCommMessages: function (msg) {
+            // console.log('handleCommMessages', msg);
             var msgType = msg.content.data.msg_type;
             switch (msgType) {
                 case 'new_job':
@@ -324,6 +325,8 @@ define([
                             widgetParameters: jobStateMessage.widget_info,
                             owner: jobStateMessage.owner
                         };
+                        
+                        // console.log('job-status (all)', jobId, jobStateMessage.state);
 
                         this.sendJobMessage('job-status', jobId, {
                             jobId: jobId,
@@ -472,12 +475,20 @@ define([
                     new kbaseAccordion($modalBody.find('div#kb-job-err-trace'), {
                         elements: [{
                             title: 'Detailed Error Information',
-                            body: $('<table class="table table-bordered"><tr><th>code:</th><td>' + content.code +
-                                    '</td></tr><tr><th>error:</th><td>' + content.message +
-                                    '</td></tr><tr><th>type:</th><td>' + content.name +
-                                    '</td></tr><tr><th>source:</th><td>' + content.source + '</td></tr></table>')
+                            body: $('<table class="table table-bordered"><tr><th>code:</th><td>' + content.code + '</td></tr>' +
+                                    '<tr><th>error:</th><td>' + content.message + '</td></tr>' +
+                                    (function () {
+                                        if (content.service) {
+                                            return '<tr><th>service:</th><td>' + content.service + '</td></tr>';
+                                        }
+                                        return '';
+                                    }()) +
+                                    '<tr><th>type:</th><td>' + content.name + '</td></tr>' +
+                                    '<tr><th>source:</th><td>' + content.source + '</td></tr></table>')
                             }]
                     });
+                    
+
                     $modalBody.find('button#kb-job-err-report').click(function (e) {
                         alert('reporting error!');
                     });

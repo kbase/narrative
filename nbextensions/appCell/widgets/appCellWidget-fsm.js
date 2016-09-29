@@ -106,7 +106,7 @@ define([
                     }
                 },
                 label: 'editing',
-                message: 'You may edit the parameters for this App. All required parameters are not currently entered. When they are complete, you will be able to run the app.'
+                message: 'You may edit the parameters for this App. You must fill in all required parameters (indicated by red arrows) before you can run the App.'
             },
             next: [
                 {
@@ -222,7 +222,7 @@ define([
             doc: [
                 'This state is entered when the cell is first executing, and before the back end has received the code and begun processing it.',
                 'It is necessary to allow the UI to immediately switch to running mode, as there can be significant latency between ',
-                'executing code and receiving the first message that it has is being considered for excecution.'
+                'executing code and receiving the first message that it is being considered for excecution.'
             ],
             ui: {
                 tabs: {
@@ -275,7 +275,7 @@ define([
                     }
                 },
                 label: 'sending...',
-                message: 'Launching the app...'
+                message: 'Launching the App...'
             },
             on: {
                 enter: {
@@ -356,7 +356,7 @@ define([
                     }
                 },
                 label: 'executing...',
-                message: 'The app has now entered the execution engine'
+                message: 'The App has now entered the execution engine.'
             },
             on: {
                 resume: {
@@ -447,7 +447,7 @@ define([
                     }
                 },
                 label: 'queued...',
-                message: 'The app is queued for running.'
+                message: 'The App is queued for running.'
             },
             on: {
                 enter: {
@@ -557,7 +557,7 @@ define([
                     }
                 },
                 label: 'running...',
-                message: 'The app is now running.'
+                message: 'The App is now running.'
             },
             on: {
                 enter: {
@@ -653,7 +653,7 @@ define([
                     }
                 },
                 label: 'canceling...',
-                message: 'Canceling the app...'
+                message: 'Canceling App execution...'
             },
             next: [
                 {
@@ -726,7 +726,7 @@ define([
                     }
                 },
                 label: 'canceled',
-                message: 'The app execution has been successfully canceled'
+                message: 'App execution has been successfully canceled.'
             },
             next: [
                 {
@@ -782,7 +782,7 @@ define([
                     }
                 },
                 label: 'completed',
-                message: 'The app has successfully run'
+                message: 'The App has successfully finished.'
             },
             on: {
                 enter: {
@@ -865,7 +865,7 @@ define([
                     }
                 },
                 label: 'error',
-                message: 'There was an error launching the app'
+                message: 'There was an error launching the App.'
             },
             next: [
                 {
@@ -927,7 +927,7 @@ define([
                     }
                 },
                 label: 'error',
-                message: 'An error was encountered while the app was queued'
+                message: 'An error was encountered while the App was queued.'
             },
             next: [
                 {
@@ -989,7 +989,7 @@ define([
                     }
                 },
                 label: 'error',
-                message: 'An error was encountered running the app'
+                message: 'An error was encountered running the App.'
             },
             next: [
                 {
@@ -1050,7 +1050,7 @@ define([
                     }
                 },
                 label: 'error',
-                message: 'An error was encountered'
+                message: 'An error was encountered.'
             },
             next: [
                 {
@@ -1110,7 +1110,7 @@ define([
                     }
                 },
                 label: 'error',
-                message: 'An internal error was encountered'
+                message: 'An internal error was encountered.'
             },
             next: [
                 {

@@ -11,7 +11,9 @@ define(
         'kbaseAuthenticatedWidget',
         'narrativeConfig',
         'util/string',
-        
+        'common/ui',
+        'kb_common/html',
+
         'jquery-dataTables',
         'jquery-dataTables-bootstrap',
         'kbase-client-api'
@@ -21,8 +23,10 @@ define(
     $,
     kbaseAuthenticatedWidget,
     Config,
-    StringUtil
-        
+    StringUtil,
+    UI,
+    html
+
     ) {
     return KBWidget({
         name: 'kbaseReportView',
@@ -34,6 +38,7 @@ define(
             report_window_line_height: 10,
             showReportText: true,
             showCreatedObjects: false,
+            showFiles : true,
             inNarrative: true, // todo: toggles whether data links show in narrative or new page
 
             wsURL: Config.url('workspace'),
@@ -83,6 +88,10 @@ define(
         render: function () {
             var self = this;
 
+            var div = html.tag('div');
+
+            ui = UI.make({node: self.$mainPanel.get(0)});
+
             // Handle warnings?
             if (self.reportData.warnings) {
                 if (self.reportData.warnings.length > 0) {
@@ -101,14 +110,12 @@ define(
                 }
             }
 
-            if (self.options.showReportText) {
-                var $report_window = $('<textarea style="width:100%;font-family:Monaco,monospace;font-size:9pt;color:#555;resize:vertical;" rows="' +
-                    self.options.report_window_line_height + '" readonly>')
-                    .append(self.reportData.text_message);
-                self.$mainPanel.append($report_window);
-            }
 
+//XXX THIS IS ON FOR DEBUGGING PURPOSES
+self.options.showCreatedObjects = true;
             if (self.options.showCreatedObjects) {
+                var someDiv = div({dataElement : 'created-objects'});
+                self.$mainPanel.append(someDiv);
                 if (self.reportData.objects_created) {
                     if (self.reportData.objects_created.length > 0) {
 
@@ -159,7 +166,23 @@ define(
                                 var iDisplayLength = 5;
                                 var sDom = "ft<ip>";
                                 var $tblDiv = $('<div>').css('margin-top', '10px');
-                                self.$mainPanel.append($tblDiv);
+                                //self.$mainPanel.append($tblDiv);
+
+                                var objTableId = self.uuid();
+
+                                ui.setContent('created-objects',
+                                    ui.buildCollapsiblePanel({
+                                        title: 'Objects',
+                                        name: 'created-objects-toggle',
+                                        hidden: false,
+                                        type: 'default',
+                                        classes: ['kb-panel-container'],
+                                        body: "<div id = '" + objTableId + "' style = 'margin-top : 10px'></div>",
+                                    })
+                                );
+
+                                var $tblDiv = $('#' + objTableId);
+
                                 if (displayData.length <= iDisplayLength) {
                                     var $objTable = $('<table class="table table-striped table-bordered" style="margin-left: auto; margin-right: auto;">');
 
@@ -234,6 +257,54 @@ define(
                         });
                     }
                 }
+            }
+
+            if (self.options.showReportText) {
+
+                var $report_window = $('<textarea style="width:100%;font-family:Monaco,monospace;font-size:9pt;color:#555;resize:vertical;" rows="' +
+                    self.options.report_window_line_height + '" readonly>')
+                    .append(self.reportData.text_message);
+                var reportHTML = $.jqElem('div').append($report_window).html();
+
+                var someDiv = div({dataElement : 'report-section'});
+
+                self.$mainPanel.append(someDiv);
+
+                var sectionTitle = $.jqElem('div')
+                  .append('Report &nbsp;&nbsp;')
+                  .append(
+                    $.jqElem('a').append("Download")
+                  )
+                  .html();
+                ;
+
+                ui.setContent('report-section',
+                    ui.buildCollapsiblePanel({
+                        title: sectionTitle,
+                        name: 'report-section-toggle',
+                        hidden: false,
+                        type: 'default',
+                        classes: ['kb-panel-container'],
+                        body: reportHTML
+                    })
+                );
+            }
+
+            if (self.options.showFiles) {
+              var someDiv = div({dataElement : 'downloadable-files'});
+              self.$mainPanel.append(someDiv);
+
+              ui.setContent('downloadable-files',
+                  ui.buildCollapsiblePanel({
+                      title: 'Files',
+                      name: 'downloadable-files-toggle',
+                      hidden: false,
+                      type: 'default',
+                      classes: ['kb-panel-container'],
+                      body: "Downloadable file content will go here!"
+                  })
+              );
+
             }
 
             this.loading(false);

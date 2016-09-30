@@ -141,22 +141,84 @@ define (
                 return $('<tr>').append($('<td>').append(key)).append($('<td>').append(value));
             }
 
+	    var reads_type = ''
 	    if (this.reads["info"][2].startsWith("KBaseFile.PairedEndLibrary")){
-		$overviewTable.append(get_table_row(
-		    'KBase Object Name',
-                    '<a href="/#dataview/' + this.reference + '" target="_blank">' 
-			+ this.reads["info"][1] +'</a>' ));
-                // leave out version for now, because that is not passed into data widgets
-		if (this.reads["data"].hasOwnProperty("strain")){
-		    $overviewTable.append(get_table_row('Genus', this.reads["data"]['strain']['genus'] ));
-		    $overviewTable.append(get_table_row('Species', this.reads["data"]['strain']['species'] ));
-		    $overviewTable.append(get_table_row('Strain', this.reads["data"]['strain']['strain'] ));
+		reads_type = 'Paired End'
+	    } else if (this.reads["info"][2].startsWith("KBaseFile.SingleEndLibrary")){
+		reads_type = 'Single End'
+	    }
+
+
+	    $overviewTable.append(get_table_row(
+		'Name',
+                '<a href="/#dataview/' + this.reference + '" target="_blank">' 
+		    + this.reads["info"][1] +'</a>' ));
+            // leave out version for now, because that is not passed into data widgets
+	    $overviewTable.append(get_table_row('Type', reads_type ));
+
+/* KEEP COMMENTED OUT UNTIL UPLOADER CALCULATES THESE
+	    if (this.reads["data"].hasOwnProperty("strain")){
+		$overviewTable.append(get_table_row('Species/Taxa', this.reads["data"]['strain']['genus'] + " " + 
+						    this.reads["data"]['strain']['species'] + " " + 
+						    this.reads["data"]['strain']['strain'] ));
+	    }
+	    else{
+		$overviewTable.append(get_table_row('Species/Taxa', 'Not specified' ));
+	    }
+
+	    if(this.reads["data"].hasOwnProperty("read_count")){
+		$overviewTable.append(get_table_row('Read Count', this.reads["data"]['read_count'] ));
+	    }else{
+		$overviewTable.append(get_table_row('Read Count', "Not Specified"));
+	    }
+
+	    if(this.reads["data"].hasOwnProperty("read_size")){
+		$overviewTable.append(get_table_row('Read Size', this.reads["data"]['read_size'] ));
+	    }else{
+		$overviewTable.append(get_table_row('Read Size', "Not Specified"));
+	    }
+*/
+	    $overviewTable.append(get_table_row('Platform', this.reads["data"]['sequencing_tech'] ));
+
+	    if(this.reads["data"].hasOwnProperty("single_genome")){
+		display_value = "No";
+		if (this.reads["data"]['read_size'] === 1 ){
+		    display_value = "Yes";
 		}
-		else{
-		    $overviewTable.append(get_table_row('Genus', 'Not specified' ));
-		    $overviewTable.append(get_table_row('Species', 'Not specified' ));
-		    $overviewTable.append(get_table_row('Strain', 'Not specified' ));
+		$overviewTable.append(get_table_row('Single Genome', display_value ));
+	    }else{
+		$overviewTable.append(get_table_row('Single Genome', "Not Specified"));
+	    }
+
+	    if (reads_type === "Paired End"){
+		if(this.reads["data"].hasOwnProperty("insert_size_mean")){
+		    $overviewTable.append(get_table_row('Insert Size Mean', this.reads["data"]['insert_size_mean'] ));
+		}else{
+		    $overviewTable.append(get_table_row('Insert Size Mean', "Not Specified"));
 		}
+
+		if(this.reads["data"].hasOwnProperty("insert_size_std_dev")){
+		    $overviewTable.append(get_table_row('Insert Size Std Dev', this.reads["data"]['insert_size_std_dev'] ));
+		}else{
+		    $overviewTable.append(get_table_row('Insert Size Std Dev', "Not Specified"));
+		}
+
+		var display_value = "No";//temp value for display purposes
+
+		if(this.reads["data"].hasOwnProperty("read_orientation_outward")){
+		    display_value = "No";
+		    if (this.reads["data"]['read_orientation_outward'] === 1 ){
+			display_value = "Yes";
+		    }
+		    $overviewTable.append(get_table_row('Outward Read Orientation', display_value ));
+		}else{
+		    $overviewTable.append(get_table_row('Outward Read Orientation', "Not Specified"));
+		}
+	    }
+
+	    $container.append($overviewTable);
+	},
+/*
 		if (this.reads["data"].hasOwnProperty("source")){
 		    if(this.reads["data"]["source"].hasOwnProperty("source")){
 			$overviewTable.append(get_table_row('Source', this.reads["data"]['source']['source']));
@@ -181,60 +243,12 @@ define (
 		    $overviewTable.append(get_table_row('Project ID', 'Not specified' ));
 		}
 		
-		$overviewTable.append(get_table_row('Platform', this.reads["data"]['sequencing_tech'] ));
-
-		if(this.reads["data"].hasOwnProperty("read_count")){
-		    $overviewTable.append(get_table_row('Read Count', this.reads["data"]['read_count'] ));
-		}else{
-		    $overviewTable.append(get_table_row('Read Count', "Not Specified"));
-		}
-
-		if(this.reads["data"].hasOwnProperty("read_size")){
-		    $overviewTable.append(get_table_row('Read Size', this.reads["data"]['read_size'] ));
-		}else{
-		    $overviewTable.append(get_table_row('Read Size', "Not Specified"));
-		}
-
-		if(this.reads["data"].hasOwnProperty("insert_size_mean")){
-		    $overviewTable.append(get_table_row('Insert Size Mean', this.reads["data"]['insert_size_mean'] ));
-		}else{
-		    $overviewTable.append(get_table_row('Insert Size Mean', "Not Specified"));
-		}
-
-		if(this.reads["data"].hasOwnProperty("insert_size_std_dev")){
-		    $overviewTable.append(get_table_row('Insert Size Std Dev', this.reads["data"]['insert_size_std_dev'] ));
-		}else{
-		    $overviewTable.append(get_table_row('Insert Size Std Dev', "Not Specified"));
-		}
-
 		if(this.reads["data"].hasOwnProperty("gc_content")){
 		    $overviewTable.append(get_table_row('GC Content', this.reads["data"]['gc_content'] ));
 		}else{
 		    $overviewTable.append(get_table_row('GC Content', "Not Specified"));
 		}
 
-		var display_value = "No";//temp value for display purposes
-
-		if(this.reads["data"].hasOwnProperty("single_genome")){
-		    display_value = "No";
-		    if (this.reads["data"]['read_size'] === 1 ){
-			display_value = "Yes";
-		    }
-		    $overviewTable.append(get_table_row('Single Genome', display_value ));
-		}else{
-		    $overviewTable.append(get_table_row('Single Genome', "Not Specified"));
-		}
-
-		if(this.reads["data"].hasOwnProperty("read_orientation_outward")){
-		    display_value = "No";
-		    if (this.reads["data"]['read_orientation_outward'] === 1 ){
-			display_value = "Yes";
-		    }
-		    $overviewTable.append(get_table_row('Outward Read Orientation', display_value ));
-		}else{
-		    $overviewTable.append(get_table_row('Outward Read Orientation', "Not Specified"));
-		}
-		
 		if(this.reads["data"].hasOwnProperty("interleaved")){
 		    display_value = "No";
 		    if (this.reads["data"]['interleaved'] === 1 ){
@@ -266,10 +280,8 @@ define (
 			$overviewTable.append(get_table_row('Right Lbrary File Name', "Not Specified"));
 		    }
 		}
-	    }
+*/
 
-	    $container.append($overviewTable);
-	},
 
         loggedInCallback: function(event, auth) {
             this.token = auth.token;

@@ -103,7 +103,16 @@ define([
         // Test if given type name is one of the set types
         isSetType: function(type_name) {
             var t = ['SingleEndLibrarySet', 'PairedEndLibrarySet'];
-            return (_.contains(t, type_name));
+            return _.some(t, function(s) { return type_name.includes(s) });
+        },
+
+        // Test if item is in a set
+        // Input: an object info tuple, as returned by the
+        // workspace API for list_objects()
+        inAnySet: function(item_info) {
+            var item_id = this.itemId(item_info);
+            console.debug('item_id = ', item_id);
+            return _.has(this.setItems, item_id);
         },
 
         // Utility function to portably return the identifier to
@@ -111,40 +120,42 @@ define([
         itemId: function(item) { return item[0]; },
 
         // Extract, into 'setItems' and 'setInfo', the
-        // the data items in the input list which are set types.
-        // The input list is unchanged, but the output list
-        // is a copy with any items contained in a set, removed.
-        extractSets: function(data_list) {
+        // the data items in the input workspace.
+        extractSets: function(ws_id) {
+            var self = this;
             // clear out member variables
             this.setItems = {}; 
             this.setInfo = {};
-            // find and extract
-            var ws_id = data_list[6]; // current workspace
             _.each(
                 this.getWorkspaceSets(ws_id),
-                // for each set type, add mappings of item_id -> set_id
+                // for each set type, add mappings of {item_id: {set_id : 1, ..}}
                 // to the instance 'setItems' object
                 // and info to 'setInfo'
-                function(item) {
-                    var set_id = this.itemId(item);
-                    var set_items = this.getWorkspaceSetMembers(set_id);
-                    _.each(set_items, function(value) {
-                        var item_id = this.itemId(item);
-                        if (!_.has(this.setItems, item_id)) {
-                            this.setItems[item_id] = {};
+                function(set_info) {
+                    var set_id = self.itemId(set_info);
+                    var set_items = self.getWorkspaceSetMembers(set_id);
+                    var set_item_ids = [];
+                    _.each(set_items, function(item_info) {
+                        var item_id = self.itemId(item_info);
+                        set_item_ids.push(item_id);
+                        if (!_.has(self.setItems, item_id)) {
+                            self.setItems[item_id] = {};
                         }
-                        this.setItems[item_id][set_id] = 1;
+                        self.setItems[item_id][set_id] = 1;
+                        //console.debug('adding mapping: set ' + set_id + ' <- ' + item_id + ' item');
                     });
-                    this.setInfo[set_id] = {
-                        'count': set_items.length
-                    };
+                    self.setInfo[set_id] = {item_ids: set_item_ids};
                 }
             );
             // return input array with any items that are inside
             // a set filtered out (but not the set objects themselves)
-            return _.filter(data_list, function(item) {
-                return !_.has(this.setItems, this.itemId(item));
-            });
+            //return _.filter(data_list, function(item) {
+            //    return !_.has(self.setItems, self.itemId(item));
+            //});
+        },
+
+        itemIdsInSet: function(set_id) {
+            return this.setInfo[set_id].item_ids;
         },
 
         // Return a list of workspace items which are set/group types
@@ -154,9 +165,9 @@ define([
 
         mock_getWorkspaceSets: function(ws_id) {
             return [
-                    this.MOCK_SET_ID, 'foo', 'FooType.PairedEndLibrarySet-X', '2010-09-06',
+                [this.MOCK_SET_ID, 'foo', 'FooType.PairedEndLibrarySet-X', '2010-09-06',
                     1, 'dangunter', ws_id, 'FooWorkspace', '00DEADBEEFBADDECAF00',
-                    1234, {}
+                    1234, {}]
                 ];
         },
 
@@ -180,7 +191,7 @@ define([
         // Get the hardcoded workspace set objects
         mock_list_objects: function(ws_id) {
             var objs = this.mock_getWorkspaceSetMembers(ws_id);
-            objs.push(this.mock_getWorkspaceSets(ws_id));
+            objs = objs.concat(objs, this.mock_getWorkspaceSets(ws_id));
             return objs;
         },
 
@@ -421,8 +432,10 @@ define([
 
                             /* Changes for hierarchical data panel (KBASE-4566) */
                             // Add mock objects
-                            console.info('@@ Add mock objects');
-                            infoList = infoList.concat(this.mock_list_objects(infoList[0][6]));
+                            console.info('@@ Add mock objects, build data structures');
+                            var cur_ws_id = infoList[0][6];
+                            infoList = infoList.concat(this.mock_list_objects(cur_ws_id));
+                            this.extractSets(cur_ws_id);
                             /* END Changed for KBASE-4566 */
 
                             // object_info:
@@ -442,11 +455,18 @@ define([
                                 if (infoList[i][2].indexOf('KBaseNarrative') === 0) {
                                     continue;
                                 }
+
+                                // For KBASE-4566, skip if member of a set
+                                if (this.inAnySet(infoList[i])) {
+                                    continue;
+                                }
+
                                 this.objectList.push({
                                     key: StringUtil.uuid(), // always generate the DnD key
                                     $div: null,
                                     info: infoList[i],
-                                    attached: false
+                                    attached: false,
+                                    is_set_type: this.isSetType(infoList[i][2])
                                 });
                                 // type is formatted like this: Module.Type-1.0
                                 // typeKey = Module.Type
@@ -466,6 +486,8 @@ define([
                                 }
                                 this.availableTypes[typeName].count++;
                             }
+
+
 
                             /* Do another lookup if all of these conditions are met:
                              * 1. total object list length < max objs allowed to fetch/render
@@ -956,6 +978,14 @@ define([
                     function () {
                         self.setSelected($(this).closest('.kb-data-list-obj-row'), object_info);
                         toggleAdvanced();
+
+                        /* KBASE-4566 */
+                        if (self.isSetType(object_info[2])) {
+                            console.debug('@@ clicked on a set. members:');
+                            var cur_set_id = self.itemId(object_info);
+                            console.debug(self.itemIdsInSet(cur_set_id));
+                        }
+
                     });
 
             var $topTable = $('<table>').attr('kb-oid', object_key)
@@ -1212,6 +1242,7 @@ define([
             var self = this;
 
             self.detachAllRows();
+            self.extractSets(_.pluck(self.objectList, 'info'));
 
             if (self.objectList.length > 0) {
                 for (var i = 0; i < self.objectList.length; i++) {
@@ -1226,6 +1257,17 @@ define([
                     if (self.objectList[i].key == undefined) {
                         self.objectList[i].key = StringUtil.uuid();
                     }
+
+                    /* Issue KBASE-4566 */
+                    // Skip objects "inside" a set
+                    var cur_obj_info = this.objectList[i].info;
+                    if (this.inAnySet(cur_obj_info)) {
+                        console.debug('not attaching object #' + i + ', it is in a set');
+                        continue;
+                    }
+                    console.debug('attaching object #' + i);
+                    /* end: KBASE-4566 */
+
                     self.attachRow(i);
                 }
                 if (Jupyter.narrative.readonly) {

@@ -150,6 +150,8 @@ require.config({
         /***
          * CUSTOM OUTPUT AND VIEWER WIDGETS
          ***/
+	'kbaseReadsViewer'                      : 'kbase/js/widgets/function_output/kbaseReadsViewer',
+
         'kbaseMatrix2DAbstract'                 : 'kbase/js/widgets/function_output/kbaseMatrix2DAbstract',
         'kbaseGrowthMatrixAbstract'             : 'kbase/js/widgets/function_output/kbaseGrowthMatrixAbstract',
         'kbaseGrowthMatrix'                     : 'kbase/js/widgets/function_output/kbaseGrowthMatrix',

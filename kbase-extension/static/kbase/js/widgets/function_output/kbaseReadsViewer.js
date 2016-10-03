@@ -109,8 +109,11 @@ define (
          */
         render: function() {
             var s = this.options.data;
-	    
-	    this.reference =  this.options.wsName + '/' + this.options.objId;
+	    if (this.options._obj_info){
+		this.reference =  this.options.wsName + '/' + this.options.objId + '/' + this.options._obj_info['version'];
+	    }else{
+		this.reference =  this.options.wsName + '/' + this.options.objId;
+	    }
 	    Promise.resolve(this.wsClient.get_objects([{ref: this.reference}]))
             .then(function(results) {
                 this.reads = results[0];
@@ -119,8 +122,23 @@ define (
 		console.log(this.reads);
             }.bind(this))
             .catch(function(error) {
-		console.error(error);
-		alert('An error happened');
+		console.error("Render Function Error : ", error);
+                var errorMssg = '';
+		if (error && typeof error === 'object'){
+                    if(error.error) {
+			errorMssg = JSON.stringify(error.error);
+			if(error.error.message){
+                            errorMssg = error.error.message;
+                            if(error.error.error){
+				errorMssg += '<br><b>Error Trace:</b>:' + error.error.error;
+                            }
+			} else {
+                            errorMssg = JSON.stringify(error.error);
+			}
+                    } else { errorMssg = error.message; }
+		}
+		else{ errorMssg = "Undefined error"}
+		this.$elem.append('<div>'+errorMssg+'</div>')
             });
 
             return this;
@@ -140,6 +158,8 @@ define (
             function get_table_row(key, value) {
                 return $('<tr>').append($('<td>').append(key)).append($('<td>').append(value));
             }
+
+	    console.log("OPTIONS:" + this.options);
 
 	    var reads_type = ''
 	    if (this.reads["info"][2].startsWith("KBaseFile.PairedEndLibrary")){

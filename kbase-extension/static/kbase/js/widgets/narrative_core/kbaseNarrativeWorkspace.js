@@ -475,8 +475,18 @@ define([
         },
 
         determineMethodCellType: function(spec) {
-            if (spec.info.id === 'NarrativeTest/test_editor') {
-                return 'editor';
+            if (spec.info.app_type) {
+                // Should be working after this PR will be deployed:
+                // https://github.com/kbase/narrative_method_store/pull/36
+                if (spec.info.app_type === 'editor') {
+                    return 'editor';
+                } else if (spec.info.app_type === 'viewer') {
+                    return 'view';
+                } else if (spec.info.app_type === 'widget') {
+                    return 'widget';
+                }
+                // spec.info.app_type should be "app" by default, but we still
+                // use logic from below until we switch all viewers to app_type.
             }
 
             // An app will execute via the method described in the behavior. If

@@ -97,7 +97,7 @@ define([
             Changes for hierarchical data panel (KBASE-4566)
         */
         setItems: { }, // item_id -> {set_id -> 1, ..}
-        setInfo: { }, // set_id -> { count: , ..set info.. }
+        setInfo: { }, // set_id -> { count: , div: , expanded: ,... }
         MOCK_SET_ID: 666, // hardcoded workspace set object id
 
         // Test if given type name is one of the set types
@@ -106,13 +106,42 @@ define([
             return _.some(t, function(s) { return type_name.includes(s) });
         },
 
-        // Test if item is in a set
-        // Input: an object info tuple, as returned by the
-        // workspace API for list_objects()
+        /** 
+         * Test if item is in a set.
+         *
+         * @param item_info an object info tuple, as returned by the
+         *                  workspace API for list_objects()
+         * @return true or false
+        */
         inAnySet: function(item_info) {
             var item_id = this.itemId(item_info);
-            console.debug('item_id = ', item_id);
+            //console.debug('item_id = ', item_id);
             return _.has(this.setItems, item_id);
+        },
+
+        /** 
+         * Get item parents.
+         *
+         * @param item_info an object info tuple, as returned by the
+         *                  workspace API for list_objects()
+         * @return 
+        */
+        getItemParents: function(item_info) {
+            var item_id = this.itemId(item_info);
+            // empty if not in ANY set
+            if (!_.has(this.setItems, item_id)) {
+                return [];
+            }
+            var self = this;
+            // Construct return value
+            return _.map(
+                _.keys(this.setItems[item_id]),
+                function(key) {
+                    return {'item_id': key,
+                            'expanded': self.setInfo[key].expanded,
+                            'div': self.setInfo[key].div};
+                }
+            );
         },
 
         // Utility function to portably return the identifier to
@@ -142,7 +171,7 @@ define([
                             self.setItems[item_id] = {};
                         }
                         self.setItems[item_id][set_id] = 1;
-                        //console.debug('adding mapping: set ' + set_id + ' <- ' + item_id + ' item');
+                        console.debug('adding mapping: set ' + set_id + ' <- ' + item_id + ' item');
                     });
                     self.setInfo[set_id] = {item_ids: set_item_ids};
                 }
@@ -457,9 +486,9 @@ define([
                                 }
 
                                 // For KBASE-4566, skip if member of a set
-                                if (this.inAnySet(infoList[i])) {
-                                    continue;
-                                }
+                                //if (this.inAnySet(infoList[i])) {
+                                //    continue;
+                                //}
 
                                 this.objectList.push({
                                     key: StringUtil.uuid(), // always generate the DnD key
@@ -1173,12 +1202,11 @@ define([
 
                 if (!self.searchFilterOn) { // if search filter is off, then we just are showing everything
                     var start = self.n_objs_rendered;
-                    for (var i = start; i < self.objectList.length; i++) {
-                        // only show them as we scroll to them
-                        if (self.n_objs_rendered >= start + self.options.objs_to_render_on_scroll) {
-                            break;
-                        }
-                        self.attachRow(i);
+                    var limit = start + self.options.objs_to_render_on_scroll;
+                    for (var i = start;
+                         (i < self.objectList.length) && (self.n_objs_rendered < limit);
+                         i++) {
+                        self.n_objs_rendered += self.attachObjectAtIndex(i);
                     }
                 } else {
                     // search filter is on, so we have to base this on what is currently filtered
@@ -1188,39 +1216,73 @@ define([
                         if (self.n_filteredObjsRendered >= start + self.options.objs_to_render_on_scroll) {
                             break;
                         }
-                        self.attachRowElement(self.currentMatch[i]);
-                        self.n_filteredObjsRendered++;
+                        self.attachObject(self.currentMatch[i]);
+                        self.n_filteredObjsRendered++; 
                     }
                 }
             }
         },
-        attachRow: function (index) {
-            var obj = this.objectList[index];
+
+        /**
+         * Attach one object from the list
+         * to the datalist *if* it is not in a set,
+         * or expanded in a set. Determine where to 
+         * attach the object in the hierarchy, and pass this
+         * information to the attachObject() function.
+         *
+         * @param i Index of object in this.objectList
+         */
+        attachObjectAtIndex: function(i) {
+            var obj_info = this.objectList[i].info,
+                rendered = false;
+
+            if (this.inAnySet(obj_info)) {
+                var parents = this.getItemParents(obj_info);
+                if (parents.length === 0 ) {
+                    console.debug(i + ': Error! No parent found');
+                }
+                else if (_.some(_.pluck(parents, 'expanded'))) {
+                    console.debug(i + ': Adding expanded set member');
+                    // self.attachObject(this.objectList[i], parents[i].div)
+                    rendered = true;
+                }
+                else {
+                    console.debug( i + ': Set not expanded');
+                }
+            }
+            else {
+                console.debug(i + ' not in any set:', obj_info);
+                //console.debug('attaching object #' + i);
+                this.attachObject(this.objectList[i], null);
+                rendered = true;
+            }
+            return rendered;
+        },
+
+        /**
+         * Add an object to the list.
+         *
+         * @param obj Object to attach (one item from this.objectList)
+         * @param $parentDiv Parent 'div' to which to add.
+         *        If null, use default main list 'div'.
+         */
+        attachObject: function (obj, $parentDiv) {
             if (obj.attached) {
                 return;
             }
+            if (!$parentDiv) {
+                $parentDiv = this.$mainListDiv;
+            }
             if (obj.$div) {
-                this.$mainListDiv.append(obj.$div);
+                $parentDiv.append(obj.$div);
             } else {
                 obj.$div = this.renderObjectRowDiv(obj.info, obj.key);
-                this.$mainListDiv.append(obj.$div);
+                $parentDiv.append(obj.$div);
             }
             obj.attached = true;
             this.n_objs_rendered++;
         },
-        attachRowElement: function (row) {
-            if (row.attached) {
-                return;
-            } // return if we are already attached
-            if (row.$div) {
-                this.$mainListDiv.append(row.$div);
-            } else {
-                row.$div = this.renderObjectRowDiv(row.info, row.key);
-                this.$mainListDiv.append(row.$div);
-            }
-            row.attached = true;
-            this.n_objs_rendered++;
-        },
+
         detachAllRows: function () {
             for (var i = 0; i < this.objectList.length; i++) {
                 this.detachRow(i);
@@ -1238,37 +1300,28 @@ define([
                 this.n_objs_rendered--;
             }
         },
+
+
         renderList: function () {
             var self = this;
 
             self.detachAllRows();
+            self.n_objs_rendered = 0; // added: KBASE-4566
             self.extractSets(_.pluck(self.objectList, 'info'));
 
             if (self.objectList.length > 0) {
-                for (var i = 0; i < self.objectList.length; i++) {
-                    // only show up to the given number
-                    if (i >= self.options.objs_to_render_to_start) {
-                        self.n_objs_rendered = i;
-                        break;
-                    }
+                var limit = self.options.objs_to_render_to_start;
+                for (var i = 0;
+                     i < self.objectList.length && (self.n_objs_rendered < limit);
+                     i++) {
+                    console.debug('renderList: object', i);
                     // If object does not have a key, define one.
                     // This will be used for 'id' of rendered element.
                     // But do *not* replace an existing key.
-                    if (self.objectList[i].key == undefined) {
+                    if (self.objectList[i].key === undefined) {
                         self.objectList[i].key = StringUtil.uuid();
                     }
-
-                    /* Issue KBASE-4566 */
-                    // Skip objects "inside" a set
-                    var cur_obj_info = this.objectList[i].info;
-                    if (this.inAnySet(cur_obj_info)) {
-                        console.debug('not attaching object #' + i + ', it is in a set');
-                        continue;
-                    }
-                    console.debug('attaching object #' + i);
-                    /* end: KBASE-4566 */
-
-                    self.attachRow(i);
+                    self.n_objs_rendered += self.attachObjectAtIndex(i);
                 }
                 if (Jupyter.narrative.readonly) {
                     this.$addDataButton.hide();
@@ -1291,6 +1344,7 @@ define([
                     self.$addDataButton.hide();
                 }
                 self.$mainListDiv.append($noDataDiv);
+                // only show up to the given number
             }
         },
         renderController: function () {
@@ -1666,7 +1720,7 @@ define([
                         // todo: add check so we only show up to the number we render... switching to this will require that
                         // we revise the renderMore logic...
                         if (n_matches < self.options.objs_to_render_to_start) {
-                            self.attachRowElement(self.currentMatch[k]);
+                            self.attachObject(self.currentMatch[k]);
                             self.n_filteredObjsRendered++;
                         }
 

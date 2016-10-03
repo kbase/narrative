@@ -74,7 +74,7 @@ define(
 
         //this is an ugly hack. It'd be prettier to hand in just the shock node ID, but I don't have one of those yet.
         //Also, this is embedding the token into the html and the URL, both of which are potentially security concerns.
-        buildUsableShockLink : function(shock_url, name) {
+        importExportLink : function(shock_url, name) {
           var m;
           if (m = shock_url.match(/\/node\/(.+)$/)) {
             var shock_id = m[1];
@@ -84,6 +84,38 @@ define(
           }
         },
 
+        preauthMagicClick : function (url, link_id) {
+          var self = this;
+          $.ajax({
+              url : url,
+              type : 'GET',
+              //processData : false,
+              //dataType : 'binary',
+              headers:{'Authorization' : 'Oauth ' + self.authToken()},
+              //processData : false
+              }
+          ).then(function(d) {
+//            console.log("I RETRIEVED DATA ", d);
+            $('#' + link_id).on('click', function(e) {
+//              console.log("OPENS UP URL ", self.properPreauthURL(d.data.url))
+              e.stopPropagation();
+              self.preauthMagicClick(url, link_id);
+              window.location.href = self.properPreauthURL(d.data.url);
+            });
+          }).fail(function(d) {
+            console.log("FAILED ", d);
+          });
+        },
+
+
+        properPreauthURL : function(url) {
+          var m;
+          if (m = url.match(new RegExp('^http://ci.kbase.us/preauth/(.+)$'))) {
+            url = 'https://ci.kbase.us/services/shock-api/preauth/' + m[1];
+          }
+          return url;
+        },
+
         loadAndRender: function () {
             var self = this;
             self.loading(true);
@@ -91,7 +123,7 @@ define(
             // var objIdentity = self.buildObjectIdentity(this.options.workspace_name, this.options.report_name, null, null);
             var objIdentity = {ref: this.options.report_ref};
 
-            objIdentity = {ref : "11699/2/6"};
+            //objIdentity = {ref : "11699/2/6"};
             self.ws.get_objects([objIdentity],
                 function (data) {
                     self.reportData = data[0].data;
@@ -279,11 +311,13 @@ self.options.showCreatedObjects = true;
                 var $report_iframe = '';
                 if (self.reportData.html_links) {
                   var iframe_id = self.uuid();
+
                   $report_iframe = $.jqElem('iframe')
                     .css({width : '100%', height : '500px'})
                     .attr('frameborder', 0)
                     .attr('id', iframe_id)
-                    .attr('src', self.buildUsableShockLink(self.reportData.html_links[0].URL, 'report.html') )
+                    //.attr('src', self.importExportLink(self.reportData.html_links[0].URL, 'report.html') )
+                    .attr('src', 'data:text/html;charset=utf-8,' + encodeURIComponent( self.reportData.direct_html) )
                   ;
 
                 }
@@ -330,12 +364,22 @@ self.options.showCreatedObjects = true;
                   self.reportData.file_links,
                   function (i, v) {
 
+                    var link_id = StringUtil.uuid();
+
+                    self.preauthMagicClick(v.URL + '?download_url', link_id);
+
+
                     $ul.append(
                       $.jqElem('li')
                         .append(
                           $.jqElem('a')
-                            .attr('href', self.buildUsableShockLink(v.URL, v.name || 'download-' + i) )
-                            //.attr('target', '_blank')
+                            //.attr('href', self.importExportLink(v.URL, v.name || 'download-' + i) )
+                            /*.on('click', function(e) {
+                              e.preventDefault();
+                              console.log("CLICK ON LINK", self.importExportLink(v.URL, v.name || 'download-' + i));
+                              window.location.href = self.importExportLink(v.URL, v.name || 'download-' + i);
+                            })*/
+                            .attr('id', link_id)
                             .append(v.name || v.URL)
                         )
                     );

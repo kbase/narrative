@@ -71,12 +71,27 @@ define(
             return this;
         },
         reportData: null,
+
+        //this is an ugly hack. It'd be prettier to hand in just the shock node ID, but I don't have one of those yet.
+        //Also, this is embedding the token into the html and the URL, both of which are potentially security concerns.
+        buildUsableShockLink : function(shock_url, name) {
+          var m;
+          if (m = shock_url.match(/\/node\/(.+)$/)) {
+            var shock_id = m[1];
+            var url = "https://ci.kbase.us/services/data_import_export/download?&id=" + shock_id + "&token=" + this.authToken() + "&wszip=0&name=" + name;
+
+            return url;
+          }
+        },
+
         loadAndRender: function () {
             var self = this;
             self.loading(true);
 
             // var objIdentity = self.buildObjectIdentity(this.options.workspace_name, this.options.report_name, null, null);
             var objIdentity = {ref: this.options.report_ref};
+
+            objIdentity = {ref : "11699/2/6"};
             self.ws.get_objects([objIdentity],
                 function (data) {
                     self.reportData = data[0].data;
@@ -261,10 +276,23 @@ self.options.showCreatedObjects = true;
 
             if (self.options.showReportText) {
 
+                var $report_iframe = '';
+                if (self.reportData.html_links) {
+                  var iframe_id = self.uuid();
+                  $report_iframe = $.jqElem('iframe')
+                    .css({width : '100%', height : '500px'})
+                    .attr('frameborder', 0)
+                    .attr('id', iframe_id)
+                    .attr('src', self.buildUsableShockLink(self.reportData.html_links[0].URL, 'report.html') )
+                  ;
+
+                }
+
+
                 var $report_window = $('<textarea style="width:100%;font-family:Monaco,monospace;font-size:9pt;color:#555;resize:vertical;" rows="' +
                     self.options.report_window_line_height + '" readonly>')
                     .append(self.reportData.text_message);
-                var reportHTML = $.jqElem('div').append($report_window).html();
+                var reportHTML = $.jqElem('div').append($report_iframe).append($report_window).html();
 
                 var someDiv = div({dataElement : 'report-section'});
 
@@ -294,6 +322,29 @@ self.options.showCreatedObjects = true;
               var someDiv = div({dataElement : 'downloadable-files'});
               self.$mainPanel.append(someDiv);
 
+              var body = 'No files to download';
+
+              if (self.reportData.file_links && self.reportData.file_links.length) {
+                var $ul = $.jqElem('ul');
+                $.each(
+                  self.reportData.file_links,
+                  function (i, v) {
+
+                    $ul.append(
+                      $.jqElem('li')
+                        .append(
+                          $.jqElem('a')
+                            .attr('href', self.buildUsableShockLink(v.URL, v.name || 'download-' + i) )
+                            //.attr('target', '_blank')
+                            .append(v.name || v.URL)
+                        )
+                    );
+                  }
+                );
+
+                body = $.jqElem('div').append($ul).html();
+              }
+
               ui.setContent('downloadable-files',
                   ui.buildCollapsiblePanel({
                       title: 'Files',
@@ -301,7 +352,7 @@ self.options.showCreatedObjects = true;
                       hidden: false,
                       type: 'default',
                       classes: ['kb-panel-container'],
-                      body: "Downloadable file content will go here!"
+                      body: body
                   })
               );
 

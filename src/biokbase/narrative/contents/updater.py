@@ -237,10 +237,11 @@ def obsolete_method_cell(cell, app_id, app_name, app_spec, params):
     <div style="font-family: 'OxygenBold', Arial, sans-serif;">
     Obsolete App!
     </div>
-    Sorry, this app is obsolete and can no longer function. But don't worry! Any results produced by running this app have been retained.
-    <br><b>Parameters:</b>
+    Sorry, this app is obsolete and can no longer function. But don't worry! Any data objects that were produced when you ran this app have been saved.
+    <br>Please see the <a href="http://kbase.us/kbase-app-replacement/">App Replacement page</a> for more information.
+    <br><br><b>Parameter settings you used:</b>
     {}
-    <br><b>Suggested Replacements:</b><br>
+    <br><b>Suggested replacement app(s):</b><br>
     {}
 </div>"""
 
@@ -293,10 +294,11 @@ def obsolete_app_cell(cell, app_id, app_name, app_spec, params):
     <div style="font-family: 'OxygenBold', Arial, sans-serif;">
     Obsolete App!
     </div>
-    Sorry, this app is obsolete and can no longer function. But don't worry! Any results produced by running this app have been retained.
-    <br><b>Parameters:</b>
+    Sorry, this app is obsolete and can no longer function. But don't worry! Any data objects that were produced when you ran this app have been saved.
+    <br>Please see the <a href="http://kbase.us/kbase-app-replacement/">App Replacement page</a> for more information.
+    <br><br><b>Parameter settings you used:</b>
     {}
-    <br><b>Suggested Replacements:</b><br>
+    <br><b>Suggested replacement app(s):</b><br>
     {}
 </div>"""
 

@@ -52,6 +52,7 @@ require.config({
         'AssemblyAPI-client-api'                : 'kbase/js/api/AssemblyAPIClient',
         'TaxonAPI-client-api'                   : 'kbase/js/api/TaxonAPIClient',
         'GenomeSearchUtil-client-api'           : 'kbase/js/api/GenomeSearchUtilClient',
+        'SetAPI-client-api'                     : 'kbase/js/api/SetAPIClient',
 
         'njs-wrapper-client-api'                : 'kbase/js/api/NarrativeJobServiceWrapper',
         kbaseNarrativeJobStatus                 : 'kbase/js/widgets/narrative_core/kbaseNarrativeJobStatus',

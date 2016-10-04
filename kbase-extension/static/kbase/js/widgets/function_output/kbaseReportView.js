@@ -1,4 +1,3 @@
-//fnar pardon my french
 /**
  * Basic viz for a basic report type.
  * @public

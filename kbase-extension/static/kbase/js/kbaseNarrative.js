@@ -172,7 +172,7 @@ define(
             try {
                 Jupyter.notebook.keyboard_manager.edit_shortcuts.remove_shortcut(shortcut);
             } catch (ex) {
-                console.warn('Error removing shortcut "'  + shortcut +'"', ex);
+                // console.warn('Error removing shortcut "'  + shortcut +'"', ex);
             }
         });
 

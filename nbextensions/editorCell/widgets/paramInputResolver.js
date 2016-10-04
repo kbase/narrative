@@ -10,21 +10,14 @@ define([
     './input/singleObjectInput',
     './input/multiObjectInput',
     './input/singleNewObjectInput',
-    './input/undefinedInput',
+    './undefinedWidget',
     './input/singleCheckbox',
     './input/singleFloatInput',
     './input/singleSubdata',
-    './input/customSubdata',
+    './input/singleCustomSubdata',
     './input/singleTextareaInput',
     './input/multiFloatInput',
-    './input/multiSelectInput',
-    './input/singleFileInput',
-    './input/multiTextareaInput',
-    './input/errorInput',
-    './input/singleToggleButton',
-    './input/singleCustomSelect',
-    './input/multiCustomSelect',
-    './input/readsGroupEditor'
+    './input/multiSelectInput'
 ], function (
     SingleTextInputWidget,
     MultiTextInputWidget,
@@ -38,17 +31,10 @@ define([
     SingleCheckboxInputWidget,
     SingleFloatInputWidget,
     SingleSubdataWidget,
-    CustomSubdataWidget,
+    SingleCustomSubdataWidget,
     SingleTextareaInputWidget,
     MultiFloatInputWidget,
-    MultiSelectInputWidget,
-    SingleFileInputWidget,
-    MultiTextareaInputWidget,
-    ErrorInputWidget,
-    SingleToggleButtonWidget,
-    SingleCustomSelectWidget,
-    MultiCustomSelectWidget,
-    ReadsGroupEditor
+    MultiSelectInputWidget
     ) {
     'use strict';
 
@@ -59,10 +45,10 @@ define([
          * representation.
          * The paramter spec is rather baroque, and undocumented.
          * We want the input widgets to rely on documented structures, which
-         * assists in documentation and testing, and also in generation of
+         * assists in documentation and testing, and also in generation of 
          * specs for subwidgets.
          * Also as this just concerns constraints for the base type,
-         * the
+         * the 
          */
         function getParamConstraints(parameterSpec) {
             var dataType = parameterSpec.dataType(),
@@ -70,7 +56,7 @@ define([
                 fieldType = spec.field_type;
 
             // NOTE:
-            // field_type is text or dropdown, but does not always correspond to the
+            // field_type is text or dropdown, but does not always correspond to the 
             // type of control to build. E.g. selecting a workspace object is actually
             // a dropdown even though the field_type is 'text'.
 
@@ -79,10 +65,10 @@ define([
                 case 'text':
                     switch (fieldType) {
                         case 'text':
-                            return {
+                            return {                                
                             };
                         case 'dropdown':
-                            return {
+                            return {                                
                             };
                         default:
                             throw new Error('Unknown text param field type');
@@ -90,17 +76,17 @@ define([
                 case 'int':
                     switch (fieldType) {
                         case 'text':
-                            return {
+                            return {                                
                             };
                         case 'checkbox':
-                            return {
+                            return {                                
                             };
                         default:
-                            return {
+                            return {                                
                             };
                     }
                 case 'float':
-                    return {
+                    return {                                
                     };
                 case 'workspaceObjectName':
                     switch (parameterSpec.uiClass()) {
@@ -128,49 +114,43 @@ define([
                 case '[]string':
                     switch (fieldType) {
                         case 'dropdown':
-                            return {
-                            };
-                        case 'textarea':
-                            return {
+                            return {                                
                             };
                         default:
                             throw new Error('Unknown []string field type');
-                    }
+                    }                    
                 case 'unspecified':
                     // a bunch of field types are untyped:
                     switch (fieldType) {
                         case 'text':
-                            return {
+                            return {                                
                             };
                         case 'checkbox':
-                            return {
+                            return {                                
                             };
                         case 'textarea':
-                            return {
+                            return {                                
                             };
                         case 'dropdown':
-                            return {
+                            return {                                
                             };
                         case 'custom_button':
-                            return {
+                            return {                                
                             };
                         case 'textsubdata':
-                            return {
+                            return {                                
                             };
                         case 'file':
-                            return {
+                            return {                                
                             };
                         case 'custom_textsubdata':
-                            return {
+                            return {                                
                             };
                         case 'custom_widget':
-                            return {
+                            return {                                
                             };
                         case 'tab':
-                            return {
-                            };
-                        case 'reads_group_editor':
-                            return {
+                            return {                                
                             };
                         default:
                             throw new Error('Unknown unspecified field type');
@@ -180,14 +160,14 @@ define([
 
             }
         }
-
+        
         function getInputWidgetFactory(parameterSpec) {
             var dataType = parameterSpec.dataType(),
                 spec = parameterSpec.spec,
                 fieldType = spec.field_type;
 
             // NOTE:
-            // field_type is text or dropdown, but does not always correspond to the
+            // field_type is text or dropdown, but does not always correspond to the 
             // type of control to build. E.g. selecting a workspace object is actually
             // a dropdown even though the field_type is 'text'.
 
@@ -203,11 +183,7 @@ define([
                         case 'dropdown':
                             return SingleSelectInputWidget;
                         case 'textarea':
-                            return SingleTextareaInputWidget;
-                        case 'file':
-                            return SingleFileInputWidget;
-                        case 'custom_textsubdata':
-                            return CustomSubdataWidget;
+                            return SingleTextareaInputWidget;                            
                         default:
                             return UndefinedInputWidget;
                     }
@@ -250,44 +226,28 @@ define([
                             return UndefinedInputWidget;
                     }
                 case '[]workspaceObjectName':
-                    switch (parameterSpec.paramClass()) {
+                    switch (parameterSpec.uiClass()) {
                         case 'input':
                             return MultiObjectInputWidget;
                         case 'output':
-                            return ErrorInputWidget.make({
-                                message: 'A set of workspace object names does not make sense for an output'
-                            });
+                            throw new Error('A set of workspace object names does not make sense for an output');
+                            // return UndefinedInputWidget;
                         case 'parameter':
                             return UndefinedInputWidget;
                         default:
                             return UndefinedInputWidget;
-                    }
-                case 'subdata':
+                    }    
+                case 'subdata': 
                     return SingleSubdataWidget;
                 case '[]string':
                     switch (fieldType) {
                         case 'dropdown':
                             return MultiSelectInputWidget;
-                        case 'textarea':
-                            return MultiTextareaInputWidget;
-                        case 'custom_textsubdata':
-                            return CustomSubdataWidget;
-                        case 'custom_widget':
-                            if (parameterSpec.multipleItems()) {
-                                return MultiCustomSelectWidget;
-                            }
-                            return SingleCustomSelectWidget;
                         default:
                             return MultiTextInputWidget;
                     }
-                case 'boolean':
-                    if (parameterSpec.multipleItems()) {
-                        return UndefinedInputWidget;
-                    }
-                    return SingleToggleButtonWidget;
-
-                //case 'sample_property':
-                //    return SingleCustomSubdataWidget;
+                case 'sample_property':
+                    return SingleCustomSubdataWidget;
                 case 'unspecified':
                     // a bunch of field types are untyped:
                     switch (fieldType) {
@@ -308,28 +268,23 @@ define([
                         case 'custom_button':
                             return UndefinedInputWidget;
                         case 'textsubdata':
+                            console.log('TEXTSUBDATA', parameterSpec);
                             if (parameterSpec.multipleItems()) {
                                 return UndefinedInputWidget;
                             }
                             return SingleSubdataWidget;
                         case 'file':
-                            if (parameterSpec.multipleItems()) {
-                                return ErrorInputWidget.make({
-                                    message: 'multiple item "file" parameter type is not currently supported'
-                                });
-                            }
-                            return SingleFileInputWidget;
+                            throw new Error('"file" parameter type is not supported');
                         case 'custom_textsubdata':
+                            console.log('CUSTOM_TEXTSUBDATA', parameterSpec);
                             if (parameterSpec.multipleItems()) {
                                 return UndefinedInputWidget;
                             }
-                            return SingleSubdataWidget;
+                            return UndefinedInputWidget;
                         case 'custom_widget':
-                            return SingleCustomSelectWidget;
+                            return UndefinedInputWidget;
                         case 'tab':
                             return UndefinedInputWidget;
-                        case 'reads_group_editor':
-                            return ReadsGroupEditor;
                         default:
                             return UndefinedInputWidget;
                     }

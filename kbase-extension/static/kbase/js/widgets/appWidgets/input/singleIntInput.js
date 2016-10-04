@@ -9,7 +9,7 @@ define([
     'common/dom',
     'common/props',
     '../inputUtils',
-    
+
     'bootstrap',
     'css!font-awesome'
 ], function (
@@ -66,9 +66,9 @@ define([
          *
          * Text fields can occur in multiples.
          * We have a choice, treat single-text fields as a own widget
-         * or as a special case of multiple-entry -- 
+         * or as a special case of multiple-entry --
          * with a min-items of 1 and max-items of 1.
-         * 
+         *
          *
          */
 
@@ -96,7 +96,7 @@ define([
 
                 validationOptions.required = spec.required();
                 validationResult = Validation.validateIntString(rawValue, validationOptions);
-                
+
                 return validationResult;
 
 //                return {

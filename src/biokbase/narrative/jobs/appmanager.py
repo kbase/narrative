@@ -1,15 +1,12 @@
 """
 A module for managing apps, specs, requirements, and for starting jobs.
 """
-__author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
-from .job import Job
+from job import Job
+from jobmanager import JobManager
+from specmanager import SpecManager
 import biokbase.narrative.clients as clients
 from biokbase.narrative.widgetmanager import WidgetManager
-from .jobmanager import JobManager
-from .specmanager import SpecManager
-import os
-import biokbase.auth
 from biokbase.narrative.app_util import (
     app_version_tags,
     check_tag,
@@ -19,15 +16,18 @@ from biokbase.narrative.app_util import (
 from biokbase.narrative.exception_util import (
     transform_job_exception
 )
+from biokbase.narrative.common import kblogging
+from biokbase.service.Client import Client as ServiceClient
 from IPython.display import HTML
 from jinja2 import Template
 import json
 import re
-from biokbase.narrative.common import kblogging
 import logging
 import datetime
 import traceback
 
+
+__author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
 class AppManager(object):
     """
@@ -49,6 +49,8 @@ class AppManager(object):
     nms = clients.get('narrative_method_store')
     njs = clients.get('job_service')
     ws_client = clients.get('workspace')
+    service_client = clients.get('service')
+
     spec_manager = SpecManager()
     _log = kblogging.get_logger(__name__)
     _comm = None
@@ -71,18 +73,19 @@ class AppManager(object):
     def app_usage(self, app_id, tag='release'):
         """
         This shows the list of inputs and outputs for a given app with a given
-        tag. By default, this is done in a pretty HTML way, but this app can be wrapped
-        in str() to show a bare formatted string.
+        tag. By default, this is done in a pretty HTML way, but this app can be
+        wrapped in str() to show a bare formatted string.
 
-        If either the app_id is unknown, or isn't found with the given release tag,
-        or if the tag is unknown, a ValueError will be raised.
+        If either the app_id is unknown, or isn't found with the given release
+        tag, or if the tag is unknown, a ValueError will be raised.
 
         Parameters:
         -----------
         app_id : string
             A KBase app id, generally of the format Module_name/app_name
             (see available_apps for a list)
-        tag : Which version of the app to view - either release, beta, or dev (default=release)
+        tag : Which version of the app to view - either release, beta, or dev
+            (default=release)
         """
         return self.spec_manager.app_usage(app_id, tag)
 
@@ -90,15 +93,16 @@ class AppManager(object):
         """
         Returns the app description in a printable HTML format.
 
-        If either the app_id is unknown, or isn't found with the given release tag,
-        or if the tag is unknown, a ValueError will be raised.
+        If either the app_id is unknown, or isn't found with the given release
+        tag, or if the tag is unknown, a ValueError will be raised.
 
         Parameters:
         -----------
         app_id : string
             A KBase app id, generally of the format Module_name/app_name
             (see available_apps for a list)
-        tag : Which version of the app to view - either release, beta, or dev (default=release)
+        tag : Which version of the app to view - either release, beta, or dev
+            (default=release)
         """
         return self.spec_manager.app_description(app_id, tag)
 
@@ -109,15 +113,42 @@ class AppManager(object):
 
         Parameters:
         -----------
-        tag : Which version of the list of apps to view - either release, beta, or dev (default=release)
+        tag : Which version of the list of apps to view - either release, beta,
+            or dev (default=release)
 
         """
         return self.spec_manager.available_apps(tag)
 
-    def run_local_app(self, app_id, params, tag="release", version=None, cell_id=None, run_id=None, **kwargs):
+    def run_set_editor(self, app_id, params, tag="release", version=None,
+                       cell_id=None, run_id=None, **kwargs):
+        ws = system_variable('workspace')
+        set_items = []
+        for obj in params.get('reads_objects', []):
+            set_items.append({
+                'ref': ws + '/' + obj['name'],
+                'label': obj['label']
+            })
+        set_data = {
+            'description': params.get('description', ""),
+            'items': set_items
+        }
+
+        return self.service_client.sync_call(
+            "SetAPI.save_reads_set_v1",
+            [{
+                'data': set_data,
+                'output_object_name': params['output_object_name'],
+                'workspace': ws
+            }],
+            service_version=tag
+        )[0]
+
+    def run_local_app(self, app_id, params, tag="release", version=None,
+                      cell_id=None, run_id=None, **kwargs):
         """
-        Attempts to run a local app. These do not return a Job object, but just the result of the app.
-        In most cases, this will be a Javascript display of the result, but could be anything.
+        Attempts to run a local app. These do not return a Job object, but just
+        the result of the app. In most cases, this will be a Javascript display
+        of the result, but could be anything.
 
         If the app_spec looks like it makes a service call, then this raises a ValueError.
         Otherwise, it validates each parameter in **kwargs against the app spec, executes it, and
@@ -739,28 +770,30 @@ class AppManager(object):
 
     def _validate_param_value(self, param, value, workspace):
         """
-        Tests a value to make sure it's valid, based on the rules given in the param dict.
-        Returns None if valid, an error string if not.
+        Tests a value to make sure it's valid, based on the rules given in the
+        param dict. Returns None if valid, an error string if not.
 
         Parameters:
         -----------
         param : dict
-            A dict representing a single KBase App parameter, generated by the Spec Manager.
-            This contains the rules for processing any given values.
+            A dict representing a single KBase App parameter, generated by the
+            Spec Manager. This contains the rules for processing any given
+            values.
         value : any
-            A value input by the user - likely either None, int, float, string, or list
+            A value input by the user - likely either None, int, float, string,
+            or list
         workspace : string
-            The name of the current workspace to test workspace object types against, if
-            required by the parameter.
+            The name of the current workspace to test workspace object types
+            against, if required by the parameter.
         """
-        # The workspace reference for the parameter. Can be None, and returned as such.
+        # The workspace reference for the parameter. Can be None.
         ws_ref = None
 
-        # allow None to pass, we'll just pass it to the method and let it get rejected there.
+        # allow None to pass, we'll just pass it to the method.
         if value is None:
             return (ws_ref, None)
 
-        # Also, for strings, last I heard, an empty string is the same as null/None
+        # Also, for strings, an empty string is the same as null/None
         if param['type'] in ['string', 'dropdown', 'checkbox'] and isinstance(value, basestring) and value == '':
             return (ws_ref, None)
 

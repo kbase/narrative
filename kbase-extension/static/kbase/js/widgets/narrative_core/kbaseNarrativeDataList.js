@@ -98,12 +98,29 @@ define([
         */
         setItems: { }, // item_id -> {set_id -> 1, ..}
         setInfo: { }, // set_id -> { count: , div: , expanded: ,... }
+        setsInitialized: false,
         MOCK_SET_ID: 666, // hardcoded workspace set object id
 
-        // Test if given type name is one of the set types
-        isSetType: function(type_name) {
-            var t = ['SingleEndLibrarySet', 'PairedEndLibrarySet'];
-            return _.some(t, function(s) { return type_name.includes(s) });
+        /** 
+         * Utility function to portably return the identifier to
+         * use for a single data object.
+         *
+         * @param obj Info tuple from ws_list_objects
+         * @return Identifier (string)
+         */
+        itemId: function(obj) {
+            return obj[0];
+        },
+
+        /**
+         * Test if given object is a set.
+         * This simply tests whether that object is in the `setInfo` mapping.
+         *
+         * @param obj_info Object info tuple, as returned by ws.list_objects()
+         * @return true if in a set, false otherwise
+         */
+        isASet: function(obj_info) {
+            return _.has(this.setInfo, this.itemId(obj_info));
         },
 
         /** 
@@ -119,12 +136,32 @@ define([
             return _.has(this.setItems, item_id);
         },
 
+        getSetInfo: function(obj_info) {
+            return this.setInfo[this.itemId(obj_info)];
+        },
+
+        /**
+         * Toggle whether set is 'expanded' or not.
+         *
+         * @param item_info an object info tuple, as returned by the
+         *                  workspace API for list_objects()
+         * @return New state of 'expanded'
+         */
+         toggleSetExpanded: function (item_info) {
+            var set_id = this.itemId(item_info);
+            console.debug('Expanded value for set', set_id, 'is', this.setInfo[set_id].expanded);
+            var new_value = !this.setInfo[set_id].expanded;
+            this.setInfo[set_id].expanded = new_value;            
+            console.debug('Toggled "expanded" for set', set_id, 'to', new_value);
+            return new_value;
+         },
+
         /** 
          * Get item parents.
          *
          * @param item_info an object info tuple, as returned by the
          *                  workspace API for list_objects()
-         * @return 
+         * @return All parents, expanded or not
         */
         getItemParents: function(item_info) {
             var item_id = this.itemId(item_info);
@@ -133,28 +170,29 @@ define([
                 return [];
             }
             var self = this;
-            // Construct return value
+            // Construct return value, which is one
+            // map for each of the Sets.
             return _.map(
                 _.keys(this.setItems[item_id]),
                 function(key) {
-                    return {'item_id': key,
-                            'expanded': self.setInfo[key].expanded,
-                            'div': self.setInfo[key].div};
+                    return {
+                        item_id: key,
+                        expanded: self.setInfo[key].expanded,
+                        div: self.setInfo[key].div
+                    };
                 }
             );
         },
-
-        // Utility function to portably return the identifier to
-        // use for a single data object
-        itemId: function(item) { return item[0]; },
 
         // Extract, into 'setItems' and 'setInfo', the
         // the data items in the input workspace.
         extractSets: function(ws_id) {
             var self = this;
-            // clear out member variables
-            this.setItems = {}; 
-            this.setInfo = {};
+            if (this.setsInitialized) {
+                console.info('Sets are already initialized');
+                return;
+            }
+            console.info('Extracting sets from datalist...');
             _.each(
                 this.getWorkspaceSets(ws_id),
                 // for each set type, add mappings of {item_id: {set_id : 1, ..}}
@@ -171,16 +209,25 @@ define([
                             self.setItems[item_id] = {};
                         }
                         self.setItems[item_id][set_id] = 1;
-                        console.debug('adding mapping: set ' + set_id + ' <- ' + item_id + ' item');
                     });
-                    self.setInfo[set_id] = {item_ids: set_item_ids};
+                    self.setInfo[set_id] = {
+                        item_ids: set_item_ids,
+                        expanded: false,
+                        div: null
+                    };
                 }
             );
-            // return input array with any items that are inside
-            // a set filtered out (but not the set objects themselves)
-            //return _.filter(data_list, function(item) {
-            //    return !_.has(self.setItems, self.itemId(item));
-            //});
+            this.setsInitialized = true;
+        },
+
+        /**
+         * Clear data structures tracking the workspace sets.
+         * This will cause the next refresh to fetch new data.
+         */
+        clearSets: function() {
+            this.setItems = {}; 
+            this.setInfo = {};
+            this.setsInitialized = false;
         },
 
         itemIdsInSet: function(set_id) {
@@ -387,6 +434,7 @@ define([
             this.objectList = [];
             this.objData = {};
             this.availableTypes = {};
+            this.clearSets();
 
             this.fetchWorkspaceData()
                 .then(function () {
@@ -485,17 +533,12 @@ define([
                                     continue;
                                 }
 
-                                // For KBASE-4566, skip if member of a set
-                                //if (this.inAnySet(infoList[i])) {
-                                //    continue;
-                                //}
 
                                 this.objectList.push({
                                     key: StringUtil.uuid(), // always generate the DnD key
                                     $div: null,
                                     info: infoList[i],
-                                    attached: false,
-                                    is_set_type: this.isSetType(infoList[i][2])
+                                    attached: false
                                 });
                                 // type is formatted like this: Module.Type-1.0
                                 // typeKey = Module.Type
@@ -891,6 +934,10 @@ define([
 
             return $btnToolbar;
         },
+        /**
+         * This is the main function for rendering a data object
+         * in the data list.
+         */
         renderObjectRowDiv: function (object_info, object_key) {
             var self = this;
             // object_info:
@@ -1007,22 +1054,38 @@ define([
                     function () {
                         self.setSelected($(this).closest('.kb-data-list-obj-row'), object_info);
                         toggleAdvanced();
-
-                        /* KBASE-4566 */
-                        if (self.isSetType(object_info[2])) {
-                            console.debug('@@ clicked on a set. members:');
-                            var cur_set_id = self.itemId(object_info);
-                            console.debug(self.itemIdsInSet(cur_set_id));
-                        }
-
                     });
 
             var $topTable = $('<table>').attr('kb-oid', object_key)
                 .css({'width': '100%', 'background': '#fff'})  // set background to white looks better on DnD
                 .append($('<tr>')
+                    // set 'expand' arrow
+                    .append(function() {
+                        if (self.isASet(object_info)) {
+                            var glyph_collapsed = 'glyphicon-chevron-right',
+                                glyph_expanded = 'glyphicon-chevron-down'; 
+                            console.info('@@ Is a set', object_info);
+                            var starts_expanded = self.setInfo[self.itemId(object_info)].expanded;
+                            var $gi = $('<span class="glyphicon"  aria-hidden="true"/>')
+                                .addClass(starts_expanded ? glyph_expanded : glyph_collapsed)
+                                .on('click', function () {
+                                    var is_expanded = self.toggleSetExpanded(object_info);
+                                    $(this)
+                                        .removeClass(is_expanded ? glyph_collapsed : glyph_expanded)
+                                        .addClass(is_expanded ? glyph_expanded : glyph_collapsed);
+                                    console.debug('@@ re-render');
+                                    self.renderList();
+                                }
+                            );
+                            return $('<td>').append($gi); 
+                        }
+                        return $('<td>&nbsp;</td>');
+                    })
+                    // logo
                     .append($('<td>')
                         .css({'width': '15%'})
                         .append($logo))
+                    // main content
                     .append($('<td>')
                         .append($mainDiv)));
 
@@ -1042,13 +1105,21 @@ define([
             // Drag and drop
             this.addDragAndDrop($topTable);
 
-            var $rowWithHr = $('<div>')
-                .append($('<hr>')
-                    .addClass('kb-data-list-row-hr')
-                    .css({'margin-left': '65px'}))
-                .append($row);
+            // +---+
+            // |   | Containing "box" is the top-level <div>
+            // +---+
 
-            return $rowWithHr;
+            var $box = $('<div>').addClass('kb-data-list-box');
+
+            // add a separator
+            $box.append($('<hr>')
+                .addClass('kb-data-list-row-hr')
+                .css({'margin-left': '65px'}));
+
+            // add the row
+            $box.append($row);
+
+            return $box;
         },
         // ============= DnD ==================
 
@@ -1234,7 +1305,8 @@ define([
          */
         attachObjectAtIndex: function(i) {
             var obj_info = this.objectList[i].info,
-                rendered = false;
+                rendered = false,
+                self = this;
 
             if (this.inAnySet(obj_info)) {
                 var parents = this.getItemParents(obj_info);
@@ -1242,16 +1314,18 @@ define([
                     console.debug(i + ': Error! No parent found');
                 }
                 else if (_.some(_.pluck(parents, 'expanded'))) {
-                    console.debug(i + ': Adding expanded set member');
-                    // self.attachObject(this.objectList[i], parents[i].div)
+                    _.each(_.filter(parents, function(p) { return p.expanded; }),
+                        function(p) {
+                            self.attachObject(self.objectList[i], p.div);
+                        });
                     rendered = true;
                 }
                 else {
-                    console.debug( i + ': Set not expanded');
+                    //console.debug( i + ': Set not expanded');
                 }
             }
             else {
-                console.debug(i + ' not in any set:', obj_info);
+                //console.debug(i + ' not in any set:', obj_info);
                 //console.debug('attaching object #' + i);
                 this.attachObject(this.objectList[i], null);
                 rendered = true;
@@ -1278,6 +1352,10 @@ define([
             } else {
                 obj.$div = this.renderObjectRowDiv(obj.info, obj.key);
                 $parentDiv.append(obj.$div);
+                var set_info = this.getSetInfo(obj.info);
+                if (set_info !== undefined) {
+                    set_info.div = obj.$div;
+                }
             }
             obj.attached = true;
             this.n_objs_rendered++;
@@ -1306,15 +1384,27 @@ define([
             var self = this;
 
             self.detachAllRows();
-            self.n_objs_rendered = 0; // added: KBASE-4566
+            self.n_objs_rendered = 0;
             self.extractSets(_.pluck(self.objectList, 'info'));
 
             if (self.objectList.length > 0) {
                 var limit = self.options.objs_to_render_to_start;
+
+                // XXX: Hack, part 1: Find expanded sets, and "reserve" rendering for them
+                var exp_sets = {};
+                for (i=0; i < self.objectList.length; i++) {
+                    var oi = self.objectList[i].info;
+                    if (self.isASet(oi) && self.getSetInfo(oi).expanded) {
+                        exp_sets[i] = true; // save index needed for attachObjectAtIndex()
+                    }
+                }
+                limit -= _.keys(exp_sets).length; // reserve space
+                console.debug('@@ New limit', limit, 'with exp_sets', exp_sets);
+
                 for (var i = 0;
                      i < self.objectList.length && (self.n_objs_rendered < limit);
                      i++) {
-                    console.debug('renderList: object', i);
+                    //console.debug('renderList: object', i);
                     // If object does not have a key, define one.
                     // This will be used for 'id' of rendered element.
                     // But do *not* replace an existing key.
@@ -1322,7 +1412,18 @@ define([
                         self.objectList[i].key = StringUtil.uuid();
                     }
                     self.n_objs_rendered += self.attachObjectAtIndex(i);
+                    // XXX: Hack, part 1.5: Remove from "reserved" exp sets
+                    if (_.has(exp_sets, i)) {
+                        delete exp_sets[i];
+                        limit++; // un-reserve space
+                    }
                 }
+
+                // XXX: Hack, part deux: Add the expanded sets
+                _.each(_.keys(exp_sets), function(i) {
+                    self.n_objs_rendered += self.attachObjectAtIndex(i);
+                });
+
                 if (Jupyter.narrative.readonly) {
                     this.$addDataButton.hide();
                 } else {

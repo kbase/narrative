@@ -2462,6 +2462,11 @@ div[class="tooltip-inner"] {
 }
 
 
+/* Indent nested box */
+.kb-data-list-box > .kb-data-list-box {
+    margin-left: 40px;
+}
+
 /* end data list*/
 
 

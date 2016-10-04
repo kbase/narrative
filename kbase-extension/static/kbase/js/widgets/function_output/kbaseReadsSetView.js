@@ -1,29 +1,29 @@
 define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery',
-        'kbase-client-api',
-		'jquery-dataTables',
-		'kbaseAuthenticatedWidget',
-		'kbaseTable',
+    [
+        'kbwidget',
+        'bootstrap',
+        'jquery',
+        'SetAPI-client-api',
+        'jquery-dataTables',
+        'kbaseAuthenticatedWidget',
+        'kbaseTable',
         'kbaseTabs',
         'narrativeConfig',
         'bluebird',
-        'numeral'
-	], function(
-		KBWidget,
-		bootstrap,
-		$,
-        kbase_client_api,
-		jquery_dataTables,
-		kbaseAuthenticatedWidget,
-		kbaseTable,
+        'numeral',
+    ], function(
+        KBWidget,
+        bootstrap,
+        $,
+        SetAPI_client_api,
+        jquery_dataTables,
+        kbaseAuthenticatedWidget,
+        kbaseTable,
         kbaseTabs,
         Config,
         Promise,
         Numeral
-	) {
+    ) {
         'use strict';
 
         return KBWidget({
@@ -50,12 +50,18 @@ define (
                     $self.link_ref = $self.obj_ref;
                 }
 
-                $self.ws = new Workspace(Config.url('workspace'),
-                                         {'token':$self.authToken()});
-                
-                return Promise.resolve($self.ws.get_objects([{'ref': this.obj_ref}]))
-                    .then(function (data) {
-                        var info = data[0]["info"],
+                this.setAPI = new SetAPI(Config.url('service_wizard'),
+                                         {'token': this.authToken()},
+                                         "dev");
+                this.wsClient = new Workspace(Config.url('workspace'),
+                                              {'token': this.authToken()});
+
+                return Promise.resolve($self.setAPI.get_reads_set_v1({
+                    'ref': $self.obj_ref,
+                    'include_item_info': 1
+                    }))
+                    .then(function (results) {
+                        var info = results.info,
                             refs = [],
                             i = 0;
     
@@ -63,7 +69,7 @@ define (
                         $self.link_ref = info[6] + '/' +
                                          info[1] + '/' +
                                          info[4];
-                        $self.group_info = data[0]["data"];
+                        $self.group_info = results.data;
                         
                         // pull all reads objects to calculate summary stats
                         // and individual browse row contents
@@ -74,7 +80,7 @@ define (
                         return refs;
                     })
                     .then(function (refs) {
-                        return Promise.resolve($self.ws.get_objects(refs));
+                        return Promise.resolve($self.wsClient.get_objects(refs));
                     })
                     .then(function (data) {
                         var i = 0;

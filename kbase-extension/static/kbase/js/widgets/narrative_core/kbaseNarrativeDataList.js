@@ -950,12 +950,21 @@ define([
             var type = type_tokens[1].split('-')[0];
             var unversioned_full_type = type_module + '.' + type;
             var $logo = $('<div>');
+            var is_set = this.isASet(object_info);
             // set icon
-            $(document).trigger("setDataIcon.Narrative", {elt: $logo, type: type});
+            $(document).trigger("setDataIcon.Narrative", {elt: $logo, type: type, stacked: is_set});
             // add behavior
             $logo.click(function (e) {
                 e.stopPropagation();
-                self.insertViewer(object_key);
+                // For sets, click toggles -- everything else, adds a viewer (?!)
+                if (self.isASet(object_info)) {
+                    var is_expanded = self.toggleSetExpanded(object_info);
+                    console.debug('@@ re-render');
+                    self.renderList();
+                }
+                else {
+                   self.insertViewer(object_key);
+                }
             });
 
             var shortName = object_info[1];
@@ -1059,28 +1068,28 @@ define([
             var $topTable = $('<table>').attr('kb-oid', object_key)
                 .css({'width': '100%', 'background': '#fff'})  // set background to white looks better on DnD
                 .append($('<tr>')
-                    // set 'expand' arrow
-                    .append(function() {
-                        if (self.isASet(object_info)) {
-                            var glyph_collapsed = 'glyphicon-chevron-right',
-                                glyph_expanded = 'glyphicon-chevron-down'; 
-                            console.info('@@ Is a set', object_info);
-                            var starts_expanded = self.setInfo[self.itemId(object_info)].expanded;
-                            var $gi = $('<span class="glyphicon"  aria-hidden="true"/>')
-                                .addClass(starts_expanded ? glyph_expanded : glyph_collapsed)
-                                .on('click', function () {
-                                    var is_expanded = self.toggleSetExpanded(object_info);
-                                    $(this)
-                                        .removeClass(is_expanded ? glyph_collapsed : glyph_expanded)
-                                        .addClass(is_expanded ? glyph_expanded : glyph_collapsed);
-                                    console.debug('@@ re-render');
-                                    self.renderList();
-                                }
-                            );
-                            return $('<td>').append($gi); 
-                        }
-                        return $('<td>&nbsp;</td>');
-                    })
+                    // // set 'expand' arrow
+                    // .append(function() {
+                    //     if (self.isASet(object_info)) {
+                    //         var glyph_collapsed = 'glyphicon-chevron-right',
+                    //             glyph_expanded = 'glyphicon-chevron-down'; 
+                    //         console.info('@@ Is a set', object_info);
+                    //         var starts_expanded = self.setInfo[self.itemId(object_info)].expanded;
+                    //         var $gi = $('<span class="glyphicon"  aria-hidden="true"/>')
+                    //             .addClass(starts_expanded ? glyph_expanded : glyph_collapsed)
+                    //             .on('click', function () {
+                    //                 var is_expanded = self.toggleSetExpanded(object_info);
+                    //                 $(this)
+                    //                     .removeClass(is_expanded ? glyph_collapsed : glyph_expanded)
+                    //                     .addClass(is_expanded ? glyph_expanded : glyph_collapsed);
+                    //                 console.debug('@@ re-render');
+                    //                 self.renderList();
+                    //             }
+                    //         );
+                    //         return $('<td>').append($gi); 
+                    //     }
+                    //     return $('<td>&nbsp;</td>');
+                    // })
                     // logo
                     .append($('<td>')
                         .css({'width': '15%'})

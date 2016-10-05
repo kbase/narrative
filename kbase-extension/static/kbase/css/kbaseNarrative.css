@@ -2311,6 +2311,24 @@ div[class="tooltip-inner"] {
     font-weight: bold;
     text-shadow: -1px 0 #777, 0 1px #777, 1px 0 #777, 0 -1px #777;
 }
+/* For shifting over logos that are stacked on
+ * top of eachother */
+.kb-data-list-logo-shifted1 {
+    margin-left: 1px;
+    margin-top: 1px;
+}
+.kb-data-list-logo-shiftedx1 {
+    margin-left: 8px;
+    margin-top: 6px;
+}
+.kb-data-list-logo-shifted2 {
+    margin-left: 9px;
+    margin-top: 7px;
+}
+.kb-data-list-logo-shiftedx2 {
+    margin-left: 16px;
+    margin-top: 12px;
+}
 
 /* Nudge the data icon a bit to the left or right */
 .kb-data-icon-rnudge {

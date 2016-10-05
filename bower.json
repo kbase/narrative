@@ -17,6 +17,7 @@
     "plotly.js": "git://github.com/plotly/plotly.js/#1.5.1",
     "bluebird": "3.0.6",
     "handlebars": "^4.0.5",
+    "numeral": "~1.5.0",
     "bootstrap-slider": "*",
     "jquery.tipsy": "*",
     "requirejs-plugins": "^1.0.3",

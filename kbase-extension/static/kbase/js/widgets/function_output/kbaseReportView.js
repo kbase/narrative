@@ -95,9 +95,9 @@ define(
               //processData : false
               }
           ).then(function(d) {
-//            console.log("I RETRIEVED DATA ", d);
+
             $('#' + link_id).on('click', function(e) {
-//              console.log("OPENS UP URL ", self.properPreauthURL(d.data.url))
+
               e.stopPropagation();
               self.preauthMagicClick(url, link_id);
               window.location.href = self.properPreauthURL(d.data.url);
@@ -120,8 +120,8 @@ define(
             var self = this;
             self.loading(true);
 
-            // var objIdentity = self.buildObjectIdentity(this.options.workspace_name, this.options.report_name, null, null);
-            var objIdentity = {ref: this.options.report_ref};
+               var objIdentity = self.buildObjectIdentity(this.options.workspace_name, this.options.report_name, null, null);
+            // var objIdentity = {ref: this.options.report_ref};
 
             objIdentity = {ref : "11699/2/6"};
             self.ws.get_objects([objIdentity],
@@ -332,13 +332,21 @@ self.options.showCreatedObjects = true;
 
                 self.$mainPanel.append(someDiv);
 
+                var download_link_id = StringUtil.uuid();
+
                 var sectionTitle = $.jqElem('div')
                   .append('Report &nbsp;&nbsp;')
                   .append(
-                    $.jqElem('a').append("Download")
+                    $.jqElem('a').append("Download").attr('id', download_link_id)
                   )
                   .html();
                 ;
+
+                setTimeout(function() {
+                  $('#' + download_link_id).on('click', function(e) {
+                    e.stopPropagation();
+                    window.location.href = self.importExportLink(self.reportData.html_links[0].URL, 'report.html');
+                  })}, 1);
 
                 ui.setContent('report-section',
                     ui.buildCollapsiblePanel({
@@ -366,7 +374,7 @@ self.options.showCreatedObjects = true;
 
                     var link_id = StringUtil.uuid();
 
-                    self.preauthMagicClick(v.URL + '?download_url', link_id);
+                    //self.preauthMagicClick(v.URL + '?download_url', link_id);
 
 
                     $ul.append(
@@ -383,6 +391,12 @@ self.options.showCreatedObjects = true;
                             .append(v.name || v.URL)
                         )
                     );
+
+                    setTimeout(function() {
+                      $('#' + link_id).on('click', function(e) {
+                        e.stopPropagation();
+                        window.location.href = self.importExportLink(v.URL, v.name || 'download');
+                      })}, 1);
                   }
                 );
 

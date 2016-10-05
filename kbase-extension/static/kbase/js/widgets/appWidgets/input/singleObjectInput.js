@@ -1,7 +1,6 @@
 /*global define*/
 /*jslint white:true,browser:true*/
 define([
-    'jquery',
     'bluebird',
     'kb_common/html',
     'kb_common/utils',
@@ -13,7 +12,16 @@ define([
     'common/dom',
     'bootstrap',
     'css!font-awesome'
-], function ($, Promise, html, utils, Workspace, serviceUtils, Validation, Events, Runtime, Dom) {
+], function (
+    Promise,
+    html,
+    utils,
+    Workspace,
+    serviceUtils,
+    Validation,
+    Events,
+    Runtime,
+    Dom) {
     'use strict';
 
     // Constants
@@ -22,31 +30,26 @@ define([
         select = t('select'), option = t('option');
 
     function factory(config) {
-        var options = {},
-            constraints = config.parameterSpec.getConstraints(),
+        var constraints = config.parameterSpec.getConstraints(),
             parent,
             container,
             workspaceId = config.workspaceId,
             bus = config.bus,
-            runCount = 0,
             dom,
             model = {
                 blacklistValues: undefined,
                 availableValues: undefined,
                 value: undefined
             },
-        runtime = Runtime.make();
-    
+            runtime = Runtime.make();
+
         model.blacklistValues = config.blacklist || [];
 
         // Validate configuration.
         if (!workspaceId) {
             throw new Error('Workspace id required for the object widget');
         }
-        //if (!workspaceUrl) {
-        //    throw new Error('Workspace url is required for the object widget');
-        //}
-        
+
         function makeInputControl(events, bus) {
             // There is an input control, and a dropdown,
             // TODO select2 after we get a handle on this...
@@ -61,15 +64,15 @@ define([
                         }
                     })
                     .map(function (objectInfo) {
-                    var selected = false;
-                    if (objectInfo.name === model.value) {
-                        selected = true;
-                    }
-                    return option({
-                        value: objectInfo.name,
-                        selected: selected
-                    }, objectInfo.name);
-                });
+                        var selected = false;
+                        if (objectInfo.name === model.value) {
+                            selected = true;
+                        }
+                        return option({
+                            value: objectInfo.name,
+                            selected: selected
+                        }, objectInfo.name);
+                    });
             }
 
             // CONTROL
@@ -290,18 +293,18 @@ define([
 
         // LIFECYCLE API
         function start() {
-            return Promise.try(function () {                
-                bus.on('run', function (message) {                    
+            return Promise.try(function () {
+                bus.on('run', function (message) {
                     parent = message.node;
                     container = parent.appendChild(document.createElement('div'));
                     dom = Dom.make({node: container});
 
                     var events = Events.make(),
                         theLayout = layout(events);
-                        
+
                     container.innerHTML = theLayout.content;
                     events.attachEvents(container);
-                        
+
                     return fetchData()
                         .then(function (data) {
                             model.availableValues = data;
@@ -322,7 +325,7 @@ define([
                             });
                             bus.emit('sync');
                         });
-                    });
+                });
             });
         }
 

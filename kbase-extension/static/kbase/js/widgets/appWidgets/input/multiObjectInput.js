@@ -2,43 +2,49 @@
 /*jslint white:true,browser:true*/
 define([
     'bluebird',
-    'base/js/namespace',
     'kb_common/html',
     'common/validation',
     'common/events',
     'common/dom',
-    'common/runtime', 
+    'common/runtime',
     './singleObjectInput',
     '../display/singleObjectDisplay',
     'bootstrap',
     'css!font-awesome'
-], function (Promise, Jupyter, html, Validation, Events, Dom, Runtime, SingleObjectInputWidget, SingleObjectDisplayWidget) {
+], function (
+    Promise,
+    html,
+    Validation,
+    Events,
+    Dom,
+    Runtime,
+    SingleObjectInputWidget,
+    SingleObjectDisplayWidget) {
     'use strict';
 
     // Constants
     var t = html.tag,
-        div = t('div'), input = t('input'), button = t('button');
+        div = t('div'), button = t('button');
 
     function factory(config) {
-        var options = {},
-            spec = config.parameterSpec,
+        var spec = config.parameterSpec,
             container,
             parent,
             bus = config.bus,
-            dom, 
+            dom,
             model = {
                 value: []
             },
             runtime = Runtime.make(),
             widgets = [];
-        
+
         function normalizeModel() {
             var newModel = model.value.filter(function (item) {
                 return item ? true : false;
             });
             model.value = newModel;
         }
-        
+
         function getModelValue() {
             return model.value;
         }
@@ -69,7 +75,7 @@ define([
                     autoValidate();
                 });
         }
-        
+
         function deleteModelValue(index) {
             return Promise.try(function () {
                 if (index !== undefined) {
@@ -118,37 +124,6 @@ define([
             }
         }
 
-        /*
-         * If the parameter is optional, and is empty, return null.
-         * If it allows multiple values, wrap single results in an array
-         * There is a weird twist where if it ...
-         * well, hmm, the only consumer of this, isValid, expects the values
-         * to mirror the input rows, so we shouldn't really filter out any
-         * values.
-         */
-
-        function getInputValue() {
-            return dom.getElement('input-container.input').value;
-        }
-
-        /*
-         *
-         * Text fields can occur in multiples.
-         * We have a choice, treat single-text fields as a own widget
-         * or as a special case of multiple-entry -- 
-         * with a min-items of 1 and max-items of 1.
-         * 
-         *
-         */
-
-        function copyProps(from, props) {
-            var newObj = {};
-            props.forEach(function (prop) {
-                newObj[prop] = from[prop];
-            });
-            return newObj;
-        }
-
         function validate() {
             return Promise.try(function () {
                 var validationOptions = {
@@ -160,42 +135,23 @@ define([
             });
         }
 
-        function updateValue() {
-
-        }
-
-        /*
-         * Creates the markup
-         * Places it into the dom node
-         * Hooks up event listeners
-         */
-        
         function makeInputControl(events, bus) {
             var items = model.value.map(function (value, index) {
                 return makeSingleInputControl(value, index, events, bus);
             });
-            
+
 
             items = items.concat(makeNewInputControl('', events, bus));
 
             var content = items.join('\n');
             return content;
         }
-        
+
         function makeSingleInputControl(currentValue, index, events, bus) {
             // CONTROL
             var preButton, postButton,
                 widgetId = html.genId(),
                 inputBus = runtime.bus().makeChannelBus(null, 'Multi object input'),
-                inputWidget = SingleObjectInputWidget.make({
-                    bus: inputBus,
-                    // initialValue: config.initialValue,
-                    parameterSpec: spec,
-                    spec: spec,
-                    workspaceInfo: config.workspaceInfo,
-                    workspaceId: config.workspaceId,
-                    fieldSpec: config.fieldSpec
-                }),
                 displayWidget = SingleObjectDisplayWidget.make({
                     bus: inputBus,
                     parameterSpec: spec,
@@ -209,9 +165,9 @@ define([
                     index: index
                 },
                 placeholder = div({id: widgetId});
-            
+
             widgets.push(widgetWrapper);
-            
+
             // set up listeners for the input
             inputBus.on('sync', function (message) {
                 var value = model.value[index];
@@ -238,8 +194,8 @@ define([
                 bus.emit('changed', {
                     newValue: model.value
                 });
-                
-                
+
+
             });
 
             preButton = div({class: 'input-group-addon', style: {width: '5ex', padding: '0'}}, String(index + 1) + '.');
@@ -252,15 +208,9 @@ define([
                         // no, we don't need to consult the control, we just remove 
                         // it...
                         deleteModelValue(widgetWrapper.index);
-                        // model.value.splice(widgetWrapper.index, 1);
-                        //var index = e.target.getAttribute('data-index'),
-                        //    control = container.querySelector('input[data-index="' + index + '"]');
-                        //control.value = '';
-                        //control.dispatchEvent(new Event('change'));
                         bus.emit('changed', {
                             newValue: model.value
                         });
-                        // render();
                     }})
             }, 'x'));
             return div({class: 'input-group', dataIndex: String(index)}, [
@@ -269,7 +219,7 @@ define([
                 postButton
             ]);
         }
-        
+
         function makeNewInputControl(currentValue, events, bus) {
             // CONTROL
             var preButton, postButton,
@@ -286,22 +236,22 @@ define([
                     fieldSpec: config.fieldSpec
                 }),
                 placeholder = div({id: widgetId});
-            
+
             widgets.push({
                 id: widgetId,
                 instance: inputWidget,
                 bus: inputBus
             });
-            
+
             inputBus.on('changed', function (message) {
                 addModelValue(message.newValue);
                 // model.value.push(message.newValue);
-                
+
                 // TODO: and insert a new row ...
-                
+
                 // first attempt, re-render the whole shebang.
                 render();
-                
+
                 // TODO: validate the main control...
                 bus.emit('changed', {
                     newValue: model.value
@@ -317,7 +267,7 @@ define([
                         // alert('add me');
                     }})
             }, '+'));
-            
+
             return div({class: 'input-group'}, [
                 preButton,
                 placeholder,
@@ -326,9 +276,9 @@ define([
         }
 
         function render() {
-            
+
             // if we have input widgets already, tear them down.
-            
+
             widgets.forEach(function (widget) {
                 widget.bus.emit('stop');
                 // TODO figure out how to remove unused channels.
@@ -336,10 +286,10 @@ define([
             });
             widgets = [];
             // we don't have to wait for anything...
-            
+
             var events = Events.make(),
                 control = makeInputControl(events, bus);
-            
+
             dom.setContent('input-container', control);
             widgets.forEach(function (widget) {
                 widget.instance.start()
@@ -366,12 +316,12 @@ define([
         }
         function autoValidate() {
             //return Promise.all(model.value.map(function (value, index) {
-                // could get from DOM, but the model is the same.
-                // var rawValue = container.querySelector('[data-index="' + index + '"]').value;
-                // console.log('VALIDATE', value);
+            // could get from DOM, but the model is the same.
+            // var rawValue = container.querySelector('[data-index="' + index + '"]').value;
+            // console.log('VALIDATE', value);
             //    return validate();
             //}))
-                return validate()
+            return validate()
                 .then(function (results) {
                     bus.emit('validation', results);
                     return;
@@ -396,7 +346,7 @@ define([
                         };
                     }
                     bus.emit('validation', validationMessage);
-                    
+
                 });
         }
 
@@ -415,7 +365,7 @@ define([
 
                     container.innerHTML = theLayout.content;
                     events.attachEvents(container);
-                    
+
                     bus.on('reset-to-defaults', function (message) {
                         resetModelValue();
                     });

@@ -156,9 +156,6 @@ define(
                 }
             }
 
-
-//XXX THIS IS ON FOR DEBUGGING PURPOSES
-self.options.showCreatedObjects = true;
             if (self.options.showCreatedObjects) {
                 var someDiv = div({dataElement : 'created-objects'});
                 self.$mainPanel.append(someDiv);

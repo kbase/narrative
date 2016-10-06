@@ -340,10 +340,15 @@ define(
                 ;
 
                 setTimeout(function() {
-                  $('#' + download_link_id).on('click', function(e) {
-                    e.stopPropagation();
-                    window.location.href = self.importExportLink(self.reportData.html_links[0].URL, 'report.html');
-                  })}, 1);
+                  if (self.reportData.direct_html_link_index) {
+                    $('#' + download_link_id).on('click', function(e) {
+                      e.stopPropagation();
+                      window.location.href = self.importExportLink(self.reportData.html_links[self.reportData.direct_html_link_index].URL, 'report.html');
+                    })
+                  } else {
+                    $('#' + download_link_id).remove();
+                  }
+                  }, 1);
 
                 ui.setContent('report-section',
                     ui.buildCollapsiblePanel({
@@ -381,7 +386,6 @@ define(
                             //.attr('href', self.importExportLink(v.URL, v.name || 'download-' + i) )
                             .on('click', function(e) {
                               e.preventDefault();
-                              console.log("CLICK ON LINK", self.importExportLink(v.URL, v.name || 'download-' + i));
                               window.location.href = self.importExportLink(v.URL, v.name || 'download-' + i);
                             })
                             .attr('id', link_id)
@@ -436,7 +440,6 @@ define(
                             //.attr('href', self.importExportLink(v.URL, v.name || 'download-' + i) )
                             .on('click', function(e) {
                               e.preventDefault();
-                              console.log("CLICK ON LINK", self.importExportLink(v.URL, v.name || 'download-' + i));
                               window.location.href = self.importExportLink(v.URL, v.name || 'download-' + i);
                             })
                             .attr('id', link_id)

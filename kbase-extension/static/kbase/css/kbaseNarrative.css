@@ -2485,6 +2485,17 @@ div[class="tooltip-inner"] {
     margin-left: 40px;
 }
 
+/* Control buttons */
+.kb-data-list-ctl span.inviso {
+    /* like mayo on wonderbread */
+    color: #FFF;
+    background-color: #FFF;
+    text-shadow: none;
+}
+.kb-data-list-ctl[enabled] {
+    background-color: lightgrey;
+}
+
 /* end data list*/
 
 

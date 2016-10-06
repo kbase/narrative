@@ -38,7 +38,7 @@ define([
     return KBWidget({
         name: 'kbaseNarrativeDataList',
         parent: kbaseAuthenticatedWidget,
-        version: '1.0.0',
+        version: '1.1.0',
         options: {
             ws_name: null, // must be the WS name, not the WS Numeric ID
 
@@ -90,7 +90,7 @@ define([
         objList: [],
         objData: {}, // old style - type_name : info
         downloadSpecCache: {tag: 'dev'},
-
+        controlClickHnd: {}, // click handlers for control buttons
         my_user_id: null,
 
         /* ----------------------------------------------------
@@ -100,6 +100,7 @@ define([
         setInfo: { }, // set_id -> { count: , div: , expanded: ,... }
         setsInitialized: false,
         MOCK_SET_ID: 666, // hardcoded workspace set object id
+        setViewMode: false, // Whether the panel is in hierarchy "mode"
 
         /** 
          * Utility function to portably return the identifier to
@@ -120,7 +121,12 @@ define([
          * @return true if in a set, false otherwise
          */
         isASet: function(obj_info) {
-            return _.has(this.setInfo, this.itemId(obj_info));
+            if (this.setViewMode) {
+                return _.has(this.setInfo, this.itemId(obj_info));
+            }
+            else {
+                return false;
+            }
         },
 
         /** 
@@ -131,9 +137,14 @@ define([
          * @return true or false
         */
         inAnySet: function(item_info) {
-            var item_id = this.itemId(item_info);
-            //console.debug('item_id = ', item_id);
-            return _.has(this.setItems, item_id);
+            if (this.setViewMode) {
+                var item_id = this.itemId(item_info);
+                //console.debug('item_id = ', item_id);
+                return _.has(this.setItems, item_id);
+            }
+            else {
+                return false;
+            }
         },
 
         getSetInfo: function(obj_info) {
@@ -161,7 +172,8 @@ define([
          *
          * @param item_info an object info tuple, as returned by the
          *                  workspace API for list_objects()
-         * @return All parents, expanded or not
+         * @return All parents, expanded or not, as a mapping with
+         *         the keys: (item_id, expanded, div).
         */
         getItemParents: function(item_info) {
             var item_id = this.itemId(item_info);
@@ -184,14 +196,18 @@ define([
             );
         },
 
-        // Extract, into 'setItems' and 'setInfo', the
+        // Extract, into 'setItems' and 'setInfo',
         // the data items in the input workspace.
         extractSets: function(ws_id) {
-            var self = this;
+            if (!this.setViewMode) {
+                return;
+            }
             if (this.setsInitialized) {
                 console.info('Sets are already initialized');
                 return;
             }
+
+            var self = this;
             console.info('Extracting sets from datalist...');
             _.each(
                 this.getWorkspaceSets(ws_id),
@@ -231,12 +247,22 @@ define([
         },
 
         itemIdsInSet: function(set_id) {
-            return this.setInfo[set_id].item_ids;
+            if (this.setViewMode) {
+                return this.setInfo[set_id].item_ids;
+            }
+            else {
+                return [];
+            }
         },
 
         // Return a list of workspace items which are set/group types
         getWorkspaceSets: function(ws_id) {
-            return this.mock_getWorkspaceSets(ws_id);
+            if (this.setViewMode) {
+                return this.mock_getWorkspaceSets(ws_id);
+            }
+            else {
+                return [];
+            }
         },
 
         mock_getWorkspaceSets: function(ws_id) {
@@ -249,8 +275,14 @@ define([
 
         // Return all items inside a given set
         getWorkspaceSetMembers: function(set_id) {
-            return this.mock_getWorkspaceSetMembers(set_id);
+            if (this.setViewMode) {
+                return this.mock_getWorkspaceSetMembers(set_id);
+            }
+            else {
+                return [];
+            }
         },
+
         // Hardcoded, fake object info list for PairedEndLibrary objects
         // within the hardcoded, fake PairedEndLibrarySet from mock_getWorkspaceSets()
         mock_getWorkspaceSetMembers: function(set_id) {
@@ -283,6 +315,7 @@ define([
          * Builds the DOM structure for the widget.
          * Includes the tables and panel.
          * If any data was passed in (options.data), that gets shoved into the datatable.
+         *
          * @param {Object} - the options set.
          * @returns {Object} this shiny new widget.
          * @private
@@ -1518,10 +1551,62 @@ define([
             //                         self.trigger('toggleSidePanelOverlay.Narrative');
             //                     });
 
+            /** Set view mode toggle */
+            var viewModeDisableCtl = ['search', 'sort', 'filter'];
+            self.viewModeDisableHnd = {};
+            var $viewMode = $('<span>')
+                .addClass('btn btn-xs btn-default kb-data-list-ctl')
+                .attr('id', 'kb-data-list-hierctl')
+                .tooltip({
+                    title: 'Hierarchical view',
+                    container: 'body',
+                    delay: {
+                        show: Config.get('tooltip').showDelay,
+                        hide: Config.get('tooltip').hideDelay
+                    }
+                })
+                .append('<span class="fa fa-copy"></span>')
+                .on('click', function () {
+                    if (self.setViewMode) {
+                        // Turn OFF set view mode
+                        self.setViewMode = false;
+                        self.renderList();
+                        $('#kb-data-list-hierctl').removeAttr('enabled');
+                        // re-enable other controls
+                        _.each(viewModeDisableCtl, function(ctl) {
+                            var ctl_id = '#kb-data-list-' + ctl + 'ctl';
+                            $(ctl_id + ' span').removeClass('inviso');
+                            $(ctl_id).on('click', self.controlClickHnd[ctl]);
+                        });
+                    } 
+                    else {
+                        // Turn ON set view mode
+                        self.setViewMode = true;
+                        self.renderList();
+                        $('#kb-data-list-hierctl').attr('enabled', '1');
+                        // disable some other controls
+                        _.each(viewModeDisableCtl, function(ctl) {
+                            var ctl_id = '#kb-data-list-' + ctl + 'ctl';
+                            $(ctl_id + ' span').addClass('inviso');
+                            $(ctl_id).off('click');
+                        });
+                    }
+                });
 
-
+            // Search control
+            self.controlClickHnd.search = function () {
+                if (!self.$searchDiv.is(':visible')) {
+                    self.$sortByDiv.hide({effect: 'blind', duration: 'fast'});
+                    self.$filterTypeDiv.hide({effect: 'blind', duration: 'fast'});
+                    self.$searchDiv.show({effect: 'blind', duration: 'fast'});
+                    self.$searchInput.focus();
+                } else {
+                    self.$searchDiv.hide({effect: 'blind', duration: 'fast'});
+                }
+            }
             var $openSearch = $('<span>')
-                .addClass('btn btn-xs btn-default')
+                .addClass('btn btn-xs btn-default kb-data-list-ctl')
+                .attr('id', 'kb-data-list-searchctl')
                 .tooltip({
                     title: 'Search data in narrative',
                     container: 'body',
@@ -1531,19 +1616,21 @@ define([
                     }
                 })
                 .append('<span class="fa fa-search"></span>')
-                .on('click', function () {
-                    if (!self.$searchDiv.is(':visible')) {
-                        self.$sortByDiv.hide({effect: 'blind', duration: 'fast'});
-                        self.$filterTypeDiv.hide({effect: 'blind', duration: 'fast'});
-                        self.$searchDiv.show({effect: 'blind', duration: 'fast'});
-                        self.$searchInput.focus();
-                    } else {
-                        self.$searchDiv.hide({effect: 'blind', duration: 'fast'});
-                    }
-                });
+                .on('click', self.controlClickHnd.search);
 
+            // Sort control
+            self.controlClickHnd.sort = function () {
+                if (!self.$sortByDiv.is(':visible')) {
+                    self.$searchDiv.hide({effect: 'blind', duration: 'fast'});
+                    self.$filterTypeDiv.hide({effect: 'blind', duration: 'fast'});
+                    self.$sortByDiv.show({effect: 'blind', duration: 'fast'});
+                } else {
+                    self.$sortByDiv.hide({effect: 'blind', duration: 'fast'});
+                }
+            };
             var $openSort = $('<span>')
-                .addClass('btn btn-xs btn-default')
+                .addClass('btn btn-xs btn-default kb-data-list-ctl')
+                .attr('id', 'kb-data-list-sortctl')
                 .tooltip({
                     title: 'Sort data list',
                     container: 'body',
@@ -1553,18 +1640,21 @@ define([
                     }
                 })
                 .append('<span class="fa fa-sort-amount-asc"></span>')
-                .on('click', function () {
-                    if (!self.$sortByDiv.is(':visible')) {
-                        self.$searchDiv.hide({effect: 'blind', duration: 'fast'});
-                        self.$filterTypeDiv.hide({effect: 'blind', duration: 'fast'});
-                        self.$sortByDiv.show({effect: 'blind', duration: 'fast'});
-                    } else {
-                        self.$sortByDiv.hide({effect: 'blind', duration: 'fast'});
-                    }
-                });
+                .on('click', self.controlClickHnd.sort);
 
+            // Filter control
+            self.controlClickHnd.filter = function () {
+                if (!self.$filterTypeDiv.is(':visible')) {
+                    self.$sortByDiv.hide({effect: 'blind', duration: 'fast'});
+                    self.$searchDiv.hide({effect: 'blind', duration: 'fast'});
+                    self.$filterTypeDiv.show({effect: 'blind', duration: 'fast'});
+                } else {
+                    self.$filterTypeDiv.hide({effect: 'blind', duration: 'fast'});
+                }
+            };
             var $openFilter = $('<span>')
-                .addClass('btn btn-xs btn-default')
+                .addClass('btn btn-xs btn-default kb-data-list-ctl')
+                .attr('id', 'kb-data-list-filterctl')
                 .tooltip({
                     title: 'Filter data by type',
                     container: 'body',
@@ -1574,15 +1664,9 @@ define([
                     }
                 })
                 .append('<span class="fa fa-filter"></span>')
-                .on('click', function () {
-                    if (!self.$filterTypeDiv.is(':visible')) {
-                        self.$sortByDiv.hide({effect: 'blind', duration: 'fast'});
-                        self.$searchDiv.hide({effect: 'blind', duration: 'fast'});
-                        self.$filterTypeDiv.show({effect: 'blind', duration: 'fast'});
-                    } else {
-                        self.$filterTypeDiv.hide({effect: 'blind', duration: 'fast'});
-                    }
-                });
+                .on('click', self.controlClickHnd.filter);
+
+            // Refresh control
             var $refreshBtn = $('<span>')
                 .addClass('btn btn-xs btn-default')
                 .tooltip({
@@ -1653,6 +1737,7 @@ define([
 
             var $header = $('<div>');
             if (self.options.parentControlPanel) {
+                self.options.parentControlPanel.addButtonToControlPanel($viewMode);
                 self.options.parentControlPanel.addButtonToControlPanel($openSearch);
                 self.options.parentControlPanel.addButtonToControlPanel($openSort);
                 self.options.parentControlPanel.addButtonToControlPanel($openFilter);
@@ -1660,6 +1745,7 @@ define([
             } else {
                 $header.addClass('row').css({'margin': '5px'})
                     .append($('<div>').addClass('col-xs-12').css({'margin': '0px', 'padding': '0px', 'text-align': 'right'})
+                        .append($viewMode)
                         .append($openSearch)
                         .append($openSort)
                         .append($openFilter))

@@ -211,15 +211,15 @@ class AppManager(object):
 
         # Get the spec & params
         spec = self.spec_manager.get_spec(app_id, tag)
+        app_type = spec['info'].get('app_type', 'app')
+
+        if app_type == 'app':
+            raise ValueError('This app appears to be a long-running job! Please start it using the run_app function instead.')
 
         if 'behavior' not in spec:
             raise ValueError("This app appears invalid - it has no defined behavior")
 
         behavior = spec['behavior']
-
-        if 'kb_service_input_mapping' in behavior:
-            # it's a service! Should run this with run_app!
-            raise ValueError('This app appears to be a long-running job! Please start it using the run_app function instead.')
 
         if 'script_module' in behavior or 'script_name' in behavior:
             # It's an old NJS script. These don't work anymore.
@@ -251,9 +251,25 @@ class AppManager(object):
             'run_id': run_id
         })
 
-        # now just map onto outputs.
-        (output_widget, widget_params) = map_outputs_from_state([], params, spec)
-        return WidgetManager().show_output_widget(output_widget, widget_params, cell_id=cell_id, tag=tag)
+        if app_type == 'view':
+            # now just map onto outputs.
+            (output_widget, widget_params) = map_outputs_from_state([], params, spec)
+            return WidgetManager().show_output_widget(output_widget, widget_params, cell_id=cell_id, tag=tag)
+        elif app_type == 'editor':
+            input_vals = self._map_inputs(spec['behavior']['kb_service_input_mapping'], params)
+
+            function_name = spec['behavior']['kb_service_name'] + '.' + spec['behavior']['kb_service_method']
+            return self.service_client.sync_call(
+                function_name,
+                input_vals,
+                # [{
+                #     'data': set_data,
+                #     'output_object_name': params['output_object_name'],
+                #     'workspace': ws
+                # }],
+                service_version=tag
+            )[0]
+
 
     def run_widget_app(self, app_id, tag="release", version=None, cell_id=None, run_id=None):
         """

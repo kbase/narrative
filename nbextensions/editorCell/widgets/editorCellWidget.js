@@ -1544,9 +1544,6 @@ define([
                         // set with no items.
                         // stuff a sample item in here to start with.
                         items: [
-                            {
-                                ref: '11733/16/4'
-                            }
                         ]
                     }
                 };

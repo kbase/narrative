@@ -325,6 +325,9 @@ define([
         // dataUpdated.Narrative is emitted by the data sidebar list
         // after it has fetched and updated its data. Not the best of
         // triggers that the ws has changed, not the worst.
+        
+        // TODO: complete the work for narrative startup and migrate this (and all such instances)
+        //       into the core startup function.
         $(document).on('dataUpdated.Narrative', function () {
             runtime.bus().emit('workspace-changed');
         });

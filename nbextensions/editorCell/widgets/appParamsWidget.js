@@ -181,7 +181,8 @@ define([
                     appSpec: appSpec,
                     parameterSpec: parameterSpec,
                     bus: fieldBus,
-                    workspaceId: workspaceInfo.id
+                    workspaceId: workspaceInfo.id,
+                    referenceType: 'ref'
                 })
             };
         }
@@ -264,12 +265,15 @@ define([
                         ]
                     }),
                     // Main editor panel
-                    ui.buildPanel({
-                        title: span(['EDITOR', span({dataElement: 'advanced-hidden-message', style: {marginLeft: '6px', fontStyle: 'italic'}})]), 
-                        name: 'field-area',
-                        body: div({dataElement: 'fields'}),
-                        classes: ['kb-panel-light']
-                    })
+                    div({dataElement: 'field-area'}, [
+                        div({dataElement: 'fields'})
+                    ])
+//                    ui.buildPanel({
+//                        title: span(['EDITOR', span({dataElement: 'advanced-hidden-message', style: {marginLeft: '6px', fontStyle: 'italic'}})]), 
+//                        name: 'field-area',
+//                        body: div({dataElement: 'fields'}),
+//                        classes: ['kb-panel-light']
+//                    })
                 ]);
 
             return {
@@ -348,10 +352,10 @@ define([
         // Render layout per editor type.
         function renderEditorLayout() {
             return div([
-                div({dataParameter: 'output_readset_name'}),
-                div({dataParameter: 'desc'}),
-                div({dataParameter: 'input_reads_list'}),
-                div({dataParameter: 'input_reads_list2'})
+                div({dataParameter: 'name'}),
+                div({dataParameter: 'description'}),
+                // div({dataParameter: 'type'}),
+                div({dataParameter: 'items'})
             ]);
         }
 

@@ -28,9 +28,10 @@ define([
 
     function factory(config) {
         var spec = config.parameterSpec,
+            bus = config.bus,
+            objectRefType = config.referenceType || 'name',
             container,
             parent,
-            bus = config.bus,
             dom,
             model = {
                 value: []
@@ -156,7 +157,8 @@ define([
                     bus: inputBus,
                     parameterSpec: spec,
                     workspaceInfo: config.workspaceInfo,
-                    workspaceId: config.workspaceId
+                    workspaceId: config.workspaceId,
+                    referenceType: objectRefType
                 }),
                 widgetWrapper = {
                     id: widgetId,
@@ -233,7 +235,8 @@ define([
                     workspaceInfo: config.workspaceInfo,
                     workspaceId: config.workspaceId,
                     blacklist: model.value,
-                    fieldSpec: config.fieldSpec
+                    fieldSpec: config.fieldSpec,
+                    referenceType: objectRefType
                 }),
                 placeholder = div({id: widgetId});
 
@@ -276,9 +279,7 @@ define([
         }
 
         function render() {
-
             // if we have input widgets already, tear them down.
-
             widgets.forEach(function (widget) {
                 widget.bus.emit('stop');
                 // TODO figure out how to remove unused channels.

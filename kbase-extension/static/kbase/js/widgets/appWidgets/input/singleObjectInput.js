@@ -31,9 +31,10 @@ define([
 
     function factory(config) {
         var constraints = config.parameterSpec.getConstraints(),
+            workspaceId = config.workspaceId,
+            objectRefType = config.referenceType || 'name',
             parent,
             container,
-            workspaceId = config.workspaceId,
             bus = config.bus,
             dom,
             model = {
@@ -59,17 +60,18 @@ define([
                     .filter(function (objectInfo) {
                         if (model.blacklistValues) {
                             return !model.blacklistValues.some(function (value) {
-                                return (value === objectInfo.name);
+                                return (value === getObjectRef(objectInfo));
                             });
                         }
                     })
                     .map(function (objectInfo) {
-                        var selected = false;
-                        if (objectInfo.name === model.value) {
+                        var selected = false,
+                            ref = getObjectRef(objectInfo);
+                        if (ref === model.value) {
                             selected = true;
                         }
                         return option({
-                            value: objectInfo.name,
+                            value: ref,
                             selected: selected
                         }, objectInfo.name);
                     });
@@ -165,8 +167,14 @@ define([
                         authToken: runtime.authToken(),
                         workspaceServiceUrl: runtime.config('services.workspace.url')
                     };
-
-                return Validation.validateWorkspaceObjectName(rawValue, validationOptions);
+                    
+                switch (objectRefType) {
+                    case 'ref':
+                        return Validation.validateWorkspaceObjectRef(rawValue, validationOptions);
+                    case 'name':
+                    default:
+                        return Validation.validateWorkspaceObjectName(rawValue, validationOptions);
+                }                        
             })
                 .then(function (validationResult) {
                     return {
@@ -200,6 +208,8 @@ define([
                 return getObjectsByType(type);
             }))
                 .then(function (objectSets) {
+                    // we could also use [] rather than Array.prototype, but
+                    // this way is both more mysterious and better performing.
                     return Array.prototype.concat.apply([], objectSets);
                 })
                 .then(function (objects) {
@@ -258,6 +268,19 @@ define([
                     });
                 });
         }
+        
+        function getObjectRef(objectInfo) {
+            switch (objectRefType) {
+                case 'name':
+                    return objectInfo.name;
+                    break;
+                case 'ref':
+                    return objectInfo.ref;
+                    break;
+                default:
+                    throw new Error('Unsupported object reference type ' + objectRefType);
+            }
+        }
 
         /*
          * Handle the workspace being updated and reflecting that correctly
@@ -274,7 +297,7 @@ define([
                     if (!utils.isEqual(data, model.availableValues)) {
                         model.availableValues = data;
                         var matching = model.availableValues.filter(function (value) {
-                            if (value.name === model.value) {
+                            if (value.name === getObjectRef(value)) {
                                 return true;
                             }
                             return false;

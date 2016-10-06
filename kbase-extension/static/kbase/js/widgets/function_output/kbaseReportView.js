@@ -378,22 +378,22 @@ define(
                       $.jqElem('li')
                         .append(
                           $.jqElem('a')
-                            .attr('href', self.importExportLink(v.URL, v.name || 'download-' + i) )
-                            /*.on('click', function(e) {
+                            //.attr('href', self.importExportLink(v.URL, v.name || 'download-' + i) )
+                            .on('click', function(e) {
                               e.preventDefault();
                               console.log("CLICK ON LINK", self.importExportLink(v.URL, v.name || 'download-' + i));
                               window.location.href = self.importExportLink(v.URL, v.name || 'download-' + i);
-                            })*/
+                            })
                             .attr('id', link_id)
                             .append(v.name || v.URL)
                         )
                     );
 
-                    /*setTimeout(function() {
+                    setTimeout(function() {
                       $('#' + link_id).on('click', function(e) {
                         e.stopPropagation();
                         window.location.href = self.importExportLink(v.URL, v.name || 'download');
-                      })}, 1);*/
+                      })}, 1);
                   }
                 );
 
@@ -433,22 +433,22 @@ define(
                       $.jqElem('li')
                         .append(
                           $.jqElem('a')
-                            .attr('href', self.importExportLink(v.URL, v.name || 'download-' + i) )
-                            /*.on('click', function(e) {
+                            //.attr('href', self.importExportLink(v.URL, v.name || 'download-' + i) )
+                            .on('click', function(e) {
                               e.preventDefault();
                               console.log("CLICK ON LINK", self.importExportLink(v.URL, v.name || 'download-' + i));
                               window.location.href = self.importExportLink(v.URL, v.name || 'download-' + i);
-                            })*/
+                            })
                             .attr('id', link_id)
                             .append(v.name || v.URL)
                         )
                     );
 
-                    /*setTimeout(function() {
+                    setTimeout(function() {
                       $('#' + link_id).on('click', function(e) {
                         e.stopPropagation();
                         window.location.href = self.importExportLink(v.URL, v.name || 'download');
-                      })}, 1);*/
+                      })}, 1);
                   }
                 );
 

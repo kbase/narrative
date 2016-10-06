@@ -39,6 +39,7 @@ define(
             showReportText: true,
             showCreatedObjects: false,
             showFiles : true,
+            showHTML : true,
             inNarrative: true, // todo: toggles whether data links show in narrative or new page
 
             wsURL: Config.url('workspace'),
@@ -341,6 +342,7 @@ define(
                 setTimeout(function() {
                   $('#' + download_link_id).on('click', function(e) {
                     e.stopPropagation();
+                    console.log("IE LINK IS ", self.importExportLink(self.reportData.html_links[0].URL, 'report.html') );
                     window.location.href = self.importExportLink(self.reportData.html_links[0].URL, 'report.html');
                   })}, 1);
 
@@ -354,6 +356,61 @@ define(
                         body: reportHTML
                     })
                 );
+            }
+
+            if (self.options.showHTML) {
+              var someDiv = div({dataElement : 'downloadable-html'});
+              self.$mainPanel.append(someDiv);
+
+              var body = 'No files to download';
+
+              if (self.reportData.html_links && self.reportData.html_links.length) {
+                var $ul = $.jqElem('ul');
+                $.each(
+                  self.reportData.html_links,
+                  function (i, v) {
+
+                    var link_id = StringUtil.uuid();
+
+                    //self.preauthMagicClick(v.URL + '?download_url', link_id);
+
+
+                    $ul.append(
+                      $.jqElem('li')
+                        .append(
+                          $.jqElem('a')
+                            .attr('href', self.importExportLink(v.URL, v.name || 'download-' + i) )
+                            /*.on('click', function(e) {
+                              e.preventDefault();
+                              console.log("CLICK ON LINK", self.importExportLink(v.URL, v.name || 'download-' + i));
+                              window.location.href = self.importExportLink(v.URL, v.name || 'download-' + i);
+                            })*/
+                            .attr('id', link_id)
+                            .append(v.name || v.URL)
+                        )
+                    );
+
+                    /*setTimeout(function() {
+                      $('#' + link_id).on('click', function(e) {
+                        e.stopPropagation();
+                        window.location.href = self.importExportLink(v.URL, v.name || 'download');
+                      })}, 1);*/
+                  }
+                );
+
+                body = $.jqElem('div').append($ul).html();
+              }
+              ui.setContent('downloadable-html',
+                  ui.buildCollapsiblePanel({
+                      title: 'HTML Files',
+                      name: 'downloadable-html-toggle',
+                      hidden: false,
+                      type: 'default',
+                      classes: ['kb-panel-container'],
+                      body: body
+                  })
+              );
+
             }
 
             if (self.options.showFiles) {
@@ -377,7 +434,7 @@ define(
                       $.jqElem('li')
                         .append(
                           $.jqElem('a')
-                            //.attr('href', self.importExportLink(v.URL, v.name || 'download-' + i) )
+                            .attr('href', self.importExportLink(v.URL, v.name || 'download-' + i) )
                             /*.on('click', function(e) {
                               e.preventDefault();
                               console.log("CLICK ON LINK", self.importExportLink(v.URL, v.name || 'download-' + i));
@@ -388,11 +445,11 @@ define(
                         )
                     );
 
-                    setTimeout(function() {
+                    /*setTimeout(function() {
                       $('#' + link_id).on('click', function(e) {
                         e.stopPropagation();
                         window.location.href = self.importExportLink(v.URL, v.name || 'download');
-                      })}, 1);
+                      })}, 1);*/
                   }
                 );
 

@@ -1643,7 +1643,7 @@ define([
 
             renderUI();
         }
-        
+
          function resetAppAndEdit(source) {
             // only do this if we are not editing.
 
@@ -1722,7 +1722,7 @@ define([
                     } else {
                         // Hmm this is a rather odd case, but it has been seen in the wild.
                         // E.g. it could (logically) occur during launch phase (although the cancel button should not be available.)
-                        // In erroneous conditions it could occur if a job failed or was 
+                        // In erroneous conditions it could occur if a job failed or was
                         // cancelled but the state machine got confused.
                         model.deleteItem('exec');
                         fsm.newState({mode: 'editing', params: 'complete', code: 'built'});

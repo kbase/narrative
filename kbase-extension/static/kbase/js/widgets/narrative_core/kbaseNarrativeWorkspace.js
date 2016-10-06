@@ -475,19 +475,32 @@ define([
         },
 
         determineMethodCellType: function(spec) {
-            if (spec.info.app_type) {
-                // Should be working after this PR will be deployed:
-                // https://github.com/kbase/narrative_method_store/pull/36
-                if (spec.info.app_type === 'editor') {
+            console.log('DETERMINING CELL TYPE', spec);
+            
+            switch (spec.info.id) {
+                case 'ReadGroupEditor/ReadGroupEditor':
                     return 'editor';
-                } else if (spec.info.app_type === 'viewer') {
-                    return 'view';
-                } else if (spec.info.app_type === 'widget') {
-                    return 'widget';
-                }
-                // spec.info.app_type should be "app" by default, but we still
-                // use logic from below until we switch all viewers to app_type.
             }
+
+            // Should be working after this PR will be deployed:
+            // https://github.com/kbase/narrative_method_store/pull/36
+            switch (spec.info.app_type) {
+                case 'app':
+                    return 'app';
+                    break;
+                case 'viewer':
+                    return 'view';
+                    break;
+                case 'editor':
+                    return 'editor';
+                    break;
+                //case 'widget':
+                //    return 'widget';
+                //    break;
+            }
+            // spec.info.app_type should be "app" by default, but we still
+            // use logic from below until we switch all viewers to app_type.
+
 
             // An app will execute via the method described in the behavior. If
             // such a method is not described, it is by definition not an
@@ -506,14 +519,15 @@ define([
                 return 'view';
             }
 
-            // A very small class of methods are just non-app-calling widgets.
+            // This should disappear soon. Handling for new cell types prior
+            // to the spec.info.app_type property
             switch (spec.info.id) {
                 //case 'model_support/edit_model':
-                case 'fba_tools/edit_metabolic_model':
-                case 'fba_tools/create_or_edit_media':
-                case 'NarrativeTest/test_editor':
+                //case 'fba_tools/edit_metabolic_model':
+                //case 'fba_tools/create_or_edit_media':                
                 //case 'model_support/edit_media':
-                    return 'widget';
+                case 'ReadGroupEditor/ReadGroupEditor':
+                    return 'editor';
             }
 
             // ... while in reality, ANY app which does not execute is for now

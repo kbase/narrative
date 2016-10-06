@@ -96,6 +96,10 @@
         "widget": {
             "url": "http://localhost:11001",
             "name": "Widget Service"
+        },
+        "service_wizard": {
+            "url": "https://next.kbase.us/services/service_wizard",
+            "name": "Service Wizard"
         }
     },
     "resources": {

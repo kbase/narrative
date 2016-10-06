@@ -21,29 +21,41 @@ define([
             spec = config.parameterSpec,
             workspaceInfo = config.workspaceInfo,
             workspaceId = config.workspaceId,
+            objectRefType = config.referenceType || 'name',
             runtime = Runtime.make(),
             container,
             bus = config.bus,
             model;
 
         // DATA 
-        
+
+        function getObjectRef() {
+            switch (objectRefType) {
+                case 'name':
+                    return {
+                        wsid: workspaceId,
+                        name: model.getItem('value')
+                    };
+                    break;
+                case 'ref':
+                    return {
+                        ref: model.getItem('value')
+                    };
+                    break;
+                default:
+                    throw new Error('Unsupported object reference type ' + objectRefType);
+            }
+        }
+
         function getObject(value) {
             var workspace = new Workspace(runtime.config('services.workspace.url'), {
                 token: runtime.authToken()
             });
-//            console.log('OBJ', {
-//                    wsid: workspaceId,
-//                    name: model.getItem('value')
-//                });
             return workspace.get_object_info_new({
-                objects: [{
-                    wsid: workspaceId,
-                    name: model.getItem('value')
-                }],
+                objects: [getObjectRef()],
                 includeMetadata: 1,
                 ignoreErrors: 1
-                
+
             })
                 .then(function (data) {
                     var objectInfo = data[0];
@@ -53,7 +65,7 @@ define([
                     return null;
                 });
         }
-        
+
         // VIEW
 
         function render() {
@@ -62,8 +74,8 @@ define([
                     // console.log('OBJECT INFO', objectInfo);            
                     container.innerHTML = div({style: {padding: '3px', border: '1px solid gray', backgroundColor: '#eeeeee'}}, [
                         div({style: {fontWeight: 'bold'}}, objectInfo.name),
-                        div({style: {fontStyle: 'italic'}}, objectInfo.typeName  + ' v' + objectInfo.typeMajorVersion + '.' + objectInfo.typeMinorVersion + ' (' + objectInfo.typeModule + ') '),
-                        div({style: {fontStyle: 'italic'}}, objectInfo.save_date)                        
+                        div({style: {fontStyle: 'italic'}}, objectInfo.typeName + ' v' + objectInfo.typeMajorVersion + '.' + objectInfo.typeMinorVersion + ' (' + objectInfo.typeModule + ') '),
+                        div({style: {fontStyle: 'italic'}}, objectInfo.save_date)
                     ]);
                 });
         }

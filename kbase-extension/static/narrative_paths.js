@@ -69,6 +69,7 @@ require.config({
 
 
         common: 'kbase/js/common/',
+        kb_sdk_clients: 'kbase/js/kb_sdk_clients',
         widgets: 'kbase/js/widgets',
 
 

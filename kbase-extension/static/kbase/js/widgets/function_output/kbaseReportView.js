@@ -342,7 +342,6 @@ define(
                 setTimeout(function() {
                   $('#' + download_link_id).on('click', function(e) {
                     e.stopPropagation();
-                    console.log("IE LINK IS ", self.importExportLink(self.reportData.html_links[0].URL, 'report.html') );
                     window.location.href = self.importExportLink(self.reportData.html_links[0].URL, 'report.html');
                   })}, 1);
 

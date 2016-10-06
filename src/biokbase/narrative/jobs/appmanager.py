@@ -259,16 +259,25 @@ class AppManager(object):
             input_vals = self._map_inputs(spec['behavior']['kb_service_input_mapping'], params)
 
             function_name = spec['behavior']['kb_service_name'] + '.' + spec['behavior']['kb_service_method']
-            return self.service_client.sync_call(
-                function_name,
-                input_vals,
-                # [{
-                #     'data': set_data,
-                #     'output_object_name': params['output_object_name'],
-                #     'workspace': ws
-                # }],
-                service_version=tag
-            )[0]
+            try:
+                result = [
+                    function_name,
+                    input_vals,
+                    tag
+                ]
+                # result = self.service_client.sync_call(
+                #     function_name,
+                #     input_vals,
+                #     # [{
+                #     #     'data': set_data,
+                #     #     'output_object_name': params['output_object_name'],
+                #     #     'workspace': ws
+                #     # }],
+                #     service_version=tag
+                # )[0]
+                return result
+            except:
+                raise
 
 
     def run_widget_app(self, app_id, tag="release", version=None, cell_id=None, run_id=None):

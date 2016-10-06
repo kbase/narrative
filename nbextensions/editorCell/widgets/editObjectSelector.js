@@ -63,13 +63,15 @@ define([
             selectedReadsSetItem;
         
         function doCreate(e) {
+            e.preventDefault();
+            e.stopPropagation();
             var name = ui.getElement('new-object-name').value;
                 // value = ui.getElement('new-object-type').value;
-            e.preventDefault();
             bus.emit('create-new-set', {
                 name: name
                 // type: value
             });
+            return false;
         }
 
         function renderLayout() {
@@ -86,7 +88,7 @@ define([
                     div({style: {fontStyle: 'italic'}}, 'or'),
                     form({
                         class: 'form-inline',
-                        id: events.addEvent({type: 'submit', handler: 'doCreate'})
+                        id: events.addEvent({type: 'submit', handler: doCreate})
                     }, [
                         span({style: {padding: '0 4px 0 0'}}, 'Create a new set named'),
                         input({dataElement: 'new-object-name', class: 'form-control'}),

@@ -245,6 +245,7 @@ class AppManager(object):
 
         # Preflight check the params - all required ones are present, all values are the right type, all numerical values are in given ranges
         spec_params = self.spec_manager.app_params(spec)
+        spec_params_map = dict((spec_params[i]['id'],spec_params[i]) for i in range(len(spec_params)))
 
         (params, ws_input_refs) = self._validate_parameters(app_id, tag, spec_params, params)
 
@@ -252,7 +253,7 @@ class AppManager(object):
         if ws_id is None:
             raise ValueError('Unable to retrive current Narrative workspace information!')
 
-        input_vals = self._map_inputs(spec['behavior']['kb_service_input_mapping'], params)
+        input_vals = self._map_inputs(spec['behavior']['kb_service_input_mapping'], params, spec_params_map)
 
         service_method = spec['behavior']['kb_service_method']
         service_name = spec['behavior']['kb_service_name']
@@ -438,8 +439,8 @@ class AppManager(object):
             (output_widget, widget_params) = map_outputs_from_state([], params, spec)
             return WidgetManager().show_output_widget(output_widget, widget_params, cell_id=cell_id, tag=tag)
         elif app_type == 'editor':
-            input_vals = self._map_inputs(spec['behavior']['kb_service_input_mapping'], params)
-
+            spec_params_map = dict((spec_params[i]['id'],spec_params[i]) for i in range(len(spec_params)))
+            input_vals = self._map_inputs(spec['behavior']['kb_service_input_mapping'], params, spec_params_map)
             function_name = spec['behavior']['kb_service_name'] + '.' + spec['behavior']['kb_service_method']
             try:
                 result = [
@@ -636,7 +637,20 @@ class AppManager(object):
 
         return (params, ws_input_refs)
 
-    def _map_inputs(self, input_mapping, params):
+    def _map_group_inputs(self, value, spec_param):
+        if isinstance(value, list):
+            return [self._map_group_inputs(v, spec_param) for v in value]
+        else:
+            if 'id_mapping' in spec_param:
+                mapped_value = dict()
+                id_map = spec_param['id_mapping']
+                for k in id_map:
+                    mapped_value[id_map[k]] = value[k]
+                return mapped_value
+            else:
+                return value
+
+    def _map_inputs(self, input_mapping, params, spec_params):
         """
         Maps the dictionary of parameters and inputs based on rules provided in the input_mapping.
         This iterates over the list of input_mappings, and uses them as a filter to apply to each
@@ -654,6 +668,8 @@ class AppManager(object):
             p_value = None
             if 'input_parameter' in p:
                 p_value = params.get(p['input_parameter'], None)
+                if spec_params[p['input_parameter']].get('type', '') == 'group':
+                    p_value = self._map_group_inputs(p_value, spec_params[p['input_parameter']])
                 # turn empty strings into None
                 if isinstance(p_value, basestring) and len(p_value) == 0:
                     p_value = None

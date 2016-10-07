@@ -122,5 +122,50 @@ class AppManagerTestCase(unittest.TestCase):
         self.assertIn('11635/9/1', ws_inputs)
         self.assertIn('11635/10/1', ws_inputs)
 
+    def test_input_mapping(self):
+        inputs = {
+            "reads_tuple": [
+                {
+                    "input_reads_label": "reads file 1",
+                    "input_reads_obj": "rhodobacterium.art.q20.int.PE.reads",
+                    "input_reads_metadata": {
+                        "key1": "value1"
+                    }
+                },
+                {
+                    "input_reads_label": "reads file 2",
+                    "input_reads_obj": "rhodobacterium.art.q10.PE.reads",
+                    "input_reads_metadata": {
+                        "key2": "value2"
+                    }
+                }
+            ],
+            "output_object": "MyReadsSet",
+            "description": "New Reads Set"
+        }
+        app_id = "NarrativeTest/test_create_set"
+        tag = "dev"
+        from biokbase.narrative.jobs.specmanager import SpecManager
+        sm = SpecManager()
+        spec = sm.get_spec(app_id, tag=tag)
+        spec_params = sm.app_params(spec)
+        spec_params_map = dict((spec_params[i]['id'],spec_params[i]) for i in range(len(spec_params)))
+        mapped_inputs = self.mm._map_inputs(spec['behavior']['kb_service_input_mapping'], inputs, spec_params_map)
+        expected = [{
+            u'output_object_name': 'MyReadsSet',
+            u'set_data': [{
+                u'label': 'reads file 1',
+                u'metadata': {'key1': 'value1'},
+                u'obj': 'rhodobacterium.art.q20.int.PE.reads'
+            }, {
+                u'label': 'reads file 2',
+                u'metadata': {'key2': 'value2'},
+                u'obj': 'rhodobacterium.art.q10.PE.reads'
+            }],
+            u'workspace': None
+        }]
+        self.assertListEqual(expected, mapped_inputs)
+
+
 if __name__ == "__main__":
     unittest.main()

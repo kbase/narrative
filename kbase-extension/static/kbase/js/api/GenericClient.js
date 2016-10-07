@@ -16,7 +16,7 @@ define([
         var lookup_url = url;
         this.use_url_lookup = use_url_lookup;
         var _use_url_lookup = (typeof use_url_lookup !== 'undefined') &&
-            (use_url_lookup != null) ? use_url_lookup : true;
+            (use_url_lookup !== null) ? use_url_lookup : true;
 
         this.timeout = timeout;
         var _timeout = timeout;
@@ -31,21 +31,28 @@ define([
 
 
         this.sync_call = function (service_method, param_list, _callback, _errorCallback, service_version) {
-            if (Object.prototype.toString.call(param_list) !== '[object Array]')
+            if (Object.prototype.toString.call(param_list) !== '[object Array]') {
                 throw 'Argument param_list must be an array';
-            if (_callback && typeof _callback !== 'function')
+            }
+            if (_callback && typeof _callback !== 'function') {
                 throw 'Argument _callback must be a function if defined';
-            if (_errorCallback && typeof _errorCallback !== 'function')
+            }
+            if (_errorCallback && typeof _errorCallback !== 'function') {
                 throw 'Argument _errorCallback must be a function if defined';
-            if (typeof arguments === 'function' && arguments.length > 5)
+            }
+            if (typeof arguments === 'function' && arguments.length > 5) {
                 throw 'Too many arguments (' + arguments.length + ' instead of 5)';
+            }
             var _url = lookup_url;
             if (_use_url_lookup) {
                 var deferred = $.Deferred();
                 var module_name = service_method.split('.')[0];
-                json_call_ajax(_url, 'ServiceWizard.get_service_status', [{'module_name': module_name,
-                        'version': service_version}], 1, function (service_status_ret) {
-                    _url = service_status_ret['url'];
+                console.log('looking up service module', module_name, service_version);
+                json_call_ajax(_url, 'ServiceWizard.get_service_status', [{
+                        module_name: module_name,
+                        version: service_version || null
+                    }], 1, function (service_status_ret) {
+                    _url = service_status_ret.url;
                     json_call_ajax(_url, service_method, param_list, 0, _callback, _errorCallback, deferred);
                 }, function (err) {
                     if (_errorCallback) {
@@ -68,8 +75,9 @@ define([
          * JSON call using jQuery method.
          */
         function json_call_ajax(_url, method, params, numRets, callback, errorCallback, deferred) {
-            if (!deferred)
+            if (!deferred) {
                 deferred = $.Deferred();
+            }
 
             if (typeof callback === 'function') {
                 deferred.done(callback);
@@ -120,6 +128,10 @@ define([
                     deferred.resolve(result);
                 },
                 error: function (xhr, textStatus, errorThrown) {
+                    var errObj = JSON.parse(xhr.responseText);
+                    console.error('ERR?', errObj , xhr);
+                    console.error('ERR!', errObj.error.error.replace('\n', '<br>'));
+                    console.error('URL', _url, _use_url_lookup);
                     var error;
                     if (xhr.responseText) {
                         try {

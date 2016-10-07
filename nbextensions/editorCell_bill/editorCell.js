@@ -178,8 +178,8 @@ define([
                         };
                     })
                     .catch(function (err) {
-                        console.error('ERROR starting app cell', err);
-                        alert('Error starting app cell: ' + err.message);
+                        console.error('ERROR starting editor cell', err);
+                        alert('Error starting editor cell: ' + err.message);
                     });
             });
         }

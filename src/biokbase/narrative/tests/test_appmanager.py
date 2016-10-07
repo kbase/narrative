@@ -2,11 +2,13 @@
 Tests for the app manager.
 """
 from biokbase.narrative.jobs.appmanager import AppManager
+from biokbase.narrative.jobs.specmanager import SpecManager
 from IPython.display import HTML
 import unittest
 import mock
 from traitlets import Instance
 import os
+
 
 class AppManagerTestCase(unittest.TestCase):
     @classmethod
@@ -28,11 +30,11 @@ class AppManagerTestCase(unittest.TestCase):
         self.assertTrue(usage)
 
         # bad id
-        with self.assertRaises(ValueError) as err:
+        with self.assertRaises(ValueError):
             self.mm.app_usage(self.bad_app_id)
 
         # bad tag
-        with self.assertRaises(ValueError) as err:
+        with self.assertRaises(ValueError):
             self.mm.app_usage(self.good_app_id, self.bad_tag)
 
     def test_app_usage_html(self):
@@ -48,14 +50,14 @@ class AppManagerTestCase(unittest.TestCase):
         self.assertIsInstance(apps, HTML)
 
     def test_available_apps_bad(self):
-        with self.assertRaises(ValueError) as err:
+        with self.assertRaises(ValueError):
             self.mm.available_apps(self.bad_tag)
 
     @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')
     def test_run_app_good_inputs(self, m):
         m.return_value._send_comm_message.return_value = None
         pass
-        # self.assertFalse("TODO: this test and code with mocking")
+        # TODO: self.assertFalse("this test and code with mocking")
 
     @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')
     def test_run_app_bad_id(self, m):
@@ -65,29 +67,36 @@ class AppManagerTestCase(unittest.TestCase):
     @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')
     def test_run_app_bad_tag(self, m):
         m.return_value._send_comm_message.return_value = None
-        self.assertIsNone(self.mm.run_app(self.good_app_id, None, tag=self.bad_tag))
+        self.assertIsNone(self.mm.run_app(self.good_app_id,
+                                          None,
+                                          tag=self.bad_tag))
 
     @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')
     def test_run_app_bad_version_match(self, m):
         # fails because a non-release tag can't be versioned
         m.return_value._send_comm_message.return_value = None
-        self.assertIsNone(self.mm.run_app(self.good_app_id, None, tag=self.good_tag, version=">0.0.1"))
+        self.assertIsNone(self.mm.run_app(self.good_app_id,
+                                          None,
+                                          tag=self.good_tag,
+                                          version=">0.0.1"))
 
     @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')
     def test_run_app_missing_inputs(self, m):
         m.return_value._send_comm_message.return_value = None
-        self.assertIsNone(self.mm.run_app(self.good_app_id, None, tag=self.good_tag))
+        self.assertIsNone(self.mm.run_app(self.good_app_id,
+                                          None,
+                                          tag=self.good_tag))
 
     def test_app_description(self):
         desc = self.mm.app_description(self.good_app_id, tag=self.good_tag)
         self.assertIsInstance(desc, HTML)
 
     def test_app_description_bad_tag(self):
-        with self.assertRaises(ValueError) as err:
+        with self.assertRaises(ValueError):
             self.mm.app_description(self.good_app_id, tag=self.bad_tag)
 
     def test_app_description_bad_name(self):
-        with self.assertRaises(ValueError) as err:
+        with self.assertRaises(ValueError):
             self.mm.app_description(self.bad_app_id)
 
     def test_validate_params(self):
@@ -115,7 +124,6 @@ class AppManagerTestCase(unittest.TestCase):
         tag = "dev"
         prev_ws_id = os.environ.get('KB_WORKSPACE_ID', None)
         os.environ['KB_WORKSPACE_ID'] = 'wjriehl:1475006266615'
-        from biokbase.narrative.jobs.specmanager import SpecManager
         sm = SpecManager()
         spec = sm.get_spec(app_id, tag=tag)
         (params, ws_inputs) = self.mm._validate_parameters(app_id, tag, sm.app_params(spec), inputs)
@@ -150,7 +158,6 @@ class AppManagerTestCase(unittest.TestCase):
         }
         app_id = "NarrativeTest/test_create_set"
         tag = "dev"
-        from biokbase.narrative.jobs.specmanager import SpecManager
         sm = SpecManager()
         spec = sm.get_spec(app_id, tag=tag)
         spec_params = sm.app_params(spec)

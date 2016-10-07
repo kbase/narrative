@@ -95,7 +95,7 @@ class AppManagerTestCase(unittest.TestCase):
             "reads_tuple": [
                 {
                     "input_reads_label": "reads file 1",
-                    "input_reads_obj": "rhodobacterium.art.q20.int.PE.reads",
+                    "input_reads_obj": "11635/rhodobacterium.art.q20.int.PE.reads",
                     "input_reads_metadata": {
                         "key1": "value1"
                     }
@@ -127,14 +127,14 @@ class AppManagerTestCase(unittest.TestCase):
             "reads_tuple": [
                 {
                     "input_reads_label": "reads file 1",
-                    "input_reads_obj": "rhodobacterium.art.q20.int.PE.reads",
+                    "input_reads_obj": "11635/rhodobacterium.art.q20.int.PE.reads",
                     "input_reads_metadata": {
                         "key1": "value1"
                     }
                 },
                 {
                     "input_reads_label": "reads file 2",
-                    "input_reads_obj": "rhodobacterium.art.q10.PE.reads",
+                    "input_reads_obj": "11635/rhodobacterium.art.q10.PE.reads",
                     "input_reads_metadata": {
                         "key2": "value2"
                     }
@@ -153,15 +153,18 @@ class AppManagerTestCase(unittest.TestCase):
         mapped_inputs = self.mm._map_inputs(spec['behavior']['kb_service_input_mapping'], inputs, spec_params_map)
         expected = [{
             u'output_object_name': 'MyReadsSet',
-            u'set_data': [{
-                u'label': 'reads file 1',
-                u'metadata': {'key1': 'value1'},
-                u'obj': 'rhodobacterium.art.q20.int.PE.reads'
-            }, {
-                u'label': 'reads file 2',
-                u'metadata': {'key2': 'value2'},
-                u'obj': 'rhodobacterium.art.q10.PE.reads'
-            }],
+            u'data': {
+                u'items': [{
+                    u'label': 'reads file 1',
+                    u'metadata': {'key1': 'value1'},
+                    u'ref': '11635/rhodobacterium.art.q20.int.PE.reads'
+                }, {
+                    u'label': 'reads file 2',
+                    u'metadata': {'key2': 'value2'},
+                    u'ref': '11635/rhodobacterium.art.q10.PE.reads'
+                }],
+                u'description': 'New Reads Set'
+            },
             u'workspace': None
         }]
         self.assertListEqual(expected, mapped_inputs)

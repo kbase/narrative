@@ -443,21 +443,16 @@ class AppManager(object):
             input_vals = self._map_inputs(spec['behavior']['kb_service_input_mapping'], params, spec_params_map)
             function_name = spec['behavior']['kb_service_name'] + '.' + spec['behavior']['kb_service_method']
             try:
-                result = [
-                    function_name,
-                    input_vals,
-                    tag
-                ]
-                # result = self.service_client.sync_call(
+                # result = [
                 #     function_name,
                 #     input_vals,
-                #     # [{
-                #     #     'data': set_data,
-                #     #     'output_object_name': params['output_object_name'],
-                #     #     'workspace': ws
-                #     # }],
-                #     service_version=tag
-                # )[0]
+                #     tag
+                # ]
+                result = self.service_client.sync_call(
+                    function_name,
+                    input_vals,
+                    service_version=tag
+                )[0]
                 return result
             except:
                 raise
@@ -885,17 +880,25 @@ class AppManager(object):
                 isinstance(value, float)):
             return (ws_ref, "input type not supported - only str, int, float, or list")
 
-        # check types. basestring is pretty much anything (it'll just get casted),
-        # but ints, floats, or lists are funky.
+        # check types. basestring is pretty much anything (it'll just get
+        # casted), but ints, floats, or lists are funky.
         if param['type'] == 'int' and not isinstance(value, int):
             return (ws_ref, 'Given value {} is not an int'.format(value))
-        elif param['type'] == 'float' and not (isinstance(value, float) or isinstance(value, int)):
+        elif param['type'] == 'float' and not (isinstance(value, float) or
+                                               isinstance(value, int)):
             return (ws_ref, 'Given value {} is not a number'.format(value))
 
         # if it's expecting a workspace object, check if that's present, and a valid type
         if 'allowed_types' in param and len(param['allowed_types']) > 0 and not param['is_output']:
             try:
-                info = self.ws_client.get_object_info_new({'objects': [{'workspace': workspace, 'name': value}]})[0]
+                # If we see a / , assume it's already an object reference.
+                if '/' in value:
+                    if len(value.split('/')) > 3:
+                        return (ws_ref, 'Data reference named {} does not have the right format - should be workspace/object/version(optional)')
+                    info = self.ws_client.get_object_info_new({'objects': [{'ref': value}]})[0]
+                # Otherwise, assume it's a name, not a reference.
+                else:
+                    info = self.ws_client.get_object_info_new({'objects': [{'workspace': workspace, 'name': value}]})[0]
                 ws_ref = "{}/{}/{}".format(info[6], info[0], info[4])
                 type_ok = False
                 for t in param['allowed_types']:
@@ -904,6 +907,7 @@ class AppManager(object):
                 if not type_ok:
                     return (ws_ref, 'Type of data object, {}, does not match allowed types'.format(info[2]))
             except Exception as e:
+                print(e)
                 return (ws_ref, 'Data object named {} not found with this Narrative.'.format(value))
 
         # if it expects a set of allowed values, check if this one matches

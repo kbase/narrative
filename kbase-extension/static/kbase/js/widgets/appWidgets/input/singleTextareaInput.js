@@ -42,7 +42,7 @@ define([
         }
 
         options.enabled = true;
-        options.required = spec.is_optional ? false : true;
+        options.required = spec.required();
         options.nRows = spec.spec.textarea_options.n_rows;
 
         /*

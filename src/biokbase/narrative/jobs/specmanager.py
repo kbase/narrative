@@ -153,7 +153,7 @@ class SpecManager(object):
         """
         params = list()
         for p in spec['parameters']:
-            p_info = {'id': p['id']}
+            p_info = {'id': p['id'], 'is_group': False}
 
             if p['optional']==0:
                 p_info['optional'] = False
@@ -162,14 +162,14 @@ class SpecManager(object):
 
             p_info['short_hint'] = p['short_hint']
             p_info['description'] = p['description']
-            p_info['type'] = p['field_type']
+            p_info['type'] = p['field_type'].lower()
             p_info['is_output'] = False
 
             p_info['allow_multiple'] = False
             if p['allow_multiple'] == 1:
                 p_info['allow_multiple'] = True
 
-            if p_info['type'].lower() == 'dropdown':
+            if p_info['type'] == 'dropdown':
                 p_info['allowed_values'] = [ opt['value'] for opt in p['dropdown_options']['options'] ]
             if p_info['type'] == 'checkbox':
                 p_info['allowed_values'] = [True, False]
@@ -206,7 +206,19 @@ class SpecManager(object):
 
             params.append(p_info)
 
-        return sorted(params, key=lambda p: (p['optional'], p['is_output']))
+        for p in spec.get('parameter_groups', []):
+            p_info = {'id': p.get('id', ''), 'is_group': True}
+            p_info['optional'] = p.get('optional', 0) == 1
+            p_info['short_hint'] = p.get('short_hint', '')
+            p_info['description'] = p.get('ui_name', '')
+            p_info['parameter_ids'] = p.get('parameter_ids', [])
+            p_info['id_mapping'] = p.get('id_mapping', {})
+            p_info['allow_multiple'] = p.get('allow_multiple', 0)
+            p_info['type'] = 'group'
+
+            params.append(p_info)
+
+        return sorted(params, key=lambda p: (p.get('optional', False), p.get('is_output', False)))
 
 
 

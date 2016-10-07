@@ -25,6 +25,7 @@ import re
 import logging
 import datetime
 import traceback
+import random
 
 
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
@@ -142,314 +143,6 @@ class AppManager(object):
             }],
             service_version=tag
         )[0]
-
-    def run_local_app(self, app_id, params, tag="release", version=None,
-                      cell_id=None, run_id=None, **kwargs):
-        """
-        Attempts to run a local app. These do not return a Job object, but just
-        the result of the app. In most cases, this will be a Javascript display
-        of the result, but could be anything.
-
-        If the app_spec looks like it makes a service call, then this raises a ValueError.
-        Otherwise, it validates each parameter in **kwargs against the app spec, executes it, and
-        returns the result.
-
-        Parameters:
-        -----------
-        app_id - should be from the app spec, e.g. 'view_expression_profile'
-        params - the dictionary of parameters for the app. Should be key-value
-                 pairs where they keys are strings. If any non-optional
-                 parameters are missing, an informative string will be printed.
-        tag - optional, one of [release|beta|dev] (default=release)
-        version - optional, a semantic version string. Only released modules have
-                  versions, so if the tag is not 'release', and a version is given,
-                  a ValueError will be raised.
-        **kwargs - these are the set of parameters to be used with the app.
-                   They can be found by using the app_usage function. If any
-                   non-optional apps are missing, a ValueError will be raised.
-
-        Example:
-        run_local_app('NarrativeViewers/view_expression_profile', version='0.0.1', input_expression_matrix="MyMatrix", input_gene_ids="1234")
-        """
-        try:
-            if params is None:
-                params = dict()
-            return self._run_local_app_internal(app_id, params, tag, version, cell_id, run_id, **kwargs)
-        except Exception as e:
-            e_type = type(e).__name__
-            e_message = str(e).replace('<', '&lt;').replace('>', '&gt;')
-            e_trace = traceback.format_exc().replace('<', '&lt;').replace('>', '&gt;')
-            self._send_comm_message('run_status', {
-                'event': 'error',
-                'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
-                'cell_id': cell_id,
-                'run_id': run_id,
-                'error_message': e_message,
-                'error_type': e_type,
-                'error_stacktrace': e_trace
-            })
-            # raise
-            print("Error while trying to start your app (run_local_app)!\n-------------------------------------\n" + str(e))
-
-    def _run_local_app_internal(self, app_id, params, tag, version, cell_id, run_id, **kwargs):
-        self._send_comm_message('run_status', {
-            'event': 'validating_app',
-            'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
-            'cell_id': cell_id,
-            'run_id': run_id
-        })
-
-        ### TODO: this needs restructuring so that we can send back validation failure
-        ### messages. Perhaps a separate function and catch the errors, or return an
-        ### error structure.
-
-        # Intro tests:
-        self.spec_manager.check_app(app_id, tag, raise_exception=True)
-
-        if version is not None and tag != "release":
-            raise ValueError("App versions only apply to released app modules!")
-
-        # Get the spec & params
-        spec = self.spec_manager.get_spec(app_id, tag)
-        app_type = spec['info'].get('app_type', 'app')
-
-        if app_type == 'app':
-            raise ValueError('This app appears to be a long-running job! Please start it using the run_app function instead.')
-
-        if 'behavior' not in spec:
-            raise ValueError("This app appears invalid - it has no defined behavior")
-
-        behavior = spec['behavior']
-
-        if 'script_module' in behavior or 'script_name' in behavior:
-            # It's an old NJS script. These don't work anymore.
-            raise ValueError('This app relies on a service that is now obsolete. Please contact the administrator.')
-
-        # Here, we just deal with two behaviors:
-        # 1. None of the above - it's a viewer.
-        # 2. ***TODO*** python_class / python_function. Import and exec the python code.
-
-        # for now, just map the inputs to outputs.
-        # First, validate.
-        # Preflight check the params - all required ones are present, all values are the right type, all numerical values are in given ranges
-        spec_params = self.spec_manager.app_params(spec)
-        (params, ws_refs) = self._validate_parameters(app_id, tag, spec_params, params)
-
-        # Log that we're trying to run a job...
-        log_info = {
-            'app_id': app_id,
-            'tag': tag,
-            'username': system_variable('user_id'),
-            'ws': system_variable('workspace')
-        }
-        kblogging.log_event(self._log, "run_local_app", log_info)
-
-        self._send_comm_message('run_status', {
-            'event': 'success',
-            'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
-            'cell_id': cell_id,
-            'run_id': run_id
-        })
-
-        if app_type == 'view':
-            # now just map onto outputs.
-            (output_widget, widget_params) = map_outputs_from_state([], params, spec)
-            return WidgetManager().show_output_widget(output_widget, widget_params, cell_id=cell_id, tag=tag)
-        elif app_type == 'editor':
-            input_vals = self._map_inputs(spec['behavior']['kb_service_input_mapping'], params)
-
-            function_name = spec['behavior']['kb_service_name'] + '.' + spec['behavior']['kb_service_method']
-            try:
-                result = [
-                    function_name,
-                    input_vals,
-                    tag
-                ]
-                # result = self.service_client.sync_call(
-                #     function_name,
-                #     input_vals,
-                #     # [{
-                #     #     'data': set_data,
-                #     #     'output_object_name': params['output_object_name'],
-                #     #     'workspace': ws
-                #     # }],
-                #     service_version=tag
-                # )[0]
-                return result
-            except:
-                raise
-
-
-    def run_widget_app(self, app_id, tag="release", version=None, cell_id=None, run_id=None):
-        """
-        Attempts to run a local app. These do not return a Job object, but just the result of the app.
-        In most cases, this will be a Javascript display of the result, but could be anything.
-
-        If the app_spec looks like it makes a service call, then this raises a ValueError.
-        Otherwise, it validates each parameter in **kwargs against the app spec, executes it, and
-        returns the result.
-
-        Parameters:
-        -----------
-        app_id - should be from the app spec, e.g. 'view_expression_profile'
-        tag - optional, one of [release|beta|dev] (default=release)
-        version - optional, a semantic version string. Only released modules have
-                  versions, so if the tag is not 'release', and a version is given,
-                  a ValueError will be raised.
-        **kwargs - these are the set of parameters to be used with the app.
-                   They can be found by using the app_usage function. If any
-                   non-optional apps are missing, a ValueError will be raised.
-
-        Example:
-        run_local_app('NarrativeViewers/view_expression_profile', version='0.0.1', input_expression_matrix="MyMatrix", input_gene_ids="1234")
-        """
-        try:
-            return self._run_widget_app_internal(app_id, tag, version, cell_id, run_id)
-        except Exception as e:
-            e_type = type(e).__name__
-            e_message = str(e).replace('<', '&lt;').replace('>', '&gt;')
-            e_trace = traceback.format_exc().replace('<', '&lt;').replace('>', '&gt;')
-            self._send_comm_message('run_status', {
-                'event': 'error',
-                'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
-                'cell_id': cell_id,
-                'run_id': run_id,
-                'error_message': e_message,
-                'error_type': e_type,
-                'error_stacktrace': e_trace
-            })
-            # raise
-            print("Error while trying to start your app (run_widget_app)!\n-------------------------------------\n" + str(e))
-
-    def _run_widget_app_internal(self, app_id, tag, version, cell_id, run_id):
-        self._send_comm_message('run_status', {
-            'event': 'validating_app',
-            'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
-            'cell_id': cell_id,
-            'run_id': run_id
-        })
-
-        # Intro tests:
-        self.spec_manager.check_app(app_id, tag, raise_exception=True)
-
-        if version is not None and tag != "release":
-            raise ValueError("App versions only apply to released app modules!")
-
-        # Get the spec & params
-        spec = self.spec_manager.get_spec(app_id, tag)
-
-        if 'behavior' not in spec:
-            raise ValueError("This app appears invalid - it has no defined behavior")
-
-        behavior = spec['behavior']
-
-        if 'kb_service_input_mapping' in behavior:
-            # it's a service! Should run this with run_app!
-            raise ValueError('This app appears to be a long-running job! Please start it using the run_app function instead.')
-
-        if 'script_module' in behavior or 'script_name' in behavior:
-            # It's an old NJS script. These don't work anymore.
-            raise ValueError('This app relies on a service that is now obsolete. Please contact the administrator.')
-
-        # Here, we just deal with two behaviors:
-        # 1. None of the above - it's a viewer.
-        # 2. ***TODO*** python_class / python_function. Import and exec the python code.
-
-        # for now, just map the inputs to outputs.
-        # First, validate.
-        # Preflight check the params - all required ones are present, all values are the right type, all numerical values are in given ranges
-        #spec_params = self.spec_manager.app_params(spec)
-        #(params, ws_refs) = self._validate_parameters(app_id, tag, spec_params, kwargs)
-
-        log_info = {
-            'app_id': app_id,
-            'tag': tag,
-            'username': system_variable('user_id'),
-            'ws': system_variable('workspace')
-        }
-        kblogging.log_event(self._log, "run_widget_app", log_info)
-
-        self._send_comm_message('run_status', {
-            'event': 'success',
-            'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
-            'cell_id': cell_id,
-            'run_id': run_id
-        })
-
-        # now just map onto outputs.
-        custom_widget = spec.get('widgets', {}).get('input', None)
-        return WidgetManager().show_custom_widget(custom_widget, app_id, version, tag, spec, cell_id)
-
-    def _validate_parameters(self, app_id, tag, spec_params, params):
-        """
-        Validates the dict of params against the spec_params. If all is good, it updates a few
-        parameters that need it - checkboxes go from True/False to 1/0, and sets default values
-        where necessary.
-        Then it returns a tuple like this:
-        (dict_of_params, list_of_ws_refs)
-        where list_of_ws_refs is the list of workspace references for objects being passed into
-        the app.
-
-        If it fails, this will raise a ValueError with a description of the problem and a
-        (hopefully useful!) hint for the user as to what went wrong.
-        """
-        spec_param_ids = [p['id'] for p in spec_params]
-
-        # First, test for presence.
-        missing_params = list()
-        for p in spec_params:
-            if not p['optional'] and not p['default'] and not params.get(p['id'], None):
-                missing_params.append(p['id'])
-        if len(missing_params):
-            raise ValueError('Missing required parameters {} - try executing app_usage("{}", tag="{}") for more information'.format(json.dumps(missing_params), app_id, tag))
-
-        # Next, test for extra params that don't make sense
-        extra_params = list()
-        for p in params.keys():
-            if p not in spec_param_ids:
-                extra_params.append(p)
-        if len(extra_params):
-            raise ValueError('Unknown parameters {} - maybe something was misspelled?\nexecute app_usage("{}", tag="{}") for more information'.format(json.dumps(extra_params), app_id, tag))
-
-        # Now, validate parameter values.
-        # Should also check if input (NOT OUTPUT) object variables are present in the current workspace
-        workspace = system_variable('workspace')
-        ws_id = system_variable('workspace_id')
-        if workspace is None or ws_id is None:
-            raise ValueError('Unable to retrive current Narrative workspace information! workspace={}, workspace_id={}'.format(workspace, ws_id))
-
-        param_errors = list()
-        # If they're workspace objects, track their refs in a list we'll pass to run_job as
-        # a separate param to track provenance.
-        ws_input_refs = list()
-        for p in spec_params:
-            if p['id'] in params:
-                (wsref, err) = self._check_parameter(p, params[p['id']], workspace)
-                if err is not None:
-                    param_errors.append("{} - {}".format(p['id'], err))
-                if wsref is not None:
-                    if isinstance(wsref, list):
-                        for ref in wsref:
-                            if ref is not None:
-                                ws_input_refs.append(ref)
-                    else:
-                        ws_input_refs.append(wsref)
-        if len(param_errors):
-            raise ValueError('Parameter value errors found!\n{}'.format("\n".join(param_errors)))
-
-        # Hooray, parameters are validated. Set them up for transfer.
-        for p in spec_params:
-            # If any param is a checkbox, need to map from boolean to actual expected value in p['checkbox_map']
-            # note that True = 0th elem, False = 1st
-            if p['type'] == 'checkbox':
-                if p['id'] in params:
-                    checkbox_idx = 0 if params[p['id']] else 1
-                    params[p['id']] = p['checkbox_map'][checkbox_idx]
-            # While we're at it, set the default values for any unset parameters that have them
-            if p['default'] and p['id'] not in params:
-                params[p['id']] = p['default']
-
-        return (params, ws_input_refs)
 
     def run_app(self, app_id, params, tag="release", version=None, cell_id=None, run_id=None, **kwargs):
         """
@@ -631,6 +324,318 @@ class AppManager(object):
         else:
             return new_job
 
+    def run_local_app(self, app_id, params, tag="release", version=None,
+                      cell_id=None, run_id=None, **kwargs):
+        """
+        Attempts to run a local app. These do not return a Job object, but just
+        the result of the app. In most cases, this will be a Javascript display
+        of the result, but could be anything.
+
+        If the app_spec looks like it makes a service call, then this raises a ValueError.
+        Otherwise, it validates each parameter in **kwargs against the app spec, executes it, and
+        returns the result.
+
+        Parameters:
+        -----------
+        app_id - should be from the app spec, e.g. 'view_expression_profile'
+        params - the dictionary of parameters for the app. Should be key-value
+                 pairs where they keys are strings. If any non-optional
+                 parameters are missing, an informative string will be printed.
+        tag - optional, one of [release|beta|dev] (default=release)
+        version - optional, a semantic version string. Only released modules have
+                  versions, so if the tag is not 'release', and a version is given,
+                  a ValueError will be raised.
+        **kwargs - these are the set of parameters to be used with the app.
+                   They can be found by using the app_usage function. If any
+                   non-optional apps are missing, a ValueError will be raised.
+
+        Example:
+        run_local_app('NarrativeViewers/view_expression_profile', version='0.0.1', input_expression_matrix="MyMatrix", input_gene_ids="1234")
+        """
+        try:
+            if params is None:
+                params = dict()
+            return self._run_local_app_internal(app_id, params, tag, version, cell_id, run_id, **kwargs)
+        except Exception as e:
+            e_type = type(e).__name__
+            e_message = str(e).replace('<', '&lt;').replace('>', '&gt;')
+            e_trace = traceback.format_exc().replace('<', '&lt;').replace('>', '&gt;')
+            self._send_comm_message('run_status', {
+                'event': 'error',
+                'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
+                'cell_id': cell_id,
+                'run_id': run_id,
+                'error_message': e_message,
+                'error_type': e_type,
+                'error_stacktrace': e_trace
+            })
+            # raise
+            print("Error while trying to start your app (run_local_app)!\n-------------------------------------\n" + str(e))
+
+    def _run_local_app_internal(self, app_id, params, tag, version, cell_id, run_id, **kwargs):
+        self._send_comm_message('run_status', {
+            'event': 'validating_app',
+            'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
+            'cell_id': cell_id,
+            'run_id': run_id
+        })
+
+        ### TODO: this needs restructuring so that we can send back validation failure
+        ### messages. Perhaps a separate function and catch the errors, or return an
+        ### error structure.
+
+        # Intro tests:
+        self.spec_manager.check_app(app_id, tag, raise_exception=True)
+
+        if version is not None and tag != "release":
+            raise ValueError("App versions only apply to released app modules!")
+
+        # Get the spec & params
+        spec = self.spec_manager.get_spec(app_id, tag)
+        app_type = spec['info'].get('app_type', 'app')
+
+        if app_type == 'app':
+            raise ValueError('This app appears to be a long-running job! Please start it using the run_app function instead.')
+
+        if 'behavior' not in spec:
+            raise ValueError("This app appears invalid - it has no defined behavior")
+
+        behavior = spec['behavior']
+
+        if 'script_module' in behavior or 'script_name' in behavior:
+            # It's an old NJS script. These don't work anymore.
+            raise ValueError('This app relies on a service that is now obsolete. Please contact the administrator.')
+
+        # Here, we just deal with two behaviors:
+        # 1. None of the above - it's a viewer.
+        # 2. ***TODO*** python_class / python_function. Import and exec the python code.
+
+        # for now, just map the inputs to outputs.
+        # First, validate.
+        # Preflight check the params - all required ones are present, all values are the right type, all numerical values are in given ranges
+        spec_params = self.spec_manager.app_params(spec)
+        (params, ws_refs) = self._validate_parameters(app_id, tag,
+                                                      spec_params, params)
+
+        # Log that we're trying to run a job...
+        log_info = {
+            'app_id': app_id,
+            'tag': tag,
+            'username': system_variable('user_id'),
+            'ws': system_variable('workspace')
+        }
+        kblogging.log_event(self._log, "run_local_app", log_info)
+
+        self._send_comm_message('run_status', {
+            'event': 'success',
+            'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
+            'cell_id': cell_id,
+            'run_id': run_id
+        })
+
+        if app_type == 'view':
+            # now just map onto outputs.
+            (output_widget, widget_params) = map_outputs_from_state([], params, spec)
+            return WidgetManager().show_output_widget(output_widget, widget_params, cell_id=cell_id, tag=tag)
+        elif app_type == 'editor':
+            input_vals = self._map_inputs(spec['behavior']['kb_service_input_mapping'], params)
+
+            function_name = spec['behavior']['kb_service_name'] + '.' + spec['behavior']['kb_service_method']
+            try:
+                result = [
+                    function_name,
+                    input_vals,
+                    tag
+                ]
+                # result = self.service_client.sync_call(
+                #     function_name,
+                #     input_vals,
+                #     # [{
+                #     #     'data': set_data,
+                #     #     'output_object_name': params['output_object_name'],
+                #     #     'workspace': ws
+                #     # }],
+                #     service_version=tag
+                # )[0]
+                return result
+            except:
+                raise
+
+
+    def run_widget_app(self, app_id, tag="release", version=None, cell_id=None, run_id=None):
+        """
+        Attempts to run a local app. These do not return a Job object, but just the result of the app.
+        In most cases, this will be a Javascript display of the result, but could be anything.
+
+        If the app_spec looks like it makes a service call, then this raises a ValueError.
+        Otherwise, it validates each parameter in **kwargs against the app spec, executes it, and
+        returns the result.
+
+        Parameters:
+        -----------
+        app_id - should be from the app spec, e.g. 'view_expression_profile'
+        tag - optional, one of [release|beta|dev] (default=release)
+        version - optional, a semantic version string. Only released modules have
+                  versions, so if the tag is not 'release', and a version is given,
+                  a ValueError will be raised.
+        **kwargs - these are the set of parameters to be used with the app.
+                   They can be found by using the app_usage function. If any
+                   non-optional apps are missing, a ValueError will be raised.
+
+        Example:
+        run_local_app('NarrativeViewers/view_expression_profile', version='0.0.1', input_expression_matrix="MyMatrix", input_gene_ids="1234")
+        """
+        try:
+            return self._run_widget_app_internal(app_id, tag, version, cell_id, run_id)
+        except Exception as e:
+            e_type = type(e).__name__
+            e_message = str(e).replace('<', '&lt;').replace('>', '&gt;')
+            e_trace = traceback.format_exc().replace('<', '&lt;').replace('>', '&gt;')
+            self._send_comm_message('run_status', {
+                'event': 'error',
+                'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
+                'cell_id': cell_id,
+                'run_id': run_id,
+                'error_message': e_message,
+                'error_type': e_type,
+                'error_stacktrace': e_trace
+            })
+            # raise
+            print("Error while trying to start your app (run_widget_app)!\n-------------------------------------\n" + str(e))
+
+    def _run_widget_app_internal(self, app_id, tag, version, cell_id, run_id):
+        self._send_comm_message('run_status', {
+            'event': 'validating_app',
+            'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
+            'cell_id': cell_id,
+            'run_id': run_id
+        })
+
+        # Intro tests:
+        self.spec_manager.check_app(app_id, tag, raise_exception=True)
+
+        if version is not None and tag != "release":
+            raise ValueError("App versions only apply to released app modules!")
+
+        # Get the spec & params
+        spec = self.spec_manager.get_spec(app_id, tag)
+
+        if 'behavior' not in spec:
+            raise ValueError("This app appears invalid - it has no defined behavior")
+
+        behavior = spec['behavior']
+
+        if 'kb_service_input_mapping' in behavior:
+            # it's a service! Should run this with run_app!
+            raise ValueError('This app appears to be a long-running job! Please start it using the run_app function instead.')
+
+        if 'script_module' in behavior or 'script_name' in behavior:
+            # It's an old NJS script. These don't work anymore.
+            raise ValueError('This app relies on a service that is now obsolete. Please contact the administrator.')
+
+        # Here, we just deal with two behaviors:
+        # 1. None of the above - it's a viewer.
+        # 2. ***TODO*** python_class / python_function. Import and exec the python code.
+
+        # for now, just map the inputs to outputs.
+        # First, validate.
+        # Preflight check the params - all required ones are present, all values are the right type, all numerical values are in given ranges
+        #spec_params = self.spec_manager.app_params(spec)
+        #(params, ws_refs) = self._validate_parameters(app_id, tag, spec_params, kwargs)
+
+        log_info = {
+            'app_id': app_id,
+            'tag': tag,
+            'username': system_variable('user_id'),
+            'ws': system_variable('workspace')
+        }
+        kblogging.log_event(self._log, "run_widget_app", log_info)
+
+        self._send_comm_message('run_status', {
+            'event': 'success',
+            'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
+            'cell_id': cell_id,
+            'run_id': run_id
+        })
+
+        # now just map onto outputs.
+        custom_widget = spec.get('widgets', {}).get('input', None)
+        return WidgetManager().show_custom_widget(custom_widget, app_id, version, tag, spec, cell_id)
+
+    def _validate_parameters(self, app_id, tag, spec_params, params):
+        """
+        Validates the dict of params against the spec_params. If all is good, it updates a few
+        parameters that need it - checkboxes go from True/False to 1/0, and sets default values
+        where necessary.
+        Then it returns a tuple like this:
+        (dict_of_params, list_of_ws_refs)
+        where list_of_ws_refs is the list of workspace references for objects being passed into
+        the app.
+
+        If it fails, this will raise a ValueError with a description of the problem and a
+        (hopefully useful!) hint for the user as to what went wrong.
+        """
+        spec_param_ids = [p['id'] for p in spec_params]
+
+        # Cheater way for making a dict of params with param[id] => param
+        params_dict = dict((spec_params[i]['id'],spec_params[i]) for i in range(len(spec_params)))
+
+        # First, test for presence.
+        missing_params = list()
+        for p in spec_params:
+            if not p['optional'] and not p['default'] and not params.get(p['id'], None):
+                missing_params.append(p['id'])
+        if len(missing_params):
+            raise ValueError('Missing required parameters {} - try executing app_usage("{}", tag="{}") for more information'.format(json.dumps(missing_params), app_id, tag))
+
+        # Next, test for extra params that don't make sense
+        extra_params = list()
+        for p in params.keys():
+            if p not in spec_param_ids:
+                extra_params.append(p)
+        if len(extra_params):
+            raise ValueError('Unknown parameters {} - maybe something was misspelled?\nexecute app_usage("{}", tag="{}") for more information'.format(json.dumps(extra_params), app_id, tag))
+
+        # Now, validate parameter values.
+        # Should also check if input (NOT OUTPUT) object variables are present in the current workspace
+        workspace = system_variable('workspace')
+        ws_id = system_variable('workspace_id')
+        if workspace is None or ws_id is None:
+            raise ValueError('Unable to retrive current Narrative workspace information! workspace={}, workspace_id={}'.format(workspace, ws_id))
+
+        param_errors = list()
+        # If they're workspace objects, track their refs in a list we'll pass to run_job as
+        # a separate param to track provenance.
+        ws_input_refs = list()
+        for p in spec_params:
+            if p['id'] in params:
+                (wsref, err) = self._check_parameter(p, params[p['id']], workspace, all_params=params_dict)
+                if err is not None:
+                    param_errors.append("{} - {}".format(p['id'], err))
+                if wsref is not None:
+                    if isinstance(wsref, list):
+                        for ref in wsref:
+                            if ref is not None:
+                                ws_input_refs.append(ref)
+                    else:
+                        ws_input_refs.append(wsref)
+        if len(param_errors):
+            raise ValueError('Parameter value errors found!\n{}'.format("\n".join(param_errors)))
+
+        # Hooray, parameters are validated. Set them up for transfer.
+        for p in spec_params:
+            # If any param is a checkbox, need to map from boolean to actual expected value in p['checkbox_map']
+            # note that True = 0th elem, False = 1st
+            if p['type'] == 'checkbox':
+                if p['id'] in params:
+                    checkbox_idx = 0 if params[p['id']] else 1
+                    params[p['id']] = p['checkbox_map'][checkbox_idx]
+            # While we're at it, set the default values for any unset parameters that have them
+            if p.get('default', '') and p['id'] not in params:
+                params[p['id']] = p['default']
+
+        return (params, ws_input_refs)
+
     def _map_inputs(self, input_mapping, params):
         """
         Maps the dictionary of parameters and inputs based on rules provided in the input_mapping.
@@ -760,7 +765,7 @@ class AppManager(object):
             ret = ret + str(generator['suffix'])
         return ret
 
-    def _check_parameter(self, param, value, workspace):
+    def _check_parameter(self, param, value, workspace, all_params=None):
         """
         Checks if the given value matches the rules provided in the param dict.
         If yes, returns None
@@ -777,21 +782,52 @@ class AppManager(object):
             A value input by the user
         workspace : string
             The name of the current workspace to search against (if needed)
+        all_params : dict (param id -> param dict)
+            All spec parameters. Really only needed when validating a parameter
+            group, because it probably needs to dig into all of them.
         """
         if param['allow_multiple'] and isinstance(value, list):
             ws_refs = list()
             error_list = list()
             for v in value:
-                (ref, err) = self._validate_param_value(param, v, workspace)
+                if param['type'] == 'group':
+                    # returns ref and err as a list
+                    (ref, err) = self._validate_group_values(param, v, workspace, all_params)
+                else:
+                    # returns a single ref / err pair
+                    (ref, err) = self._validate_param_value(param, v, workspace)
+                    ref = [ref]
+                    err = [err]
                 if err:
-                    error_list.append(err)
+                    error_list += err
                 if ref:
-                    ws_refs.append(ref)
+                    ws_refs += ref
             if len(error_list):
                 return (None, "\n\t".join(error_list))
             else:
                 return (ws_refs, None)
         return self._validate_param_value(param, value, workspace)
+
+    def _validate_group_values(self, param, value, workspace, spec_params):
+        ref = list()
+        err = list()
+
+        if not isinstance(value, dict):
+            return (None, "A parameter-group must be a dictionary")
+
+        for param_id in value:
+            if param_id not in spec_params:
+                err.append('Unknown parameter id "{}" in parameter group'.format(param_id))
+                continue
+            if param_id not in param.get('parameter_ids', []):
+                err.append('Unmappable parameter id "{}" in parameter group'.format(param_id))
+                continue
+            (param_ref, param_err) = self._validate_param_value(spec_params[param_id], value[param_id], workspace)
+            if param_ref:
+                ref.append(param_ref)
+            if param_err:
+                err.append(param_err)
+        return (ref, err)
 
     def _validate_param_value(self, param, value, workspace):
         """
@@ -806,7 +842,7 @@ class AppManager(object):
             values.
         value : any
             A value input by the user - likely either None, int, float, string,
-            or list
+            list, or dict. Which is pretty much everything, right?
         workspace : string
             The name of the current workspace to test workspace object types
             against, if required by the parameter.
@@ -823,7 +859,12 @@ class AppManager(object):
             return (ws_ref, None)
 
         # cases - value == list (checked by wrapping function, _check_parameter), int, float, others get rejected
-        if not (isinstance(value, basestring) or
+        if param['type'] == 'group' and not (isinstance(value, list) or
+                                             isinstance(value, dict)):
+            return (ws_ref, "a parameter group must be of type list or dict")
+        elif param['type'] == 'mapping' and not isinstance(value, dict):
+            return (ws_ref, "a parameter of type 'mapping' must be a dict")
+        elif param['type'] not in ['group', 'mapping'] and not (isinstance(value, basestring) or
                 isinstance(value, int) or
                 isinstance(value, float)):
             return (ws_ref, "input type not supported - only str, int, float, or list")
@@ -870,18 +911,18 @@ class AppManager(object):
                 return (ws_ref, "Given value {} must be a number".format(value))
 
         # if it's an output object, make sure it follows the data object rules.
-        if param['is_output']:
-            if re.search('\s', value):
+        if param.get('is_output', False):
+            if re.search(r'\s', value):
                 return (ws_ref, "Spaces are not allowed in data object names.")
-            if re.match('^\d+$', value):
+            if re.match(r'^\d+$', value):
                 return (ws_ref, "Data objects cannot be just a number.")
-            if not re.match('^[a-z0-9|\.|\||_\-]*$', value, re.IGNORECASE):
+            if not re.match(r'^[a-z0-9|\.|\||_\-]*$', value, re.IGNORECASE):
                 return (ws_ref, "Data object names can only include symbols: _ - . |")
 
         # Last, regex. not being used in any extant specs, but cover it anyway.
         if 'regex_constraint' in param:
-            for regex in regex_constraint:
-                if not re.match(regex_constraint, value):
+            for regex in param['regex_constraint']:
+                if not re.match(regex, value):
                     return (ws_ref, 'Value {} does not match required regex {}'.format(value, regex))
 
         # Whew. Passed all filters!

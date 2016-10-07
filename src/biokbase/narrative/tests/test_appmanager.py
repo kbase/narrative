@@ -6,6 +6,7 @@ from IPython.display import HTML
 import unittest
 import mock
 from traitlets import Instance
+import os
 
 class AppManagerTestCase(unittest.TestCase):
     @classmethod
@@ -89,6 +90,37 @@ class AppManagerTestCase(unittest.TestCase):
         with self.assertRaises(ValueError) as err:
             self.mm.app_description(self.bad_app_id)
 
+    def test_validate_params(self):
+        inputs = {
+            "reads_tuple": [
+                {
+                    "input_reads_label": "reads file 1",
+                    "input_reads_obj": "rhodobacterium.art.q20.int.PE.reads",
+                    "input_reads_metadata": {
+                        "key1": "value1"
+                    }
+                },
+                {
+                    "input_reads_label": "reads file 2",
+                    "input_reads_obj": "rhodobacterium.art.q10.PE.reads",
+                    "input_reads_metadata": {
+                        "key2": "value2"
+                    }
+                }
+            ],
+            "output_object": "MyReadsSet",
+            "description": "New Reads Set"
+        }
+        app_id = "NarrativeTest/test_create_set"
+        tag = "dev"
+        os.environ['KB_WORKSPACE_ID'] = 'wjriehl:1475006266615'
+        from biokbase.narrative.jobs.specmanager import SpecManager
+        sm = SpecManager()
+        spec = sm.get_spec(app_id, tag=tag)
+        (params, ws_inputs) = self.mm._validate_parameters(app_id, tag, sm.app_params(spec), inputs)
+        self.assertDictEqual(params, inputs)
+        self.assertIn('11635/9/1', ws_inputs)
+        self.assertIn('11635/10/1', ws_inputs)
 
 if __name__ == "__main__":
     unittest.main()

@@ -113,6 +113,7 @@ class AppManagerTestCase(unittest.TestCase):
         }
         app_id = "NarrativeTest/test_create_set"
         tag = "dev"
+        prev_ws_id = os.environ.get('KB_WORKSPACE_ID', None)
         os.environ['KB_WORKSPACE_ID'] = 'wjriehl:1475006266615'
         from biokbase.narrative.jobs.specmanager import SpecManager
         sm = SpecManager()
@@ -121,6 +122,10 @@ class AppManagerTestCase(unittest.TestCase):
         self.assertDictEqual(params, inputs)
         self.assertIn('11635/9/1', ws_inputs)
         self.assertIn('11635/10/1', ws_inputs)
+        if prev_ws_id is None:
+            del(os.environ['KB_WORKSPACE_ID'])
+        else:
+            os.environ['KB_WORKSPACE_ID'] = prev_ws_id
 
     def test_input_mapping(self):
         inputs = {
@@ -150,6 +155,7 @@ class AppManagerTestCase(unittest.TestCase):
         spec = sm.get_spec(app_id, tag=tag)
         spec_params = sm.app_params(spec)
         spec_params_map = dict((spec_params[i]['id'],spec_params[i]) for i in range(len(spec_params)))
+        del(os.environ['KB_WORKSPACE_ID'])
         mapped_inputs = self.mm._map_inputs(spec['behavior']['kb_service_input_mapping'], inputs, spec_params_map)
         expected = [{
             u'output_object_name': 'MyReadsSet',

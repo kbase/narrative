@@ -120,30 +120,6 @@ class AppManager(object):
         """
         return self.spec_manager.available_apps(tag)
 
-    def run_set_editor(self, app_id, params, tag="release", version=None,
-                       cell_id=None, run_id=None, **kwargs):
-        ws = system_variable('workspace')
-        set_items = []
-        for obj in params.get('reads_objects', []):
-            set_items.append({
-                'ref': ws + '/' + obj['name'],
-                'label': obj['label']
-            })
-        set_data = {
-            'description': params.get('description', ""),
-            'items': set_items
-        }
-
-        return self.service_client.sync_call(
-            "SetAPI.save_reads_set_v1",
-            [{
-                'data': set_data,
-                'output_object_name': params['output_object_name'],
-                'workspace': ws
-            }],
-            service_version=tag
-        )[0]
-
     def run_app(self, app_id, params, tag="release", version=None, cell_id=None, run_id=None, **kwargs):
         """
         Attempts to run the app, returns a Job with the running app info.
@@ -768,7 +744,12 @@ class AppManager(object):
         """
         symbols = 8
         if 'symbols' in generator:
-            symbols = int(generator['symbols'])
+            try:
+                symbols = int(generator['symbols'])
+            except:
+                raise ValueError('The "symbols" input to the generated value must be a number > 0!')
+        if symbols < 1:
+            raise ValueError('Must have at least 1 symbol to randomly generate!')
         ret = ''.join([chr(random.randrange(0, 26) + ord('A')) for _ in xrange(symbols)])
         if 'prefix' in generator:
             ret = str(generator['prefix']) + ret

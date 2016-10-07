@@ -155,7 +155,8 @@ class AppManagerTestCase(unittest.TestCase):
         spec = sm.get_spec(app_id, tag=tag)
         spec_params = sm.app_params(spec)
         spec_params_map = dict((spec_params[i]['id'],spec_params[i]) for i in range(len(spec_params)))
-        del(os.environ['KB_WORKSPACE_ID'])
+        if os.environ.get('KB_WORKSPACE_ID', None) is not None:
+            del(os.environ['KB_WORKSPACE_ID'])
         mapped_inputs = self.mm._map_inputs(spec['behavior']['kb_service_input_mapping'], inputs, spec_params_map)
         expected = [{
             u'output_object_name': 'MyReadsSet',
@@ -174,6 +175,26 @@ class AppManagerTestCase(unittest.TestCase):
             u'workspace': None
         }]
         self.assertDictEqual(expected[0], mapped_inputs[0])
+
+    def test_generate_input(self):
+        prefix = 'pre'
+        suffix = 'suf'
+        num_symbols = 8
+        generator = {
+            'symbols': num_symbols,
+            'prefix': prefix,
+            'suffix': suffix
+        }
+        rand_str = self.mm._generate_input(generator)
+        self.assertTrue(rand_str.startswith(prefix))
+        self.assertTrue(rand_str.endswith(suffix))
+        self.assertEqual(len(rand_str), len(prefix) + len(suffix) + num_symbols)
+
+    def test_generate_input_bad(self):
+        with self.assertRaises(ValueError):
+            self.mm._generate_input({'symbols': 'foo'})
+        with self.assertRaises(ValueError):
+            self.mm._generate_input({'symbols': -1})
 
 
 if __name__ == "__main__":

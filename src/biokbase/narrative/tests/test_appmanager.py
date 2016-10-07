@@ -167,7 +167,7 @@ class AppManagerTestCase(unittest.TestCase):
             },
             u'workspace': None
         }]
-        self.assertListEqual(expected, mapped_inputs)
+        self.assertDictEqual(expected[0], mapped_inputs[0])
 
 
 if __name__ == "__main__":

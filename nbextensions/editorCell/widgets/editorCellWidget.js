@@ -166,7 +166,12 @@ define([
                         show: ['parameters-group'],
                         hide: []
                     }
-                }
+                },
+                next: [
+                    {
+                        mode: 'saved'
+                    }
+                ]
             },
             {
                 state: {
@@ -241,7 +246,6 @@ define([
             bus = runtime.bus().makeChannelBus(null, 'An editor cell widget'),
             env = {},
             model,
-            
             eventManager = BusEventManager.make({
                 bus: runtime.bus()
             }),
@@ -265,7 +269,7 @@ define([
                     element: 'about-app'
                 }
             },
-        widgets = {},
+            widgets = {},
             fsm,
             saveMaxFrequency = config.saveMaxFrequency || 5000;
 
@@ -279,7 +283,7 @@ define([
         }
 
         // DATA API
-        
+
         /*
          * The app spec parameters, were we to use them, do not at present
          * accurately reflect what we need to present to the user, so we
@@ -290,7 +294,7 @@ define([
         function getLayout() {
         }
         function getRelations() {
-            
+
         }
         function getParameters() {
             var type = model.getItem('params.type'),
@@ -298,11 +302,11 @@ define([
             type = null;
             if (!type) {
                 // alert('help, no type!');
-                types =  ['KBaseFile.SingleEndLibrary', 'KBaseFile.PairedEndLibrary'];
+                types = ['KBaseFile.SingleEndLibrary', 'KBaseFile.PairedEndLibrary'];
             } else {
                 types = [type];
             }
-            
+
             var parameters = [
 //                {
 //                    id: 'type',
@@ -353,7 +357,7 @@ define([
                     description: 'Description of the reads set',
                     short_hint: 'The description of the set of sequence reads',
                     default_values: [''],
-                    optional: 0,
+                    optional: 1,
                     disabled: 0,
                     advanced: 0,
                     allow_multiple: 0,
@@ -374,7 +378,7 @@ define([
                     description: 'A set of reads objects',
                     short_hint: 'A set of reads objects',
                     default_values: [''],
-                    optional: 0,
+                    optional: 1,
                     disabled: 0,
                     advanced: 0,
                     allow_multiple: 1,
@@ -388,14 +392,14 @@ define([
                     ui_name: 'Set of Reads Objects'
                 }
             ];
-            
+
             return parameters.map(function (parameterSpec) {
                 // tee hee
                 var param = ParameterSpec.make({parameterSpec: parameterSpec});
                 return param;
             });
         }
-        
+
         function getParameterMap() {
             var parameterMap = {};
             getParameters().forEach(function (param) {
@@ -418,9 +422,9 @@ define([
                 ids: [appId],
                 tag: appTag
             },
-            nms = new NarrativeMethodStore(runtime.config('services.narrative_method_store.url'), {
-                token: runtime.authToken()
-            });
+                nms = new NarrativeMethodStore(runtime.config('services.narrative_method_store.url'), {
+                    token: runtime.authToken()
+                });
 
             return nms.get_method_spec(appRef)
                 .then(function (data) {
@@ -430,8 +434,8 @@ define([
                     // TODO: really the best way to store state?
                     env.appSpec = data[0];
                     // Get an input field widget per parameter
-                    
-                    
+
+
 //                    var parameterMap = {},
 //                        parameters = getParameters().map(function (parameterSpec) {
 //                            // tee hee
@@ -776,15 +780,15 @@ define([
              */
             var params = model.getItem('params'),
                 errors = getParameters().map(function (parameterSpec) {
-                    if (parameterSpec.required()) {
-                        if (parameterSpec.isEmpty(params[parameterSpec.id()])) {
-                            return {
-                                diagnosis: 'required-missing',
-                                errorMessage: 'The ' + parameterSpec.dataType() + ' "' + parameterSpec.id() + '" is required but was not provided'
-                            };
-                        }
+                if (parameterSpec.required()) {
+                    if (parameterSpec.isEmpty(params[parameterSpec.id()])) {
+                        return {
+                            diagnosis: 'required-missing',
+                            errorMessage: 'The ' + parameterSpec.dataType() + ' "' + parameterSpec.id() + '" is required but was not provided'
+                        };
                     }
-                }).filter(function (error) {
+                }
+            }).filter(function (error) {
                 if (error) {
                     return true;
                 }
@@ -1127,7 +1131,7 @@ define([
                 });
             return outputNames;
         }
-        
+
         /*
          * Given a set of object names within this workspace, get the object
          * info for each one, and return the absolute reference (wsid, objid, ref)
@@ -1276,7 +1280,7 @@ define([
                             break;
                         case 'success':
                         case 'error':
-                            // do nothing for now
+                        // do nothing for now
                     }
                 }
 
@@ -1336,7 +1340,7 @@ define([
 
             return paramsToExport;
         }
-        
+
         // TODO: this should be a the error area -- and we should switch the 
         // editor into error mode.
         function loadErrorWidget(error) {
@@ -1348,7 +1352,7 @@ define([
             } else {
                 detail = '';
             }
-            
+
             var content = div({
                 style: {border: '1px red solid'}
             }, [
@@ -1367,7 +1371,7 @@ define([
                     ])
                 ])
             ]);
-            
+
             ui.setContent('parameters-group.widget', content);
         }
 
@@ -1380,7 +1384,7 @@ define([
                 //if (!selectedWidget) {
                 //    reject('Cannot find the requested input widget ' + inputWidget);
                 //}
-                
+
                 ui.setContent('parameters-group.widget', html.loading());
 
                 require([selectedWidget], function (Widget) {
@@ -1467,18 +1471,18 @@ define([
                 });
             });
         }
-        
+
         /*
          * Given an object ref, fetch the set object via the setApi, 
          * then populate
          */
         function updateEditor(objectRef) {
             var setApiClient = new GenericClient({
-                    url: runtime.config('services.service_wizard.url'),
-                    token: runtime.authToken(),
-                    module: 'SetAPI',
-                    version: 'dev'
-                }),
+                url: runtime.config('services.service_wizard.url'),
+                token: runtime.authToken(),
+                module: 'SetAPI',
+                version: 'dev'
+            }),
                 params = {
                     ref: objectRef,
                     include_item_info: 1
@@ -1493,7 +1497,7 @@ define([
                         item.objectInfo = apiUtils.objectInfoToObject(item.info);
                         return item.ref;
                     }));
-                    
+
                     // For now set the type based on the type of the first element.
                     // console.log(setObject.data.items[0]);
 //                    var donorElementType = [
@@ -1501,7 +1505,7 @@ define([
 //                        setObject.data.items[0].objectInfo.typeName
 //                    ].join('.');                        
 //                     model.setItem('params.type', donorElementType);
-                    
+
                     //console.log('spec', env.appSpec);
                     //console.log('parameters', env.parameters);
 //                    console.log('set object', setObject);
@@ -1517,16 +1521,16 @@ define([
                     console.error(err.detail.replace('\n', '<br>'));
                     loadErrorWidget(err);
                 });
-            
+
         }
-        
+
         function doCreateNewSet(name) {
             var setApiClient = new GenericClient({
-                    url: runtime.config('services.service_wizard.url'),
-                    token: runtime.authToken(),
-                    module: 'SetAPI',
-                    version: 'dev'
-                }),
+                url: runtime.config('services.service_wizard.url'),
+                token: runtime.authToken(),
+                module: 'SetAPI',
+                version: 'dev'
+            }),
 //                donorReadsRef = (function (type) {
 //                    switch (type) {
 //                        case 'KBaseFile.SingleEndLibrary':
@@ -1557,14 +1561,14 @@ define([
                 });
 
         }
-        
+
         function doSaveReadsSet() {
             var setApiClient = new GenericClient({
-                    url: runtime.config('services.service_wizard.url'),
-                    token: runtime.authToken(),
-                    module: 'SetAPI',
-                    version: 'dev'
-                }),
+                url: runtime.config('services.service_wizard.url'),
+                token: runtime.authToken(),
+                module: 'SetAPI',
+                version: 'dev'
+            }),
                 params = {
                     workspace: String(workspaceInfo.id),
                     output_object_name: model.getItem('params.name'),
@@ -1596,9 +1600,9 @@ define([
                     'nbextensions/editorCell/widgets/editObjectSelector'
                 ], function (Widget) {
                     var widget = Widget.make({
-                            workspaceInfo: workspaceInfo,
-                            objectType: 'KBaseSets.ReadsSet'
-                        });
+                        workspaceInfo: workspaceInfo,
+                        objectType: 'KBaseSets.ReadsSet'
+                    });
                     widgets.editObjectSelector = {
                         path: ['edit-object-selector', 'widget'],
                         instance: widget
@@ -1607,7 +1611,7 @@ define([
                         widget.bus.emit('run', {
                             node: ui.getElement(['edit-object-selector', 'widget']),
                             appSpec: env.appSpec
-                            // parameters: getParameters()
+                                // parameters: getParameters()
                         });
                     });
                     widget.bus.on('changed', function (message) {
@@ -1628,6 +1632,7 @@ define([
 
         function evaluateAppState() {
             var validationResult = validateModel();
+            console.log('evaluated app state: ', validationResult);
             if (validationResult.isValid) {
                 buildPython(cell, utils.getMeta(cell, 'attributes').id, model.getItem('app'), exportParams());
                 fsm.newState({mode: 'editing', params: 'complete', code: 'built'});
@@ -1653,7 +1658,7 @@ define([
                     utils.setCellMeta(cell, 'kbase.attributes.info.label', 'more...');
                     return Promise.all([
                         loadEditObjectSelector()
-                        // loadInputWidget()
+                            // loadInputWidget()
                     ]);
                 })
                 .then(function () {

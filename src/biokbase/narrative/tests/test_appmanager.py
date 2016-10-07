@@ -196,6 +196,54 @@ class AppManagerTestCase(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.mm._generate_input({'symbols': -1})
 
+    def test_transform_input_good(self):
+        ws_name = 'test_workspace'
+        os.environ['KB_WORKSPACE_ID'] = ws_name
+        test_data = [
+            {
+                'value': 'input_value',
+                'type': 'ref',
+                'expected': ws_name + '/' + 'input_value'
+            },
+            {
+                'value': None,
+                'type': 'int',
+                'expected': None
+            },
+            {
+                'value': '5',
+                'type': 'int',
+                'expected': 5
+            },
+            {
+                'value': ['a', 'b', 'c'],
+                'type': 'list<ref>',
+                'expected': [ws_name + '/a', ws_name + '/b', ws_name + '/c']
+            },
+            {
+                'value': 'foo',
+                'type': 'list<ref>',
+                'expected': [ws_name + '/foo']
+            },
+            {
+                'value': ['1', '2', 3],
+                'type': 'list<int>',
+                'expected': [1, 2, 3]
+            },
+            {
+                'value': 'bar',
+                'type': None,
+                'expected': 'bar'
+            }
+        ]
+        for test in test_data:
+            ret = self.mm._transform_input(test['type'], test['value'])
+            self.assertEqual(ret, test['expected'])
+        del(os.environ['KB_WORKSPACE_ID'])
+
+    def test_transform_input_bad(self):
+        with self.assertRaises(ValueError):
+            self.mm._transform_input('foo', 'bar')
 
 if __name__ == "__main__":
     unittest.main()

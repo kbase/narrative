@@ -2330,6 +2330,14 @@ div[class="tooltip-inner"] {
     margin-top: 12px;
 }
 
+/*  Nested item indent (crude!!) */
+.kb-data-list-level1 {
+    margin-left: 25px;
+}
+.kb-data-list-level2 {
+    margin-left: 50px;
+}
+
 /* Nudge the data icon a bit to the left or right */
 .kb-data-icon-rnudge {
   margin-left: 3px;

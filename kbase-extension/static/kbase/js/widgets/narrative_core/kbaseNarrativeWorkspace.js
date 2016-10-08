@@ -241,7 +241,7 @@ define([
             // Global functions for setting icons
             $(document).on('setDataIcon.Narrative',
                 function(e, param) {
-                    this.setDataIcon(param.elt, param.type, param.stacked);
+                    this.setDataIcon(param.elt, param.type, param.stacked, param.indent);
                 }.bind(this)
             );
 
@@ -2527,8 +2527,14 @@ define([
          * @param stacked - If true, show "stacked" version of the icon
          *                indicating, e.g., that this is a container for
          *                multiple items. Undefined is false.
+         * @param indent - Indent level (default is none)
          */
-        setDataIcon: function($logo, type, stacked) {
+        setDataIcon: function($logo, type, stacked, indent) {
+            if (indent === undefined || indent === null) {
+                console.debug('indent not given for type', type);
+                indent = 0;
+            }
+
             if ($logo.hasClass('exampleDataIcon')) {
                 console.debug("SET EXAMPLE ICON");
             }
@@ -2560,7 +2566,7 @@ define([
                 else {
                     parsed_color = circle_color.match(/rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/);
                     r = parsed_color[1];
-                    g = parsed_color[2];
+                    g = parsed_color[2];;
                     b = parsed_color[3];
                 }
                 // Add circles with lighter colors
@@ -2575,6 +2581,11 @@ define([
                         .css({'color': 'white'}));
                 }
             }
+            // Assume there are CSS rules for levels of indent we care about..
+            if (indent > 0) {
+                $logo.addClass('kb-data-list-level' + indent);
+            }
+
             $logo.append($('<i>')
                     .addClass(circle_classes)
                     .css({'color': circle_color}));

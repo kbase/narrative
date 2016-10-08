@@ -117,17 +117,11 @@ define([
                     var oi = self.objectList[i].info;
                     if (self.isASet(oi)) {
                         var oi_id = self.itemId(oi);
-                        if (!self.dataIconParam[oi_id].stacked) {
+                        if (_.has(self.dataIconParam, oi_id) && !self.dataIconParam[oi_id].stacked) {
                             console.debug('update dataIcon for set object', oi);                                
                             self.dataIconParam[oi_id].stacked = true;
                             $(document).trigger("setDataIcon.Narrative", self.dataIconParam[oi_id]); 
                         }
-                    }
-                    else if (self.inAnySet(oi)) {
-                        var oi_id = self.itemId(oi);
-                        // turn OFF indent if we are not viewing sets
-                        self.dataIconParam[oi_id].indent = self.setViewMode ? 1 : 0;                        
-                        $(document).trigger("setDataIcon.Narrative", self.dataIconParam[oi_id]); 
                     }
                 }
             });            
@@ -247,7 +241,7 @@ define([
             var self = this;
             console.info('Extracting sets from datalist...');
             return this.getWorkspaceSets(ws_id).then(function(ws_sets) {
-                //console.debug('Got list of sets:', ws_sets);
+                console.debug('Got list of sets:', ws_sets);
                 _.each(ws_sets.sets,
                     // for each set type, add mappings of {item_id: {set_id : 1, ..}}
                     // to the instance 'setItems' object, and info to 'setInfo'
@@ -272,6 +266,7 @@ define([
                         // If we make it here, then we are initialized
                         self.setsInitialized = true;
                     });
+                $(document).trigger('dataViewUpdated.Narrative');                
                 return true;
             }, function(reason) {
                 console.error('Failed to get sets:', reason);
@@ -305,7 +300,7 @@ define([
          */
         getWorkspaceSets: function(ws_id) {
             console.debug('getWorkspaceSets');
-            if (this.setViewMode) {
+            //if (this.setViewMode) {
                 //return {sets: this.mock_getWorkspaceSets(ws_id)}; -XXX- make Promise
                 try {
                     var params = {workspace: '' + ws_id, include_set_item_info: true};
@@ -315,11 +310,11 @@ define([
                 catch(e) {
                     return Promise.reject('Cannot get sets for workspace ' + ws_id + ' :' + e);
                 }
-            }
-            else {
+            //}
+            //else {
                 // wrap an empty list as a Promise
-                return new Promise(function(resolve, reject) { resolve([]) });
-            }
+            //    return new Promise(function(resolve, reject) { resolve([]) });
+            //}
         },
 
         // XXX: This is broken!! needs to imitate return type with include_set_item_info=true 
@@ -524,6 +519,13 @@ define([
 
             this.fetchWorkspaceData()
                 .then(function () {
+                    // Extract sets
+                    var cur_ws_id = this.ws_name;
+                    console.debug('extract sets from reloadWsData');
+                    this.extractSets(cur_ws_id).then(function (success) {
+                        console.debug('reloadWsData, sets initialized?', this.setsInitialized);
+                    }.bind(this));
+
                     // Signal all data channel listeners that we have new data.
                     // TODO: only signal if there are actual changes
                     // TODO: data fetch and sychronization should live as a ui
@@ -593,72 +595,67 @@ define([
                         maxObjectID: minId + this.options.ws_chunk_size
                     }))
                         .then(function (infoList) {
-                            // Extract set information first
-                            var cur_ws_id = infoList[0][6];
-                            this.extractSets(cur_ws_id).then(function (success) {
-
-                                // object_info:
-                                // [0] : obj_id objid
-                                // [1] : obj_name name
-                                // [2] : type_string type
-                                // [3] : timestamp save_date
-                                // [4] : int version
-                                // [5] : username saved_by
-                                // [6] : ws_id wsid
-                                // [7] : ws_name workspace
-                                // [8] : string chsum
-                                // [9] : int size
-                                // [10] : usermeta meta
-                                for (var i = 0; i < infoList.length; i++) {
-                                    // skip narrative objects
-                                    if (infoList[i][2].indexOf('KBaseNarrative') === 0) {
-                                        continue;
-                                    }
-
-
-                                    self.objectList.push({
-                                        key: StringUtil.uuid(), // always generate the DnD key
-                                        $div: null,
-                                        info: infoList[i],
-                                        attached: false
-                                    });
-                                    // type is formatted like this: Module.Type-1.0
-                                    // typeKey = Module.Type
-                                    // typeName = Type
-                                    var typeKey = infoList[i][2].split('-')[0];
-                                    if (!(typeKey in self.objData)) {
-                                        self.objData[typeKey] = [];
-                                    }
-                                    self.objData[typeKey].push(infoList[i]);
-
-                                    var typeName = typeKey.split('.')[1];
-                                    if (!(typeName in self.availableTypes)) {
-                                        self.availableTypes[typeName] = {
-                                            type: typeName,
-                                            count: 0
-                                        };
-                                    }
-                                    self.availableTypes[typeName].count++;
+                            // object_info:
+                            // [0] : obj_id objid
+                            // [1] : obj_name name
+                            // [2] : type_string type
+                            // [3] : timestamp save_date
+                            // [4] : int version
+                            // [5] : username saved_by
+                            // [6] : ws_id wsid
+                            // [7] : ws_name workspace
+                            // [8] : string chsum
+                            // [9] : int size
+                            // [10] : usermeta meta
+                            for (var i = 0; i < infoList.length; i++) {
+                                // skip narrative objects
+                                if (infoList[i][2].indexOf('KBaseNarrative') === 0) {
+                                    continue;
                                 }
 
 
-                                /* Do another lookup if all of these conditions are met:
-                                 * 1. total object list length < max objs allowed to fetch/render
-                                 * 2. theres > 0 objects seen.
-                                 * 3. our search space hasn't hit the max object id.
-                                 * There's no guarantee that we'll ever see the object with
-                                 * max id (it could have been deleted), so keep rolling until
-                                 * we either meet how many we're allowed to fetch, or we get
-                                 * a query with no objects.
-                                 */
-                                if (minId + self.options.ws_chunk_size < self.maxWsObjId &&
-                                    self.objectList.length < self.options.ws_max_objs_to_fetch &&
-                                    infoList.length > 0) {
-                                    dataChunkNum++;
-                                    return getDataChunk(minId + 1 + self.options.ws_chunk_size);
+                                self.objectList.push({
+                                    key: StringUtil.uuid(), // always generate the DnD key
+                                    $div: null,
+                                    info: infoList[i],
+                                    attached: false
+                                });
+                                // type is formatted like this: Module.Type-1.0
+                                // typeKey = Module.Type
+                                // typeName = Type
+                                var typeKey = infoList[i][2].split('-')[0];
+                                if (!(typeKey in self.objData)) {
+                                    self.objData[typeKey] = [];
                                 }
-                            });
-                        }.bind(this));
+                                self.objData[typeKey].push(infoList[i]);
+
+                                var typeName = typeKey.split('.')[1];
+                                if (!(typeName in self.availableTypes)) {
+                                    self.availableTypes[typeName] = {
+                                        type: typeName,
+                                        count: 0
+                                    };
+                                }
+                                self.availableTypes[typeName].count++;
+                            }
+
+
+                            /* Do another lookup if all of these conditions are met:
+                             * 1. total object list length < max objs allowed to fetch/render
+                             * 2. theres > 0 objects seen.
+                             * 3. our search space hasn't hit the max object id.
+                             * There's no guarantee that we'll ever see the object with
+                             * max id (it could have been deleted), so keep rolling until
+                             * we either meet how many we're allowed to fetch, or we get
+                             * a query with no objects.
+                             */
+                            if (minId + self.options.ws_chunk_size < self.maxWsObjId &&
+                                self.objectList.length < self.options.ws_max_objs_to_fetch &&
+                                infoList.length > 0) {
+                                dataChunkNum++;
+                                return getDataChunk(minId + 1 + self.options.ws_chunk_size);
+                            }
+                        });
                 }.bind(this);
 
                 getDataChunk(0).then(resolve);
@@ -1451,7 +1448,7 @@ define([
                 var set_info = this.getSetInfo(obj.info);
                 if (set_info !== undefined) {
                     set_info.div = obj.$div;
-                    var type = obj[2].split('.')[1].split('-')[0]; // split type-string like KBaseFile.PairedEndLibrary-2.0
+                    var type = obj.info[2].split('.')[1].split('-')[0]; // split type-string like KBaseFile.PairedEndLibrary-2.0
                     console.debug('update dataIcon for set object', obj);
                     $(document).trigger("setDataIcon.Narrative", {elt: set_info.div, type: type, stacked: true});
                 }
@@ -1485,57 +1482,72 @@ define([
             self.detachAllRows();
             self.n_objs_rendered = 0;
     
+            var indent_value = self.setViewMode ? 1 : 0; // new value
+
             if (self.objectList.length > 0) {
-                // First, extract sets. Note that this is no-op
-                // if sets are already initialized.
-                self.extractSets(self.objectList[0].info[6]).then(function(ok) {
-                    console.debug('@@renderList, sets initialized?', self.setsInitialized);
-                    var limit = self.options.objs_to_render_to_start;
+                var limit = self.options.objs_to_render_to_start;
 
-                    // XXX: Hack, part 1: Find expanded sets, and "reserve" rendering for them.
-                    // Also fix rendering of set logos.
-                    var exp_sets = {};
-                    for (i=0; i < self.objectList.length; i++) {
-                        var oi = self.objectList[i].info;
-                        if (self.isAViewedSet(oi) && self.getSetInfo(oi).expanded) {
-                                exp_sets[i] = true; // save index needed for attachObjectAtIndex()
-                        }
+                // XXX: Hack, part 1: Find expanded sets, and "reserve" rendering for them.
+                // Also fix rendering of set logos.
+                var exp_sets = {};
+                for (i=0; i < self.objectList.length; i++) {
+                    var cur_obj = self.objectList[i];
+                    var cur_obj_id = self.itemId(cur_obj.info);
+                    console.debug('Hack part 1 for object', cur_obj_id);
+                    // check whether expanded
+                    if (self.isAViewedSet(cur_obj.info) && self.getSetInfo(cur_obj.info).expanded) {
+                            exp_sets[i] = true; // save index needed for attachObjectAtIndex()
+                    }
+                    // modify indentation
+                    else if (self.setViewMode && self.inAnySet(cur_obj.info)) {
+                        console.debug('change indent for object ' + cur_obj_id + ' from ' +
+                            self.dataIconParam[cur_obj_id].indent + ' to ' + indent_value);
+                        self.dataIconParam[cur_obj_id].indent = indent_value;
+                        $(document).trigger("setDataIcon.Narrative", self.dataIconParam[cur_obj_id]); 
+                    }
+                    // Any non-zero indent not in setView mode, should go to zero
+                    else if (!self.setViewMode && self.dataIconParam[cur_obj_id] !== undefined && 
+                        self.dataIconParam[cur_obj_id].indent !== 0) {
+                        self.dataIconParam[cur_obj_id].indent = 0;
+                        $(document).trigger("setDataIcon.Narrative", self.dataIconParam[cur_obj_id]); 
+                    }
+                }
+                console.debug('renderList setItems = ', self.setItems);
+
+                limit -= _.keys(exp_sets).length; // reserve space
+
+                for (var i = 0;
+                     i < self.objectList.length && (self.n_objs_rendered < limit);
+                     i++) {
+
+                    var cur_obj = self.objectList[i];
+                    var cur_obj_id = self.itemId(cur_obj.info);
+                    // If object does not have a key, define one.
+                    // This will be used for 'id' of rendered element.
+                    // But do *not* replace an existing key.
+                    if (cur_obj.key === undefined) {
+                        cur_obj.key = StringUtil.uuid();
                     }
 
-                    limit -= _.keys(exp_sets).length; // reserve space
-                    console.debug('@@ New limit', limit, 'with exp_sets', exp_sets);
-
-                    for (var i = 0;
-                         i < self.objectList.length && (self.n_objs_rendered < limit);
-                         i++) {
-                        //console.debug('renderList: object', i);
-                        // If object does not have a key, define one.
-                        // This will be used for 'id' of rendered element.
-                        // But do *not* replace an existing key.
-                        if (self.objectList[i].key === undefined) {
-                            self.objectList[i].key = StringUtil.uuid();
-                        }
-                        self.n_objs_rendered += self.attachObjectAtIndex(i);
-                        // XXX: Hack, part 1.5: Remove from "reserved" exp sets
-                        if (_.has(exp_sets, i)) {
-                            delete exp_sets[i];
-                            limit++; // un-reserve space
-                        }
+                    self.n_objs_rendered += self.attachObjectAtIndex(i);
+                    // XXX: Hack, part 1.5: Remove from "reserved" exp sets
+                    if (_.has(exp_sets, i)) {
+                        delete exp_sets[i];
+                        limit++; // un-reserve space
                     }
+                }
 
-                    // XXX: Hack, part deux: Add the expanded sets
-                    _.each(_.keys(exp_sets), function(i) {
-                        self.n_objs_rendered += self.attachObjectAtIndex(i);
-                    });
-
-                    if (Jupyter.narrative.readonly) {
-                        self.$addDataButton.hide();
-                    } else {
-                        self.$addDataButton.show();
-                    }
-    
-                    $(document).trigger('dataViewUpdated.Narrative');
+                // XXX: Hack, part deux: Add the expanded sets
+                _.each(_.keys(exp_sets), function(i) {
+                    self.n_objs_rendered += self.attachObjectAtIndex(i);
                 });
+
+                if (Jupyter.narrative.readonly) {
+                    self.$addDataButton.hide();
+                } else {
+                    self.$addDataButton.show();
+                }
+    
             } else {
                 var $noDataDiv = $('<div>')
                     .css({'text-align': 'center', 'margin': '20pt'})

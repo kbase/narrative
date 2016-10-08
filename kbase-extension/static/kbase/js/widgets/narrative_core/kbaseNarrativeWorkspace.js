@@ -2583,7 +2583,10 @@ define([
             }
             // Assume there are CSS rules for levels of indent we care about..
             if (indent > 0) {
-                $logo.addClass('kb-data-list-level' + indent);
+                $logo.addClass('kb-data-list-level1');
+            }
+            else if ($logo.hasClass('kb-data-list-level1')) {
+                $logo.removeClass('kb-data-list-level1');
             }
 
             $logo.append($('<i>')

@@ -8,6 +8,7 @@ import unittest
 import mock
 from traitlets import Instance
 import os
+import json
 
 
 class AppManagerTestCase(unittest.TestCase):
@@ -114,8 +115,7 @@ class AppManagerTestCase(unittest.TestCase):
             "reads_tuple": [
                 {
                     "input_reads_label": "reads file 1",
-                    "input_reads_obj":
-                        "11635/rhodobacterium.art.q20.int.PE.reads",
+                    "input_reads_obj": "rhodobacterium.art.q20.int.PE.reads",
                     "input_reads_metadata": {
                         "key1": "value1"
                     }
@@ -154,16 +154,14 @@ class AppManagerTestCase(unittest.TestCase):
             "reads_tuple": [
                 {
                     "input_reads_label": "reads file 1",
-                    "input_reads_obj":
-                        "11635/rhodobacterium.art.q20.int.PE.reads",
+                    "input_reads_obj": "rhodobacterium.art.q20.int.PE.reads",
                     "input_reads_metadata": {
                         "key1": "value1"
                     }
                 },
                 {
                     "input_reads_label": "reads file 2",
-                    "input_reads_obj":
-                        "11635/rhodobacterium.art.q10.PE.reads",
+                    "input_reads_obj": "rhodobacterium.art.q10.PE.reads",
                     "input_reads_metadata": {
                         "key2": "value2"
                     }
@@ -174,6 +172,10 @@ class AppManagerTestCase(unittest.TestCase):
         }
         app_id = "NarrativeTest/test_create_set"
         tag = "dev"
+        ws_name = 'wjriehl:1475006266615'
+        prev_ws_id = os.environ.get('KB_WORKSPACE_ID', None)
+        os.environ['KB_WORKSPACE_ID'] = ws_name
+        from biokbase.narrative.jobs.specmanager import SpecManager
         sm = SpecManager()
         spec = sm.get_spec(app_id, tag=tag)
         spec_params = sm.app_params(spec)
@@ -194,17 +196,21 @@ class AppManagerTestCase(unittest.TestCase):
                 u'items': [{
                     u'label': 'reads file 1',
                     u'metadata': {'key1': 'value1'},
-                    u'ref': '11635/rhodobacterium.art.q20.int.PE.reads'
+                    u'ref': '11635/9/1'
                 }, {
                     u'label': 'reads file 2',
                     u'metadata': {'key2': 'value2'},
-                    u'ref': '11635/rhodobacterium.art.q10.PE.reads'
+                    u'ref': '11635/10/1'
                 }],
                 u'description': 'New Reads Set'
             },
-            u'workspace': None
+            u'workspace': ws_name
         }]
         self.assertDictEqual(expected[0], mapped_inputs[0])
+        if prev_ws_id is None:
+            del(os.environ['KB_WORKSPACE_ID'])
+        else:
+            os.environ['KB_WORKSPACE_ID'] = prev_ws_id
 
     def test_generate_input(self):
         prefix = 'pre'

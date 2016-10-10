@@ -608,18 +608,29 @@ class AppManager(object):
 
         return (params, ws_input_refs)
 
-    def _map_group_inputs(self, value, spec_param):
+    def _resolve_ref_if_typed(self, value, spec_param):
+        if 'allowed_types' in spec_param:
+            allowed_types = spec_param['allowed_types']
+            if len(allowed_types) > 0:
+                workspace = system_variable('workspace')
+                info = self.ws_client.get_object_info_new({'objects': [{'workspace': workspace, 'name': value}]})[0]
+                return "{}/{}/{}".format(info[6], info[0], info[4])
+        return value
+
+    def _map_group_inputs(self, value, spec_param, spec_params):
         if isinstance(value, list):
-            return [self._map_group_inputs(v, spec_param) for v in value]
+            return [self._map_group_inputs(v, spec_param, spec_params) for v in value]
         else:
-            if 'id_mapping' in spec_param:
-                mapped_value = dict()
-                id_map = spec_param['id_mapping']
-                for k in id_map:
-                    mapped_value[id_map[k]] = value[k]
-                return mapped_value
-            else:
-                return value
+            mapped_value = dict()
+            id_map = spec_param.get('id_mapping', {})
+            for param_id in id_map:
+                if not param_id in spec_params:
+                    raise ValueError('Unknown parameter ID in group mapping: ' + param_id)
+            for param_id in value:
+                target_key = id_map.get(param_id, param_id)
+                target_val = self._resolve_ref_if_typed(value[param_id], spec_params[param_id])
+                mapped_value[target_key] = target_val
+            return mapped_value
 
     def _map_inputs(self, input_mapping, params, spec_params):
         """
@@ -640,7 +651,8 @@ class AppManager(object):
             if 'input_parameter' in p:
                 p_value = params.get(p['input_parameter'], None)
                 if spec_params[p['input_parameter']].get('type', '') == 'group':
-                    p_value = self._map_group_inputs(p_value, spec_params[p['input_parameter']])
+                    p_value = self._map_group_inputs(p_value, spec_params[p['input_parameter']],
+                                                     spec_params)
                 # turn empty strings into None
                 if isinstance(p_value, basestring) and len(p_value) == 0:
                     p_value = None

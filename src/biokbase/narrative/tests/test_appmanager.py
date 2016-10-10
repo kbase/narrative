@@ -87,6 +87,16 @@ class AppManagerTestCase(unittest.TestCase):
                                           None,
                                           tag=self.good_tag))
 
+    @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')
+    def test_run_app_bad_version(self, m):
+        m.return_value._send_comm_message.return_value = None
+        print('here')
+        self.assertIsNone(self.mm.run_app(self.good_app_id,
+                                          None,
+                                          tag="dev",
+                                          version="1.0.0"))
+
+
     def test_app_description(self):
         desc = self.mm.app_description(self.good_app_id, tag=self.good_tag)
         self.assertIsInstance(desc, HTML)
@@ -104,7 +114,8 @@ class AppManagerTestCase(unittest.TestCase):
             "reads_tuple": [
                 {
                     "input_reads_label": "reads file 1",
-                    "input_reads_obj": "11635/rhodobacterium.art.q20.int.PE.reads",
+                    "input_reads_obj":
+                        "11635/rhodobacterium.art.q20.int.PE.reads",
                     "input_reads_metadata": {
                         "key1": "value1"
                     }
@@ -126,7 +137,10 @@ class AppManagerTestCase(unittest.TestCase):
         os.environ['KB_WORKSPACE_ID'] = 'wjriehl:1475006266615'
         sm = SpecManager()
         spec = sm.get_spec(app_id, tag=tag)
-        (params, ws_inputs) = self.mm._validate_parameters(app_id, tag, sm.app_params(spec), inputs)
+        (params, ws_inputs) = self.mm._validate_parameters(app_id,
+                                                           tag,
+                                                           sm.app_params(spec),
+                                                           inputs)
         self.assertDictEqual(params, inputs)
         self.assertIn('11635/9/1', ws_inputs)
         self.assertIn('11635/10/1', ws_inputs)
@@ -140,14 +154,16 @@ class AppManagerTestCase(unittest.TestCase):
             "reads_tuple": [
                 {
                     "input_reads_label": "reads file 1",
-                    "input_reads_obj": "11635/rhodobacterium.art.q20.int.PE.reads",
+                    "input_reads_obj":
+                        "11635/rhodobacterium.art.q20.int.PE.reads",
                     "input_reads_metadata": {
                         "key1": "value1"
                     }
                 },
                 {
                     "input_reads_label": "reads file 2",
-                    "input_reads_obj": "11635/rhodobacterium.art.q10.PE.reads",
+                    "input_reads_obj":
+                        "11635/rhodobacterium.art.q10.PE.reads",
                     "input_reads_metadata": {
                         "key2": "value2"
                     }
@@ -161,10 +177,17 @@ class AppManagerTestCase(unittest.TestCase):
         sm = SpecManager()
         spec = sm.get_spec(app_id, tag=tag)
         spec_params = sm.app_params(spec)
-        spec_params_map = dict((spec_params[i]['id'],spec_params[i]) for i in range(len(spec_params)))
+        spec_params_map = dict(
+            (spec_params[i]['id'], spec_params[i])
+            for i in range(len(spec_params))
+        )
         if os.environ.get('KB_WORKSPACE_ID', None) is not None:
             del(os.environ['KB_WORKSPACE_ID'])
-        mapped_inputs = self.mm._map_inputs(spec['behavior']['kb_service_input_mapping'], inputs, spec_params_map)
+        mapped_inputs = self.mm._map_inputs(
+            spec['behavior']['kb_service_input_mapping'],
+            inputs,
+            spec_params_map
+        )
         expected = [{
             u'output_object_name': 'MyReadsSet',
             u'data': {
@@ -195,7 +218,7 @@ class AppManagerTestCase(unittest.TestCase):
         rand_str = self.mm._generate_input(generator)
         self.assertTrue(rand_str.startswith(prefix))
         self.assertTrue(rand_str.endswith(suffix))
-        self.assertEqual(len(rand_str), len(prefix) + len(suffix) + num_symbols)
+        self.assertEqual(len(rand_str), len(prefix)+len(suffix)+num_symbols)
 
     def test_generate_input_bad(self):
         with self.assertRaises(ValueError):

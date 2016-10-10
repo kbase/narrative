@@ -183,8 +183,6 @@ class AppManagerTestCase(unittest.TestCase):
             (spec_params[i]['id'], spec_params[i])
             for i in range(len(spec_params))
         )
-        if os.environ.get('KB_WORKSPACE_ID', None) is not None:
-            del(os.environ['KB_WORKSPACE_ID'])
         mapped_inputs = self.mm._map_inputs(
             spec['behavior']['kb_service_input_mapping'],
             inputs,

@@ -279,8 +279,8 @@ require.config({
         'kbasePValueHistogram'                  : 'kbase/js/widgets/function_output/rna-seq/kbasePValueHistogram',
         'kbasePMIBarchart'                      : 'kbase/js/widgets/vis/plants/kbasePMIBarchart',
         'kbaseVenndiagram'                      : 'kbase/js/widgets/vis/kbaseVenndiagram',
-        'kbaseOntologyDictionary'               : 'kbase/js/widgets/ontology/kbaseOntologyDictionary',
-        'kbaseOntologyTranslation'              : 'kbase/js/widgets/ontology/kbaseOntologyTranslation',
+        'kbaseOntologyDictionary'               : 'kbase/js/widgets/function_output/ontology/kbaseOntologyDictionary',
+        'kbaseOntologyTranslation'              : 'kbase/js/widgets/function_output/ontology/kbaseOntologyTranslation',
         'kbaseBlastOutput'                      : 'kbase/js/widgets/function_output/kbaseBlastOutput',
 
         'kbaseRegisterRepoState'                : 'kbase/js/widgets/function_output/kbaseRegisterRepoState',
@@ -294,7 +294,7 @@ require.config({
          ***/
 
         'd3'                                    : 'ext_components/d3/d3.min',
-        'colorbrewer'                           : 'ext_components/colorbrewer/colorbrewer.min',
+        'colorbrewer'                           : 'ext_components/colorbrewer/colorbrewer',
         'handlebars'                            : 'ext_components/handlebars/handlebars',
         'numeral'                               : 'ext_components/numeral/numeral',
         'kbwidget'                              : 'kbase/js/kbwidget',

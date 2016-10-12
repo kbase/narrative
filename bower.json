@@ -21,7 +21,6 @@
     "bootstrap-slider": "*",
     "jquery.tipsy": "*",
     "requirejs-plugins": "^1.0.3",
-    "dropzone": "^4.3.0",
-    "colorbrewer": "^1.0.0"
+    "dropzone": "^4.3.0"
   }
 }

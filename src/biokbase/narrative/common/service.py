@@ -26,13 +26,9 @@ from biokbase.narrative.common import kbtypes, kblogging
 from biokbase.narrative.common.log_common import EVENT_MSG_SEP
 from biokbase.narrative.common.url_config import URLS
 from biokbase.narrative.common import util
-from biokbase.narrative.common.kbjob_manager import KBjobManager
 
 # Logging
 _log = logging.getLogger(__name__)
-
-# Init job manager
-job_manager = KBjobManager()
 
 ## Exceptions
 
@@ -471,44 +467,12 @@ class LifecycleSubject(object):
     def register_job(self, job_id):
         """Register a new long-running job.
         """
-        global job_manager
-        if job_id is not None:
-            if job_manager is None:
-                job_manager = KBjobManager()
-
-            self._event('debug', job_id)
-            # njs jobs start with either
-            # 'njs:' or 'method:' - either way
-            # they're the only ones with a colon
-            try:
-                unprefixed_job_id = job_id
-                if job_id.find(':') >= 0:
-                    unprefixed_job_id = job_id.split(':')[1]
-                job_manager.register_job(unprefixed_job_id)
-            except Exception as e:
-                to_log = type(e).__name__ + ': ' + str(e) + '\n' + traceback.format_exc()
-                self._event('debug', to_log)
-            self._event('register_job', job_id)
+        raise ValueError("Method is not supported anymore")
 
     def register_app(self, app_id):
         """Register a new long-running app process.
         """
-        global job_manager
-        if app_id is not None:
-            if job_manager is None:
-                job_manager = KBjobManager()
-
-            self._event('debug', app_id)
-            try:
-                unprefixed_app_id = app_id
-                if app_id.find(':') >= 0:
-                    unprefixed_app_id = app_id.split(':')[1]
-                job_manager.register_job(unprefixed_app_id)
-            except Exception as e:
-                # It should be logged somehow
-                to_log = type(e).__name__ + ': ' + str(e) + '\n' + traceback.format_exc()
-                self._event('debug', to_log)
-            self._event('register_app', app_id)
+        raise ValueError("Method is not supported anymore")
 
     # get/set 'stage' property
 
@@ -970,11 +934,7 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
         return os.environ['KB_WORKSPACE_ID']
 
     def poll_job(self, job_id):
-        global job_manager
-        if job_manager is None:
-            job_manager = KBjobManager()
-
-        return job_manager.poll_job(job_id)
+        raise ValueError("Method is not supported anymore")
 
 
     ## JSON serialization

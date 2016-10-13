@@ -725,7 +725,22 @@ class AppManager(object):
 
         Returns a transformed (or not) value.
         """
-        if transform_type is None:
+        if transform_type == "none" or transform_type == "object-name" or transform_type is None:
+            return value
+
+        elif transform_type == "ref" or transform_type == "unresolved-ref":
+            # make unresolved workspace ref (like 'ws-name/obj-name')
+            if value is not None:
+                value = system_variable('workspace') + '/' + value
+            return value
+
+        elif transform_type == "resolved-ref":
+            # make a workspace ref
+            if value is not None:
+                value = self._resolve_ref(system_variable('workspace'), value)
+            return value
+
+        elif transform_type == "future-default":
             # let's guess base on spec_param
             if spec_param is None:
                 return value
@@ -733,21 +748,6 @@ class AppManager(object):
                 if value is not None:
                     value = self._resolve_ref_if_typed(value, spec_param)
                 return value
-
-        elif transform_type == "none" or transform_type == "object-name":
-            return value
-
-        elif transform_type == "unresolved-ref":
-            # make unresolved workspace ref (like 'ws-name/obj-name')
-            if value is not None:
-                value = system_variable('workspace') + '/' + value
-            return value
-
-        elif transform_type == "ref":
-            # make a workspace ref
-            if value is not None:
-                value = self._resolve_ref(system_variable('workspace'), value)
-            return value
 
         elif transform_type == "int":
             # make it an integer, OR 0.

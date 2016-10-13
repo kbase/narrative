@@ -236,12 +236,17 @@ class AppManagerTestCase(unittest.TestCase):
         test_data = [
             {
                 'value': 'input_value',
+                'type': 'ref',
+                'expected': ws_name + '/' + 'input_value'
+            },
+            {
+                'value': 'input_value',
                 'type': 'unresolved-ref',
                 'expected': ws_name + '/' + 'input_value'
             },
             {
                 'value': 'rhodobacterium.art.q20.int.PE.reads',
-                'type': 'ref',
+                'type': 'resolved-ref',
                 'expected': '11635/9/1'
             },
             {
@@ -255,15 +260,20 @@ class AppManagerTestCase(unittest.TestCase):
                 'expected': 5
             },
             {
+                'value': ['a', 'b', 'c'],
+                'type': 'list<ref>',
+                'expected': [ws_name + '/a', ws_name + '/b', ws_name + '/c']
+            },
+            {
                 'value': ['rhodobacterium.art.q20.int.PE.reads',
                           'rhodobacterium.art.q10.PE.reads'],
-                'type': 'list<ref>',
+                'type': 'list<resolved-ref>',
                 'expected': ['11635/9/1', '11635/10/1']
             },
             {
-                'value': 'rhodobacterium.art.q20.int.PE.reads',
+                'value': 'foo',
                 'type': 'list<ref>',
-                'expected': ['11635/9/1']
+                'expected': [ws_name + '/foo']
             },
             {
                 'value': ['1', '2', 3],
@@ -277,7 +287,7 @@ class AppManagerTestCase(unittest.TestCase):
             },
             {
                 'value': 'rhodobacterium.art.q20.int.PE.reads',
-                'type': None,
+                'type': 'future-default',
                 'spec': {'is_output': 0, 'allowed_types': ["Some.KnownType"]},
                 'expected': '11635/9/1'
             }

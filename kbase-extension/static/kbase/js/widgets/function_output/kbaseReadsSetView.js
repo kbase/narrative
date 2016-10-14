@@ -64,19 +64,19 @@ define (
                         var info = results.info,
                             refs = [],
                             i = 0;
-    
+
                         $self.obj_info = info;
                         $self.link_ref = info[6] + '/' +
                                          info[1] + '/' +
                                          info[4];
                         $self.group_info = results.data;
-                        
+
                         // pull all reads objects to calculate summary stats
                         // and individual browse row contents
                         for (i = 0; i < $self.group_info.items.length; i++) {
                             refs.push({'ref':$self.group_info.items[i].ref});
                         }
-                        
+
                         return refs;
                     })
                     .then(function (refs) {
@@ -95,7 +95,7 @@ define (
                                 }
                             }
                         }
-                        $self.render(); 
+                        $self.render();
                     })
                     .catch(function (err) {
                         console.error(err);
@@ -140,10 +140,10 @@ define (
                     '<tr><th>Total base pairs</th><td>' +
                     Numeral($self.group_stats.bp_count).format('0,0') +
                     '</td></tr>');
-                
+
                 $divs.append($('<div id="' + tab_ids.overview + '" class="tab-pane active">')
                              .append($overviewTable));
-                
+
                 $browseTable.append('<thead><tr>' +
                                     '<th>Name</th>' +
                                     '<th># Reads</th>' +
@@ -151,18 +151,18 @@ define (
                                     '<th>Insert Size</th>' +
                                     '</tr></thead>');
                 $browseTable.append($('<tbody>'));
-                
+
                 for (var i = 0; i < $self.row_contents.length; i++) {
                     row.read_count = $self.row_contents[i].data.read_count;
                     row.read_size = $self.row_contents[i].data.read_size;
                     row.insert_size_mean = $self.row_contents[i].data.insert_size_mean;
-                    
+
                     for (var k in row) {
                         if (row[k] !== null && row[k] !== undefined) {
                             row[k] = Numeral(row[k]).format('0,0');
                         } else {
                             row[k] = "Missing";
-                        }                        
+                        }
                     }
 
                     $browseTable.append(
@@ -178,7 +178,7 @@ define (
                 $container.append($tabs);
                 $container.append($divs);
             },
-            get_uuid4() {
+            get_uuid4: function() {
                 return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
                      var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
                      return v.toString(16);

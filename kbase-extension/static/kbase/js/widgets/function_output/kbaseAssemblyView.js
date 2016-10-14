@@ -9,11 +9,13 @@
 		'kbwidget',
 		'bootstrap',
 		'jquery',
+        'narrativeConfig',
 		'kbaseAuthenticatedWidget'
 	], function(
 		KBWidget,
 		bootstrap,
 		$,
+        Config,
 		kbaseAuthenticatedWidget
 	) {
     return KBWidget({
@@ -30,8 +32,8 @@
             ws_name: null,
             job_id: null
         },
-        loadingImage: window.kbconfig.loading_gif,
-        wsUrl: window.kbconfig.urls.workspace,
+        loadingImage: Config.get('loading_gif'),
+        wsUrl: Config.get('workspace'),
         timer: null,
 
         init: function(options) {
@@ -71,7 +73,7 @@
                 if (typeof self.ws_id == "string") {
                     if (self.ws_id.indexOf(".report") == -1) { //Check if contigset or report
                         objname = self.ws_id + ".report"
-                    } 
+                    }
                 }
 
                 kbws.get_objects([{ref: self.ws_name +"/"+ objname}], function(data) {
@@ -84,7 +86,7 @@
                 }, function(data) {
                     container.empty();
                     container.append('<p>[Error] ' + data.error.message + '</p>');
-                });             
+                });
             };
             ready();
             return this;
@@ -112,7 +114,7 @@
         },
 
         uuid: function() {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, 
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,
                 function(c) {
                     var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
                     return v.toString(16);

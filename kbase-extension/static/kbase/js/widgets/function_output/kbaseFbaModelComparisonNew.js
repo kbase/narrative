@@ -1,3 +1,4 @@
+'use strict';
 define (
 	[
 		'kbwidget',
@@ -20,7 +21,7 @@ define (
 		kbaseAuthenticatedWidget,
         kbaseTabs,
 		jquery_dataTables,
-		bootstrap
+		dataTables_bootstrap
 	) {
 return KBWidget({
     name: "kbaseFbaModelComparisonNew",
@@ -319,7 +320,7 @@ return KBWidget({
         //        this.token = null;
         this.render();
         return this;
-    },
+    }
 
-})
+});
 });

@@ -204,15 +204,19 @@ define([
                     } else if (/\s/.test(parsedValue)) {
                         messageId = 'obj-name-no-spaces';
                         diagnosis = 'invalid';
-                        errorMessage = 'spaces are not allowed in data object names';
+                        errorMessage = 'an object name may not contain a space';
                     } else if (/^[\+\-]*\d+$/.test(parsedValue)) {
                         messageId = 'obj-name-not-integer';
                         diagnosis = 'invalid';
-                        errorMessage = 'data object names may not be in the form of an integer';
+                        errorMessage = 'an object name may not be in the form of an integer';
                     } else if (!/^[A-Za-z0-9|\.|\||_\-]+$/.test(parsedValue)) {
                         messageId = 'obj-name-invalid-characters';
                         diagnosis = 'invalid';
-                        errorMessage = 'object names may only include alphabetic characters, numbers, and the symbols "_",  "-",  ".",  "|"';
+                        errorMessage = 'one or more invalid characters detected; an object name may only include alphabetic characters, numbers, and the symbols "_",  "-",  ".",  and "|"';
+                    } else if (parsedValue.length > 255) {
+                        messageId = 'obj-name-too-long';
+                        diagnosis = 'invalid';
+                        errorMessage = 'an object name may not exceed 255 characters in length';
                     } else if (options.shouldNotExist) {
                         return getObjectInfo(options.workspaceId, parsedValue, options.authToken, options.workspaceServiceUrl)
                             .then(function (objectInfo) {

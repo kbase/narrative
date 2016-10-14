@@ -344,12 +344,11 @@ define([
                     allow_multiple: 0,
                     field_type: 'text',
                     text_options: {
-                        is_output_name: 0,
+                        is_output_name: 1,
                         placeholder: 'Reads Set Name',
-                        regex_constraint: [],
-                        validate_as: 'string'
+                        valid_ws_types: ['KBaseSets.ReadsSet']
                     },
-                    ui_class: 'parameter',
+                    ui_class: 'output',
                     ui_name: 'Reads Set Name'
                 },
                 {

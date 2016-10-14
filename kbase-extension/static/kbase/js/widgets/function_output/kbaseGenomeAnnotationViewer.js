@@ -30,7 +30,7 @@ define (
         kbaseAuthenticatedWidget,
         kbaseTabs,
         jquery_dataTables,
-        bootstrap,
+        dataTables_bootstrap,
         gaa,
         kbaseTable
     ) {
@@ -101,7 +101,7 @@ define (
                     .attr('align', 'center')
                     .append($.jqElem('i').addClass('fa fa-spinner fa-spin fa-2x'))
                     .append('<br>Loading data... please wait...<br>Data processing may take upwards of 30 seconds, during which time this page may be unresponsive.<br><br>')
-                    
+
                     )
                 ;
         },
@@ -366,7 +366,7 @@ define (
               $self.showContent($selector.val(), $target);
             }
           );
-          for (type of Object.keys(this.summary.annotation.feature_type_counts).sort(this.sortCaseInsensitively)) {
+          for (type in Object.keys(this.summary.annotation.feature_type_counts).sort(this.sortCaseInsensitively)) {
             $selector.append(
               $.jqElem('option')
                 .attr('value', type)

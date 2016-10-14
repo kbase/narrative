@@ -294,7 +294,7 @@ require.config({
          ***/
 
         'd3'                                    : 'ext_components/d3/d3.min',
-        'colorbrewer'                           : 'ext_components/colorbrewer/colorbrewer',
+        'colorbrewer'                           : 'ext_components/colorbrewer/colorbrewer.min',
         'handlebars'                            : 'ext_components/handlebars/handlebars',
         'numeral'                               : 'ext_components/numeral/numeral',
         'kbwidget'                              : 'kbase/js/kbwidget',

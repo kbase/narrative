@@ -6,12 +6,14 @@ define (
 		'kbwidget',
 		'bootstrap',
 		'jquery',
+        'narrativeConfig',
 		'kbaseAuthenticatedWidget',
 		'kbStandaloneTable'
 	], function(
 		KBWidget,
 		bootstrap,
 		$,
+        Config,
 		kbaseAuthenticatedWidget,
 		kbStandaloneTable
 	) {
@@ -24,14 +26,14 @@ define (
 	        id: null,
 	        ws: null
         },
-	    ws_url: window.kbconfig.urls.workspace,
-	    loading_image: window.kbconfig.loading_gif,
-        
+	    ws_url: Config.url('workspace'),
+	    loading_image: Config.get('loading_gif'),
+
 	    init: function(options) {
             this._super(options);
             return this;
         },
-	
+
         render: function() {
 	        var self = this;
 	        var container = this.$elem;
@@ -53,7 +55,7 @@ define (
 		            var otus = data[0]['data']['otus'];
 		            var cnames = ['features', 'functional role', 'abundance', 'avg e-value', 'otu']
 		            var tdata  = [];
-		            
+
 		            for (var o = 0; o < otus.length; o++) {
 		                funcs = otus[o]['functions']
 		                for (var f = 0; f < funcs.length; f++) {
@@ -66,13 +68,13 @@ define (
 		                    ]);
 	                    }
 	                }
-	                
+
 	                var tlen = 0;
 	    		    if (window.hasOwnProperty('rendererTable') && rendererTable.length) {
 				        tlen = rendererTable.length;
 			        }
             	    container.append('<div id="annotationTable'+tlen+'" style="width: 95%;"></div>');
-			        
+
 			        var tableAnn = standaloneTable.create({index: tlen});
 	  		        tableAnn.settings.target = document.getElementById("annotationTable"+tlen);
 	    		    tableAnn.settings.data = { header: cnames, data: tdata };

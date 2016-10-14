@@ -8,7 +8,7 @@ define([
     'KBModeling'
 ], function(Widget, kbm) {
     describe('Test the KBaseFBA.FBA widget', function() {
-        it('Should do things', function() {
+        it('Should load the module', function() {
             var api = new KBModeling('token');
             expect(api.KBaseFBA_FBA).toBeDefined();
         });

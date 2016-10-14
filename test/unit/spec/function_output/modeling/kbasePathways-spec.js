@@ -5,10 +5,10 @@
 /*jslint white: true*/
 define([
     'kbasePathways',
-], function(Widget, kbm) {
+], function(Widget) {
     describe('Test the kbasePathways widget', function() {
-        it('Should do things', function() {
-
+        it('Should load the widget', function() {
+            expect(Widget).toBeDefined();
         });
     });
 });

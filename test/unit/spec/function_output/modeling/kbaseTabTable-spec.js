@@ -8,7 +8,7 @@ define([
 ], function(Widget) {
     describe('Test the kbaseTabTable widget', function() {
         it('Should do things', function() {
-
+            expect(Widget).toBeDefined();
         });
     });
 });

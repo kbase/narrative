@@ -7,8 +7,8 @@ define([
     'kbaseTabTableTabs'
 ], function(Widget) {
     describe('Test the kbaseTabTableTabs widget', function() {
-        it('Should do things', function() {
-
+        it('Should load the widget', function() {
+            expect(Widget).toBeDefined();
         });
     });
 });

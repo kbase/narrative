@@ -269,7 +269,7 @@ define (
                 }
                 else {
                     $self.load_data_ref(ws, d[0].data);
-                });
+                }
             }).fail(function(d) {
 
                 $self.$elem.empty();

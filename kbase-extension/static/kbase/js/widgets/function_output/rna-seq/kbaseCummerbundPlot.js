@@ -191,10 +191,9 @@ define (
                             type : 'GET',
                             processData : false,
                             dataType : 'binary',
-                            headers:{'Authorization' : 'Oauth ' + $plot.authToken()},
-                            processData : false
-                            }
-                        ).then(function(d) {
+                            headers : {'Authorization' : 'Oauth ' + $plot.authToken()},
+                        })
+                        .then(function(d) {
 
                             var reader = new FileReader();
                             reader.readAsDataURL(d);
@@ -208,7 +207,7 @@ define (
                             $plot.$elem
                                 .addClass('alert alert-danger')
                                 .html("Could not load plot : " + (d.error.message || d.statusText));
-                        })
+                        });
                     }
                 }
             );

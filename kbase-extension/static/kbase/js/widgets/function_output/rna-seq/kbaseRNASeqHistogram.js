@@ -9,7 +9,6 @@ define (
 		'd3',
 		'kbaseBarchart',
 		'kbaseTable',
-		'kbwidget',
 		'kbaseAuthenticatedWidget',
 		'kbaseTabs'
 	], function(
@@ -20,7 +19,6 @@ define (
 		d3,
 		kbaseBarchart,
 		kbaseTable,
-		KBWidget,
 		kbaseAuthenticatedWidget,
 		kbaseTabs
 	) {

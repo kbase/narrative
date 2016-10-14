@@ -208,7 +208,6 @@ define (
                         dataset : pieData,
 
                         outerRadius : minEdge - 30,
-                        outsideLabels : false,
                         tooltips : false,
 
                     }

@@ -126,23 +126,45 @@ define([
         }
 
         function changeOnPause() {
-            var editPauseTime = 0,
-                editPauseTimer,
+            var editPauseTimer,
                 editPauseInterval = 2000;
             return {
                 type: 'keyup',
                 handler: function (e) {
-                    editPauseTime = new Date().getTime();
                     if (editPauseTimer) {
                         window.clearTimeout(editPauseTimer);
                     }
                     editPauseTimer = window.setTimeout(function () {
-                        var now = new Date().getTime();
-                        if ((now - editPauseTime) > editPauseInterval) {
-                            editPauseTimer = null;
-                            e.target.dispatchEvent(new Event('change'));
-                        }
-                    }, 2500);
+                        editPauseTimer = null;
+                        e.target.dispatchEvent(new Event('change'));
+                    }, editPauseInterval);
+                }
+            };
+        }
+
+        function evaluateChange() {
+            return {
+                type: 'change',
+                handler: function () {
+                    validate()
+                        .then(function (result) {
+                            if (result.isValid) {
+                                bus.emit('changed', {
+                                    newValue: result.parsedValue
+                                });
+                            } else if (result.diagnosis === 'required-missing') {
+                                bus.emit('changed', {
+                                    newValue: result.parsedValue
+                                });
+                            }
+                            bus.emit('validation', result);
+                        })
+                        .catch(function (err) {
+                            bus.emit('validation', {
+                                errorMessage: err.message,
+                                diagnosis: 'error'
+                            });
+                        });
                 }
             };
         }
@@ -157,31 +179,7 @@ define([
             return input({
                 id: events.addEvents({
                     events: [
-                        {
-                            type: 'change',
-                            handler: function () {
-                                validate()
-                                    .then(function (result) {
-                                        console.log('VALIDATED', result);
-                                        if (result.isValid) {
-                                            bus.emit('changed', {
-                                                newValue: result.parsedValue
-                                            });
-                                        } else if (result.diagnosis === 'required-missing') {
-                                            bus.emit('changed', {
-                                                newValue: result.parsedValue
-                                            });
-                                        }
-                                        bus.emit('validation', result);
-                                    })
-                                    .catch(function (err) {
-                                        bus.emit('validation', {
-                                            errorMessage: err.message,
-                                            diagnosis: 'error'
-                                        });
-                                    });
-                            }
-                        }, changeOnPause()
+                        evaluateChange(), changeOnPause()
                     ]}),
                 class: 'form-control',
                 dataElement: 'input',

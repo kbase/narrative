@@ -6,8 +6,7 @@ sychan@lbl.gov
 """
 
 from traitlets.config import Config
-from nbconvert.preprocessors.execute import ExecutePreprocessor, \
-                                            CellExecutionError
+from nbconvert.preprocessors.execute import ExecutePreprocessor, CellExecutionError
 from biokbase.narrative.exporter.preprocessor import NarrativePreprocessor
 from biokbase.narrative.contents.narrativeio import KBaseWSManagerMixin as NIO
 import nbformat

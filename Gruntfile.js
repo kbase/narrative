@@ -34,7 +34,7 @@ module.exports = function(grunt) {
             }
         },
 
-        // Put a 'revision' stamp on the output file. This attaches an 8-character 
+        // Put a 'revision' stamp on the output file. This attaches an 8-character
         // md5 hash to the end of the requirejs built file.
         filerev: {
             options: {
@@ -76,7 +76,16 @@ module.exports = function(grunt) {
         // Testing with Karma!
         'karma': {
             unit: {
-                configFile: 'test/unit/karma.conf.js'
+                configFile: 'test/unit/karma.conf.js',
+                reporters: ['progress', 'coverage'],
+                coverageReporter: {
+                    dir: 'build/test-coverage/',
+                    reporters: [
+                        {
+                            type: 'html', subdir: 'html'
+                        }
+                    ]
+                }
             },
             dev: {
                 // to do - add watch here
@@ -104,7 +113,7 @@ module.exports = function(grunt) {
                 src: 'build/test-coverage/lcov/**/*.info',
             },
         },
-        
+
     });
 
 
@@ -118,7 +127,7 @@ module.exports = function(grunt) {
         'karma:unit',
     ]);
 
-    // Does a single unit test run, then sends 
+    // Does a single unit test run, then sends
     // the lcov results to coveralls. Intended for running
     // from travis-ci.
     grunt.registerTask('test-travis', [

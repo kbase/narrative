@@ -668,15 +668,18 @@ class AppManager(object):
 
         return (params, ws_input_refs)
 
+    def _resolve_ref(self, workspace, obj_name):
+        info = self.ws_client.get_object_info_new({'objects': [{'workspace': workspace, 
+                                                                'name': obj_name}]})[0]
+        return "{}/{}/{}".format(info[6], info[0], info[4])
+
     def _resolve_ref_if_typed(self, value, spec_param):
-        if 'allowed_types' in spec_param:
+        is_output = 'is_output' in spec_param and spec_param['is_output'] == 1
+        if 'allowed_types' in spec_param and not is_output:
             allowed_types = spec_param['allowed_types']
             if len(allowed_types) > 0:
                 workspace = system_variable('workspace')
-                info = self.ws_client.get_object_info_new({
-                    'objects': [{'workspace': workspace, 'name': value}]
-                })[0]
-                return "{}/{}/{}".format(info[6], info[0], info[4])
+                return self._resolve_ref(workspace, value)
         return value
 
     def _map_group_inputs(self, value, spec_param, spec_params):
@@ -715,15 +718,13 @@ class AppManager(object):
             # 2 steps - figure out the proper value, then figure out the
             # proper position. value first!
             p_value = None
+            input_param_id = None
             if 'input_parameter' in p:
-                input_param = p['input_parameter']
-                p_value = params.get(input_param, None)
-                if spec_params[input_param].get('type', '') == 'group':
-                    p_value = self._map_group_inputs(
-                        p_value,
-                        spec_params[input_param],
-                        spec_params
-                    )
+                input_param_id = p['input_parameter']
+                p_value = params.get(input_param_id, None)
+                if spec_params[input_param_id].get('type', '') == 'group':
+                    p_value = self._map_group_inputs(p_value, spec_params[input_param_id],
+                                                     spec_params)
                 # turn empty strings into None
                 if isinstance(p_value, basestring) and len(p_value) == 0:
                     p_value = None
@@ -734,8 +735,12 @@ class AppManager(object):
             if 'generated_value' in p and p_value is None:
                 p_value = self._generate_input(p['generated_value'])
             if 'target_type_transform' in p:
-                p_value = self._transform_input(p['target_type_transform'],
-                                                p_value)
+                spec_param = None
+                if input_param_id:
+                    spec_param = spec_params[input_param_id]
+                p_value = self._transform_input(p['target_type_transform'], p_value,
+                                                spec_param)
+
             # get position!
             arg_position = p.get('target_argument_position', 0)
             target_prop = p.get('target_property', None)
@@ -779,7 +784,7 @@ class AppManager(object):
             inputs_list.append(inputs_dict[k])
         return inputs_list
 
-    def _transform_input(self, transform_type, value):
+    def _transform_input(self, transform_type, value, spec_param):
         """
         Transforms an input according to the rules given in
         NarrativeMethodStore.ServiceMethodInputMapping
@@ -791,14 +796,29 @@ class AppManager(object):
 
         Returns a transformed (or not) value.
         """
-        if transform_type == "none" or transform_type is None:
+        if transform_type == "none" or transform_type == "object-name" or transform_type is None:
             return value
 
-        elif transform_type == "ref":
-            # make a workspace ref
+        elif transform_type == "ref" or transform_type == "unresolved-ref":
+            # make unresolved workspace ref (like 'ws-name/obj-name')
             if value is not None:
                 value = system_variable('workspace') + '/' + value
             return value
+
+        elif transform_type == "resolved-ref":
+            # make a workspace ref
+            if value is not None:
+                value = self._resolve_ref(system_variable('workspace'), value)
+            return value
+
+        elif transform_type == "future-default":
+            # let's guess base on spec_param
+            if spec_param is None:
+                return value
+            else:
+                if value is not None:
+                    value = self._resolve_ref_if_typed(value, spec_param)
+                return value
 
         elif transform_type == "int":
             # make it an integer, OR 0.
@@ -813,10 +833,10 @@ class AppManager(object):
             if isinstance(value, list):
                 ret = []
                 for pos in range(0, len(value)):
-                    ret.append(self._transform_input(list_type, value[pos]))
+                    ret.append(self._transform_input(list_type, value[pos], None))
                 return ret
             else:
-                return [self._transform_input(list_type, value)]
+                return [self._transform_input(list_type, value, None)]
 
         else:
             raise ValueError("Unsupported Transformation type: " +

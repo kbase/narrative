@@ -6,12 +6,14 @@ define (
 		'kbwidget',
 		'bootstrap',
 		'jquery',
+        'narrativeConfig',
 		'kbaseAuthenticatedWidget',
 		'kbStandaloneTable'
 	], function(
 		KBWidget,
 		bootstrap,
 		$,
+        Config,
 		kbaseAuthenticatedWidget,
 		kbStandaloneTable
 	) {
@@ -25,8 +27,8 @@ define (
 	        ws: null,
 	        name: 0
         },
-	    ws_url: window.kbconfig.urls.workspace,
-	    loading_image: window.kbconfig.loading_gif,
+	    ws_url: Config.url('workspace'),
+	    loading_image: Config.get('loading_gif'),
 
 	    init: function(options) {
             this._super(options);

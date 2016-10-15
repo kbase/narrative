@@ -9,12 +9,14 @@ define (
 		'kbwidget',
 		'bootstrap',
 		'jquery',
+        'narrativeConfig',
 		'kbaseAuthenticatedWidget',
 		'kbaseLinechart'
 	], function(
 		KBWidget,
 		bootstrap,
 		$,
+        Config,
 		kbaseAuthenticatedWidget,
 		kbaseLinechart
 	) {
@@ -26,15 +28,15 @@ define (
 			estimateKResultID: null,
 			workspaceID: null,
 			avgWindow: null,
-			workspaceURL: window.kbconfig.urls.workspace,
-			loadingImage: "static/kbase/images/ajax-loader.gif",
+			workspaceURL: Config.url('workspace'),
+			loadingImage: Config.get('loading_gif')
 		},
         data : null,
 
 		init: function(options) {
 			this._super(options);
             this.$messagePane = $("<div/>").addClass("kbwidget-message-pane kbwidget-hide-message");
-            this.$elem.append(this.$messagePane);		
+            this.$elem.append(this.$messagePane);
 
 			return this;
 		},
@@ -44,10 +46,10 @@ define (
 
 			// Create a new workspace client
 			this.ws = new Workspace(this.options.workspaceURL, auth);
-		   
+
 			// Let's go...
-			this.loadAndRender();           
-		   
+			this.loadAndRender();
+
 			return this;
 		},
 
@@ -86,7 +88,7 @@ define (
 
             $("<div>").html('Estimated K (based on highest quality score) = ' + data.best_k).appendTo(this.$elem);
             var $kDistributionDiv = $("<div>");
-            
+
             self.$avgWindowTextField = $("<input type='text' size='6'/>");
             self.$avgWindowRefreshBtn = $('<button class="btn btn-default">Refresh</button>')
             var $sliderDiv = $("<div/>");
@@ -105,7 +107,7 @@ define (
                     self.$avgWindowTextField.val('');
                 self.options.avgWindow = avgWindow;
                 self.buildKDistributionPlot($kDistributionDiv);
-            }); 
+            });
             self.$avgWindowTextField.keyup(function(event) {
                 if(event.keyCode == 13) {
                     $sliderButton.click();
@@ -113,7 +115,7 @@ define (
             });
             if (self.options.avgWindow)
                 self.$avgWindowTextField.val(self.options.avgWindow);
-            
+
             this.$elem.append($kDistributionDiv);
             this.buildKDistributionPlot($kDistributionDiv);
 
@@ -175,7 +177,7 @@ define (
                     label : "k = " + val[0] + '<br>' + valY.toFixed(3)
                 });
             }
-            
+
             $lineChartDiv = $("<div style = 'width : 500px; height : 300px'>");
             $containerDiv.append($lineChartDiv);
              new kbaseLinechart($lineChartDiv, {
@@ -208,14 +210,14 @@ define (
                         }
                     ],
                 }
-            );              
-        },        
+            );
+        },
 
 		loading: function(isLoading) {
 			if (isLoading)
 				this.showMessage("<img src='" + this.options.loadingImage + "'/>");
 			else
-				this.hideMessage();                
+				this.hideMessage();
 		},
 
 		showMessage: function(message) {
@@ -231,7 +233,7 @@ define (
 		},
 
 		uuid: function() {
-			return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, 
+			return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,
 				function(c) {
 					var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
 					return v.toString(16);
@@ -253,17 +255,17 @@ define (
 					obj['objid'] = objectID;
 				else
 					obj['name'] = objectID;
-				
+
 				if (objectVer)
 					obj['ver'] = objectVer;
 			}
 			return obj;
-		},        
+		},
 
 		clientError: function(error){
 			this.loading(false);
 			this.showMessage(error.error.error);
-		}        
+		}
 
 	});
 });

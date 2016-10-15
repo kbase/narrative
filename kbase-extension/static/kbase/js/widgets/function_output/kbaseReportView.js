@@ -405,7 +405,7 @@ define(
               }
               ui.setContent('downloadable-html',
                   ui.buildCollapsiblePanel({
-                      title: 'HTML Files',
+                      title: 'Links',
                       name: 'downloadable-html-toggle',
                       hidden: false,
                       type: 'default',

@@ -231,13 +231,23 @@ class AppManagerTestCase(unittest.TestCase):
             self.mm._generate_input({'symbols': -1})
 
     def test_transform_input_good(self):
-        ws_name = 'test_workspace'
+        ws_name = 'wjriehl:1475006266615'
         os.environ['KB_WORKSPACE_ID'] = ws_name
         test_data = [
             {
                 'value': 'input_value',
                 'type': 'ref',
                 'expected': ws_name + '/' + 'input_value'
+            },
+            {
+                'value': 'input_value',
+                'type': 'unresolved-ref',
+                'expected': ws_name + '/' + 'input_value'
+            },
+            {
+                'value': 'rhodobacterium.art.q20.int.PE.reads',
+                'type': 'resolved-ref',
+                'expected': '11635/9/1'
             },
             {
                 'value': None,
@@ -255,6 +265,12 @@ class AppManagerTestCase(unittest.TestCase):
                 'expected': [ws_name + '/a', ws_name + '/b', ws_name + '/c']
             },
             {
+                'value': ['rhodobacterium.art.q20.int.PE.reads',
+                          'rhodobacterium.art.q10.PE.reads'],
+                'type': 'list<resolved-ref>',
+                'expected': ['11635/9/1', '11635/10/1']
+            },
+            {
                 'value': 'foo',
                 'type': 'list<ref>',
                 'expected': [ws_name + '/foo']
@@ -268,16 +284,23 @@ class AppManagerTestCase(unittest.TestCase):
                 'value': 'bar',
                 'type': None,
                 'expected': 'bar'
+            },
+            {
+                'value': 'rhodobacterium.art.q20.int.PE.reads',
+                'type': 'future-default',
+                'spec': {'is_output': 0, 'allowed_types': ["Some.KnownType"]},
+                'expected': '11635/9/1'
             }
         ]
         for test in test_data:
-            ret = self.mm._transform_input(test['type'], test['value'])
+            spec = test.get('spec', None)
+            ret = self.mm._transform_input(test['type'], test['value'], spec)
             self.assertEqual(ret, test['expected'])
         del(os.environ['KB_WORKSPACE_ID'])
 
     def test_transform_input_bad(self):
         with self.assertRaises(ValueError):
-            self.mm._transform_input('foo', 'bar')
+            self.mm._transform_input('foo', 'bar', None)
 
 if __name__ == "__main__":
     unittest.main()

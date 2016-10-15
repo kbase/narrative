@@ -27,7 +27,19 @@
     Sure, you could just set it up through kbasePrompt. But why bother?
 */
 
-(function( $, undefined ) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'kbasePrompt'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		kbasePrompt
+	) {
+
     return KBWidget({
 
 		  name: "kbaseDeletePrompt",
@@ -40,25 +52,26 @@
 
         init: function(options) {
 
-            this._super(options);
-
-             new kbasePrompt(return $('<div></div>'), {
-                        title : 'Confirm deletion',
-                        body : 'Really delete <strong>' + this.options.name + '</strong>?',
-                        controls : [
-                            'cancelButton',
-                            {
-                                name : 'Delete',
-                                type : 'primary',
-                                callback : this.options.callback
-                            }
-                        ],
+            this._super(
+              {
+                title : 'Confirm deletion',
+                body : 'Really delete <strong>' + options.name + '</strong>?',
+                controls : [
+                    'cancelButton',
+                    {
+                        name : 'Delete',
+                        type : 'primary',
+                        callback : options.callback
                     }
-                )
+                ],
+              }
+            );
+
+            return this;
 
         },
 
 
     });
 
-}( jQuery ) );
+});

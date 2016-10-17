@@ -84,6 +84,8 @@ define([
             'Data of temporary Narratives is not visible on this tab. Please change ' +
             'the name of the Narrative to make it permanent.',
         renderedTabs: [false, false, false, false, false],
+
+
         init: function (options) {
             this._super(options);
             var self = this;

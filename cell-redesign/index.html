@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+        <title>Narrative cell refactor</title>
+
+        <!-- Bootstrap -->
+        <link href="css/bootstrap.min.css" rel="stylesheet">
+
+        <!-- main -->
+        <link href="ncell.css" rel="stylesheet">
+
+        <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+        <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+        <!--[if lt IE 9]>
+<script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+<![endif]-->
+
+
+    </head>
+
+
+
+
+    <body>
+
+        <h2>Header only</h2>
+        <div class='ncell'>
+            <div class='ncell-head'>
+                <div class='ncell-name'>
+                    <span>View Chromatograms</span>
+                </div>
+                <div class='ncell-info'>
+                    Last run<br/>
+                    2h 23m ago<br/>
+                    <br/>
+                    &nbsp; &nbsp;
+                    <span class="glyphicon glyphicon-check"
+                          style="color: green; font-size: 200%;"></span>
+                </div>
+                <div class='ncell-main'>
+                    <div class='ncell-main-top'>
+                        <div class='ncell-desc'>
+                            View and explore chromatograms. Plot chromatography data from ChromatographyMatrix object.
+                        </div>
+                        <div class='ncell-controls'>
+                            <div class='ncell-up glyphicon glyphicon-triangle-top'></div>
+                            <div class='ncell-down glyphicon glyphicon-triangle-bottom'></div>
+                            <div class='ncell-settings glyphicon glyphicon-cog'></div>
+                        </div>
+                    </div>
+                    <div class='ncell-main-action'>
+                        <button type="button" class="btn btn-primary">Configure</button>
+                        <button type="button" class="btn btn-primary">Status</button>
+                        <button type="button" class="btn btn-primary">Results</button>
+                    </div>
+                    <div class='ncell-run'>
+                        <button type="button" class="btn btn-success">
+                            <span class='glyphicon glyphicon-play'></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h2>Configuration </h2>
+        <div class='ncell'>
+            <div class='ncell-head'>
+                <div class='ncell-name'>
+                    <span>View Chromatograms</span>
+                </div>
+                <div class='ncell-info'>
+                    Last run<br/>
+                    2h 23m ago<br/>
+                    <br/>
+                    &nbsp; &nbsp;
+                    <span class="glyphicon glyphicon-check"
+                          style="color: green; font-size: 200%;"></span>
+                </div>
+                <div class='ncell-main'>
+                    <div class='ncell-main-top'>
+                        <div class='ncell-desc'>
+                            View and explore chromatograms. Plot chromatography data from ChromatographyMatrix object.
+                        </div>
+                        <div class='ncell-controls'>
+                            <div class='ncell-up glyphicon glyphicon-triangle-top'></div>
+                            <div class='ncell-down glyphicon glyphicon-triangle-bottom'></div>
+                            <div class='ncell-settings glyphicon glyphicon-cog'></div>
+                        </div>
+                    </div>
+                    <div class='ncell-main-action'>
+                        <button type="button" class="btn btn-primary">Configure</button>
+                        <button type="button" class="btn btn-primary">Status</button>
+                        <button type="button" class="btn btn-primary">Results</button>
+                    </div>
+                    <div class='ncell-run'>
+                        <button type="button" class="btn btn-success">
+                            <span class='glyphicon glyphicon-play'></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class='ncell-horiz'>
+                <div>&nbsp;</div>
+            </div>
+            <div class='ncell-body'>
+                <div class='ncell-editable'>
+                    <div class='locked' style='display: none'>
+                        <button class='button btn-default'>
+                            <img src='img/locked_1.png' />
+                        </button>
+                        <span>Click the lock to make changes</span>
+                    </div>
+                    <div class='unlocked'>
+                        <button>
+                            <img src='img/unlocked_2.png' />
+                        </button>
+                        <span>Click the lock to prevent further changes</span>
+                    </div>
+                </div>
+                <div class='ncell-body-panel'>
+                    <div class='ncell-body-title'>
+                        <span>Inputs</span>
+                    </div>
+                    <div class='ncell-body-content'>
+                        <form>
+                            <table class='ncell-parameters'>
+                                <tr>
+                                    <td>
+                                        <label>Read library</label>
+                                    </td>
+                                    <td>
+                                        <select class="form-control">
+                                            <option value="1" selected>rhodo.art.jgi.reads</option>
+                                            <option value="2">something.else</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <label>RNA-seq Sample or Sample Set</label>
+                                    </td>
+                                    <td>
+                                        <select class="form-control" data-element="input">
+                                            <option value="Ptrichocarpa_Root_Control_Rep1" selected>Ptrichocarpa_Root_Control_Rep1</option>
+                                            <option value="Ptrichocarpa_Root_Control_Rep2">Ptrichocarpa_Root_Control_Rep2</option><option value="Ptrichocarpa_Root_Control_Rep3">Ptrichocarpa_Root_Control_Rep3</option><option value="Ptrichocarpa_Root_short_term_drought_Rep1">Ptrichocarpa_Root_short_term_drought_Rep1</option><option value="Ptrichocarpa_prolonged_drought_Rep1">Ptrichocarpa_prolonged_drought_Rep1</option><option value="Ptrichocarpa_prolonged_drought_Rep2">Ptrichocarpa_prolonged_drought_Rep2</option><option value="Ptrichocarpa_prolonged_drought_Rep3">Ptrichocarpa_prolonged_drought_Rep3</option><option value="Ptrichocarpa_short-term_drought_Rep2">Ptrichocarpa_short-term_drought_Rep2</option><option value="Ptrichocarpa_short-term_drought_Rep3">Ptrichocarpa_short-term_drought_Rep3</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                            </table>
+                        </form>
+                    </div>
+                </div>
+                <div class='ncell-body-panel'>
+                    <div class='ncell-body-title'>
+                        <span>Parameters</span>
+                    </div>
+                    <div class='ncell-body-content'>
+                        <form>
+                            <table class='ncell-parameters'>
+                                <tr>
+                                    <td><label>Parameter preset</label></td>
+                                    <td>
+                                        <select class="form-control" data-element="input">
+                                            <option value="m1" selected>
+                                                meta
+                                            </option>
+                                            <option value="m2">baba</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                            </table>
+                        </form>
+                    </div>
+                </div>
+                <div class='ncell-body-panel'>
+                    <div class='ncell-body-title'>
+                        <span>Outputs</span>
+                    </div>
+                    <div class='ncell-body-content'>
+                        <table class='ncell-parameters'>
+                            <tr>
+                                <td>Output contigset name</td>
+                                <td>MegaHit.contigs</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h2>Status</h2>
+        <div class='ncell'>
+            <div class='ncell-head'>
+                <div class='ncell-name'>
+                    <span>View Chromatograms</span>
+                </div>
+                <div class='ncell-info'>
+                    Last run<br/>
+                    2h 23m ago<br/>
+                    <br/>
+                    &nbsp; &nbsp;
+                    <span class="glyphicon glyphicon-check"
+                          style="color: green; font-size: 200%;"></span>
+                </div>
+                <div class='ncell-main'>
+                    <div class='ncell-main-top'>
+                        <div class='ncell-desc'>
+                            View and explore chromatograms. Plot chromatography data from ChromatographyMatrix object.
+                        </div>
+                        <div class='ncell-controls'>
+                            <div class='ncell-up glyphicon glyphicon-triangle-top'></div>
+                            <div class='ncell-down glyphicon glyphicon-triangle-bottom'></div>
+                            <div class='ncell-settings glyphicon glyphicon-cog'></div>
+                        </div>
+                    </div>
+                    <div class='ncell-main-action'>
+                        <button type="button" class="btn btn-primary">Configure</button>
+                        <button type="button" class="btn btn-primary">Status</button>
+                        <button type="button" class="btn btn-primary">Results</button>
+                    </div>
+                    <div class='ncell-run'>
+                        <button type="button" class="btn btn-success">
+                            <span class='glyphicon glyphicon-play'></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class='ncell-horiz'>
+                <div>&nbsp;</div>
+            </div>
+            <div class='ncell-body'>
+                <div>
+                    <div class='ncell-body-panel'>
+                        <div class='ncell-body-title'>
+                            <span>Execution status</span>
+                        </div>
+                        <div class='ncell-body-content'>
+                            <div class='ncell-status-view'>
+                                <div class='ncell-date'>
+                                    <span>Launched</span>
+                                    <span>12:34:56pm Wed, Aug 9</span>
+                                </div>
+                                <div class='ncell-date'>
+                                    <span>Finished</span>
+                                    <span> 12:45:12pm Wed, Aug 9</span>
+                                </div>
+                                <div class='ncell-status-bar'>
+                                    <div class='ncell-status-barplot'>
+                                        <table>
+                                            <tr>
+                                                <td width='7%' class='ncell-status-barplot-queued'>&nbsp;</td>
+                                                <td width='93%' class='ncell-status-barplot-run'>&nbsp;</td>
+                                                <td></td>
+                                            </tr>
+                                            <tr class='ncell-status-barplot-legend'>
+                                                <td>Queued</td>
+                                                <td>Run</td>
+                                                <td>Total</td>
+                                            </tr>
+                                            <tr class='ncell-status-barplot-legend'>
+                                                <td>00:01:56</td>
+                                                <td>00:33:34</td>
+                                                <td>00:35:30</td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                    <div class='ncell-status-barlabels'>
+                                    </div>
+                                </div>
+                            </div>    
+                        </div>
+                    </div>
+                    <div class='ncell-body-panel'>
+                        <div class='ncell-body-title'>
+                            <span>Execution logs</span>
+                        </div>
+                        <div class='ncell-body-content'>
+                            <div class='ncell-log-view'>
+<pre>Running on ci48 (10.58.1.148), in /mnt/awe-nfs/ci48/awe/ci-assembly/work/87/13/3e/87133eb3-9bbf-4095-98ff-d229e921c5c0_0_0
+2
+Client group: ci-assembly
+3
+Server version of Execution Engine: 0.2.4 (matches to version of runner script)
+4
+Image name received from catalog: dockerhub-ci.kbase.us/kbase:megahit.74d45440315ad0e520844c075c92ebbebf7cd607
+5
+Job runner recieved callback URL: http://172.17.42.1:49165
+6
+/usr/local/lib/python2.7/dist-packages/requests/packages/urllib3/util/ssl_.py:90: InsecurePlatformWarning: A true SSLContext object is not available. This prevents urllib3 from configuring SSL appropriately and may cause certain SSL connections to fail. For more information, see https://urllib3.readthedocs.org/en/latest/security.html#insecureplatformwarning.
+7
+InsecurePlatformWarning
+8
+Running run_megahit with params=
+9
+{u'k_list': [],
+10
+u'k_max': 89,                                
+</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    <h2>Results </h2>
+    <div class='ncell'>
+        <div class='ncell-head'>
+            <div class='ncell-name'>
+                <span>View Chromatograms</span>
+            </div>
+            <div class='ncell-info'>
+                Last run<br/>
+                2h 23m ago<br/>
+                <br/>
+                &nbsp; &nbsp;
+                <span class="glyphicon glyphicon-check"
+                      style="color: green; font-size: 200%;"></span>
+            </div>
+            <div class='ncell-main'>
+                <div class='ncell-main-top'>
+                    <div class='ncell-desc'>
+                        View and explore chromatograms. Plot chromatography data from ChromatographyMatrix object.
+                    </div>
+                    <div class='ncell-controls'>
+                        <div class='ncell-up glyphicon glyphicon-triangle-top'></div>
+                        <div class='ncell-down glyphicon glyphicon-triangle-bottom'></div>
+                        <div class='ncell-settings glyphicon glyphicon-cog'></div>
+                    </div>
+                </div>
+                <div class='ncell-main-action'>
+                    <button type="button" class="btn btn-primary">Configure</button>
+                    <button type="button" class="btn btn-primary">Status</button>
+                    <button type="button" class="btn btn-primary active">Results</button>
+                </div>
+                <div class='ncell-run'>
+                    <button type="button" class="btn btn-success">
+                        <span class='glyphicon glyphicon-play'></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class='ncell-horiz'>
+            <div>&nbsp;</div>
+        </div>
+        <div class='ncell-body'>
+            <div>
+                <div class='ncell-body-panel'>
+                    <div class='ncell-body-title'>
+                        <span>Abundance Plot</span>
+                    </div>
+                    <div class='ncell-body-content'>
+                        <img src="newplot.png" width='100%'></img>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+
+<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<!-- Include all compiled plugins (below), or include individual files as needed -->
+<script src="js/bootstrap.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,148 @@
+body{
+    font-family: Oxygen,Helvetica,sans-serif;
+    background-color: white;
+}
+h1,h2,h3 {
+    margin-left: 1em;
+}
+/* cell */
+.ncell {
+    margin: 10px;
+    box-shadow: 3px 3px lightgrey;
+    width: auto;
+}
+.ncell + .selected {
+    box-shadow: 2px 2px 2px #AFD4CB;
+}
+/* -- Cell header -- */
+.ncell-head {
+    height: 105px;
+    background-color: #F1F0F1;
+    display: flex;
+}
+.ncell-info {
+    height: 105px;
+    border-right: 3px solid #FBFAFB;
+    width: 15%;
+    padding: 5px;
+}
+.ncell-name {
+    height: 105px;
+    min-width: 100px;
+    width: 15%;
+    padding: 5px;
+}
+.ncell-name > span {
+    font-weight: 900;
+    font-size: 110%;
+    vertical-align: text-top;
+}
+.ncell-main {
+    height: 105px;
+    position:absolute;
+    width: 70%;
+}
+.ncell-main-top {
+    width: 100%;
+}
+/* cell description */
+.ncell-desc {
+    margin-left: 5px;
+    margin-top: 5px;
+    width: 85%;
+}
+.ncell-controls {
+    position: absolute;
+    right: 20px;
+    top: 5px;
+}
+/* actions */
+.ncell-main-action {
+    position:absolute;
+    bottom: 10px;
+    left: 10px;
+}
+.ncell-run {
+    
+}
+/* control glyphs */
+.ncell-controls .glyphicon {
+    color: grey;
+    font-size: 115%;
+}
+/* head/content divider */
+.ncell-horiz {
+    background-color: #FBFAFB;
+    height: 5px;
+}
+/* -- Cell body -- */
+.ncell-body {
+    padding: 15px 0;
+    /*display: none;*/
+    background-color: #F1F0F1;
+}
+.ncell-body-panel {
+    background-color: white;
+    margin: 20px 10px;
+    border: 1px solid #E3E3E3;
+}
+.ncell-body-title {
+    background-color: #FBFAFB;
+    width: 100%;
+    padding: 3px;
+    border-bottom: 1px solid #E3E3E3;
+    font-size: 110%;
+}
+.ncell-body-title > span {
+    margin-left: 1em;
+}
+/* 
+ooooooooooooo
+Buttons 
+...............
+*/
+.btn:focus {
+    /* eliminate glowing blue outline */
+    outline: none !important;
+}
+.ncell-main .btn-primary {
+    background: #FBFAFB;
+    color: #009CF1;
+    border: 2px solid #009CF1;
+    margin-right: 5px;
+    border-radius: 0;
+    /*box-shadow: 1px 1px #60c0f5;*/
+}
+.ncell-main .btn-primary:active,
+.ncell-main .btn-primary + .active,
+.ncell-main .btn-primary:focus,
+.ncell-main .btn-primary:hover {
+    background-color: #009CF1;
+    color: white;   
+}
+.ncell-main .btn-primary:active {
+    margin-top: -10px;
+    border: 2px solid #009CF1;
+}
+.ncell-main .btn-success {
+    position: absolute;
+    right: 20px;
+    bottom: 5px;
+}
+/*
+    Tables
+*/
+table.ncell-parameters {
+    border: 0;
+    width: 100%
+}
+table.ncell-parameters tr {
+}
+table.ncell-parameters td {
+    border-left: 1px solid #999999;
+    padding: 5px;
+}
+table.ncell-parameters td:first-child {
+    border-left: none;
+    width: 30em;
+}

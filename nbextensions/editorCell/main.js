@@ -137,7 +137,6 @@ define([
                     }
                 }
             };
-            console.log('setting editor cell to ...', meta);
             cell.metadata = meta;
         })
             .then(function () {
@@ -201,18 +200,13 @@ define([
 
     function setupCell(cell) {
         return Promise.try(function () {
-            // Only handle kbase cells.
-
             if (cell.cell_type !== 'code') {
-                // console.log('not a code cell!');
                 return;
             }
             if (!cell.metadata.kbase) {
-                // console.log('not a kbase code cell');
                 return;
             }
             if (cell.metadata.kbase.type !== 'editor') {
-                // console.log('not a kbase app cell, ignoring');
                 return;
             }
 

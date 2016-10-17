@@ -826,10 +826,31 @@ define([
                     throw new Error('Invalid tag for app ' + app.id);
             }
         }
+        
+        
+        /*
+         * For now we are using this to transform the params as stored in the
+         * model to those expected by the "save" method
+         */
+        function fixParams(params) {
+            var obj = {
+                output_object: params.name,
+                description: params.description,
+                reads_tuple: params.items.map(function (item) {
+                    return {
+                        input_reads_label: null,
+                        input_reads_obj: item,
+                        input_reads_metadata: null
+                    };
+                })
+            };
+            return obj;
+        }
 
         function buildPython(cell, cellId, app, params) {
             var runId = new Uuid(4).format(),
                 app = fixApp(app),
+                params = fixParams(params),
                 code = PythonInterop.buildEditorRunner(cellId, runId, app, params);
             // TODO: do something with the runId
             cell.set_text(code);
@@ -1239,6 +1260,17 @@ define([
 
                 eventManager.add(cellBus.on('delete-cell', function () {
                     doDeleteCell();
+                }));
+                
+                eventManager.add(cellBus.on('result', function (message) {
+                    if (message.result) {
+                        alert('Successfully saved the reads set');
+                    } else if (message.error) {
+                        alert('Error saving reads set: ' + message.error.message);
+                    } else {
+                        alert('what?');
+                    }
+                    // console.log('local app result!', message);
                 }));
 
 
@@ -1696,6 +1728,10 @@ define([
         }
 
         function doSaveReadsSet() {
+            
+            cell.execute();
+            return;
+            
             var setApiClient = new GenericClient({
                 url: runtime.config('services.service_wizard.url'),
                 token: runtime.authToken(),
@@ -1714,7 +1750,17 @@ define([
                         })
                     }
                 };
-            console.log('saving...', params);
+                
+            // TODO: Replace direct call to setApi with a call through the
+            // narrative back end.
+            
+            // Code should already be ready, that is part of the editor update
+            // workflow.
+            
+            // execute it
+            
+            // await the response (a synchronised message).
+                
             return setApiClient.callFunc('save_reads_set_v1', [params])
                 .then(function (result) {
                     console.log('SAVED!', result);

@@ -140,6 +140,9 @@ M.provision_count = 20
 -- The max number of docker containers to have running, including provisioned
 M.container_max = 5000
 
+-- Image to use for notebooks
+M.image = "kbase/narrative:latest"
+
 M.load_redirect = "/loading.html?n=%s"
 --
 -- Function that runs a netstat and returns a table of foreign IP:PORT
@@ -434,12 +437,14 @@ initialize = function(self, conf)
         M.provision_count = conf.provision_count or M.provision_count
         M.container_max = conf.container_max or M.container_max
         M.lock_name = conf.lock_name or M.lock_name
+        M.image = conf.image or M.image
         session_map = conf.session_map or ngx.shared.session_map
         docker_map = conf.docker_map or ngx.shared.docker_map
         token_cache = conf.token_cache or ngx.shared.token_cache
         proxy_mgr = conf.proxy_mgr or ngx.shared.proxy_mgr
         ngx.log(ngx.INFO, string.format("Initializing proxy manager: sweep_interval %d mark_interval %d idle_timeout %d ",
                                             M.sweep_interval, M.mark_interval, M.timeout))
+        ngx.log(ngx.INFO, string.format("Image %s",M.image))
     else
         ngx.log(ngx.INFO, string.format("Initialized at %d, skipping", initialized))
     end
@@ -891,7 +896,7 @@ end
 -- remove any containers that don't exist in both
 sync_containers = function()
     ngx.log(ngx.INFO, "Syncing docker memory map with docker container state")
-    local portmap = notemgr:get_notebooks()
+    local portmap = notemgr:get_notebooks(M.image)
     local ids = docker_map:get_keys()
     local dock_lock = locklib:new(M.lock_name, lock_opts)
     local session_lock = locklib:new(M.lock_name, lock_opts)
@@ -942,7 +947,7 @@ end
 --
 new_container = function()
     ngx.log(ngx.INFO, "Creating container for queue")
-    local id, info = notemgr:launch_notebook()
+    local id, info = notemgr:launch_notebook(M.image)
     if id == nil then
         ngx.log(ngx.ERR, "Failed to launch new instance : "..p.write(info))
         return nil

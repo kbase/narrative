@@ -352,9 +352,6 @@ define([
                         return Promise.all(widgets.map(function (widget) {
                             return widget.widget.run(params);
                         }));
-                    })
-                    .then(function () {
-                        renderAdvanced();
                     });
             });
         }

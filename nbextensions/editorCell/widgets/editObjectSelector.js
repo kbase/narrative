@@ -73,6 +73,13 @@ define([
             });
             return false;
         }
+        
+        function doNew(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            // alert('do a new form request');
+            bus.emit('new-set-form');
+        }   
 
         function renderLayout() {
             var events = Events.make(),
@@ -82,7 +89,7 @@ define([
 //                        span({style: {fontWeight: 'bold'}}, objectType)
 //                    ]),
                     div({class: 'form-inline'}, [
-                        'Select an object to edit: ',
+                        'Select a Reads Set to edit: ',
                         span({dataElement: 'object-selector'})
                     ]),
                     div({style: {fontStyle: 'italic'}}, 'or'),
@@ -90,7 +97,7 @@ define([
                         class: 'form-inline',
                         id: events.addEvent({type: 'submit', handler: doCreate})
                     }, [
-                        span({style: {padding: '0 4px 0 0'}}, 'Create a new set named'),
+                        span({style: {padding: '0 4px 0 0'}}, 'Create a new Reads Set named:'),
                         input({dataElement: 'new-object-name', class: 'form-control'}),
 //                        span({style: {padding: '0 4px 0 4px'}}, 'of type'),
 //                        select({
@@ -106,7 +113,12 @@ define([
                             class: 'btn btn-primary',
                             type: 'button',
                             id: events.addEvent({type: 'click', handler: doCreate})
-                        }, 'Create')])
+                        }, 'Create'),
+                        button({
+                            class: 'btn btn-default',
+                            type: 'button',
+                            id: events.addEvent({type: 'click', handler: doNew})
+                        }, 'New')])
                 ]);
 
             return {
@@ -217,30 +229,34 @@ define([
         // LIFECYCLE API
 
         function start() {
-            // send parent the ready message
-            bus.emit('ready');
-
-            bus.on('run', function (message) {
-                doAttach(message.node);
-                renderAvailableObjects()
-                    .then(function (itemCount) {
-                        // TODO: fetch the selected item and send to the app.
-                        if (availableReadsSets.length) {
-                            // TODO: use the currently selected item, which may have
-                            // been restored from state.
-                            console.log('selected?', availableReadsSets, selectedReadsSetItem);
-                            selectItem(availableReadsSets[selectedReadsSetItem].ref)
-                        }
+            return Promise.try(function () {
+                bus.on('run', function (message) {
+                    doAttach(message.node);
+                    renderAvailableObjects()
+                        .then(function (itemCount) {
+                            // TODO: fetch the selected item and send to the app.
+                            if (availableReadsSets.length) {
+                                // TODO: use the currently selected item, which may have
+                                // been restored from state.
+                                console.log('selected?', availableReadsSets, selectedReadsSetItem);
+                                selectItem(availableReadsSets[selectedReadsSetItem].ref);
+                            }
+                        });
+                    runtime.bus().on('workspace-changed', function () {
+                        renderAvailableObjects();
                     });
-                runtime.bus().on('workspace-changed', function () {
-                    renderAvailableObjects();
+                    // do more stuff
                 });
-                // do more stuff
+                // send parent the ready message
+                bus.emit('ready');
             });
         }
 
         function stop() {
-            // stop the bus!
+            return Promise.try(function () {
+                // TODO: stop the bus!
+                return null;
+            })
         }
 
         // CONSTRUCTION

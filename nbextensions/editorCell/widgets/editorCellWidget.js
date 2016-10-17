@@ -417,6 +417,8 @@ define([
          * @returns {unresolved}
          */
         function syncAppSpec(appId, appTag) {
+            env.appId = appId;
+            env.appTag = appTag;
             var appRef = {
                 ids: [appId],
                 tag: appTag
@@ -1221,10 +1223,6 @@ define([
                     doOnSuccess();
                 });
 
-                bus.on('sync-all-display-parameters', function () {
-                    widgets.paramsDisplayWidget.bus.emit('sync-all-parameters');
-                });
-
                 // Events from widgets...
 
                 parentBus.on('newstate', function (message) {
@@ -1291,7 +1289,7 @@ define([
         }
 
         function findInputWidget(requestedInputWidget) {
-            var defaultModule = 'nbextensions/editorCell/widgets/appParamsWidget';
+            var defaultModule = 'nbextensions/editorCell/widgets/readsSetUpdateEditor';
             return defaultModule;
 
             if (requestedInputWidget === null) {
@@ -1374,28 +1372,136 @@ define([
             ui.setContent('parameters-group.widget', content);
         }
 
-        function loadInputWidget() {
+        function loadUpdateEditor() {
             return new Promise(function (resolve, reject) {
-                var // inputWidget = env.appSpec.widgets.input,
-                    // don't even take the chance.
-                    selectedWidget = findInputWidget(null);
+                ui.setContent('parameters-group.widget', html.loading());
+                require(['nbextensions/editorCell/widgets/readsSetUpdateEditor'], function (Widget) {
+                    // TODO: widget should make own bus.
+                    var bus = runtime.bus().makeChannelBus(null, 'Parent comm bus for input widget'),
+                        widget = Widget.make({
+                            bus: bus,
+                            workspaceInfo: workspaceInfo,
+                            appId: env.appId,
+                            appTag: env.appTag
+                        });
+                    widgets.editor = {
+                        path: ['parameters-group', 'widget'],
+                        // module: widgetModule,
+                        type: 'update',
+                        bus: bus,
+                        instance: widget
+                    };
+                    bus.on('parameter-sync', function (message) {
+                        var value = model.getItem(['params', message.parameter]);
+                        bus.send({
+                            parameter: message.parameter,
+                            value: value
+                        }, {
+                            // This points the update back to a listener on this key
+                            key: {
+                                type: 'update',
+                                parameter: message.parameter
+                            }
+                        });
+                    });
 
-                //if (!selectedWidget) {
-                //    reject('Cannot find the requested input widget ' + inputWidget);
-                //}
+                    bus.on('sync-params', function (message) {
+                        message.parameters.forEach(function (paramId) {
+                            bus.send({
+                                parameter: paramId,
+                                value: model.getItem(['params', message.parameter])
+                            },
+                                {
+                                    key: {
+                                        type: 'parameter-value',
+                                        parameter: paramId
+                                    },
+                                    channel: message.replyToChannel
+                                });
+                        });
+                    });
 
+                    bus.respond({
+                        key: {
+                            type: 'get-parameter'
+                        },
+                        handle: function (message) {
+                            return {
+                                value: model.getItem(['params', message.parameterName])
+                            };
+                        }
+                    });
+
+//                    bus.on('get-parameter-value', function (message) {
+//                        var value = model.getItem(['params', message.parameter]);
+//                        bus.send({
+//                            parameter: message.parameter,
+//                            value: value
+//                        }, {
+//                            key: {
+//                                type: 'parameter-value',
+//                                parameter: message.parameter
+//                            }
+//                        });
+//                    });
+                    bus.on('parameter-changed', function (message) {
+                        // We simply store the new value for the parameter.
+                        model.setItem(['params', message.parameter], message.newValue);
+                        evaluateAppState();
+                    });
+                    return widget.start()
+                        .then(function () {
+                            resolve();
+                            widget.bus.emit('run', {
+                                node: ui.getElement(['parameters-group', 'widget']),
+                                appSpec: env.appSpec,
+                                parameters: getParameters()
+                            });
+
+                            return null;
+                        })
+                        .catch(function (err) {
+                            console.error('ERROR starting editor widget', err);
+                            reject(err);
+                        });
+
+                }, function (err) {
+                    console.error('ERROR', err);
+                    reject(err);
+                });
+            });
+        }
+        
+        function unloadEditor() {
+            return Promise.try(function () {
+                if (widgets.editor) {
+                    return widgets.editor.instance.stop()
+                        .then(function (stopped) {
+                            if (stopped) {
+                                widgets.editor = null;
+                            }
+                            return stopped;
+                        });
+                }
+                return true;
+            });
+        }
+        
+        function loadCreationEditor() {
+            return new Promise(function (resolve, reject) {
                 ui.setContent('parameters-group.widget', html.loading());
 
-                require([selectedWidget], function (Widget) {
+                require(['nbextensions/editorCell/widgets/readsSetCreateEditor'], function (Widget) {
                     // TODO: widget should make own bus.
                     var bus = runtime.bus().makeChannelBus(null, 'Parent comm bus for input widget'),
                         widget = Widget.make({
                             bus: bus,
                             workspaceInfo: workspaceInfo
                         });
-                    widgets.paramsInputWidget = {
+                    widgets.editor = {
                         path: ['parameters-group', 'widget'],
                         // module: widgetModule,
+                        type: 'create',
                         bus: bus,
                         instance: widget
                     };
@@ -1462,8 +1568,15 @@ define([
                         model.setItem(['params', message.parameter], message.newValue);
                         evaluateAppState();
                     });
-                    widget.start();
-                    resolve();
+                    widget.start()
+                        .then(function () {
+                            resolve();
+                            return null;
+                        })
+                        .catch(function (err) {
+                            reject(err);
+                        });
+
                 }, function (err) {
                     console.log('ERROR', err);
                     reject(err);
@@ -1512,7 +1625,7 @@ define([
 //                    console.log('desc', setObject.data.description);
 //                    console.log('MODEL', model.getRawObject());
                     // bus.emit('reset-to-defaults');
-                    loadInputWidget();
+                    return loadUpdateEditor();
 
                 })
                 .catch(function (err) {
@@ -1522,7 +1635,21 @@ define([
                 });
 
         }
+        
+        /*
+         * Reset the editor to default values for the parameters.
+         * TODO: this really should be done through the spec, but we
+         * are rapidly cutting corners here...
+         */
+        function resetEditorModel(objectRef) {
+            model.setItem('params', {});
+            model.setItem('params.name', '');
+            model.setItem('params.description', '');
+            model.setItem('params.items', []);
 
+            //loadUpdateEditor();
+
+        }
         function doCreateNewSet(name) {
             var setApiClient = new GenericClient({
                 url: runtime.config('services.service_wizard.url'),
@@ -1552,7 +1679,14 @@ define([
                 };
             return setApiClient.callFunc('save_reads_set_v1', [params])
                 .spread(function (result) {
-                    console.log('SAVED!', result);
+                    console.log('CREATED!', result);
+                
+                    // remove whatever is in the editor panel
+                    
+                    // place the update editor there
+                    
+                    // updatethe update editor with the thing to edit.
+                    
                     updateEditor(result.set_ref);
                 })
                 .catch(function (err) {
@@ -1573,9 +1707,6 @@ define([
                     output_object_name: model.getItem('params.name'),
                     data: {
                         description: model.getItem('params.description'),
-                        // set api has bug -- will throw exception if fetch a 
-                        // set with no items.
-                        // stuff a sample item in here to start with.
                         items: model.getItem('params.items').map(function (item) {
                             return {
                                 ref: item
@@ -1583,6 +1714,7 @@ define([
                         })
                     }
                 };
+            console.log('saving...', params);
             return setApiClient.callFunc('save_reads_set_v1', [params])
                 .then(function (result) {
                     console.log('SAVED!', result);
@@ -1591,6 +1723,12 @@ define([
                 .catch(function (err) {
                     console.error('ERROR!', err);
                 });
+        }
+        
+        function doLoadNewSetForm() {
+            unloadEditor();
+            resetEditorModel();
+            loadCreationEditor();
         }
 
         function loadEditObjectSelector() {
@@ -1619,9 +1757,19 @@ define([
                     widget.bus.on('create-new-set', function (message) {
                         doCreateNewSet(message.name);
                     });
-                    widget.start();
-
-                    resolve();
+                    widget.bus.on('new-set-form', function () {
+                        // TODO: ask user if they want to save the editor if it is dirty.
+                        doLoadNewSetForm();
+                        // swap out the update editor with the creation editor.
+                    })
+                    widget.start()
+                        .then(function () {
+                            resolve();
+                            return null;
+                        })
+                        .catch(function (err) {
+                            reject(err);
+                        });
                 }, function (err) {
                     console.log('ERROR', err);
                     reject(err);

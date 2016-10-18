@@ -200,7 +200,7 @@ define([
          */
         this.status = function () {
             var params = Array.prototype.slice.call(arguments),
-                func = 'get_contigs';
+                func = 'status';
 
             return this.lookupModule()
                 .then(function (serviceStatus) {

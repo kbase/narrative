@@ -13,8 +13,7 @@ define([
      * auth - auth structure
      *   token - auth token
      *   username - username
-     * auth_cb - function which returns the above value
-     * async_job_check_time_ms - unused? 
+     * rpcContext
      */
     function GenericClient(arg) {
         // Establish an auth object which has properties token and user_id.
@@ -49,7 +48,6 @@ define([
         
         this.callFunc = function(funcName, params) {
             // var params = Array.prototype.slice.call(arguments);
-
             return this.lookupModule()
                 .spread(function (serviceStatus) {
                     return jsonRpc.request(serviceStatus.url, module, funcName, params, null, options());

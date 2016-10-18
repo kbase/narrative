@@ -241,7 +241,7 @@ define([
             // Global functions for setting icons
             $(document).on('setDataIcon.Narrative',
                 function(e, param) {
-                    this.setDataIcon(param.elt, param.type);
+                    this.setDataIcon(param.elt, param.type, param.stacked, param.indent);
                 }.bind(this)
             );
 
@@ -2543,36 +2543,88 @@ define([
          *
          * @param $logo - Target element
          * @param type - Name of data type
+         * @param stacked - If true, show "stacked" version of the icon
+         *                indicating, e.g., that this is a container for
+         *                multiple items. Undefined is false.
+         * @param indent - Indent level (default is none)
          */
-        setDataIcon: function($logo, type) {
+        setDataIcon: function($logo, type, stacked, indent) {
+            if (indent === undefined || indent === null) {
+                console.debug('indent not given for type', type);
+                indent = 0;
+            }
+
             if ($logo.hasClass('exampleDataIcon')) {
                 console.debug("SET EXAMPLE ICON");
             }
             var icons = this.data_icons;
-            var icon = _.has(icons, type) ? icons[type] : icons['DEFAULT'];
+            var icon = _.has(icons, type) ? icons[type] : icons.DEFAULT;
             // background circle
             $logo.addClass("fa-stack fa-2x").css({
                     'cursor': 'pointer'
-                })
-                .append($('<i>')
-                    .addClass("fa fa-circle fa-stack-2x")
-                    .css({
-                        'color': this.logoColorLookup(type)
-                    }));
+                });
+            // For 'stacked' (set) icons, add a shifted-over
+            // circle first, as the bottom layer, then also add a border
+            // to the top one.
+            var circle_classes = 'fa fa-circle fa-stack-2x'; 
+            var circle_color = this.logoColorLookup(type);
+            var cmax = function(x) { return x > 255 ? 255 : x; };
+            if (stacked) {
+                console.debug('@@ circle color', circle_color);
+                var parsed_color, r, g, b;
+                var cstep = 20; // color-step for overlapped circles
+                var num_stacked_circles = 1; // up to 2
+                // XXX: Assume color is in form '#RRGGBB'
+                if (circle_color[0] == '#') {
+                    parsed_color = circle_color.match(/#(..)(..)(..)/);
+                    r = parseInt(parsed_color[1], 16);
+                    g = parseInt(parsed_color[2], 16);
+                    b = parseInt(parsed_color[3], 16);
+                }
+                // XXX: Assume color is in form "rgb(#,#,#)"
+                else {
+                    parsed_color = circle_color.match(/rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/);
+                    r = parsed_color[1];
+                    g = parsed_color[2];;
+                    b = parsed_color[3];
+                }
+                // Add circles with lighter colors
+                for (var i=num_stacked_circles; i > 0; i--) {
+                    var stacked_color = 'rgb(' + cmax(r + i * cstep)  + ',' + 
+                        cmax(g + i * cstep) + ',' + cmax(b + i * cstep) + ')';
+                    $logo.append($('<i>')
+                        .addClass(circle_classes + ' kb-data-list-logo-shiftedx' + i)
+                        .css({'color': stacked_color}));
+                    $logo.append($('<i>')
+                        .addClass(circle_classes + ' kb-data-list-logo-shifted' + i)
+                        .css({'color': 'white'}));
+                }
+            }
+            // Assume there are CSS rules for levels of indent we care about..
+            if (indent > 0) {
+                $logo.addClass('kb-data-list-level1');
+            }
+            else if ($logo.hasClass('kb-data-list-level1')) {
+                $logo.removeClass('kb-data-list-level1');
+            }
+
+            $logo.append($('<i>')
+                    .addClass(circle_classes)
+                    .css({'color': circle_color}));
+            // to avoid repetition, define the func. here that will
+            // add one set of icons
+            var add_logo_func = function(fa_icon, $logo, cls) {
+                $logo.append($('<i>')
+                    .addClass(fa_icon + ' fa-inverse fa-stack-1x ' + cls));
+            };
             if (this.isCustomIcon(icon)) {
                 // add custom icons (more than 1 will look weird, though)
-                _.each(icon, function(cls) {
-                    $logo.append($('<i>')
-                        .addClass("icon fa-inverse fa-stack-1x " + cls));
-                });
+                _.each(icon, function(cls) { add_logo_func('icon', $logo, cls); });
             } else {
                 // add stack of font-awesome icons
-                _.each(icon, function(cls) {
-                    $logo.append($('<i>')
-                        .addClass("fa fa-inverse fa-stack-1x " + cls));
-                });
+                _.each(icon, function(cls) { add_logo_func('fa', $logo, cls); });
             }
-        },
+    },
 
         /**
          * Whether the stack of icons is using font-awesome

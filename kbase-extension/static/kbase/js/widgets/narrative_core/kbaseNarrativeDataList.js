@@ -17,7 +17,6 @@ define([
     'kbaseAuthenticatedWidget',
     'kbaseNarrativeDownloadPanel',
     'common/runtime',
-
     'bootstrap',
     'jquery-nearest'
 ], function (
@@ -38,7 +37,7 @@ define([
     return KBWidget({
         name: 'kbaseNarrativeDataList',
         parent: kbaseAuthenticatedWidget,
-        version: '1.0.0',
+        version: '1.1.0',
         options: {
             ws_name: null, // must be the WS name, not the WS Numeric ID
 
@@ -90,13 +89,263 @@ define([
         objList: [],
         objData: {}, // old style - type_name : info
         downloadSpecCache: {tag: 'dev'},
-
+        controlClickHnd: {}, // click handlers for control buttons
         my_user_id: null,
+        setAPI: null,
+
+        /* ----------------------------------------------------
+            Changes for hierarchical data panel (KBASE-4566)
+        */
+        setItems: { }, // item_id -> {set_id -> 1, ..}
+        setInfo: { }, // set_id -> { count: , div: , expanded: ,... }
+        setsInitialized: false, // have we 'extracted' the sets yet?
+        MOCK_SET_ID: 666, // hardcoded workspace set object id
+        setViewMode: false, // Whether the panel is in hierarchy "mode"
+        cachedSetItems: {}, // Items retrieved from a mega-call to list_sets
+        dataIconParam: {},
+
+        /**
+         * Perform any set-specific initialization needed.
+         */
+        initDataListSets: function() {
+            var self = this;
+
+            // Add handler to fix up icons
+            $(document).on('dataViewUpdated.Narrative', function(event) {
+                console.debug('dataViewUpdated triggered');
+                for (var i=0; i < self.objectList.length; i++) {
+                    var oi = self.objectList[i].info;
+                    if (self.isASet(oi)) {
+                        var oi_id = self.itemId(oi);
+                        if (_.has(self.dataIconParam, oi_id) && !self.dataIconParam[oi_id].stacked) {
+                            console.debug('update dataIcon for set object', oi);                                
+                            self.dataIconParam[oi_id].stacked = true;
+                            $(document).trigger("setDataIcon.Narrative", self.dataIconParam[oi_id]); 
+                        }
+                    }
+                }
+            });            
+        },
+
+        /** 
+         * Utility function to portably return the identifier to
+         * use for a single data object.
+         *
+         * @param obj Info tuple from ws_list_objects
+         * @return Identifier (string)
+         */
+        itemId: function(obj) {
+            return obj[0];
+        },
+
+        /**
+         * Test if given object is a set.
+         * This simply tests whether that object is in the `setInfo` mapping.
+         *
+         * @param obj_info Object info tuple, as returned by ws.list_objects()
+         * @return true if in a set, false otherwise
+         */
+        isASet: function(obj_info) {
+            return _.has(this.setInfo, this.itemId(obj_info));
+        },
+
+        isAViewedSet: function(obj_info) {
+            if (this.setViewMode) {
+                return _.has(this.setInfo, this.itemId(obj_info));
+            }
+            else {
+                return false;
+            }
+        },
+
+        /** 
+         * Test if item is in a set.
+         *
+         * @param item_info an object info tuple, as returned by the
+         *                  workspace API for list_objects()
+         * @return true or false
+        */
+        inAnySet: function(item_info) {
+            if (this.setViewMode) {
+                var item_id = this.itemId(item_info);
+                //console.debug('item_id = ', item_id);
+                return _.has(this.setItems, item_id);
+            }
+            else {
+                return false;
+            }
+        },
+
+        getSetInfo: function(obj_info) {
+            return this.setInfo[this.itemId(obj_info)];
+        },
+
+        /**
+         * Toggle whether set is 'expanded' or not.
+         *
+         * @param item_info an object info tuple, as returned by the
+         *                  workspace API for list_objects()
+         * @return New state of 'expanded'
+         */
+         toggleSetExpanded: function (item_info) {
+            var set_id = this.itemId(item_info);
+            console.debug('Expanded value for set', set_id, 'is', this.setInfo[set_id].expanded);
+            var new_value = !this.setInfo[set_id].expanded;
+            this.setInfo[set_id].expanded = new_value;            
+            console.debug('Toggled "expanded" for set', set_id, 'to', new_value);
+            return new_value;
+         },
+
+        /** 
+         * Get item parents.
+         *
+         * @param item_info an object info tuple, as returned by the
+         *                  workspace API for list_objects()
+         * @return All parents, expanded or not, as a mapping with
+         *         the keys: (item_id, expanded, div).
+        */
+        getItemParents: function(item_info) {
+            var item_id = this.itemId(item_info);
+            // empty if not in ANY set
+            if (!_.has(this.setItems, item_id)) {
+                return [];
+            }
+            var self = this;
+            // Construct return value, which is one
+            // map for each of the Sets.
+            return _.map(
+                _.keys(this.setItems[item_id]),
+                function(key) {
+                    return {
+                        item_id: key,
+                        expanded: self.setInfo[key].expanded,
+                        div: self.setInfo[key].div
+                    };
+                }
+            );
+        },
+
+        /**
+         * Extract, into 'setItems' and 'setInfo',
+         * the data items in the input workspace.
+         *
+         * @return Promise-wrapped true (ok or no-op) or false (failed)
+         */
+        extractSets: function(ws_id, force) {
+            if (this.setsInitialized && !force) {
+                console.info('Sets are already initialized');
+                return new Promise(function(resolve, reject) { resolve(true) });
+            }
+            this.setsInitialized = false;
+
+            var self = this;
+            console.info('Extracting sets from datalist...');
+            return this.getWorkspaceSets(ws_id).then(function(ws_sets) {
+                console.debug('Got list of sets:', ws_sets);
+                _.each(ws_sets.sets,
+                    // for each set type, add mappings of {item_id: {set_id : 1, ..}}
+                    // to the instance 'setItems' object, and info to 'setInfo'
+                    function(set_info) {
+                        var set_id = self.itemId(set_info.info),
+                            set_item_ids = [];
+                        _.each(set_info.items, function(item) {
+                            var item_id = self.itemId(item.info);
+                            set_item_ids.push(item_id);
+                            if (!_.has(self.setItems, item_id)) {
+                                self.setItems[item_id] = {};
+                            }
+                            self.setItems[item_id][set_id] = 1;
+                        });
+                        // record item ids, expanded state, etc. for the set
+                        self.setInfo[set_id] = {
+                            item_ids: set_item_ids,
+                            expanded: false,
+                            div: null
+                        };
+                        //console.debug('Added setInfo[' + set_id + ']', self.setInfo[set_id]);
+                        // If we make it here, then we are initialized
+                        self.setsInitialized = true;
+                    });
+                $(document).trigger('dataViewUpdated.Narrative');                
+                return true;
+            }, function(reason) {
+                console.error('Failed to get sets:', reason);
+                return false;
+            });
+        },
+
+        /**
+         * Clear data structures tracking the workspace sets.
+         * This will cause the next refresh to fetch new data.
+         */
+        clearSets: function() {
+            this.setItems = {}; 
+            this.setInfo = {};
+            this.setsInitialized = false;
+        },
+
+        itemIdsInSet: function(set_id) {
+            if (this.setViewMode) {
+                return this.setInfo[set_id].item_ids;
+            }
+            else {
+                return [];
+            }
+        },
+
+        /** 
+         * Get a list of workspace items which are set/group types.
+         *
+         * @return Promise-wrapped list of items.
+         */
+        getWorkspaceSets: function(ws_id) {
+            console.debug('getWorkspaceSets');
+            //if (this.setViewMode) {
+                //return {sets: this.mock_getWorkspaceSets(ws_id)}; -XXX- make Promise
+                try {
+                    var params = {workspace: '' + ws_id, include_set_item_info: true};
+                    console.debug('getWorkspaceSets', params);
+                    return this.setAPI.list_sets(params);
+                }
+                catch(e) {
+                    return Promise.reject('Cannot get sets for workspace ' + ws_id + ' :' + e);
+                }
+            //}
+            //else {
+                // wrap an empty list as a Promise
+            //    return new Promise(function(resolve, reject) { resolve([]) });
+            //}
+        },
+
+        // XXX: This is broken!! needs to imitate return type with include_set_item_info=true 
+        mock_getWorkspaceSets: function(ws_id) {
+            return [
+                [this.MOCK_SET_ID, 'foo', 'FooType.PairedEndLibrarySet-X', '2010-09-06',
+                    1, 'dangunter', ws_id, 'FooWorkspace', '00DEADBEEFBADDECAF00',
+                    1234, {}]
+                ];
+        },
+
+        // Get the hardcoded workspace set objects
+        mock_list_objects: function(ws_id) {
+            var objs = this.mock_getWorkspaceSetMembers(ws_id);
+            objs = objs.concat(objs, this.mock_getWorkspaceSets(ws_id));
+            return objs;
+        },
+
+        /* 
+            END: Changes for hierarchical data panel (KBASE-4566)
+            ----------------------------------------------------
+        */
+
+
+
         /**
          * @method init
          * Builds the DOM structure for the widget.
          * Includes the tables and panel.
          * If any data was passed in (options.data), that gets shoved into the datatable.
+         *
          * @param {Object} - the options set.
          * @returns {Object} this shiny new widget.
          * @private
@@ -136,12 +385,16 @@ define([
 
             if (this._attributes.auth) {
                 this.ws = new Workspace(this.options.ws_url, this._attributes.auth);
+                this.initSetAPI(this._attributes.auth);
             }
 
             // listener for refresh
             $(document).on('updateDataList.Narrative', function () {
+                self.initSetAPI(this._attributes.auth);
                 self.refresh();
             })
+
+            self.initDataListSets();
 
             if (this.options.ws_name) {
                 this.ws_name = this.options.ws_name;
@@ -159,6 +412,19 @@ define([
             }
         },
         /**
+         * Initialize Set API
+         */
+        initSetAPI: function(auth) {
+            if (this.setAPI) {
+                console.log('initSetAPI(): already initialized');
+                return;
+            }
+            var token = {'token': auth.token};
+            this.setAPI = new /*kbase_client_api.*/SetAPI(Config.url('service_wizard'), token, null, null, null, '<1.0.0');
+            return this.setAPI;
+        },
+
+        /**
          * @method loggedInCallback
          * This is associated with the login widget (through the kbaseAuthenticatedWidget parent) and
          * is triggered when a login event occurs.
@@ -172,6 +438,7 @@ define([
             this.refresh();
             return this;
         },
+
         /**
          * @method loggedOutCallback
          * Like the loggedInCallback, this is triggered during a logout event (through the login widget).
@@ -248,9 +515,17 @@ define([
             this.objectList = [];
             this.objData = {};
             this.availableTypes = {};
+            this.clearSets();
 
             this.fetchWorkspaceData()
                 .then(function () {
+                    // Extract sets
+                    var cur_ws_id = this.ws_name;
+                    console.debug('extract sets from reloadWsData');
+                    this.extractSets(cur_ws_id).then(function (success) {
+                        console.debug('reloadWsData, sets initialized?', this.setsInitialized);
+                    }.bind(this));
+
                     // Signal all data channel listeners that we have new data.
                     // TODO: only signal if there are actual changes
                     // TODO: data fetch and sychronization should live as a ui
@@ -309,6 +584,7 @@ define([
         },
         fetchWorkspaceData: function () {
             var dataChunkNum = 1;
+            var self = this;
             return new Promise(function (resolve, reject) {
                 var getDataChunk = function (minId) {
                     this.showLoading('Fetching data chunk ' + dataChunkNum + '...');
@@ -336,7 +612,9 @@ define([
                                 if (infoList[i][2].indexOf('KBaseNarrative') === 0) {
                                     continue;
                                 }
-                                this.objectList.push({
+
+
+                                self.objectList.push({
                                     key: StringUtil.uuid(), // always generate the DnD key
                                     $div: null,
                                     info: infoList[i],
@@ -346,20 +624,21 @@ define([
                                 // typeKey = Module.Type
                                 // typeName = Type
                                 var typeKey = infoList[i][2].split('-')[0];
-                                if (!(typeKey in this.objData)) {
-                                    this.objData[typeKey] = [];
+                                if (!(typeKey in self.objData)) {
+                                    self.objData[typeKey] = [];
                                 }
-                                this.objData[typeKey].push(infoList[i]);
+                                self.objData[typeKey].push(infoList[i]);
 
                                 var typeName = typeKey.split('.')[1];
-                                if (!(typeName in this.availableTypes)) {
-                                    this.availableTypes[typeName] = {
+                                if (!(typeName in self.availableTypes)) {
+                                    self.availableTypes[typeName] = {
                                         type: typeName,
                                         count: 0
                                     };
                                 }
-                                this.availableTypes[typeName].count++;
+                                self.availableTypes[typeName].count++;
                             }
+
 
                             /* Do another lookup if all of these conditions are met:
                              * 1. total object list length < max objs allowed to fetch/render
@@ -370,13 +649,13 @@ define([
                              * we either meet how many we're allowed to fetch, or we get
                              * a query with no objects.
                              */
-                            if (minId + this.options.ws_chunk_size < this.maxWsObjId &&
-                                this.objectList.length < this.options.ws_max_objs_to_fetch &&
+                            if (minId + self.options.ws_chunk_size < self.maxWsObjId &&
+                                self.objectList.length < self.options.ws_max_objs_to_fetch &&
                                 infoList.length > 0) {
                                 dataChunkNum++;
-                                return getDataChunk(minId + 1 + this.options.ws_chunk_size);
+                                return getDataChunk(minId + 1 + self.options.ws_chunk_size);
                             }
-                        }.bind(this));
+                        });
                 }.bind(this);
 
                 getDataChunk(0).then(resolve);
@@ -734,6 +1013,10 @@ define([
 
             return $btnToolbar;
         },
+        /**
+         * This is the main function for rendering a data object
+         * in the data list.
+         */
         renderObjectRowDiv: function (object_info, object_key) {
             var self = this;
             // object_info:
@@ -741,17 +1024,31 @@ define([
             // [3] : timestamp save_date // [4] : int version // [5] : username saved_by
             // [6] : ws_id wsid // [7] : ws_name workspace // [8] : string chsum
             // [9] : int size // [10] : usermeta meta
-            var type_tokens = object_info[2].split('.')
+            var type_tokens = object_info[2].split('.');
             var type_module = type_tokens[0];
             var type = type_tokens[1].split('-')[0];
             var unversioned_full_type = type_module + '.' + type;
             var $logo = $('<div>');
-            // set icon
-            $(document).trigger("setDataIcon.Narrative", {elt: $logo, type: type});
+            var is_set = this.isASet(object_info);
+
+            // Remember the icons
+            console.debug('setDataIcon for',object_info,'with stacked=', is_set);
+            var data_icon_param = {elt: $logo, type: type, stacked: is_set, indent: 0};
+            $(document).trigger("setDataIcon.Narrative", data_icon_param);
+
+            // Save params for this icon, so we can update later when sets get "discovered"
+            this.dataIconParam[this.itemId(object_info)] = data_icon_param;
             // add behavior
             $logo.click(function (e) {
                 e.stopPropagation();
-                self.insertViewer(object_key);
+                // For sets, click toggles -- everything else, adds a viewer (?!)
+                if (self.isAViewedSet(object_info)) {
+                    var is_expanded = self.toggleSetExpanded(object_info);
+                    self.renderList();
+                }
+                else {
+                   self.insertViewer(object_key);
+                }
             });
 
             var shortName = object_info[1];
@@ -855,9 +1152,33 @@ define([
             var $topTable = $('<table>').attr('kb-oid', object_key)
                 .css({'width': '100%', 'background': '#fff'})  // set background to white looks better on DnD
                 .append($('<tr>')
+                    // // set 'expand' arrow
+                    // .append(function() {
+                    //     if (self.isASet(object_info)) {
+                    //         var glyph_collapsed = 'glyphicon-chevron-right',
+                    //             glyph_expanded = 'glyphicon-chevron-down'; 
+                    //         console.info('@@ Is a set', object_info);
+                    //         var starts_expanded = self.setInfo[self.itemId(object_info)].expanded;
+                    //         var $gi = $('<span class="glyphicon"  aria-hidden="true"/>')
+                    //             .addClass(starts_expanded ? glyph_expanded : glyph_collapsed)
+                    //             .on('click', function () {
+                    //                 var is_expanded = self.toggleSetExpanded(object_info);
+                    //                 $(this)
+                    //                     .removeClass(is_expanded ? glyph_collapsed : glyph_expanded)
+                    //                     .addClass(is_expanded ? glyph_expanded : glyph_collapsed);
+                    //                 console.debug('@@ re-render');
+                    //                 self.renderList();
+                    //             }
+                    //         );
+                    //         return $('<td>').append($gi); 
+                    //     }
+                    //     return $('<td>&nbsp;</td>');
+                    // })
+                    // logo
                     .append($('<td>')
                         .css({'width': '15%'})
                         .append($logo))
+                    // main content
                     .append($('<td>')
                         .append($mainDiv)));
 
@@ -877,13 +1198,21 @@ define([
             // Drag and drop
             this.addDragAndDrop($topTable);
 
-            var $rowWithHr = $('<div>')
-                .append($('<hr>')
-                    .addClass('kb-data-list-row-hr')
-                    .css({'margin-left': '65px'}))
-                .append($row);
+            // +---+
+            // |   | Containing "box" is the top-level <div>
+            // +---+
 
-            return $rowWithHr;
+            var $box = $('<div>').addClass('kb-data-list-box');
+
+            // add a separator
+            $box.append($('<hr>')
+                .addClass('kb-data-list-row-hr')
+                .css({'margin-left': '65px'}));
+
+            // add the row
+            $box.append($row);
+
+            return $box;
         },
         // ============= DnD ==================
 
@@ -1037,12 +1366,11 @@ define([
 
                 if (!self.searchFilterOn) { // if search filter is off, then we just are showing everything
                     var start = self.n_objs_rendered;
-                    for (var i = start; i < self.objectList.length; i++) {
-                        // only show them as we scroll to them
-                        if (self.n_objs_rendered >= start + self.options.objs_to_render_on_scroll) {
-                            break;
-                        }
-                        self.attachRow(i);
+                    var limit = start + self.options.objs_to_render_on_scroll;
+                    for (var i = start;
+                         (i < self.objectList.length) && (self.n_objs_rendered < limit);
+                         i++) {
+                        self.n_objs_rendered += self.attachObjectAtIndex(i);
                     }
                 } else {
                     // search filter is on, so we have to base this on what is currently filtered
@@ -1052,39 +1380,83 @@ define([
                         if (self.n_filteredObjsRendered >= start + self.options.objs_to_render_on_scroll) {
                             break;
                         }
-                        self.attachRowElement(self.currentMatch[i]);
-                        self.n_filteredObjsRendered++;
+                        self.attachObject(self.currentMatch[i]);
+                        self.n_filteredObjsRendered++; 
                     }
                 }
             }
         },
-        attachRow: function (index) {
-            var obj = this.objectList[index];
+
+        /**
+         * Attach one object from the list
+         * to the datalist *if* it is not in a set,
+         * or expanded in a set. Determine where to 
+         * attach the object in the hierarchy, and pass this
+         * information to the attachObject() function.
+         *
+         * @param i Index of object in this.objectList
+         */
+        attachObjectAtIndex: function(i) {
+            var obj_info = this.objectList[i].info,
+                rendered = false,
+                self = this;
+
+            if (this.inAnySet(obj_info)) {
+                var parents = this.getItemParents(obj_info);
+                if (parents.length === 0 ) {
+                    console.debug(i + ': Error! No parent found');
+                }
+                else if (_.some(_.pluck(parents, 'expanded'))) {
+                    _.each(_.filter(parents, function(p) { return p.expanded; }),
+                        function(p) {
+                            self.attachObject(self.objectList[i], p.div);
+                        });
+                    rendered = true;
+                }
+                else {
+                    //console.debug( i + ': Set not expanded');
+                }
+            }
+            else {
+                //console.debug(i + ' not in any set:', obj_info);
+                //console.debug('attaching object #' + i);
+                this.attachObject(this.objectList[i], null);
+                rendered = true;
+            }
+            return rendered;
+        },
+
+        /**
+         * Add an object to the list.
+         *
+         * @param obj Object to attach (one item from this.objectList)
+         * @param $parentDiv Parent 'div' to which to add.
+         *        If null, use default main list 'div'.
+         */
+        attachObject: function (obj, $parentDiv) {
             if (obj.attached) {
                 return;
             }
+            if (!$parentDiv) {
+                $parentDiv = this.$mainListDiv;
+            }
             if (obj.$div) {
-                this.$mainListDiv.append(obj.$div);
+                $parentDiv.append(obj.$div);
             } else {
                 obj.$div = this.renderObjectRowDiv(obj.info, obj.key);
-                this.$mainListDiv.append(obj.$div);
+                $parentDiv.append(obj.$div);
+                var set_info = this.getSetInfo(obj.info);
+                if (set_info !== undefined) {
+                    set_info.div = obj.$div;
+                    var type = obj.info[2].split('.')[1].split('-')[0]; // split type-string like KBaseFile.PairedEndLibrary-2.0
+                    console.debug('update dataIcon for set object', obj);
+                    $(document).trigger("setDataIcon.Narrative", {elt: set_info.div, type: type, stacked: true});
+                }
             }
             obj.attached = true;
             this.n_objs_rendered++;
         },
-        attachRowElement: function (row) {
-            if (row.attached) {
-                return;
-            } // return if we are already attached
-            if (row.$div) {
-                this.$mainListDiv.append(row.$div);
-            } else {
-                row.$div = this.renderObjectRowDiv(row.info, row.key);
-                this.$mainListDiv.append(row.$div);
-            }
-            row.attached = true;
-            this.n_objs_rendered++;
-        },
+
         detachAllRows: function () {
             for (var i = 0; i < this.objectList.length; i++) {
                 this.detachRow(i);
@@ -1102,31 +1474,80 @@ define([
                 this.n_objs_rendered--;
             }
         },
+
+
         renderList: function () {
             var self = this;
 
             self.detachAllRows();
+            self.n_objs_rendered = 0;
+    
+            var indent_value = self.setViewMode ? 1 : 0; // new value
 
             if (self.objectList.length > 0) {
-                for (var i = 0; i < self.objectList.length; i++) {
-                    // only show up to the given number
-                    if (i >= self.options.objs_to_render_to_start) {
-                        self.n_objs_rendered = i;
-                        break;
+                var limit = self.options.objs_to_render_to_start;
+
+                // XXX: Hack, part 1: Find expanded sets, and "reserve" rendering for them.
+                // Also fix rendering of set logos.
+                var exp_sets = {};
+                for (i=0; i < self.objectList.length; i++) {
+                    var cur_obj = self.objectList[i];
+                    var cur_obj_id = self.itemId(cur_obj.info);
+                    console.debug('Hack part 1 for object', cur_obj_id);
+                    // check whether expanded
+                    if (self.isAViewedSet(cur_obj.info) && self.getSetInfo(cur_obj.info).expanded) {
+                            exp_sets[i] = true; // save index needed for attachObjectAtIndex()
                     }
+                    // modify indentation
+                    else if (self.setViewMode && self.inAnySet(cur_obj.info)) {
+                        console.debug('change indent for object ' + cur_obj_id + ' from ' +
+                            self.dataIconParam[cur_obj_id].indent + ' to ' + indent_value);
+                        self.dataIconParam[cur_obj_id].indent = indent_value;
+                        $(document).trigger("setDataIcon.Narrative", self.dataIconParam[cur_obj_id]); 
+                    }
+                    // Any non-zero indent not in setView mode, should go to zero
+                    else if (!self.setViewMode && self.dataIconParam[cur_obj_id] !== undefined && 
+                        self.dataIconParam[cur_obj_id].indent !== 0) {
+                        self.dataIconParam[cur_obj_id].indent = 0;
+                        $(document).trigger("setDataIcon.Narrative", self.dataIconParam[cur_obj_id]); 
+                    }
+                }
+                console.debug('renderList setItems = ', self.setItems);
+
+                limit -= _.keys(exp_sets).length; // reserve space
+
+                for (var i = 0;
+                     i < self.objectList.length && (self.n_objs_rendered < limit);
+                     i++) {
+
+                    var cur_obj = self.objectList[i];
+                    var cur_obj_id = self.itemId(cur_obj.info);
                     // If object does not have a key, define one.
                     // This will be used for 'id' of rendered element.
                     // But do *not* replace an existing key.
-                    if (self.objectList[i].key == undefined) {
-                        self.objectList[i].key = StringUtil.uuid();
+                    if (cur_obj.key === undefined) {
+                        cur_obj.key = StringUtil.uuid();
                     }
-                    self.attachRow(i);
+
+                    self.n_objs_rendered += self.attachObjectAtIndex(i);
+                    // XXX: Hack, part 1.5: Remove from "reserved" exp sets
+                    if (_.has(exp_sets, i)) {
+                        delete exp_sets[i];
+                        limit++; // un-reserve space
+                    }
                 }
+
+                // XXX: Hack, part deux: Add the expanded sets
+                _.each(_.keys(exp_sets), function(i) {
+                    self.n_objs_rendered += self.attachObjectAtIndex(i);
+                });
+
                 if (Jupyter.narrative.readonly) {
-                    this.$addDataButton.hide();
+                    self.$addDataButton.hide();
                 } else {
-                    this.$addDataButton.show();
+                    self.$addDataButton.show();
                 }
+    
             } else {
                 var $noDataDiv = $('<div>')
                     .css({'text-align': 'center', 'margin': '20pt'})
@@ -1143,6 +1564,7 @@ define([
                     self.$addDataButton.hide();
                 }
                 self.$mainListDiv.append($noDataDiv);
+                // only show up to the given number
             }
         },
         renderController: function () {
@@ -1206,10 +1628,62 @@ define([
             //                         self.trigger('toggleSidePanelOverlay.Narrative');
             //                     });
 
+            /** Set view mode toggle */
+            var viewModeDisableCtl = ['search', 'sort', 'filter'];
+            self.viewModeDisableHnd = {};
+            var $viewMode = $('<span>')
+                .addClass('btn btn-xs btn-default kb-data-list-ctl')
+                .attr('id', 'kb-data-list-hierctl')
+                .tooltip({
+                    title: 'Hierarchical view',
+                    container: 'body',
+                    delay: {
+                        show: Config.get('tooltip').showDelay,
+                        hide: Config.get('tooltip').hideDelay
+                    }
+                })
+                .append('<span class="fa fa-copy"></span>')
+                .on('click', function () {
+                    if (self.setViewMode) {
+                        // Turn OFF set view mode
+                        self.setViewMode = false;
+                        self.renderList();
+                        $('#kb-data-list-hierctl').removeAttr('enabled');
+                        // re-enable other controls
+                        _.each(viewModeDisableCtl, function(ctl) {
+                            var ctl_id = '#kb-data-list-' + ctl + 'ctl';
+                            $(ctl_id + ' span').removeClass('inviso');
+                            $(ctl_id).on('click', self.controlClickHnd[ctl]);
+                        });
+                    } 
+                    else {
+                        // Turn ON set view mode
+                        self.setViewMode = true;
+                        self.renderList();
+                        $('#kb-data-list-hierctl').attr('enabled', '1');
+                        // disable some other controls
+                        _.each(viewModeDisableCtl, function(ctl) {
+                            var ctl_id = '#kb-data-list-' + ctl + 'ctl';
+                            $(ctl_id + ' span').addClass('inviso');
+                            $(ctl_id).off('click');
+                        });
+                    }
+                });
 
-
+            // Search control
+            self.controlClickHnd.search = function () {
+                if (!self.$searchDiv.is(':visible')) {
+                    self.$sortByDiv.hide({effect: 'blind', duration: 'fast'});
+                    self.$filterTypeDiv.hide({effect: 'blind', duration: 'fast'});
+                    self.$searchDiv.show({effect: 'blind', duration: 'fast'});
+                    self.$searchInput.focus();
+                } else {
+                    self.$searchDiv.hide({effect: 'blind', duration: 'fast'});
+                }
+            }
             var $openSearch = $('<span>')
-                .addClass('btn btn-xs btn-default')
+                .addClass('btn btn-xs btn-default kb-data-list-ctl')
+                .attr('id', 'kb-data-list-searchctl')
                 .tooltip({
                     title: 'Search data in narrative',
                     container: 'body',
@@ -1219,19 +1693,21 @@ define([
                     }
                 })
                 .append('<span class="fa fa-search"></span>')
-                .on('click', function () {
-                    if (!self.$searchDiv.is(':visible')) {
-                        self.$sortByDiv.hide({effect: 'blind', duration: 'fast'});
-                        self.$filterTypeDiv.hide({effect: 'blind', duration: 'fast'});
-                        self.$searchDiv.show({effect: 'blind', duration: 'fast'});
-                        self.$searchInput.focus();
-                    } else {
-                        self.$searchDiv.hide({effect: 'blind', duration: 'fast'});
-                    }
-                });
+                .on('click', self.controlClickHnd.search);
 
+            // Sort control
+            self.controlClickHnd.sort = function () {
+                if (!self.$sortByDiv.is(':visible')) {
+                    self.$searchDiv.hide({effect: 'blind', duration: 'fast'});
+                    self.$filterTypeDiv.hide({effect: 'blind', duration: 'fast'});
+                    self.$sortByDiv.show({effect: 'blind', duration: 'fast'});
+                } else {
+                    self.$sortByDiv.hide({effect: 'blind', duration: 'fast'});
+                }
+            };
             var $openSort = $('<span>')
-                .addClass('btn btn-xs btn-default')
+                .addClass('btn btn-xs btn-default kb-data-list-ctl')
+                .attr('id', 'kb-data-list-sortctl')
                 .tooltip({
                     title: 'Sort data list',
                     container: 'body',
@@ -1241,18 +1717,21 @@ define([
                     }
                 })
                 .append('<span class="fa fa-sort-amount-asc"></span>')
-                .on('click', function () {
-                    if (!self.$sortByDiv.is(':visible')) {
-                        self.$searchDiv.hide({effect: 'blind', duration: 'fast'});
-                        self.$filterTypeDiv.hide({effect: 'blind', duration: 'fast'});
-                        self.$sortByDiv.show({effect: 'blind', duration: 'fast'});
-                    } else {
-                        self.$sortByDiv.hide({effect: 'blind', duration: 'fast'});
-                    }
-                });
+                .on('click', self.controlClickHnd.sort);
 
+            // Filter control
+            self.controlClickHnd.filter = function () {
+                if (!self.$filterTypeDiv.is(':visible')) {
+                    self.$sortByDiv.hide({effect: 'blind', duration: 'fast'});
+                    self.$searchDiv.hide({effect: 'blind', duration: 'fast'});
+                    self.$filterTypeDiv.show({effect: 'blind', duration: 'fast'});
+                } else {
+                    self.$filterTypeDiv.hide({effect: 'blind', duration: 'fast'});
+                }
+            };
             var $openFilter = $('<span>')
-                .addClass('btn btn-xs btn-default')
+                .addClass('btn btn-xs btn-default kb-data-list-ctl')
+                .attr('id', 'kb-data-list-filterctl')
                 .tooltip({
                     title: 'Filter data by type',
                     container: 'body',
@@ -1262,15 +1741,9 @@ define([
                     }
                 })
                 .append('<span class="fa fa-filter"></span>')
-                .on('click', function () {
-                    if (!self.$filterTypeDiv.is(':visible')) {
-                        self.$sortByDiv.hide({effect: 'blind', duration: 'fast'});
-                        self.$searchDiv.hide({effect: 'blind', duration: 'fast'});
-                        self.$filterTypeDiv.show({effect: 'blind', duration: 'fast'});
-                    } else {
-                        self.$filterTypeDiv.hide({effect: 'blind', duration: 'fast'});
-                    }
-                });
+                .on('click', self.controlClickHnd.filter);
+
+            // Refresh control
             var $refreshBtn = $('<span>')
                 .addClass('btn btn-xs btn-default')
                 .tooltip({
@@ -1341,6 +1814,7 @@ define([
 
             var $header = $('<div>');
             if (self.options.parentControlPanel) {
+                self.options.parentControlPanel.addButtonToControlPanel($viewMode);
                 self.options.parentControlPanel.addButtonToControlPanel($openSearch);
                 self.options.parentControlPanel.addButtonToControlPanel($openSort);
                 self.options.parentControlPanel.addButtonToControlPanel($openFilter);
@@ -1348,6 +1822,7 @@ define([
             } else {
                 $header.addClass('row').css({'margin': '5px'})
                     .append($('<div>').addClass('col-xs-12').css({'margin': '0px', 'padding': '0px', 'text-align': 'right'})
+                        .append($viewMode)
                         .append($openSearch)
                         .append($openSort)
                         .append($openFilter))
@@ -1518,7 +1993,7 @@ define([
                         // todo: add check so we only show up to the number we render... switching to this will require that
                         // we revise the renderMore logic...
                         if (n_matches < self.options.objs_to_render_to_start) {
-                            self.attachRowElement(self.currentMatch[k]);
+                            self.attachObject(self.currentMatch[k]);
                             self.n_filteredObjsRendered++;
                         }
 

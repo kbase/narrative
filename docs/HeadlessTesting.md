@@ -52,7 +52,7 @@ https://ci.kbase.us/narrative/ws.11546.obj.1
 
 ## Running Headless Narratives
 
-The standard narrative contain now contains an additional executable in /usr/bin called
+The standard narrative container now contains an additional executable in /usr/bin called
 "headless-narrative". It is installed by the install_narrative_docker.sh script using
 the run_headless.tmpl file. To run this script, simply run the narrative docker container
 but override the default entrypoint with "headless-narrative".
@@ -60,16 +60,16 @@ but override the default entrypoint with "headless-narrative".
 You will need to pass in the following environment variables via -e parameters on the
 docker run command line:
 * KB_AUTH_TOKEN - this is a standard KBase authentication token with access to the narrative to be run
-* KB_WORKSPACE_ID - this is a workspace that the KB_AUTH_TOKEN has access to. A narrative needs to run within something
+* KB_WORKSPACE_ID - this is a workspace that the KB_AUTH_TOKEN has access to. A narrative needs to run within some
 workspace. This can be the same as the workspace of the narrative being run, or another workspace that the token has access to
 * SERVICESSL - [optional] this is the SSL endpoint for API services that distinguishes CI, next, appdev or production. At runtime this
 is substituted into the endpoints preconfigured for the narrative container
 
-The [__main__ routine](../src/biokbase/narrative/exporter/run_narrative.py) that runs the
+The [__main__ routine](../src/biokbase/narrative/exporter/run_narrative.py#L126) that runs the
 narrative accepts some commandline parameters:
 
-* --all display the output from all code cells that have run, not just the final one
-* --codecells display the code cells as well as the output from the code cells
+* **--all** display the output from all code cells that have run, not just the final one
+* **--codecells** display the code cells as well as the output from the code cells
 
 The parameter that is passed to the headless-narrative route is the workspace ID of the
 narrative to run, in the form of the numeric workspace ID in the format ws_id/obj_id/version_id.

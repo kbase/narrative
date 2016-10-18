@@ -13,8 +13,6 @@ fi
 . ./url.cfg
 
 sed -i "s/ci.kbase.us/$SERVICESSL/" /kb/dev_container/narrative/src/config.json
-chmod 666 /kb/dev_container/narrative/src/config.json
-
 
 grep -rl //kbase.us/services /kb/deployment/services/narrative-venv/ | \
        xargs sed -i "s/\/\/kbase.us\/services/\/\/$SERVICESSL\/services/g" || echo "Done" && \

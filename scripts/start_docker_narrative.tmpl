@@ -9,12 +9,6 @@ export IPYTHONDIR=$NARRATIVE_DIR/kbase-extension/ipython
 export HOME=/tmp
 CFGDIR=$JUPYTER_CONFIG_DIR/static/kbase
 
-if [ -n "$SERVICESSL" ]
-then
-    sed -i "s/ci.kbase.us/$SERVICESSL/" $NARRATIVE_DIR/src/config.json
-
-fi
-
 cp $NARRATIVE_DIR/src/config.json $JUPYTER_CONFIG_DIR/static/kbase/config/
 
 jupyter notebook --NotebookApp.base_url=/narrative --NotebookApp.open_browser=False --ip=* "$@"

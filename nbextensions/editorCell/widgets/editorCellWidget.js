@@ -82,14 +82,19 @@ define([
                 ui: {
                     buttons: {
                         enabled: [],
-                        disabled: ['save']
+                        disabled: [],
+                        hide: ['save']
                     },
                     elements: {
                         show: ['fatal-error'],
-                        hide: ['parameters-group']
+                        hide: ['parameters-group', 'edit-object-selector']
                     }
                 },
-                next: []
+                next: [
+                    {
+                        mode: 'fatal-error'
+                    }
+                ]
 
             },
             {
@@ -116,7 +121,10 @@ define([
                     {
                         mode: 'editing',
                         params: 'incomplete'
-                    }
+                    },
+                    {
+                        mode: 'fatal-error'
+                    }                    
                 ]
             },
             {
@@ -150,6 +158,9 @@ define([
                     },
                     {
                         mode: 'error'
+                    },
+                    {
+                        mode: 'fatal-error'
                     }
                 ]
             },
@@ -170,6 +181,9 @@ define([
                 next: [
                     {
                         mode: 'saved'
+                    },
+                    {
+                        mode: 'fatal-error'
                     }
                 ]
             },
@@ -204,6 +218,9 @@ define([
                         mode: 'editing',
                         params: 'complete',
                         code: 'built'
+                    },
+                    {
+                        mode: 'fatal-error'
                     }
                 ]
             },
@@ -229,6 +246,9 @@ define([
                         mode: 'editing',
                         params: 'complete',
                         code: 'built'
+                    },
+                    {
+                        mode: 'fatal-error'
                     }
                 ]
             }
@@ -459,6 +479,7 @@ define([
         function syncFatalError() {
             ui.setContent('fatal-error.title', model.getItem('fatalError.title'));
             ui.setContent('fatal-error.message', model.getItem('fatalError.message'));
+            ui.setContent('fatal-error.details', model.getItem('fatalError.details'));
         }
 
         function showFatalError(arg) {
@@ -666,8 +687,13 @@ define([
                                     body: div([
                                         table({class: 'table table-striped'}, [
                                             tr([
-                                                th('Title'), td({dataElement: 'title'}),
-                                                td('Message', td({dataElement: 'message'}))
+                                                th('Title'), td({dataElement: 'title'})
+                                            ]),
+                                            tr([
+                                                th('Message'), td({dataElement: 'message'})
+                                            ]),
+                                            tr([
+                                                th('Details'), td({dataElement: 'details'})
                                             ])
                                         ])
                                     ])
@@ -744,6 +770,22 @@ define([
                                         ])
                                     ])
                                 ]),
+                                // just a simple status area for now...
+                                ui.buildPanel({
+                                    title: 'Status',
+                                    name: 'editor-status',
+                                    hidden: false,
+                                    type: 'default',
+                                    classes: ['kb-panel-container'],
+                                    body: div({
+                                        dataElement: 'message',
+                                        style: {
+                                            width: '100%',
+                                            padding: '4px',
+                                            minHeight: '1em'
+                                        }
+                                    })
+                                })
                             ])
                         ])
                     ])
@@ -800,6 +842,11 @@ define([
                 errors: errors
             };
         }
+        
+        function setStatus(message) {
+            ui.setContent('editor-status.message', message);
+        }
+        
 
         // TODO: we need to determine the proper forms for a app identifier, and
         // who creates this canonical identifier. E.g. the method panel supplies
@@ -852,20 +899,14 @@ define([
                 app = fixApp(app),
                 params = fixParams(params),
                 code = PythonInterop.buildEditorRunner(cellId, runId, app, params);
-            // TODO: do something with the runId
+            // TODO: do something with the runId 
+            setStatus('Successfully built code');
+            model.setItem('editorState.currentRunId', runId);
             cell.set_text(code);
         }
 
         function resetPython(cell) {
             cell.set_text('');
-        }
-
-        function setStatus(cell, status) {
-            model.setItem('attributes.status', status);
-        }
-
-        function getStatus(cell) {
-            model.getItem('attributes.status');
         }
 
         function initializeFSM() {
@@ -1081,6 +1122,7 @@ define([
             // ui.collapsePanel('parameters-group');
             // cell.execute();
             // Just save from the UI for now.
+            setStatus(html.loading('Saving...'));
             doSaveReadsSet();
         }
 
@@ -1263,12 +1305,23 @@ define([
                 }));
                 
                 eventManager.add(cellBus.on('result', function (message) {
-                    if (message.result) {
-                        alert('Successfully saved the reads set');
-                    } else if (message.error) {
-                        alert('Error saving reads set: ' + message.error.message);
+                    // Verify that the run id is the same.
+                    setStatus('Received result...');
+                    if (message.address.run_id !== model.getItem('editorState.currentRunId')) {
+                        setStatus('Error! result message is not from the generated code!');
+                        return;
+                    }
+                    if (message.message.result) {
+                        setStatus('Successfully saved the reads set');
+                    } else if (message.message.error) {
+                        // cheap as heck error message
+                        var errorMessage = div({class: 'alert alert-danger'}, [
+                            'Error saving reads set: ',
+                            message.message.error.message
+                        ]);
+                        setStatus(errorMessage);
                     } else {
-                        alert('what?');
+                        setStatus('what?');
                     }
                     // console.log('local app result!', message);
                 }));
@@ -1729,6 +1782,7 @@ define([
 
         function doSaveReadsSet() {
             
+            var runId = model.getItem('params');
             cell.execute();
             return;
             
@@ -1807,7 +1861,15 @@ define([
                         // TODO: ask user if they want to save the editor if it is dirty.
                         doLoadNewSetForm();
                         // swap out the update editor with the creation editor.
-                    })
+                    });
+                    widget.bus.on('fatal-error', function (message) {
+                        setFatalError({
+                            title: 'Fatal error from ' + message.location,
+                            message: message.error.message,
+                            details: 'details here'
+                        });
+                        renderUI();
+                    });
                     widget.start()
                         .then(function () {
                             resolve();
@@ -1835,6 +1897,16 @@ define([
                 fsm.newState({mode: 'editing', params: 'incomplete'});
                 renderUI();
             }
+        }
+        
+        function setFatalError(arg) {
+            model.setItem('fatalError', {
+                title: arg.title,
+                message: arg.message,
+                details: arg.details
+            });
+            syncFatalError();
+            fsm.newState({mode: 'fatal-error'});
         }
 
 
@@ -1874,12 +1946,7 @@ define([
                 .catch(function (err) {
                     console.error('ERROR loading main widgets', err);
                     addNotification('Error loading main widgets: ' + err.message);
-                    model.setItem('fatalError', {
-                        title: 'Error loading main widgets',
-                        message: err.message
-                    });
-                    syncFatalError();
-                    fsm.newState({mode: 'fatal-error'});
+                    setFatalError({title: 'Error loading main widgets', message: err.message, details: ''});
                     renderUI();
                 });
         }

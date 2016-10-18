@@ -15,6 +15,7 @@ define([
     'kb_common/html',
     'kb_service/client/workspace',
     'kb_sdk_clients/genericClient',
+    'kb_sdk_clients/exceptions',
     'kb_service/utils',
     // LOCAL
     'common/ui',
@@ -22,6 +23,7 @@ define([
     'common/runtime',
     'common/events',
     'common/props',
+    'common/error',
     // Wrapper for inputs
     './inputWrapperWidget',
     'widgets/appWidgets/fieldWidget',
@@ -33,12 +35,14 @@ define([
     html,
     Workspace,
     GenericClient,
+    sdkClientExceptions,
     serviceUtils,
     UI,
     Dom,
     Runtime,
     Events,
     Props,
+    kbError,
     //Wrappers
     RowWidget,
     FieldWidget,
@@ -153,28 +157,6 @@ define([
         }
 
         function renderAvailableObjects() {
-            /*
-             var wsClient = new Workspace(runtime.config('services.workspace.url'), {
-             token: runtime.authToken()
-             });Config.url('service_wizard')
-             return wsClient.list_objects({
-             ids: [workspaceInfo.id],
-             type: objectType
-             })
-             .then(function (result) {
-             var objects = result.map(function (info) {
-             return serviceUtils.objectInfoToObject(info);
-             }),
-             content = select({}, objects.map(function (objectInfo) {
-             return option({value: objectInfo.ref}, objectInfo.name);
-             }));
-             container.querySelector('[data-element="object-selector"]').innerHTML = content;
-             })
-             .catch(function (err) {
-             console.error('ERROR getting objects', err, runtime.authToken(), workspaceInfo, objectType)
-             });
-             */
-
             var events = Events.make(),
                 setApiClient = new GenericClient({
                     url: runtime.config('services.service_wizard.url'),
@@ -189,7 +171,7 @@ define([
                 controlNode = container.querySelector('[data-element="object-selector"]');
 
             controlNode.innerHTML = html.loading();
-
+            
             return setApiClient.callFunc('list_sets', [params])
                 .then(function (result) {
                     // console.log('list sets result is ', result);
@@ -212,17 +194,30 @@ define([
                     events.attachEvents(container);
                     return objects.length;
                 })
-                .catch(function (err) {
-                    console.error('ERROR getting objects', err, runtime.authToken(), workspaceInfo, objectType);
-                    console.error('stack trace', err.detail.replace('\n', '<br>'));
-                    // FORNOW: just return the empty set;
-                    var content = div({class: 'alert alert-warning'}, [
-                        'No Reads Set objects in your Narrative. Create a read set below'
-                    ]);
-                    controlNode.innerHTML = content;
-                    selectedReadsSetItem = null;
-                    return 0;
+                .catch(sdkClientExceptions.RequestException, function (err) {
+                    throw new kbError.KBError({
+                        type: 'GeneralError',
+                        original: err,
+                        message:err.message,
+                        reason: 'This is an unknown error connecting to a service',
+                        detail: 'This is an unknown error connecting to a service. Additional details may be available in your browser log',
+                        advice: [
+                            'This problem may be temporary -- try again later',
+                            'You may wish to <href="https://kbase.us/contact">report this error to kbase</a>'
+                        ]
+                    })
                 });
+//                .catch(function (err) {
+//                    console.error('ERROR getting objects', err, runtime.authToken(), workspaceInfo, objectType);
+//                    console.error('stack trace', err.detail.replace('\n', '<br>'));
+//                    // FORNOW: just return the empty set;
+//                    var content = div({class: 'alert alert-warning'}, [
+//                        'No Reads Set objects in your Narrative. Create a read set below'
+//                    ]);
+//                    controlNode.innerHTML = content;
+//                    selectedReadsSetItem = null;
+//                    return 0;
+//                });
         }
 
 
@@ -238,10 +233,16 @@ define([
                             if (availableReadsSets.length) {
                                 // TODO: use the currently selected item, which may have
                                 // been restored from state.
-                                console.log('selected?', availableReadsSets, selectedReadsSetItem);
                                 selectItem(availableReadsSets[selectedReadsSetItem].ref);
                             }
-                        });
+                        })
+                        .catch(function (err) {
+                            console.log('ERROR', err);
+                            bus.emit('fatal-error', {
+                                location: 'render-available-objects',
+                                error: err
+                            });
+                        })
                     runtime.bus().on('workspace-changed', function () {
                         renderAvailableObjects();
                     });

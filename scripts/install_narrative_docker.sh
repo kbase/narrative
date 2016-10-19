@@ -8,10 +8,12 @@
 PYTHON=python2.7
 
 SCRIPT_TGT="kbase-narrative"
+SCRIPT_TGT2="headless-narrative"
 
 CUR_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 NARRATIVE_ROOT_DIR=$CUR_DIR/..
 SCRIPT_TEMPLATE=$CUR_DIR/start_docker_narrative.tmpl
+SCRIPT_TEMPLATE2=$CUR_DIR/run_headless.tmpl
 
 function console () {
     now=`date '+%Y-%m-%d %H:%M:%S'`
@@ -37,6 +39,7 @@ cd ..
 rm -rf data_api
 
 # Setup jupyter_narrative script
+# and headless narrative runner
 # ------------------------------
 console "Installing scripts"
 i=0
@@ -49,10 +52,25 @@ while read s
             i=1
         fi
 done < $SCRIPT_TEMPLATE > $SCRIPT_TGT
+
+i=0
+while read s
+    do
+        echo $s
+        if [ $i = 0 ]
+            then
+            echo d=`pwd`
+            i=1
+        fi
+done < $SCRIPT_TEMPLATE2 > $SCRIPT_TGT2
+
 d=$(dirname `which python`)
-chmod 0755 $SCRIPT_TGT
+chmod 0755 $SCRIPT_TGT $SCRIPT_TGT2
 console "Putting new $SCRIPT_TGT command under $d"
 /bin/mv $SCRIPT_TGT $d
+/bin/mv $SCRIPT_TGT2 $d
+
+
 console "Done installing scripts"
 
 NARRATIVE_DIR=$(pwd)

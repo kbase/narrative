@@ -5,9 +5,11 @@ Eventually this will be incorporated into a service
 sychan@lbl.gov
 """
 
+import logging
+logging.getLogger("tornado.application").addHandler(logging.StreamHandler())
+
 from traitlets.config import Config
-from nbconvert.preprocessors.execute import ExecutePreprocessor, \
-                                            CellExecutionError
+from nbconvert.preprocessors.execute import ExecutePreprocessor, CellExecutionError
 from biokbase.narrative.exporter.preprocessor import NarrativePreprocessor
 from biokbase.narrative.contents.narrativeio import KBaseWSManagerMixin as NIO
 import nbformat
@@ -25,13 +27,13 @@ def get_output(notebook, all=False, codecells=False):
 
     def get_cell_output(cell):
         # return output from cell in a notebook
-        output = None
+        output = ""
         if cell['cell_type'] == 'code':
             if codecells and \
                (len(cell['outputs']) > 0 or 'kbase' in cell['metadata']):
-                output = cell['source']
+                output = cell['source'] + "\n"
             if 'kbase' in cell['metadata']:
-                output = output + pformat(cell['metadata']['kbase'])
+                output = output + pformat(cell['metadata']['kbase']) + "\n"
             for outputs in cell['outputs']:
                 if outputs['output_type'] == 'stream' and \
                    outputs['name'] == 'stdout':
@@ -39,15 +41,17 @@ def get_output(notebook, all=False, codecells=False):
                     # just print out the raw test
                     try:
                         output_json = json.loads(outputs['text'])
-                        output = output + pformat(output_json)
+                        output = output + pformat(output_json) + "\n"
                     except:
-                        output = pformat(outputs['text'])
+                        output = output + pformat(outputs['text']) + "\n"
         return(output)
 
     if all:
-        output = None
+        output = ""
         for cell in notebook['cells']:
-            output += get_cell_output(cell)
+            cell_output = get_cell_output(cell)
+            if cell_output:
+                output += cell_output + "\n"
     else:
         for cell in reversed(notebook['cells']):
             output = get_cell_output(cell)

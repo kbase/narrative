@@ -86,7 +86,6 @@ define([
         $mainListDiv: null,
         mainListId: null,
         $loadingDiv: null,
-        objectList: [],
         objData: {}, // old style - type_name : info
         downloadSpecCache: {tag: 'dev'},
         controlClickHnd: {}, // click handlers for control buttons
@@ -97,9 +96,11 @@ define([
          * Structural changes to support new view(s).
          * viewOrder = a list of object ids - which order to view (might make them references)
          * dataObjects = object id (or ref) -> object info -- same as objectList above
+         * keyToObjId = key (uuid) -> obj id (int)
          */
         viewOrder: [],
         dataObjects: {},
+        keyToObjId: {},
 
         /* ----------------------------------------------------
             Changes for hierarchical data panel (KBASE-4566)
@@ -116,22 +117,17 @@ define([
          * Perform any set-specific initialization needed.
          */
         initDataListSets: function() {
-            var self = this;
-
-            // Add handler to fix up icons
             $(document).on('dataViewUpdated.Narrative', function() {
-                for (var i=0; i < self.objectList.length; i++) {
-                    var oi = self.objectList[i].info;
-                    if (self.isASet(oi)) {
-                        var oi_id = self.itemId(oi);
-                        if (_.has(self.dataIconParam, oi_id) && !self.dataIconParam[oi_id].stacked) {
-                            console.debug('update dataIcon for set object', oi);
-                            self.dataIconParam[oi_id].stacked = true;
-                            $(document).trigger("setDataIcon.Narrative", self.dataIconParam[oi_id]);
-                        }
+                for (var objId in this.dataObjects) {
+                    if (this.isASet(this.dataObjects[objId].info) &&
+                        _.has(this.dataIconParam, objId) &&
+                        !this.dataIconParam[objId].stacked
+                    ) {
+                        this.dataIconParam[objId].stacked = true;
+                        $(document).trigger('setDataIcon.Narrative', this.dataIconParam[objId]);
                     }
                 }
-            });
+            }.bind(this));
         },
 
         /**
@@ -196,10 +192,8 @@ define([
          */
          toggleSetExpanded: function (item_info) {
             var set_id = this.itemId(item_info);
-            console.debug('Expanded value for set', set_id, 'is', this.setInfo[set_id].expanded);
             var new_value = !this.setInfo[set_id].expanded;
             this.setInfo[set_id].expanded = new_value;
-            console.debug('Toggled "expanded" for set', set_id, 'to', new_value);
             return new_value;
          },
 
@@ -397,12 +391,10 @@ define([
          * Initialize Set API
          */
         initSetAPI: function(auth) {
-            if (this.setAPI) {
-                console.log('initSetAPI(): already initialized');
-                return;
+            if (!this.setAPI) {
+                var token = {'token': auth.token};
+                this.setAPI = new SetAPI(Config.url('service_wizard'), token, null, null, null, '<1.0.0');
             }
-            var token = {'token': auth.token};
-            this.setAPI = new SetAPI(Config.url('service_wizard'), token, null, null, null, '<1.0.0');
             return this.setAPI;
         },
 
@@ -490,19 +482,10 @@ define([
                     this.dataObjects[i].$div.find('.kb-data-list-date').text(newTime);
                 }
             }.bind(this));
-            // if (this.objectList) {
-            //     for (var i = 0; i < this.objectList.length; i++) {
-            //         if (this.objectList[i].$div) {
-            //             var newTime = TimeFormat.getTimeStampStr(this.objectList[i].info[3]);
-            //             this.objectList[i].$div.find('.kb-data-list-date').text(newTime);
-            //         }
-            //     }
-            // }
         },
 
         reloadWsData: function () {
             // empty the existing object list first
-            // this.objectList = [];
             this.objData = {};
             this.availableTypes = {};
 
@@ -526,9 +509,11 @@ define([
                     // service, not in a widget.
                     var runtime = Runtime.make();
                     runtime.bus().send({
-                        data: JSON.parse(JSON.stringify(this.objectList.map(function (item) {
-                            return item.info;
-                        })))
+                        data: JSON.parse(
+                                JSON.stringify(
+                                    Object.keys(this.dataObjects).map(function (objId) {
+                                        return this.dataObjects[objId].info;
+                                    }.bind(this))))
                     }, {
                         channel: 'data',
                         key: {
@@ -538,18 +523,12 @@ define([
                 }.bind(this))
                 .then(function () {
                     this.showLoading('Rendering data...');
-                    if (this.objectList.length > this.options.maxObjsToPreventFilterAsYouTypeInSearch) {
+                    var numObj = Object.keys(this.dataObjects).length;
+                    if (numObj > this.options.maxObjsToPreventFilterAsYouTypeInSearch) {
                         this.$searchInput.off('input');
                     }
 
-                    if (this.objectList.length <= this.options.max_objs_to_prevent_initial_sort) {
-                        this.objectList.sort(function (a, b) {
-                            if (a.info[3] > b.info[3])
-                                return -1; // sort by date
-                            if (a.info[3] < b.info[3])
-                                return 1;  // sort by date
-                            return 0;
-                        });
+                    if (numObj <= this.options.max_objs_to_prevent_initial_sort) {
                         this.viewOrder.sort(function (a, b) {
                             if (this.dataObjects[a].info[3] > this.dataObjects[b].info[3]) {
                                 return -1;
@@ -618,20 +597,14 @@ define([
                                 continue;
                             }
 
-
-                            self.objectList.push({
-                                key: StringUtil.uuid(), // always generate the DnD key
-                                $div: null,
-                                info: infoList[i],
-                                attached: false
-                            });
-
+                            var key = StringUtil.uuid();
                             self.dataObjects[infoList[i][0]] = {
-                                key: StringUtil.uuid(),
+                                key: key,
                                 $div: null,
                                 info: infoList[i],
                                 attached: false
                             };
+                            self.keyToObjId[key] = infoList[i][0];
                             self.viewOrder.push(infoList[i][0]);
 
                             // type is formatted like this: Module.Type-1.0
@@ -663,7 +636,7 @@ define([
                          * a query with no objects.
                          */
                         if (minId + self.options.ws_chunk_size < self.maxWsObjId &&
-                            self.objectList.length < self.options.ws_max_objs_to_fetch &&
+                            self.viewOrder.length < self.options.ws_max_objs_to_fetch &&
                             infoList.length > 0) {
                             dataChunkNum++;
                             return getDataChunk(minId + 1 + self.options.ws_chunk_size);
@@ -679,6 +652,10 @@ define([
             }.bind(this));
         },
 
+        /**
+         * Returns the available object data for a type.
+         * If no type is specified (type is falsy), returns all object data
+         */
         getObjData: function (type, ignoreVersion) {
             if (type) {
                 var dataSet = {};
@@ -708,12 +685,6 @@ define([
                 self.selectedObject = null;
                 self.trigger('removeFilterMethods.Narrative');
             }
-            // } else {
-            //     $selectedRow.addClass('kb-data-list-obj-row-selected');
-            //     self.$currentSelectedRow = $selectedRow;
-            //     self.selectedObject = object_info[0];
-            //     self.trigger('filterMethods.Narrative', 'type:' + object_info[2].split('-')[0].split('.')[1]);
-            // }
         },
 
         addDataControls: function (object_info, $alertContainer) {
@@ -1048,7 +1019,6 @@ define([
             var is_set = this.isASet(object_info);
 
             // Remember the icons
-            console.debug('setDataIcon for',object_info,'with stacked=', is_set);
             var data_icon_param = {elt: $logo, type: type, stacked: is_set, indent: 0};
             $(document).trigger("setDataIcon.Narrative", data_icon_param);
 
@@ -1231,8 +1201,8 @@ define([
             });
             targetDiv.addEventListener('drop', function (e) {
                 var data = JSON.parse(e.dataTransfer.getData('info')),
-                    key = data.key,
-                    obj = _.findWhere(self.objectList, {key: key}),
+                    // key = data.key,
+                    obj = self.dataObjects[self.keyToObjId[data.key]], //_.findWhere(self.objectList, {key: key}),
                     info = self.createInfoObject(obj.info),
                     cell, cellIndex, placement;
 
@@ -1263,7 +1233,7 @@ define([
         addDragAndDrop: function ($row) {
             var node = $row.parent().get(0),
                 key = $row.attr('kb-oid'),
-                obj = _.findWhere(this.objectList, {key: key}),
+                obj = this.dataObjects[this.keyToObjId[key]], //_.findWhere(this.objectList, {key: key}),
                 info = this.createInfoObject(obj.info),
                 data = {
                     widget: 'kbaseNarrativeDataCell',
@@ -1330,22 +1300,16 @@ define([
         // ============= end DnD ================
 
         insertViewer: function (key) {
-            var self = this;
-            var cell = Jupyter.notebook.get_selected_cell();
-            var near_idx = 0;
+            var cell = Jupyter.notebook.get_selected_cell(),
+                near_idx = 0;
             if (cell) {
                 near_idx = Jupyter.notebook.find_cell_index(cell);
                 $(cell.element).off('dblclick');
                 $(cell.element).off('keydown');
             }
 
-            //var cell_id = StringUtil.uuid();
-            //cell.rendered = false;
-            //cell.set_text('<div id="' + cell_id + '">&nbsp;</div>');
-            //cell.render();
-
-            var obj = _.findWhere(self.objectList, {key: key});
-            var info = self.createInfoObject(obj.info);
+            var obj = this.dataObjects[this.keyToObjId[key]], // _.findWhere(self.objectList, {key: key});
+                info = self.createInfoObject(obj.info);
             // Insert the narrative data cell into the div we just rendered
             // new kbaseNarrativeDataCell($('#' + cell_id), {cell: cell, info: info});
             self.trigger('createViewerCell.Narrative', {
@@ -1354,29 +1318,26 @@ define([
                 'info': info
             });
         },
-        renderMore: function () {
-            var self = this;
-            if (self.objectList) {
 
-                if (!self.searchFilterOn) { // if search filter is off, then we just are showing everything
-                    var start = self.n_objs_rendered;
-                    var limit = start + self.options.objs_to_render_on_scroll;
-                    for (var i = start;
-                         (i < self.objectList.length) && (self.n_objs_rendered < limit);
-                         i++) {
-                        self.n_objs_rendered += self.attachObjectAtIndex(i);
+        renderMore: function () {
+            if (!this.searchFilterOn) { // if search filter is off, then we just are showing everything
+                var start = this.n_objs_rendered;
+                var limit = start + this.options.objs_to_render_on_scroll;
+                for (var i = start;
+                     (i < this.viewOrder.length) && (this.n_objs_rendered < limit);
+                     i++) {
+                    this.n_objs_rendered += this.attachObjectAtIndex(i);
+                }
+            } else {
+                // search filter is on, so we have to base this on what is currently filtered
+                var start = this.n_filteredObjsRendered;
+                for (var i = start; i < this.currentMatch.length; i++) {
+                    // only show them as we scroll to them
+                    if (this.n_filteredObjsRendered >= start + this.options.objs_to_render_on_scroll) {
+                        break;
                     }
-                } else {
-                    // search filter is on, so we have to base this on what is currently filtered
-                    var start = self.n_filteredObjsRendered;
-                    for (var i = start; i < self.currentMatch.length; i++) {
-                        // only show them as we scroll to them
-                        if (self.n_filteredObjsRendered >= start + self.options.objs_to_render_on_scroll) {
-                            break;
-                        }
-                        self.attachObject(self.currentMatch[i]);
-                        self.n_filteredObjsRendered++;
-                    }
+                    this.attachObject(this.currentMatch[i]);
+                    this.n_filteredObjsRendered++;
                 }
             }
         },
@@ -1386,10 +1347,10 @@ define([
          * or expanded in a set. Determine where to attach the object in the hierarchy, and pass
          * this information to the attachObject() function.
          *
-         * @param i Index of object in this.objectList
+         * @param i Index of object in this.viewOrder
          */
         attachObjectAtIndex: function(i) {
-            var obj_info = this.objectList[i].info,
+            var obj_info = this.dataObjects[this.viewOrder[i]].info,
                 rendered = false,
                 self = this;
 
@@ -1401,7 +1362,7 @@ define([
                 else if (_.some(_.pluck(parents, 'expanded'))) {
                     _.each(_.filter(parents, function(p) { return p.expanded; }),
                         function(p) {
-                            self.attachObject(self.objectList[i], p.div);
+                            self.attachObject(self.dataObjects[this.viewOrder[i]], p.div);
                         });
                     rendered = true;
                 }
@@ -1412,7 +1373,7 @@ define([
             else {
                 //console.debug(i + ' not in any set:', obj_info);
                 //console.debug('attaching object #' + i);
-                this.attachObject(this.objectList[i], null);
+                this.attachObject(this.dataObjects[this.viewOrder[i]], null);
                 rendered = true;
             }
             return rendered;
@@ -1421,7 +1382,7 @@ define([
         /**
          * Add an object to the list.
          *
-         * @param obj Object to attach (one item from this.objectList)
+         * @param obj Object to attach (one item from this.dataObjects)
          * @param $parentDiv Parent 'div' to which to add.
          *        If null, use default main list 'div'.
          */
@@ -1451,7 +1412,7 @@ define([
         },
 
         detachAllRows: function () {
-            for (var i = 0; i < this.objectList.length; i++) {
+            for (var i = 0; i < this.viewOrder.length; i++) {
                 this.detachRow(i);
             }
             this.$mainListDiv.children().detach();
@@ -1459,11 +1420,11 @@ define([
             this.renderedAll = false;
         },
         detachRow: function (index) {
-            if (this.objectList[index].attached) {
-                if (this.objectList[index].$div) {
-                    this.objectList[index].$div.detach();
+            if (this.dataObjects[this.viewOrder[index]].attached) {
+                if (this.dataObjects[this.viewOrder[index]].$div) {
+                    this.dataObjects[this.viewOrder[index]].$div.detach();
                 }
-                this.objectList[index].attached = false;
+                this.dataObjects[this.viewOrder[index]].attached = false;
                 this.n_objs_rendered--;
             }
         },
@@ -1476,55 +1437,21 @@ define([
             self.n_objs_rendered = 0;
 
             var indent_value = self.setViewMode ? 1 : 0; // new value
-            var objIdToIndex = {};
-            for (var i=0; i<self.objectList.length; i++) {
-                objIdToIndex[self.objectList[i].info[0]] = i;
-            }
-            if (self.objectList.length > 0) {
+
+            if (self.viewOrder.length > 0) {
                 var limit = self.options.objs_to_render_to_start;
-                // var totalRendered = 0;
-                // for (var i=0; i<self.objectList.length && (totalRendered < limit); i++) {
-                //     var curObj = self.objectList[i];
-                //     // 1. Render object.
-                //     // 2. If it's a Set and it's expanded, render its children.
-                //     // 3. Profit.
-                //     // 4. Cry because we have to rewrite sorting.
-                //
-                //     var curObjId = self.itemId(curObj.info);
-                //     // render object.
-                //     self.n_objs_rendered += self.attachObjectAtIndex(i);
-                //     totalRendered++;
-                //     if (self.isAViewedSet(curObj.info)) { //} && self.getSetInfo(curObj.info).expanded) {
-                //         // render children with indentation, up to the limit...ish
-                //         self.setInfo[curObjId].item_ids.forEach(function(childId) {
-                //             var childObjId = objIdToIndex[childId];
-                //             if (self.dataIconParam[childObjId]) {
-                //                 self.dataIconParam[childObjId].indent = indentValue;
-                //                 $(document).trigger('setDataIcon.Narrative', self.dataIconParam[childObjId]);
-                //             }
-                //             self.n_objs_rendered += self.attachObjectAtIndex(childObjId);
-                //             totalRendered++;
-                //         });
-                //     }
-                // }
-                //
-                //
-                //
                 // XXX: Hack, part 1: Find expanded sets, and "reserve" rendering for them.
                 // Also fix rendering of set logos.
                 var exp_sets = {};
-                for (i=0; i < self.objectList.length; i++) {
-                    var cur_obj = self.objectList[i];
+                for (i=0; i < self.viewOrder.length; i++) {
+                    var cur_obj = self.dataObjects[self.viewOrder[i]];
                     var cur_obj_id = self.itemId(cur_obj.info);
-                    console.debug('Hack part 1 for object', cur_obj_id);
                     // check whether expanded
                     if (self.isAViewedSet(cur_obj.info) && self.getSetInfo(cur_obj.info).expanded) {
                         exp_sets[i] = true; // save index needed for attachObjectAtIndex()
                     }
                     // modify indentation
                     else if (self.setViewMode && self.inAnySet(cur_obj.info)) {
-                        console.debug('change indent for object ' + cur_obj_id + ' from ' +
-                            self.dataIconParam[cur_obj_id].indent + ' to ' + indent_value);
                         self.dataIconParam[cur_obj_id].indent = indent_value;
                         $(document).trigger("setDataIcon.Narrative",
                             self.dataIconParam[cur_obj_id]);
@@ -1536,21 +1463,21 @@ define([
                         $(document).trigger("setDataIcon.Narrative", self.dataIconParam[cur_obj_id]);
                     }
                 }
-                console.debug('renderList setItems = ', self.setItems);
 
                 limit -= _.keys(exp_sets).length; // reserve space
 
                 for (var i = 0;
-                     i < self.objectList.length && (self.n_objs_rendered < limit);
+                     i < self.viewOrder.length && (self.n_objs_rendered < limit);
                      i++) {
 
-                    var cur_obj = self.objectList[i];
+                    var cur_obj = self.dataObjects[self.viewOrder[i]];
                     var cur_obj_id = self.itemId(cur_obj.info);
                     // If object does not have a key, define one.
                     // This will be used for 'id' of rendered element.
                     // But do *not* replace an existing key.
                     if (cur_obj.key === undefined) {
                         cur_obj.key = StringUtil.uuid();
+                        this.keyToObjId[cur_obj.key] = cur_obj_id;
                     }
 
                     self.n_objs_rendered += self.attachObjectAtIndex(i);
@@ -1600,9 +1527,9 @@ define([
                 .append("date")
                 .on('click', function () {
                     self.sortData(function (a, b) {
-                        if (a.info[3] > b.info[3])
+                        if (self.dataObjects[a].info[3] > self.dataObjects[b].info[3])
                             return -1; // sort by date
-                        if (a.info[3] < b.info[3])
+                        if (self.dataObjects[a].info[3] < self.dataObjects[b].info[3])
                             return 1;  // sort by date
                         return 0;
                     });
@@ -1613,9 +1540,9 @@ define([
                 .append("name")
                 .on('click', function () {
                     self.sortData(function (a, b) {
-                        if (a.info[1].toUpperCase() < b.info[1].toUpperCase())
+                        if (self.dataObjects[a].info[1].toUpperCase() < self.dataObjects[b].info[1].toUpperCase())
                             return -1; // sort by name
-                        if (a.info[1].toUpperCase() > b.info[1].toUpperCase())
+                        if (self.dataObjects[a].info[1].toUpperCase() > self.dataObjects[b].info[1].toUpperCase())
                             return 1;
                         return 0;
                     });
@@ -1626,9 +1553,9 @@ define([
                 .append("type")
                 .on('click', function () {
                     self.sortData(function (a, b) {
-                        if (a.info[2].toUpperCase() > b.info[2].toUpperCase())
+                        if (self.dataObjects[a].info[2].toUpperCase() > self.dataObjects[b].info[2].toUpperCase())
                             return -1; // sort by type
-                        if (a.info[2].toUpperCase() < b.info[2].toUpperCase())
+                        if (self.dataObjects[a].info[2].toUpperCase() < self.dataObjects[b].info[2].toUpperCase())
                             return 1;
                         return 0;
                     });
@@ -1822,7 +1749,7 @@ define([
 
                     // whenever we change the type filter, we need to clear the current match
                     // so that the complete filter can rerun
-                    self.currentMatch = self.objectList;
+                    self.currentMatch = self.viewOrder;
 
                     self.filterByType(typeSelected);
                 });
@@ -1892,65 +1819,58 @@ define([
                     .val("");
             }
         },
+
         reverseData: function () {
-            var self = this;
-            if (!self.objectList) {
-                return;
-            }
-
-            self.objectList.reverse();
-            self.renderList();
-            self.search();
+            this.viewOrder.reverse();
+            this.renderList();
+            this.search();
         },
-        sortData: function (sortfunction) {
-            var self = this;
-            if (!self.objectList) {
-                return;
-            }
 
-            self.objectList.sort(sortfunction);
-            self.renderList();
-            self.search();  // always refilter on the search term search if there is something there
+        sortData: function (sortfunction) {
+            this.viewOrder.sort(sortfunction);
+            this.renderList();
+            this.search();  // always refilter on the search term search if there is something there
 
             // go back to the top on sort
-            self.$mainListDiv.animate({
+            this.$mainListDiv.animate({
                 scrollTop: 0
             }, 300); // fast = 200, slow = 600
         },
+
         currentMatch: [],
         currentTerm: '',
         searchFilterOn: false,
         n_filteredObjsRendered: null,
+
         search: function (term, type) {
-            var self = this;
-            if (!self.objectList) {
+            if (!this.dataObjects) {
                 return;
             }
 
-            if (!term && self.$searchInput) {
-                term = self.$searchInput.val();
+            if (!term && this.$searchInput) {
+                term = this.$searchInput.val();
             }
 
             // if type wasn't selected, then we try to get something that was set
             if (!type) {
-                if (self.$filterTypeSelect) {
-                    type = self.$filterTypeSelect.find("option:selected").val();
+                if (this.$filterTypeSelect) {
+                    type = this.$filterTypeSelect.find("option:selected").val();
                 }
             }
 
             term = term.trim();
             if (term.length > 0 || type) {
-                self.searchFilterOn = true;
+                this.searchFilterOn = true;
                 // todo: should show searching indicator (could take several seconds if there is a lot of data)
                 // optimization => we filter existing matches instead of researching everything if the new
                 // term starts with the last term searched for
                 var newMatch = [];
-                if (!self.currentTerm) {
+                if (!this.currentTerm) {
                     // reset if currentTerm is null or empty
-                    self.currentMatch = self.objectList;
+                    this.currentMatch = this.viewOrder;
                 } else {
-                    if (term.indexOf(self.currentTerm) !== 0) {
-                        self.currentMatch = self.objectList;
+                    if (term.indexOf(this.currentTerm) !== 0) {
+                        this.currentMatch = this.viewOrder;
                     }
                 }
                 // clean the term for regex use
@@ -1961,14 +1881,14 @@ define([
                 var regex = new RegExp(term, 'i');
 
                 var n_matches = 0;
-                self.n_filteredObjsRendered = 0;
-                for (var k = 0; k < self.currentMatch.length; k++) {
+                this.n_filteredObjsRendered = 0;
+                for (var k = 0; k < this.currentMatch.length; k++) {
                     // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
                     // [3] : timestamp save_date // [4] : int version // [5] : username saved_by
                     // [6] : ws_id wsid // [7] : ws_name workspace // [8] : string chsum
                     // [9] : int size // [10] : usermeta meta
                     var match = false;
-                    var info = self.currentMatch[k].info;
+                    var info = this.dataObjects[this.currentMatch[k]].info;
                     if (regex.test(info[1])) {
                         match = true;
                     } // match on name
@@ -2001,42 +1921,41 @@ define([
                     }
                     if (match) {
                         // matches must always switch to show if they are rendered
-                        if (self.currentMatch[k].$div) {
-                            self.currentMatch[k].$div.show();
+                        if (this.dataObjects[this.currentMatch[k]].$div) {
+                            this.dataObjects[this.currentMatch[k]].$div.show();
                         }
 
                         // todo: add check so we only show up to the number we render... switching to this will require that
                         // we revise the renderMore logic...
-                        if (n_matches < self.options.objs_to_render_to_start) {
-                            self.attachObject(self.currentMatch[k]);
-                            self.n_filteredObjsRendered++;
+                        if (n_matches < this.options.objs_to_render_to_start) {
+                            this.attachObject(this.dataObjects[this.currentMatch[k]]);
+                            this.n_filteredObjsRendered++;
                         }
 
-                        newMatch.push(self.currentMatch[k]);
+                        newMatch.push(this.dataObjects[this.currentMatch[k]]);
                         n_matches++;
                     } else {
-                        if (self.currentMatch[k].$div) {
-                            self.currentMatch[k].$div.hide();
+                        if (this.dataObjects[this.currentMatch[k]].$div) {
+                            this.dataObjects[this.currentMatch[k]].$div.hide();
                         }
                     }
                 }
-                self.currentMatch = newMatch; // update the current match
+                this.currentMatch = newMatch; // update the current match
             } else {
-                self.searchFilterOn = false;
+                this.searchFilterOn = false;
                 // no new search, so show all and render the list
-                for (var k = 0; k < self.objectList.length; k++) {
-                    if (self.objectList[k].$div) {
-                        self.objectList[k].$div.show();
+                for (var k = 0; k < this.viewOrder.length; k++) {
+                    if (this.dataObjects[this.viewOrder[k]].$div) {
+                        this.dataObjects[this.viewOrder[k]].$div.show();
                     }
                 }
-                self.renderList();
+                this.renderList();
             }
-            self.currentTerm = term;
+            this.currentTerm = term;
         },
 
         filterByType: function (type) {
-            var self = this;
-            self.search(null, type);
+            this.search(null, type);
         },
 
         getRichData: function (object_info, $moreRow) {

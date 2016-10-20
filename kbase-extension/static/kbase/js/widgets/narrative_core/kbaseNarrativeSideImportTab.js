@@ -308,6 +308,7 @@ define (
 
             $importButton.click(
                 $.proxy(function(event) {
+                    console.log("kbaseNarrativeSideImportTab: On Import button clicked");
                     event.preventDefault();
                     var v = self.getInputWidget().isValid();
                     if (v.isValid) {
@@ -522,6 +523,7 @@ define (
         },
 
         runImport: function(methods, tag) {
+            console.log("kbaseNarrativeSideImportTab: In runImport");
             var self = this;
             var methodId = self.getSelectedTabId();
             var methodSpec = methods[methodId];
@@ -561,6 +563,8 @@ define (
                     allow_stdin: false,
                     store_history: false
             };
+            console.log("kbaseNarrativeSideImportTab: sending python code to Jupyter:");
+            console.log(pythonCode);
             Jupyter.notebook.kernel.execute(pythonCode, callbacks, executeOptions);
             self.showInfo("Your import job is being submitted and you will be directed to it shortly.");
         },

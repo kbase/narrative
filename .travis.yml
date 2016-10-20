@@ -12,6 +12,7 @@ branches:
     - staging
     - master
     - jupyter
+
 before_install:
   - pip install virtualenv
   - npm install -g bower

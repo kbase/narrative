@@ -93,6 +93,14 @@ define([
         my_user_id: null,
         setAPI: null,
 
+        /** -----------------
+         * Structural changes to support new view(s).
+         * viewOrder = a list of object ids - which order to view (might make them references)
+         * dataObjects = object id (or ref) -> object info -- same as objectList above
+         */
+        viewOrder: [],
+        dataObjects: {},
+
         /* ----------------------------------------------------
             Changes for hierarchical data panel (KBASE-4566)
         */
@@ -476,24 +484,31 @@ define([
         },
 
         refreshTimeStrings: function () {
-            var self = this;
-            var newTime;
-            var oldTime;
-            if (self.objectList) {
-                for (var i = 0; i < self.objectList.length; i++) {
-                    if (self.objectList[i].$div) {
-                        newTime = TimeFormat.getTimeStampStr(self.objectList[i].info[3]);
-                        self.objectList[i].$div.find('.kb-data-list-date').text(newTime);
-                    }
+            Object.keys(this.dataObjects).forEach(function(i) {
+                if (this.dataObjects[i].$div) {
+                    var newTime = TimeFormat.getTimeStampStr(this.dataObjects[i].info[3]);
+                    this.dataObjects[i].$div.find('.kb-data-list-date').text(newTime);
                 }
-            }
+            }.bind(this));
+            // if (this.objectList) {
+            //     for (var i = 0; i < this.objectList.length; i++) {
+            //         if (this.objectList[i].$div) {
+            //             var newTime = TimeFormat.getTimeStampStr(this.objectList[i].info[3]);
+            //             this.objectList[i].$div.find('.kb-data-list-date').text(newTime);
+            //         }
+            //     }
+            // }
         },
 
         reloadWsData: function () {
             // empty the existing object list first
-            this.objectList = [];
+            // this.objectList = [];
             this.objData = {};
             this.availableTypes = {};
+
+            this.viewOrder = [];
+            this.dataObjects = {};
+
             this.clearSets();
 
             this.fetchWorkspaceData()
@@ -535,6 +550,15 @@ define([
                                 return 1;  // sort by date
                             return 0;
                         });
+                        this.viewOrder.sort(function (a, b) {
+                            if (this.dataObjects[a].info[3] > this.dataObjects[b].info[3]) {
+                                return -1;
+                            }
+                            if (this.dataObjects[a].info[3] < this.dataObjects[b].info[3]) {
+                                return 1;
+                            }
+                            return 0;
+                        }.bind(this));
                         this.$elem.find('#nar-data-list-default-sort-label').addClass('active');
                         this.$elem.find('#nar-data-list-default-sort-option').attr('checked');
                     }
@@ -601,6 +625,14 @@ define([
                                 info: infoList[i],
                                 attached: false
                             });
+
+                            self.dataObjects[infoList[i][0]] = {
+                                key: StringUtil.uuid(),
+                                $div: null,
+                                info: infoList[i],
+                                attached: false
+                            };
+                            self.viewOrder.push(infoList[i][0]);
 
                             // type is formatted like this: Module.Type-1.0
                             // typeKey = Module.Type

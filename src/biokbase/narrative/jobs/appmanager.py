@@ -468,9 +468,138 @@ class AppManager(object):
                     input_vals,
                     service_version=tag
                 )[0]
-                return result
+                if (cell_id):
+                    self.send_cell_message('local_app_result', cell_id, run_id, {
+                        'result': result
+                    });
+                else:
+                    return result
+
             except:
                 raise
+            
+    def run_dynamic_service(self, app_id, params, tag="release", version=None,
+                      cell_id=None, run_id=None, **kwargs):
+        """
+        Attempts to run a local app. These do not return a Job object, but just
+        the result of the app. In most cases, this will be a Javascript display
+        of the result, but could be anything.
+
+        If the app_spec looks like it makes a service call, then this raises a ValueError.
+        Otherwise, it validates each parameter in **kwargs against the app spec, executes it, and
+        returns the result.
+
+        Parameters:
+        -----------
+        app_id - should be from the app spec, e.g. 'view_expression_profile'
+        params - the dictionary of parameters for the app. Should be key-value
+                 pairs where they keys are strings. If any non-optional
+                 parameters are missing, an informative string will be printed.
+        tag - optional, one of [release|beta|dev] (default=release)
+        version - optional, a semantic version string. Only released modules have
+                  versions, so if the tag is not 'release', and a version is given,
+                  a ValueError will be raised.
+        **kwargs - these are the set of parameters to be used with the app.
+                   They can be found by using the app_usage function. If any
+                   non-optional apps are missing, a ValueError will be raised.
+
+        Example:
+        run_local_app('NarrativeViewers/view_expression_profile', version='0.0.1', input_expression_matrix="MyMatrix", input_gene_ids="1234")
+        """
+        try:
+            if params is None:
+                params = dict()
+            return self._run_dynamic_service_internal(app_id, params, tag, version, cell_id, run_id, **kwargs)
+        except Exception as e:
+            e_type = type(e).__name__
+            e_message = str(e).replace('<', '&lt;').replace('>', '&gt;')
+            e_trace = traceback.format_exc().replace('<', '&lt;').replace('>', '&gt;')
+
+            if cell_id:
+                self.send_cell_message('result', cell_id, run_id, {
+                    'error': {
+                        'message': e_message,
+                        'type': e_type,
+                        'stacktrace': e_trace
+                    }
+                })
+            else:            
+                print("Error while trying to start your app (run_local_app)!\n-------------------------------------\n" + str(e))
+
+    def _run_dynamic_service_internal(self, app_id, params, tag, version, cell_id, run_id, **kwargs):
+        # Intro tests:
+        self.spec_manager.check_app(app_id, tag, raise_exception=True)
+
+        if version is not None and tag != "release":
+            raise ValueError("App versions only apply to released app modules!")
+
+        # Get the spec & params
+        spec = self.spec_manager.get_spec(app_id, tag)
+        app_type = spec['info'].get('app_type', 'app')
+
+        if app_type == 'app':
+            raise ValueError('This app appears to be a long-running job! Please start it using the run_app function instead.')
+
+        if 'behavior' not in spec:
+            raise ValueError("This app appears invalid - it has no defined behavior")
+
+        behavior = spec['behavior']
+
+        if 'script_module' in behavior or 'script_name' in behavior:
+            # It's an old NJS script. These don't work anymore.
+            raise ValueError('This app relies on a service that is now obsolete. Please contact the administrator.')
+
+        # for now, just map the inputs to outputs.
+        # First, validate.
+        # Preflight check the params - all required ones are present, all values are the right type, all numerical values are in given ranges
+        spec_params = self.spec_manager.app_params(spec)
+        (params, ws_refs) = self._validate_parameters(app_id, tag,
+                                                      spec_params, params)
+
+        # Log that we're trying to run a job...
+        log_info = {
+            'app_id': app_id,
+            'tag': tag,
+            'username': system_variable('user_id'),
+            'ws': system_variable('workspace')
+        }
+        kblogging.log_event(self._log, "run_dynamic_service", log_info)
+
+        spec_params_map = dict((spec_params[i]['id'],spec_params[i]) for i in range(len(spec_params)))
+        input_vals = self._map_inputs(spec['behavior']['kb_service_input_mapping'], params, spec_params_map)
+        function_name = spec['behavior']['kb_service_name'] + '.' + spec['behavior']['kb_service_method']
+        try:
+            # result = [
+            #     function_name,
+            #     input_vals,
+            #     tag
+            # ]
+            result = self.service_client.sync_call(
+                function_name,
+                input_vals,
+                service_version=tag
+            )[0]
+            if cell_id:
+                self.send_cell_message('result', cell_id, run_id, {
+                    'result': result
+                });
+            else:
+                return result
+        except:
+            raise            
+
+    def send_cell_message(self, message_id, cell_id, run_id, message):
+        address = {
+            'cell_id': cell_id,
+            'run_id': run_id,
+            'event_at': datetime.datetime.utcnow().isoformat() + 'Z'
+        }
+        
+        self._send_comm_message(message_id, {
+            'address': address,
+            'message': message
+        })
+        
 
     def run_widget_app(self, app_id, tag="release",
                        version=None, cell_id=None, run_id=None):
@@ -667,11 +796,23 @@ class AppManager(object):
                 params[p['id']] = p['default']
 
         return (params, ws_input_refs)
+    
+    
+    def _resolve_ref(self, workspace, value):
+            if '/' in value:
+                if len(value.split('/')) > 3:
+                    raise ValueError('Object reference {} has too many slashes  - should be workspace/object/version(optional)'.format(value))
+                    # return (ws_ref, 'Data reference named {} does not have the right format - should be workspace/object/version(optional)')
+                info = self.ws_client.get_object_info_new({'objects': [{'ref': value}]})[0]
+            # Otherwise, assume it's a name, not a reference.
+            else:
+                info = self.ws_client.get_object_info_new({'objects': [{'workspace': workspace, 'name': value}]})[0]
+            return "{}/{}/{}".format(info[6], info[0], info[4])
 
-    def _resolve_ref(self, workspace, obj_name):
-        info = self.ws_client.get_object_info_new({'objects': [{'workspace': workspace, 
-                                                                'name': obj_name}]})[0]
-        return "{}/{}/{}".format(info[6], info[0], info[4])
+#    def _resolve_ref(self, workspace, obj_name):
+#        info = self.ws_client.get_object_info_new({'objects': [{'workspace': workspace, 
+#                                                                'name': obj_name}]})[0]
+#        return "{}/{}/{}".format(info[6], info[0], info[4])
 
     def _resolve_ref_if_typed(self, value, spec_param):
         is_output = 'is_output' in spec_param and spec_param['is_output'] == 1

@@ -29,9 +29,6 @@ define(['./ajax', './exceptions'], function (ajax, exceptions) {
         })
             .then(function (response) {
                 var data = JSON.parse(response);
-                if (numRets === undefined || numRets === null) {
-                    return data.result;
-                } 
                 if (numRets === 1) {
                     return data.result[0];
                 }

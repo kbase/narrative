@@ -17,9 +17,12 @@ define([
     'util/timeFormat',
     'util/icon',
     'kbase-client-api',
+    'kbase-generic-client-api',
     'kbaseAuthenticatedWidget',
     'kbaseNarrativeDownloadPanel',
     'common/runtime',
+    'handlebars',
+    'text!kbase/templates/data_list/object_row.html',
     'bootstrap',
     'jquery-nearest'
 ], function (
@@ -33,9 +36,12 @@ define([
     TimeFormat,
     Icon,
     kbase_client_api,
+    GenericClient,
     kbaseAuthenticatedWidget,
     kbaseNarrativeDownloadPanel,
-    Runtime
+    Runtime,
+    Handlebars,
+    ObjectRowHtml
     ) {
     'use strict';
     return KBWidget({
@@ -93,6 +99,9 @@ define([
         controlClickHnd: {}, // click handlers for control buttons
         my_user_id: null,
         setAPI: null,
+        serviceClient: null,
+
+        objectRowTmpl: Handlebars.compile(ObjectRowHtml),
 
         /** -----------------
          * Structural changes to support new view(s).
@@ -269,7 +278,6 @@ define([
                             self.setsInitialized = true;
                         });
                     self.initDataListSets();
-                    // $(document).trigger('dataViewUpdated.Narrative');
                     return true;
                 }, function(reason) {
                     console.error('Failed to get sets:', reason);
@@ -409,6 +417,7 @@ define([
          */
         loggedInCallback: function (event, auth) {
             this.ws = new Workspace(this.options.ws_url, auth);
+            this.serviceClient = new GenericClient(Config.url('service_wizard'), auth);
             this.my_user_id = auth.user_id;
             this.isLoggedIn = true;
             this.refresh();
@@ -502,9 +511,6 @@ define([
                     var cur_ws_id = this.ws_name;
                     console.debug('extract sets from reloadWsData');
                     this.extractSets(cur_ws_id);
-                    // .then(function (success) {
-                    //     console.debug('reloadWsData, sets initialized?', this.setsInitialized);
-                    // }.bind(this));
 
                     // Signal all data channel listeners that we have new data.
                     // TODO: only signal if there are actual changes
@@ -570,89 +576,139 @@ define([
         },
 
         fetchWorkspaceData: function () {
-            var dataChunkNum = 1;
-            var self = this;
-            return new Promise(function (resolve, reject) {
-                var getDataChunk = function (minId) {
-                    this.showLoading('Fetching data chunk ' + dataChunkNum + '...');
-                    return Promise.resolve(this.ws.list_objects({
-                        workspaces: [this.ws_name],
-                        includeMetadata: 1,
-                        minObjectID: minId,
-                        maxObjectID: minId + this.options.ws_chunk_size
-                    }))
-                    .then(function (infoList) {
-                        // object_info:
-                        // [0] : obj_id objid
-                        // [1] : obj_name name
-                        // [2] : type_string type
-                        // [3] : timestamp save_date
-                        // [4] : int version
-                        // [5] : username saved_by
-                        // [6] : ws_id wsid
-                        // [7] : ws_name workspace
-                        // [8] : string chsum
-                        // [9] : int size
-                        // [10] : usermeta meta
-                        for (var i = 0; i < infoList.length; i++) {
-                            // skip narrative objects
-                            if (infoList[i][2].indexOf('KBaseNarrative') === 0) {
-                                continue;
-                            }
+            // var dataChunkNum = 1;
+            // var self = this;
 
-                            var key = StringUtil.uuid();
-                            self.dataObjects[infoList[i][0]] = {
-                                key: key,
-                                $div: null,
-                                info: infoList[i],
-                                attached: false
-                            };
-                            self.keyToObjId[key] = infoList[i][0];
-                            self.viewOrder.push(infoList[i][0]);
+            return Promise.resolve(
+                this.serviceClient.sync_call(
+                    'NarrativeService.list_objects_with_sets',
+                    [{'ws_name': this.ws_name}]
+                )
+            )
+            .then(function(result) {
+                result = result[0]['data'];
+                console.log('NEW WORKSPACE LIST FUN');
+                console.log(result);
+                for (var i=0; i<result.length; i++) {
+                    var obj = result[i];
+                    if (obj.object_info[2].indexOf('KBaseNarrative') === 0) {
+                        continue;
+                    }
 
-                            // type is formatted like this: Module.Type-1.0
-                            // typeKey = Module.Type
-                            // typeName = Type
-                            var typeKey = infoList[i][2].split('-')[0];
-                            if (!(typeKey in self.objData)) {
-                                self.objData[typeKey] = [];
-                            }
-                            self.objData[typeKey].push(infoList[i]);
+                    var key = StringUtil.uuid();
+                    var objId = obj.object_info[0];
+                    this.dataObjects[objId] = {
+                        key: key,
+                        $div: null,
+                        info: obj.object_info,
+                        attached: false
+                    };
+                    this.keyToObjId[key] = objId;
+                    this.viewOrder.push(objId);
 
-                            var typeName = typeKey.split('.')[1];
-                            if (!(typeName in self.availableTypes)) {
-                                self.availableTypes[typeName] = {
-                                    type: typeName,
-                                    count: 0
-                                };
-                            }
-                            self.availableTypes[typeName].count++;
+                    var typeKey = obj.object_info[2].split('-')[0];
+                    if (!(typeKey in this.objData)) {
+                        this.objData[typeKey] = [];
+                    }
+                    this.objData[typeKey].push(obj.object_info);
+
+                    var typeName = typeKey.split('.')[1];
+                    if (!(typeName in this.availableTypes)) {
+                        this.availableTypes[typeName] = {
+                            type: typeName,
+                            count: 0
                         }
-
-                        /* Do another lookup if all of these conditions are met:
-                         * 1. total object list length < max objs allowed to fetch/render
-                         * 2. theres > 0 objects seen.
-                         * 3. our search space hasn't hit the max object id.
-                         * There's no guarantee that we'll ever see the object with
-                         * max id (it could have been deleted), so keep rolling until
-                         * we either meet how many we're allowed to fetch, or we get
-                         * a query with no objects.
-                         */
-                        if (minId + self.options.ws_chunk_size < self.maxWsObjId &&
-                            self.viewOrder.length < self.options.ws_max_objs_to_fetch &&
-                            infoList.length > 0) {
-                            dataChunkNum++;
-                            return getDataChunk(minId + 1 + self.options.ws_chunk_size);
-                        }
-                    });
-                }.bind(this);
-                getDataChunk(0).then(resolve);
+                    }
+                    this.availableTypes[typeName].count++;
+                }
             }.bind(this))
             .catch(function (error) {
                 this.showBlockingError(error);
                 console.error(error);
                 KBError("kbaseNarrativeDataList.getNextDataChunk", error.error.message);
             }.bind(this));
+
+            // return new Promise(function (resolve, reject) {
+            //     var getDataChunk = function (minId) {
+            //         this.showLoading('Fetching data chunk ' + dataChunkNum + '...');
+            //         return Promise.resolve(this.ws.list_objects({
+            //             workspaces: [this.ws_name],
+            //             includeMetadata: 1,
+            //             minObjectID: minId,
+            //             maxObjectID: minId + this.options.ws_chunk_size
+            //         }))
+            //         .then(function (infoList) {
+            //             // object_info:
+            //             // [0] : obj_id objid
+            //             // [1] : obj_name name
+            //             // [2] : type_string type
+            //             // [3] : timestamp save_date
+            //             // [4] : int version
+            //             // [5] : username saved_by
+            //             // [6] : ws_id wsid
+            //             // [7] : ws_name workspace
+            //             // [8] : string chsum
+            //             // [9] : int size
+            //             // [10] : usermeta meta
+            //             for (var i = 0; i < infoList.length; i++) {
+            //                 // skip narrative objects
+            //                 if (infoList[i][2].indexOf('KBaseNarrative') === 0) {
+            //                     continue;
+            //                 }
+            //
+            //                 var key = StringUtil.uuid();
+            //                 self.dataObjects[infoList[i][0]] = {
+            //                     key: key,
+            //                     $div: null,
+            //                     info: infoList[i],
+            //                     attached: false
+            //                 };
+            //                 self.keyToObjId[key] = infoList[i][0];
+            //                 self.viewOrder.push(infoList[i][0]);
+            //
+            //                 // type is formatted like this: Module.Type-1.0
+            //                 // typeKey = Module.Type
+            //                 // typeName = Type
+            //                 var typeKey = infoList[i][2].split('-')[0];
+            //                 if (!(typeKey in self.objData)) {
+            //                     self.objData[typeKey] = [];
+            //                 }
+            //                 self.objData[typeKey].push(infoList[i]);
+            //
+            //                 var typeName = typeKey.split('.')[1];
+            //                 if (!(typeName in self.availableTypes)) {
+            //                     self.availableTypes[typeName] = {
+            //                         type: typeName,
+            //                         count: 0
+            //                     };
+            //                 }
+            //                 self.availableTypes[typeName].count++;
+            //             }
+            //
+            //             /* Do another lookup if all of these conditions are met:
+            //              * 1. total object list length < max objs allowed to fetch/render
+            //              * 2. theres > 0 objects seen.
+            //              * 3. our search space hasn't hit the max object id.
+            //              * There's no guarantee that we'll ever see the object with
+            //              * max id (it could have been deleted), so keep rolling until
+            //              * we either meet how many we're allowed to fetch, or we get
+            //              * a query with no objects.
+            //              */
+            //             if (minId + self.options.ws_chunk_size < self.maxWsObjId &&
+            //                 self.viewOrder.length < self.options.ws_max_objs_to_fetch &&
+            //                 infoList.length > 0) {
+            //                 dataChunkNum++;
+            //                 return getDataChunk(minId + 1 + self.options.ws_chunk_size);
+            //             }
+            //         });
+            //     }.bind(this);
+            //     getDataChunk(0).then(resolve);
+            // }.bind(this))
+            // .catch(function (error) {
+            //     this.showBlockingError(error);
+            //     console.error(error);
+            //     KBError("kbaseNarrativeDataList.getNextDataChunk", error.error.message);
+            // }.bind(this));
         },
 
         /**
@@ -1023,7 +1079,6 @@ define([
 
             // Remember the icons
             var data_icon_param = {elt: $logo, type: type, stacked: is_set, indent: 0};
-            // $(document).trigger("setDataIcon.Narrative", data_icon_param);
             Icon.buildDataIcon($logo, type, is_set, 0);
 
             // Save params for this icon, so we can update later when sets get "discovered"
@@ -1182,6 +1237,196 @@ define([
 
             return $box;
         },
+
+
+        renderObjectRowDivxx: function (object_info, object_key) {
+            var self = this;
+            // object_info:
+            // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
+            // [3] : timestamp save_date // [4] : int version // [5] : username saved_by
+            // [6] : ws_id wsid // [7] : ws_name workspace // [8] : string chsum
+            // [9] : int size // [10] : usermeta meta
+            var type_tokens = object_info[2].split('.');
+            var type_module = type_tokens[0];
+            var type = type_tokens[1].split('-')[0];
+            var unversioned_full_type = type_module + '.' + type;
+            var $logo = $('<div>');
+            var is_set = this.isASet(object_info);
+
+            var templateInfo = {
+                kbOid: '',
+                objName: type,
+                lastUpdate: '',
+                lastEditBy: '',
+                objRef: '',
+                typeModule: type_module,
+                fullType: object_info[2],
+                versionedType: type + '-'
+            }
+
+
+            // Remember the icons
+            var data_icon_param = {elt: $logo, type: type, stacked: is_set, indent: 0};
+            Icon.buildDataIcon($logo, type, is_set, 0);
+
+            // Save params for this icon, so we can update later when sets get "discovered"
+            this.dataIconParam[this.itemId(object_info)] = data_icon_param;
+            // add behavior
+            $logo.click(function (e) {
+                e.stopPropagation();
+                // For sets, click toggles -- everything else, adds a viewer (?!)
+                if (self.isAViewedSet(object_info)) {
+                    var is_expanded = self.toggleSetExpanded(object_info);
+                    self.renderList();
+                }
+                else {
+                   self.insertViewer(object_key);
+                }
+            });
+
+            var shortName = object_info[1];
+            var isShortened = false;
+            if (shortName.length > this.options.max_name_length) {
+                shortName = shortName.substring(0, this.options.max_name_length - 3) + '...';
+                isShortened = true;
+            }
+            var $name = $('<span>').addClass("kb-data-list-name").append('<a>' + shortName + '</a>')
+                .css({'cursor': 'pointer'})
+                .click(function (e) {
+                    e.stopPropagation();
+                    self.insertViewer(object_key);
+                });
+            if (isShortened) {
+                $name.tooltip({
+                    title: object_info[1],
+                    placement: 'bottom',
+                    delay: {
+                        show: Config.get('tooltip').showDelay,
+                        hide: Config.get('tooltip').hideDelay
+                    }
+                });
+            }
+
+            var $version = $('<span>').addClass("kb-data-list-version").append('v' + object_info[4]);
+            var $type = $('<div>').addClass("kb-data-list-type").append(type);
+
+            var $date = $('<span>').addClass("kb-data-list-date").append(TimeFormat.getTimeStampStr(object_info[3]));
+            var $byUser = $('<span>').addClass("kb-data-list-edit-by");
+            if (object_info[5] !== self.my_user_id) {
+                $byUser.append(' by ' + object_info[5])
+                    .click(function (e) {
+                        e.stopPropagation();
+                        window.open('/#people/' + object_info[5]);
+                    });
+            }
+            var metadata = object_info[10];
+            var metadataText = '';
+            for (var key in metadata) {
+                if (metadata.hasOwnProperty(key)) {
+                    metadataText += '<tr><th>' + key + '</th><td>' + metadata[key] + '</td></tr>';
+                }
+            }
+            if (type === 'Genome' || type === 'GenomeAnnotation') {
+                if (metadata.hasOwnProperty('Name')) {
+                    $type.text(type + ': ' + metadata['Name']);
+                }
+            }
+
+            var $savedByUserSpan = $('<td>').addClass('kb-data-list-username-td');
+            DisplayUtil.displayRealName(object_info[5], $savedByUserSpan);
+
+            var $alertDiv = $('<div>').css({'text-align': 'center', 'margin': '10px 0px'});
+            var typeLink = '<a href="/#spec/module/' + type_module + '" target="_blank">' + type_module + "</a>.<wbr>" +
+                '<a href="/#spec/type/' + object_info[2] + '" target="_blank">' + (type_tokens[1].replace('-', '&#8209;')) + '.' + type_tokens[2] + '</a>';
+            var $moreRow = $('<div>').addClass("kb-data-list-more-div").hide()
+                .append($('<div>').css({'text-align': 'center', 'margin': '5pt'})
+                    .append(self.addDataControls(object_info, $alertDiv)).append($alertDiv))
+                .append(
+                    $('<table style="width:100%;">')
+                    .append("<tr><th>Permament Id</th><td>" + object_info[6] + "/" + object_info[0] + "/" + object_info[4] + '</td></tr>')
+                    .append("<tr><th>Full Type</th><td>" + typeLink + '</td></tr>')
+                    .append($('<tr>').append('<th>Saved by</th>').append($savedByUserSpan))
+                    .append(metadataText));
+
+            var $toggleAdvancedViewBtn =
+                $('<span>').addClass("kb-data-list-more")//.addClass('btn btn-default btn-xs kb-data-list-more-btn')
+                .hide()
+                .html($('<button class="btn btn-xs btn-default pull-right" aria-hidden="true">').append('<span class="fa fa-ellipsis-h" style="color:#888" />'));
+            var toggleAdvanced = function () {
+                if (self.selectedObject === object_info[0] && $moreRow.is(':visible')) {
+                    // assume selection handling occurs before this is called
+                    // so if we are now selected and the moreRow is visible, leave it...
+                    return;
+                }
+                if ($moreRow.is(':visible')) {
+                    $moreRow.slideUp('fast');
+                    //$toggleAdvancedViewBtn.show();
+                } else {
+                    self.getRichData(object_info, $moreRow);
+                    $moreRow.slideDown('fast');
+                    //$toggleAdvancedViewBtn.hide();
+                }
+            };
+
+            var $mainDiv = $('<div>').addClass('kb-data-list-info').css({padding: '0px', margin: '0px'})
+                .append($name).append($version).append('<br>')
+                .append($('<table>').css({width: '100%'})
+                    .append($('<tr>')
+                        .append($('<td>').css({width: '80%'})
+                            .append($type).append($date).append($byUser))
+                        .append($('<td>')
+                            .append($toggleAdvancedViewBtn))))
+                .click(
+                    function () {
+                        self.setSelected($(this).closest('.kb-data-list-obj-row'), object_info);
+                        toggleAdvanced();
+                    });
+
+            var $topTable = $('<table>').attr('kb-oid', object_key)
+                .css({'width': '100%', 'background': '#fff'})  // set background to white looks better on DnD
+                .append($('<tr>')
+                    // logo
+                    .append($('<td>')
+                        .css({'width': '15%'})
+                        .append($logo))
+                    // main content
+                    .append($('<td>')
+                        .append($mainDiv)));
+
+            var $row = $('<div>').addClass('kb-data-list-obj-row')
+                .append($('<div>').addClass('kb-data-list-obj-row-main')
+                    .append($topTable))
+                .append($moreRow)
+                // show/hide ellipses on hover, show extra info on click
+                .mouseenter(function () {
+                    $toggleAdvancedViewBtn.show();
+                })
+                .mouseleave(function () {
+                    $toggleAdvancedViewBtn.hide();
+                });
+
+
+            // Drag and drop
+            this.addDragAndDrop($topTable);
+
+            // +---+
+            // |   | Containing "box" is the top-level <div>
+            // +---+
+
+            var $box = $('<div>').addClass('kb-data-list-box');
+
+            // add a separator
+            $box.append($('<hr>')
+                .addClass('kb-data-list-row-hr')
+                .css({'margin-left': '65px'}));
+
+            // add the row
+            $box.append($row);
+
+            return $box;
+        },
+
+
         // ============= DnD ==================
 
         addDropZone: function (container, targetCell, isBelow) {
@@ -1410,7 +1655,6 @@ define([
                     var type = obj.info[2].split('.')[1].split('-')[0]; // split type-string like KBaseFile.PairedEndLibrary-2.0
                     console.debug('update dataIcon for set object', obj);
                     Icon.overwriteDataIcon({elt: set_info.div, type: type, stacked: true});
-                    // $(document).trigger("setDataIcon.Narrative", {elt: set_info.div, type: type, stacked: true});
                 }
             }
             obj.attached = true;
@@ -1459,15 +1703,12 @@ define([
                     else if (self.setViewMode && self.inAnySet(cur_obj.info)) {
                         self.dataIconParam[cur_obj_id].indent = indent_value;
                         Icon.overwriteDataIcon(self.dataIconParam[cur_obj_id]);
-                        // $(document).trigger("setDataIcon.Narrative",
-                        //     self.dataIconParam[cur_obj_id]);
                     }
                     // Any non-zero indent not in setView mode, should go to zero
                     else if (!self.setViewMode && self.dataIconParam[cur_obj_id] !== undefined &&
                         self.dataIconParam[cur_obj_id].indent !== 0) {
                         self.dataIconParam[cur_obj_id].indent = 0;
                         Icon.overwriteDataIcon(self.dataIconParam[cur_obj_id]);
-                        // $(document).trigger("setDataIcon.Narrative", self.dataIconParam[cur_obj_id]);
                     }
                 }
 

@@ -22,6 +22,7 @@ define([
         if (indent === undefined || indent === null) {
             indent = 0;
         }
+        indent = 0;
 
         var icons = dataIcons;
         var icon = _.has(icons, type) ? icons[type] : icons.DEFAULT;

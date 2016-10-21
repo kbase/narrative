@@ -95,14 +95,14 @@ define(
     /**
      * @method
      * getMethodIcon
-     * 
-     * Provides a JQuery object containing an Icon for narrative apps (in the 
+     *
+     * Provides a JQuery object containing an Icon for narrative apps (in the
      * legacy style) or methods (soon to be called apps).
      *
      * params = {
      *    isApp: true | false  // set to true to use the default app icon
      *    url:  string         // url to the icon image, if missing this will provide a default
-     *    size: string         // set the max-width and max-height property for url icons 
+     *    size: string         // set the max-width and max-height property for url icons
      *                         // (icons are square), default is 50px
      *    cursor: string       // if set, set the cursor css of the icon, default is 'default'
      *    setColor: true | false  // this param should probably go away, but if true will set the color of the default icon

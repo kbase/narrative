@@ -15,6 +15,7 @@ define([
     'util/string',
     'util/display',
     'util/timeFormat',
+    'util/icon',
     'kbase-client-api',
     'kbaseAuthenticatedWidget',
     'kbaseNarrativeDownloadPanel',
@@ -30,6 +31,7 @@ define([
     StringUtil,
     DisplayUtil,
     TimeFormat,
+    Icon,
     kbase_client_api,
     kbaseAuthenticatedWidget,
     kbaseNarrativeDownloadPanel,
@@ -117,17 +119,15 @@ define([
          * Perform any set-specific initialization needed.
          */
         initDataListSets: function() {
-            $(document).on('dataViewUpdated.Narrative', function() {
-                for (var objId in this.dataObjects) {
-                    if (this.isASet(this.dataObjects[objId].info) &&
-                        _.has(this.dataIconParam, objId) &&
-                        !this.dataIconParam[objId].stacked
-                    ) {
-                        this.dataIconParam[objId].stacked = true;
-                        $(document).trigger('setDataIcon.Narrative', this.dataIconParam[objId]);
-                    }
+            for (var objId in this.dataObjects) {
+                if (this.isASet(this.dataObjects[objId].info) &&
+                    _.has(this.dataIconParam, objId) &&
+                    !this.dataIconParam[objId].stacked
+                ) {
+                    this.dataIconParam[objId].stacked = true;
+                    Icon.overwriteDataIcon(this.dataIconParam[objId]);
                 }
-            }.bind(this));
+            }
         },
 
         /**
@@ -241,38 +241,40 @@ define([
 
             var self = this;
             console.info('Extracting sets from datalist...');
-            return this.getWorkspaceSets(ws_id).then(function(ws_sets) {
-                console.debug('Got list of sets:', ws_sets);
-                _.each(ws_sets.sets,
-                    // for each set type, add mappings of {item_id: {set_id : 1, ..}}
-                    // to the instance 'setItems' object, and info to 'setInfo'
-                    function(set_info) {
-                        var set_id = self.itemId(set_info.info),
-                            set_item_ids = [];
-                        _.each(set_info.items, function(item) {
-                            var item_id = self.itemId(item.info);
-                            set_item_ids.push(item_id);
-                            if (!_.has(self.setItems, item_id)) {
-                                self.setItems[item_id] = {};
-                            }
-                            self.setItems[item_id][set_id] = 1;
+            return this.getWorkspaceSets(ws_id)
+                .then(function(ws_sets) {
+                    console.debug('Got list of sets:', ws_sets);
+                    _.each(ws_sets.sets,
+                        // for each set type, add mappings of {item_id: {set_id : 1, ..}}
+                        // to the instance 'setItems' object, and info to 'setInfo'
+                        function(set_info) {
+                            var set_id = self.itemId(set_info.info),
+                                set_item_ids = [];
+                            _.each(set_info.items, function(item) {
+                                var item_id = self.itemId(item.info);
+                                set_item_ids.push(item_id);
+                                if (!_.has(self.setItems, item_id)) {
+                                    self.setItems[item_id] = {};
+                                }
+                                self.setItems[item_id][set_id] = 1;
+                            });
+                            // record item ids, expanded state, etc. for the set
+                            self.setInfo[set_id] = {
+                                item_ids: set_item_ids,
+                                expanded: false,
+                                div: null
+                            };
+                            //console.debug('Added setInfo[' + set_id + ']', self.setInfo[set_id]);
+                            // If we make it here, then we are initialized
+                            self.setsInitialized = true;
                         });
-                        // record item ids, expanded state, etc. for the set
-                        self.setInfo[set_id] = {
-                            item_ids: set_item_ids,
-                            expanded: false,
-                            div: null
-                        };
-                        //console.debug('Added setInfo[' + set_id + ']', self.setInfo[set_id]);
-                        // If we make it here, then we are initialized
-                        self.setsInitialized = true;
-                    });
-                $(document).trigger('dataViewUpdated.Narrative');
-                return true;
-            }, function(reason) {
-                console.error('Failed to get sets:', reason);
-                return false;
-            });
+                    self.initDataListSets();
+                    // $(document).trigger('dataViewUpdated.Narrative');
+                    return true;
+                }, function(reason) {
+                    console.error('Failed to get sets:', reason);
+                    return false;
+                });
         },
 
         /**
@@ -499,9 +501,10 @@ define([
                     // Extract sets
                     var cur_ws_id = this.ws_name;
                     console.debug('extract sets from reloadWsData');
-                    this.extractSets(cur_ws_id).then(function (success) {
-                        console.debug('reloadWsData, sets initialized?', this.setsInitialized);
-                    }.bind(this));
+                    this.extractSets(cur_ws_id);
+                    // .then(function (success) {
+                    //     console.debug('reloadWsData, sets initialized?', this.setsInitialized);
+                    // }.bind(this));
 
                     // Signal all data channel listeners that we have new data.
                     // TODO: only signal if there are actual changes
@@ -1020,7 +1023,8 @@ define([
 
             // Remember the icons
             var data_icon_param = {elt: $logo, type: type, stacked: is_set, indent: 0};
-            $(document).trigger("setDataIcon.Narrative", data_icon_param);
+            // $(document).trigger("setDataIcon.Narrative", data_icon_param);
+            Icon.buildDataIcon($logo, type, is_set, 0);
 
             // Save params for this icon, so we can update later when sets get "discovered"
             this.dataIconParam[this.itemId(object_info)] = data_icon_param;
@@ -1201,8 +1205,7 @@ define([
             });
             targetDiv.addEventListener('drop', function (e) {
                 var data = JSON.parse(e.dataTransfer.getData('info')),
-                    // key = data.key,
-                    obj = self.dataObjects[self.keyToObjId[data.key]], //_.findWhere(self.objectList, {key: key}),
+                    obj = self.dataObjects[self.keyToObjId[data.key]],
                     info = self.createInfoObject(obj.info),
                     cell, cellIndex, placement;
 
@@ -1230,6 +1233,7 @@ define([
                 container.insertBefore(targetDiv, targetCell);
             }
         },
+
         addDragAndDrop: function ($row) {
             var node = $row.parent().get(0),
                 key = $row.attr('kb-oid'),
@@ -1259,7 +1263,8 @@ define([
                     }
                 }
             });
-            node.addEventListener('dragend', function (e) {
+
+            node.addEventListener('dragend', function () {
                 var container = document.querySelector('#notebook-container'),
                     targetCells = document.querySelectorAll('#notebook-container .kb-data-list-drag-target');
                 for (var i = 0; i < targetCells.length; i += 1) {
@@ -1273,6 +1278,7 @@ define([
                 'data-toggle': 'tooltip',
                 'title': 'Drag onto narrative &rarr;'
             });
+
             $row.tooltip({
                 delay: {
                     show: Config.get('tooltip').showDelay,
@@ -1307,7 +1313,6 @@ define([
                 $(cell.element).off('dblclick');
                 $(cell.element).off('keydown');
             }
-
             var obj = this.dataObjects[this.keyToObjId[key]], // _.findWhere(self.objectList, {key: key});
                 info = self.createInfoObject(obj.info);
             // Insert the narrative data cell into the div we just rendered
@@ -1404,7 +1409,8 @@ define([
                     set_info.div = obj.$div;
                     var type = obj.info[2].split('.')[1].split('-')[0]; // split type-string like KBaseFile.PairedEndLibrary-2.0
                     console.debug('update dataIcon for set object', obj);
-                    $(document).trigger("setDataIcon.Narrative", {elt: set_info.div, type: type, stacked: true});
+                    Icon.overwriteDataIcon({elt: set_info.div, type: type, stacked: true});
+                    // $(document).trigger("setDataIcon.Narrative", {elt: set_info.div, type: type, stacked: true});
                 }
             }
             obj.attached = true;
@@ -1429,7 +1435,6 @@ define([
             }
         },
 
-
         renderList: function () {
             var self = this;
 
@@ -1453,14 +1458,16 @@ define([
                     // modify indentation
                     else if (self.setViewMode && self.inAnySet(cur_obj.info)) {
                         self.dataIconParam[cur_obj_id].indent = indent_value;
-                        $(document).trigger("setDataIcon.Narrative",
-                            self.dataIconParam[cur_obj_id]);
+                        Icon.overwriteDataIcon(self.dataIconParam[cur_obj_id]);
+                        // $(document).trigger("setDataIcon.Narrative",
+                        //     self.dataIconParam[cur_obj_id]);
                     }
                     // Any non-zero indent not in setView mode, should go to zero
                     else if (!self.setViewMode && self.dataIconParam[cur_obj_id] !== undefined &&
                         self.dataIconParam[cur_obj_id].indent !== 0) {
                         self.dataIconParam[cur_obj_id].indent = 0;
-                        $(document).trigger("setDataIcon.Narrative", self.dataIconParam[cur_obj_id]);
+                        Icon.overwriteDataIcon(self.dataIconParam[cur_obj_id]);
+                        // $(document).trigger("setDataIcon.Narrative", self.dataIconParam[cur_obj_id]);
                     }
                 }
 
@@ -1961,6 +1968,6 @@ define([
         getRichData: function (object_info, $moreRow) {
             var $usernameTd = $moreRow.find(".kb-data-list-username-td");
             DisplayUtil.displayRealName(object_info[5], $usernameTd);
-        },
+        }
     })
 });

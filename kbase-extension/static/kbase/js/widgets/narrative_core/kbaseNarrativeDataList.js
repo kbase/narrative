@@ -121,7 +121,6 @@ define([
         */
         setItems: { }, // item_id -> {set_id -> 1, ..}
         setInfo: { }, // set_id -> { count: , div: , expanded: ,... }
-        setsInitialized: false, // have we 'extracted' the sets yet?
         setViewMode: false, // Whether the panel is in hierarchy "mode"
         cachedSetItems: {}, // Items retrieved from a mega-call to list_sets
         dataIconParam: {},
@@ -149,6 +148,9 @@ define([
             // return _.has(this.setInfo, this.itemId(obj_info));
         },
 
+        /**
+         * Returns true if in set view mode AND the object is a set.
+         */
         isAViewedSet: function(objInfo) {
             if (this.setViewMode) {
                 return this.isASet(objInfo);
@@ -180,19 +182,19 @@ define([
             return this.setInfo[this.itemId(obj_info)];
         },
 
-        /**
-         * Toggle whether set is 'expanded' or not.
-         *
-         * @param item_info an object info tuple, as returned by the
-         *                  workspace API for list_objects()
-         * @return New state of 'expanded'
-         */
-        toggleSetExpanded: function (item_info) {
-            var set_id = this.itemId(item_info);
-            var new_value = !this.setInfo[set_id].expanded;
-            this.setInfo[set_id].expanded = new_value;
-            return new_value;
-        },
+        // /**
+        //  * Toggle whether set is 'expanded' or not.
+        //  *
+        //  * @param item_info an object info tuple, as returned by the
+        //  *                  workspace API for list_objects()
+        //  * @return New state of 'expanded'
+        //  */
+        // toggleSetExpanded: function (item_info) {
+        //     var set_id = this.itemId(item_info);
+        //     var new_value = !this.setInfo[set_id].expanded;
+        //     this.setInfo[set_id].expanded = new_value;
+        //     return new_value;
+        // },
 
         /**
          * Get item parents.
@@ -230,7 +232,6 @@ define([
         clearSets: function() {
             this.setItems = {};
             this.setInfo = {};
-            this.setsInitialized = false;
         },
 
         itemIdsInSet: function(set_id) {
@@ -256,11 +257,6 @@ define([
                 return Promise.reject('Cannot get sets for workspace ' + ws_id + ' :' + e);
             }
         },
-
-        /*
-            END: Changes for hierarchical data panel (KBASE-4566)
-            ----------------------------------------------------
-        */
 
         /**
          * @method init
@@ -445,13 +441,6 @@ define([
 
             this.fetchWorkspaceData()
                 .then(function () {
-                    // Extract sets
-                    var cur_ws_id = this.ws_name;
-                    console.debug('extract sets from reloadWsData');
-                    this.setsInitialized = true;
-                    // this.initDataListSets();
-                    // return this.extractSets(cur_ws_id);
-
                     // Signal all data channel listeners that we have new data.
                     // TODO: only signal if there are actual changes
                     // TODO: data fetch and sychronization should live as a ui
@@ -612,7 +601,7 @@ define([
          * Returns the available object data for a type.
          * If no type is specified (type is falsy), returns all object data
          */
-        getObjData: function (type, ignoreVersion) {
+        getObjData: function (type) {
             if (type) {
                 var dataSet = {};
                 if (typeof type === 'string') {
@@ -662,7 +651,7 @@ define([
                 })
                 .addClass(btnClasses)
                 .append($('<span>').addClass('fa fa-sign-in').css(css))
-                .click(function (e) {
+                .click(function () {
                     this.trigger('filterMethods.Narrative', 'in_type:' + object_info[2].split('-')[0].split('.')[1]);
                 }.bind(this));
 
@@ -677,7 +666,7 @@ define([
                 })
                 .addClass(btnClasses)
                 .append($('<span>').addClass('fa fa-sign-out').css(css))
-                .click(function (e) {
+                .click(function () {
                     this.trigger('filterMethods.Narrative', 'out_type:' + object_info[2].split('-')[0].split('.')[1]);
                 }.bind(this));
 
@@ -696,7 +685,7 @@ define([
                 .click(function (e) {
                     e.stopPropagation();
                     $alertContainer.empty();
-                    var typeTokens = object_info[2].split('-')[0].split('.');
+                    // var typeTokens = object_info[2].split('-')[0].split('.');
                     var landingPageLink = self.options.lp_url + object_info[6] + '/' + object_info[1];
                     window.open(landingPageLink);
                 });
@@ -950,12 +939,36 @@ define([
 
             return $btnToolbar;
         },
+
+        toggleSetExpansion: function(objId, $setDiv) {
+            var setInfo = this.setInfo[objId];
+            if (!setInfo) {
+                return;
+            }
+            var showItems = this.dataObjects[objId].expanded;
+            if (showItems) {
+                for (var i=0; i<setInfo.item_ids.length; i++) {
+                    $setDiv.after(this.renderObjectRowDiv(setInfo.item_ids[i], 1));
+                }
+            }
+            else {
+                for (var i=0; i<setInfo.item_ids.length; i++) {
+                    $setDiv.next().remove();
+                }
+            }
+        },
         /**
          * This is the main function for rendering a data object
          * in the data list.
          */
-        renderObjectRowDiv: function (object_info, object_key) {
+        renderObjectRowDiv: function (objId, indent) {
             var self = this;
+            var objData = this.dataObjects[objId];
+            var object_info = objData.info;
+            var object_key = objData.key;
+            if (!indent) {
+                indent = 0;
+            }
             // object_info:
             // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
             // [3] : timestamp save_date // [4] : int version // [5] : username saved_by
@@ -967,6 +980,15 @@ define([
             var unversioned_full_type = type_module + '.' + type;
             var $logo = $('<div>');
             var is_set = this.isASet(object_info);
+
+            // +---+
+            // |   | Containing "box" is the top-level <div>
+            // +---+
+            var $box = $('<div>').addClass('kb-data-list-box');
+            if (indent > 0) {
+                $box.addClass('kb-data-list-level' + indent);
+            }
+
 
             // Remember the icons
             var data_icon_param = {elt: $logo, type: type, stacked: is_set, indent: 0};
@@ -980,8 +1002,8 @@ define([
                 e.stopPropagation();
                 // For sets, click toggles -- everything else, adds a viewer (?!)
                 if (self.isAViewedSet(object_info)) {
-                    var is_expanded = self.toggleSetExpanded(object_info);
-                    self.renderList();
+                    objData.expanded = !objData.expanded;
+                    self.toggleSetExpansion(objId, $box);
                 }
                 else {
                    self.insertViewer(object_key);
@@ -1112,12 +1134,6 @@ define([
 
             // Drag and drop
             this.addDragAndDrop($topTable);
-
-            // +---+
-            // |   | Containing "box" is the top-level <div>
-            // +---+
-
-            var $box = $('<div>').addClass('kb-data-list-box');
 
             // add a separator
             $box.append($('<hr>')
@@ -1400,10 +1416,13 @@ define([
         },
 
         renderObject: function (objId) {
-            var $renderedDiv = this.renderObjectRowDiv(this.dataObjects[objId].info, this.dataObjects[objId].key);
+            var $renderedDiv = this.renderObjectRowDiv(objId); //this.dataObjects[objId].info, this.dataObjects[objId].key);
             this.dataObjects[objId].$div = $renderedDiv;
             this.viewObjects[objId] = $renderedDiv;
             this.$mainListDiv.append($renderedDiv);
+            if (this.setViewMode) {
+                this.toggleSetExpansion(objId, $renderedDiv);
+            }
         },
 
         renderController: function () {
@@ -1603,7 +1622,7 @@ define([
                         Jupyter.narrative.enableKeyboardManager();
                     }
                 })
-                .on('input change blur', function (e) {
+                .on('input change blur', function () {
                     this.search();
                 }.bind(this))
                 .on('keyup', function (e) {
@@ -1794,13 +1813,8 @@ define([
                         }
                     }
                     this.viewOrder[k].inFilter = match;
-                    if (match) {
-                        n_matches++;
-                    }
                 }
-                // this.currentMatch = newMatch; // update the current match
             } else {
-                // this.searchFilterOn = false;
                 // no new search, so show all and render the list
                 this.viewOrder.forEach(function(viewInfo) {
                     viewInfo.inFilter = true;
@@ -1809,7 +1823,6 @@ define([
             this.renderList();
             this.currentTerm = term;
         },
-
 
         filterByType: function (type) {
             this.search(null, type);

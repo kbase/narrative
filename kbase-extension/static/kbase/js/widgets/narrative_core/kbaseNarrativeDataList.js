@@ -950,7 +950,8 @@ define([
                     var setItemId = setInfo.item_ids[i];
                     var viewInfo = _.findWhere(this.viewOrder, {objId: setItemId});
                     if (viewInfo.inFilter) {
-                        $setDiv.after(this.renderObjectRowDiv(setItemId, 1));
+                        var $setItemDiv = this.renderObjectRowDiv(setItemId, 1);
+                        $setDiv.after($setItemDiv);
                         setItemsShown++;
                     }
                 }

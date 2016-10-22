@@ -1322,35 +1322,8 @@ define([
             this.detachAllRows();
             this.n_objs_rendered = 0;
 
-            // var indent_value = this.setViewMode ? 1 : 0; // new value
-
             if (this.viewOrder.length > 0) {
                 var limit = this.options.objs_to_render_to_start;
-                // XXX: Hack, part 1: Find expanded sets, and "reserve" rendering for them.
-                // Also fix rendering of set logos.
-                // var exp_sets = {};
-                // for (i=0; i < this.viewOrder.length; i++) {
-                //     var cur_obj = this.dataObjects[this.viewOrder[i].objId];
-                //     var cur_obj_id = this.itemId(cur_obj.info);
-                //     // check whether expanded
-                //     if (this.isAViewedSet(cur_obj.info) && this.getSetInfo(cur_obj.info).expanded) {
-                //         exp_sets[i] = true; // save index needed for attachObjectAtIndex()
-                //     }
-                //     // modify indentation
-                //     else if (this.setViewMode && this.inAnySet(cur_obj.info)) {
-                //         this.dataIconParam[cur_obj_id].indent = indent_value;
-                //         Icon.overwriteDataIcon(this.dataIconParam[cur_obj_id]);
-                //     }
-                //     // Any non-zero indent not in setView mode, should go to zero
-                //     else if (!this.setViewMode && this.dataIconParam[cur_obj_id] !== undefined &&
-                //         this.dataIconParam[cur_obj_id].indent !== 0) {
-                //         this.dataIconParam[cur_obj_id].indent = 0;
-                //         Icon.overwriteDataIcon(this.dataIconParam[cur_obj_id]);
-                //     }
-                // }
-                //
-                // limit -= _.keys(exp_sets).length; // reserve space
-
                 for (var i=0;
                      i < this.viewOrder.length && (this.n_objs_rendered < limit);
                      i++) {
@@ -1360,35 +1333,6 @@ define([
                         this.lastObjectRendered = i;
                     }
                 }
-
-                // for (var i = 0;
-                //      i < self.viewOrder.length && (self.n_objs_rendered < limit);
-                //      i++) {
-                //
-                //     var cur_obj = self.dataObjects[self.viewOrder[i]];
-                //     var cur_obj_id = self.itemId(cur_obj.info);
-                //
-                //     // If object does not have a key, define one.
-                //     // This will be used for 'id' of rendered element.
-                //     // But do *not* replace an existing key.
-                //     // if (cur_obj.key === undefined) {
-                //     //     cur_obj.key = StringUtil.uuid();
-                //     //     this.keyToObjId[cur_obj.key] = cur_obj_id;
-                //     // }
-                //
-                //     self.n_objs_rendered += self.attachObjectAtIndex(i);
-                //     // XXX: Hack, part 1.5: Remove from "reserved" exp sets
-                //     if (_.has(exp_sets, i)) {
-                //         delete exp_sets[i];
-                //         limit++; // un-reserve space
-                //     }
-                // }
-                //
-                // // XXX: Hack, part deux: Add the expanded sets
-                // _.each(_.keys(exp_sets), function(i) {
-                //     self.n_objs_rendered += self.attachObjectAtIndex(i);
-                // });
-
                 if (Jupyter.narrative.readonly) {
                     this.$addDataButton.hide();
                 } else {
@@ -1416,7 +1360,7 @@ define([
         },
 
         renderObject: function (objId) {
-            var $renderedDiv = this.renderObjectRowDiv(objId); //this.dataObjects[objId].info, this.dataObjects[objId].key);
+            var $renderedDiv = this.renderObjectRowDiv(objId);
             this.dataObjects[objId].$div = $renderedDiv;
             this.viewObjects[objId] = $renderedDiv;
             this.$mainListDiv.append($renderedDiv);
@@ -1501,11 +1445,11 @@ define([
                         self.renderList();
                         $('#kb-data-list-hierctl').removeAttr('enabled');
                         // re-enable other controls
-                        _.each(viewModeDisableCtl, function(ctl) {
-                            var ctl_id = '#kb-data-list-' + ctl + 'ctl';
-                            $(ctl_id + ' span').removeClass('inviso');
-                            $(ctl_id).on('click', self.controlClickHnd[ctl]);
-                        });
+                        // _.each(viewModeDisableCtl, function(ctl) {
+                        //     var ctl_id = '#kb-data-list-' + ctl + 'ctl';
+                        //     $(ctl_id + ' span').removeClass('inviso');
+                        //     $(ctl_id).on('click', self.controlClickHnd[ctl]);
+                        // });
                     }
                     else {
                         // Turn ON set view mode
@@ -1513,11 +1457,11 @@ define([
                         self.renderList();
                         $('#kb-data-list-hierctl').attr('enabled', '1');
                         // disable some other controls
-                        _.each(viewModeDisableCtl, function(ctl) {
-                            var ctl_id = '#kb-data-list-' + ctl + 'ctl';
-                            $(ctl_id + ' span').addClass('inviso');
-                            $(ctl_id).off('click');
-                        });
+                        // _.each(viewModeDisableCtl, function(ctl) {
+                        //     var ctl_id = '#kb-data-list-' + ctl + 'ctl';
+                        //     $(ctl_id + ' span').addClass('inviso');
+                        //     $(ctl_id).off('click');
+                        // });
                     }
                 });
 
@@ -1695,31 +1639,20 @@ define([
          * Populates the filter set of available types.
          */
         populateAvailableTypes: function () {
-            var self = this;
-            if (self.availableTypes && self.$filterTypeSelect) {
-
-                var types = [];
-                for (var type in self.availableTypes) {
-                    if (self.availableTypes.hasOwnProperty(type)) {
-                        types.push(type);
-                    }
-                }
-                types.sort();
-
-                self.$filterTypeSelect.empty();
+            if (this.availableTypes && this.$filterTypeSelect) {
+                this.$filterTypeSelect.empty();
                 var runningCount = 0;
-                var suf = '';
-                for (var i = 0; i < types.length; i++) {
-                    runningCount += self.availableTypes[types[i]].count;
-                    if (runningCount > 1) {
-                        suf = 's';
-                    }
-                    var countStr = ' ('.concat(runningCount).concat(" object" + suf + ")");
-                    self.$filterTypeSelect.append(
-                        $('<option value="' + self.availableTypes[types[i]].type + '">')
-                        .append(self.availableTypes[types[i]].type + countStr));
-                }
-                self.$filterTypeSelect
+                Object.keys(this.availableTypes).sort().forEach(function(type) {
+                    var typeInfo = this.availableTypes[type];
+                    var suf = typeInfo.count > 0 ? 's' : '';
+                    this.$filterTypeSelect.append(
+                        $('<option value="' + typeInfo.type + '">')
+                        .append([typeInfo.type, ' (', typeInfo.count, " object", suf, ")"].join(''))
+                    );
+                    runningCount += typeInfo.count;
+                }.bind(this));
+                var suf = runningCount > 0 ? 's' : '';
+                this.$filterTypeSelect
                     .prepend($('<option value="">')
                              .append("Show All Types (" + runningCount + " object" + suf + ")"))
                     .val("");

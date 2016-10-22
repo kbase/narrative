@@ -59,8 +59,8 @@ define([
             // note that if there are more objects than this, then sorts/search filters may
             // not show accurate results
 
-            objs_to_render_to_start: 6, // initial number of rows to display
-            objs_to_render_on_scroll: 1, // number of rows to add when the user scrolls to the bottom, should be <=5, much more and
+            objs_to_render_to_start: 40, // initial number of rows to display
+            objs_to_render_on_scroll: 5, // number of rows to add when the user scrolls to the bottom, should be <=5, much more and
             // the addition of new rows becomes jerky
 
             maxObjsToPreventFilterAsYouTypeInSearch: 50000, //if there are more than this # of objs, user must click search
@@ -106,12 +106,10 @@ define([
         /** -----------------
          * Structural changes to support new view(s).
          * viewOrder = a list of object ids - which order to view (might make them references)
-         * viewObjects = obj id -> jquery node - the jquery nodes currently in view (or just created)
          * dataObjects = object id (or ref) -> object info
          * keyToObjId = key (uuid) -> obj id (int)
          */
         viewOrder: [], // { objId: int, rendered: boolean, filtered: boolean }
-        viewObjects: {},
         dataObjects: {},
         keyToObjId: {},
         lastObjectRendered: 0,
@@ -947,12 +945,20 @@ define([
             }
             var showItems = this.dataObjects[objId].expanded;
             if (showItems) {
+                var setItemsShown = 0;
                 for (var i=0; i<setInfo.item_ids.length; i++) {
-                    $setDiv.after(this.renderObjectRowDiv(setInfo.item_ids[i], 1));
+                    var setItemId = setInfo.item_ids[i];
+                    var viewInfo = _.findWhere(this.viewOrder, {objId: setItemId});
+                    if (viewInfo.inFilter) {
+                        $setDiv.after(this.renderObjectRowDiv(setItemId, 1));
+                        setItemsShown++;
+                    }
                 }
+                this.setInfo[objId].setItemsShown = setItemsShown;
             }
             else {
-                for (var i=0; i<setInfo.item_ids.length; i++) {
+                var setItemsShown = setInfo.setItemsShown || 0;
+                for (var i=0; i<setItemsShown; i++) {
                     $setDiv.next().remove();
                 }
             }
@@ -1362,7 +1368,6 @@ define([
         renderObject: function (objId) {
             var $renderedDiv = this.renderObjectRowDiv(objId);
             this.dataObjects[objId].$div = $renderedDiv;
-            this.viewObjects[objId] = $renderedDiv;
             this.$mainListDiv.append($renderedDiv);
             if (this.setViewMode) {
                 this.toggleSetExpansion(objId, $renderedDiv);

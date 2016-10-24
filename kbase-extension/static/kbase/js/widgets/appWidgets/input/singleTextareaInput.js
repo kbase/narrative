@@ -60,6 +60,7 @@ define([
 
         function setModelValue(value) {
             return Promise.try(function () {
+                console.log('setting model value...', model.value, value);
                 if (model.value !== value) {
                     model.value = value;
                     return true;
@@ -81,9 +82,12 @@ define([
         }
 
         function resetModelValue() {
+            console.log('resetting model value...', spec);
             if (spec.spec.default_values && spec.spec.default_values.length > 0) {
+                console.log('... and setting to ', spec.spec.default_values[0]);
                 setModelValue(spec.spec.default_values[0]);
             } else {
+                console.log('... unsetting it');
                 unsetModelValue();
             }
         }

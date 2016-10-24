@@ -15,6 +15,7 @@ define([
     'kb_common/html',
     'kb_service/client/workspace',
     'kb_sdk_clients/genericClient',
+    'kb_sdk_clients/exceptions',
     'kb_service/utils',
     // LOCAL
     'common/ui',
@@ -22,6 +23,7 @@ define([
     'common/runtime',
     'common/events',
     'common/props',
+    'common/error',
     // Wrapper for inputs
     './inputWrapperWidget',
     'widgets/appWidgets/fieldWidget',
@@ -33,12 +35,14 @@ define([
     html,
     Workspace,
     GenericClient,
+    sdkClientExceptions,
     serviceUtils,
     UI,
     Dom,
     Runtime,
     Events,
     Props,
+    kbError,
     //Wrappers
     RowWidget,
     FieldWidget,
@@ -73,6 +77,13 @@ define([
             });
             return false;
         }
+        
+        function doNew(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            // alert('do a new form request');
+            bus.emit('new-set-form');
+        }   
 
         function renderLayout() {
             var events = Events.make(),
@@ -82,7 +93,7 @@ define([
 //                        span({style: {fontWeight: 'bold'}}, objectType)
 //                    ]),
                     div({class: 'form-inline'}, [
-                        'Select an object to edit: ',
+                        'Select a Reads Set to edit: ',
                         span({dataElement: 'object-selector'})
                     ]),
                     div({style: {fontStyle: 'italic'}}, 'or'),
@@ -90,7 +101,7 @@ define([
                         class: 'form-inline',
                         id: events.addEvent({type: 'submit', handler: doCreate})
                     }, [
-                        span({style: {padding: '0 4px 0 0'}}, 'Create a new set named'),
+                        span({style: {padding: '0 4px 0 0'}}, 'Create a new Reads Set named:'),
                         input({dataElement: 'new-object-name', class: 'form-control'}),
 //                        span({style: {padding: '0 4px 0 4px'}}, 'of type'),
 //                        select({
@@ -106,7 +117,12 @@ define([
                             class: 'btn btn-primary',
                             type: 'button',
                             id: events.addEvent({type: 'click', handler: doCreate})
-                        }, 'Create')])
+                        }, 'Create'),
+                        button({
+                            class: 'btn btn-default',
+                            type: 'button',
+                            id: events.addEvent({type: 'click', handler: doNew})
+                        }, 'New')])
                 ]);
 
             return {
@@ -141,28 +157,6 @@ define([
         }
 
         function renderAvailableObjects() {
-            /*
-             var wsClient = new Workspace(runtime.config('services.workspace.url'), {
-             token: runtime.authToken()
-             });Config.url('service_wizard')
-             return wsClient.list_objects({
-             ids: [workspaceInfo.id],
-             type: objectType
-             })
-             .then(function (result) {
-             var objects = result.map(function (info) {
-             return serviceUtils.objectInfoToObject(info);
-             }),
-             content = select({}, objects.map(function (objectInfo) {
-             return option({value: objectInfo.ref}, objectInfo.name);
-             }));
-             container.querySelector('[data-element="object-selector"]').innerHTML = content;
-             })
-             .catch(function (err) {
-             console.error('ERROR getting objects', err, runtime.authToken(), workspaceInfo, objectType)
-             });
-             */
-
             var events = Events.make(),
                 setApiClient = new GenericClient({
                     url: runtime.config('services.service_wizard.url'),
@@ -177,7 +171,7 @@ define([
                 controlNode = container.querySelector('[data-element="object-selector"]');
 
             controlNode.innerHTML = html.loading();
-
+            
             return setApiClient.callFunc('list_sets', [params])
                 .then(function (result) {
                     // console.log('list sets result is ', result);
@@ -200,47 +194,70 @@ define([
                     events.attachEvents(container);
                     return objects.length;
                 })
-                .catch(function (err) {
-                    console.error('ERROR getting objects', err, runtime.authToken(), workspaceInfo, objectType);
-                    console.error('stack trace', err.detail.replace('\n', '<br>'));
-                    // FORNOW: just return the empty set;
-                    var content = div({class: 'alert alert-warning'}, [
-                        'No Reads Set objects in your Narrative. Create a read set below'
-                    ]);
-                    controlNode.innerHTML = content;
-                    selectedReadsSetItem = null;
-                    return 0;
+                .catch(sdkClientExceptions.RequestException, function (err) {
+                    throw new kbError.KBError({
+                        type: 'GeneralError',
+                        original: err,
+                        message:err.message,
+                        reason: 'This is an unknown error connecting to a service',
+                        detail: 'This is an unknown error connecting to a service. Additional details may be available in your browser log',
+                        advice: [
+                            'This problem may be temporary -- try again later',
+                            'You may wish to <href="https://kbase.us/contact">report this error to kbase</a>'
+                        ]
+                    })
                 });
+//                .catch(function (err) {
+//                    console.error('ERROR getting objects', err, runtime.authToken(), workspaceInfo, objectType);
+//                    console.error('stack trace', err.detail.replace('\n', '<br>'));
+//                    // FORNOW: just return the empty set;
+//                    var content = div({class: 'alert alert-warning'}, [
+//                        'No Reads Set objects in your Narrative. Create a read set below'
+//                    ]);
+//                    controlNode.innerHTML = content;
+//                    selectedReadsSetItem = null;
+//                    return 0;
+//                });
         }
 
 
         // LIFECYCLE API
 
         function start() {
-            // send parent the ready message
-            bus.emit('ready');
-
-            bus.on('run', function (message) {
-                doAttach(message.node);
-                renderAvailableObjects()
-                    .then(function (itemCount) {
-                        // TODO: fetch the selected item and send to the app.
-                        if (availableReadsSets.length) {
-                            // TODO: use the currently selected item, which may have
-                            // been restored from state.
-                            console.log('selected?', availableReadsSets, selectedReadsSetItem);
-                            selectItem(availableReadsSets[selectedReadsSetItem].ref)
-                        }
+            return Promise.try(function () {
+                bus.on('run', function (message) {
+                    doAttach(message.node);
+                    renderAvailableObjects()
+                        .then(function (itemCount) {
+                            // TODO: fetch the selected item and send to the app.
+                            if (availableReadsSets.length) {
+                                // TODO: use the currently selected item, which may have
+                                // been restored from state.
+                                selectItem(availableReadsSets[selectedReadsSetItem].ref);
+                            }
+                        })
+                        .catch(function (err) {
+                            console.log('ERROR', err);
+                            bus.emit('fatal-error', {
+                                location: 'render-available-objects',
+                                error: err
+                            });
+                        })
+                    runtime.bus().on('workspace-changed', function () {
+                        renderAvailableObjects();
                     });
-                runtime.bus().on('workspace-changed', function () {
-                    renderAvailableObjects();
+                    // do more stuff
                 });
-                // do more stuff
+                // send parent the ready message
+                bus.emit('ready');
             });
         }
 
         function stop() {
-            // stop the bus!
+            return Promise.try(function () {
+                // TODO: stop the bus!
+                return null;
+            })
         }
 
         // CONSTRUCTION

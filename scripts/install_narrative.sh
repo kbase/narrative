@@ -118,12 +118,6 @@ done
 
 console "Install: complete log in: $logfile"
 
-# (temporary?)
-# Setup git submodules
-# --------------------
-git submodule init
-git submodule update
-
 # Setup virtualenv
 # ----------------
 if [ "x$VIRTUAL_ENV" = x ] && [ ! $no_venv -eq 1 ]
@@ -187,12 +181,12 @@ if [ ! $update_only -eq 1 ]
 then
     # Install KBase data_api package
     # ------------------------------
-    git clone https://github.com/kbase/data_api -b develop
-    cd data_api
-    pip install -r requirements.txt
-    $PYTHON setup.py install >> ${logfile} 2>&1
-    cd ..
-    rm -rf data_api
+    # git clone https://github.com/kbase/data_api -b develop
+    # cd data_api
+    # pip install -r requirements.txt
+    # $PYTHON setup.py install >> ${logfile} 2>&1
+    # cd ..
+    # rm -rf data_api
 
 
     # Setup jupyter_narrative script

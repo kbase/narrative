@@ -1082,6 +1082,9 @@ define([
 
         function isModelChanged() {
             var params = model.getItem('params');
+            if (!params) {
+                return false;
+            }
             return ['touched', 'changed'].some(function (flag) {
                 return Object.keys(params).some(function (key) {
                     return params[key];

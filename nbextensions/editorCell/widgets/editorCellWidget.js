@@ -653,7 +653,7 @@ define([
                                         ])
                                     ]
                                 }),
-                                ui.buildPanel({
+                                ui.buildCollapsiblePanel({
                                     title: 'Select Object to Edit',
                                     name: 'edit-object-selector',
                                     hidden: false,

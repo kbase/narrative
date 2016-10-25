@@ -807,6 +807,12 @@ define([
                             return dataList;
                         });
                     } else {
+                        // return Promise.resolve(serviceClient.sync_call(
+                        //     'NarrativeService.list_objects_with_sets',
+                        //     [{
+                        //
+                        //     }]))
+                        //
                         return Promise.resolve(ws.list_objects(param))
                             .then(function (data) {
                                 // filter out Narrative objects.
@@ -1150,10 +1156,10 @@ define([
                 // [6] : ws_id wsid // [7] : ws_name workspace // [8] : string chsum
                 // [9] : int size // [10] : usermeta meta
                 var type_tokens = object_info[2].split('.')
-                var type_module = type_tokens[0];
+                // var type_module = type_tokens[0];
                 var type = type_tokens[1].split('-')[0];
-                var unversioned_full_type = type_module + '.' + type;
-                var logo_name = "";
+                // var unversioned_full_type = type_module + '.' + type;
+                // var logo_name = "";
                 var landingPageLink = self.options.lp_url + object_info[6] + '/' + object_info[1];
                 var icons = self.data_icons;
                 var icon = _.has(icons, type) ? icons[type] : icons['DEFAULT'];

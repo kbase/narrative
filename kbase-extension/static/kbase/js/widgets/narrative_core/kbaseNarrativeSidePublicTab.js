@@ -228,58 +228,6 @@ define (
                     this.totalPanel.empty();
                     this.totalPanel.append($('<span>').addClass("kb-data-list-type").append("Total results: 0"));
                 }.bind(this));
-
-        // // list_objects: function(ws, type, query, okCallback, errorCallback) {
-        // //     this.wsClient.list_objects({workspaces: [ws], type: type, includeMetadata: 1}, function(data) {
-
-        //         self.list_objects(ws, type, self.currentQuery, function(data, origQuery) {
-        //             if (thisQuery !== self.currentQuery)
-        //                 return;
-        //             //console.log(data);
-        //             var query = self.currentQuery.replace(/[\*]/g,' ').trim().toLowerCase();
-        //             for (var i in data) {
-        //                 var info = data[i];
-        //                 // object_info:
-        //                 // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
-        //                 // [3] : timestamp save_date // [4] : int version // [5] : username saved_by
-        //                 // [6] : ws_id wsid // [7] : ws_name workspace // [8] : string chsum
-        //                 // [9] : int size // [10] : usermeta meta
-        //                 var name = info[1];
-        //                 var id = info[1];
-        //                 var metadata = {};
-        //                 if (self.currentCategory === 'media') {
-        //                     metadata['Size'] = info[9];
-        //                 } else if (self.currentCategory === 'plant_gnms') {
-        //                     if (info[10].Name) {
-        //                         metadata['ID'] = id;
-        //                         name = info[10].Name;
-        //                     }
-        //                     metadata['Source'] = info[10].Source;
-        //                     metadata['Genes'] = info[10]['Number features'];
-        //                 }
-        //                 if (name.toLowerCase().indexOf(query) == -1)
-        //                     continue;
-        //                 self.objectList.push({
-        //                     $div: null,
-        //                     info: info,
-        //                     id: id,
-        //                     name: name,
-        //                     metadata: metadata,
-        //                     ws: cat.ws,
-        //                     type: cat.type,
-        //                     attached: false
-        //                 });
-        //                 self.attachRow(self.objectList.length - 1);
-        //             }
-        //             data.totalResults = self.objectList.length;
-        //             self.totalPanel.empty();
-        //             self.totalPanel.append($('<span>').addClass("kb-data-list-type")
-        //                     .append("Total results: " + data.totalResults));
-        //         }, function(error) {
-        //             //console.log(error);
-        //             self.totalPanel.empty();
-        //             self.totalPanel.append($('<span>').addClass("kb-data-list-type").append("Total results: 0"));
-        //         });
             } else {
                 this.currentPage++;
                 this.search(this.currentCategory, this.currentQuery, this.itemsPerPage, this.currentPage, function(query, data) {
@@ -328,47 +276,9 @@ define (
                             });
                             this.attachRow(this.objectList.length - 1);
                         }
-                    } /*else {
-                        for (var i in data.items) {
-                            var id = data.items[i].object_name;
-                            var name = data.items[i].object_name;
-                            var metadata = {};
-                            if (this.currentCategory === 'gwas_populations') {
-                                metadata['Genome'] = data.items[i].kbase_genome_name;
-                                metadata['Source'] = data.items[i].source_genome_name;
-                            } else if (this.currentCategory === 'gwas_population_kinships') {
-                                metadata['Genome'] = data.items[i].kbase_genome_name;
-                                metadata['Source'] = data.items[i].source_genome_name;
-                            } else if (this.currentCategory === 'gwas_population_variations') {
-                                metadata['Originator'] = data.items[i].originator;
-                                metadata['Assay'] = data.items[i].assay;
-                            } else if (this.currentCategory === 'gwas_top_variations') {
-                                metadata['Trait'] = data.items[i].trait_name;
-                                metadata['Ontology'] = data.items[i].trait_ontology_id;
-                                metadata['Genome'] = data.items[i].kbase_genome_name;
-                            } else if (this.currentCategory === 'gwas_population_traits') {
-                                metadata['Trait'] = data.items[i].trait_name;
-                                metadata['Ontology'] = data.items[i].trait_ontology_id;
-                                metadata['Genome'] = data.items[i].kbase_genome_name;
-                            } else if (this.currentCategory === 'gwas_gene_lists') {
-                                metadata['Genes'] = data.items[i].gene_count;
-                                metadata['SNPs'] = data.items[i].gene_snp_count;
-                            }
-                            this.objectList.push({
-                                $div: null,
-                                info: null,
-                                id: id,
-                                name: name,
-                                metadata: metadata,
-                                ws: cat.ws,
-                                type: cat.type,
-                                attached: false
-                            });
-                            this.attachRow(this.objectList.length - 1);
-                        }
-                    }*/
+                    }
                     this.totalPanel.append($('<span>').addClass("kb-data-list-type")
-                            .append("Total results: " + data.totalResults + " (" + this.objectList.length + " shown)"));
+                        .append("Total results: " + data.totalResults + " (" + this.objectList.length + " shown)"));
                 }.bind(this), function(error) {
                     //console.log(error);
                     if (this.objectList.length == 0) {

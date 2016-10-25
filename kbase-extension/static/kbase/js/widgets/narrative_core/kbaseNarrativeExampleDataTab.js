@@ -9,18 +9,26 @@ define (
 		'kbwidget',
 		'bootstrap',
 		'jquery',
+        'underscore',
 		'bluebird',
 		'narrativeConfig',
 		'kbaseAuthenticatedWidget',
-		'kbaseNarrative'
+		'kbaseNarrative',
+        'kbase-generic-client-api',
+        'base/js/namespace',
+        'util/display'
 	], function(
 		KBWidget,
 		bootstrap,
 		$,
+        _,
 		Promise,
 		Config,
 		kbaseAuthenticatedWidget,
-		kbaseNarrative
+		kbaseNarrative,
+        GenericClient,
+        Jupyter,
+        DisplayUtil
 	) {
     'use strict';
     return KBWidget({
@@ -31,11 +39,12 @@ define (
             ws_name: null, // must be the WS name, not the WS Numeric ID
             ws_url: Config.url('workspace'),
             loadingImage: Config.get('loading_gif'),
-	        $importStatus: $('<div>'),
+            $importStatus: $('<div>')
         },
 
         ws: null,
         narWs: null,
+        serviceClient: null,
 
         $mainPanel:null,
         $loadingDiv:null,
@@ -51,7 +60,6 @@ define (
          */
         init: function(options) {
             this._super(options);
-            var self = this;
 
             this.$loadingDiv = $('<div>').addClass('kb-data-list-type')
                                  .append('<img src="' + this.options.loadingImage + '">');
@@ -66,9 +74,7 @@ define (
             this.icon_colors = icons.colors;
             this.showLoading();
 
-            if (Jupyter && Jupyter.narrative) {
-                this.narWs = Jupyter.narrative.getWorkspaceName();
-            }
+            this.narWs = Jupyter.narrative.getWorkspaceName();
 
             return this;
         },
@@ -84,11 +90,18 @@ define (
             }
 
             if (this.narWs && this.ws) {
-                Promise.resolve(this.ws.list_objects({
-                    workspaces : [this.dataConfig.ws],
-                    includeMetadata: 1
-                }))
+                Promise.resolve(this.serviceClient.sync_call(
+                    "NarrativeService.list_objects_with_sets",
+                    [{
+                        ws_name: this.dataConfig.ws
+                    }]
+                ))
+                // Promise.resolve(this.ws.list_objects({
+                //     workspaces : [this.dataConfig.ws],
+                //     includeMetadata: 1
+                // }))
                 .then(function(infoList) {
+                    infoList = infoList[0]['data'];
                     this.objectList = [];
                     // object_info:
                     // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
@@ -97,28 +110,30 @@ define (
                     // [9] : int size // [10] : usermeta meta
                     for (var i=0; i<infoList.length; i++) {
                         // skip narrative objects
-                        if (infoList[i][2].indexOf('KBaseNarrative') == 0) { continue; }
-                        if (infoList[i][1].indexOf('Transcriptome') == 0) {
-                            infoList[i][2] = 'TranscriptomeHack';
+                        var obj = infoList[i].object_info;
+                        if (obj[2].indexOf('KBaseNarrative') === 0) { continue; }
+                        if (obj[1].indexOf('Transcriptome') === 0) {
+                            obj[2] = 'TranscriptomeHack';
                         }
                         this.objectList.push({
-                            $div:this.renderObjectRowDiv(infoList[i]), // we defer rendering the div until it is shown
-                            info:infoList[i]
+                            $div:this.renderObjectRowDiv(obj), // we defer rendering the div until it is shown
+                            info:obj
                         });
                     }
                     this.renderData();
                 }.bind(this))
                 .catch(function(error) {
-                    this.showError(error.error.message);
-                    console.error(error);
+                    this.showError('Sorry, we\'re unable to load example data', error);
+                    // console.error(error);
+                    alert(error);
                 }.bind(this));
             }
 
         },
 
-        showError: function(errorMsg) {
+        showError: function(title, error) {
             this.$mainPanel.show();
-            this.$mainPanel.append($('<div class="alert alert-danger">').append('Error: ' + errorMsg));
+            this.$mainPanel.append(DisplayUtil.createError(title, error));
             this.hideLoading();
         },
 
@@ -126,7 +141,7 @@ define (
             var self = this;
             if (!self.objectList) { return; }
 
-            var typeDivs = {}; 
+            var typeDivs = {};
             var showTypeDiv = {};
             for(var t=0; t<this.dataConfig.data_types.length; t++) {
                 var typeInfo = this.dataConfig.data_types[t];
@@ -242,16 +257,19 @@ define (
 
                         }));
 
-            var shortName = object_info[1]; var isShortened=false;
+            var shortName = object_info[1],
+                isShortened=false;
             /*if (shortName.length>this.options.max_name_length) {
                 shortName = shortName.substring(0,this.options.max_name_length-3)+'...';
                 isShortened=true;
             }*/
             var $name = $('<span>').addClass("kb-data-list-name").append(shortName);
-            if (isShortened) { $name.tooltip({title:object_info[1], placement:'bottom'}); }
+            if (isShortened) {
+                $name.tooltip({title:object_info[1], placement:'bottom'});
+            }
             var $type = $('<span>').addClass("kb-data-list-type").append(type);
 
-            var metadata = object_info[10];
+            var metadata = object_info[10] || {};
             var metadataText = '';
             for(var key in metadata) {
                 if (metadata.hasOwnProperty(key)) {
@@ -313,6 +331,7 @@ define (
 
         loggedInCallback: function(event, auth) {
             this.ws = new Workspace(this.options.ws_url, auth);
+            this.serviceClient = new GenericClient(Config.url('service_wizard'), auth);
             return this;
         },
 

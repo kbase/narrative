@@ -179,7 +179,7 @@ define(
                 $errorPanel.append($('<div>').append('<b>' + key + ':</b> ' + error[key]));
             });
         }
-        else {
+        else if (error) {
             $errorPanel.append('No other information available. Sorry!');
         }
         return $errorPanel;

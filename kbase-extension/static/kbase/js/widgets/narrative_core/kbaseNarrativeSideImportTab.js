@@ -40,6 +40,7 @@ define (
         loadingImage: Config.get('loading_gif'),
         wsUrl: Config.url('workspace'),
         methodStoreURL: Config.url('narrative_method_store'),
+        methodStoreTypesURL: Config.url('narrative_method_store_types'),
         methClient: null,
         uploaderURL: Config.url('transform'),
         ujsURL: Config.url('user_and_job_state'),
@@ -172,7 +173,11 @@ define (
             this.$mainPanel.append(this.infoPanel);
 
             this.methClient = new NarrativeMethodStore(this.methodStoreURL);
-            this.methClient.list_categories({'load_methods': 0, 'load_apps' : 0, 'load_types' : 1},
+            if (!this.methodStoreTypesURL) {
+                this.methodStoreTypesURL = this.methodStoreURL;
+            }
+            var typesClient = new NarrativeMethodStore(this.methodStoreTypesURL);
+            typesClient.list_categories({'load_methods': 0, 'load_apps' : 0, 'load_types' : 1},
                 $.proxy(function(data) {
                     var aTypes = data[3];
                     self.methodIds = [];

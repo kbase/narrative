@@ -290,7 +290,6 @@ class AppManager(object):
         }
         kblogging.log_event(self._log, "run_app", log_info)
 
-        kblogging.log_event(self._log, "run_app_parameters", job_runner_inputs)
         try:
             job_id = self.njs.run_job(job_runner_inputs)
         except Exception as e:

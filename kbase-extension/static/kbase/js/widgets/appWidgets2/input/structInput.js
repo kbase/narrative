@@ -251,7 +251,7 @@ define([
             container.innerHTML = div({
                         dataElement: 'main-panel'
                     }, [
-                        div({dataElement: 'input-container'}, )
+                        div({dataElement: 'input-container'})
                     ]);
             
             return renderStruct(events);

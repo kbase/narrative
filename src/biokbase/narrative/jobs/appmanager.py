@@ -552,9 +552,9 @@ class AppManager(object):
         # for now, just map the inputs to outputs.
         # First, validate.
         # Preflight check the params - all required ones are present, all values are the right type, all numerical values are in given ranges
-        spec_params = self.spec_manager.app_params(spec)
-        (params, ws_refs) = self._validate_parameters(app_id, tag,
-                                                      spec_params, params)
+        #spec_params = self.spec_manager.app_params(spec)
+        ###(params, ws_refs) = self._validate_parameters(app_id, tag,
+        ###                                             spec_params, params)
 
         # Log that we're trying to run a job...
         log_info = {
@@ -565,8 +565,9 @@ class AppManager(object):
         }
         kblogging.log_event(self._log, "run_dynamic_service", log_info)
 
-        spec_params_map = dict((spec_params[i]['id'],spec_params[i]) for i in range(len(spec_params)))
-        input_vals = self._map_inputs(spec['behavior']['kb_service_input_mapping'], params, spec_params_map)
+        #spec_params_map = dict((spec_params[i]['id'],spec_params[i]) for i in range(len(spec_params)))
+        #input_vals = self._map_inputs(spec['behavior']['kb_service_input_mapping'], params, spec_params_map)
+        input_vals = params
         function_name = spec['behavior']['kb_service_name'] + '.' + spec['behavior']['kb_service_method']
         try:
             # result = [
@@ -797,13 +798,23 @@ class AppManager(object):
 
         return (params, ws_input_refs)
     
-    
+    # TODO: how does this affect parameter with many object references?
+    # TODO: I'm wondering -- should we even support object names? Why not 
+    #       just insist that all object references be ... references?
+    #       And in the context of parameters should they always be absolute?
     def _resolve_ref(self, workspace, value):
             if '/' in value:
                 if len(value.split('/')) > 3:
                     raise ValueError('Object reference {} has too many slashes  - should be workspace/object/version(optional)'.format(value))
                     # return (ws_ref, 'Data reference named {} does not have the right format - should be workspace/object/version(optional)')
                 info = self.ws_client.get_object_info_new({'objects': [{'ref': value}]})[0]
+                # TODO: this should only occur at the moment if an object is copied
+                #       with internal references in a set. With data palettes
+                #       this check will no longer be necessary.
+                #       The ui constructing a set of references only allows 
+                #       those in the current narrative workspace.
+                #if (info[7] != workspace):
+                #    raise ValueError('Object reference {} is not in the current workspace {}'.format(value, workspace))
             # Otherwise, assume it's a name, not a reference.
             else:
                 info = self.ws_client.get_object_info_new({'objects': [{'workspace': workspace, 'name': value}]})[0]
@@ -814,6 +825,12 @@ class AppManager(object):
 #                                                                'name': obj_name}]})[0]
 #        return "{}/{}/{}".format(info[6], info[0], info[4])
 
+
+    # For a given value and associated spec, if this is not an output param,
+    # then ensure that the reference points to an object in the current
+    # workspace, and transform the value into an absolute reference to it.
+    # Note that for 
+    # 
     def _resolve_ref_if_typed(self, value, spec_param):
         is_output = 'is_output' in spec_param and spec_param['is_output'] == 1
         if 'allowed_types' in spec_param and not is_output:
@@ -831,11 +848,17 @@ class AppManager(object):
             mapped_value = dict()
             id_map = spec_param.get('id_mapping', {})
             for param_id in id_map:
+                # ensure that the param referenced in the group param list
+                # exists in the spec. 
+                # NB: This should really never happen if thesdk registration 
+                # process validates them.
                 if param_id not in spec_params:
                     msg = "Unknown parameter id in group mapping: " + param_id
                     raise ValueError(msg)
             for param_id in value:
                 target_key = id_map.get(param_id, param_id)
+                # Sets either the raw value, or if the parameter is an object
+                # reference the full object refernce (see the method).
                 target_val = self._resolve_ref_if_typed(value[param_id],
                                                         spec_params[param_id])
                 mapped_value[target_key] = target_val

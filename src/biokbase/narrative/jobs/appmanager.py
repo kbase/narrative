@@ -171,7 +171,7 @@ class AppManager(object):
                 'error_source': e_source
             })
             print("Error while trying to start your app (run_app)!\n" +
-                  "-------------------------------------\n" +
+                  "-----------------------------------------------\n" +
                   str(e))
             return
 
@@ -477,7 +477,7 @@ class AppManager(object):
 
             except:
                 raise
-            
+
     def run_dynamic_service(self, app_id, params, tag="release", version=None,
                       cell_id=None, run_id=None, **kwargs):
         """
@@ -523,7 +523,7 @@ class AppManager(object):
                         'stacktrace': e_trace
                     }
                 })
-            else:            
+            else:
                 print("Error while trying to start your app (run_local_app)!\n-------------------------------------\n" + str(e))
 
     def _run_dynamic_service_internal(self, app_id, params, tag, version, cell_id, run_id, **kwargs):
@@ -587,7 +587,7 @@ class AppManager(object):
             else:
                 return result
         except:
-            raise            
+            raise
 
     def send_cell_message(self, message_id, cell_id, run_id, message):
         address = {
@@ -595,12 +595,12 @@ class AppManager(object):
             'run_id': run_id,
             'event_at': datetime.datetime.utcnow().isoformat() + 'Z'
         }
-        
+
         self._send_comm_message(message_id, {
             'address': address,
             'message': message
         })
-        
+
 
     def run_widget_app(self, app_id, tag="release",
                        version=None, cell_id=None, run_id=None):
@@ -766,7 +766,8 @@ class AppManager(object):
         ws_input_refs = list()
         for p in spec_params:
             if p['id'] in params:
-                (wsref, err) = self._check_parameter(p, params[p['id']],
+                (wsref, err) = self._check_parameter(p,
+                                                     params[p['id']],
                                                      workspace,
                                                      all_params=params_dict)
                 if err is not None:
@@ -797,31 +798,20 @@ class AppManager(object):
                 params[p['id']] = p['default']
 
         return (params, ws_input_refs)
-    
-    # TODO: how does this affect parameter with many object references?
-    # TODO: I'm wondering -- should we even support object names? Why not 
-    #       just insist that all object references be ... references?
-    #       And in the context of parameters should they always be absolute?
+
     def _resolve_ref(self, workspace, value):
-            if '/' in value:
-                if len(value.split('/')) > 3:
-                    raise ValueError('Object reference {} has too many slashes  - should be workspace/object/version(optional)'.format(value))
-                    # return (ws_ref, 'Data reference named {} does not have the right format - should be workspace/object/version(optional)')
-                info = self.ws_client.get_object_info_new({'objects': [{'ref': value}]})[0]
-                # TODO: this should only occur at the moment if an object is copied
-                #       with internal references in a set. With data palettes
-                #       this check will no longer be necessary.
-                #       The ui constructing a set of references only allows 
-                #       those in the current narrative workspace.
-                #if (info[7] != workspace):
-                #    raise ValueError('Object reference {} is not in the current workspace {}'.format(value, workspace))
-            # Otherwise, assume it's a name, not a reference.
-            else:
-                info = self.ws_client.get_object_info_new({'objects': [{'workspace': workspace, 'name': value}]})[0]
-            return "{}/{}/{}".format(info[6], info[0], info[4])
+        if '/' in value:
+            if len(value.split('/')) > 3:
+                raise ValueError('Object reference {} has too many slashes  - should be workspace/object/version(optional)'.format(value))
+                # return (ws_ref, 'Data reference named {} does not have the right format - should be workspace/object/version(optional)')
+            info = self.ws_client.get_object_info_new({'objects': [{'ref': value}]})[0]
+        # Otherwise, assume it's a name, not a reference.
+        else:
+            info = self.ws_client.get_object_info_new({'objects': [{'workspace': workspace, 'name': value}]})[0]
+        return "{}/{}/{}".format(info[6], info[0], info[4])
 
 #    def _resolve_ref(self, workspace, obj_name):
-#        info = self.ws_client.get_object_info_new({'objects': [{'workspace': workspace, 
+#        info = self.ws_client.get_object_info_new({'objects': [{'workspace': workspace,
 #                                                                'name': obj_name}]})[0]
 #        return "{}/{}/{}".format(info[6], info[0], info[4])
 
@@ -1039,7 +1029,7 @@ class AppManager(object):
             ret = ret + str(generator['suffix'])
         return ret
 
-    def _check_parameter(self, param, value, workspace, all_params=None):
+    def _check_parameter(self, param, value, workspace, all_params=dict()):
         """
         Checks if the given value matches the rules provided in the param dict.
         If yes, returns None
@@ -1071,17 +1061,19 @@ class AppManager(object):
                                                              v,
                                                              workspace,
                                                              all_params)
+                    if err:
+                        error_list += err
+                    if ref:
+                        ws_refs += ref
                 else:
                     # returns a single ref / err pair
                     (ref, err) = self._validate_param_value(param,
                                                             v,
                                                             workspace)
-                    ref = [ref]
-                    err = [err]
-                if err:
-                    error_list += err
-                if ref:
-                    ws_refs += ref
+                    if err:
+                        error_list.append(err)
+                    if ref:
+                        ws_refs.append(ref)
             if len(error_list):
                 return (None, "\n\t".join(error_list))
             else:

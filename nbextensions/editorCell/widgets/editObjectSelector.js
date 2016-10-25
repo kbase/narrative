@@ -26,9 +26,9 @@ define([
     'common/error',
     // Wrapper for inputs
     './inputWrapperWidget',
-    'widgets/appWidgets/fieldWidget',
+    'widgets/appWidgets2/fieldWidget',
     // Display widgets
-    'widgets/appWidgets/paramDisplayResolver'
+    'widgets/appWidgets2/paramDisplayResolver'
 
 ], function (
     Promise,
@@ -117,12 +117,12 @@ define([
                             class: 'btn btn-primary',
                             type: 'button',
                             id: events.addEvent({type: 'click', handler: doCreate})
-                        }, 'Create'),
-                        button({
-                            class: 'btn btn-default',
-                            type: 'button',
-                            id: events.addEvent({type: 'click', handler: doNew})
-                        }, 'New')])
+                        }, 'Create')])
+//                        button({
+//                            class: 'btn btn-default',
+//                            type: 'button',
+//                            id: events.addEvent({type: 'click', handler: doNew})
+//                        }, 'New')])
                 ]);
 
             return {

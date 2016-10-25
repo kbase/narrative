@@ -237,6 +237,13 @@ define([
             return buttonNode;
         }
 
+        /*
+         * Generic version of getElement
+         * Returns a node which is accessible by the path.
+         * Each path element is an object with 
+         * type = data-TYPE
+         * name = value of the data-TYPE attribute
+         */
         function getNode(names) {
             if (typeof names === 'string') {
                 names = [names];
@@ -244,7 +251,7 @@ define([
             var selector = names.map(function (dataSelector) {
                 return '[data-' + dataSelector.type + '="' + dataSelector.name + '"]';
             }).join(' ');
-
+            
             return container.querySelector(selector);
         }
 

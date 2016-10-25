@@ -11,8 +11,8 @@ define([
     'common/props',
     // Wrapper for inputs
     './inputWrapperWidget',
-    'widgets/appWidgets/fieldWidget',
-    'widgets/appWidgets/paramInputResolver',
+    'widgets/appWidgets2/fieldWidget',
+    'widgets/appWidgets2/paramInputResolver',
     'common/runtime'
         // All the input widgets
 

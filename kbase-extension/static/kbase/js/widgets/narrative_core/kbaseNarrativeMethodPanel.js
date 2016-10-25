@@ -178,7 +178,6 @@ define ([
 
             // The error panel should be empty for now.
             this.$errorPanel = $('<div>')
-                               .addClass('kb-error')
                                .hide();
 
             // The help element should be outside of the panel itself, so it can be manipulated separately.
@@ -387,9 +386,8 @@ define ([
 
             this.addButton(this.$slideoutBtn);
 
-
             if (!NarrativeMethodStore || !Catalog) {
-                this.showError('Unable to connect to the Catalog or NMS!');
+                this.showError('Sorry, an error occurred while loading KBase Apps.', 'Unable to connect to the Catalog or Narrative Method Store! Apps are currently unavailable.');
                 return this;
             }
 
@@ -498,13 +496,10 @@ define ([
                                 if(methods[i].module_name) {
                                     var idTokens = methods[i].id.split('/');
                                     self.methodSpecs[idTokens[0].toLowerCase() + '/' + idTokens[1]] = {info:methods[i]};
-                                    // EAP - don't even consider methods without a module, they are obsolete.
-                                    //} else {
-                                    //    self.methodSpecs[methods[i].id] = {info:methods[i]};
-                                    }
                                 }
                             }
-                        ));
+                        }
+                    ));
 
             loadingCalls.push(
                 Promise.resolve(self.methClient.list_categories({}))
@@ -533,32 +528,32 @@ define ([
             Promise.all(loadingCalls)
                 .then(function() {
                     return Promise.resolve(self.catalog.list_favorites(self.auth().user_id))
-                                .then(function(favs) {
-                                    for(var k=0; k<favs.length; k++) {
-                                        var fav = favs[k];
-                                        var lookup = fav.id;
-                                        if(fav.module_name_lc !== 'nms.legacy') {
-                                            lookup = fav.module_name_lc + '/' + lookup
-                                        }
-                                        if(self.methodSpecs[lookup]) {
-                                            self.methodSpecs[lookup]['favorite'] = fav.timestamp; // this is when this was added as a favorite
-                                        }
-                                    }
-                                    self.parseMethods(self.categories, self.methodSpecs);
-                                    self.showFunctionPanel();
-                                    self.filterList(); // keep the filters
-                                })
-                                 // For some reason this is throwing a Bluebird error to include this error handler, but I don't know why right now -mike
-                                .catch(function(error) {
-                                    console.log('error getting favorites, but probably we can still try and proceed', error);
-                                    self.parseMethods(self.categories, self.methodSpecs);
-                                    self.showFunctionPanel();
-                                    self.filterList(); // keep the filters
-                                });
+                        .then(function(favs) {
+                            for(var k=0; k<favs.length; k++) {
+                                var fav = favs[k];
+                                var lookup = fav.id;
+                                if(fav.module_name_lc !== 'nms.legacy') {
+                                    lookup = fav.module_name_lc + '/' + lookup
+                                }
+                                if(self.methodSpecs[lookup]) {
+                                    self.methodSpecs[lookup]['favorite'] = fav.timestamp; // this is when this was added as a favorite
+                                }
+                            }
+                            self.parseMethods(self.categories, self.methodSpecs);
+                            self.showFunctionPanel();
+                            self.filterList(); // keep the filters
+                        })
+                         // For some reason this is throwing a Bluebird error to include this error handler, but I don't know why right now -mike
+                        .catch(function(error) {
+                            console.log('error getting favorites, but probably we can still try and proceed', error);
+                            self.parseMethods(self.categories, self.methodSpecs);
+                            self.showFunctionPanel();
+                            self.filterList(); // keep the filters
+                        });
                 })
                 .catch(function(error) {
                     console.log(error);
-                    self.showError(error);
+                    self.showError('Sorry, an error occurred while loading KBase Apps.', error);
                 });
         },
 
@@ -927,42 +922,12 @@ define ([
          * @param {string} error - the text of the error message
          * @private
          */
-        showError: function(error) {
-            var $errorHeader = $('<div>')
-                               .addClass('alert alert-danger')
-                               .append('<b>Sorry, an error occurred while loading KBase functions.</b><br>Please contact the KBase team at <a href="mailto:help@kbase.us?subject=Narrative%20function%20loading%20error">help@kbase.us</a> with the information below.');
-
-            this.$errorPanel.empty();
-            this.$errorPanel.append($errorHeader);
-
-            // If it's a string, just dump the string.
-            if (typeof error === 'string') {
-                this.$errorPanel.append($('<div>').append(error));
-            }
-
-            // If it's an object, expect an error object as returned by the execute_reply callback from the IPython kernel.
-            else if (typeof error === 'object') {
-                var $details = $('<div>');
-                $details.append($('<div>').append('<b>Type:</b> ' + error.ename))
-                        .append($('<div>').append('<b>Value:</b> ' + error.evalue));
-
-                var $tracebackDiv = $('<div>')
-                                 .addClass('kb-function-error-traceback');
-                for (var i=0; i<error.traceback.length; i++) {
-                    $tracebackDiv.append(error.traceback[i] + "<br>");
-                }
-
-                var $tracebackPanel = $('<div>');
-                var tracebackAccordion = [{'title' : 'Traceback', 'body' : $tracebackDiv}];
-
-                this.$errorPanel.append($details)
-                                .append($tracebackPanel);
-                 new kbaseAccordion($tracebackPanel, { elements : tracebackAccordion });
-            }
-
+        showError: function(title, error) {
+            this.$errorPanel.empty().append(DisplayUtil.createError(title, error));
             this.$functionPanel.hide();
             this.$loadingPanel.hide();
             this.$errorPanel.show();
+            return;
         },
 
         /**

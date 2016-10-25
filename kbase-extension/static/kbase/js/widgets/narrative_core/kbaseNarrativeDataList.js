@@ -413,7 +413,7 @@ define([
             .catch(function (error) {
                 console.error('DataList: when checking for updates:', error);
                 if (showError) {
-                    this.showBlockingError('Error: Unable to connect to KBase data.');
+                    this.showBlockingError('Sorry, an error occurred while fetching your data.', {'error': 'Unable to connect to KBase database.'});
                 }
             }.bind(this));
         },
@@ -494,12 +494,11 @@ define([
          * This empties out the main data div and injects an error into it.
          * Used mainly when lookups fail.
          */
-        showBlockingError: function (error) {
+        showBlockingError: function (title, error) {
             this.$mainListDiv.empty();
             this.$mainListDiv.append(
-                $('<div>').css({'color': '#F44336', 'margin': '10px'})
-                .append(error)
-                );
+                DisplayUtil.createError(title, error)
+            );
             this.loadingDiv.div.hide();
             this.$mainListDiv.show();
         },
@@ -567,8 +566,6 @@ define([
             )
             .then(function(result) {
                 result = result[0]['data'];
-                console.log('NEW WORKSPACE LIST FUN');
-                console.log(result);
 
                 for (var i=0; i<result.length; i++) {
                     var obj = result[i];
@@ -588,9 +585,10 @@ define([
                 }
             }.bind(this))
             .catch(function (error) {
-                this.showBlockingError(error);
+                this.showBlockingError("Sorry, an error occurred while fetching your data.", error);
                 console.error(error);
-                KBError("kbaseNarrativeDataList.getNextDataChunk", error.error.message);
+                KBError("kbaseNarrativeDataList.fetchWorkspaceData", error.error.message);
+                throw error;
             }.bind(this));
 
         },

@@ -1,5 +1,7 @@
-/*global define*/
+/*global define,Workspace*/
 /*jslint white: true*/
+/*eslint-env browser*/
+
 /**
  * Widget to display a table of data objects from a kbase workspace.
  *
@@ -29,8 +31,7 @@ define([
     'kbaseNarrativeSideImportTab',
     'kbaseNarrativeExampleDataTab',
     'kbaseLogin',
-    'common/runtime',
-    
+    'kbase-generic-client-api',
     'bootstrap'
 ], function (
     KBWidget,
@@ -47,7 +48,7 @@ define([
     kbaseNarrativeSideImportTab,
     kbaseNarrativeExampleDataTab,
     kbaseLogin,
-    Runtime
+    GenericClient
     ) {
     'use strict';
     return KBWidget({
@@ -88,7 +89,6 @@ define([
 
         init: function (options) {
             this._super(options);
-            var self = this;
 
             this.ws_name = Jupyter.narrative.getWorkspaceName();
 
@@ -103,12 +103,7 @@ define([
                     ws_name: this.ws_name,
                     parentControlPanel: this,
                     slideTime: this.slideTime
-                }
-                );
-            
-            var runtime = Runtime.make();
-            
-            
+                });
 
             /**
              * This should be triggered if something wants to know what data is loaded from the current workspace
@@ -129,33 +124,31 @@ define([
              * in the workspace.
              */
             $(document).on(
-                'updateData.Narrative', $.proxy(function (e) {
+                'updateData.Narrative', function () {
                     this.dataListWidget.refresh();
-                },
-                    this)
-                );
+                }.bind(this)
+            );
 
             /**
              * This should be triggered when something wants to know what workspace this widget is currently linked to.
              */
             $(document).on(
-                'workspaceQuery.Narrative', $.proxy(function (e, callback) {
+                'workspaceQuery.Narrative', function (e, callback) {
                     if (callback) {
                         callback(this.ws_name);
                     }
-                },
-                    this)
-                );
+                }.bind(this)
+            );
 
             $(document).on(
-                'sidePanelOverlayShown.Narrative', function (e) {
+                'sidePanelOverlayShown.Narrative', function () {
                     // find the index of what tab is being shown.
                     if (this.$overlayPanel.is(':visible')) {
                         var idx = $('.kb-side-overlay-container').find('.kb-side-header.active').index();
                         this.updateSlideoutRendering(idx);
                     }
                 }.bind(this)
-                );
+            );
 
             $(document).on()
 
@@ -170,7 +163,7 @@ define([
                     }
                 })
                 .append('<span class="fa fa-arrow-right"></span>')
-                .click(function (event) {
+                .click(function () {
                     this.$slideoutBtn.tooltip('hide');
                     this.trigger('hideGalleryPanelOverlay.Narrative');
                     this.trigger('toggleSidePanelOverlay.Narrative', this.$overlayPanel);
@@ -208,6 +201,7 @@ define([
         loggedInCallback: function (event, auth) {
             this.token = auth.token;
             this.wsClient = new Workspace(this.options.workspaceURL, auth);
+            this.serviceClient = new GenericClient(Config.url('service_wizard'), auth);
             this.isLoggedIn = true;
             if (this.ws_name) {
                 this.importerThing = this.dataImporter(this.ws_name);
@@ -268,6 +262,7 @@ define([
         refresh: function () {
             return;
         },
+
         /**
          * Returns the set of currently loaded data objects from the workspace.
          * These are returned as described below.
@@ -287,11 +282,12 @@ define([
          */
         getLoadedData: function (type, ignoreVersion) {
             if (this.dataListWidget) {
-                return this.dataListWidget.getObjData(params, ignoreVersion);
+                return this.dataListWidget.getObjData(type, ignoreVersion);
             } else {
                 return {};
             }
         },
+
         buildTabs: function (tabs, isOuter) {
             var $header = $('<div>');
             var $body = $('<div>');
@@ -348,7 +344,6 @@ define([
             var self = this;
             var maxObjFetch = 100000;
 
-            var self = this;
             if (this.$login == undefined) {
                 if (this.loginInit) {
                     return;
@@ -556,6 +551,7 @@ define([
             var auth = {token: this.$login.session('token')};
             //var auth = {token: $("#signin-button").kbaseLogin('session', 'token')};
             var ws = new Workspace(this.options.workspaceURL, auth);
+            var serviceClient = new GenericClient(Config.url('service_wizard'), auth);
 
             closeBtn.click(function () {
                 self.trigger('hideSidePanelOverlay.Narrative');
@@ -569,7 +565,6 @@ define([
             var narrativeNameLookup = {};
             this.$overlayPanel = body.append(footer);
 
-            var self = this;
             function cleanupData(data, view) {
                 return Promise.try(function () {
                     // data = [].concat.apply([], data);
@@ -700,7 +695,7 @@ define([
                     });
                 }
                 var params = {includeMetadata: 1},
-                wsIds = [],
+                    wsIds = [],
                     objCount = 0,
                     maxObjCount = 0;
 
@@ -808,8 +803,8 @@ define([
                     updateProgress(view, progress);
                     if (dataList.length >= maxObjFetch) {
                         return Promise.try(function () {
-                            return dataList;
                             updateProgress(view, 100);
+                            return dataList;
                         });
                     } else {
                         return Promise.resolve(ws.list_objects(param))
@@ -1062,9 +1057,9 @@ define([
                     //     continue;
                     // }
                     if (template)
-                        var item = template(item);
+                        item = template(item);
                     else
-                        var item = rowTemplate(item);
+                        item = rowTemplate(item);
 
                     rows.append(item);
                 }

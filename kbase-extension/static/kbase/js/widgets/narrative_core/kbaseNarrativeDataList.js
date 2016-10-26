@@ -1,5 +1,5 @@
 /* global define,Jupyter,KBError */
-/* global Workspace, SetAPI */
+/* global Workspace */
 /* jslint white: true */
 /* eslint no-console: 0 */
 /**
@@ -98,7 +98,6 @@ define([
         downloadSpecCache: {tag: 'dev'},
         controlClickHnd: {}, // click handlers for control buttons
         my_user_id: null,
-        setAPI: null,
         serviceClient: null,
 
         objectRowTmpl: Handlebars.compile(ObjectRowHtml),
@@ -242,21 +241,6 @@ define([
         },
 
         /**
-         * Get a list of workspace items which are set/group types.
-         *
-         * @return Promise-wrapped list of items.
-         */
-        getWorkspaceSets: function(ws_id) {
-            try {
-                var params = {workspace: '' + ws_id, include_set_item_info: true};
-                return this.setAPI.list_sets(params);
-            }
-            catch(e) {
-                return Promise.reject('Cannot get sets for workspace ' + ws_id + ' :' + e);
-            }
-        },
-
-        /**
          * @method init
          * Builds the DOM structure for the widget.
          * Includes the tables and panel.
@@ -301,12 +285,10 @@ define([
 
             if (this._attributes.auth) {
                 this.ws = new Workspace(this.options.ws_url, this._attributes.auth);
-                this.initSetAPI(this._attributes.auth);
             }
 
             // listener for refresh
             $(document).on('updateDataList.Narrative', function () {
-                self.initSetAPI(this._attributes.auth);
                 self.refresh();
             })
 
@@ -327,17 +309,6 @@ define([
                     this.$mainListDiv.css({'height': height});
                 }
             }
-        },
-
-        /**
-         * Initialize Set API
-         */
-        initSetAPI: function(auth) {
-            if (!this.setAPI) {
-                var token = {'token': auth.token};
-                this.setAPI = new SetAPI(Config.url('service_wizard'), token, null, null, null, '<1.0.0');
-            }
-            return this.setAPI;
         },
 
         /**

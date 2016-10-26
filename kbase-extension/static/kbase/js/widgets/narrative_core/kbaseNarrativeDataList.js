@@ -1327,7 +1327,7 @@ define([
                         .click(function () {
                             this.trigger('hideGalleryPanelOverlay.Narrative');
                             this.trigger('toggleSidePanelOverlay.Narrative', this.options.parentControlPanel.$overlayPanel);
-                        }));
+                        }.bind(this)));
                     this.$addDataButton.hide();
                 }
                 this.$mainListDiv.append($noDataDiv);

@@ -171,7 +171,7 @@ class AppManager(object):
                 'error_source': e_source
             })
             print("Error while trying to start your app (run_app)!\n" +
-                  "-------------------------------------\n" +
+                  "-----------------------------------------------\n" +
                   str(e))
             return
 
@@ -477,7 +477,7 @@ class AppManager(object):
 
             except:
                 raise
-            
+
     def run_dynamic_service(self, app_id, params, tag="release", version=None,
                       cell_id=None, run_id=None, **kwargs):
         """
@@ -523,7 +523,7 @@ class AppManager(object):
                         'stacktrace': e_trace
                     }
                 })
-            else:            
+            else:
                 print("Error while trying to start your app (run_local_app)!\n-------------------------------------\n" + str(e))
 
     def _run_dynamic_service_internal(self, app_id, params, tag, version, cell_id, run_id, **kwargs):
@@ -552,9 +552,9 @@ class AppManager(object):
         # for now, just map the inputs to outputs.
         # First, validate.
         # Preflight check the params - all required ones are present, all values are the right type, all numerical values are in given ranges
-        spec_params = self.spec_manager.app_params(spec)
-        (params, ws_refs) = self._validate_parameters(app_id, tag,
-                                                      spec_params, params)
+        #spec_params = self.spec_manager.app_params(spec)
+        ###(params, ws_refs) = self._validate_parameters(app_id, tag,
+        ###                                             spec_params, params)
 
         # Log that we're trying to run a job...
         log_info = {
@@ -565,8 +565,9 @@ class AppManager(object):
         }
         kblogging.log_event(self._log, "run_dynamic_service", log_info)
 
-        spec_params_map = dict((spec_params[i]['id'],spec_params[i]) for i in range(len(spec_params)))
-        input_vals = self._map_inputs(spec['behavior']['kb_service_input_mapping'], params, spec_params_map)
+        #spec_params_map = dict((spec_params[i]['id'],spec_params[i]) for i in range(len(spec_params)))
+        #input_vals = self._map_inputs(spec['behavior']['kb_service_input_mapping'], params, spec_params_map)
+        input_vals = params
         function_name = spec['behavior']['kb_service_name'] + '.' + spec['behavior']['kb_service_method']
         try:
             # result = [
@@ -586,7 +587,7 @@ class AppManager(object):
             else:
                 return result
         except:
-            raise            
+            raise
 
     def send_cell_message(self, message_id, cell_id, run_id, message):
         address = {
@@ -594,12 +595,12 @@ class AppManager(object):
             'run_id': run_id,
             'event_at': datetime.datetime.utcnow().isoformat() + 'Z'
         }
-        
+
         self._send_comm_message(message_id, {
             'address': address,
             'message': message
         })
-        
+
 
     def run_widget_app(self, app_id, tag="release",
                        version=None, cell_id=None, run_id=None):
@@ -765,7 +766,8 @@ class AppManager(object):
         ws_input_refs = list()
         for p in spec_params:
             if p['id'] in params:
-                (wsref, err) = self._check_parameter(p, params[p['id']],
+                (wsref, err) = self._check_parameter(p,
+                                                     params[p['id']],
                                                      workspace,
                                                      all_params=params_dict)
                 if err is not None:
@@ -796,24 +798,29 @@ class AppManager(object):
                 params[p['id']] = p['default']
 
         return (params, ws_input_refs)
-    
-    
+
     def _resolve_ref(self, workspace, value):
-            if '/' in value:
-                if len(value.split('/')) > 3:
-                    raise ValueError('Object reference {} has too many slashes  - should be workspace/object/version(optional)'.format(value))
-                    # return (ws_ref, 'Data reference named {} does not have the right format - should be workspace/object/version(optional)')
-                info = self.ws_client.get_object_info_new({'objects': [{'ref': value}]})[0]
-            # Otherwise, assume it's a name, not a reference.
-            else:
-                info = self.ws_client.get_object_info_new({'objects': [{'workspace': workspace, 'name': value}]})[0]
-            return "{}/{}/{}".format(info[6], info[0], info[4])
+        if '/' in value:
+            if len(value.split('/')) > 3:
+                raise ValueError('Object reference {} has too many slashes  - should be workspace/object/version(optional)'.format(value))
+                # return (ws_ref, 'Data reference named {} does not have the right format - should be workspace/object/version(optional)')
+            info = self.ws_client.get_object_info_new({'objects': [{'ref': value}]})[0]
+        # Otherwise, assume it's a name, not a reference.
+        else:
+            info = self.ws_client.get_object_info_new({'objects': [{'workspace': workspace, 'name': value}]})[0]
+        return "{}/{}/{}".format(info[6], info[0], info[4])
 
 #    def _resolve_ref(self, workspace, obj_name):
-#        info = self.ws_client.get_object_info_new({'objects': [{'workspace': workspace, 
+#        info = self.ws_client.get_object_info_new({'objects': [{'workspace': workspace,
 #                                                                'name': obj_name}]})[0]
 #        return "{}/{}/{}".format(info[6], info[0], info[4])
 
+
+    # For a given value and associated spec, if this is not an output param,
+    # then ensure that the reference points to an object in the current
+    # workspace, and transform the value into an absolute reference to it.
+    # Note that for 
+    # 
     def _resolve_ref_if_typed(self, value, spec_param):
         is_output = 'is_output' in spec_param and spec_param['is_output'] == 1
         if 'allowed_types' in spec_param and not is_output:
@@ -831,11 +838,17 @@ class AppManager(object):
             mapped_value = dict()
             id_map = spec_param.get('id_mapping', {})
             for param_id in id_map:
+                # ensure that the param referenced in the group param list
+                # exists in the spec. 
+                # NB: This should really never happen if thesdk registration 
+                # process validates them.
                 if param_id not in spec_params:
                     msg = "Unknown parameter id in group mapping: " + param_id
                     raise ValueError(msg)
             for param_id in value:
                 target_key = id_map.get(param_id, param_id)
+                # Sets either the raw value, or if the parameter is an object
+                # reference the full object refernce (see the method).
                 target_val = self._resolve_ref_if_typed(value[param_id],
                                                         spec_params[param_id])
                 mapped_value[target_key] = target_val
@@ -1016,7 +1029,7 @@ class AppManager(object):
             ret = ret + str(generator['suffix'])
         return ret
 
-    def _check_parameter(self, param, value, workspace, all_params=None):
+    def _check_parameter(self, param, value, workspace, all_params=dict()):
         """
         Checks if the given value matches the rules provided in the param dict.
         If yes, returns None
@@ -1048,17 +1061,19 @@ class AppManager(object):
                                                              v,
                                                              workspace,
                                                              all_params)
+                    if err:
+                        error_list += err
+                    if ref:
+                        ws_refs += ref
                 else:
                     # returns a single ref / err pair
                     (ref, err) = self._validate_param_value(param,
                                                             v,
                                                             workspace)
-                    ref = [ref]
-                    err = [err]
-                if err:
-                    error_list += err
-                if ref:
-                    ws_refs += ref
+                    if err:
+                        error_list.append(err)
+                    if ref:
+                        ws_refs.append(ref)
             if len(error_list):
                 return (None, "\n\t".join(error_list))
             else:

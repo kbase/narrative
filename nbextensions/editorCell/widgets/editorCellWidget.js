@@ -2,10 +2,8 @@
 /*jslint white:true,browser:true*/
 
 define([
-    'jquery',
     'bluebird',
     'uuid',
-    'common/parameterSpec',
     'common/runtime',
     'common/events',
     'common/html',
@@ -13,7 +11,6 @@ define([
     'common/jupyter',
     'common/busEventManager',
     'kb_service/client/narrativeMethodStore',
-    'kb_service/client/workspace',
     'kb_service/utils',
     'kb_sdk_clients/genericClient',
     'common/pythonInterop',
@@ -21,13 +18,13 @@ define([
     'common/ui',
     'common/fsm',
     'google-code-prettify/prettify',
+    './editorCell-fsm',
+
     'css!google-code-prettify/prettify.css',
     'css!font-awesome.css'
 ], function (
-    $,
     Promise,
     Uuid,
-    ParameterSpec,
     Runtime,
     Events,
     html,
@@ -35,14 +32,14 @@ define([
     Jupyter,
     BusEventManager,
     NarrativeMethodStore,
-    Workspace,
-    apiUtils,
+    serviceUtils,
     GenericClient,
     PythonInterop,
     utils,
     Ui,
     Fsm,
-    PR
+    PR,
+    editorCellFsm
     ) {
     'use strict';
     var t = html.tag,
@@ -50,209 +47,7 @@ define([
         table = t('table'), tr = t('tr'), th = t('th'), td = t('td'),
         pre = t('pre'), input = t('input'),
         places,
-        appStates = [
-            {
-                state: {
-                    mode: 'new'
-                },
-                ui: {
-                    buttons: {
-                        enabled: [],
-                        disabled: ['save']
-                    },
-                    elements: {
-                        show: [],
-                        hide: ['fatal-error', 'parameters-group']
-                    }
-                },
-                next: [
-                    {
-                        mode: 'fatal-error'
-                    },
-                    {
-                        mode: 'editing',
-                        params: 'incomplete'
-                    }
-                ]
-            },
-            {
-                state: {
-                    mode: 'fatal-error'
-                },
-                ui: {
-                    buttons: {
-                        enabled: [],
-                        disabled: [],
-                        hide: ['save']
-                    },
-                    elements: {
-                        show: ['fatal-error'],
-                        hide: ['parameters-group', 'edit-object-selector']
-                    }
-                },
-                next: [
-                    {
-                        mode: 'fatal-error'
-                    }
-                ]
-
-            },
-            {
-                state: {
-                    mode: 'editing',
-                    params: 'incomplete'
-                },
-                ui: {
-                    buttons: {
-                        enabled: [],
-                        disabled: ['save']
-                    },
-                    elements: {
-                        show: ['parameters-group'],
-                        hide: ['fatal-error']
-                    }
-                },
-                next: [
-                    {
-                        mode: 'editing',
-                        params: 'complete',
-                        code: 'built'
-                    },
-                    {
-                        mode: 'editing',
-                        params: 'incomplete'
-                    },
-                    {
-                        mode: 'fatal-error'
-                    }                    
-                ]
-            },
-            {
-                state: {
-                    mode: 'editing',
-                    params: 'complete',
-                    code: 'built'
-                },
-                ui: {
-                    buttons: {
-                        enabled: ['save'],
-                        disabled: []
-                    },
-                    elements: {
-                        show: ['parameters-group'],
-                        hide: ['fatal-error']
-                    }
-                },
-                next: [
-                    {
-                        mode: 'editing',
-                        params: 'incomplete'
-                    },
-                    {
-                        mode: 'editing',
-                        params: 'complete',
-                        code: 'built'
-                    },
-                    {
-                        mode: 'saving'
-                    },
-                    {
-                        mode: 'error'
-                    },
-                    {
-                        mode: 'fatal-error'
-                    }
-                ]
-            },
-            {
-                state: {
-                    mode: 'saving'
-                },
-                ui: {
-                    buttons: {
-                        enabled: [],
-                        disabled: ['save']
-                    },
-                    elements: {
-                        show: ['parameters-group'],
-                        hide: []
-                    }
-                },
-                next: [
-                    {
-                        mode: 'saved'
-                    },
-                    {
-                        mode: 'fatal-error'
-                    }
-                ]
-            },
-            {
-                state: {
-                    mode: 'saved'
-                },
-                ui: {
-                    buttons: {
-                        enabled: [],
-                        disabled: ['save']
-                    },
-                    elements: {
-                        show: ['parameters-group'],
-                        hide: []
-                    }
-                },
-                on: {
-                    enter: {
-                        messages: [
-                            {
-                                emit: 'on-success'
-                            }
-                        ]
-                    }
-                },
-                next: [
-                    {
-                        mode: 'saved'
-                    },
-                    {
-                        mode: 'editing',
-                        params: 'complete',
-                        code: 'built'
-                    },
-                    {
-                        mode: 'fatal-error'
-                    }
-                ]
-            },
-            {
-                state: {
-                    mode: 'error'
-                },
-                ui: {
-                    buttons: {
-                        enabled: [],
-                        disabled: ['save']
-                    },
-                    elements: {
-                        show: ['parameters-display-group', 'exec-group', 'output-group'],
-                        hide: ['parameters-group']
-                    }
-                },
-                next: [
-                    {
-                        mode: 'error'
-                    },
-                    {
-                        mode: 'editing',
-                        params: 'complete',
-                        code: 'built'
-                    },
-                    {
-                        mode: 'fatal-error'
-                    }
-                ]
-            }
-        ];
+        appStates = editorCellFsm.fsm;
 
     function factory(config) {
         var container, ui,
@@ -265,6 +60,7 @@ define([
             cellBus,
             bus = runtime.bus().makeChannelBus(null, 'An editor cell widget'),
             env = {},
+            editorState,
             model,
             eventManager = BusEventManager.make({
                 bus: runtime.bus()
@@ -313,119 +109,227 @@ define([
          */
         function getLayout() {
         }
+        
         function getRelations() {
 
         }
-        function getParameters() {
-            var type = model.getItem('params.type'),
-                types;
-            type = null;
-            if (!type) {
-                // alert('help, no type!');
-                types = ['KBaseFile.SingleEndLibrary', 'KBaseFile.PairedEndLibrary'];
-            } else {
-                types = [type];
-            }
 
-            var parameters = [
-//                {
-//                    id: 'type',
-//                    description: 'Type of the reads set',
-//                    short_hint: 'The type of the set of sequence reads',
-//                    default_values: [''],
-//                    optional: 0,
-//                    disabled: 0,
-//                    advanced: 0,
-//                    allow_multiple: 0,
-//                    field_type: 'dropdown',
-//                    dropdown_options: {
-//                        options: [
-//                            {
-//                                value: 'KBaseFile.SingleEndLibrary',
-//                                display: 'Single-End'
-//                            },
-//                            {
-//                                value: 'KBaseFile.PairedEndLibrary',
-//                                display: 'Paired-End'
-//                            }
-//                        ]
-//                    },
-//                    ui_class: 'parameter',
-//                    ui_name: 'Type'
-//                },
-                {
+        function getEditorSpec() {
+            var spec = {
+                target: {
                     id: 'name',
-                    description: 'Name of the reads set',
+                    description: 'Name of the Reads Set',
                     short_hint: 'The name of the set of sequence reads',
-                    default_values: [''],
-                    optional: 0,
-                    disabled: 0,
-                    advanced: 0,
-                    allow_multiple: 0,
-                    field_type: 'text',
-                    text_options: {
-                        is_output_name: 1,
-                        placeholder: 'Reads Set Name',
-                        valid_ws_types: ['KBaseSets.ReadsSet']
-                    },
-                    ui_class: 'output',
-                    ui_name: 'Reads Set Name'
+                    type: 'objectName',
+                    constraints: {
+                        types: ['KBaseSets.ReadsSet']
+                    }
                 },
-                {
-                    id: 'description',
-                    description: 'Description of the reads set',
-                    short_hint: 'The description of the set of sequence reads',
-                    default_values: [''],
-                    optional: 1,
-                    disabled: 0,
-                    advanced: 0,
-                    allow_multiple: 0,
-                    field_type: 'textarea',
-                    textarea_options: {
-                        is_output_name: 0,
-                        placeholder: 'Description',
-                        regex_constraint: [],
-                        validate_as: 'string',
-                        n_rows: 5
-                    },
-                    ui_class: 'parameter',
-                    ui_name: 'Description'
-                },
-                {
-                    id: 'items',
-                    field_type: 'text',
-                    description: 'A set of reads objects',
-                    short_hint: 'A set of reads objects',
-                    default_values: [''],
-                    optional: 1,
-                    disabled: 0,
-                    advanced: 0,
-                    allow_multiple: 1,
-                    text_options: {
-                        is_output_name: 0,
-                        placeholder: 'Items',
-                        regex_constraint: [],
-                        valid_ws_types: types
-                    },
-                    ui_class: 'input',
-                    ui_name: 'Set of Reads Objects'
-                }
-            ];
+                fields: [
 
-            return parameters.map(function (parameterSpec) {
-                // tee hee
-                var param = ParameterSpec.make({parameterSpec: parameterSpec});
-                return param;
-            });
+                ]
+            };
         }
 
-        function getParameterMap() {
-            var parameterMap = {};
-            getParameters().forEach(function (param) {
-                // tee hee
-                parameterMap[param.id()] = param;
-            });
-            return  parameterMap;
+        function getParameters() {
+            return {
+                name: {
+                    id: 'name',
+
+                    multipleItems: false,
+
+                    ui: {
+                        label: 'Reads Set Name',
+                        description: 'Name of the reads set',
+                        hint: 'The name of the set of sequence reads',
+                        class: 'parameter',
+                        control: null
+                    },
+                    data: {
+                        type: 'string',
+                        constraints: {
+                            required: true,
+                            rule: 'WorkspaceObjectName' // ws data_type
+                        },
+                        defaultValue: ''
+                    }
+                },
+                description: {
+                    id: 'description',
+                    multipleItems: false,
+                    ui: {
+                        label: 'Description',
+                        description: 'Description of the Reads Set',
+                        hint: 'The description of the set of sequence reads',
+                        class: 'parameter',
+                        control: 'textarea',
+                        rows: 5
+                    },
+                    data: {
+                        type: 'string',
+                        constraints: {
+                            required: false,
+                            multiLine: true
+                        },
+                        defaultValue: ''
+                    }
+                },
+//                integers: {
+//                    id: 'integers',
+//                    multipleItems: true,
+//                    ui: {
+//                        label: 'Integers',
+//                        description: 'Enter some numbers, er, integers',
+//                        hint: 'This is where youentere integers',
+//                        class: 'parameter'
+//                    },
+//                    data: {
+//                        type: '[]int',
+//                        constraints: {
+//                            required: true,
+//                            min: 10,
+//                            max: 100
+//                        }
+//                    }
+//                },
+                items: {
+                    id: 'items',
+                    multipleItems: false,
+                    ui: {
+                        label: 'Items',
+                        description: 'A set of Reads Objects',
+                        hint: 'A set of Reads Objects',
+                        class: 'parameter',
+                        control: '',
+                        layout: ['ref', 'label']
+                    },
+                    data: {
+                        type: '[]struct',
+                        constraints: {
+                            required: true
+                        },
+                        defaultValue: null
+                    },
+                    parameters: {                        
+                        ref: {
+                            id: 'ref',
+
+                            multipleItems: false,
+
+                            ui: {
+                                label: 'Reads Object',
+                                description: 'This is param 1',
+                                hint: 'Hint 1',
+                                class: 'parameter'
+                            },
+                            data: {
+                                type: 'workspaceObjectRef',
+                                constraints: {
+                                    required: true,
+                                    types: ['KBaseFile.PairedEndLibrary', 'KBaseFile.SingleEndLibrary']
+                                },
+                                defaultValue: null
+                            }
+                        },
+                        label: {
+                            id: 'label',
+
+                            multipleItems: false,
+
+                            ui: {
+                                label: 'Label',
+                                description: 'This is param 2',
+                                hint: 'Hint 2',
+                                class: 'parameter'
+                            },
+                            data: {
+                                type: 'string',
+                                constraints: {
+                                    required: true
+                                },
+                                defaultValue: null
+                            }
+                        }
+//                        data_attachments: {
+//                            id: 'data_attachments',
+//
+//                            multipleItems: false,
+//
+//                            ui: {
+//                                label: 'Data Attachment',
+//                                description: 'A data attachment',
+//                                hint: 'Hint 3',
+//                                class: 'parameter',
+//                                layout: ['name', 'ref']
+//                            },
+//                            data: {
+//                                type: '[]struct',
+//                                constraints: {
+//                                    required: true
+//                                },
+//                                defaultValue: {}
+//                            },
+//                            parameters: {
+//                                name: {
+//                                    id: 'name',
+//                                    ui: {
+//                                        label: 'Label',
+//                                        description: 'Label for the data attachment',
+//                                        hint: 'Hint for data attachment',
+//                                        class: 'parameter'
+//                                    },
+//                                    data: {
+//                                        type: 'string',
+//                                        constraints: {
+//                                            required: true
+//                                        }
+//                                    }
+//                                },
+//                                ref: {
+//                                    id: 'ref',
+//                                    ui: {
+//                                        label: 'Data Obj',
+//                                        description: 'Object reference',
+//                                        hint: 'Object reference',
+//                                        class: 'parameter'
+//                                    },
+//                                    data: {
+//                                        type: 'workspaceObjectRef',
+//                                        constraints: {
+//                                            types: [null]
+//                                        }
+//                                    }
+//                                }
+//                            }
+//                        }
+                    }
+                }
+//                ,
+//                items: {
+//                    id: 'items',
+//
+//                    multipleItems: true,
+//
+//                    ui: {
+//                        label: 'Items',
+//                        description: 'A set of Reads Objects',
+//                        hint: 'The set of Reads Objects',
+//                        class: 'parameter'
+//                    },
+//                    data: {
+//                        type: '[]workspaceObjectName',
+//                        constraints: {
+//                            required: false,
+//                            types: ['KBaseFile.SingleEndLibrary', 'KBaseFile.PairedEndLibrary']
+//                        },
+//                        defaultValue: null
+//                    }
+//                }
+            };
+        }
+
+        function getLayout() {
+            return ['name', 'description', 'items'];
         }
 
         /*
@@ -477,9 +381,10 @@ define([
 
 
         function syncFatalError() {
-            ui.setContent('fatal-error.title', model.getItem('fatalError.title'));
-            ui.setContent('fatal-error.message', model.getItem('fatalError.message'));
-            ui.setContent('fatal-error.details', model.getItem('fatalError.details'));
+            ui.setContent('fatal-error.title', editorState.getItem('fatalError.title'));
+            ui.setContent('fatal-error.message', editorState.getItem('fatalError.message'));
+            ui.setContent('fatal-error.details', editorState.getItem('fatalError.details'));
+            ui.setContent('fatal-error.advice', editorState.getItem('fatalError.advice'));
         }
 
         function showFatalError(arg) {
@@ -499,7 +404,11 @@ define([
             ui.setContent('fsm-display.content', content);
         }
 
-
+        function showDebug(status) {
+            // NOOP for now
+            // console.log('debug', status);
+            // ui.setContent('editor-status.debug', status);
+        }
 
         function renderAppSpec() {
             return pre({
@@ -569,7 +478,6 @@ define([
             });
         }
 
-
         function renderSetting(settingName) {
             var setting = settings[settingName],
                 value;
@@ -578,7 +486,7 @@ define([
                 return;
             }
 
-            value = model.getItem(['user-settings', settingName], setting.defaultValue);
+            value = editorState.getItem(['user-settings', settingName], setting.defaultValue);
             switch (setting.type) {
                 case 'toggle':
                     if (value) {
@@ -594,7 +502,7 @@ define([
             var control = event.target,
                 settingName = control.value;
 
-            model.setItem(['user-settings', settingName], control.checked);
+            editorState.setItem(['user-settings', settingName], control.checked);
 
             renderSetting(settingName);
         }
@@ -603,7 +511,7 @@ define([
             var events = Events.make({node: container}),
                 content = Object.keys(settings).map(function (key) {
                 var setting = settings[key],
-                    settingsValue = model.getItem(['user-settings', key], setting.defaultValue);
+                    settingsValue = editorState.getItem(['user-settings', key], setting.defaultValue);
                 return div({}, [
                     input({
                         type: 'checkbox',
@@ -745,7 +653,7 @@ define([
                                         ])
                                     ]
                                 }),
-                                ui.buildPanel({
+                                ui.buildCollapsiblePanel({
                                     title: 'Select Object to Edit',
                                     name: 'edit-object-selector',
                                     hidden: false,
@@ -753,16 +661,24 @@ define([
                                     classes: ['kb-panel-container'],
                                     body: div({dataElement: 'widget'})
                                 }),
+                                ui.buildCollapsiblePanel({
+                                    title: span(['Currently Editing ', span({dataElement: 'name', style: {textDecoration: 'underline'}})]),
+                                    name: 'currently-editing',
+                                    hidden: false,
+                                    type: 'default',
+                                    classes: ['kb-panel-container'],
+                                    body: div({dataElement: 'widget'})
+                                }),
                                 ui.buildPanel({
                                     title: 'Editor ' + span({class: 'fa fa-pencil'}),
-                                    name: 'parameters-group',
+                                    name: 'editor',
                                     hidden: false,
                                     type: 'default',
                                     classes: ['kb-panel-container'],
                                     body: div({dataElement: 'widget'})
                                 }),
                                 div({
-                                    dataElement: 'availableActions'
+                                    dataElement: 'available-actions'
                                 }, [
                                     div({class: 'btn-toolbar kb-btn-toolbar-cell-widget'}, [
                                         div({class: 'btn-group'}, [
@@ -771,20 +687,49 @@ define([
                                     ])
                                 ]),
                                 // just a simple status area for now...
-                                ui.buildPanel({
+                                ui.buildCollapsiblePanel({
                                     title: 'Status',
                                     name: 'editor-status',
                                     hidden: false,
                                     type: 'default',
                                     classes: ['kb-panel-container'],
-                                    body: div({
-                                        dataElement: 'message',
-                                        style: {
-                                            width: '100%',
-                                            padding: '4px',
-                                            minHeight: '1em'
-                                        }
-                                    })
+                                    body: div([
+                                        div({
+                                            dataElement: 'message',
+                                            style: {
+                                                width: '100%',
+                                                padding: '4px',
+                                                minHeight: '1em'
+                                            }
+                                        }),
+                                        div({
+                                            dataElement: 'flags',
+                                            style: {borderTop: '1px silver solid'}
+                                        }, [
+                                            span('param flags: '),
+                                            span({style: {border: '0px silver solid'}}, [
+                                                'touched:', span({
+                                                    dataElement: 'touched',
+                                                    style: {
+                                                        display: 'inline-block',
+                                                        border: '1px silver solid',
+                                                        width: '10px', height: '10px'
+                                                    }
+                                                })
+                                            ]),
+                                            span({style: {border: '0px silver solid', marginLeft: '10px'}}, [
+                                                'changed:', span({
+                                                    dataElement: 'changed',
+                                                    style: {
+                                                        display: 'inline-block',
+                                                        border: '1px silver solid',
+                                                        width: '10px', height: '10px'
+                                                    }
+                                                })
+                                            ])
+                                        ])
+                                        // div(['debug: ', span({dataElement: 'debug'}, 'debug here')])
+                                    ])
                                 })
                             ])
                         ])
@@ -797,6 +742,14 @@ define([
         }
 
         function validateModel() {
+
+            // TODO: make this work
+
+            return {
+                isValid: true,
+                errors: []
+            };
+
             /*
              * Validation is currently very simple.
              * Iterate through all parameters in the model specification.
@@ -822,9 +775,11 @@ define([
              *
              */
             var params = model.getItem('params'),
-                errors = getParameters().map(function (parameterSpec) {
+                parameters = getParameters(),
+                errors = Object.keys(parameters).map(function (id) {
+                var parameterSpec = parameters[id];
                 if (parameterSpec.required()) {
-                    if (parameterSpec.isEmpty(params[parameterSpec.id()])) {
+                    if (parameterSpec.isEmpty(params[id].value)) {
                         return {
                             diagnosis: 'required-missing',
                             errorMessage: 'The ' + parameterSpec.dataType() + ' "' + parameterSpec.id() + '" is required but was not provided'
@@ -842,11 +797,10 @@ define([
                 errors: errors
             };
         }
-        
+
         function setStatus(message) {
             ui.setContent('editor-status.message', message);
         }
-        
 
         // TODO: we need to determine the proper forms for a app identifier, and
         // who creates this canonical identifier. E.g. the method panel supplies
@@ -868,13 +822,12 @@ define([
                     return {
                         id: app.id,
                         tag: app.tag
-                    }
+                    };
                 default:
                     throw new Error('Invalid tag for app ' + app.id);
             }
         }
-        
-        
+
         /*
          * For now we are using this to transform the params as stored in the
          * model to those expected by the "save" method
@@ -896,12 +849,12 @@ define([
 
         function buildPython(cell, cellId, app, params) {
             var runId = new Uuid(4).format(),
-                app = fixApp(app),
-                params = fixParams(params),
-                code = PythonInterop.buildEditorRunner(cellId, runId, app, params);
+                fixedApp = fixApp(app),
+                code = PythonInterop.buildEditorRunner(cellId, runId, fixedApp, params);
             // TODO: do something with the runId 
+            
             setStatus('Successfully built code');
-            model.setItem('editorState.currentRunId', runId);
+            editorState.setItem('editorState.currentRunId', runId);
             cell.set_text(code);
         }
 
@@ -910,7 +863,7 @@ define([
         }
 
         function initializeFSM() {
-            var currentState = model.getItem('fsm.currentState');
+            var currentState = editorState.getItem('fsm.currentState');
             if (!currentState) {
                 // TODO: evaluate the state of things to try to guess the state?
                 // Or is this just an error unless it is a new cell?
@@ -926,7 +879,7 @@ define([
                 //    mode: 'editing', params: 'incomplete'
                 //},
                 onNewState: function (fsm) {
-                    model.setItem('fsm.currentState', fsm.getCurrentState().state);
+                    editorState.setItem('fsm.currentState', fsm.getCurrentState().state);
                     // save the narrative!
 
                 },
@@ -952,12 +905,12 @@ define([
             // }
             // try this hack to reset the initial state for the input subarea...
             //codeInputArea[0].setAttribute('data-toggle-initial-state', 'hidden');
-            model.setItem('user-settings.showCodeInputArea', false);
+            editorState.setItem('user-settings.showCodeInputArea', false);
         }
 
         function showCodeInputArea() {
             var codeInputArea = cell.input.find('.input_area');
-            if (model.getItem('user-settings.showCodeInputArea')) {
+            if (editorState.getItem('user-settings.showCodeInputArea')) {
                 codeInputArea.removeClass('hidden');
                 // codeInputArea.css('display', cell.kbase.inputAreaDisplayStyle);
             } else {
@@ -967,27 +920,27 @@ define([
         }
 
         function toggleCodeInputArea(cell) {
-            if (model.getItem('user-settings.showCodeInputArea')) {
-                model.setItem('user-settings.showCodeInputArea', false);
+            if (editorState.getItem('user-settings.showCodeInputArea')) {
+                editorState.setItem('user-settings.showCodeInputArea', false);
             } else {
-                model.setItem('user-settings.showCodeInputArea', true);
+                editorState.setItem('user-settings.showCodeInputArea', true);
             }
             showCodeInputArea();
-            return model.getItem('user-settings.showCodeInputArea');
+            return editorState.getItem('user-settings.showCodeInputArea');
         }
 
         function toggleSettings(cell) {
             var name = 'showSettings',
                 selector = 'settings',
                 node = ui.getElement(selector),
-                showing = model.getItem(['user-settings', name]);
+                showing = editorState.getItem(['user-settings', name]);
             if (showing) {
-                model.setItem(['user-settings', name], false);
+                editorState.setItem(['user-settings', name], false);
             } else {
-                model.setItem(['user-settings', name], true);
+                editorState.setItem(['user-settings', name], true);
             }
 
-            showing = model.getItem(['user-settings', name]);
+            showing = editorState.getItem(['user-settings', name]);
             if (showing) {
                 node.classList.remove('hidden');
                 //node.style.display = 'block';
@@ -999,15 +952,15 @@ define([
         }
 
         function doRemoveNotification(index) {
-            var notifications = model.getItem('notifications') || [];
+            var notifications = editorState.getItem('notifications') || [];
             notifications.splice(index, 1);
-            model.setItem('notifications', notifications);
+            editorState.setItem('notifications', notifications);
             renderNotifications();
         }
 
         function renderNotifications() {
             var events = Events.make(),
-                notifications = model.getItem('notifications') || [],
+                notifications = editorState.getItem('notifications') || [],
                 content = notifications.map(function (notification, index) {
                     return div({class: 'row'}, [
                         div({class: 'col-md-10'}, notification),
@@ -1029,14 +982,14 @@ define([
         }
 
         function addNotification(notification) {
-            var notifications = model.getItem('notifications') || [];
+            var notifications = editorState.getItem('notifications') || [];
             notifications.push(notification);
-            model.setItem('notifications', notifications);
+            editorState.setItem('notifications', notifications);
             renderNotifications();
         }
 
         function clearNotifications() {
-            model.setItem('notifications', []);
+            editorState.setItem('notifications', []);
         }
 
         // WIDGETS
@@ -1067,6 +1020,7 @@ define([
             renderNotifications();
             renderSettings();
             var state = fsm.getCurrentState();
+            showDebug(JSON.stringify(state.state));
 
             // Button state
             state.ui.buttons.enabled.forEach(function (button) {
@@ -1084,6 +1038,21 @@ define([
             state.ui.elements.hide.forEach(function (element) {
                 ui.hideElement(element);
             });
+
+            // Editor state flags
+            ['touched', 'changed'].forEach(function (flag) {
+                var flagged, params = model.getItem('params');
+                if (params) {
+                    Object.keys(params).forEach(function (key) {
+                        var param = params[key];
+                        if (param[flag]) {
+                            flagged = true;
+                        }
+                    });
+                    setStatusFlag(flag, flagged);
+                }
+            });
+
 
         }
 
@@ -1118,12 +1087,40 @@ define([
                     Jupyter.deleteCell(cell);
                 });
         }
-        function doRun() {
-            // ui.collapsePanel('parameters-group');
-            // cell.execute();
-            // Just save from the UI for now.
+
+        function isModelChanged() {
+            var params = model.getItem('params');
+            if (!params) {
+                return false;
+            }
+            return ['touched', 'changed'].some(function (flag) {
+                return Object.keys(params).some(function (key) {
+                    return params[key];
+                });
+            });
+        }
+
+        function clearModelFlags() {
+            var params = model.getItem('params');
+            ['touched', 'changed'].forEach(function (flag) {
+                Object.keys(params).forEach(function (key) {
+                    var param = params[key];
+                    param[flag] = false;
+                });
+            });
+        }
+
+        function doSave() {
             setStatus(html.loading('Saving...'));
-            doSaveReadsSet();
+            doSaveReadsSet()
+                .then(function () {
+                    // Clear the parameter flags
+                    clearModelFlags();
+                    renderUI();
+                })
+                .catch(function (err) {
+                    console.error('ERROR!', err);
+                });
         }
 
         // LIFECYCLE API
@@ -1168,79 +1165,6 @@ define([
             });
         }
 
-        function getOutputParams() {
-            var outputParams = env.appSpec.parameters.map(function (parameter) {
-                var textOptions = parameter.text_options;
-                if (textOptions) {
-                    if (textOptions.is_output_name === 1) {
-                        return parameter.id;
-                    }
-                }
-                return false;
-            })
-                .filter(function (paramId) {
-                    return (paramId !== false);
-                }),
-                params = model.getItem('params'),
-                outputNames = Object.keys(params).filter(function (key) {
-                return outputParams.some(function (param) {
-                    return (param === key);
-                });
-            })
-                .map(function (key) {
-                    return {
-                        param: key,
-                        objectName: params[key]
-                    };
-                });
-            return outputNames;
-        }
-
-        /*
-         * Given a set of object names within this workspace, get the object
-         * info for each one, and return the absolute reference (wsid, objid, ref)
-         */
-        function getOutputObjectRefs(outputs) {
-            var workspace = new Workspace(runtime.config('services.workspace.url'), {
-                token: runtime.authToken()
-            }),
-                objectIdentities = outputs.map(function (output) {
-                    return {
-                        wsid: workspaceInfo.id,
-                        name: output.objectName
-                    };
-                });
-            return workspace.get_object_info_new({
-                objects: objectIdentities,
-                ignoreErrors: 1,
-                includeMetadata: 0
-            })
-                .then(function (results) {
-                    return results.map(function (result, index) {
-                        if (result === null) {
-                            console.warn('MISSING OBJECT', outputs[index]);
-                            throw new Error('Output object ' + outputs[index].objectName + ' specified in param ' + outputs[index].param + ' was not found in this workspace');
-                        }
-                        return {
-                            param: outputs[index].param,
-                            name: outputs[index].objectName,
-                            ref: [result[6], result[0], result[4]].join('/')
-                        };
-                    });
-                });
-        }
-
-        function clearOutput() {
-            // cell.set_text('from biokbase.narrative.jobs import AppManager\nAppManager().clear_app()');
-            // cell.execute();
-            var cellNode = cell.element.get(0),
-                textNode = document.querySelector('.output_area.output_text');
-
-            if (textNode) {
-                textNode.innerHTML = '';
-            }
-        }
-
         function start() {
             return Promise.try(function () {
                 /*
@@ -1276,7 +1200,7 @@ define([
                     }
                 });
                 bus.on('save', function () {
-                    doRun();
+                    doSave();
                 });
 //                bus.on('remove', function () {
 //                    doRemove();
@@ -1303,16 +1227,26 @@ define([
                 eventManager.add(cellBus.on('delete-cell', function () {
                     doDeleteCell();
                 }));
-                
+
                 eventManager.add(cellBus.on('result', function (message) {
                     // Verify that the run id is the same.
-                    setStatus('Received result...');
-                    if (message.address.run_id !== model.getItem('editorState.currentRunId')) {
+                    if (message.address.run_id !== editorState.getItem('editorState.currentRunId')) {
                         setStatus('Error! result message is not from the generated code!');
                         return;
                     }
                     if (message.message.result) {
                         setStatus('Successfully saved the reads set');
+                        editorState.setItem('editorState.touched', false);
+                        editorState.setItem('editorState.changed', false);
+                        fsm.newState({mode: 'editing', params: 'complete', data: 'clean'});
+                        renderUI();
+                        
+                        // Now we need to reload the editor with thew new item.
+                        // console.log('RESULT', message);
+                        model.setItem('current.readsSetRef', message.message.result.set_ref);
+                        model.setItem('current.readsSet.object', serviceUtils.objectInfoToObject(message.message.result.set_info));
+                        updateEditor(message.message.result.set_ref);
+                        
                     } else if (message.message.error) {
                         // cheap as heck error message
                         var errorMessage = div({class: 'alert alert-danger'}, [
@@ -1323,49 +1257,7 @@ define([
                     } else {
                         setStatus('what?');
                     }
-                    // console.log('local app result!', message);
                 }));
-
-
-                // We need to listen for job-status messages is we are loading
-                // a cell that has a running job.
-
-                // TODO: inform the job manager that we are ready to receive
-                // messages for this job?
-                // At present the job manager will start doing this after it
-                // loads the narrative and has inspected the jobs in its metadata.
-                // But this is a race condition -- and it is probably better
-                // if the cell invokes this response and then can receive either
-                // the start of the job-status message stream or a response indicating
-                // that the job has completed, after which we don't need to
-                // listen any further.
-
-                // get the status
-
-                // if we are in a running state, start listening for jobs
-                var state = model.getItem('fsm.currentState');
-
-                if (state) {
-                    switch (state.mode) {
-                        case 'editing':
-                        case 'launching':
-                        case 'processing':
-                            switch (state.stage) {
-                                case 'launching':
-                                    // nothing to do.
-                                    break;
-                                case 'queued':
-                                case 'running':
-                                    startListeningForJobMessages(model.getItem('exec.jobState.job_id'));
-                                    break;
-                            }
-                            break;
-                        case 'success':
-                        case 'error':
-                        // do nothing for now
-                    }
-                }
-
 
                 showCodeInputArea();
 
@@ -1373,54 +1265,24 @@ define([
             });
         }
 
-        function findInputWidget(requestedInputWidget) {
-            var defaultModule = 'nbextensions/editorCell/widgets/readsSetUpdateEditor';
-            return defaultModule;
-
-            if (requestedInputWidget === null) {
-                return defaultModule;
-            }
-            // Yes, the string literal 'null' can slip through
-            if (requestedInputWidget === 'null') {
-                return defaultModule;
-            }
-
-            return 'nbextensions/editorCell/widgets/inputWidgets/' + requestedInputWidget;
-        }
-
-        function exportParams() {
-
-            // For each param.
-
-            // if certain limited conditions apply
-
-            // transform the params from the fundamental types
-
-            // to something more suitable for the app params.
-
-            // This is necessary because some params, like subdata, have a
-            // natural storage as array, but are supposed to be provided as
-            // a string with comma separators
-            var params = model.getItem('params'),
-                paramSpecs = getParameters(),
-                paramsToExport = {},
-                parameterMap = getParameterMap();
-
-            Object.keys(params).forEach(function (key) {
-                var value = params[key],
-                    paramSpec = parameterMap[key];
-
-                // console.log('param spec', paramSpec);
-//                if (paramSpec.spec.field_type === 'textsubdata') {
-//                    if (value) {
-//                        value = value.join(',');
-//                    }
-//                }
-
-                paramsToExport[key] = value;
-            });
-
-            return paramsToExport;
+        /*
+         * Convert the model into a set of params suitable for the editor
+         * app.
+         */
+        function modelToParams() {
+            return [{
+                    workspace: workspaceInfo.id,
+                    output_object_name: model.getItem('params.name.value'),
+                    data: {
+                        description: model.getItem('params.description.value'),
+                        items: model.getItem('params.items.value', []).map(function (item) {
+                            return {
+                                label:item.label,
+                                ref: item.ref
+                            };
+                        })
+                    }
+                }];
         }
 
         // TODO: this should be a the error area -- and we should switch the 
@@ -1454,12 +1316,23 @@ define([
                 ])
             ]);
 
-            ui.setContent('parameters-group.widget', content);
+            ui.setContent('editor.widget', content);
+        }
+
+        function setStatusFlag(flag, value) {
+            var flagNode = ui.getElement('editor-status.flags.' + flag);
+            if (flagNode) {
+                if (value) {
+                    flagNode.style.backgroundColor = 'green';
+                } else {
+                    flagNode.style.backgroundColor = 'white';
+                }
+            }
         }
 
         function loadUpdateEditor() {
             return new Promise(function (resolve, reject) {
-                ui.setContent('parameters-group.widget', html.loading());
+                ui.setContent('editor.widget', html.loading());
                 require(['nbextensions/editorCell/widgets/readsSetUpdateEditor'], function (Widget) {
                     // TODO: widget should make own bus.
                     var bus = runtime.bus().makeChannelBus(null, 'Parent comm bus for input widget'),
@@ -1470,14 +1343,14 @@ define([
                             appTag: env.appTag
                         });
                     widgets.editor = {
-                        path: ['parameters-group', 'widget'],
+                        path: ['editor', 'widget'],
                         // module: widgetModule,
                         type: 'update',
                         bus: bus,
                         instance: widget
                     };
                     bus.on('parameter-sync', function (message) {
-                        var value = model.getItem(['params', message.parameter]);
+                        var value = model.getItem(['params', message.parameter, 'value']);
                         bus.send({
                             parameter: message.parameter,
                             value: value
@@ -1494,7 +1367,7 @@ define([
                         message.parameters.forEach(function (paramId) {
                             bus.send({
                                 parameter: paramId,
-                                value: model.getItem(['params', message.parameter])
+                                value: model.getItem(['params', message.parameter, 'value'])
                             },
                                 {
                                     key: {
@@ -1512,35 +1385,43 @@ define([
                         },
                         handle: function (message) {
                             return {
-                                value: model.getItem(['params', message.parameterName])
+                                value: model.getItem(['params', message.parameterName, 'value'])
                             };
                         }
                     });
 
-//                    bus.on('get-parameter-value', function (message) {
-//                        var value = model.getItem(['params', message.parameter]);
-//                        bus.send({
-//                            parameter: message.parameter,
-//                            value: value
-//                        }, {
-//                            key: {
-//                                type: 'parameter-value',
-//                                parameter: message.parameter
-//                            }
-//                        });
-//                    });
                     bus.on('parameter-changed', function (message) {
                         // We simply store the new value for the parameter.
-                        model.setItem(['params', message.parameter], message.newValue);
+                        console.log('parameter-changed', message);
+                        model.setItem(['params', message.parameter, 'value'], message.newValue);
+                        model.setItem(['params', message.parameter, 'changed'], true);
+                        model.setItem(['params', message.parameter, 'touched'], false);
+                        // hack this in for now...
+                        var state = fsm.getCurrentState(),
+                            newState = JSON.parse(JSON.stringify(state.state));
+                        newState.data = 'changed';
+                        fsm.newState(newState);
+
                         evaluateAppState();
                     });
+
+                    bus.on('parameter-touched', function (message) {
+                        model.setItem(['params', message.parameter, 'touched'], true);
+                        var state = fsm.getCurrentState(),
+                            newState = JSON.parse(JSON.stringify(state.state));
+                        newState.data = 'touched';
+                        fsm.newState(newState);
+                        evaluateAppState();
+                    });
+
                     return widget.start()
                         .then(function () {
                             resolve();
                             widget.bus.emit('run', {
-                                node: ui.getElement(['parameters-group', 'widget']),
+                                node: ui.getElement(['editor', 'widget']),
                                 appSpec: env.appSpec,
-                                parameters: getParameters()
+                                parameters: getParameters(),
+                                layout: getLayout()  // LEFT OFF HERE - need layout + parameters in the update widget...
                             });
 
                             return null;
@@ -1556,7 +1437,7 @@ define([
                 });
             });
         }
-        
+
         function unloadEditor() {
             return Promise.try(function () {
                 if (widgets.editor) {
@@ -1571,10 +1452,10 @@ define([
                 return true;
             });
         }
-        
+
         function loadCreationEditor() {
             return new Promise(function (resolve, reject) {
-                ui.setContent('parameters-group.widget', html.loading());
+                ui.setContent('editor.widget', html.loading());
 
                 require(['nbextensions/editorCell/widgets/readsSetCreateEditor'], function (Widget) {
                     // TODO: widget should make own bus.
@@ -1584,19 +1465,19 @@ define([
                             workspaceInfo: workspaceInfo
                         });
                     widgets.editor = {
-                        path: ['parameters-group', 'widget'],
+                        path: ['editor', 'widget'],
                         // module: widgetModule,
                         type: 'create',
                         bus: bus,
                         instance: widget
                     };
                     bus.emit('run', {
-                        node: ui.getElement(['parameters-group', 'widget']),
+                        node: ui.getElement(['editor', 'widget']),
                         appSpec: env.appSpec,
                         parameters: getParameters()
                     });
                     bus.on('parameter-sync', function (message) {
-                        var value = model.getItem(['params', message.parameter]);
+                        var value = model.getItem(['params', message.parameter, 'value']);
                         bus.send({
                             parameter: message.parameter,
                             value: value
@@ -1613,7 +1494,7 @@ define([
                         message.parameters.forEach(function (paramId) {
                             bus.send({
                                 parameter: paramId,
-                                value: model.getItem(['params', message.parameter])
+                                value: model.getItem(['params', paramId, 'value'])
                             },
                                 {
                                     key: {
@@ -1631,7 +1512,7 @@ define([
                         },
                         handle: function (message) {
                             return {
-                                value: model.getItem(['params', message.parameterName])
+                                value: model.getItem(['params', message.parameterName, 'value'])
                             };
                         }
                     });
@@ -1650,7 +1531,7 @@ define([
 //                    });
                     bus.on('parameter-changed', function (message) {
                         // We simply store the new value for the parameter.
-                        model.setItem(['params', message.parameter], message.newValue);
+                        model.setItem(['params', message.parameter, 'value'], message.newValue);
                         evaluateAppState();
                     });
                     widget.start()
@@ -1668,12 +1549,34 @@ define([
                 });
             });
         }
+        
+        
+        function renderCurrentlyEditing(info) {
+            
+            // console.log('INFO', info);
+            
+            var content = table({class: 'table table-striped'}, [
+                tr([th('Name'), td({style: {fontWeight: 'bold'}}, info.name)]),
+                tr([th('Ref'), td(info.ref)]),
+                tr([th('Last saved'), td(info.saveDate.toLocaleDateString() + ' at ' + info.saveDate.toLocaleTimeString())]),
+                tr([th('By'), td(info.saved_by)])
+            ]);
+            
+            ui.setContent('currently-editing.widget', content);
+            
+            ui.setContent('currently-editing.name', info.name);
+        }
+        
 
         /*
          * Given an object ref, fetch the set object via the setApi, 
          * then populate
          */
         function updateEditor(objectRef) {
+
+            // TODO: check if the editor has unsaved changed, and 
+            // show an error message if so, and refuse to switch.
+
             var setApiClient = new GenericClient({
                 url: runtime.config('services.service_wizard.url'),
                 token: runtime.authToken(),
@@ -1684,43 +1587,45 @@ define([
                     ref: objectRef,
                     include_item_info: 1
                 };
+                
             return setApiClient.callFunc('get_reads_set_v1', [params])
                 .spread(function (setObject) {
-                    // Set the params.
+                    // After getting the reads set object, we populate our 
+                    // view model (data model-ish) with the results.
+                    // The editor will sync up with the model, and pick up the
+                    // values.                    
                     model.setItem('params', {});
-                    model.setItem('params.name', setObject.info[1]);
-                    model.setItem('params.description', setObject.data.description);
-                    model.setItem('params.items', setObject.data.items.map(function (item) {
-                        item.objectInfo = apiUtils.objectInfoToObject(item.info);
-                        return item.ref;
+                    
+                    // TODO: move this into code or config specific to 
+                    // the reads set editor.
+                    model.setItem('params.name.value', setObject.info[1]);
+                    model.setItem('params.description.value', setObject.data.description);
+                    model.setItem('params.items.value', setObject.data.items.map(function (item) {
+                        return {
+                            ref: item.ref,
+                            label: item.label
+                        };
                     }));
-
-                    // For now set the type based on the type of the first element.
-                    // console.log(setObject.data.items[0]);
-//                    var donorElementType = [
-//                        setObject.data.items[0].objectInfo.typeModule,
-//                        setObject.data.items[0].objectInfo.typeName
-//                    ].join('.');                        
-//                     model.setItem('params.type', donorElementType);
-
-                    //console.log('spec', env.appSpec);
-                    //console.log('parameters', env.parameters);
-//                    console.log('set object', setObject);
-//                    console.log('name', setObject.info[1]);
-//                    console.log('desc', setObject.data.description);
-//                    console.log('MODEL', model.getRawObject());
-                    // bus.emit('reset-to-defaults');
+                    
+                    var info = serviceUtils.objectInfoToObject(setObject.info);
+                    
+                    model.setItem('currentReadsSet', info);
+                    
+                    renderCurrentlyEditing(info);
+                    
                     return loadUpdateEditor();
-
+                })
+                .then(function () {
+                    evaluateAppState(true);
                 })
                 .catch(function (err) {
                     console.error('ERROR getting reads set ', err);
-                    console.error(err.detail.replace('\n', '<br>'));
+                    console.error(err.detail ? err.detail.replace('\n', '<br>') : '');
                     loadErrorWidget(err);
                 });
 
         }
-        
+
         /*
          * Reset the editor to default values for the parameters.
          * TODO: this really should be done through the spec, but we
@@ -1728,13 +1633,14 @@ define([
          */
         function resetEditorModel(objectRef) {
             model.setItem('params', {});
-            model.setItem('params.name', '');
-            model.setItem('params.description', '');
-            model.setItem('params.items', []);
+            model.setItem('params.name.value', '');
+            model.setItem('params.description.value', '');
+            model.setItem('params.items.value', []);
 
             //loadUpdateEditor();
 
         }
+        
         function doCreateNewSet(name) {
             var setApiClient = new GenericClient({
                 url: runtime.config('services.service_wizard.url'),
@@ -1764,14 +1670,13 @@ define([
                 };
             return setApiClient.callFunc('save_reads_set_v1', [params])
                 .spread(function (result) {
-                    console.log('CREATED!', result);
-                
+
                     // remove whatever is in the editor panel
-                    
+
                     // place the update editor there
-                    
+
                     // updatethe update editor with the thing to edit.
-                    
+
                     updateEditor(result.set_ref);
                 })
                 .catch(function (err) {
@@ -1781,54 +1686,23 @@ define([
         }
 
         function doSaveReadsSet() {
-            
-            var runId = model.getItem('params');
-            cell.execute();
-            return;
-            
-            var setApiClient = new GenericClient({
-                url: runtime.config('services.service_wizard.url'),
-                token: runtime.authToken(),
-                module: 'SetAPI',
-                version: 'dev'
-            }),
-                params = {
-                    workspace: String(workspaceInfo.id),
-                    output_object_name: model.getItem('params.name'),
-                    data: {
-                        description: model.getItem('params.description'),
-                        items: model.getItem('params.items').map(function (item) {
-                            return {
-                                ref: item
-                            };
-                        })
-                    }
-                };
-                
-            // TODO: Replace direct call to setApi with a call through the
-            // narrative back end.
-            
-            // Code should already be ready, that is part of the editor update
-            // workflow.
-            
-            // execute it
-            
-            // await the response (a synchronised message).
-                
-            return setApiClient.callFunc('save_reads_set_v1', [params])
-                .then(function (result) {
-                    console.log('SAVED!', result);
-                    alert('saved!');
-                })
-                .catch(function (err) {
-                    console.error('ERROR!', err);
-                });
+            return Promise.try(function () {
+                cell.execute();
+            });
         }
-        
+
         function doLoadNewSetForm() {
             unloadEditor();
             resetEditorModel();
             loadCreationEditor();
+        }
+        
+        function doEditObject(objectInfo) {            
+            // Update editor state (is also persistent in the metadata)
+            editorState.setItem('current.set.ref', objectInfo.ref);
+            editorState.setItem('current.set.info', objectInfo);
+            
+            updateEditor(objectInfo.ref);
         }
 
         function loadEditObjectSelector() {
@@ -1847,12 +1721,18 @@ define([
                     widget.bus.on('ready', function () {
                         widget.bus.emit('run', {
                             node: ui.getElement(['edit-object-selector', 'widget']),
-                            appSpec: env.appSpec
+                            appSpec: env.appSpec,
+                            selectedSet: editorState.getItem('current.set.ref')
                                 // parameters: getParameters()
                         });
                     });
+                    // When the user selects a reads set to edit.
                     widget.bus.on('changed', function (message) {
-                        updateEditor(message.newObjectRef);
+                        // Call this when we have a new object to edit. It will 
+                        // take care of updating the cell state as well as
+                        // rendering the object.
+                        console.log('changed', message);
+                        doEditObject(message.value);                        
                     });
                     widget.bus.on('create-new-set', function (message) {
                         doCreateNewSet(message.name);
@@ -1866,7 +1746,8 @@ define([
                         setFatalError({
                             title: 'Fatal error from ' + message.location,
                             message: message.error.message,
-                            details: 'details here'
+                            details: message.error.details || 'You may need to consult the browser log for additional information',
+                            advice: message.error.advice
                         });
                         renderUI();
                     });
@@ -1879,51 +1760,55 @@ define([
                             reject(err);
                         });
                 }, function (err) {
-                    console.log('ERROR', err);
+                    console.error('ERROR', err);
                     reject(err);
                 });
             });
         }
 
-        function evaluateAppState() {
-            var validationResult = validateModel();
-            console.log('evaluated app state: ', validationResult);
-            if (validationResult.isValid) {
-                buildPython(cell, utils.getMeta(cell, 'attributes').id, model.getItem('app'), exportParams());
-                fsm.newState({mode: 'editing', params: 'complete', code: 'built'});
-                renderUI();
-            } else {
-                resetPython(cell);
-                fsm.newState({mode: 'editing', params: 'incomplete'});
-                renderUI();
+        function evaluateAppState(force) {
+            if (force || isModelChanged()) {
+                var validationResult = validateModel();
+                if (validationResult.isValid) {
+                    buildPython(cell, utils.getCellMeta(cell, 'kbase.attributes.id'), editorState.getItem('app'), modelToParams());
+                    fsm.newState({mode: 'editing', params: 'complete', data: 'changed'});
+                } else {
+                    resetPython(cell);
+                    fsm.newState({mode: 'editing', params: 'incomplete', data: 'changed'});
+                }
             }
+            renderUI();
         }
-        
+
         function setFatalError(arg) {
-            model.setItem('fatalError', {
+            editorState.setItem('fatalError', {
                 title: arg.title,
                 message: arg.message,
-                details: arg.details
+                details: arg.details,
+                advice: arg.advice
             });
             syncFatalError();
             fsm.newState({mode: 'fatal-error'});
         }
-
 
         function run(params) {
             // First get the app specs, which is stashed in the model,
             // with the parameters returned.
             return syncAppSpec(params.appId, params.appTag)
                 .then(function () {
-                    var appRef = [model.getItem('app').id, model.getItem('app').tag].filter(toBoolean).join('/'),
+                    var appRef = [editorState.getItem('app').id, editorState.getItem('app').tag].filter(toBoolean).join('/'),
                         url = '/#appcatalog/app/' + appRef;
                     utils.setCellMeta(cell, 'kbase.attributes.title', env.appSpec.info.name);
                     utils.setCellMeta(cell, 'kbase.attributes.subtitle', env.appSpec.info.subtitle);
                     utils.setCellMeta(cell, 'kbase.attributes.info.url', url);
                     utils.setCellMeta(cell, 'kbase.attributes.info.label', 'more...');
                     return Promise.all([
-                        loadEditObjectSelector()
-                            // loadInputWidget()
+                        loadEditObjectSelector(),
+                        (function () {
+                            if (editorState.getItem('current.set.info')) {
+                                return doEditObject(editorState.getItem('current.set.info'));
+                            }
+                        }())
                     ]);
                 })
                 .then(function () {
@@ -1931,22 +1816,25 @@ define([
                     showAboutApp();
                     showAppSpec();
                     PR.prettyPrint(null, container);
-                    renderUI();
-                    // renderIcon();
                 })
                 .then(function () {
                     // if we start out in 'new' state, then we need to promote to
                     // editing...
                     if (fsm.getCurrentState().state.mode === 'new') {
-                        fsm.newState({mode: 'editing', params: 'incomplete'});
-                        // evaluateAppState();
+                        // fsm.newState({mode: 'editing', params: 'incomplete'});
+                        evaluateAppState();
                     }
                     renderUI();
                 })
                 .catch(function (err) {
                     console.error('ERROR loading main widgets', err);
                     addNotification('Error loading main widgets: ' + err.message);
-                    setFatalError({title: 'Error loading main widgets', message: err.message, details: ''});
+                    setFatalError({
+                        title: 'Error loading main widgets',
+                        message: err.message,
+                        details: err.details,
+                        advice: err.advice
+                    });
                     renderUI();
                 });
         }
@@ -1954,13 +1842,19 @@ define([
         // INIT
 
         model = Props.make({
-            data: utils.getMeta(cell, 'editorCell'),
+            data: {},
             onUpdate: function (props) {
-                // don't need to put params into the metadata for editor cells.
-                // we use the metadata for editor state.
-                // utils.setMeta(cell, 'editorCell', props.getRawObject());
-                // console.log('model updated');
-                // saveNarrative();
+                renderUI();
+            }
+        });
+        
+        // console.log('EDITOR STATE', utils.getCellMeta(cell, 'kbase.editorCell'));
+        editorState = Props.make({
+            data: utils.getCellMeta(cell, 'kbase.editorCell'),
+            onUpdate: function (props) {
+                console.log('setting editor cell metadata to editorState', props.getRawObject());
+                utils.setCellMeta(cell, 'kbase.editorCell', props.getRawObject());
+                renderUI();
             }
         });
 
@@ -1978,5 +1872,5 @@ define([
         }
     };
 }, function (err) {
-    console.log('ERROR loading editorCell editorCellWidget', err);
+    console.error('ERROR loading editorCell editorCellWidget', err);
 });

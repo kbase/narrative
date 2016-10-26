@@ -28,10 +28,8 @@ define([
     'common/utils',
     'common/clock',
     'common/dom',
-    'common/props',
     'common/appUtils',
     'common/jupyter',
-//    './widgets/codeCellRunWidget',
     'kb_service/utils',
     'kb_service/client/workspace',
     'css!kbase/css/appCell.css',
@@ -49,7 +47,6 @@ define([
     utils,
     Clock,
     Dom,
-    Props,
     AppUtils,
     jupyter,
     serviceUtils,
@@ -131,26 +128,23 @@ define([
                         request: null,
                         result: null
                     },
-                    params: null,
-                    output: {
-                        byJob: {}
-                    }
+                    params: null
                 }
             };
             cell.metadata = meta;
         })
-            .then(function () {
+            //.then(function () {
                 // Add the params
-                return setupParams(cell, appSpec);
-            })
+                //return setupParams(cell, appSpec);
+            //})
             .then(function () {
                 // Complete the cell setup.
                 return setupCell(cell);
-            })
-            .then(function (cellStuff) {
-                // Initialize the cell to its default state.
-                cellStuff.bus.emit('reset-to-defaults');
             });
+            //.then(function (cellStuff) {
+            //    // Initialize the cell to its default state.
+            //    cellStuff.bus.emit('reset-to-defaults');
+            //});
     }
 
     function specializeCell(cell) {
@@ -223,8 +217,8 @@ define([
             // TODO: the code cell input widget should instantiate its state
             // from the cell!!!!
             var cellBus = runtime.bus().makeChannelBus(null, 'Parent comm for The Cell Bus'),
-                appId = utils.getMeta(cell, 'editorCell', 'app').id,
-                appTag = utils.getMeta(cell, 'editorCell', 'app').tag,
+                appId = utils.getCellMeta(cell, 'kbase.editorCell.app.id'),
+                appTag = utils.getCellMeta(cell, 'kbase.editorCell.app.tag'),
                 editorCellWidget = EditorCellWidget.make({
                     bus: cellBus,
                     cell: cell,
@@ -371,6 +365,7 @@ define([
             })
             .catch(function (err) {
                 console.error('ERROR setting up notebook', err);
+                alert('Error loading editor cell extension');
             });
     }
 

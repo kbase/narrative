@@ -32,7 +32,7 @@ define([
     Jupyter,
     BusEventManager,
     NarrativeMethodStore,
-    apiUtils,
+    serviceUtils,
     GenericClient,
     PythonInterop,
     utils,
@@ -661,6 +661,14 @@ define([
                                     classes: ['kb-panel-container'],
                                     body: div({dataElement: 'widget'})
                                 }),
+                                ui.buildCollapsiblePanel({
+                                    title: span(['Currently Editing ', span({dataElement: 'name', style: {textDecoration: 'underline'}})]),
+                                    name: 'currently-editing',
+                                    hidden: false,
+                                    type: 'default',
+                                    classes: ['kb-panel-container'],
+                                    body: div({dataElement: 'widget'})
+                                }),
                                 ui.buildPanel({
                                     title: 'Editor ' + span({class: 'fa fa-pencil'}),
                                     name: 'editor',
@@ -679,7 +687,7 @@ define([
                                     ])
                                 ]),
                                 // just a simple status area for now...
-                                ui.buildPanel({
+                                ui.buildCollapsiblePanel({
                                     title: 'Status',
                                     name: 'editor-status',
                                     hidden: false,
@@ -1232,6 +1240,13 @@ define([
                         editorState.setItem('editorState.changed', false);
                         fsm.newState({mode: 'editing', params: 'complete', data: 'clean'});
                         renderUI();
+                        
+                        // Now we need to reload the editor with thew new item.
+                        // console.log('RESULT', message);
+                        model.setItem('current.readsSetRef', message.message.result.set_ref);
+                        model.setItem('current.readsSet.object', serviceUtils.objectInfoToObject(message.message.result.set_info));
+                        updateEditor(message.message.result.set_ref);
+                        
                     } else if (message.message.error) {
                         // cheap as heck error message
                         var errorMessage = div({class: 'alert alert-danger'}, [
@@ -1534,6 +1549,24 @@ define([
                 });
             });
         }
+        
+        
+        function renderCurrentlyEditing(info) {
+            
+            // console.log('INFO', info);
+            
+            var content = table({class: 'table table-striped'}, [
+                tr([th('Name'), td({style: {fontWeight: 'bold'}}, info.name)]),
+                tr([th('Ref'), td(info.ref)]),
+                tr([th('Last saved'), td(info.saveDate.toLocaleDateString() + ' at ' + info.saveDate.toLocaleTimeString())]),
+                tr([th('By'), td(info.saved_by)])
+            ]);
+            
+            ui.setContent('currently-editing.widget', content);
+            
+            ui.setContent('currently-editing.name', info.name);
+        }
+        
 
         /*
          * Given an object ref, fetch the set object via the setApi, 
@@ -1557,7 +1590,14 @@ define([
                 
             return setApiClient.callFunc('get_reads_set_v1', [params])
                 .spread(function (setObject) {
+                    // After getting the reads set object, we populate our 
+                    // view model (data model-ish) with the results.
+                    // The editor will sync up with the model, and pick up the
+                    // values.                    
                     model.setItem('params', {});
+                    
+                    // TODO: move this into code or config specific to 
+                    // the reads set editor.
                     model.setItem('params.name.value', setObject.info[1]);
                     model.setItem('params.description.value', setObject.data.description);
                     model.setItem('params.items.value', setObject.data.items.map(function (item) {
@@ -1567,8 +1607,13 @@ define([
                         };
                     }));
                     
+                    var info = serviceUtils.objectInfoToObject(setObject.info);
+                    
+                    model.setItem('currentReadsSet', info);
+                    
+                    renderCurrentlyEditing(info);
+                    
                     return loadUpdateEditor();
-
                 })
                 .then(function () {
                     evaluateAppState(true);
@@ -1651,6 +1696,14 @@ define([
             resetEditorModel();
             loadCreationEditor();
         }
+        
+        function doEditObject(objectInfo) {            
+            // Update editor state (is also persistent in the metadata)
+            editorState.setItem('current.set.ref', objectInfo.ref);
+            editorState.setItem('current.set.info', objectInfo);
+            
+            updateEditor(objectInfo.ref);
+        }
 
         function loadEditObjectSelector() {
             return new Promise(function (resolve, reject) {
@@ -1668,12 +1721,18 @@ define([
                     widget.bus.on('ready', function () {
                         widget.bus.emit('run', {
                             node: ui.getElement(['edit-object-selector', 'widget']),
-                            appSpec: env.appSpec
+                            appSpec: env.appSpec,
+                            selectedSet: editorState.getItem('current.set.ref')
                                 // parameters: getParameters()
                         });
                     });
+                    // When the user selects a reads set to edit.
                     widget.bus.on('changed', function (message) {
-                        updateEditor(message.newObjectRef);
+                        // Call this when we have a new object to edit. It will 
+                        // take care of updating the cell state as well as
+                        // rendering the object.
+                        console.log('changed', message);
+                        doEditObject(message.value);                        
                     });
                     widget.bus.on('create-new-set', function (message) {
                         doCreateNewSet(message.name);
@@ -1711,7 +1770,7 @@ define([
             if (force || isModelChanged()) {
                 var validationResult = validateModel();
                 if (validationResult.isValid) {
-                    buildPython(cell, utils.getMeta(cell, 'attributes').id, editorState.getItem('app'), modelToParams());
+                    buildPython(cell, utils.getCellMeta(cell, 'kbase.attributes.id'), editorState.getItem('app'), modelToParams());
                     fsm.newState({mode: 'editing', params: 'complete', data: 'changed'});
                 } else {
                     resetPython(cell);
@@ -1744,7 +1803,12 @@ define([
                     utils.setCellMeta(cell, 'kbase.attributes.info.url', url);
                     utils.setCellMeta(cell, 'kbase.attributes.info.label', 'more...');
                     return Promise.all([
-                        loadEditObjectSelector()
+                        loadEditObjectSelector(),
+                        (function () {
+                            if (editorState.getItem('current.set.info')) {
+                                return doEditObject(editorState.getItem('current.set.info'));
+                            }
+                        }())
                     ]);
                 })
                 .then(function () {
@@ -1784,9 +1848,12 @@ define([
             }
         });
         
+        // console.log('EDITOR STATE', utils.getCellMeta(cell, 'kbase.editorCell'));
         editorState = Props.make({
-            data: utils.getMeta(cell, 'editorCell'),
+            data: utils.getCellMeta(cell, 'kbase.editorCell'),
             onUpdate: function (props) {
+                console.log('setting editor cell metadata to editorState', props.getRawObject());
+                utils.setCellMeta(cell, 'kbase.editorCell', props.getRawObject());
                 renderUI();
             }
         });

@@ -2,34 +2,36 @@
 /*jslint white: true*/
 /**
  * @author Michael Sneddon <mwsneddon@lbl.gov>
+ * @author Bill Riehl <wjriehl@lbl.gov>
  * @public
  */
-define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery',
-        'underscore',
-		'bluebird',
-		'narrativeConfig',
-		'kbaseAuthenticatedWidget',
-		'kbaseNarrative',
-        'kbase-generic-client-api',
-        'base/js/namespace',
-        'util/display'
-	], function(
-		KBWidget,
-		bootstrap,
-		$,
-        _,
-		Promise,
-		Config,
-		kbaseAuthenticatedWidget,
-		kbaseNarrative,
-        GenericClient,
-        Jupyter,
-        DisplayUtil
-	) {
+define ([
+	'kbwidget',
+	'bootstrap',
+	'jquery',
+    'underscore',
+	'bluebird',
+	'narrativeConfig',
+	'kbaseAuthenticatedWidget',
+	'kbaseNarrative',
+    'kbase-generic-client-api',
+    'base/js/namespace',
+    'util/display',
+    'util/icon'
+], function (
+	KBWidget,
+	bootstrap,
+	$,
+    _,
+	Promise,
+	Config,
+	kbaseAuthenticatedWidget,
+	kbaseNarrative,
+    GenericClient,
+    Jupyter,
+    DisplayUtil,
+    Icon
+) {
     'use strict';
     return KBWidget({
         name: 'kbaseNarrativeExampleDataTab',
@@ -37,7 +39,6 @@ define (
         version: '1.0.0',
         options: {
             ws_name: null, // must be the WS name, not the WS Numeric ID
-            ws_url: Config.url('workspace'),
             loadingImage: Config.get('loading_gif'),
             $importStatus: $('<div>')
         },
@@ -89,17 +90,13 @@ define (
                 return;
             }
 
-            if (this.narWs && this.ws) {
+            if (this.narWs) {
                 Promise.resolve(this.serviceClient.sync_call(
                     "NarrativeService.list_objects_with_sets",
                     [{
                         ws_name: this.dataConfig.ws
                     }]
                 ))
-                // Promise.resolve(this.ws.list_objects({
-                //     workspaces : [this.dataConfig.ws],
-                //     includeMetadata: 1
-                // }))
                 .then(function(infoList) {
                     infoList = infoList[0]['data'];
                     this.objectList = [];
@@ -124,11 +121,9 @@ define (
                 }.bind(this))
                 .catch(function(error) {
                     this.showError('Sorry, we\'re unable to load example data', error);
-                    // console.error(error);
                     alert(error);
                 }.bind(this));
             }
-
         },
 
         showError: function(title, error) {
@@ -157,21 +152,22 @@ define (
                 }
             }
             var $tc = $('<div>')
-                            .append($('<div>').css({'margin':'15px'})
-                                .append($('<div>').css({'margin':'4px','margin-top':'15px','color':'#555','font-size':'large','font-weight':'bold'})
-                                        .append('Other Examples'))
-                                .append($('<div>').css({'margin':'4px','color':'#555'})
-                                        .append('Assorted data types used in more advanced analyses')));
+                      .append($('<div>').css({'margin':'15px'})
+                          .append($('<div>').css({'margin':'4px','margin-top':'15px','color':'#555','font-size':'large','font-weight':'bold'})
+                                  .append('Other Examples'))
+                          .append($('<div>').css({'margin':'4px','color':'#555'})
+                                  .append('Assorted data types used in more advanced analyses')));
             typeDivs['other.types'] = $tc;
 
             var hasOthers = false;
-            self.objectList.sort(function(a,b) {
-                                        if (a.info[2].toUpperCase() > b.info[2].toUpperCase()) return -1; // sort by type
-                                        if (a.info[2].toUpperCase() < b.info[2].toUpperCase()) return 1;
-                                        if (a.info[1].toUpperCase() > b.info[1].toUpperCase()) return -1; // then by name
-                                        if (a.info[1].toUpperCase() < b.info[1].toUpperCase()) return 1;
-                                        return 0;
-                                    });
+            self.objectList.sort(
+                function(a,b) {
+                    if (a.info[2].toUpperCase() > b.info[2].toUpperCase()) return -1; // sort by type
+                    if (a.info[2].toUpperCase() < b.info[2].toUpperCase()) return 1;
+                    if (a.info[1].toUpperCase() > b.info[1].toUpperCase()) return -1; // then by name
+                    if (a.info[1].toUpperCase() < b.info[1].toUpperCase()) return 1;
+                    return 0;
+                });
             for (var k=0; k<self.objectList.length; k++) {
                 var obj = self.objectList[k];
                 var typeName='';
@@ -221,7 +217,6 @@ define (
                 type='Genome';
             } else {
                 var type_tokens = object_info[2].split('.')
-                var type_module = type_tokens[0];
                 type = type_tokens[1].split('-')[0];
             }
 
@@ -261,10 +256,6 @@ define (
 
             var shortName = object_info[1],
                 isShortened=false;
-            /*if (shortName.length>this.options.max_name_length) {
-                shortName = shortName.substring(0,this.options.max_name_length-3)+'...';
-                isShortened=true;
-            }*/
             var $name = $('<span>').addClass("kb-data-list-name").append(shortName);
             if (isShortened) {
                 $name.tooltip({title:object_info[1], placement:'bottom'});
@@ -272,19 +263,11 @@ define (
             var $type = $('<span>').addClass("kb-data-list-type").append(type);
 
             var metadata = object_info[10] || {};
-            var metadataText = '';
-            for(var key in metadata) {
-                if (metadata.hasOwnProperty(key)) {
-                    metadataText += '<tr><th>'+ key +'</th><td>'+ metadata[key] + '</td></tr>';
-                }
-            }
             if (type==='Genome') {
                 if (metadata.hasOwnProperty('Name')) {
                     $type.html('Genome: '+metadata['Name']);
                 }
             }
-            var icons = this.data_icons;
-            var icon = _.has(icons, type) ? icons[type] : icons['DEFAULT'];
             var $logo = $('<span>');
             var $topTable = $('<table>')
                 .css({'width':'100%','background':'#fff'})  // set background to white looks better on DnD
@@ -294,29 +277,21 @@ define (
                         .append($addDiv.hide()))
                     .append($('<td>')
                         .css({'width':'50px'})
-                        .append($logo))/*$('<span>')
-                              .addClass("kb-data-list-logo")
-                              .css({'background-color':this.logoColorLookup(type)})
-                              .append(type.substring(0,1))))*/
+                        .append($logo))
                     .append($('<td>')
                          .append($name).append('<br>').append($type)));
 
-	    var $row = $('<div>')
-                                .css({margin:'2px',padding:'4px','margin-bottom': '5px'})
-                                //.addClass('kb-data-list-obj-row')
-                                .append($('<div>').addClass('kb-data-list-obj-row-main')
-                                            .append($topTable))
-                                .mouseenter(function(){
-                                    $addDiv.show();
-                                })
-                                .mouseleave(function(){
-                                    $addDiv.hide();
-                                });
-            // set icon
-            $(document).trigger("setDataIcon.Narrative", {
-                elt: $logo,
-                type: type
-            });
+            var $row = $('<div>')
+                        .css({margin:'2px',padding:'4px','margin-bottom': '5px'})
+                        .append($('<div>').addClass('kb-data-list-obj-row-main')
+                                    .append($topTable))
+                        .mouseenter(function(){
+                            $addDiv.show();
+                        })
+                        .mouseleave(function(){
+                            $addDiv.hide();
+                        });
+            Icon.buildDataIcon($logo, type);
 
             return $row;
         },
@@ -332,17 +307,13 @@ define (
         },
 
         loggedInCallback: function(event, auth) {
-            this.ws = new Workspace(this.options.ws_url, auth);
             this.serviceClient = new GenericClient(Config.url('service_wizard'), auth);
             return this;
         },
 
-        loggedOutCallback: function(event, auth) {
-            this.ws = null;
+        loggedOutCallback: function(event) {
             this.isLoggedIn = false;
             return this;
         },
-
     })
-
 });

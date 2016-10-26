@@ -11,6 +11,7 @@ define([
     'jquery',
     'underscore',
     'bluebird',
+    'base/js/namespace',
     'narrativeConfig',
     'util/string',
     'util/display',
@@ -30,6 +31,7 @@ define([
     $,
     _,
     Promise,
+    Jupyter,
     Config,
     StringUtil,
     DisplayUtil,
@@ -131,7 +133,7 @@ define([
          * @return Identifier (string)
          */
         itemId: function(obj) {
-            return obj[0];
+            return obj[6] + '/' + obj[0];
         },
 
         /**
@@ -168,7 +170,6 @@ define([
         inAnySet: function(item_info) {
             if (this.setViewMode) {
                 var item_id = this.itemId(item_info);
-                //console.debug('item_id = ', item_id);
                 return _.has(this.setItems, item_id);
             }
             else {
@@ -179,20 +180,6 @@ define([
         getSetInfo: function(obj_info) {
             return this.setInfo[this.itemId(obj_info)];
         },
-
-        // /**
-        //  * Toggle whether set is 'expanded' or not.
-        //  *
-        //  * @param item_info an object info tuple, as returned by the
-        //  *                  workspace API for list_objects()
-        //  * @return New state of 'expanded'
-        //  */
-        // toggleSetExpanded: function (item_info) {
-        //     var set_id = this.itemId(item_info);
-        //     var new_value = !this.setInfo[set_id].expanded;
-        //     this.setInfo[set_id].expanded = new_value;
-        //     return new_value;
-        // },
 
         /**
          * Get item parents.
@@ -315,6 +302,8 @@ define([
             if (this.options.ws_name) {
                 this.ws_name = this.options.ws_name;
             }
+
+            this.wsId = Number(Jupyter.narrative.workspaceId);
 
             return this;
         },
@@ -507,13 +496,17 @@ define([
         fetchWorkspaceData: function () {
             var addObjectInfo = function(objInfo) {
                 // Get the object info
+                var objId = this.itemId(objInfo); //objInfo[6] + '/' + objInfo[0]; // + '/' + objInfo[2]
+                if (this.dataObjects[objId]) {
+                    return;
+                }
                 var key = StringUtil.uuid();
-                var objId = objInfo[0];
                 this.dataObjects[objId] = {
                     key: key,
                     $div: null,
                     info: objInfo,
-                    attached: false
+                    attached: false,
+                    fromPalette: this.wsId !== objInfo[6]
                 };
                 this.keyToObjId[key] = objId;
                 this.viewOrder.push({
@@ -541,9 +534,9 @@ define([
             }.bind(this);
 
             var updateSetInfo = function(obj) {
-                var setId = obj.object_info[0];
+                var setId = this.itemId(obj.object_info); //obj.object_info[6] + '/' + obj.object_info[0];
                 obj.set_items.set_items_info.forEach(function(setItem) {
-                    var itemId = setItem[0];
+                    var itemId = this.itemId(setItem); //setItem[6] + '/' + setItem[0];
                     if (!this.setInfo[setId]) {
                         this.setInfo[setId] = {
                             div: null,
@@ -556,6 +549,9 @@ define([
                         this.setItems[itemId] = {};
                     }
                     this.setItems[itemId][setId] = 1;
+                    if (!this.dataObjects[itemId]) {
+                        addObjectInfo(setItem);
+                    }
                 }.bind(this));
             }.bind(this);
 
@@ -567,8 +563,6 @@ define([
             )
             .then(function(result) {
                 result = result[0]['data'];
-                console.log('NEW WORKSPACE LIST FUN');
-                console.log(result);
 
                 for (var i=0; i<result.length; i++) {
                     var obj = result[i];
@@ -577,10 +571,8 @@ define([
                     if (objInfo[2].indexOf('KBaseNarrative') === 0) {
                         continue;
                     }
-                    if (!this.dataObjects[objInfo[0]]) {
-                        addObjectInfo(objInfo);
-                    }
-
+                    // Only adds to dataObjects, etc., if it's not already there.
+                    addObjectInfo(objInfo);
                     // if there's set info, update that.
                     if (obj.set_items) {
                         updateSetInfo(obj);
@@ -1008,6 +1000,7 @@ define([
             $logo.click(function (e) {
                 e.stopPropagation();
                 // For sets, click toggles -- everything else, adds a viewer (?!)
+
                 if (self.isAViewedSet(object_info)) {
                     objData.expanded = !objData.expanded;
                     self.toggleSetExpansion(objId, $box);
@@ -1022,6 +1015,9 @@ define([
             if (shortName.length > this.options.max_name_length) {
                 shortName = shortName.substring(0, this.options.max_name_length - 3) + '...';
                 isShortened = true;
+            }
+            if (objData.fromPalette) {
+                shortName += ' (from palette)';
             }
             var $name = $('<span>').addClass("kb-data-list-name").append('<a>' + shortName + '</a>')
                 .css({'cursor': 'pointer'})
@@ -1042,6 +1038,10 @@ define([
 
             var $version = $('<span>').addClass("kb-data-list-version").append('v' + object_info[4]);
             var $type = $('<div>').addClass("kb-data-list-type").append(type);
+            var $paletteIcon = '';
+            if (objData.fromPalette) {
+                $paletteIcon = $('<span>').addClass('pull-right').append($('<i>').addClass('fa fa-briefcase').css({color: '#888'}));
+            }
 
             var $date = $('<span>').addClass("kb-data-list-date").append(TimeFormat.getTimeStampStr(object_info[3]));
             var $byUser = $('<span>').addClass("kb-data-list-edit-by");
@@ -1102,7 +1102,7 @@ define([
             };
 
             var $mainDiv = $('<div>').addClass('kb-data-list-info').css({padding: '0px', margin: '0px'})
-                .append($name).append($version).append('<br>')
+                .append($name).append($version).append($paletteIcon).append('<br>')
                 .append($('<table>').css({width: '100%'})
                     .append($('<tr>')
                         .append($('<td>').css({width: '80%'})
@@ -1285,10 +1285,10 @@ define([
                 $(cell.element).off('keydown');
             }
             var obj = this.dataObjects[this.keyToObjId[key]], // _.findWhere(self.objectList, {key: key});
-                info = self.createInfoObject(obj.info);
+                info = this.createInfoObject(obj.info);
             // Insert the narrative data cell into the div we just rendered
             // new kbaseNarrativeDataCell($('#' + cell_id), {cell: cell, info: info});
-            self.trigger('createViewerCell.Narrative', {
+            this.trigger('createViewerCell.Narrative', {
                 'nearCellIdx': near_idx,
                 'widget': 'kbaseNarrativeDataCell',
                 'info': info
@@ -1383,9 +1383,9 @@ define([
                 .append("date")
                 .on('click', function () {
                     self.sortData(function (a, b) {
-                        if (self.dataObjects[a].info[3] > self.dataObjects[b].info[3])
+                        if (self.dataObjects[a.objId].info[3] > self.dataObjects[b.objId].info[3])
                             return -1; // sort by date
-                        if (self.dataObjects[a].info[3] < self.dataObjects[b].info[3])
+                        if (self.dataObjects[a.objId].info[3] < self.dataObjects[b.objId].info[3])
                             return 1;  // sort by date
                         return 0;
                     });
@@ -1396,9 +1396,9 @@ define([
                 .append("name")
                 .on('click', function () {
                     self.sortData(function (a, b) {
-                        if (self.dataObjects[a].info[1].toUpperCase() < self.dataObjects[b].info[1].toUpperCase())
+                        if (self.dataObjects[a.objId].info[1].toUpperCase() < self.dataObjects[b.objId].info[1].toUpperCase())
                             return -1; // sort by name
-                        if (self.dataObjects[a].info[1].toUpperCase() > self.dataObjects[b].info[1].toUpperCase())
+                        if (self.dataObjects[a.objId].info[1].toUpperCase() > self.dataObjects[b.objId].info[1].toUpperCase())
                             return 1;
                         return 0;
                     });
@@ -1445,30 +1445,14 @@ define([
                 })
                 .append('<span class="fa fa-copy"></span>')
                 .on('click', function () {
+                    self.setViewMode = !self.setViewMode;
                     if (self.setViewMode) {
-                        // Turn OFF set view mode
-                        self.setViewMode = false;
-                        self.renderList();
-                        $('#kb-data-list-hierctl').removeAttr('enabled');
-                        // re-enable other controls
-                        // _.each(viewModeDisableCtl, function(ctl) {
-                        //     var ctl_id = '#kb-data-list-' + ctl + 'ctl';
-                        //     $(ctl_id + ' span').removeClass('inviso');
-                        //     $(ctl_id).on('click', self.controlClickHnd[ctl]);
-                        // });
+                        $('#kb-data-list-hierctl').attr('enabled', '1');
                     }
                     else {
-                        // Turn ON set view mode
-                        self.setViewMode = true;
-                        self.renderList();
-                        $('#kb-data-list-hierctl').attr('enabled', '1');
-                        // disable some other controls
-                        // _.each(viewModeDisableCtl, function(ctl) {
-                        //     var ctl_id = '#kb-data-list-' + ctl + 'ctl';
-                        //     $(ctl_id + ' span').addClass('inviso');
-                        //     $(ctl_id).off('click');
-                        // });
+                        $('#kb-data-list-hierctl').removeAttr('enabled');
                     }
+                    self.renderList();
                 });
 
             // Search control

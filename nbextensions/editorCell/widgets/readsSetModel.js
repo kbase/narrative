@@ -29,8 +29,7 @@ define([
 
         // SUPPORT
 
-        function fetchAppSpec_real(appId, appTag) {
-            console.log('fetching app sppec with', appId, appTag);
+        function fetchAppSpec(appId, appTag) {
             var appRef = {
                 ids: [appId],
                 tag: appTag
@@ -70,7 +69,7 @@ define([
                 });
         }
 
-        function fetchAppSpec(appId, appTag) {
+        function fetchAppSpec_fake(appId, appTag) {
 
             var appSpec = {
                 parameters: [
@@ -135,84 +134,7 @@ define([
             };
         }
 
-        function getParameters(spec) {
-            var type = model.getItem('params.type'),
-                types;
-            type = null;
-            if (!type) {
-                // alert('help, no type!');
-                types = ['KBaseFile.SingleEndLibrary', 'KBaseFile.PairedEndLibrary'];
-            } else {
-                types = [type];
-            }
-
-            var parameters = [
-                {
-                    id: 'name',
-                    description: 'Name of the reads set',
-                    short_hint: 'The name of the set of sequence reads',
-                    default_values: [''],
-                    optional: 0,
-                    disabled: 0,
-                    advanced: 0,
-                    allow_multiple: 0,
-                    field_type: 'text',
-                    text_options: {
-                        is_output_name: 1,
-                        placeholder: 'Reads Set Name',
-                        valid_ws_types: ['KBaseSets.ReadsSet']
-                    },
-                    ui_class: 'output',
-                    ui_name: 'Reads Set Name'
-                },
-                {
-                    id: 'description',
-                    description: 'Description of the reads set',
-                    short_hint: 'The description of the set of sequence reads',
-                    default_values: [''],
-                    optional: 1,
-                    disabled: 0,
-                    advanced: 0,
-                    allow_multiple: 0,
-                    field_type: 'textarea',
-                    textarea_options: {
-                        is_output_name: 0,
-                        placeholder: 'Description',
-                        regex_constraint: [],
-                        validate_as: 'string',
-                        n_rows: 5
-                    },
-                    ui_class: 'parameter',
-                    ui_name: 'Description'
-                },
-                {
-                    id: 'items',
-                    field_type: 'text',
-                    description: 'A set of reads objects',
-                    short_hint: 'A set of reads objects',
-                    default_values: [''],
-                    optional: 1,
-                    disabled: 0,
-                    advanced: 0,
-                    allow_multiple: 1,
-                    text_options: {
-                        is_output_name: 0,
-                        placeholder: 'Items',
-                        regex_constraint: [],
-                        valid_ws_types: types
-                    },
-                    ui_class: 'input',
-                    ui_name: 'Set of Reads Objects'
-                }
-            ];
-
-            return parameters.map(function (parameterSpec) {
-                // tee hee
-                var param = ParameterSpec.make({parameterSpec: parameterSpec});
-                return param;
-            });
-        }
-
+        
         function createModelForApp(appId, appTag) {
             fetchAppSpec(appId, appTag)
                 .then(function () {
@@ -262,7 +184,7 @@ define([
         function start() {
             console.log('starting model...');
 
-            return fetchAppSpec_real(appId, appTag)
+            return fetchAppSpec(appId, appTag)
                 .then(function(appSpec) {
                     console.log('GOT IT!', appSpec);
                     return true;

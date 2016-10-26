@@ -12,9 +12,9 @@ define([
     'common/props',
     // Wrapper for inputs
     './inputWrapperWidget',
-    'widgets/appWidgets/fieldWidget',
+    'widgets/appWidgets2/fieldWidget',
     // Display widgets
-    'widgets/appWidgets/paramDisplayResolver'
+    'widgets/appWidgets2/paramDisplayResolver'
 
 ], function (
     Promise,

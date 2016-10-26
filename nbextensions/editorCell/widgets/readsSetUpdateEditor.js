@@ -10,9 +10,8 @@ define([
     'common/events',
     'common/props',
     // Wrapper for inputs
-    './inputWrapperWidget',
-    'widgets/appWidgets/fieldWidget',
-    'widgets/appWidgets/paramInputResolver',
+    'widgets/appWidgets2/fieldWidgetCompact',
+    'widgets/appWidgets2/inputParamResolver',
     'common/runtime',
     './readsSetModel'
         // All the input widgets
@@ -24,7 +23,6 @@ define([
     Events,
     Props,
     //Wrappers
-    RowWidget,
     FieldWidget,
     ParamResolver,
     Runtime,
@@ -96,120 +94,130 @@ define([
         // RENDERING
 
         function makeFieldWidget(appSpec, parameterSpec, value) {
-            var fieldBus = runtime.bus().makeChannelBus(null, 'A field widget'),
-                inputWidget = paramResolver.getInputWidgetFactory(parameterSpec);
-
-            inputBusses.push(fieldBus);
-
-            // Forward all changed parameters to the controller. That is our main job!
-            fieldBus.on('changed', function (message) {
-                parentBus.emit('parameter-changed', {
-                    parameter: parameterSpec.id(),
-                    newValue: message.newValue
-                });
-            });
-
-
-            // An input widget may ask for the current model value at any time.
-            fieldBus.on('sync', function () {
-                parentBus.emit('parameter-sync', {
-                    parameter: parameterSpec.id()
-                });
-            });
             
-            fieldBus.on('sync-params', function (message) {
-                console.log('request sync params', message);
-                parentBus.emit('sync-params', {
-                    parameters: message.parameters,
-                    replyToChannel: fieldBus.channelName
+             return paramResolver.getInputWidgetFactory(parameterSpec)
+                .then(function (inputWidget) {
+                    
+                var fieldBus = runtime.bus().makeChannelBus(null, 'A field widget');
+
+                inputBusses.push(fieldBus);
+
+                // Forward all changed parameters to the controller. That is our main job!
+                fieldBus.on('changed', function (message) {
+                    parentBus.emit('parameter-changed', {
+                        parameter: parameterSpec.id,
+                        newValue: message.newValue
+                    });
                 });
-            });
 
-
-            /*
-             * Or in fact any parameter value at any time...
-             */
-            fieldBus.on('get-parameter-value', function (message) {
-                parentBus.request({
-                    parameter: message.parameter
-                }, {
-                    key: 'get-parameter-value'
-                })
-                    .then(function (message) {
-                        bus.emit('parameter-value', {
-                            parameter: message.parameter
-                        });
+                fieldBus.on('touched', function () {
+                    parentBus.emit('parameter-touched', {
+                        parameter: parameterSpec.id
                     });
-            });
+                });
 
-            //bus.on('parameter-value', function (message) {
-            //    bus.emit('parameter-value', message);
-            //});
 
-            fieldBus.respond({
-                key: {
-                    type: 'get-parameter'
-                },
-                handle: function (message) {
-                    if (message.parameterName) {
-                        return parentBus.request(message, {
-                            key: {
-                                type: 'get-parameter'
-                            }
+                // An input widget may ask for the current model value at any time.
+                fieldBus.on('sync', function () {
+                    parentBus.emit('parameter-sync', {
+                        parameter: parameterSpec.id
+                    });
+                });
+
+                fieldBus.on('sync-params', function (message) {
+                    console.log('request sync params', message);
+                    parentBus.emit('sync-params', {
+                        parameters: message.parameters,
+                        replyToChannel: fieldBus.channelName
+                    });
+                });
+
+
+                /*
+                 * Or in fact any parameter value at any time...
+                 */
+                fieldBus.on('get-parameter-value', function (message) {
+                    parentBus.request({
+                        parameter: message.parameter
+                    }, {
+                        key: 'get-parameter-value'
+                    })
+                        .then(function (message) {
+                            bus.emit('parameter-value', {
+                                parameter: message.parameter
+                            });
                         });
-                    } else {
-                        return null;
+                });
+
+                //bus.on('parameter-value', function (message) {
+                //    bus.emit('parameter-value', message);
+                //});
+
+                fieldBus.respond({
+                    key: {
+                        type: 'get-parameter'
+                    },
+                    handle: function (message) {
+                        if (message.parameterName) {
+                            return parentBus.request(message, {
+                                key: {
+                                    type: 'get-parameter'
+                                }
+                            });
+                        } else {
+                            return null;
+                        }
                     }
-                }
+                });
+
+                // Just pass the update along to the input widget.
+                parentBus.listen({
+                    key: {
+                        type: 'update',
+                        parameter: parameterSpec.id
+                    },
+                    handle: function (message) {
+                        fieldBus.emit('update', {
+                            value: message.value
+                        });
+                    }
+                });
+
+
+                // just forward...
+                //bus.on('newstate', function (message) {
+                //    inputWidgetBus.send(message);
+                //});
+                return {
+                    bus: bus,
+                    widget: FieldWidget.make({
+                        inputControlFactory: inputWidget,
+                        showHint: true,
+                        useRowHighight: true,
+                        initialValue: value,
+                        appSpec: appSpec,
+                        parameterSpec: parameterSpec,
+                        bus: fieldBus,
+                        workspaceId: workspaceInfo.id,
+                        referenceType: 'ref'
+                    })
+                };
             });
-
-            // Just pass the update along to the input widget.
-            parentBus.listen({
-                key: {
-                    type: 'update',
-                    parameter: parameterSpec.id()
-                },
-                handle: function (message) {
-                    fieldBus.emit('update', {
-                        value: message.value
-                    });
-                }
-            });
-
-
-            // just forward...
-            //bus.on('newstate', function (message) {
-            //    inputWidgetBus.send(message);
-            //});
-            return {
-                bus: bus,
-                widget: FieldWidget.make({
-                    inputControlFactory: inputWidget,
-                    showHint: true,
-                    useRowHighight: true,
-                    initialValue: value,
-                    appSpec: appSpec,
-                    parameterSpec: parameterSpec,
-                    bus: fieldBus,
-                    workspaceId: workspaceInfo.id,
-                    referenceType: 'ref'
-                })
-            };
         }
 
         function renderLayout() {
             var events = Events.make(),
                 content = form({dataElement: 'input-widget-form'}, [
                     // Toolbar area
-                    ui.buildPanel({
-                        type: 'default',
-                        classes: ['kb-panel-light'],
-                        body: [
-                            div('Update Editor')
-                            // ui.makeButton('Show Advanced', 'toggle-advanced', {events: events}),
-                            // ui.makeButton('Reset to Defaults', 'reset-to-defaults', {events: events})
-                        ]
-                    }),
+//                    ui.buildPanel({
+//                        type: 'default',
+//                        classes: ['kb-panel-light'],
+//                        body: [
+//                            div('Update Editor')
+//                            // ui.makeButton('Show Advanced', 'toggle-advanced', {events: events}),
+//                            // ui.makeButton('Reset to Defaults', 'reset-to-defaults', {events: events})
+//                        ]
+//                    }),
                     // Main editor panel
                     div({dataElement: 'field-area'}, [
                         div({dataElement: 'fields'})
@@ -281,83 +289,58 @@ define([
 
         // LIFECYCLE API
 
-        // Editor layout is controled by a simple spec.
-        // We are still prototyping this...
-
-        // Render layout per editor type.
+        // Just a simple row layout.
         function renderEditorLayout() {
-            return div([
-                div({dataParameter: 'name'}),
-                div({dataParameter: 'description'}),
-                // div({dataParameter: 'type'}),
-                div({dataParameter: 'items'})
-            ]);
+            var view = {};
+            var parameterLayout = model.getItem('layout');
+            var layout = parameterLayout.map(function (parameterId) {
+                var id = html.genId();
+                view[parameterId] = {
+                    id: id
+                };
+            
+                return div({
+                    id: id,
+                    dataParameter: parameterId
+                });
+            }).join('\n');
+            
+            return {
+                view: view,
+                content: layout
+            };
         }
 
-        function renderParameters(params) {
-            // First get the app specs, which is stashed in the model,
-            // with the parameters returned.
-            // Separate out the params into the primary groups.
-            
+        function renderParameters() {
             var appSpec = model.getItem('appSpec');
+            var parameterSpecs = model.getItem('parameters');
+            var parameterLayout = model.getItem('layout');
+            var layout = renderEditorLayout();
+            
+            places.fields.innerHTML = layout.content;
 
+            return Promise.all(parameterLayout.map(function (parameterId) {
+                var spec = parameterSpecs[parameterId];
+                try {
+                    return makeFieldWidget(appSpec, spec, model.getItem(['params', spec.id]))
+                        .then(function (result) {
+                            widgets.push(result);
 
-            return Promise.try(function () {
-                var params = validateParameterSpecs(model.getItem('parameters'));
-
-                return Promise.resolve()
-                    .then(function () {
-                        if (params.length === 0) {
-                            places.fields.innerHTML = span({style: {fontStyle: 'italic'}}, 'No input objects for this app');
-                        } else {
-                            // The "fields" becomes the layout.
-                            places.fields.innerHTML = renderEditorLayout();
-
-                            return Promise.all(params.map(function (spec) {
-                                try {
-                                    var result = makeFieldWidget(appSpec, spec, model.getItem(['params', spec.name()])),
-                                        rowWidget = RowWidget.make({widget: result.widget, spec: spec}),
-                                        rowNode = document.createElement('div');
-                                    // places.fields.appendChild(rowNode);
-                                    var rowPlace = document.querySelector('[data-parameter="' + spec.name() + '"]');
-                                    if (!rowPlace) {
-                                        console.warn('Parameter not found in layout', spec);
-                                        return;
-                                    }
-                                    rowPlace.appendChild(rowNode);
-                                    widgets.push({
-                                        widget: rowWidget,
-                                        bus: result.bus
-                                    });
-                                    rowWidget.attach(rowNode);
-                                } catch (ex) {
-                                    console.error('Error making input field widget', ex);
-                                    // TRY Throwing up
-                                    // or not: throw new Error('Error making input field widget: ' + ex.message);
-                                    var errorDisplay = div({style: {border: '1px red solid'}}, [
-                                        ex.message
-                                    ]);
-                                    places.fields.appendChild(ui.createNode(errorDisplay));
-                                }
-                            }));
-                        }
-                    })                   
-                    
-                    .then(function () {
-                        return Promise.all(widgets.map(function (widget) {
-                            return widget.widget.start();
-                        }));
-                    })
-                    .then(function () {
-                        return Promise.all(widgets.map(function (widget) {
-                            return widget.widget.run(params);
-                        }));
-                    });
-            });
+                            return result.widget.start({
+                                node: document.getElementById(layout.view[parameterId].id)
+                            });
+                        });
+                } catch (ex) {
+                    console.error('Error making input field widget', ex);
+                    var errorDisplay = div({style: {border: '1px red solid'}}, [
+                        ex.message
+                    ]);                    
+                    document.getElementById(layout.view[parameterId].id).innerHTML = errorDisplay;
+                }
+            }));
         }
 
         function start() {
-            console.log('starting...');
             readsSetModel = ReadsSetModel.make({
                 runtime: runtime,
                 appId: appId,
@@ -372,6 +355,7 @@ define([
 
                         model.setItem('appSpec', message.appSpec);
                         model.setItem('parameters', message.parameters);
+                        model.setItem('layout', message.layout);
 
                         // we then create our widgets
                         renderParameters()

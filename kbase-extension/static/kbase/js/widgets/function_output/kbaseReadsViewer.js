@@ -108,7 +108,8 @@ define (
          * that's just a style thing. You can do whatever the widget requires.
          */
         render: function() {
-            var s = this.options.data;
+	    var s = this.options.data,
+		errorMsg = '';
 	    if (this.options._obj_info){
 		this.reference =  this.options.wsName + '/' + this.options.objId + '/' + this.options._obj_info['version'];
 	    }else{
@@ -123,7 +124,6 @@ define (
             }.bind(this))
             .catch(function(error) {
 		console.error("Render Function Error : ", error);
-                var errorMssg = '';
 		if (error && typeof error === 'object'){
                     if(error.error) {
 			errorMssg = JSON.stringify(error.error);
@@ -145,23 +145,32 @@ define (
         },
 
         renderBasicTable: function() {
-            var $self = this;
-            var $container = this.$elem;
+	    var $self = this,
+                $container = this.$elem,
+                reads_type = '',
+		tab_ids = {
+		    'overview': 'reads-overview-' + $self.get_uuid4(),
+		    'stats': 'reads-stats-' + $self.get_uuid4()
+	        },
+		$tabs = $('<ul class="nav nav-tabs">' +
+                              '<li class="active"><a data-toggle="tab" href="#' + tab_ids.overview + '">Overview</a></li>' +
+                              '<li><a data-toggle="tab" href="#' + tab_ids.stats + '">Stats</a></li>' +
+			  '</ul>'),
+                $divs = $('<div class="tab-content">'),
+                $overviewTable = $('<table class="table table-striped table-bordered table-hover" style="margin-left: auto; margin-right: auto;"/>'),
+                $statsTable = $('<table class="table table-striped table-bordered table-hover" style="margin-left: auto; margin-right: auto;"/>');
 //            $container.empty();
 
-            var $tabPane = $('<div>');
-            $container.append($tabPane);
-
-            // Build the overview table
-            var $overviewTable = $('<table class="table table-striped table-bordered table-hover" style="margin-left: auto; margin-right: auto;"/>');
+//            var $tabPane = $('<div>');
+//            $container.append($tabPane);
 
             function get_table_row(key, value) {
                 return $('<tr>').append($('<td>').append(key)).append($('<td>').append(value));
             }
 
+            // Build the overview table
 	    console.log("OPTIONS:" + this.options);
 
-	    var reads_type = ''
 	    if (this.reads["info"][2].startsWith("KBaseFile.PairedEndLibrary")){
 		reads_type = 'Paired End'
 	    } else if (this.reads["info"][2].startsWith("KBaseFile.SingleEndLibrary")){
@@ -174,9 +183,18 @@ define (
                 '<a href="/#dataview/' + this.reference + '" target="_blank">' 
 		    + this.reads["info"][1] +'</a>' ));
             // leave out version for now, because that is not passed into data widgets
+
+            if(this.reads["data"].hasOwnProperty("read_count")){
+                $overviewTable.append(get_table_row('Number of Reads', this.reads["data"]['read_count'].toLocaleString() ));
+                $statsTable.append(get_table_row('Number of Reads', this.reads["data"]['read_count'].toLocaleString() ));
+            }else{
+                $overviewTable.append(get_table_row('Number of Reads', "Not Specified"));
+                $statsTable.append(get_table_row('Number of Reads', "Not Specified"));
+            }
+
 	    $overviewTable.append(get_table_row('Type', reads_type ));
 
-/* KEEP COMMENTED OUT UNTIL UPLOADER CALCULATES THESE
+/* KEEP COMMENTED OUT UNTIL UPLOADER WEB FORM ALLOWS THE USE TO SPECIFY
 	    if (this.reads["data"].hasOwnProperty("strain")){
 		$overviewTable.append(get_table_row('Species/Taxa', this.reads["data"]['strain']['genus'] + " " + 
 						    this.reads["data"]['strain']['species'] + " " + 
@@ -185,19 +203,8 @@ define (
 	    else{
 		$overviewTable.append(get_table_row('Species/Taxa', 'Not specified' ));
 	    }
-
-	    if(this.reads["data"].hasOwnProperty("read_count")){
-		$overviewTable.append(get_table_row('Read Count', this.reads["data"]['read_count'] ));
-	    }else{
-		$overviewTable.append(get_table_row('Read Count', "Not Specified"));
-	    }
-
-	    if(this.reads["data"].hasOwnProperty("read_size")){
-		$overviewTable.append(get_table_row('Read Size', this.reads["data"]['read_size'] ));
-	    }else{
-		$overviewTable.append(get_table_row('Read Size', "Not Specified"));
-	    }
 */
+
 	    $overviewTable.append(get_table_row('Platform', this.reads["data"]['sequencing_tech'] ));
 
 	    if(this.reads["data"].hasOwnProperty("single_genome")){
@@ -236,7 +243,89 @@ define (
 		}
 	    }
 
-	    $container.append($overviewTable);
+	    $divs.append($('<div id="' + tab_ids.overview + '" class="tab-pane active">').append($overviewTable))
+
+            if(this.reads["data"].hasOwnProperty("read_size")){
+                $statsTable.append(get_table_row('Total Number of Bases', this.reads["data"]['read_size'].toLocaleString() ));
+            }else{
+                $statsTable.append(get_table_row('Total Number of Bases', "Not Specified"));
+            }
+
+            if(this.reads["data"].hasOwnProperty("read_length_mean")){
+                $statsTable.append(get_table_row('Mean Read Length', this.reads["data"]['read_length_mean'].toLocaleString() ));
+            }else{
+                $statsTable.append(get_table_row('Mean Read Length', "Not Specified"));
+            }
+
+            if(this.reads["data"].hasOwnProperty("read_length_stdev")){
+                $statsTable.append(get_table_row('Read Length Std Dev', this.reads["data"]['read_length_stdev'].toLocaleString() ));
+            }else{
+                $statsTable.append(get_table_row('Read Length Std Dev', "Not Specified"));
+            }
+
+            if(this.reads["data"].hasOwnProperty("number_of_duplicates")){
+		var dup_percentage = (this.reads["data"]['number_of_duplicates'].toLocaleString() / this.reads["data"]["read_size"]) * 100;
+                $statsTable.append(get_table_row('Number of Duplicate Reads(%)', 
+						 this.reads["data"]['number_of_duplicates'].toLocaleString() + " (" + dup_percentage.toFixed(2) + "%)"
+						 ));
+            }else{
+                $statsTable.append(get_table_row('Number of Duplicate Reads', "Not Specified"));
+            }
+
+            if(this.reads["data"].hasOwnProperty("phred_type")){
+                $statsTable.append(get_table_row('Phred Type', this.reads["data"]['phred_type'] ));
+            }else{
+                $statsTable.append(get_table_row('Phred Type', "Not Specified"));
+            }
+	    
+            if((this.reads["data"].hasOwnProperty("qual_mean")) && (this.reads["data"].hasOwnProperty("qual_stdev"))) {
+                $statsTable.append(get_table_row('Quality Score Mean (Std Dev)', 
+						 this.reads["data"]['qual_mean'].toFixed(2) + " (" +
+						 this.reads["data"]['qual_stdev'].toFixed(2) + ")"));
+            }
+	    
+            if((this.reads["data"].hasOwnProperty("qual_min")) && (this.reads["data"].hasOwnProperty("qual_max"))){
+                $statsTable.append(get_table_row('Quality Score (Min/Max)', 
+						 this.reads["data"]['qual_min'].toFixed(2) + " / " + 
+						 this.reads["data"]['qual_max'].toFixed(2)));
+		
+	    }
+
+
+            if(this.reads["data"].hasOwnProperty("gc_content")){
+                $statsTable.append(get_table_row('GC Percentage', (this.reads["data"]['gc_content'] * 100).toFixed(2) + "%" ));
+            }else{
+                $statsTable.append(get_table_row('GC Percentage', "Not Specified"));
+            }
+	    
+	    if(this.reads["data"].hasOwnProperty("base_percentages")){
+		var keys = [];
+		for (var key in this.reads["data"]["base_percentages"]){
+		    keys.push(key);
+		}
+		keys.sort();
+		var len = keys.length,
+		    base_percentages = "",
+		    N_base_percentage = "";
+		for (i = 0; i < len; i++){
+		    percent = (this.reads["data"]["base_percentages"][keys[i]]).toFixed(2);
+		    if (keys[i] === "N"){
+			N_base_percentage += keys[i] + " (" + percent + "%)";
+		    }else{
+			base_percentages += keys[i] + " (" + percent + "%), ";
+		    }
+		}
+		if (N_base_percentage === ""){
+		    base_percentages = base_percentages.slice(0,-2);
+		}else{
+		    base_percentages += N_base_percentage;
+		}
+		$statsTable.append(get_table_row('Base Percentages', base_percentages));
+	    }
+	    $divs.append($('<div id="' + tab_ids.stats + '" class="tab-pane">').append($statsTable))
+	    $container.append($tabs);
+	    $container.append($divs);
+
 	},
 /*
 		if (this.reads["data"].hasOwnProperty("source")){
@@ -301,6 +390,13 @@ define (
 		    }
 		}
 */
+
+        get_uuid4: function() {
+	    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+	       	var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+	       	return v.toString(16);
+	    });
+	},
 
 
         loggedInCallback: function(event, auth) {

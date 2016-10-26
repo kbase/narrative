@@ -13,7 +13,9 @@ define (
 		'bluebird',
 		'narrativeConfig',
 		'kbaseAuthenticatedWidget',
-        'base/js/namespace'
+        'base/js/namespace',
+        'kbase-generic-client-api',
+        'util/icon'
 	], function(
 		KBWidget,
 		bootstrap,
@@ -21,7 +23,9 @@ define (
 		Promise,
 		Config,
 		kbaseAuthenticatedWidget,
-        Jupyter
+        Jupyter,
+        GenericClient,
+        Icon
 	) {
     'use strict';
     return KBWidget({
@@ -41,24 +45,7 @@ define (
         loadingImage: Config.get('loading_gif'),
         wsUrl: Config.url('workspace'),
         wsClient: null,
-        // categories: ['genomes',
-        //              //'metagenomes',
-        //              'media', 'plant_gnms'
-        //              /*'gwas_populations', 'gwas_population_kinships', 'gwas_population_variations',
-        //              'gwas_top_variations', 'gwas_population_traits', 'gwas_gene_lists'*/ ],
-        // categoryDescr: {  // search API category -> {}
-        //     'genomes': {name:'Genomes',type:'KBaseGenomes.Genome',ws:'KBasePublicGenomesV5',search:true},
-        //     // 'metagenomes': {name: 'Metagenomes',type:'Communities.Metagenome',ws:'wilke:Data',search:true},
-        //     'media': {name:'Media',type:'KBaseBiochem.Media',ws:'KBaseMedia',search:false},
-        //     'plant_gnms': {name:'Plant Genomes',type:'KBaseGenomes.Genome',ws:'PlantCSGenomes',search:false}
-
-        //     'gwas_populations': {name:'GWAS Populations',type:'KBaseGwasData.GwasPopulation',ws:'KBasePublicGwasDataV2',search:true},
-        //     'gwas_population_kinships': {name:'GWAS Population Kinships',type:'KBaseGwasData.GwasPopulationKinship',ws:'KBasePublicGwasDataV2',search:true},
-        //     'gwas_population_variations': {name:'GWAS Population Variations',type:'KBaseGwasData.GwasPopulationVariation',ws:'KBasePublicGwasDataV2',search:true},
-        //     'gwas_top_variations': {name:'GWAS Top Variations',type:'KBaseGwasData.GwasTopVariations',ws:'KBasePublicGwasDataV2',search:true},
-        //     'gwas_population_traits': {name:'GWAS Population Traits',type:'KBaseGwasData.GwasPopulationTrait',ws:'KBasePublicGwasDataV2',search:true},
-        //     'gwas_gene_lists': {name:'GWAS Gene Lists',type:'KBaseGwasData.GwasGeneList',ws:'KBasePublicGwasDataV2',search:true}
-        // },
+        serviceClient: null,
         mainListPanelHeight: '535px',
         maxNameLength: 60,
         totalPanel: null,
@@ -95,6 +82,7 @@ define (
             }
 
             this.wsClient = new Workspace(this.wsUrl, {'token': this.token});
+            this.serviceClient = new GenericClient(Config.url('service_wizard'), {'token': this.token});
             var mrg = {'margin': '10px 0px 10px 0px'};
             var typeInput = $('<select class="form-control kb-import-filter">').css(mrg);
             for (var catPos in this.categories) {
@@ -171,17 +159,20 @@ define (
                 var ws = cat.ws;
 
                 var thisQuery = this.currentQuery;
-                Promise.resolve(this.wsClient.list_objects({
-                    workspaces: [ws],
-                    type: type,
-                    includeMetadata: 1,
-                }))
+                Promise.resolve(this.serviceClient.sync_call(
+                    "NarrativeService.list_objects_with_sets",
+                    [{
+                        ws_name: ws,
+                        types: [type]
+                    }]
+                ))
                 .then(function(data) {
+                    data = data[0]['data'];
                     if (thisQuery !== this.currentQuery)
                         return;
                     var query = this.currentQuery.replace(/[\*]/g,' ').trim().toLowerCase();
                     for (var i=0; i<data.length; i++) {
-                        var info = data[i];
+                        var info = data[i].object_info;
                         // object_info:
                         // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
                         // [3] : timestamp save_date // [4] : int version // [5] : username saved_by
@@ -190,17 +181,14 @@ define (
                         var name = info[1];
                         var id = info[0];
                         var metadata = {};
-                        // the ws object size of the media doesn't seem useful!
-                        //if (this.currentCategory === 'media') {
-                        //    metadata['Size'] = info[9];
-                        //} else
+                        var objectMeta = info[10] || {}
                         if (this.currentCategory === 'plant_gnms') {
-                            if (info[10].Name) {
+                            if (objectMeta.Name) {
                                 metadata['ID'] = id;
-                                name = info[10].Name;
+                                name = objectMeta.Name;
                             }
-                            metadata['Source'] = info[10].Source;
-                            metadata['Genes'] = info[10]['Number features'];
+                            metadata['Source'] = objectMeta.Source;
+                            metadata['Genes'] = objectMeta['Number features'];
                         }
                         if(query) {
                             if (name.toLowerCase().indexOf(query) == -1)
@@ -288,14 +276,6 @@ define (
                 }.bind(this));
             }
         },
-
-        // list_objects: function(ws, type, query, okCallback, errorCallback) {
-        //     this.wsClient.list_objects({workspaces: [ws], type: type, includeMetadata: 1}, function(data) {
-        //         okCallback(data, query);
-        //     }, function(error) {
-        //         errorCallback(error);
-        //     });
-        // },
 
         attachRow: function(index) {
             var obj = this.objectList[index];
@@ -402,40 +382,37 @@ define (
                 titleElement.append('<br>').append('&nbsp;');
             }
 
-                    // Set data icon
-                    var $logo = $('<span>');
-                    //console.debug("setDataIcon:public type=", type);
-                    $(document).trigger('setDataIcon.Narrative', {elt: $logo, type: type});
-
-                    var $topTable = $('<table>')
-                        // set background to white looks better on DnD
-                        .css({'width':'100%','background':'#fff'})
-                        .append($('<tr>')
-                            .append($('<td>')
-                                .css({'width':'90px'})
-                                                .append($addDiv.hide()))
-                                 .append($('<td>')
-                                                 .css({'width':'50px'})
-                                                 .append($logo))
-                                 .append($('<td>')
-                                                 .append(titleElement)));
-
-        var $row = $('<div>')
-                                .css({margin:'2px',padding:'4px','margin-bottom': '5px'})
-                                //.addClass('kb-data-list-obj-row')
-                                .append($('<div>').addClass('kb-data-list-obj-row-main')
-                                            .append($topTable))
-                                // show/hide ellipses on hover, show extra info on click
-                                .mouseenter(function(){
-                                    //if (!$moreRow.is(':visible')) { $toggleAdvancedViewBtn.show(); }
-                                    $addDiv.show();
-                                    $btnToolbar.show();
-                                })
-                                .mouseleave(function(){
-                                    //$toggleAdvancedViewBtn.hide();
-                                    $addDiv.hide();
-                                    $btnToolbar.hide();
-                                });
+            // Set data icon
+            var $logo = $('<span>');
+            Icon.buildDataIcon($logo, type);
+            var $topTable = $('<table>')
+                // set background to white looks better on DnD
+                .css({'width':'100%','background':'#fff'})
+                .append($('<tr>')
+                    .append($('<td>')
+                        .css({'width':'90px'})
+                                        .append($addDiv.hide()))
+                         .append($('<td>')
+                                         .css({'width':'50px'})
+                                         .append($logo))
+                         .append($('<td>')
+                                         .append(titleElement)));
+            var $row = $('<div>')
+                        .css({margin:'2px',padding:'4px','margin-bottom': '5px'})
+                        //.addClass('kb-data-list-obj-row')
+                        .append($('<div>').addClass('kb-data-list-obj-row-main')
+                                    .append($topTable))
+                        // show/hide ellipses on hover, show extra info on click
+                        .mouseenter(function(){
+                            //if (!$moreRow.is(':visible')) { $toggleAdvancedViewBtn.show(); }
+                            $addDiv.show();
+                            $btnToolbar.show();
+                        })
+                        .mouseleave(function(){
+                            //$toggleAdvancedViewBtn.hide();
+                            $addDiv.hide();
+                            $btnToolbar.hide();
+                        });
 
             var $rowWithHr = $('<div>')
                                     .append($('<hr>')
@@ -472,20 +449,6 @@ define (
                     this.copyPrompt(object, targetName, thisBtn, true);
                 }
             }.bind(this));
-            // this.wsClient.get_object_info_new({objects: [{ref: self.wsName + "/" + correctedTargetName}]}, function (info) {
-            //     //console.log(correctedTargetName + ' exists:', info);
-            //     // Object exists, increment suffix
-            //     this.copy(object, targetName, thisBtn, suffix + 1);
-            // }, function (error) {
-            //     //console.log(error);
-            //     if (error.error && error.error.message && error.error.message.indexOf(
-            //             'No object with name '+correctedTargetName+' exists in workspace') == 0) {
-            //         // Object doesn't exist, so we can copy over it
-            //         self.copyFinal(object, correctedTargetName, thisBtn);
-            //     } else {
-            //         self.copyPrompt(object, targetName, thisBtn, true);
-            //     }
-            // });
         },
 
         copyPrompt: function(object, targetName, thisBtn, withError) {
@@ -497,7 +460,7 @@ define (
                     .html('Enter target object name' +
                             (withError ? ':' : ' (or leave current one for overwriting):')))
                             .append($("<br/>")).append($input);
-            IPython.dialog.modal({
+            Jupyter.dialog.modal({
                 title: withError ? 'There are some problems checking object existence' :
                     'Object with this name already exists',
                 body: dialog,
@@ -516,7 +479,7 @@ define (
                     var dlg = $(this);
                     // Upon ENTER, click the OK button.
                     dlg.find('input[type="text"]').keydown(function (event, ui) {
-                        if (event.which === IPython.utils.keycodes.ENTER)
+                        if (event.which === Jupyter.utils.keycodes.ENTER)
                             dlg.find('.btn-primary').first().click();
                     });
                     dlg.find('input[type="text"]').focus();
@@ -526,10 +489,13 @@ define (
 
         copyFinal: function(object, targetName, thisBtn) {
             console.log("Copying " + object.ws + "/" + object.id + " -> " + this.wsName + "/" + targetName);
-            Promise.resolve(this.wsClient.copy_object({
-                to:   {ref: this.wsName + "/" + targetName},
-                from: {ref: object.ws +   "/" + object.id}
-            }))
+            Promise.resolve(this.serviceClient.sync_call(
+                "NarrativeService.copy_object",
+                [{
+                    ref: object.ws + '/' + object.id,
+                    target_ws_name: this.wsName
+                }]
+            ))
             .then(function(info) {
                 $(thisBtn).prop("disabled", false);
                 $(thisBtn).html('<span class="fa fa-chevron-circle-left"/> Add');
@@ -582,7 +548,7 @@ define (
             return this;
         },
 
-        loggedOutCallback: function(event, auth) {
+        loggedOutCallback: function() {
             this.token = null;
             return this;
         },

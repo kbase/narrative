@@ -229,7 +229,8 @@ define ([
                             $(this).html('<img src="'+self.options.loadingImage+'">');
 
                             var thisBtn = this;
-                            Promise.resolve(self.serviceClient.sync_call("NarrativeService.copy_object",
+                            Promise.resolve(self.serviceClient.sync_call(
+                                "NarrativeService.copy_object",
                                 [{
                                     ref: object_info[6] + "/" + object_info[0],
                                     target_ws_name: self.narWs,

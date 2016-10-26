@@ -14,6 +14,7 @@ local json = require('json')
 -- For creating new containers the config object must contain certain fields
 -- Example config contains:
 local function config()
+   local hc = { Binds={}}
    local config = { Hostname = "",
 		    User = "nobody",
 		    Memory = 0,
@@ -30,6 +31,7 @@ local function config()
 		    Cmd = {'/bin/bash'},
 		    Dns = json.util.null,
 		    Image = "base",
+		    HostConfig=hc,
 		    Volumes = {},
 		    VolumesFrom = json.util.null,
 		    WorkingDir = ""

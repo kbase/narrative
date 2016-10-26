@@ -109,7 +109,7 @@ class NarrativeJobService(object):
                  password=None, token=None, ignore_authrc=False,
                  trust_all_ssl_certificates=False):
         if url is None:
-            url = 'http://localhost:7080'
+            url = 'https://kbase.us/services/njs_wrapper/'
         scheme, _, _, _, _, _ = _urlparse.urlparse(url)
         if scheme not in _URL_SCHEME:
             raise ValueError(url + " isn't a valid http url")
@@ -138,18 +138,23 @@ class NarrativeJobService(object):
         if self.timeout < 1:
             raise ValueError('Timeout value must be at least 1 second')
 
-    def _call(self, method, params):
+    def _call(self, method, params, json_rpc_context = None):
         arg_hash = {'method': method,
                     'params': params,
                     'version': '1.1',
                     'id': str(_random.random())[2:]
                     }
+        if json_rpc_context:
+            arg_hash['context'] = json_rpc_context
 
         body = _json.dumps(arg_hash, cls=_JSONObjectEncoder)
         ret = _requests.post(self.url, data=body, headers=self._headers,
                              timeout=self.timeout,
                              verify=not self.trust_all_ssl_certificates)
         if ret.status_code == _requests.codes.server_error:
+            json_header = None
+            if _CT in ret.headers:
+                json_header = ret.headers[_CT]
             if _CT in ret.headers and ret.headers[_CT] == _AJ:
                 err = _json.loads(ret.text)
                 if 'error' in err:
@@ -160,37 +165,133 @@ class NarrativeJobService(object):
                 raise ServerError('Unknown', 0, ret.text)
         if ret.status_code != _requests.codes.OK:
             ret.raise_for_status()
+        ret.encoding = 'utf-8'
         resp = _json.loads(ret.text)
         if 'result' not in resp:
             raise ServerError('Unknown', 0, 'An unknown server error occurred')
         return resp['result']
-
-    def run_app(self, app):
+ 
+    def run_app(self, app, json_rpc_context = None):
+        if json_rpc_context and type(json_rpc_context) is not dict:
+            raise ValueError('Method run_app: argument json_rpc_context is not type dict as required.')
         resp = self._call('NarrativeJobService.run_app',
-                          [app])
+                          [app], json_rpc_context)
         return resp[0]
-
-    def check_app_state(self, job_id):
+  
+    def check_app_state(self, job_id, json_rpc_context = None):
+        if json_rpc_context and type(json_rpc_context) is not dict:
+            raise ValueError('Method check_app_state: argument json_rpc_context is not type dict as required.')
         resp = self._call('NarrativeJobService.check_app_state',
-                          [job_id])
+                          [job_id], json_rpc_context)
         return resp[0]
-
-    def suspend_app(self, job_id):
+  
+    def suspend_app(self, job_id, json_rpc_context = None):
+        if json_rpc_context and type(json_rpc_context) is not dict:
+            raise ValueError('Method suspend_app: argument json_rpc_context is not type dict as required.')
         resp = self._call('NarrativeJobService.suspend_app',
-                          [job_id])
+                          [job_id], json_rpc_context)
         return resp[0]
-
-    def resume_app(self, job_id):
+  
+    def resume_app(self, job_id, json_rpc_context = None):
+        if json_rpc_context and type(json_rpc_context) is not dict:
+            raise ValueError('Method resume_app: argument json_rpc_context is not type dict as required.')
         resp = self._call('NarrativeJobService.resume_app',
-                          [job_id])
+                          [job_id], json_rpc_context)
         return resp[0]
-
-    def delete_app(self, job_id):
+  
+    def delete_app(self, job_id, json_rpc_context = None):
+        if json_rpc_context and type(json_rpc_context) is not dict:
+            raise ValueError('Method delete_app: argument json_rpc_context is not type dict as required.')
         resp = self._call('NarrativeJobService.delete_app',
-                          [job_id])
+                          [job_id], json_rpc_context)
         return resp[0]
-
-    def list_config(self):
+  
+    def list_config(self, json_rpc_context = None):
+        if json_rpc_context and type(json_rpc_context) is not dict:
+            raise ValueError('Method list_config: argument json_rpc_context is not type dict as required.')
         resp = self._call('NarrativeJobService.list_config',
-                          [])
+                          [], json_rpc_context)
         return resp[0]
+  
+    def ver(self, json_rpc_context = None):
+        if json_rpc_context and type(json_rpc_context) is not dict:
+            raise ValueError('Method ver: argument json_rpc_context is not type dict as required.')
+        resp = self._call('NarrativeJobService.ver',
+                          [], json_rpc_context)
+        return resp[0]
+  
+    def status(self, json_rpc_context = None):
+        if json_rpc_context and type(json_rpc_context) is not dict:
+            raise ValueError('Method status: argument json_rpc_context is not type dict as required.')
+        resp = self._call('NarrativeJobService.status',
+                          [], json_rpc_context)
+        return resp[0]
+  
+    def list_running_apps(self, json_rpc_context = None):
+        if json_rpc_context and type(json_rpc_context) is not dict:
+            raise ValueError('Method list_running_apps: argument json_rpc_context is not type dict as required.')
+        resp = self._call('NarrativeJobService.list_running_apps',
+                          [], json_rpc_context)
+        return resp[0]
+  
+    def run_job(self, params, json_rpc_context = None):
+        if json_rpc_context and type(json_rpc_context) is not dict:
+            raise ValueError('Method run_job: argument json_rpc_context is not type dict as required.')
+        resp = self._call('NarrativeJobService.run_job',
+                          [params], json_rpc_context)
+        return resp[0]
+  
+    def get_job_params(self, job_id, json_rpc_context = None):
+        if json_rpc_context and type(json_rpc_context) is not dict:
+            raise ValueError('Method get_job_params: argument json_rpc_context is not type dict as required.')
+        resp = self._call('NarrativeJobService.get_job_params',
+                          [job_id], json_rpc_context)
+        return resp
+  
+    def update_job(self, params, json_rpc_context = None):
+        if json_rpc_context and type(json_rpc_context) is not dict:
+            raise ValueError('Method update_job: argument json_rpc_context is not type dict as required.')
+        resp = self._call('NarrativeJobService.update_job',
+                          [params], json_rpc_context)
+        return resp[0]
+  
+    def add_job_logs(self, job_id, lines, json_rpc_context = None):
+        if json_rpc_context and type(json_rpc_context) is not dict:
+            raise ValueError('Method add_job_logs: argument json_rpc_context is not type dict as required.')
+        resp = self._call('NarrativeJobService.add_job_logs',
+                          [job_id, lines], json_rpc_context)
+        return resp[0]
+  
+    def get_job_logs(self, params, json_rpc_context = None):
+        if json_rpc_context and type(json_rpc_context) is not dict:
+            raise ValueError('Method get_job_logs: argument json_rpc_context is not type dict as required.')
+        resp = self._call('NarrativeJobService.get_job_logs',
+                          [params], json_rpc_context)
+        return resp[0]
+  
+    def finish_job(self, job_id, params, json_rpc_context = None):
+        if json_rpc_context and type(json_rpc_context) is not dict:
+            raise ValueError('Method finish_job: argument json_rpc_context is not type dict as required.')
+        self._call('NarrativeJobService.finish_job',
+                   [job_id, params], json_rpc_context)
+  
+    def check_job(self, job_id, json_rpc_context = None):
+        if json_rpc_context and type(json_rpc_context) is not dict:
+            raise ValueError('Method check_job: argument json_rpc_context is not type dict as required.')
+        resp = self._call('NarrativeJobService.check_job',
+                          [job_id], json_rpc_context)
+        return resp[0]
+  
+    def check_jobs(self, params, json_rpc_context = None):
+        if json_rpc_context and type(json_rpc_context) is not dict:
+            raise ValueError('Method check_jobs: argument json_rpc_context is not type dict as required.')
+        resp = self._call('NarrativeJobService.check_jobs',
+                          [params], json_rpc_context)
+        return resp[0]
+  
+    def cancel_job(self, params, json_rpc_context = None):
+        if json_rpc_context and type(json_rpc_context) is not dict:
+            raise ValueError('Method cancel_job: argument json_rpc_context is not type dict as required.')
+        self._call('NarrativeJobService.cancel_job',
+                   [params], json_rpc_context)
+ 

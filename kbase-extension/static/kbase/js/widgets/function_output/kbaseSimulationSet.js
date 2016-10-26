@@ -1,7 +1,7 @@
 (function( $, undefined ) {
-    $.KBWidget({
+    return KBWidget({
         name: "kbaseSimulationSet",
-        parent: "kbaseWidget",
+        
         version: "1.0.0",
         options: {
             color: "black",
@@ -44,7 +44,7 @@
             function buildTable(data) {
                 var simu = data[0].data
                 var simuTable = $('<table class="table table-bordered table-striped" style="width: 100%;">');
-                var tabs = container.kbTabs({tabs: [
+                var tabs = container.kbaseTabTableTabs({tabs: [
                     {name: 'Overview', active: true},
                     {name: 'Simulation Results', content: simuTable}]
                 })

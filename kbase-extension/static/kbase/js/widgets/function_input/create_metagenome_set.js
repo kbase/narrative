@@ -4,15 +4,25 @@
  * @author Andreas Wilke <wilke@anl.gov>
  * @public
  */
-define(['jquery',
-        'narrativeConfig',
-        'kbwidget',
-        'kbaseNarrativeInput',
-        'kbStandaloneListSelect'],
-    function($, Config) {
-    $.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'narrativeConfig',
+		'kbaseNarrativeInput',
+		'kbStandaloneListSelect'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Config,
+		kbaseNarrativeInput,
+		kbStandaloneListSelect
+	) {
+    return KBWidget({
         name: "create_metagenome_set",
-        parent: "kbaseNarrativeInput",
+        parent : kbaseNarrativeInput,
         version: "1.0.0",
         token: null,
         options: {},

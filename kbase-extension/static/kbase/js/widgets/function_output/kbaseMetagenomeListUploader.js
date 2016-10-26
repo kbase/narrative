@@ -1,7 +1,7 @@
 (function( $, undefined ) {
-    $.KBWidget({
+    return KBWidget({
         name: "MetagenomeListUploadWidget",
-        parent: "kbaseAuthenticatedWidget",
+        parent : kbaseAuthenticatedWidget,
         version: "1.0.0",
         ws: null,
         id: null,

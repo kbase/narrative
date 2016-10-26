@@ -7,15 +7,24 @@
  * @public
  */
 
-define(['jquery',
-        'narrativeConfig',
-        'kbwidget',
-        'kbaseNarrativeInput'],
-function($, Config) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'narrativeConfig',
+		'kbaseNarrativeInput'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Config,
+		kbaseNarrativeInput
+	) {
     'use strict';
-    $.KBWidget({
+    return KBWidget({
         name: "kbaseBuildMediaInput", 
-        parent: "kbaseNarrativeInput",
+        parent : kbaseNarrativeInput,
         version: "1.0.0",
         options: {
             loadingImage: Config.get('loading_gif'),
@@ -137,7 +146,7 @@ function($, Config) {
                                   .hide())
                           .append(this.$errorPanel);
 
-            this.$errorPanel.find("#error-accordion").kbaseAccordion({
+             new kbaseAccordion(this.$errorPanel.find("#error-accordion"), {
                     elements: [{ 
                         title: "Error Details", 
                         body: $("<pre>")

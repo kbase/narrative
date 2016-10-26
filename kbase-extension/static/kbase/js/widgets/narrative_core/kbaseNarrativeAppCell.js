@@ -12,25 +12,25 @@
  */
 
 (function( $, undefined ) {
-  require(['jquery',
+  require(['kbwidget', 'bootstrap', 'jquery',
            'narrativeConfig',
            'util/string',
            'util/display',
            'util/bootstrapDialog',
-           'kbwidget',
            'kbaseAuthenticatedWidget',
            'kbaseAccordion',
            'kbaseNarrativeOutputCell'
            ], 
-  function($, 
+  function(KBWidget, bootstrap,$, 
            Config,
            StringUtil,
            DisplayUtil,
-           BootstrapDialog) {
+           BootstrapDialog,
+            kbaseAuthenticatedWidget, kbaseAccordion, kbaseNarrativeOutputCell) {
     'use strict';
-    $.KBWidget({
+    return KBWidget({
         name: "kbaseNarrativeAppCell",
-        parent: "kbaseAuthenticatedWidget",
+        parent : kbaseAuthenticatedWidget,
         version: "1.0.0",
         options: {
             app: null,
@@ -168,7 +168,7 @@
 
                 $errorPanel.append($details)
                            .append($tracebackPanel);
-                $tracebackPanel.kbaseAccordion({ elements : tracebackAccordion });
+                 new kbaseAccordion($tracebackPanel, { elements : tracebackAccordion });
             }
             this.$elem.empty().append($errorPanel);
             this.$elem.closest('.cell').find('.button_container').kbaseNarrativeCellMenu('setSubtitle', 'Error! Unable to load app information!');
@@ -341,7 +341,7 @@
                 .trigger('set-icon.cell', [$logo.html()]);
             
             //require(['kbaseNarrativeCellMenu'], $.proxy(function() {
-            //    this.cellMenu = $menuSpan.kbaseNarrativeCellMenu();
+            //    this.cellMenu =  new kbaseNarrativeCellMenu($menuSpan);
             //}, this));
 
 
@@ -971,7 +971,8 @@
 
                     var widgetName = this.inputStepLookup[stepId].outputWidgetName;
                     var $outputWidget = $('<div>').css({'padding':'5px 0'});
-                    $outputWidget.kbaseNarrativeOutputCell({
+console.log("MAKE A");
+                     new kbaseNarrativeOutputCell($outputWidget, {
                         widget: widgetName,
                         data: output,
                         type: 'app',
@@ -999,7 +1000,8 @@
         setStepError: function(stepId, error) {
             if (this.inputStepLookup) {
                 if(this.inputStepLookup[stepId]) {
-                    this.inputStepLookup[stepId].kbaseNarrativeOutputCell({
+console.log("MAKE B");
+                     new kbaseNarrativeOutputCell(this.inputStepLookup[stepId], {
                         widget: this.OUTPUT_ERROR_WIDGET,
                         data: error,
                         type: 'error',

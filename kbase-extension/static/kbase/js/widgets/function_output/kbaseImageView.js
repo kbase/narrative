@@ -2,7 +2,7 @@
  * KBase widget to display an image.
  */
 (function($, undefined) {
-    $.KBWidget({
+    return KBWidget({
         name: 'ImageViewWidget',
         version: '1.0.0',
         options: {

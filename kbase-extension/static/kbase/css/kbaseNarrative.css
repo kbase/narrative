@@ -1,5 +1,14 @@
 @import url("//fonts.googleapis.com/css?family=Roboto");
 
+
+.kb-ga-seq {
+    word-wrap: break-word;
+    font-family: monospace;
+    max-width: 300px;
+    max-height: 100px;
+    overflow-y: auto;
+}
+
 /**
  * Shim to make sure jQuery-ui dialogs are always on front of other DOM elements.
  */
@@ -66,7 +75,7 @@
 .kb-data-list-drag-target.-drag-hover {
     background-color: #EFFCEB;
     border-color: green;
-    
+
 }
 .kb-data-list-drag-target.-drag-hover {
     height: 90px;
@@ -350,7 +359,7 @@ p#site-title {
     position: fixed;
     left: 380px;
     top: 70px;
-    right: 0; 
+    right: 0;
     bottom: 0;
     overflow: auto;
     */
@@ -686,7 +695,7 @@ ul.pane-list li {
     text-align: justify;
 }
 
-.kb-method-list-more-div > div:nth-child(2) {
+.kb-method-list-more-div > div:last-child {
 	text-align: right;
 }
 
@@ -1338,6 +1347,14 @@ div#notebook_panel {
     cursor: pointer;
 }
 
+.kb-cell-toolbar {
+    xborder-bottom: 1px silver solid;
+}
+
+.kb-cell-toolbar.collapsed {
+    xborder-bottom: none;
+}
+
 .kb-cell-toolbar .buttons {
     font-weight: bold;
     color: #CECECE !important;
@@ -1345,6 +1362,18 @@ div#notebook_panel {
 
 .kb-cell-toolbar .btn {
     border: none;
+}
+
+.kb-cell-toolbar .icon {
+    display: inline-block;
+    height: 56px;
+    width: 56px;
+    padding: 0; 
+    margin: 0 4px 0 4px;
+    vertical-align: top; 
+    border: 0px red solid;
+    line-height: 56px;
+    overflow: hidden;
 }
 
 .kb-cell-toolbar .title {
@@ -1359,6 +1388,13 @@ div#notebook_panel {
     font-size: 90%;
     color: #666;
 }
+
+.kb-cell-toolbar .info-link {
+    font-family: "Roboto", Arial, sans-serif;
+    font-size: 90%;
+    color: #666;
+}
+
 
 .kb-toolbar-open {
     border-bottom: 1px solid #CCC;
@@ -1590,7 +1626,7 @@ div#notebook_panel {
 }
 
 .kb-jobs-info-table {
-    margin-top: 5px;
+    margin: 0 2px;
     width: 95%;
 }
 
@@ -1599,6 +1635,9 @@ div#notebook_panel {
     color: #777;
     vertical-align:top;
     padding-right: 5px;
+    width: 30%;
+    max-width: 30%;
+    min-width: 30%;
 
 }
 
@@ -1677,12 +1716,12 @@ div#notebook_panel {
 }
 
 /*
-This set of styles is a to accomodate the required/satisfied icon which appears 
-between the select input control and the help text to the right of it. The 
+This set of styles is a to accomodate the required/satisfied icon which appears
+between the select input control and the help text to the right of it. The
 problem is that within the columns used for layout the select is set to 100% width
 and yet the icon is placed right next to it. The result is that the icon is shoved
 to the right of the select control and into the next column, overlapping the
-help text. The old method handling this was to scoot the help text far enough over 
+help text. The old method handling this was to scoot the help text far enough over
 to accomodate the the icon intruding into its space. This technique makes space
 in the column in which the icon lives, and does this by shrinking the select
 control with padding, and then scooting the icon back into its column.
@@ -1691,7 +1730,7 @@ control with padding, and then scooting the icon back into its column.
     /* allow space for the required (red arrow), satisfied (green checkbox) icon */
     padding-right: 20px;
 }
-.kb-method-parameter-input .kb-method-parameter-accepted-glyph, 
+.kb-method-parameter-input .kb-method-parameter-accepted-glyph,
 .kb-method-parameter-input .kb-method-parameter-required-glyph {
     /* This scoots the icon inside */
     margin-left: -15px;
@@ -2051,15 +2090,6 @@ div[class="tooltip-inner"] {
 
 #kb-ws .dataTables_filter { display: none; }
 
-.sorting { background: url('../images/sort_both.png') no-repeat center right; }
-.sorting_asc { background: url('../images/sort_asc.png') no-repeat center right; }
-.sorting_desc { background: url('../images/sort_desc.png') no-repeat center right; }
-
-.sorting_asc_disabled { background: url('../images/sort_asc_disabled.png') no-repeat center right; }
-.sorting_desc_disabled { background: url('../images/sort_desc_disabled.png') no-repeat center right; }
-
-/* end: data table */
-
 
 
 /* default blue button in the new style */
@@ -2167,7 +2197,7 @@ div[class="tooltip-inner"] {
 }
 
 .kb-data-list-add-data-button {
-	
+
     cursor:pointer;
     background-color: #F44336;
     color: #fff;
@@ -2176,7 +2206,7 @@ div[class="tooltip-inner"] {
     -webkit-box-shadow: 1px 1px 3px #aaa;
     moz-box-shadow: 1px 1px 3px #aaa;
     text-align: center;
-    
+
     width:  30pt;
     height: 30pt;
     border-radius: 50%;
@@ -2258,7 +2288,7 @@ div[class="tooltip-inner"] {
 .kb-data-list-row-hr {
     width:70%;
     margin: 2px auto;
-    
+
 }
 
 

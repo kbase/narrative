@@ -2,14 +2,23 @@
 # developebd by the Jupyter team here;
 # https://github.com/jupyter/jupyter-js-services/blob/master/test/run_test.py
 #
+# Also uses the flow where we assign a os process group id and shut down the
+# server based on that - since the subprocess actually executes the kbase-narrative
+# script.
+# (recipe here)
+# http://stackoverflow.com/questions/4789837/how-to-terminate-a-python-subprocess-launched-with-shell-true
 from __future__ import print_function
 
 import subprocess
 import sys
 import argparse
 import threading
+import time
+import os
+import signal
 
 KARMA_PORT = 9876
+JUPYTER_PORT = 9999
 
 argparser = argparse.ArgumentParser(
         description='Run KBase Narrative unit tests'
@@ -20,13 +29,16 @@ argparser.add_argument('-d', '--debug', action='store_true',
                        help="Whether to enter debug mode in Karma")
 options = argparser.parse_args(sys.argv[1:])
 
-nb_command = ['kbase-narrative', '--no-browser', '--NotebookApp.allow_origin="*"']
+nb_command = ['kbase-narrative', '--no-browser', '--NotebookApp.allow_origin="*"', '--port={}'.format(JUPYTER_PORT)]
 
 if not hasattr(sys, 'real_prefix'):
     nb_command[0] = 'narrative-venv/bin/kbase-narrative'
 
-nb_server = subprocess.Popen(nb_command, shell=False, stderr=subprocess.STDOUT,
-                             stdout=subprocess.PIPE)
+nb_server = subprocess.Popen(nb_command,
+    stderr=subprocess.STDOUT,
+    stdout=subprocess.PIPE,
+    preexec_fn = os.setsid
+)
 
 # wait for notebook server to start up
 while 1:
@@ -34,11 +46,13 @@ while 1:
     if not line:
         continue
     print(line)
-    if 'The IPython Notebook is running at: http://localhost:8888/':
+    if 'The Jupyter Notebook is running at: http://localhost:{}/'.format(JUPYTER_PORT) in line:
         break
     if 'is already in use' in line:
+        os.killpg(os.getpgid(nb_server.pid), signal.SIGTERM)
+        # nb_server.terminate()
         raise ValueError(
-            'The port 8888 was already taken, kill running notebook servers'
+            'The port {} was already taken, kill running notebook servers'.format(JUPYTER_PORT)
         )
 
 
@@ -53,6 +67,7 @@ def readlines():
 thread = threading.Thread(target=readlines)
 thread.setDaemon(True)
 thread.start()
+# time.sleep(15)
 
 test_command = ['grunt', 'test']
 
@@ -64,5 +79,6 @@ except subprocess.CalledProcessError:
     pass
 finally:
     print("Done running tests, killing server.")
-    nb_server.kill()
+    os.killpg(os.getpgid(nb_server.pid), signal.SIGTERM)
+    # nb_server.terminate()
 sys.exit(resp)

@@ -1,0 +1,28 @@
+<div>
+    <div id="kblog-header"> <!-- header buttons -->
+        <button id="kblog-play" class="btn btn-sm btn-default" data-toggle="tooltip" data-placement="top" title="Start fetching logs">
+            <span class="fa fa-play"></span>
+        </button>
+        <button id="kblog-stop" class="btn btn-sm btn-default" data-toggle="tooltip" data-placement="top" title="Stop fetching logs" disabled>
+            <span class="fa fa-stop"></span>
+        </button>
+        <button id="kblog-top" class="btn btn-sm btn-default" data-toggle="tooltip" data-placement="top" title="Jump to the top">
+            <span class="fa fa-fast-backward"></span>
+        </button>
+        <button id="kblog-back" class="btn btn-sm btn-default" data-toggle="tooltip" data-placement="top" title="Fetch previous log chunk">
+            <span class="fa fa-backward"></span>
+        </button>
+        <button id="kblog-forward" class="btn btn-sm btn-default" data-toggle="tooltip" data-placment="top" title="Fetch next log chunk">
+            <span class="fa fa-forward"></span>
+        </button>
+        <button id="kblog-bottom" class="btn btn-sm btn-default" data-toggle="tooltip" data-placment="top" title="Jump to the end">
+            <span class="fa fa-fast-forward"></span>
+        </button>
+        <div id="kblog-spinner" class="pull-right"><i class="fa fa-spinner fa-pulse fa-2x fa-fw"></i></div>
+        <div id="kblog-msg"></div>
+        <div id="kblog-err"></div>
+    </div>
+    <div id="kblog-panel"> <!-- scroll panel area -->
+        <pre>Logging not started yet! Press the <i class="fa fa-play"></i> button to start</pre>
+    </div>
+</div>

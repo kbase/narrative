@@ -1,9 +1,4 @@
-apt-get install lua5.1
-apt-get install luarocks
-apt-get install liblua5.1-0
-apt-get install liblua5.1-0-dev
-apt-get install liblua5.1-json
-apt-get install liblua5.1-lpeg2
+apt-get install -y lua5.1 luarocks liblua5.1-0 liblua5.1-0-dev liblua5.1-json liblua5.1-lpeg2 libssl-dev
 luarocks install luasocket
 luarocks install luajson
 luarocks install penlight

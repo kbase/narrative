@@ -238,7 +238,6 @@ define (
                                 [{
                                     ref: object_info[6] + "/" + object_info[0],
                                     target_ws_name: self.narWs,
-                                    // target_name: object_info[1]
                                 }]
                             ))
                             .then(function(info) {
@@ -258,27 +257,6 @@ define (
                                 }
                                 console.error(error);
                             });
-                            // self.ws.copy_object({
-                            //     to:   {ref: self.narWs     + "/" + object_info[1]},
-                            //     from: {ref: object_info[6] + "/" + object_info[0]} },
-                            //     function (info) {
-                            //         $(thisBtn).html('Added');
-                            //         self.trigger('updateDataList.Narrative');
-                            //     },
-                            //     function(error) {
-                            //         $(thisBtn).html('Error');
-                            //         if (error.error && error.error.message) {
-                            //             if (error.error.message.indexOf('may not write to workspace')>=0) {
-                            //                 self.options.$importStatus.html($('<div>').css({'color':'#F44336','width':'500px'}).append('Error: you do not have permission to add data to this Narrative.'));
-                            //             } else {
-                            //                 self.options.$importStatus.html($('<div>').css({'color':'#F44336','width':'500px'}).append('Error: '+error.error.message));
-                            //             }
-                            //         } else {
-                            //             self.options.$importStatus.html($('<div>').css({'color':'#F44336','width':'500px'}).append('Unknown error!'));
-                            //         }
-                            //         console.error(error);
-                            //     });
-
                         }));
 
             var shortName = object_info[1],

@@ -735,13 +735,12 @@ define([
 
                 var newParamSet = function (start) {
                     var param = {
-                        includeMetadata: 1,
-                        ids: []
+                        workspaces: []
                     };
                     if (start.type)
-                        param.type = start.type;
+                        param.types = [start.type];
                     if (start.id)
-                        param.ids.push(start.id);
+                        param.workspaces.push(start.id);
                     return param;
                 }
 
@@ -751,7 +750,7 @@ define([
                 var paramsList = [],
                     curParam = newParamSet({type: type}),
                     curTotal = 0,
-                    maxRequest = 10000,
+                    maxRequest = 300,
                     totalFetch = 0;
 
                 // Set up all possible requests. We'll break out of
@@ -763,7 +762,7 @@ define([
                     // if there's room in the request for this
                     // ws, put it there, and boost the total
                     if (curTotal + thisWs.count < maxRequest) {
-                        curParam.ids.push(thisWs.id);
+                        curParam.workspaces.push(String(thisWs.id));
                         curTotal += thisWs.count;
                     }
                     // if there isn't room, but ws isn't gonna
@@ -772,7 +771,7 @@ define([
                     // this ws
                     else if (thisWs.count < maxRequest) {
                         paramsList.push(curParam);
-                        curParam = newParamSet({type: type, id: thisWs.id});
+                        curParam = newParamSet({type: type, id: String(thisWs.id)});
                         curTotal = thisWs.count;
                     }
                     // if there isn't room because that's one big
@@ -781,7 +780,7 @@ define([
                     // kinda inefficient. Don't care.
                     else if (thisWs.count > maxRequest) {
                         for (var j = 0; j < thisWs.count; j += maxRequest) {
-                            var newParam = newParamSet({type: type, id: thisWs.id});
+                            var newParam = newParamSet({type: type, id: String(thisWs.id)});
                             newParam.minObjectID = j + 1;
                             newParam.maxObjectID = j + maxRequest;
                             paramsList.push(newParam);
@@ -789,7 +788,7 @@ define([
                     }
                 }
                 // at the tail end, push that last completed param set
-                if (curParam.ids.length > 0)
+                if (curParam.workspaces.length > 0)
                     paramsList.push(curParam);
 
                 if (objCount > maxObjFetch)
@@ -807,20 +806,20 @@ define([
                             return dataList;
                         });
                     } else {
-                        // return Promise.resolve(serviceClient.sync_call(
-                        //     'NarrativeService.list_objects_with_sets',
-                        //     [{
-                        //
-                        //     }]))
-                        //
-                        return Promise.resolve(ws.list_objects(param))
+                        return Promise.resolve(serviceClient.sync_call(
+                            'NarrativeService.list_objects_with_sets',
+                            [param]
+                        ))
+
+                        // return Promise.resolve(ws.list_objects(param))
                             .then(function (data) {
+                                data = data[0]['data']
                                 // filter out Narrative objects.
                                 for (var i = 0; i < data.length && dataList.length < maxObjFetch; i++) {
-                                    if (data[i][2].startsWith('KBaseNarrative'))
+                                    if (data[i].object_info[2].startsWith('KBaseNarrative'))
                                         continue;
                                     else
-                                        dataList.push(data[i]);
+                                        dataList.push(data[i].object_info);
                                 }
                                 return dataList;
                             }
@@ -1231,17 +1230,10 @@ define([
                     });
                 $btnToolbar.append($openLandingPage).append($openProvenance);
 
-
-
                 var $mainDiv = $('<div>').addClass('kb-data-list-info').css({padding: '0px', margin: '0px'})
                     .append($btnToolbar)
                     .append($name).append($version).append('<br>')
                     .append($type).append('<br>').append($narName).append('<br>').append($date).append($byUser);
-                //.append($toggleAdvancedViewBtn)
-                //.click(
-                //    function() {
-                //        toggleAdvanced();
-                //    });
 
 
                 var $addDiv =

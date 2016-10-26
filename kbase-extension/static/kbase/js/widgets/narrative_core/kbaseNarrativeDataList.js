@@ -622,7 +622,7 @@ define([
             }
         },
 
-        addDataControls: function (object_info, $alertContainer) {
+        addDataControls: function (object_info, $alertContainer, fromPalette) {
             var self = this;
             var $btnToolbar = $('<span>')
                 .addClass('btn-group');
@@ -659,7 +659,6 @@ define([
                 .click(function () {
                     this.trigger('filterMethods.Narrative', 'out_type:' + object_info[2].split('-')[0].split('.')[1]);
                 }.bind(this));
-
 
             var $openLandingPage = $('<span>')
                 .tooltip({
@@ -915,16 +914,19 @@ define([
 
             if (!Jupyter.narrative.readonly) {
                 $btnToolbar.append($filterMethodInput)
-                    .append($filterMethodOutput);
+                           .append($filterMethodOutput);
             }
             $btnToolbar.append($openLandingPage);
-            if (!Jupyter.narrative.readonly)
+            if (!Jupyter.narrative.readonly && !fromPalette) {
                 $btnToolbar.append($openHistory);
+            }
             $btnToolbar.append($openProvenance);
             if (!Jupyter.narrative.readonly) {
-                $btnToolbar.append($download)
-                    .append($rename)
-                    .append($delete);
+                $btnToolbar.append($download);
+            }
+            if (!Jupyter.narrative.readonly && !fromPalette) {
+                $btnToolbar.append($rename)
+                           .append($delete);
             }
 
             return $btnToolbar;
@@ -1016,9 +1018,6 @@ define([
                 shortName = shortName.substring(0, this.options.max_name_length - 3) + '...';
                 isShortened = true;
             }
-            if (objData.fromPalette) {
-                shortName += ' (from palette)';
-            }
             var $name = $('<span>').addClass("kb-data-list-name").append('<a>' + shortName + '</a>')
                 .css({'cursor': 'pointer'})
                 .click(function (e) {
@@ -1040,7 +1039,19 @@ define([
             var $type = $('<div>').addClass("kb-data-list-type").append(type);
             var $paletteIcon = '';
             if (objData.fromPalette) {
-                $paletteIcon = $('<span>').addClass('pull-right').append($('<i>').addClass('fa fa-briefcase').css({color: '#888'}));
+                $paletteIcon = $('<span>')
+                    .addClass('pull-right')
+                    .append($('<i>')
+                            .addClass('fa fa-rocket')
+                            .css({color: '#888'}))
+                    .tooltip({
+                        title: 'This object is rocketing in from another Narrative! Zoom!',
+                        placement: 'left',
+                        delay: {
+                            show: Config.get('tooltip').showDelay,
+                            hide: Config.get('tooltip').hideDelay
+                        }
+                    });
             }
 
             var $date = $('<span>').addClass("kb-data-list-date").append(TimeFormat.getTimeStampStr(object_info[3]));
@@ -1073,7 +1084,7 @@ define([
                 '<a href="/#spec/type/' + object_info[2] + '" target="_blank">' + (type_tokens[1].replace('-', '&#8209;')) + '.' + type_tokens[2] + '</a>';
             var $moreRow = $('<div>').addClass("kb-data-list-more-div").hide()
                 .append($('<div>').css({'text-align': 'center', 'margin': '5pt'})
-                    .append(self.addDataControls(object_info, $alertDiv)).append($alertDiv))
+                    .append(self.addDataControls(object_info, $alertDiv, objData.fromPalette)).append($alertDiv))
                 .append(
                     $('<table style="width:100%;">')
                     .append("<tr><th>Permament Id</th><td>" + object_info[6] + "/" + object_info[0] + "/" + object_info[4] + '</td></tr>')

@@ -106,7 +106,7 @@ define ([
                     '<li><a data-toggle="tab" href="#' + tab_ids.stats + '">Stats</a></li>' +
                     '</ul>'
                 ),
-                $divs = $('<div class="tab-content">'),
+                $divs = $('<div class="tab-content" style="margin-top: 15px">'),
                 $overviewTable = $('<table class="table table-striped table-bordered table-hover" style="margin-left: auto; margin-right: auto; word-wrap: break-word; table-layout: fixed;"/>').append($('<colgroup>').append('<col span="1" style="width: 25%">')),
                 $statsTable = $('<table class="table table-striped table-bordered table-hover" style="margin-left: auto; margin-right: auto; word-wrap: break-word; table-layout: fixed;"/>').append($('<colgroup>').append('<col span="1" style="width: 25%">'));
 

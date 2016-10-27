@@ -2128,16 +2128,15 @@ button.kb-data-obj {
     clear: left;
     width: 90px;
     text-align: right;
-    font-weight: 400;
-    color: rgba(0, 0, 0, 0.7);
+    color: rgba(0, 0, 0, 0.5);
+    /*padding: 0 0 5px 0;*/
 }
 .kb-data-obj-panel-info dl dt:after {
     content: ":";    
 }
 .kb-data-obj-panel-info dl dd {
-    font-weight: 900;
     margin: 0 0 0 100px;
-    padding: 0 0 0.2em 0;
+    /*padding: 0 0 5px 0;*/
 }
 /*
  * END: View details on KBase objects

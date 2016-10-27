@@ -93,6 +93,7 @@ require.config({
         'kbaseNarrativeSidePublicTab'           : 'kbase/js/widgets/narrative_core/kbaseNarrativeSidePublicTab',
         'kbaseNarrativeCell'                    : 'kbase/js/widgets/narrative_core/kbaseNarrativeCell',
         'kbaseNarrativeDataCell'                : 'kbase/js/widgets/narrative_core/kbaseNarrativeDataCell',
+        'kbaseNarrativeMetadata'                : 'kbase/js/widgets/narrative_core/kbaseNarrativeMetadata',        
         'kbaseNarrativeOutputCell'              : 'kbase/js/widgets/narrative_core/kbaseNarrativeOutputCell',
         'kbaseNarrativeInput'                   : 'kbase/js/widgets/function_input/kbaseNarrativeInput',
         'kbaseNarrativeMethodInput'             : 'kbase/js/widgets/function_input/kbaseNarrativeMethodInput',
@@ -332,6 +333,9 @@ require.config({
         },
         kbaseNarrativeOutputCell : {
             deps : ['jquery', 'kbwidget', 'kbaseNarrativeDataCell', 'kbaseNarrativeCellMenu']
+        },
+        kbaseNarrativeDataCell : {
+            deps: ['kbaseNarrativeMetadata']
         },
         knhx : {
             deps : ['knhx_menu', 'knhx_excanvas', 'knhx_canvastext', 'knhx_easytree']

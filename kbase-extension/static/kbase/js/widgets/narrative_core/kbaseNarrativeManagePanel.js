@@ -93,7 +93,7 @@ function($,
             this.ws = new Workspace(this.options.ws_url, auth);
 
             this.manager = new NarrativeManager({ws_url: this.options.ws_url, nms_url: this.options.nms_url}, auth);
-            this.serviceClient = new GenericClient(Config.get('service_wizard'), auth);
+            this.serviceClient = new GenericClient(Config.url('service_wizard'), auth);
             this.my_user_id = auth.user_id;
             this.refresh();
             return this;
@@ -641,87 +641,14 @@ function($,
                                     .append('Copy')
                                     .click(function () {
                                         $(this).prop("disabled", true);
-                                        var newMeta = ws_info[8];
-                                        newMeta['narrative_nice_name'] = $newNameInput.val();
-
-                                        var id = new Date().getTime();
-                                        var ws_name = self.my_user_id + ":" + id;
-
-                                        Promise.resolve(self.ws.clone_workspace({
-                                            wsi: {id: ws_info[0]},
-                                            workspace: ws_name,
-                                            meta: newMeta
-                                        }))
-                                        .then(function(newWsInfo) {
-                                            var newNarrativeRef = newWsInfo[0] + '/' + objectInfo[1];
-
-
-                                        }.bind(this))
-
-                                        self.ws.clone_workspace({
-                                            wsi: {id: ws_info[0]},
-                                            workspace: ws_name,
-                                            meta: newMeta
-                                        },
-                                            function (new_ws_info) {
-                                                // we have to match based on names because when cloning, the object id is not preserved!!! arg!
-                                                var new_narrative_ref = new_ws_info[0] + "/" + object_info[1]; //new_ws_info[8].narrative;
-                                                // ok, a lot of work just to update the narrative name in the metadata
-                                                self.ws.get_objects([{ref: new_narrative_ref}],
-                                                    function (data) {
-                                                        data = data[0]; // only one thing should be returned
-                                                        var new_nar_metadata = data.info[10];
-                                                        new_nar_metadata.name = newMeta['narrative_nice_name'];
-                                                        data.data.metadata.name = newMeta['narrative_nice_name'];
-
-                                                        // set workspace metadata to point to the correct object id since they can change on clone!!
-                                                        self.ws.alter_workspace_metadata({
-                                                            wsi: {id: new_ws_info[0]},
-                                                            new : {'narrative': String(data.info[0])}
-                                                        },
-                                                        function () {
-                                                            // so much work just to update this name!
-                                                            self.ws.save_objects({id: new_ws_info[0], objects: [
-                                                                    {
-                                                                        type: data.info[2],
-                                                                        data: data.data,
-                                                                        provenance: data.provenance,
-                                                                        name: data.info[1],
-                                                                        meta: new_nar_metadata
-                                                                    }
-                                                                ]},
-                                                                function (info) {
-                                                                    console.log('copying complete', info);
-                                                                    self.refresh();
-                                                                },
-                                                                function (error) {
-                                                                    var errorMessage = "Error! Copied successfully, but error on rename." + error.error.message;
-                                                                    console.log(errorMessage);
-                                                                    console.error(error);
-                                                                    self.setInteractionError($interactionPanel, errorMessage);
-                                                                });
-
-                                                            },
-                                                            function (error) {
-                                                                console.log('Error when setting ws metadata!');
-                                                                console.log(error);
-                                                            });
-
-
-                                                    },
-                                                    function (error) {
-                                                        var errorMessage = "Error! Copied successfully, but error on rename." + error.error.message;
-                                                        console.log(errorMessage);
-                                                        console.error(error);
-                                                        self.setInteractionError($interactionPanel, errorMessage);
-                                                    })
-                                            },
-                                            function (error) {
-                                                var errorMessage = "Error! " + error.error.message;
-                                                console.log(errorMessage);
-                                                console.error(error);
-                                                self.setInteractionError($interactionPanel, errorMessage);
-                                            });
+                                        self.copyThisNarrative($newNameInput.val())
+                                        .then(function() {
+                                            self.refresh();
+                                        })
+                                        .catch(function(error) {
+                                            self.setInteractionError($interactionPanel, "Sorry, an error occurred while copying!");
+                                            console.error(error);
+                                        });
                                     }))
                                 .append($('<button>').addClass('kb-data-list-cancel-btn')
                                     .append('Cancel')

@@ -78,12 +78,42 @@ define([
             }
             return setting;
         }
+        
+        var env = Props.make({});
+        function setEnv(key, value) {
+            env.setItem(key, value);
+        }
+        
+        function getEnv(key, defaultValue) {
+            return env.getItem(key, defaultValue);
+        }
+        
+        /*
+         * This is how the narrative core object does this.
+         * We should really hook into a single method which gets this 
+         * source of truth, validates it against the workspace to get a workspace
+         * info, and makes that info available in the runtime at load time.
+         * But for now, it is very helpful to have a single runtime object/module
+         * available instead of needing to thread global state through everything.
+         * The kbaseNarrative object does this, but it also does a lot more...
+         */
+        function workspaceId() {
+            var wsInfo = window.location.href.match(/ws\.(\d+)\.obj\.(\d+)/);
+            if (wsInfo && wsInfo.length === 3) {
+                return wsInfo[1];
+            }
+        }
+        
+        // This is how the 
 
         return {
             authToken: authToken,
             config: getConfig,
             bus: bus,
-            getUserSetting: getUserSetting
+            getUserSetting: getUserSetting,
+            setEnv: setEnv,
+            getEnv: getEnv,
+            workspaceId: workspaceId
         };
     }
 

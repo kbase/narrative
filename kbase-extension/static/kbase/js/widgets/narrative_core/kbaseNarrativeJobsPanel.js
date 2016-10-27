@@ -497,7 +497,10 @@ define([
                     });
                     modal.show();
                     break;
-
+                case 'result':
+                    var message = msg.content.data.content;
+                    this.sendCellMessage('result', message.address.cell_id, message);
+                    break;                    
                 default:
                     console.warn("Unhandled KBaseJobs message from kernel (type='" + msgType + "'):");
                     console.warn(msg);

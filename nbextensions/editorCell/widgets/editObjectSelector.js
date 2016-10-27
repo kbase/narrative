@@ -10,11 +10,12 @@
  */
 
 define([
+    // EXTERNAL
     'bluebird',
     // CDN
     'kb_common/html',
-    'kb_service/client/workspace',
     'kb_sdk_clients/genericClient',
+    'kb_sdk_clients/exceptions',
     'kb_service/utils',
     // LOCAL
     'common/ui',
@@ -22,27 +23,20 @@ define([
     'common/runtime',
     'common/events',
     'common/props',
-    // Wrapper for inputs
-    './inputWrapperWidget',
-    'widgets/appWidgets/fieldWidget',
-    // Display widgets
-    'widgets/appWidgets/paramDisplayResolver'
+    'common/error'
 
 ], function (
     Promise,
     html,
-    Workspace,
     GenericClient,
+    sdkClientExceptions,
     serviceUtils,
     UI,
     Dom,
     Runtime,
     Events,
     Props,
-    //Wrappers
-    RowWidget,
-    FieldWidget,
-    ParamResolver
+    kbError
     ) {
     'use strict';
 
@@ -54,35 +48,35 @@ define([
     function factory(config) {
         var runtime = Runtime.make(),
             workspaceInfo = config.workspaceInfo,
-            objectType = config.objectType,
             container,
             dom, ui,
             bus = runtime.bus().makeChannelBus(null, 'object selector bus'),
             model = Props.make(),
-            availableReadsSets,
-            selectedReadsSetItem;
-        
+            availableReadsSets, availableReadsSetsMap;
+
         function doCreate(e) {
             e.preventDefault();
             e.stopPropagation();
             var name = ui.getElement('new-object-name').value;
-                // value = ui.getElement('new-object-type').value;
+            // value = ui.getElement('new-object-type').value;
             bus.emit('create-new-set', {
                 name: name
-                // type: value
+                    // type: value
             });
             return false;
+        }
+
+        function doNew(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            bus.emit('new-set-form');
         }
 
         function renderLayout() {
             var events = Events.make(),
                 content = div([
-//                    div({style: {marginBottom: '12px'}}, [
-//                        'Editing objects of type ', 
-//                        span({style: {fontWeight: 'bold'}}, objectType)
-//                    ]),
                     div({class: 'form-inline'}, [
-                        'Select an object to edit: ',
+                        'Select a Reads Set to edit: ',
                         span({dataElement: 'object-selector'})
                     ]),
                     div({style: {fontStyle: 'italic'}}, 'or'),
@@ -90,23 +84,19 @@ define([
                         class: 'form-inline',
                         id: events.addEvent({type: 'submit', handler: doCreate})
                     }, [
-                        span({style: {padding: '0 4px 0 0'}}, 'Create a new set named'),
+                        span({style: {padding: '0 4px 0 0'}}, 'Create a new Reads Set named:'),
                         input({dataElement: 'new-object-name', class: 'form-control'}),
-//                        span({style: {padding: '0 4px 0 4px'}}, 'of type'),
-//                        select({
-//                            dataElement: 'new-object-type', 
-//                            class: 'form-control',
-//                            style: {margin: '0 12px 0 0'}
-//                        }, [
-//                            option({value: 'KBaseFile.SingleEndLibrary'}, 'Single-End'),
-//                            option({value: 'KBaseFile.PairedEndLibrary'}, 'Paired-End')
-//                        ]),
                         ' ',
                         button({
                             class: 'btn btn-primary',
                             type: 'button',
                             id: events.addEvent({type: 'click', handler: doCreate})
                         }, 'Create')])
+//                        button({
+//                            class: 'btn btn-default',
+//                            type: 'button',
+//                            id: events.addEvent({type: 'click', handler: doNew})
+//                        }, 'New')])
                 ]);
 
             return {
@@ -128,41 +118,43 @@ define([
             container.innerHTML = layout.content;
             layout.events.attachEvents(container);
         }
+
+//        function selectItem(ref) {
+//            // this is (currently) a select, so we need to 
+//            // unselect any selected item and
+//            // find the matching option and select it
+//            //console.log('autoselect', ref);
+//            var control = ui.getElement('object-selector').querySelector('select');
+//            var selected = control.querySelectorAll('[selected]');
+//            //console.log('autoselect', control, selected);
+//            if (selected.length > 1) {
+//                for (var i = 0; i < selected.length; i += 1) {
+//                    selected.item(i).removeAttribute('selected');
+//                }
+//            }
+//            var newlySelected = control.querySelector('option[value="' + ref + '"]');
+//            
+//            //console.log('autoselect', newlySelected);
+//            if (newlySelected) {
+//                newlySelected.setAttribute('selected', '');
+//            }
+//            
+//            // And we need to force the change for this
+//            emitChanged();
+//        }
         
-        function selectItem(ref) {
+        function emitChanged() {
             bus.emit('changed', {
-                newObjectRef: ref
-            });            
+                value: availableReadsSetsMap[model.getItem('objectRef')]
+            });
         }
 
         function doItemSelected(event) {
-            var newValue = event.target.value;
-            selectItem(newValue);
+            model.setItem('objectRef', event.target.value);
+            emitChanged();
         }
 
         function renderAvailableObjects() {
-            /*
-             var wsClient = new Workspace(runtime.config('services.workspace.url'), {
-             token: runtime.authToken()
-             });Config.url('service_wizard')
-             return wsClient.list_objects({
-             ids: [workspaceInfo.id],
-             type: objectType
-             })
-             .then(function (result) {
-             var objects = result.map(function (info) {
-             return serviceUtils.objectInfoToObject(info);
-             }),
-             content = select({}, objects.map(function (objectInfo) {
-             return option({value: objectInfo.ref}, objectInfo.name);
-             }));
-             container.querySelector('[data-element="object-selector"]').innerHTML = content;
-             })
-             .catch(function (err) {
-             console.error('ERROR getting objects', err, runtime.authToken(), workspaceInfo, objectType)
-             });
-             */
-
             var events = Events.make(),
                 setApiClient = new GenericClient({
                     url: runtime.config('services.service_wizard.url'),
@@ -174,73 +166,121 @@ define([
                     workspace: String(workspaceInfo.name),
                     include_set_item_info: 1
                 },
-                controlNode = container.querySelector('[data-element="object-selector"]');
+                controlNode = container.querySelector('[data-element="object-selector"]'),
+                selectedItem = model.getItem('objectRef');
 
             controlNode.innerHTML = html.loading();
 
             return setApiClient.callFunc('list_sets', [params])
                 .then(function (result) {
-                    // console.log('list sets result is ', result);
-                    var objects = result[0].sets.map(function (resultItem) {
-                        return serviceUtils.objectInfoToObject(resultItem.info);
-                    }),
-                        content = select({
+                    availableReadsSetsMap = {};
+                    availableReadsSets = result[0].sets.map(function (resultItem) {
+                        var info = serviceUtils.objectInfoToObject(resultItem.info);
+                        availableReadsSetsMap[info.ref] = info;
+                        return info;
+                    });
+                    var content = (function () {
+                        if (availableReadsSets.length === 0) {
+                            return  span({style: {fontWeight: 'bold', fontStyle: 'italic', color: '#CCC'}}, [
+                                'No Reads Sets yet in this Narrative -- you can create one below'
+                            ]);
+                        }
+                        return select({
                             class: 'form-control',
                             id: events.addEvent({type: 'change', handler: doItemSelected})
-                        }, objects.map(function (objectInfo) {
-                            return option({value: objectInfo.ref}, objectInfo.name);
-                        }));
-                    availableReadsSets = objects;
-                    if (objects.length) {
-                        selectedReadsSetItem = 0;
-                    } else {
-                        selectedReadsSetItem = null;
-                    }
+                        }, [option({value: ''}, '-- select a reads set --')]
+                            .concat(availableReadsSets.map(function (objectInfo) {
+                                var selected = false;
+                                if (selectedItem === objectInfo.ref) {
+                                    selected = true;
+                                }
+                                return option({value: objectInfo.ref, selected: selected}, objectInfo.name);
+                            })));
+                    }());
+
                     controlNode.innerHTML = content;
                     events.attachEvents(container);
-                    return objects.length;
+                    return availableReadsSets.length;
                 })
-                .catch(function (err) {
-                    console.error('ERROR getting objects', err, runtime.authToken(), workspaceInfo, objectType);
-                    console.error('stack trace', err.detail.replace('\n', '<br>'));
-                    // FORNOW: just return the empty set;
-                    var content = div({class: 'alert alert-warning'}, [
-                        'No Reads Set objects in your Narrative. Create a read set below'
-                    ]);
-                    controlNode.innerHTML = content;
-                    selectedReadsSetItem = null;
-                    return 0;
+                .catch(sdkClientExceptions.RequestException, function (err) {
+                    throw new kbError.KBError({
+                        type: 'GeneralError',
+                        original: err,
+                        message: err.message,
+                        reason: 'This is an unknown error connecting to a service',
+                        detail: 'This is an unknown error connecting to a service. Additional details may be available in your browser log',
+                        advice: [
+                            'This problem may be temporary -- try again later',
+                            'You may wish to <href="https://kbase.us/contact">report this error to kbase</a>'
+                        ]
+                    });
                 });
         }
 
-
         // LIFECYCLE API
 
-        function start() {
-            // send parent the ready message
-            bus.emit('ready');
+//        function start() {
+//            return Promise.try(function () {
+//                bus.on('run', function (message) {
+//                    doAttach(message.node);
+//                    renderAvailableObjects()
+//                        .then(function (itemCount) {
+//                            // TODO: fetch the selected item and send to the app.
+//                            if (availableReadsSets.length) {
+//                                // TODO: use the currently selected item, which may have
+//                                // been restored from state.
+//                                selectItem(availableReadsSets[selectedReadsSetItem].ref);
+//                            }
+//                        })
+//                        .catch(function (err) {
+//                            console.log('ERROR', err);
+//                            bus.emit('fatal-error', {
+//                                location: 'render-available-objects',
+//                                error: err
+//                            });
+//                        });
+//                    runtime.bus().on('workspace-changed', function () {
+//                        renderAvailableObjects();
+//                    });
+//                    // do more stuff
+//                });
+//                // send parent the ready message
+//                bus.emit('ready');
+//            });
+//        }
 
-            bus.on('run', function (message) {
-                doAttach(message.node);
-                renderAvailableObjects()
-                    .then(function (itemCount) {
-                        // TODO: fetch the selected item and send to the app.
-                        if (availableReadsSets.length) {
-                            // TODO: use the currently selected item, which may have
-                            // been restored from state.
-                            console.log('selected?', availableReadsSets, selectedReadsSetItem);
-                            selectItem(availableReadsSets[selectedReadsSetItem].ref)
-                        }
+
+        /*
+         * Now 
+         */
+        function start() {
+            return Promise.try(function () {
+                bus.on('run', function (message) {
+                    doAttach(message.node);
+                    model.setItem('objectRef', message.selectedSet);
+                    renderAvailableObjects()
+                        .catch(function (err) {
+                            console.log('ERROR', err);
+                            bus.emit('fatal-error', {
+                                location: 'render-available-objects',
+                                error: err
+                            });
+                        });
+                    runtime.bus().on('workspace-changed', function () {
+                        renderAvailableObjects();
                     });
-                runtime.bus().on('workspace-changed', function () {
-                    renderAvailableObjects();
+                    // do more stuff
                 });
-                // do more stuff
+                // send parent the ready message
+                bus.emit('ready');
             });
         }
 
         function stop() {
-            // stop the bus!
+            return Promise.try(function () {
+                // TODO: stop the bus!
+                return null;
+            });
         }
 
         // CONSTRUCTION

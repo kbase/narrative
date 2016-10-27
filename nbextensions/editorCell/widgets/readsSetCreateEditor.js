@@ -11,8 +11,8 @@ define([
     'common/props',
     // Wrapper for inputs
     './inputWrapperWidget',
-    'widgets/appWidgets/fieldWidget',
-    'widgets/appWidgets/paramInputResolver',
+    'widgets/appWidgets2/fieldWidget',
+    'widgets/appWidgets2/paramInputResolver',
     'common/runtime'
         // All the input widgets
 
@@ -132,10 +132,6 @@ define([
                     });
             });
 
-            //bus.on('parameter-value', function (message) {
-            //    bus.emit('parameter-value', message);
-            //});
-
             fieldBus.respond({
                 key: {
                     type: 'get-parameter'
@@ -166,11 +162,6 @@ define([
                 }
             });
 
-
-            // just forward...
-            //bus.on('newstate', function (message) {
-            //    inputWidgetBus.send(message);
-            //});
             return {
                 bus: bus,
                 widget: FieldWidget.make({
@@ -187,71 +178,6 @@ define([
             };
         }
 
-        function renderAdvanced() {
-            // area is either "input" or "parameter"
-            var areaElement = 'field-area',
-                areaSelector = '[data-element="' + areaElement + '"]',
-                advancedInputs = container.querySelectorAll(areaSelector + ' [data-advanced-parameter]');
-            if (advancedInputs.length === 0) {
-                ui.setContent([areaElement, 'advanced-hidden-message'], '');
-                return;
-            }
-            
-            var removeClass = (settings.showAdvanced ? 'advanced-parameter-hidden' : 'advanced-parameter-showing'),
-                addClass = (settings.showAdvanced ? 'advanced-parameter-showing' : 'advanced-parameter-hidden');
-            for (var i = 0; i < advancedInputs.length; i += 1) {
-                var input = advancedInputs[i];
-                input.classList.remove(removeClass);
-                input.classList.add(addClass);
-            }
-//
-//            // How many advanaced?
-//
-//            // Also update the button
-
-            // Also update the count in the paramters.
-            var events = Events.make({node: container});
-            
-            var message;
-            if (settings.showAdvanced) {
-                if (advancedInputs.length > 1) {
-                    message = String(advancedInputs.length) + ' advanced parameters showing';
-                } else {
-                    message = String(advancedInputs.length) + ' advanced parameter showing';
-                }
-                var showAdvancedButton = ui.buildButton({
-                    label: 'hide advanced',
-                    type: 'link',
-                    name: 'advanced-parameters-toggler',
-                    event: {
-                        type: 'toggle-advanced'
-                    },
-                    events: events
-                });
-                
-                ui.setContent([areaElement, 'advanced-hidden-message'], '(' + message + ') ' + showAdvancedButton);
-            } else {
-                if (advancedInputs.length > 1) {
-                    message = String(advancedInputs.length) + ' advanced parameters hidden';
-                } else {
-                    message = String(advancedInputs.length) + ' advanced parameter hidden';
-                }
-                var showAdvancedButton = ui.buildButton({
-                    label: 'show advanced',
-                    type: 'link',
-                    name: 'advanced-parameters-toggler',
-                    event: {
-                        type: 'toggle-advanced'
-                    },
-                    events: events
-                });
-                
-                ui.setContent([areaElement, 'advanced-hidden-message'], '(' + message + ') ' + showAdvancedButton);
-            }
-            
-            events.attachEvents();
-        }
-
         function renderLayout() {
             var events = Events.make(),
                 content = form({dataElement: 'input-widget-form'}, [
@@ -260,7 +186,7 @@ define([
                         type: 'default',
                         classes: ['kb-panel-light'],
                         body: [
-                            // ui.makeButton('Show Advanced', 'toggle-advanced', {events: events}),
+                            div('Create Set Editor')
                             // ui.makeButton('Reset to Defaults', 'reset-to-defaults', {events: events})
                         ]
                     }),
@@ -302,21 +228,12 @@ define([
 
         function attachEvents() {
             bus.on('reset-to-defaults', function () {
+                console.log('resetting...');
                 inputBusses.forEach(function (inputBus) {
+                console.log('resetting param...');
                     inputBus.emit('reset-to-defaults');
                 });
-            });
-            bus.on('toggle-advanced', function () {
-                // we can just do that here? Or defer to the inputs?
-                // I don't know ...
-                //inputBusses.forEach(function (bus) {
-                //    bus.send({
-                //        type: 'toggle-advanced'
-                //    });
-                //});
-                settings.showAdvanced = !settings.showAdvanced;
-                renderAdvanced();
-            });
+            });          
             runtime.bus().on('workspace-changed', function () {
                 // tell each input widget about this amazing event!
                 widgets.forEach(function (widget) {
@@ -359,13 +276,11 @@ define([
             ]);
         }
 
-        function renderParameters(params) {
-            // First get the app specs, which is stashed in the model,
+        function renderParameters() {
+            // First get the app spec, which is stashed in the model,
             // with the parameters returned.
-            // Separate out the params into the primary groups.
             
             var appSpec = model.getItem('appSpec');
-
 
             return Promise.try(function () {
                 var params = validateParameterSpecs(model.getItem('parameters'));
@@ -417,57 +332,58 @@ define([
                         return Promise.all(widgets.map(function (widget) {
                             return widget.widget.run(params);
                         }));
-                    })
-                    .then(function () {
-                        renderAdvanced();
                     });
             });
         }
 
         function start() {
-            // send parent the ready message
-            parentBus.emit('ready');
+            
+            return Promise.try(function () {
+                // parent will send us our initial parameters
+                parentBus.on('run', function (message) {
+                    doAttach(message.node);
 
-            // parent will send us our initial parameters
-            parentBus.on('run', function (message) {
-                doAttach(message.node);
-                
+                    model.setItem('appSpec', message.appSpec);
+                    model.setItem('parameters', message.parameters);
+    
+                    // TODO: this should be a promise, or emit an event at the 
+                    // conclusion which triggers a render.
+                    bus.emit('reset-to-defaults');
 
-                model.setItem('appSpec', message.appSpec);
-                model.setItem('parameters', message.parameters);
-
-                // we then create our widgets
-                renderParameters()
-                    .then(function () {
-                        // do something after success
-                        attachEvents();
-                    })
-                    .catch(function (err) {
-                        // do somethig with the error.
-                        console.error('ERROR in start', err);
-                    });
-            });
-
-            parentBus.on('parameter-changed', function (message) {
-                // Also, tell each of our inputs that a param has changed.
-                // TODO: use the new key address and subscription
-                // mechanism to make this more efficient.
-                inputBusses.forEach(function (bus) {
-                    bus.send(message, {
-                        key: {
-                            type: 'parameter-changed',
-                            parameter: message.parameter
-                        }
-                    });
-                    // bus.emit('parameter-changed', message);
+                    // we then create our widgetsfrend
+                    renderParameters()
+                        .then(function () {
+                            // do something after success
+                            attachEvents();
+                        })
+                        .catch(function (err) {
+                            // do somethig with the error.
+                            console.error('ERROR in start', err);
+                        });
                 });
+
+                parentBus.on('parameter-changed', function (message) {
+                    // Also, tell each of our inputs that a param has changed.
+                    // TODO: use the new key address and subscription
+                    // mechanism to make this more efficient.
+                    inputBusses.forEach(function (bus) {
+                        bus.send(message, {
+                            key: {
+                                type: 'parameter-changed',
+                                parameter: message.parameter
+                            }
+                        });
+                        // bus.emit('parameter-changed', message);
+                    });
+                });
+                
+                // send parent the ready message
+                parentBus.emit('ready');
             });
-
-
         }
 
         function stop() {
-
+            return Promise.resolve();
         }
 
         // CONSTRUCTION

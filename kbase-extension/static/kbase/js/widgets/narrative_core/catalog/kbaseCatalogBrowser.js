@@ -77,7 +77,7 @@ define (
 
             init: function (options) {
                 this._super(options);
-                
+
                 var self = this;
 
                 self.categories = {
@@ -227,13 +227,13 @@ define (
                     self.nms.get_method_spec({ids:[appCard.info.id],tag:self.options.tag})
                             .then(function(spec){
                                 // todo: cache this sped into the methods list
-                                self.trigger('methodClicked.Narrative', spec);
+                                self.trigger('methodClicked.Narrative', [spec[0], self.options.tag]);
                             });
                 } else if (appCard.type === 'app'){
                     self.nms.get_app_spec({ids:[appCard.info.id],tag:self.options.tag})
                             .then(function(spec){
                                 // todo: cache this sped into the methods list
-                                self.trigger('appClicked.Narrative', spec);
+                                self.trigger('appClicked.Narrative', [spec[0], self.options.tag]);
                             });
                 }
             },
@@ -581,7 +581,7 @@ define (
                             if(skip) continue;
 
                             // [NARRATIVE_EDIT] - always logged in, so we don't / can't check session
-                            var m = new AppCard('method',methods[k],tag,self.nms_base_url, 
+                            var m = new AppCard('method',methods[k],tag,self.nms_base_url,
                                 self.toggleFavorite, {catalog:self.catalog, browserWidget:self},
                                 true, function(card) { self.clickCallback(card); } ); //self.runtime.service('session').isLoggedIn());
                             self.appList.push(m);
@@ -612,7 +612,7 @@ define (
                             }
                             if(skip) continue;
 
-                            var a = new AppCard('app',apps[k],null,self.nms_base_url, null, {}, 
+                            var a = new AppCard('app',apps[k],null,self.nms_base_url, null, {},
                                 true, function(card) { self.clickCallback(card); });
                             self.appList.push(a);
                         }
@@ -916,7 +916,7 @@ define (
 
                 }
 
-                
+
 
                 else if (organizeBy=='category') {
 
@@ -1155,6 +1155,3 @@ define (
             }
         });
     });
-
-
-

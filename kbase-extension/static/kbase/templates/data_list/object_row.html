@@ -1,0 +1,112 @@
+<div class="kb-data-list-box" style="display: block">
+    <hr class="kb-data-list-row-hr" style="display: block">
+    <div class="kb-data-list-obj-row">
+        <div class="kb-data-list-obj-row-main" draggable="true">
+            <table kb-oid="{{kbOid}}" data-toggle="tooltip" title style="width: 100%; background: rgb(255,255,255);" data-original-title="Drag onto narrative &rarr;">
+                <tbody>
+                    <tr>
+                        <td id='data-icon' style="width: 15%"></td>
+                        <td>
+                            <div class="kb-data-list-info" style="padding: 0px; margin: 0px;">
+                                <span class="kb-data-list-name" style="cursor: pointer;">
+                                    <a>{{objName}}</a>
+                                </span>
+                                <span class="kb-data-list-version">v{{objVersion}}</span>
+                                <br>
+                                <table style="width: 100%;">
+                                    <tbody>
+                                        <tr>
+                                            <td>
+                                                <div class="kb-data-list-type">{{objType}}</div>
+                                                <span class="kb-data-list-date">{{lastUpdate}}</span>
+                                                <span class="kb-data-list-edit-by"></span>
+                                            </td>
+                                            <td>
+                                                <span class="kb-data-list-more" style="display: none;">
+                                                    <button class="btn btn-xs btn-default pull-right" aria-hidden="true">
+                                                        <span class="fa fa-ellipsis-h" style="color:#888"></span>
+                                                    </button>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="kb-data-list-more-div" style="display: none;">
+            <div style="text-align: center; margin: 5pt;">
+                <span class="btn-group">
+                    <span data-original-title="" title="" class="btn btn-xs btn-default">
+                        <span class="fa fa-sign-in" style="color: rgb(136, 136, 136);"></span>
+                    </span>
+                    <span data-original-title="" title="" class="btn btn-xs btn-default">
+                        <span class="fa fa-sign-out" style="color: rgb(136, 136, 136);"></span>
+                    </span>
+                    <span data-original-title="" title="" class="btn btn-xs btn-default">
+                        <span class="fa fa-binoculars" style="color: rgb(136, 136, 136);"></span>
+                    </span>
+                    <span class="btn btn-xs btn-default" style="color: rgb(136, 136, 136);" data-original-title="" title="">
+                        <span class="fa fa-history" style="color: rgb(136, 136, 136);"></span>
+                    </span>
+                    <span class="btn btn-xs btn-default" style="color: rgb(136, 136, 136);" data-original-title="" title="">
+                        <span class="fa fa-sitemap fa-rotate-90" style="color: rgb(136, 136, 136);"></span>
+                    </span>
+                    <span class="btn btn-xs btn-default" style="color: rgb(136, 136, 136);" data-original-title="" title="">
+                        <span class="fa fa-download" style="color: rgb(136, 136, 136);"></span>
+                    </span>
+                    <span class="btn btn-xs btn-default" style="color: rgb(136, 136, 136);" data-original-title="" title="">
+                        <span class="fa fa-font" style="color: rgb(136, 136, 136);"></span>
+                    </span>
+                    <span class="btn btn-xs btn-default" style="color: rgb(136, 136, 136);" data-original-title="" title="">
+                        <span class="fa fa-trash-o" style="color: rgb(136, 136, 136);"></span>
+                    </span>
+                </span>
+                <div style="text-align: center; margin: 10px 0px;"></div>
+            </div>
+            <table style="width:100%;">
+                <tbody>
+                    <tr>
+                        <th>Permament Id</th>
+                        <td>{{objRef}}</td>
+                    </tr>
+                    <tr>
+                        <th>Full Type</th>
+                        <td>
+                            <a href="/#spec/module/{{typeModule}}" target="_blank">typeModule</a>.<wbr><a href="/#spec/type/{{fullType}}" target="_blank">versionedType</a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Saved by</th>
+                        <td class="kb-data-list-username-td">
+                            {{savedByName}} (<a href="/#people/{{savedById}}" target="_blank">savedById</a>)
+                        </td>
+                    </tr>
+                    {{#each metadata}}
+                    <tr>
+                        <th>{{@key}}</th>
+                        <th>{{@value}}</th>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- needs...
+kbOid,
+objName,
+objType,
+lastUpdate,
+lastEditBy,
+objRef,
+typeModule,
+fullType,
+versionedType,
+savedByName,
+savedById
+-->

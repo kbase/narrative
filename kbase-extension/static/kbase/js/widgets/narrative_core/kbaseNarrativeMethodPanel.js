@@ -43,7 +43,8 @@ define ([
     kbaseNarrativeControlPanel,
     Jupyter,
     NarrativeMethodStore,
-    Uuid
+    Uuid,
+    KBaseCatalogBrowser
 ) {
     'use strict';
     return KBWidget({
@@ -373,7 +374,13 @@ define ([
                 .click(function(event) {
                     // only load the appCatalog on click
                     if(!this.appCatalog) {
-                        this.appCatalog = this.$appCatalogBody.KBaseCatalogBrowser({ignoreCategories:this.ignoreCategories});
+                        this.appCatalog = new KBaseCatalogBrowser(
+                            this.$appCatalogBody,
+                            {
+                                ignoreCategories:this.ignoreCategories,
+                                tag: this.currentTag
+                            }
+                        );
                     }
 
                     this.$slideoutBtn.tooltip('hide');

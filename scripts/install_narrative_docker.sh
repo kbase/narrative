@@ -31,12 +31,12 @@ cd $NARRATIVE_ROOT_DIR
 
 # Install KBase data_api package
 # ------------------------------
-git clone https://github.com/kbase/data_api -b develop
-cd data_api
-pip install -r requirements.txt
-$PYTHON setup.py install
-cd ..
-rm -rf data_api
+# git clone https://github.com/kbase/data_api -b develop
+# cd data_api
+# pip install -r requirements.txt
+# $PYTHON setup.py install
+# cd ..
+# rm -rf data_api
 
 # Setup jupyter_narrative script
 # and headless narrative runner

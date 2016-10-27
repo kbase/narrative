@@ -117,7 +117,7 @@ define([
             args = positionalArgs.concat(namedArgs),
             pythonCode = [
                 'from biokbase.narrative.jobs.appmanager import AppManager',
-                'AppManager().run_app(' + buildNiceArgsList(args) + ')'
+                'AppManager().run_dynamic_service(' + buildNiceArgsList(args) + ')'
             ].join('\n');
 
         return pythonCode;

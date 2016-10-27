@@ -65,20 +65,24 @@ define ([
                 var errorMsg = 'No further information available',
                     errorTrace = undefined;
                 console.error("Render Function Error : ", error);
-                if (error && typeof error === 'object'){
+                if (error && typeof error === 'object') {
                     if(error.error) {
                         errorMsg = JSON.stringify(error.error);
-                        if(error.error.message){
+                        if(error.error.message) {
                             errorMsg = error.error.message;
-                            if(error.error.error){
+                            if(error.error.error) {
                                 errorTrace = error.error.error;
                             }
                         } else {
                             errorMsg = JSON.stringify(error.error);
                         }
-                    } else { errorMsg = error.message; }
+                    } else {
+                        errorMsg = error.message;
+                    }
                 }
-                else{ errorMsg = "Undefined error"}
+                else {
+                    errorMsg = "Undefined error";
+                }
                 this.$elem.append(
                     DisplayUtil.createError(
                         'Sorry, an error occurred while retrieving your data',
@@ -92,18 +96,19 @@ define ([
 
         renderBasicTable: function() {
             var $container = this.$elem,
-            reads_type = '',
-            tab_ids = {
-                'overview': 'reads-overview-' + StringUtil.uuid(),
-                'stats': 'reads-stats-' + StringUtil.uuid()
-            },
-            $tabs = $('<ul class="nav nav-tabs">' +
-            '<li class="active"><a data-toggle="tab" href="#' + tab_ids.overview + '">Overview</a></li>' +
-            '<li><a data-toggle="tab" href="#' + tab_ids.stats + '">Stats</a></li>' +
-            '</ul>'),
-            $divs = $('<div class="tab-content">'),
-            $overviewTable = $('<table class="table table-striped table-bordered table-hover" style="margin-left: auto; margin-right: auto;"/>'),
-            $statsTable = $('<table class="table table-striped table-bordered table-hover" style="margin-left: auto; margin-right: auto;"/>');
+                reads_type = '',
+                tab_ids = {
+                    'overview': 'reads-overview-' + StringUtil.uuid(),
+                    'stats': 'reads-stats-' + StringUtil.uuid()
+                },
+                $tabs = $('<ul class="nav nav-tabs">' +
+                    '<li class="active"><a data-toggle="tab" href="#' + tab_ids.overview + '">Overview</a></li>' +
+                    '<li><a data-toggle="tab" href="#' + tab_ids.stats + '">Stats</a></li>' +
+                    '</ul>'
+                ),
+                $divs = $('<div class="tab-content">'),
+                $overviewTable = $('<table class="table table-striped table-bordered table-hover" style="margin-left: auto; margin-right: auto;"/>'),
+                $statsTable = $('<table class="table table-striped table-bordered table-hover" style="margin-left: auto; margin-right: auto;"/>');
 
             function get_table_row(key, value) {
                 return $('<tr>').append($('<td>').append(key)).append($('<td>').append(value));
@@ -118,91 +123,92 @@ define ([
 
             $overviewTable.append(get_table_row(
                 'Name',
-                '<a href="/#dataview/' + this.reference + '" target="_blank">'
-                + this.reads["info"][1] +'</a>' ));
-                // leave out version for now, because that is not passed into data widgets
+                '<a href="/#dataview/' + this.reference + '" target="_blank">' +
+                this.reads["info"][1] +'</a>'
+            ));
+            // leave out version for now, because that is not passed into data widgets
 
-                if(this.reads["data"].hasOwnProperty("read_count")) {
-                    $overviewTable.append(get_table_row('Number of Reads', this.reads["data"]['read_count'].toLocaleString() ));
-                    $statsTable.append(get_table_row('Number of Reads', this.reads["data"]['read_count'].toLocaleString() ));
-                } else {
-                    $overviewTable.append(get_table_row('Number of Reads', "Not Specified"));
-                    $statsTable.append(get_table_row('Number of Reads', "Not Specified"));
+            if(this.reads["data"].hasOwnProperty("read_count")) {
+                $overviewTable.append(get_table_row('Number of Reads', this.reads["data"]['read_count'].toLocaleString() ));
+                $statsTable.append(get_table_row('Number of Reads', this.reads["data"]['read_count'].toLocaleString() ));
+            } else {
+                $overviewTable.append(get_table_row('Number of Reads', "Not Specified"));
+                $statsTable.append(get_table_row('Number of Reads', "Not Specified"));
+            }
+
+            $overviewTable.append(get_table_row('Type', reads_type ));
+
+            /* KEEP COMMENTED OUT UNTIL UPLOADER WEB FORM ALLOWS THE USER TO SPECIFY
+            if (this.reads["data"].hasOwnProperty("strain")) {
+                $overviewTable.append(get_table_row('Species/Taxa', this.reads["data"]['strain']['genus'] + " " +
+                this.reads["data"]['strain']['species'] + " " +
+                this.reads["data"]['strain']['strain'] ));
+            }
+            else {
+                $overviewTable.append(get_table_row('Species/Taxa', 'Not specified' ));
+            }
+            */
+
+            $overviewTable.append(get_table_row('Platform', this.reads["data"]['sequencing_tech'] ));
+
+            if (this.reads["data"].hasOwnProperty("single_genome")) {
+                display_value = "No";
+                if (this.reads["data"]['read_size'] === 1 ) {
+                    display_value = "Yes";
+                }
+                $overviewTable.append(get_table_row('Single Genome', display_value ));
+            } else {
+                $overviewTable.append(get_table_row('Single Genome', "Not Specified"));
+            }
+
+            if (reads_type === "Paired End") {
+                if(this.reads["data"].hasOwnProperty("insert_size_mean")){
+                    $overviewTable.append(get_table_row('Insert Size Mean', this.reads["data"]['insert_size_mean'] ));
+                }else{
+                    $overviewTable.append(get_table_row('Insert Size Mean', "Not Specified"));
                 }
 
-                $overviewTable.append(get_table_row('Type', reads_type ));
-
-                /* KEEP COMMENTED OUT UNTIL UPLOADER WEB FORM ALLOWS THE USER TO SPECIFY
-                if (this.reads["data"].hasOwnProperty("strain")) {
-                    $overviewTable.append(get_table_row('Species/Taxa', this.reads["data"]['strain']['genus'] + " " +
-                    this.reads["data"]['strain']['species'] + " " +
-                    this.reads["data"]['strain']['strain'] ));
+                if(this.reads["data"].hasOwnProperty("insert_size_std_dev")){
+                    $overviewTable.append(get_table_row('Insert Size Std Dev', this.reads["data"]['insert_size_std_dev'] ));
+                }else{
+                    $overviewTable.append(get_table_row('Insert Size Std Dev', "Not Specified"));
                 }
-                else {
-                    $overviewTable.append(get_table_row('Species/Taxa', 'Not specified' ));
-                }
-                */
 
-                $overviewTable.append(get_table_row('Platform', this.reads["data"]['sequencing_tech'] ));
+                var display_value = "No";//temp value for display purposes
 
-                if (this.reads["data"].hasOwnProperty("single_genome")) {
+                if(this.reads["data"].hasOwnProperty("read_orientation_outward")){
                     display_value = "No";
-                    if (this.reads["data"]['read_size'] === 1 ) {
+                    if (this.reads["data"]['read_orientation_outward'] === 1 ){
                         display_value = "Yes";
                     }
-                    $overviewTable.append(get_table_row('Single Genome', display_value ));
-                }else {
-                    $overviewTable.append(get_table_row('Single Genome', "Not Specified"));
-                }
-
-                if (reads_type === "Paired End") {
-                    if(this.reads["data"].hasOwnProperty("insert_size_mean")){
-                        $overviewTable.append(get_table_row('Insert Size Mean', this.reads["data"]['insert_size_mean'] ));
-                    }else{
-                        $overviewTable.append(get_table_row('Insert Size Mean', "Not Specified"));
-                    }
-
-                    if(this.reads["data"].hasOwnProperty("insert_size_std_dev")){
-                        $overviewTable.append(get_table_row('Insert Size Std Dev', this.reads["data"]['insert_size_std_dev'] ));
-                    }else{
-                        $overviewTable.append(get_table_row('Insert Size Std Dev', "Not Specified"));
-                    }
-
-                    var display_value = "No";//temp value for display purposes
-
-                    if(this.reads["data"].hasOwnProperty("read_orientation_outward")){
-                        display_value = "No";
-                        if (this.reads["data"]['read_orientation_outward'] === 1 ){
-                            display_value = "Yes";
-                        }
-                        $overviewTable.append(get_table_row('Outward Read Orientation', display_value ));
-                    }else{
-                        $overviewTable.append(get_table_row('Outward Read Orientation', "Not Specified"));
-                    }
-                }
-
-                $divs.append($('<div id="' + tab_ids.overview + '" class="tab-pane active">').append($overviewTable))
-
-                if(this.reads["data"].hasOwnProperty("read_size")){
-                    $statsTable.append(get_table_row('Total Number of Bases', this.reads["data"]['read_size'].toLocaleString() ));
+                    $overviewTable.append(get_table_row('Outward Read Orientation', display_value ));
                 }else{
-                    $statsTable.append(get_table_row('Total Number of Bases', "Not Specified"));
+                    $overviewTable.append(get_table_row('Outward Read Orientation', "Not Specified"));
                 }
+            }
 
-                if(this.reads["data"].hasOwnProperty("read_length_mean")){
-                    $statsTable.append(get_table_row('Mean Read Length', this.reads["data"]['read_length_mean'].toLocaleString() ));
-                }else{
-                    $statsTable.append(get_table_row('Mean Read Length', "Not Specified"));
-                }
+            $divs.append($('<div id="' + tab_ids.overview + '" class="tab-pane active">').append($overviewTable));
 
-                if(this.reads["data"].hasOwnProperty("read_length_stdev")){
-                    $statsTable.append(get_table_row('Read Length Std Dev', this.reads["data"]['read_length_stdev'].toLocaleString() ));
-                }else{
-                    $statsTable.append(get_table_row('Read Length Std Dev', "Not Specified"));
-                }
+            if(this.reads["data"].hasOwnProperty("read_size")){
+                $statsTable.append(get_table_row('Total Number of Bases', this.reads["data"]['read_size'].toLocaleString() ));
+            }else{
+                $statsTable.append(get_table_row('Total Number of Bases', "Not Specified"));
+            }
 
-                if(this.reads["data"].hasOwnProperty("number_of_duplicates")){
-                    var dup_percentage = (this.reads["data"]['number_of_duplicates'].toLocaleString() / this.reads["data"]["read_size"]) * 100;
+            if(this.reads["data"].hasOwnProperty("read_length_mean")){
+                $statsTable.append(get_table_row('Mean Read Length', this.reads["data"]['read_length_mean'].toLocaleString() ));
+            }else{
+                $statsTable.append(get_table_row('Mean Read Length', "Not Specified"));
+            }
+
+            if(this.reads["data"].hasOwnProperty("read_length_stdev")){
+                $statsTable.append(get_table_row('Read Length Std Dev', this.reads["data"]['read_length_stdev'].toLocaleString() ));
+            }else{
+                $statsTable.append(get_table_row('Read Length Std Dev', "Not Specified"));
+            }
+
+            if(this.reads["data"].hasOwnProperty("number_of_duplicates")){
+                var dup_percentage = (this.reads["data"]['number_of_duplicates'].toLocaleString() / this.reads["data"]["read_size"]) * 100;
                     $statsTable.append(get_table_row('Number of Duplicate Reads(%)',
                     this.reads["data"]['number_of_duplicates'].toLocaleString() + " (" + dup_percentage.toFixed(2) + "%)"
                 ));
@@ -226,7 +232,6 @@ define ([
                 $statsTable.append(get_table_row('Quality Score (Min/Max)',
                 this.reads["data"]['qual_min'].toFixed(2) + " / " +
                 this.reads["data"]['qual_max'].toFixed(2)));
-
             }
 
 

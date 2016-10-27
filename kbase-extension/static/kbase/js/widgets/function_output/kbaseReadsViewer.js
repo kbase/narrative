@@ -38,7 +38,8 @@ define (
         'jquery-dataTables',
         'jquery-dataTables-bootstrap',
         'kbaseTabs',
-        'kbaseTable'
+        'kbaseTable',
+        'util/string'
     ], function(
         Promise,
         KBWidget,
@@ -50,7 +51,8 @@ define (
         jquery_dataTables,
         jquery_dataTables_bootstrap,
         kbaseTabs,
-        kbaseTable
+        kbaseTable,
+        StringUtil
     ) {
         return KBWidget({
             /*
@@ -149,8 +151,8 @@ define (
                 $container = this.$elem,
                 reads_type = '',
                 tab_ids = {
-                    'overview': 'reads-overview-' + $self.get_uuid4(),
-                    'stats': 'reads-stats-' + $self.get_uuid4()
+                    'overview': 'reads-overview-' + StringUtil.uuid(),
+                    'stats': 'reads-stats-' + StringUtil.uuid()
                 },
                 $tabs = $('<ul class="nav nav-tabs">' +
                 '<li class="active"><a data-toggle="tab" href="#' + tab_ids.overview + '">Overview</a></li>' +

@@ -184,7 +184,7 @@ function AbstractHandle(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("AbstractHandle.ids_to_handles", [ids], 1, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -1111,7 +1111,7 @@ function CDMI_API(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("CDMI_API.get_relationship", [relationship_names], 1, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -6686,7 +6686,7 @@ function CDMI_EntityAPI(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("CDMI_EntityAPI.get_relationship_AreCodonsFor", [ids, from_fields, rel_fields, to_fields], 1, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -6810,7 +6810,7 @@ function CoExpression(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("CoExpression.const_coex_net_clust", [args], 1, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -6924,7 +6924,7 @@ function CompressionBasedDistance(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("CompressionBasedDistance.build_matrix", [input], 1, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -7051,7 +7051,7 @@ function ERDB_Service(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("ERDB_Service.runSQL", [SQLstring, parameters], 1, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -7233,13 +7233,13 @@ function ExpressionServices(url,auth) {
                     'version': "1.1",
                     'id': String(Math.random()).slice(2),
         };
-        
+
         var body = JSON.stringify(rpc);
-        
+
         var http = new XMLHttpRequest();
-        
+
         http.open("POST", url, async_flag);
-        
+
         //Send the proper header information along with the request
         http.setRequestHeader("Content-type", "application/json");
         //http.setRequestHeader("Content-length", body.length);
@@ -7258,16 +7258,16 @@ function ExpressionServices(url,auth) {
                     'version': "1.1",
                     'id': String(Math.random()).slice(2),
         };
-        
+
         var body = JSON.stringify(rpc);
         var resp_txt;
         var code;
-        
+
         var x = jQuery.ajax({       "async": false,
                                     dataType: "text",
                                     url: _url,
-                                    beforeSend: function (xhr){ 
-                                        xhr.setRequestHeader('Authorization', _auth.token); 
+                                    beforeSend: function (xhr){
+                                        xhr.setRequestHeader('Authorization', _auth.token);
                                     },
                                     success: function (data, status, xhr) { resp_txt = data; code = xhr.status },
                                     error: function(xhr, textStatus, errorThrown) { resp_txt = xhr.responseText, code = xhr.status },
@@ -7281,7 +7281,7 @@ function ExpressionServices(url,auth) {
         if (resp_txt)
         {
             var resp = JSON.parse(resp_txt);
-            
+
             if (code >= 500)
             {
                 throw resp.error;
@@ -7304,16 +7304,16 @@ function ExpressionServices(url,auth) {
                     'version': "1.1",
                     'id': String(Math.random()).slice(2),
         };
-        
+
         var body = JSON.stringify(rpc);
         var resp_txt;
         var code;
-        
+
         var x = jQuery.ajax({       "async": true,
                                     dataType: "text",
                                     url: _url,
-                                    beforeSend: function (xhr){ 
-                                        xhr.setRequestHeader('Authorization', _auth.token); 
+                                    beforeSend: function (xhr){
+                                        xhr.setRequestHeader('Authorization', _auth.token);
                                     },
                                     success: function (data, status, xhr)
                                 {
@@ -7327,7 +7327,7 @@ function ExpressionServices(url,auth) {
                                     {
                                         callback(result);
                                     }
-                                    
+
                                 },
                                     error: function(xhr, textStatus, errorThrown)
                                 {
@@ -7356,7 +7356,7 @@ function ExpressionServices(url,auth) {
         var tup = _json_call_prepare(_url, method, params, true);
         var http = tup[0];
         var body = tup[1];
-        
+
         http.onreadystatechange = function() {
             if (http.readyState == 4 && http.status == 200) {
                 var resp_txt = http.responseText;
@@ -7372,24 +7372,24 @@ function ExpressionServices(url,auth) {
                 }
             }
         }
-        
+
         http.send(body);
-        
+
     }
-    
+
     function json_call_sync(method, params)
     {
         var tup = _json_call_prepare(url, method, params, false);
         var http = tup[0];
         var body = tup[1];
-        
+
         http.send(body);
-        
+
         var resp_txt = http.responseText;
-        
+
         var resp = JSON.parse(resp_txt);
         var result = resp["result"];
-            
+
         return result;
     }
 }
@@ -7478,7 +7478,7 @@ function GWAS(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("GWAS.gwas_genelist_to_networks", [args], 1, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -8175,7 +8175,7 @@ function GenomeAnnotation(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("GenomeAnnotation.pipeline_batch_enumerate_batches", [], 1, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -8319,7 +8319,7 @@ function GenomeComparison(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("GenomeComparison.import_ncbi_genome", [input], 0, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -8443,7 +8443,7 @@ function HandleMngr(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("HandleMngr.add_read_acl", [hids, username], 0, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -8610,7 +8610,7 @@ function IDServerAPI(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("IDServerAPI.get_identifier_prefix", [], 1, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -8747,7 +8747,7 @@ function KBaseDataImport(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("KBaseDataImport.import_ncbi_genome", [input], 0, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -9211,7 +9211,7 @@ function KBaseExpression(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("KBaseExpression.get_expression_float_data_table_by_genome", [genome_id, numerical_interpretation], 1, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -9338,7 +9338,7 @@ function KBaseGeneFamilies(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("KBaseGeneFamilies.version", [], 1, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -9552,7 +9552,7 @@ function KBaseNetworks(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("KBaseNetworks.build_internal_network_limited_by_strength", [dataset_ids, gene_ids, edge_types, cutOff], 1, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -9676,7 +9676,7 @@ function KBaseProteinStructure(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("KBaseProteinStructure.lookup_pdb_by_fid", [feature_ids], 1, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -10063,7 +10063,7 @@ function KBaseTrees(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("KBaseTrees.build_genome_set_from_tree", [params], 1, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -10230,7 +10230,7 @@ function KmerAnnotationByFigfam(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("KmerAnnotationByFigfam.estimate_closest_genomes", [proteins, dataset_name], 1, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -10407,7 +10407,7 @@ function NarrativeJobService(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("NarrativeJobService.list_config", [], 1, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -10585,14 +10585,14 @@ function NarrativeMethodStore(url, auth, auth_cb) {
         return json_call_ajax("NarrativeMethodStore.list_methods_spec", [params], 1, _callback, _error_callback);
     };
 
-    this.list_method_ids_and_names = function (_callback, _errorCallback) {
+    this.list_method_ids_and_names = function (params, _callback, _errorCallback) {
     return json_call_ajax("NarrativeMethodStore.list_method_ids_and_names",
-        [], 1, _callback, _errorCallback);
+        [params], 1, _callback, _errorCallback);
 };
 
     this.list_method_ids_and_names_async = function (_callback, _error_callback) {
         deprecationWarning();
-        return json_call_ajax("NarrativeMethodStore.list_method_ids_and_names", [], 1, _callback, _error_callback);
+        return json_call_ajax("NarrativeMethodStore.list_method_ids_and_names", [params], 1, _callback, _error_callback);
     };
 
     this.list_apps = function (params, _callback, _errorCallback) {
@@ -10714,7 +10714,7 @@ function NarrativeMethodStore(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("NarrativeMethodStore.get_type_info", [params], 1, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -10806,7 +10806,7 @@ function SetAPI(url, auth, auth_cb, timeout, async_job_check_time_ms, service_ve
 
     this.timeout = timeout;
     var _timeout = timeout;
-    
+
     this.async_job_check_time_ms = async_job_check_time_ms;
     if (!this.async_job_check_time_ms)
         this.async_job_check_time_ms = 100;
@@ -10832,10 +10832,10 @@ function SetAPI(url, auth, auth_cb, timeout, async_job_check_time_ms, service_ve
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
         var deferred = $.Deferred();
-        json_call_ajax(_url, 'ServiceWizard.get_service_status', [{'module_name' : "SetAPI", 
+        json_call_ajax(_url, 'ServiceWizard.get_service_status', [{'module_name' : "SetAPI",
                 'version' : self.service_version}], 1, function(service_status_ret) {
             srv_url = service_status_ret['url'];
-            json_call_ajax(srv_url, "SetAPI.get_reads_set_v1", 
+            json_call_ajax(srv_url, "SetAPI.get_reads_set_v1",
                 [params], 1, _callback, _errorCallback, null, deferred);
         }, function(err) {
             if (_errorCallback) {
@@ -10849,7 +10849,7 @@ function SetAPI(url, auth, auth_cb, timeout, async_job_check_time_ms, service_ve
         });
         return deferred;
     };
- 
+
      this.save_reads_set_v1 = function (params, _callback, _errorCallback) {
         if (typeof params === 'function')
             throw 'Argument params can not be a function';
@@ -10860,10 +10860,10 @@ function SetAPI(url, auth, auth_cb, timeout, async_job_check_time_ms, service_ve
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
         var deferred = $.Deferred();
-        json_call_ajax(_url, 'ServiceWizard.get_service_status', [{'module_name' : "SetAPI", 
+        json_call_ajax(_url, 'ServiceWizard.get_service_status', [{'module_name' : "SetAPI",
                 'version' : self.service_version}], 1, function(service_status_ret) {
             srv_url = service_status_ret['url'];
-            json_call_ajax(srv_url, "SetAPI.save_reads_set_v1", 
+            json_call_ajax(srv_url, "SetAPI.save_reads_set_v1",
                 [params], 1, _callback, _errorCallback, null, deferred);
         }, function(err) {
             if (_errorCallback) {
@@ -10877,7 +10877,7 @@ function SetAPI(url, auth, auth_cb, timeout, async_job_check_time_ms, service_ve
         });
         return deferred;
     };
- 
+
      this.list_sets = function (params, _callback, _errorCallback) {
         if (typeof params === 'function')
             throw 'Argument params can not be a function';
@@ -10888,10 +10888,10 @@ function SetAPI(url, auth, auth_cb, timeout, async_job_check_time_ms, service_ve
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
         var deferred = $.Deferred();
-        json_call_ajax(_url, 'ServiceWizard.get_service_status', [{'module_name' : "SetAPI", 
+        json_call_ajax(_url, 'ServiceWizard.get_service_status', [{'module_name' : "SetAPI",
                 'version' : self.service_version}], 1, function(service_status_ret) {
             srv_url = service_status_ret['url'];
-            json_call_ajax(srv_url, "SetAPI.list_sets", 
+            json_call_ajax(srv_url, "SetAPI.list_sets",
                 [params], 1, _callback, _errorCallback, null, deferred);
         }, function(err) {
             if (_errorCallback) {
@@ -10905,7 +10905,7 @@ function SetAPI(url, auth, auth_cb, timeout, async_job_check_time_ms, service_ve
         });
         return deferred;
     };
- 
+
      this.get_set_items = function (params, _callback, _errorCallback) {
         if (typeof params === 'function')
             throw 'Argument params can not be a function';
@@ -10916,10 +10916,10 @@ function SetAPI(url, auth, auth_cb, timeout, async_job_check_time_ms, service_ve
         if (typeof arguments === 'function' && arguments.length > 1+2)
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
         var deferred = $.Deferred();
-        json_call_ajax(_url, 'ServiceWizard.get_service_status', [{'module_name' : "SetAPI", 
+        json_call_ajax(_url, 'ServiceWizard.get_service_status', [{'module_name' : "SetAPI",
                 'version' : self.service_version}], 1, function(service_status_ret) {
             srv_url = service_status_ret['url'];
-            json_call_ajax(srv_url, "SetAPI.get_set_items", 
+            json_call_ajax(srv_url, "SetAPI.get_set_items",
                 [params], 1, _callback, _errorCallback, null, deferred);
         }, function(err) {
             if (_errorCallback) {
@@ -10933,7 +10933,7 @@ function SetAPI(url, auth, auth_cb, timeout, async_job_check_time_ms, service_ve
         });
         return deferred;
     };
-  
+
     this.status = function (_callback, _errorCallback) {
         if (_callback && typeof _callback !== 'function')
             throw 'Argument _callback must be a function if defined';
@@ -10942,10 +10942,10 @@ function SetAPI(url, auth, auth_cb, timeout, async_job_check_time_ms, service_ve
         if (typeof arguments === 'function' && arguments.length > 2)
             throw 'Too many arguments ('+arguments.length+' instead of 2)';
         var deferred = $.Deferred();
-        json_call_ajax(_url, 'ServiceWizard.get_service_status', [{'module_name' : "SetAPI", 
+        json_call_ajax(_url, 'ServiceWizard.get_service_status', [{'module_name' : "SetAPI",
                 'version' : self.service_version}], 1, function(service_status_ret) {
             srv_url = service_status_ret['url'];
-            json_call_ajax(srv_url, "SetAPI.status", 
+            json_call_ajax(srv_url, "SetAPI.status",
                 [], 1, _callback, _errorCallback, null, deferred);
         }, function(err) {
             if (_errorCallback) {
@@ -11044,7 +11044,7 @@ function SetAPI(url, auth, auth_cb, timeout, async_job_check_time_ms, service_ve
 }
 
 
- 
+
 
 
 function Transform(url, auth, auth_cb) {
@@ -11117,7 +11117,7 @@ function Transform(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("Transform.convert", [args], 1, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -11284,7 +11284,7 @@ function UserProfile(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("UserProfile.lookup_globus_user", [usernames], 1, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -11371,7 +11371,7 @@ function UserProfile(url, auth, auth_cb) {
   Authors: Roman Sutormin <rsutormin@lbl.gov>, ...
 */
 function AweClient(params) {
-    
+
     var self = this;
 
     self.url = "https://kbase.us/services/awe-api/";
@@ -11413,7 +11413,7 @@ function AweClient(params) {
     	});
     	return promise;
     };
-   
+
 }
 
 
@@ -12387,7 +12387,7 @@ function fbaModelServices(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("fbaModelServices.build_tissue_model", [params], 1, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -12631,7 +12631,7 @@ function MEME(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("MEME.get_pspm_collection_from_meme_result_job_from_ws", [ws_name, input_id], 1, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -12785,7 +12785,7 @@ function ProbabilisticAnnotation(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("ProbabilisticAnnotation.get_probanno", [input], 1, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -12901,13 +12901,13 @@ function ProbabilisticAnnotation(url, auth, auth_cb) {
   Authors: Tobias Paczian <paczian@mcs.anl.gov>, Roman Sutormin <rsutormin@lbl.gov> .
 */
 function ShockClient(params) {
-    
+
     var self = this;
 
     self.url = "https://kbase.us/services/shock-api/";
     self.auth_header = {};
     self.chunkSize = 2097152;
-    
+
 	if (params.url)
 	    self.url = params.url;
 
@@ -12916,11 +12916,11 @@ function ShockClient(params) {
 
 	if (params.chunkSize)
 		self.chunkSize = params.chunkSize;
-	
+
     self.get_node = function (node, ret, errorCallback) {
     	var url = self.url+'/node/'+node
     	var promise = jQuery.Deferred();
-    	
+
     	jQuery.ajax(url, {
     		success: function (data) {
     			var retval = null;
@@ -12945,7 +12945,7 @@ function ShockClient(params) {
     		headers: self.auth_header,
     		type: "GET"
     	});
-    	
+
     	return promise;
     };
 
@@ -13053,7 +13053,7 @@ function ShockClient(params) {
 	    });
 		return promise;
     };
-    
+
     self.check_file = function(file, ret, errorCallback) {
     	var promise = jQuery.Deferred();
 	    var fsize = file.size;
@@ -13069,7 +13069,7 @@ function ShockClient(params) {
 	    });
 	    return promise;
     };
-    
+
     self.loadNext = function (file, url, promise, currentChunk, chunks, incompleteId, chunkSize, ret, errorCallback, cancelCallback) {
 		if (cancelCallback && cancelCallback())
 			return;
@@ -13081,11 +13081,11 @@ function ShockClient(params) {
 		    var oMyBlob = new Blob([e.target.result], { "type" : file.type });
 		    fd.append(currentChunk+1, oMyBlob);
 		    var lastChunk = (currentChunk + 1) * chunkSize >= file.size;
-		    var incomplete_attr = { 
-		    		"incomplete": (lastChunk ? "0" : "1"), 
-		    		"file_size": "" + file.size, 
+		    var incomplete_attr = {
+		    		"incomplete": (lastChunk ? "0" : "1"),
+		    		"file_size": "" + file.size,
 		    		"file_name": file.name,
-		    		"file_time": "" + file.lastModifiedDate.getTime(), 
+		    		"file_time": "" + file.lastModifiedDate.getTime(),
 		    		"chunks": "" + (currentChunk+1),
 		    		"chunk_size": "" + chunkSize};
 		    var aFileParts = [ JSON.stringify(incomplete_attr) ];
@@ -13130,7 +13130,7 @@ function ShockClient(params) {
 		    ret({file_size: file.size, uploaded_size: file.size, node_id: incompleteId});
 	    }
     };
-    
+
     /**
      * Sends to ret function callback objects like {file_size: ..., uploaded_size: ..., node_id: ...}
      * for showing progress info in UI. Parameter "shockNodeId" is optional but if you know it
@@ -13156,7 +13156,7 @@ function ShockClient(params) {
     			processNode(null);
     		}
     	}
-    	
+
     	function processNode(incomplete) {
     		if (incomplete != null) {
     			var incompleteId = incomplete["id"];
@@ -13206,13 +13206,13 @@ function ShockClient(params) {
     			});
     		}
     	}
-    	
+
     	if (shockNodeId) {
     		self.get_node(shockNodeId, function(data) {
 				if (cancelCallback && cancelCallback())
 					return;
-				if (data && 
-						data["attributes"]["file_size"] === ("" + file.size) && 
+				if (data &&
+						data["attributes"]["file_size"] === ("" + file.size) &&
 						data["attributes"]["file_name"] === file.name &&
     					data["attributes"]["file_time"] === ("" + file.lastModifiedDate.getTime())) {
 					processNode(data);
@@ -13225,10 +13225,10 @@ function ShockClient(params) {
     	} else {
     		searchForIncomplete();
     	}
-    	
+
 	    return promise;
     };
-    
+
     /**
      * Changes file.name prop indide shock node. Use this func at the end of chunk upload.
      */
@@ -13571,7 +13571,7 @@ function UserAndJobState(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("UserAndJobState.force_delete_job", [token, job], 0, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -14248,7 +14248,7 @@ function Workspace(url, auth, auth_cb) {
         deprecationWarning();
         return json_call_ajax("Workspace.administer", [command], 1, _callback, _error_callback);
     };
- 
+
 
     /*
      * JSON call using jQuery method.
@@ -14327,5 +14327,3 @@ function Workspace(url, auth, auth_cb) {
         return promise;
     }
 }
-
-

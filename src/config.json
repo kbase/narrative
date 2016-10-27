@@ -129,7 +129,6 @@
         "workspace": "http://dev04.berkeley.kbase.us:7058",
         "ws_browser": "http://narrative.kbase.us/#ws"
     },
-
     "next": {
         "awe": "https://next.kbase.us/services/awe-api",
         "catalog": "https://next.kbase.us/services/catalog",

@@ -55,7 +55,6 @@ define (
                     $self.link_ref = $self.obj_info.ws_id + '/' +
                                      $self.obj_info.name + '/' +
                                      $self.obj_info.version;
-                    console.log($self.obj_info);
                     $self.update_overview_info_from_nar_info($self.obj_info);
                 } else {
                     $self.obj_ref = $self.options.wsId + '/' +

@@ -18,7 +18,7 @@ define([
     'common/ui',
     'common/fsm',
     'google-code-prettify/prettify',
-    './editorCell-fsm',
+    '../editorCell-fsm',
 
     'css!google-code-prettify/prettify.css',
     'css!font-awesome.css'

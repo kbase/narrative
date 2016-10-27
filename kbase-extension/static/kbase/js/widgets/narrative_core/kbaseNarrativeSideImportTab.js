@@ -16,7 +16,8 @@ define (
 		'select2',
 		'util/string',
         'base/js/namespace',
-        'common/pythonInterop'
+        'common/pythonInterop',
+        'kbase-client-api'
 	], function(
         KBWidget,
         bootstrap,
@@ -233,7 +234,7 @@ define (
                 callback(self.methodFullInfo[tag], self.methods[tag], tag);
                 return;
             }
-            self.methClient.list_method_ids_and_names({'tag': tag}, function(methodIdToName) {
+            self.methClient.list_method_ids_and_names({tag: tag}, function(methodIdToName) {
                 self.allMethodIds[tag] = methodIdToName;
                 var methodIds = [];
                 for (var i in self.methodIds) {
@@ -260,9 +261,11 @@ define (
                     }
                     callback(self.methodFullInfo[tag], self.methods[tag], tag);
                 }).fail(function(error) {
+                    alert(error);
                     errorCallback(error);
                 });
             }, function(error) {
+                alert(error);
                 errorCallback(error);
             });
         },

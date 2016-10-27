@@ -475,13 +475,7 @@ define([
         },
 
         determineMethodCellType: function(spec) {
-            console.log('DETERMINING CELL TYPE', spec);
             
-            switch (spec.info.id) {
-                case 'ReadGroupEditor/ReadGroupEditor':
-                    return 'editor';
-            }
-
             // Should be working after this PR will be deployed:
             // https://github.com/kbase/narrative_method_store/pull/36
             switch (spec.info.app_type) {

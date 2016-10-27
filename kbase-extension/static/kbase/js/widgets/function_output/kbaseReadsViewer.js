@@ -50,8 +50,6 @@ define ([
         },
 
         render: function() {
-            var errorMsg = '';
-
             if (this.options._obj_info) {
                 this.reference =  this.options.wsName + '/' + this.options.objId + '/' + this.options._obj_info['version'];
             } else {
@@ -64,6 +62,8 @@ define ([
                 this.renderBasicTable();
             }.bind(this))
             .catch(function(error) {
+                var errorMsg = 'No further information available',
+                    errorTrace = undefined;
                 console.error("Render Function Error : ", error);
                 if (error && typeof error === 'object'){
                     if(error.error) {
@@ -71,7 +71,7 @@ define ([
                         if(error.error.message){
                             errorMsg = error.error.message;
                             if(error.error.error){
-                                errorMsg += '<br><b>Error Trace:</b>:' + error.error.error;
+                                errorTrace = error.error.error;
                             }
                         } else {
                             errorMsg = JSON.stringify(error.error);
@@ -79,7 +79,12 @@ define ([
                     } else { errorMsg = error.message; }
                 }
                 else{ errorMsg = "Undefined error"}
-                this.$elem.append('<div>'+errorMsg+'</div>')
+                this.$elem.append(
+                    DisplayUtil.createError(
+                        'Sorry, an error occurred while retrieving your data',
+                        errorMsg,
+                        errorTrace
+                    ));
             }.bind(this));
 
             return this;
@@ -105,12 +110,10 @@ define ([
             }
 
             // Build the overview table
-            // console.log("OPTIONS:" + this.options);
-
-            if (this.reads["info"][2].startsWith("KBaseFile.PairedEndLibrary")){
-                reads_type = 'Paired End'
-            } else if (this.reads["info"][2].startsWith("KBaseFile.SingleEndLibrary")){
-                reads_type = 'Single End'
+            if (this.reads["info"][2].startsWith("KBaseFile.PairedEndLibrary")) {
+                reads_type = 'Paired End';
+            } else if (this.reads["info"][2].startsWith("KBaseFile.SingleEndLibrary")) {
+                reads_type = 'Single End';
             }
 
             $overviewTable.append(get_table_row(
@@ -119,10 +122,10 @@ define ([
                 + this.reads["info"][1] +'</a>' ));
                 // leave out version for now, because that is not passed into data widgets
 
-                if(this.reads["data"].hasOwnProperty("read_count")){
+                if(this.reads["data"].hasOwnProperty("read_count")) {
                     $overviewTable.append(get_table_row('Number of Reads', this.reads["data"]['read_count'].toLocaleString() ));
                     $statsTable.append(get_table_row('Number of Reads', this.reads["data"]['read_count'].toLocaleString() ));
-                }else{
+                } else {
                     $overviewTable.append(get_table_row('Number of Reads', "Not Specified"));
                     $statsTable.append(get_table_row('Number of Reads', "Not Specified"));
                 }

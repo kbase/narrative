@@ -117,57 +117,38 @@ define (
         WorkspaceObject: function(wsclient, obj_spec) {
             var ws = wsclient;
             var spec = obj_spec;
+            var self = this;
+            // Get info for every version of this object
+            ws.list_objects({ids: [spec.wsid], minObjectID: spec.objid,
+                                    maxObjectID: spec.objid, showAllVersions: 1})                    
+                .then(function(objlist) {
+                    var info = {};
+                    for (var i=0; i < objlist.length; i++) {
+                        var o = objlist[i];
+                        info[o[4]] = {objid: o[0], name: o[1], type: o[2],
+                            save_date: o[3], version: o[4], saved_by: o[5],
+                            wsid: o[6], workspace: o[7], chsum: o[8],
+                            size: o[9], meta: o[10] };
+                    }
+                    return info;
+                })
+                .then(function(info) {
+                        self.metadata_info = info;
+                        return null;
+                });
             return {
-
                 /**
                  * List of all versions of the object.
                  */
                 object_versions: function() {
-                    return ws.list_objects({ids: [spec.wsid], minObjectID: spec.objid,
-                        maxObjectID: spec.objid, showAllVersions: 1})
-                        .then(function(objlist) {
-                            var versions = [];
-                            _.each(objlist, function(o) { 
-                                versions.push(o[4]); 
-                            });
-                            return versions;
-                        }, function(exc) {
-                            console.error('Getting object versions for (',  obj_spec, '):', exc);
-                        });
+                    return _.keys(self.metadata_info);
                 },
                 
                 /**
                  * The 'object_info' thing for a single object.
                  */
                 info_for_version: function(ver) {
-                    return ws.list_objects({ids: [spec.wsid], minObjectID: spec.objid,
-                        maxObjectID: spec.objid, showAllVersions: 1})                    
-                        .then(function(objlist) {
-                            var for_version = _.filter(objlist, function(o) { 
-                                return (o[4] == ver); 
-                            });
-                            if (for_version.length == 1) {
-                                var a = for_version[0];
-                                return {
-                                    objid: a[0],
-                                    name: a[1], 
-                                    type: a[2],
-                                    save_date: a[3],
-                                    version: a[4],
-                                    saved_by: a[5],
-                                    wsid: a[6], 
-                                    workspace: a[7],
-                                    chsum: a[8],
-                                    size: a[9],
-                                    meta: a[10]                                    
-                                };
-                            }
-                            else {
-                                console.error('No versioned object found for (', spec, ')');
-                            }
-                        }, function(exc) {
-                            console.error('Getting object info for (',  spec, '):', exc);
-                        });
+                    return self.metadata_info[ver];
                 }              
             };
         },
@@ -178,8 +159,7 @@ define (
         metadataInit: function() {
             this.metadata_ver_shown = -1;
             this.metadata_ver_cur = this.obj_info.version;
-            this.metadata_ver = {};
-            this.metadata_ver[this.obj_info.version] = this.obj_info;
+            this.metadata_info = {};
             this.wsobj = this.WorkspaceObject(kb.ws, {
                 objid: this.obj_info.id,
                 wsid: this.obj_info.ws_id
@@ -265,40 +245,22 @@ define (
                 // Info subpanel(2): create version listing
                 var $version_list = $info.find('.' + this.verlist_class);
                 // Generate version list
-                $version_list.empty();
-                this.wsobj.object_versions().then(function (version_list) {
-                    self.obj_maxver = _.max(version_list); 
-                    for(var i=1; i <= self.obj_maxver; i++) {
-                        var $ver_span = $('<span>');
-                        $ver_span.text(i);
-                        $version_list.append($ver_span);
-                        // Switch on click
-                        $ver_span.click(function(event) {
-                            self.metadata_ver_cur = 1 * $(event.target).text();
-                            // Switch object info to selected version
-                            var v = self.metadata_ver_cur;
-                            if (self.metadata_ver[v] === undefined) {
-                                // Pull out info for this version
-                                self.wsobj.info_for_version(v).then(function(info) {
-                                    self.metadata_ver[v] = info;
-                                    self.obj_info = info;
-                                    // Re-display
-                                    self.showMetadata($elem);
-                                    self.metadata_ver_shown = v;
-                                });
-                            }
-                            else {
-                                self.obj_info = self.metadata_ver[v];
-                                // Re-display
-                                self.showMetadata($elem);                      
-                                self.metadata_ver_shown = v;
-                            }
-                        });
-                    }
+                var version_list = this.wsobj.object_versions();
+                self.obj_maxver = _.max(version_list); 
+                for(var i=1; i <= self.obj_maxver; i++) {
+                    var $ver_span = $('<span>');
+                    $ver_span.text(i);
+                    $version_list.append($ver_span);
+                    // Switch on click
+                    $ver_span.click(function(event) {
+                        var v = self.metadata_ver_cur = 1 * $(event.target).text();
+                        self.obj_info = self.metadata_info[v];
+                        // Re-display
+                        self.showMetadata($elem);                      
+                    });
+                }
                 // Select currently viewed version in the list
-                }).then(function() {
-                    self.selectCurrentVersion();
-                });
+                self.selectCurrentVersion();
                 // Graph subpanel
                 var $graph = $elem.find('.kb-data-obj-panel-graph');
                 $graph.text('graph');

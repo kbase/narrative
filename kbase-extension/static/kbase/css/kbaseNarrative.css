@@ -2144,10 +2144,12 @@ button.kb-data-obj {
     border-radius: 2px;
     background-color: rgba(255,255,255,0.5);
     color: rgba(0,0,0,0.5);
+    cursor: pointer;
 }
 .kb-data-obj-panel-verlist span.selected {
     background-color: #2196F3;
     color: white;
+    cursor: default;
 }
 /*
  * END: View details on KBase objects

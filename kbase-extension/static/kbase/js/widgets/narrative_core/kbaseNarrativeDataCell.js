@@ -232,10 +232,10 @@ define (
                         .addClass('row kb-data-obj-panel')
                         .append(
                             $('<div>')
-                            .addClass('col-md-8 kb-data-obj-panel-info'))
+                            .addClass('col-md-7 kb-data-obj-panel-info'))
                         .append(
                             $('<div>')
-                            .addClass('col-md-3 kb-data-obj-panel-graph'))
+                            .addClass('col-md-4 kb-data-obj-panel-graph'))
                         .append($meta_panel_close);
                 $meta_button.click(function(event) {
                     console.debug('@@ object info:', self.obj_info);
@@ -296,15 +296,15 @@ define (
                     });
                 }
                 // Select currently viewed version in the list
-                self.selectCurrentVersion();
+                self.selectCurrentVersion($elem);
                 // - - - - - - - -
                 // Graph subpanel
                 // - - - - - - - -
                 var $graph = $elem.find('.kb-data-obj-panel-graph');
                 var $g_rfrom = $("<div class='kb-data-obj-graph-ref-from'>")
-                    .append('<table><thead><tr><th>Objects from</th></tr></thead><tbody>');
+                    .append('<table><thead><tr><th>Referencing Objects</th></tr></thead><tbody>');
                 var $g_rto = $("<div class='kb-data-obj-graph-ref-to'>")
-                    .append('<table><thead><tr><th>Objects to</th></tr></thead><tbody>');
+                    .append('<table><thead><tr><th>Objects Referenced</th></tr></thead><tbody>');
                 // fetch refs
                 this.wsobj.references().then(function(refs) { 
                     _.each(refs.from, function(r) {
@@ -326,11 +326,11 @@ define (
             return success;
         },
 
-        selectCurrentVersion: function() {
+        selectCurrentVersion: function($elem) {
             var ver_selector = '.' + this.verlist_class + ' :nth-child(' +
                 this.metadata_ver_cur + ')';
-            $('.' + this.verlist_class).removeClass('selected'); 
-            $(ver_selector).addClass('selected');
+            $elem.find('.' + this.verlist_class).removeClass('selected'); 
+            $elem.find(ver_selector).addClass('selected');
             this.metadata_ver_shown = self.metadata_ver_cur;
         },
 

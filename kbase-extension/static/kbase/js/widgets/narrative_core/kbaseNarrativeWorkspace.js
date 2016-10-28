@@ -475,7 +475,7 @@ define([
         },
 
         determineMethodCellType: function(spec) {
-            
+
             // Should be working after this PR will be deployed:
             // https://github.com/kbase/narrative_method_store/pull/36
             switch (spec.info.app_type) {
@@ -518,7 +518,7 @@ define([
             switch (spec.info.id) {
                 //case 'model_support/edit_model':
                 //case 'fba_tools/edit_metabolic_model':
-                //case 'fba_tools/create_or_edit_media':                
+                //case 'fba_tools/create_or_edit_media':
                 //case 'model_support/edit_media':
                 case 'ReadGroupEditor/ReadGroupEditor':
                     return 'editor';
@@ -2544,13 +2544,9 @@ define([
          */
         setDataIcon: function($logo, type, stacked, indent) {
             if (indent === undefined || indent === null) {
-                console.debug('indent not given for type', type);
                 indent = 0;
             }
 
-            if ($logo.hasClass('exampleDataIcon')) {
-                console.debug("SET EXAMPLE ICON");
-            }
             var icons = this.data_icons;
             var icon = _.has(icons, type) ? icons[type] : icons.DEFAULT;
             // background circle
@@ -2560,11 +2556,10 @@ define([
             // For 'stacked' (set) icons, add a shifted-over
             // circle first, as the bottom layer, then also add a border
             // to the top one.
-            var circle_classes = 'fa fa-circle fa-stack-2x'; 
+            var circle_classes = 'fa fa-circle fa-stack-2x';
             var circle_color = this.logoColorLookup(type);
             var cmax = function(x) { return x > 255 ? 255 : x; };
             if (stacked) {
-                console.debug('@@ circle color', circle_color);
                 var parsed_color, r, g, b;
                 var cstep = 20; // color-step for overlapped circles
                 var num_stacked_circles = 1; // up to 2
@@ -2584,7 +2579,7 @@ define([
                 }
                 // Add circles with lighter colors
                 for (var i=num_stacked_circles; i > 0; i--) {
-                    var stacked_color = 'rgb(' + cmax(r + i * cstep)  + ',' + 
+                    var stacked_color = 'rgb(' + cmax(r + i * cstep)  + ',' +
                         cmax(g + i * cstep) + ',' + cmax(b + i * cstep) + ')';
                     $logo.append($('<i>')
                         .addClass(circle_classes + ' kb-data-list-logo-shiftedx' + i)

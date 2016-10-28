@@ -1,28 +1,33 @@
+/* global define */
+/* eslint-env browser */
 /**
  * Widget for displaying a list of Narratives and basic narrative management (copy, delete, share)
  * @author Michael Sneddon <mwsneddon@lbl.gov>
  * @public
  */
-define(['jquery',
-        'base/js/namespace',
-        'narrativeConfig',
-        'narrativeManager',
-        'util/display',
-        'bluebird',
-        'kbwidget',
-        'kbaseNarrativeControlPanel',
-        'api/NewWorkspace',
-        'kbase-generic-client-api'],
-function($,
-         Jupyter,
-         Config,
-         NarrativeManager,
-         DisplayUtil,
-         Promise,
-         KBWidget,
-         ControlPanel,
-         NewWorkspace,
-         GenericClient) {
+define([
+    'jquery',
+    'base/js/namespace',
+    'narrativeConfig',
+    'narrativeManager',
+    'util/display',
+    'bluebird',
+    'kbwidget',
+    'kbaseNarrativeControlPanel',
+    'api/NewWorkspace',
+    'kbase-generic-client-api'
+], function (
+    $,
+    Jupyter,
+    Config,
+    NarrativeManager,
+    DisplayUtil,
+    Promise,
+    KBWidget,
+    ControlPanel,
+    NewWorkspace,
+    GenericClient
+) {
     'use strict';
     return new KBWidget({
         name: "kbaseNarrativeManagePanel",
@@ -91,9 +96,9 @@ function($,
         my_user_id: null,
         loggedInCallback: function (event, auth) {
             this.ws = new Workspace(this.options.ws_url, auth);
-
             this.manager = new NarrativeManager({ws_url: this.options.ws_url, nms_url: this.options.nms_url}, auth);
             this.serviceClient = new GenericClient(Config.url('service_wizard'), auth);
+
             this.my_user_id = auth.user_id;
             this.refresh();
             return this;

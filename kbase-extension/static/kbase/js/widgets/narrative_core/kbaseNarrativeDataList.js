@@ -1,5 +1,5 @@
 /* global define,Jupyter,KBError */
-/* global Workspace, SetAPI */
+/* global Workspace */
 /* jslint white: true */
 /* eslint no-console: 0 */
 /**
@@ -100,7 +100,6 @@ define([
         downloadSpecCache: {tag: 'dev'},
         controlClickHnd: {}, // click handlers for control buttons
         my_user_id: null,
-        setAPI: null,
         serviceClient: null,
 
         objectRowTmpl: Handlebars.compile(ObjectRowHtml),
@@ -229,21 +228,6 @@ define([
         },
 
         /**
-         * Get a list of workspace items which are set/group types.
-         *
-         * @return Promise-wrapped list of items.
-         */
-        getWorkspaceSets: function(ws_id) {
-            try {
-                var params = {workspace: '' + ws_id, include_set_item_info: true};
-                return this.setAPI.list_sets(params);
-            }
-            catch(e) {
-                return Promise.reject('Cannot get sets for workspace ' + ws_id + ' :' + e);
-            }
-        },
-
-        /**
          * @method init
          * Builds the DOM structure for the widget.
          * Includes the tables and panel.
@@ -288,12 +272,10 @@ define([
 
             if (this._attributes.auth) {
                 this.ws = new Workspace(this.options.ws_url, this._attributes.auth);
-                this.initSetAPI(this._attributes.auth);
             }
 
             // listener for refresh
             $(document).on('updateDataList.Narrative', function () {
-                self.initSetAPI(this._attributes.auth);
                 self.refresh();
             })
 
@@ -316,17 +298,6 @@ define([
                     this.$mainListDiv.css({'height': height});
                 }
             }
-        },
-
-        /**
-         * Initialize Set API
-         */
-        initSetAPI: function(auth) {
-            if (!this.setAPI) {
-                var token = {'token': auth.token};
-                this.setAPI = new SetAPI(Config.url('service_wizard'), token, null, null, null, '<1.0.0');
-            }
-            return this.setAPI;
         },
 
         /**
@@ -402,7 +373,7 @@ define([
             .catch(function (error) {
                 console.error('DataList: when checking for updates:', error);
                 if (showError) {
-                    this.showBlockingError('Error: Unable to connect to KBase data.');
+                    this.showBlockingError('Sorry, an error occurred while fetching your data.', {'error': 'Unable to connect to KBase database.'});
                 }
             }.bind(this));
         },
@@ -483,12 +454,11 @@ define([
          * This empties out the main data div and injects an error into it.
          * Used mainly when lookups fail.
          */
-        showBlockingError: function (error) {
+        showBlockingError: function (title, error) {
             this.$mainListDiv.empty();
             this.$mainListDiv.append(
-                $('<div>').css({'color': '#F44336', 'margin': '10px'})
-                .append(error)
-                );
+                DisplayUtil.createError(title, error)
+            );
             this.loadingDiv.div.hide();
             this.$mainListDiv.show();
         },
@@ -580,9 +550,10 @@ define([
                 }
             }.bind(this))
             .catch(function (error) {
-                this.showBlockingError(error);
+                this.showBlockingError("Sorry, an error occurred while fetching your data.", error);
                 console.error(error);
-                KBError("kbaseNarrativeDataList.getNextDataChunk", error.error.message);
+                KBError("kbaseNarrativeDataList.fetchWorkspaceData", error.error.message);
+                throw error;
             }.bind(this));
 
         },
@@ -807,7 +778,7 @@ define([
                     new kbaseNarrativeDownloadPanel(downloadPanel, {
                         token: self._attributes.auth.token, type: type, wsId: wsId, objId: objId,
                         downloadSpecCache: self.downloadSpecCache});
-                });
+                    });
 
             var $rename = $('<span>')
                 .addClass(btnClasses).css(css)

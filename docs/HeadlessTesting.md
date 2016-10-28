@@ -62,8 +62,9 @@ docker run command line:
 * KB_AUTH_TOKEN - this is a standard KBase authentication token with access to the narrative to be run
 * KB_WORKSPACE_ID - this is a workspace that the KB_AUTH_TOKEN has access to. A narrative needs to run within some
 workspace. This can be the same as the workspace of the narrative being run, or another workspace that the token has access to
-* SERVICESSL - [optional] this is the SSL endpoint for API services that distinguishes CI, next, appdev or production. At runtime this
-is substituted into the endpoints preconfigured for the narrative container
+* ENVIRON - [optional] this is environment to use from (ci, next, appdev, prod). At runtime this
+value is substituted into the config.json file's "config" setting to determine the set of endpoints
+to use for services
 
 The [__main__ routine](../src/biokbase/narrative/exporter/run_narrative.py#L126) that runs the
 narrative accepts some commandline parameters:
@@ -101,7 +102,7 @@ Here is an example of setting the environment to the AppDev environment and then
 (narrative) 177:narrative sychan$ docker run -i -t \
 > -e "KB_AUTH_TOKEN=un=sychan|tokenid=...secret_squirrel_decoder_string..." \
 > -e "KB_WORKSPACE_ID=sychan:1474590456472" \
-> -e "SERVICESSL=appdev.kbase.us" \
+> -e "ENVIRON=appdev" \
 > --entrypoint="headless-narrative" kbase/narrative:latest 2012/1/4
 Configuring KBase logging from defaults (KBASE_PROXY_CONFIG is empty, or not found)
 "I'm running in appdev\n"

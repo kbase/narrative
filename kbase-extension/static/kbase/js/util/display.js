@@ -161,7 +161,7 @@ define(
      * errorBody = a string that'll be in standard text, in the error's body area.
      * if errorBody is an object, ...
      */
-    function createError(title, error) {
+    function createError(title, error, stackTrace) {
         var $errorPanel = $('<div>')
                           .addClass('alert alert-danger')
                           .append('<b>' + title + '</b><br>Please contact the KBase team at <a href="mailto:help@kbase.us?subject=Narrative%20function%20loading%20error">help@kbase.us</a> with the information below.');
@@ -181,6 +181,18 @@ define(
         }
         else if (error) {
             $errorPanel.append('No other information available. Sorry!');
+        }
+        if (stackTrace) {
+            var $traceAccordion = $('<div>');
+            $errorPanel.append($traceAccordion);
+            new KBaseAccordion($traceAccordion, {
+                elements: [
+                    {
+                        title: 'Error Details',
+                        body: $('<div>').addClass('kb-function-error-traceback').append(stackTrace)
+                    }
+                ]}
+            );
         }
         return $errorPanel;
     }

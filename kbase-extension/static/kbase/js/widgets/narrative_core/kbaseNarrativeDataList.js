@@ -964,7 +964,7 @@ define([
 
             // Remember the icons
             var data_icon_param = {elt: $logo, type: type, stacked: is_set, indent: 0};
-            Icon.buildDataIcon($logo, type, is_set, 0);
+            Icon.buildDataIcon($logo, type, is_set, 0, objData.fromPalette);
 
             // Save params for this icon, so we can update later when sets get "discovered"
             this.dataIconParam[this.itemId(object_info)] = data_icon_param;
@@ -1013,10 +1013,10 @@ define([
                 $paletteIcon = $('<span>')
                     .addClass('pull-right')
                     .append($('<i>')
-                            .addClass('fa fa-rocket')
+                            .addClass('fa fa-link')
                             .css({color: '#888'}))
                     .tooltip({
-                        title: 'This object is rocketing in from another Narrative! Zoom!',
+                        title: 'This is a reference to an object in another narrative.\nCurrently, this will not display properly.',
                         placement: 'left',
                         delay: {
                             show: Config.get('tooltip').showDelay,

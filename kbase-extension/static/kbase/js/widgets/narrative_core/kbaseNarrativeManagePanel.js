@@ -646,87 +646,14 @@ define([
                                     .append('Copy')
                                     .click(function () {
                                         $(this).prop("disabled", true);
-                                        var newMeta = ws_info[8];
-                                        newMeta['narrative_nice_name'] = $newNameInput.val();
-
-                                        var id = new Date().getTime();
-                                        var ws_name = self.my_user_id + ":" + id;
-
-                                        Promise.resolve(self.ws.clone_workspace({
-                                            wsi: {id: ws_info[0]},
-                                            workspace: ws_name,
-                                            meta: newMeta
-                                        }))
-                                        .then(function(newWsInfo) {
-                                            var newNarrativeRef = newWsInfo[0] + '/' + objectInfo[1];
-
-
-                                        }.bind(this))
-
-                                        self.ws.clone_workspace({
-                                            wsi: {id: ws_info[0]},
-                                            workspace: ws_name,
-                                            meta: newMeta
-                                        },
-                                            function (new_ws_info) {
-                                                // we have to match based on names because when cloning, the object id is not preserved!!! arg!
-                                                var new_narrative_ref = new_ws_info[0] + "/" + object_info[1]; //new_ws_info[8].narrative;
-                                                // ok, a lot of work just to update the narrative name in the metadata
-                                                self.ws.get_objects([{ref: new_narrative_ref}],
-                                                    function (data) {
-                                                        data = data[0]; // only one thing should be returned
-                                                        var new_nar_metadata = data.info[10];
-                                                        new_nar_metadata.name = newMeta['narrative_nice_name'];
-                                                        data.data.metadata.name = newMeta['narrative_nice_name'];
-
-                                                        // set workspace metadata to point to the correct object id since they can change on clone!!
-                                                        self.ws.alter_workspace_metadata({
-                                                            wsi: {id: new_ws_info[0]},
-                                                            new : {'narrative': String(data.info[0])}
-                                                        },
-                                                        function () {
-                                                            // so much work just to update this name!
-                                                            self.ws.save_objects({id: new_ws_info[0], objects: [
-                                                                    {
-                                                                        type: data.info[2],
-                                                                        data: data.data,
-                                                                        provenance: data.provenance,
-                                                                        name: data.info[1],
-                                                                        meta: new_nar_metadata
-                                                                    }
-                                                                ]},
-                                                                function (info) {
-                                                                    console.log('copying complete', info);
-                                                                    self.refresh();
-                                                                },
-                                                                function (error) {
-                                                                    var errorMessage = "Error! Copied successfully, but error on rename." + error.error.message;
-                                                                    console.log(errorMessage);
-                                                                    console.error(error);
-                                                                    self.setInteractionError($interactionPanel, errorMessage);
-                                                                });
-
-                                                            },
-                                                            function (error) {
-                                                                console.log('Error when setting ws metadata!');
-                                                                console.log(error);
-                                                            });
-
-
-                                                    },
-                                                    function (error) {
-                                                        var errorMessage = "Error! Copied successfully, but error on rename." + error.error.message;
-                                                        console.log(errorMessage);
-                                                        console.error(error);
-                                                        self.setInteractionError($interactionPanel, errorMessage);
-                                                    })
-                                            },
-                                            function (error) {
-                                                var errorMessage = "Error! " + error.error.message;
-                                                console.log(errorMessage);
-                                                console.error(error);
-                                                self.setInteractionError($interactionPanel, errorMessage);
-                                            });
+                                        self.copyThisNarrative($newNameInput.val())
+                                        .then(function() {
+                                            self.refresh();
+                                        })
+                                        .catch(function(error) {
+                                            self.setInteractionError($interactionPanel, "Sorry, an error occurred while copying!");
+                                            console.error(error);
+                                        });
                                     }))
                                 .append($('<button>').addClass('kb-data-list-cancel-btn')
                                     .append('Cancel')
@@ -1165,119 +1092,6 @@ define([
                           result.newNarId].join('')
                 };
             });
-            //
-            // var preCheckError = null;
-            // if (!this.ws) {
-            //     preCheckError = "Cannot copy - please sign in again.";
-            // }
-            // else if (!this.workspaceRef) {
-            //     preCheckError = "Cannot copy - cannot find Narrative id. Please refresh the page and try again.";
-            // }
-            // else if (!this.workspaceId) {
-            //     preCheckError = "Cannot copy - cannot find Narrative data id. Please refresh the page and try again.";
-            // }
-            // if (preCheckError) {
-            //     return Promise.reject(preCheckError);
-            // }
-            // // name of the narrative object in the workspace. used for closure.
-            // var narObjName;
-            // var newWsName = this.my_user_id + ':' + new Date().getTime();
-            // var newWsMeta = {
-            //     is_temporary: 'false',
-            //     narrative_nice_name: newName
-            //     // add the 'narrative' field later.
-            // };
-            // var newWsId;
-            // var newNarId;
-            // var currentNarrative;
-            //
-            // // start with getting the existing narrative object.
-            // return Promise.resolve(this.ws.get_objects([{ref: this.workspaceRef}]))
-            // .then(function(narrativeObject) {
-            //     // stash the object in a variable with scope external to the Promise.
-            //     currentNarrative = narrativeObject[0];
-            //     // next clone the workspace EXCEPT for this object.
-            //     return Promise.resolve(this.ws.clone_workspace({
-            //         wsi: { id: this.workspaceId },
-            //         workspace: newWsName,
-            //         meta: newWsMeta,
-            //         exclude: [{ objid: currentNarrative.info[0] }]
-            //     }));
-            // }.bind(this))
-            // .then(function(newWsInfo) {
-            //     // pop the newWsId into a variable available by closure in the next step.
-            //     newWsId = newWsInfo[0];
-            //     // update the ref inside the narrative object and the new workspace metadata.
-            //     var newNarMetadata = currentNarrative.info[10];
-            //     newNarMetadata.name = newName;
-            //     newNarMetadata.ws_name = newWsName;
-            //     newNarMetadata.job_info = JSON.stringify({queue_time: 0, running: 0, completed: 0, run_time: 0, error: 0});
-            //
-            //     currentNarrative.data.metadata.name = newName;
-            //     currentNarrative.data.metadata.ws_name = newWsName;
-            //     currentNarrative.data.metadata.job_ids = {
-            //         apps: [],
-            //         methods: [],
-            //         job_usage: {
-            //             queue_time: 0,
-            //             run_time: 0
-            //         }
-            //     };
-            //     // save the shiny new Narrative so it's at version 1
-            //     return Promise.resolve(this.ws.save_objects({
-            //         id: newWsId,
-            //         objects: [{
-            //             type: currentNarrative.info[2],
-            //             data: currentNarrative.data,
-            //             provenance: currentNarrative.provenance,
-            //             name: currentNarrative.info[1],
-            //             meta: newNarMetadata
-            //         }]
-            //     }));
-            // }.bind(this))
-            // .then(function(newNarInfo) {
-            //     // now, just update the workspace metadata to point
-            //     // to the new narrative object
-            //     newNarId = newNarInfo[0][0];
-            //     return Promise.resolve(this.ws.alter_workspace_metadata({
-            //         wsi: { id: newWsId },
-            //         new: { narrative: String(newNarId) }
-            //     }));
-            // }.bind(this))
-            // .then(function(results) {
-            //     return {
-            //         status: 'success',
-            //         url: window.location.origin + '/narrative/ws.' + newWsId + '.obj.' + newNarId
-            //     };
-            // })
-            // .catch(function(error) {
-            //     console.error(error);
-            //     var errMessage = "Sorry, an error occurred while copying.";
-            //     if (error.error && error.error.message) {
-            //         //try to parse...
-            //         // search for function that failed in error.
-            //         if (error.error.error) {
-            //             var trace = error.error.error;
-            //             // in order:
-            //             if (trace.search('getObjectInfoNew') > -1) {
-            //
-            //             }
-            //         }
-            //         var msg = error.error.message;
-            //     }
-            //     // if it got to the point that it made a copy,
-            //     // delete it so it's out of the way - it's broken
-            //     // if it got here without finishing.
-            //     if (newWsId) {
-            //         console.log('Deleting new incomplete copy - ' + newWsId);
-            //         return Promise.resolve(this.ws.delete_workspace({id: newWsId}))
-            //         .then(function() {
-            //             return Promise.reject(error);
-            //         });
-            //     }
-            //     return Promise.reject(error);
-            //     // throw error;
-            // }.bind(this));
         },
 
         makeNewNarrativeBtn: function () {

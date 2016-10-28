@@ -106,12 +106,12 @@ define ([
                     '<li><a data-toggle="tab" href="#' + tab_ids.stats + '">Stats</a></li>' +
                     '</ul>'
                 ),
-                $divs = $('<div class="tab-content">'),
-                $overviewTable = $('<table class="table table-striped table-bordered table-hover" style="margin-left: auto; margin-right: auto;"/>'),
-                $statsTable = $('<table class="table table-striped table-bordered table-hover" style="margin-left: auto; margin-right: auto;"/>');
+                $divs = $('<div class="tab-content" style="margin-top: 15px">'),
+                $overviewTable = $('<table class="table table-striped table-bordered table-hover" style="margin-left: auto; margin-right: auto; word-wrap: break-word; table-layout: fixed;"/>').append($('<colgroup>').append('<col span="1" style="width: 25%">')),
+                $statsTable = $('<table class="table table-striped table-bordered table-hover" style="margin-left: auto; margin-right: auto; word-wrap: break-word; table-layout: fixed;"/>').append($('<colgroup>').append('<col span="1" style="width: 25%">'));
 
             function get_table_row(key, value) {
-                return $('<tr>').append($('<td>').append(key)).append($('<td>').append(value));
+                return $('<tr>').append($('<td>').append($('<b>' + key + '</b>'))).append($('<td>').append(value));
             }
 
             // Build the overview table

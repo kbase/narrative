@@ -1045,7 +1045,9 @@ define([
                             .addClass('fa fa-link')
                             .css({color: '#888'}))
                     .tooltip({
-                        title: 'This is a reference to an object in another narrative.\nCurrently, this will not display properly.',
+                        title: 'This is a reference to an object in another narrative.\n' +
+                               'Currently, this will not display properly unless you\n' +
+                               'have access to that Narrative.',
                         placement: 'left',
                         delay: {
                             show: Config.get('tooltip').showDelay,

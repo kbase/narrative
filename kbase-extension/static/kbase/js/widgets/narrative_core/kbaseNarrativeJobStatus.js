@@ -56,10 +56,11 @@ define([
             this._super(options);
             this.jobId = this.options.jobId;
             this.state = this.options.state;
+            this.outputWidgetInfo = this.options.outputWidgetInfo;
             // expects:
             // name, id, version for appInfo
             this.appInfo = this.options.info;
-            
+
             var cellNode = this.$elem.closest('.cell').get(0);
             function findCell() {
                 var cells = Jupyter.notebook.get_cell_elements().toArray().filter(function (element) {
@@ -72,11 +73,11 @@ define([
                     return $(cells[0]).data('cell');
                 }
                 throw new Error('Cannot find the cell node!', cellNode, cells);
-                
+
             }
-            
+
             this.cell = findCell();
-            
+
             // this.cell = Jupyter.narrative.getCellByKbaseId(this.$elem.attr('id'));
             //console.log('initializing with job id = ' + this.jobId);
             if (!this.jobId) {
@@ -108,7 +109,6 @@ define([
                     type: 'job-status'
                 },
                 handle: function (message) {
-                    console.log('Have job status', message);
                     this.handleJobStatus(message);
                 }.bind(this)
             });
@@ -138,29 +138,6 @@ define([
                 }.bind(this)
             });
 
-
-
-//            this.runtime.bus().on('job-status', function (message) {
-//                this.handleJobStatus(message);
-//            }.bind(this));
-//
-//            this.runtime.bus().on('job-logs', function (message) {
-//                this.handleJobLogs(message);
-//            }.bind(this));
-//
-//            this.runtime.bus().on('job-log-deleted', function (message) {
-//                this.handleJobLogDeleted(message);
-//            }.bind(this));
-
-//            this.runtime.bus().listen({
-//                test: function(msg) {
-//                    return (msg.data && msg.data.jobId === this.jobId);
-//                }.bind(this),
-//                handle: function(msg) {
-//                    this.handleJobStatus(msg);
-//                }.bind(this)
-//            });
-//
             // render up the panel's view layer.
             this.initializeView();
             this.updateView();
@@ -188,7 +165,7 @@ define([
             this.reportView = this.makeReportPanel();
             this.newDataView = this.makeNewDataView();
             var $tabDiv = $('<div>');
-            var tabs = new KBaseTabs($tabDiv, {
+            this.tabController = new KBaseTabs($tabDiv, {
                 tabs: [
                     {
                         tab: 'Status',
@@ -198,28 +175,70 @@ define([
                         tab: 'Logs',
                         content: this.logsView
                     },
-                    {
-                        tab: 'Report',
-                        content: this.reportView
-                    },
-                    {
-                        tab: 'New Data Objects',
-                        content: this.newDataView
-                    }
+                    // {
+                    //     tab: 'Report',
+                    //     content: this.reportView
+                    // },
+                    // {
+                    //     tab: 'New Data Objects',
+                    //     content: this.newDataView
+                    // }
                 ]
             });
             this.$elem.append($tabDiv);
         },
 
         updateView: function() {
-            // console.log('updating view...');
+            // Update status panel (always)
             this.view.statusPanel.remove();
             this.view.statusPanel = this.updateJobStatusPanel();
             this.view.body.append($(this.view.statusPanel));
+
+            if (this.state.job_state === 'completed') {
+                // If job's complete, and we have a report, show that.
+                if (this.outputWidgetInfo && this.outputWidgetInfo.params &&
+                    this.outputWidgetInfo.params.report_name && !this.showingReport) {
+                    this.showReport();
+                }
+
+                // If job's complete, and we have newly generated objects, show them.
+                if (this.state.result && !this.showingNewObjects) {
+                    this.showNewObjects();
+                }
+            }
+
+        },
+
+        showNewObjects: function() {
+            if (!this.showingNewObjects) {
+                this.tabController.addTab({tab: 'New Data Objects', showContentCallback: function() {
+                    var params = this.outputWidgetInfo.params;
+                    params.showReportText = false;
+                    params.showCreatedObjects = true;
+                    var $newObjDiv = $('<div>');
+                    new KBaseReportView($newObjDiv, params);
+                    return $newObjDiv;
+                }.bind(this)});
+                this.showingNewObjects = true;
+            }
         },
 
         makeNewDataView: function() {
             return $('<div>');
+        },
+
+        showReport: function() {
+            if (!this.showingReport) {
+                this.tabController.addTab({tab: 'Report', showContentCallback: function() {
+                    var params = this.outputWidgetInfo.params;
+                    params.showReportText = true;
+                    params.showCreatedObjects = false;
+                    var $reportDiv = $('<div>');
+                    new KBaseReportView($reportDiv, params);
+                    return $reportDiv;
+                }.bind(this)});
+                this.showingReport = true;
+            }
         },
 
         makeReportPanel: function() {
@@ -258,39 +277,23 @@ define([
         handleJobStatus: function (message) {
             // console.log('HANDLE JOB STATUS', message);
             this.state = message.jobState;
+            this.outputWidgetInfo = message.outputWidgetInfo;
             this.setCellState();
             this.updateView();
         },
 
         handleJobLogs: function (message) {
-            if (this.pendingLogRequest && (this.pendingLogLine === message.logs.first || this.pendingLogLine === 'latest' && message.logs.latest)) {
+            if (this.pendingLogRequest &&
+                (this.pendingLogLine === message.logs.first ||
+                    this.pendingLogLine === 'latest' &&
+                    message.logs.latest)) {
                 this.updateLogs(message.logs);
             }
         },
 
         handleJobLogDeleted: function (message) {
-            window.alert('Job has been deleted. No log available.');
+            this.showLogMessage('Job has been deleted. No log available.');
         },
-
-//        handleJobStatus: function(message) {
-//            switch (message.type) {
-//                case 'job-status':
-//                    this.state = message.data.jobState.state;
-//                    this.setCellState();
-//                    this.updateView();
-//                    break;
-//                case 'job-logs':
-//                    if (this.pendingLogRequest && (this.pendingLogLine === message.data.logs.first || this.pendingLogLine === 'latest' && message.data.logs.latest)) {
-//                        this.updateLogs(message.data.logs);
-//                    }
-//                    break;
-//                case 'job-log-deleted':
-//                    window.alert('Job has been deleted. No log available.');
-//                    break;
-//                default:
-//                    break;
-//            }
-//        },
 
         showError: function(message) {
             this.$elem.append(message);
@@ -367,7 +370,6 @@ define([
         },
 
         sendLogRequest: function(firstLine) {
-            console.log('sending ' + firstLine + ' request');
             this.logsView.find('#kblog-spinner').show();
             this.pendingLogRequest = true;
             this.pendingLogLine = firstLine;

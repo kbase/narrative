@@ -1036,7 +1036,7 @@ define([
                         window.open('/#people/' + object_info[5]);
                     });
             }
-            var metadata = object_info[10];
+            var metadata = object_info[10] || {};
             var metadataText = '';
             for (var key in metadata) {
                 if (metadata.hasOwnProperty(key)) {

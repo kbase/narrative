@@ -778,7 +778,7 @@ define([
                     new kbaseNarrativeDownloadPanel(downloadPanel, {
                         token: self._attributes.auth.token, type: type, wsId: wsId, objId: objId,
                         downloadSpecCache: self.downloadSpecCache});
-                });
+                    });
 
             var $rename = $('<span>')
                 .addClass(btnClasses).css(css)

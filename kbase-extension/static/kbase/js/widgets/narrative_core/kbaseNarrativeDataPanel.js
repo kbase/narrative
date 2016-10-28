@@ -750,7 +750,7 @@ define([
                 var paramsList = [],
                     curParam = newParamSet({type: type}),
                     curTotal = 0,
-                    maxRequest = 300,
+                    maxRequest = 1000,
                     totalFetch = 0;
 
                 // Set up all possible requests. We'll break out of
@@ -903,8 +903,15 @@ define([
                 for (var i in objs) {
                     var ref = objs[i].ref;
                     var name = objs[i].name;
-                    proms.push(ws.copy_object({to: {workspace: nar_ws_name, name: name},
-                        from: {ref: ref}}));
+                    proms.push(
+                        serviceClient.sync_call(
+                            "NarrativeService.copy_object",
+                            [{
+                                ref: ref,
+                                target_ws_name: nar_ws_name
+                            }]
+                        )
+                    );
                 }
                 return proms;
             }
@@ -1188,7 +1195,7 @@ define([
                         });
                 }
 
-                var metadata = object_info[10];
+                var metadata = object_info[10] || {};
                 var metadataText = '';
                 for (var key in metadata) {
                     if (metadata.hasOwnProperty(key)) {
@@ -1245,28 +1252,54 @@ define([
                         $(this).html('<img src="' + self.options.loadingImage + '">');
 
                         var thisBtn = this;
-                        var targetName = object_info[1];
+                        // var targetName = object_info[1];
                         //console.log(object.name + " -> " + targetName);
-                        ws.copy_object({
-                            to: {ref: self.ws_name + "/" + targetName},
-                            from: {ref: object_info[6] + "/" + object_info[0]}},
-                            function (info) {
-                                $(thisBtn).html('Added');
-                                self.trigger('updateDataList.Narrative');
-                            },
-                            function (error) {
-                                $(thisBtn).html('Error');
-                                if (error.error && error.error.message) {
-                                    if (error.error.message.indexOf('may not write to workspace') >= 0) {
-                                        importStatus.html($('<div>').css({'color': '#F44336', 'width': '500px'}).append('Error: you do not have permission to add data to this Narrative.'));
-                                    } else {
-                                        importStatus.html($('<div>').css({'color': '#F44336', 'width': '500px'}).append('Error: ' + error.error.message));
-                                    }
+                        Promise.resolve(serviceClient.sync_call(
+                            "NarrativeService.copy_object",
+                            [{
+                                ref: object_info[6] + '/' + object_info[0],
+                                target_ws_name: self.ws_name
+                            }]
+                        ))
+                        .then(function() {
+                            $(thisBtn).html('Added');
+                            self.trigger('updateDataList.Narrative');
+                        })
+                        .catch(function(error) {
+                            $(thisBtn).html('Error');
+                            if (error.error && error.error.message) {
+                                if (error.error.message.indexOf('may not write to workspace') >= 0) {
+                                    importStatus.html($('<div>').css({'color': '#F44336', 'width': '500px'}).append('Error: you do not have permission to add data to this Narrative.'));
                                 } else {
-                                    importStatus.html($('<div>').css({'color': '#F44336', 'width': '500px'}).append('Unknown error!'));
+                                    importStatus.html($('<div>').css({'color': '#F44336', 'width': '500px'}).append('Error: ' + error.error.message));
                                 }
-                                console.error(error);
-                            });
+                            } else {
+                                importStatus.html($('<div>').css({'color': '#F44336', 'width': '500px'}).append('Unknown error!'));
+                            }
+                            console.error(error);
+                        })
+
+                        // ws.copy_object({
+                        //
+                        //     to: {ref: self.ws_name + "/" + targetName},
+                        //     from: {ref: object_info[6] + "/" + object_info[0]}},
+                        //     function (info) {
+                        //         $(thisBtn).html('Added');
+                        //         self.trigger('updateDataList.Narrative');
+                        //     },
+                        //     function (error) {
+                        //         $(thisBtn).html('Error');
+                        //         if (error.error && error.error.message) {
+                        //             if (error.error.message.indexOf('may not write to workspace') >= 0) {
+                        //                 importStatus.html($('<div>').css({'color': '#F44336', 'width': '500px'}).append('Error: you do not have permission to add data to this Narrative.'));
+                        //             } else {
+                        //                 importStatus.html($('<div>').css({'color': '#F44336', 'width': '500px'}).append('Error: ' + error.error.message));
+                        //             }
+                        //         } else {
+                        //             importStatus.html($('<div>').css({'color': '#F44336', 'width': '500px'}).append('Unknown error!'));
+                        //         }
+                        //         console.error(error);
+                        //     });
 
                     }));
 

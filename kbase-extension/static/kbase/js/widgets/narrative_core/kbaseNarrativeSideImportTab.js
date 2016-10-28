@@ -223,7 +223,7 @@ define (
             );
             return this;
         },
-        
+
         getVersionTag: function() {
             var tag = Jupyter.narrative.sidePanel.$methodsWidget.currentTag;
             if (!tag) {
@@ -231,7 +231,7 @@ define (
             }
             return tag;
         },
-        
+
         getMethodSpecs: function(callback, errorCallback) {
             var self = this;
             var tag = self.getVersionTag();
@@ -247,13 +247,13 @@ define (
                     if (self.allMethodIds[tag][methodId]) {
                         methodIds.push(methodId);
                     } else {
-                        console.log("Importer method id=" + methodId + " is skipped for " + 
+                        console.log("Importer method id=" + methodId + " is skipped for " +
                                 "tag \"" + tag + "\"");
                     }
                 }
-                var prom1 = self.methClient.get_method_full_info({'ids': methodIds, 
+                var prom1 = self.methClient.get_method_full_info({'ids': methodIds,
                     'tag' : tag});
-                var prom2 = self.methClient.get_method_spec({'ids': methodIds, 
+                var prom2 = self.methClient.get_method_spec({'ids': methodIds,
                     'tag' : tag});
                 $.when(prom1, prom2).done(function(fullInfoList, specs) {
                     self.methodFullInfo[tag] = {};
@@ -272,7 +272,7 @@ define (
                 errorCallback(error);
             });
         },
-        
+
         showWidget: function(type, methodFullInfo, methods, tag) {
             var self = this;
             this.selectedType = type;
@@ -296,7 +296,7 @@ define (
             }
 
             for (var methodPos in importMethodIds) {
-                self.showTab(importMethodIds, methodPos, $header, $body, 
+                self.showTab(importMethodIds, methodPos, $header, $body,
                         numberOfTabs, methodFullInfo, methods);
             }
             var $importButton = $('<button>')
@@ -359,7 +359,7 @@ define (
             self.widgetPanelCard2.append($buttons);
         },
 
-        showTab: function(importMethodIds, methodPos, $header, $body, 
+        showTab: function(importMethodIds, methodPos, $header, $body,
                 numberOfTabs, methodFullInfo, methods) {
             var self = this;
             var methodId = importMethodIds[methodPos];
@@ -500,6 +500,7 @@ define (
         createImportStatusCell: function(methodName, jobId) {
             var cellIndex = Jupyter.notebook.get_selected_index();
             var cell = Jupyter.notebook.insert_cell_below('code', cellIndex);
+            $(cell.element).trigger('toggleCodeArea.cell');
             var title = 'Import job status for ' + methodName;
             var cellText = ['from biokbase.narrative.jobs.jobmanager import JobManager',
                             'JobManager().get_job(' + jobId + ')'].join('\n');

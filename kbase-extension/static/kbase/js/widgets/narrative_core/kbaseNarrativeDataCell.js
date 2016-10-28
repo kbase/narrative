@@ -17,7 +17,7 @@ define (
 		'underscore',
 		'narrativeConfig',
 		'narrativeViewers',
-		'kbaseNarrativeCell',
+		'kbaseNarrativeCell'
 	], function(
 		KBWidget,
 		bootstrap,
@@ -67,13 +67,16 @@ define (
             return this;
         },
         render: function () {
-            var $label = $('<span>').addClass('label label-info').append('Data');
-            var baseClass = 'kb-cell-output';
-            var panelClass = 'panel-default';
-            var headerClass = 'kb-out-desc';
-
-            var is_default = false; // default-viewer
-            var widgetTitleElem = this.$elem.closest('.kb-cell-output').find('.panel').find('.panel-heading').find('.kb-out-desc').find('b');
+            var $label = $('<span>').addClass('label label-info').append('Data'),
+                baseClass = 'kb-cell-output',
+                panelClass = 'panel-default',
+                headerClass = 'kb-out-desc',
+                is_default = false, // default-viewer
+                widgetTitleElem = this.$elem.closest('.kb-cell-output')
+                    .find('.panel')
+                    .find('.panel-heading')
+                    .find('.kb-out-desc')
+                    .find('b');
             // var mainPanel = $('<div>');
             // self.$elem.append(mainPanel);
 
@@ -115,20 +118,19 @@ define (
          * a given single object.
          */
         WorkspaceObject: function(wsclient, obj_spec) {
-            var ws = wsclient;
-            var spec = obj_spec;
-            var self = this;
+            var ws = wsclient, spec = obj_spec, self = this, i=0;
             // Get info for every version of this object
             ws.list_objects({ids: [spec.wsid], minObjectID: spec.objid,
                                     maxObjectID: spec.objid, showAllVersions: 1})                    
                 .then(function(objlist) {
                     var info = {};
-                    for (var i=0; i < objlist.length; i++) {
+                    for (i=0; i < objlist.length; i++) {
                         var o = objlist[i];
                         info[o[4]] = {objid: o[0], name: o[1], type: o[2],
                             save_date: o[3], version: o[4], saved_by: o[5],
                             wsid: o[6], workspace: o[7], chsum: o[8],
-                            size: o[9], meta: o[10] };
+                            size: o[9], meta: o[10], 
+                            id: o[0], ws_id: o[6] /* aliases */ };
                     }
                     return info;
                 })
@@ -149,8 +151,38 @@ define (
                  */
                 info_for_version: function(ver) {
                     return self.metadata_info[ver];
-                }              
-            };
+                },
+                
+                /**
+                 * References from/to the object.
+                 */
+                references: function(ver) {
+                    var result = {from: [], to: []};
+                    
+                    var references_to = function(result) {
+                        var subset_spec = {objid: spec.objid, wsid: spec.wsid,
+                                           included: ['/refs'], 'ver': ver};
+                        return ws.get_object_subset([subset_spec]).then(function(objects) {
+                            console.debug('@@ references-to, got objects:', objects);
+                            result.to = objects[0].refs;
+                            return result;
+                        });
+                    },
+                        
+                    references_from = function(result) {
+                        return ws.list_referencing_objects([spec]).then(function(rfrom) {
+                            console.debug('@@ references-from, got data:', rfrom);
+                            result.from = _.map(_.flatten(rfrom, true), function(obj) {
+                                return obj[6] + '/' + obj[0] + '/' + obj[4];
+                            });
+                            return result;
+                        });
+                    };
+                    
+                    // chain the promises
+                    return references_to(result).then(references_from);
+                }
+            }
         },
         
         /**
@@ -165,7 +197,8 @@ define (
                 wsid: this.obj_info.ws_id
             });
             this.obj_maxver = -1;
-            this.verlist_class = 'kb-data-obj-panel-verlist';            
+            this.verlist_class = 'kb-data-obj-panel-verlist';
+            this.node_class = 'kb-data-obj-panel-gnode';
             return this;
         },
         
@@ -177,8 +210,7 @@ define (
          * @returns `this` if successful, null on error.
          */
         metadataRender: function ($elem) {
-            var self = this;
-            var fade_ms = 400;
+            var self = this, fade_ms = 400;
         
             console.info('@@ create metadata panel - start');
             try {
@@ -229,13 +261,17 @@ define (
             var success = true;
             var self = this;
             try {
+                // - - - - - - - -
                 // Info subpanel
+                // - - - - - - - -
                 console.debug('@@ showMetadata, obj_info:', this.obj_info);
-                var $info = $elem.find('.kb-data-obj-panel-info');
+                var $info = $elem.find('.kb-data-obj-panel-info'),
+                    objref = this.obj_info.ws_id + '/' + this.obj_info.id + '/' + this.obj_info.version;
                 $info.html("<dl>" +
                            "<dt>Version</dt><dd>" +
                               "<span class='" + this.verlist_class + "'></span></dd>" +
                            "<dt>Name</dt><dd>" + this.obj_info.name + "</dd>" + 
+                           "<dt>ID</dt><dd>" + objref + "</dd>" +
                            "<dt>Type</dt><dd>" + this.obj_info.type + "</dd>" + 
                            "<dt>Saved</dt><dd>" + this.obj_info.save_date + "</dd>" +
                            "<dt>Saved by</dt><dd>" + this.obj_info.saved_by + "</dd>" +
@@ -261,9 +297,27 @@ define (
                 }
                 // Select currently viewed version in the list
                 self.selectCurrentVersion();
+                // - - - - - - - -
                 // Graph subpanel
+                // - - - - - - - -
                 var $graph = $elem.find('.kb-data-obj-panel-graph');
-                $graph.text('graph');
+                var $g_rfrom = $("<div class='kb-data-obj-graph-ref-from'>")
+                    .append('<table><thead><tr><th>Objects from</th></tr></thead><tbody>');
+                var $g_rto = $("<div class='kb-data-obj-graph-ref-to'>")
+                    .append('<table><thead><tr><th>Objects to</th></tr></thead><tbody>');
+                // fetch refs
+                this.wsobj.references().then(function(refs) { 
+                    _.each(refs.from, function(r) {
+                        $g_rfrom.find('tbody').append($('<tr>').append($('<td>').text(r)));
+                    });
+                    _.each(refs.to, function(r) {
+                        $g_rto.find('tbody').append($('<tr>').append($('<td>').text(r)));
+                    });
+                    $g_rfrom.append('</tbody></table>');
+                    $g_rto.append('</tbody></table>');
+                    $graph.empty();
+                    $graph.append($g_rfrom).append($g_rto);
+                });
             }
             catch (ex) {
                 console.error('Failed to populate metadata:', ex);

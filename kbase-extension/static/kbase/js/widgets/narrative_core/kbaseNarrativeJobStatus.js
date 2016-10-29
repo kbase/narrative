@@ -243,12 +243,12 @@ define([
                             objRefs.push({ref: ref});
                         });
                         var newObjTmpl = Handlebars.compile(NewObjectsTemplate);
-                        this.tabController.addTab({tab: 'New Data Objects', showContentCallback: function() {
-                            var wsClient = new Workspace(Config.url('workspace'), {token: this.runtime.authToken()});
-                            var $div = $('<div>');
-                            Promise.resolve(wsClient.get_object_info_new({objects: objRefs}))
-                            .then(function(objInfo) {
+                        var wsClient = new Workspace(Config.url('workspace'), {token: this.runtime.authToken()});
+                        Promise.resolve(wsClient.get_object_info_new({objects: objRefs}))
+                        .then(function(objInfo) {
+                            this.tabController.addTab({tab: 'New Data Objects', showContentCallback: function() {
                                 var renderedInfo = [];
+                                var $div = $('<div>');
                                 objInfo.forEach(function(obj) {
                                     renderedInfo.push({
                                         'name': obj[1],
@@ -266,9 +266,12 @@ define([
                                     }.bind(this));
                                 }
                                 $div.append($objTable);
-                            }.bind(this));
-                            return $div;
-                        }.bind(this)});
+                                return $div;
+                            }.bind(this)});
+                        }.bind(this))
+                        .catch(function(error) {
+                            //die silently.
+                        });
                     }
                 }
                 this.showingNewObjects = true;

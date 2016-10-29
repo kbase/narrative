@@ -139,6 +139,11 @@ define ([
             $overviewTable.append(get_table_row('Type', reads_type ));
 
             /* KEEP COMMENTED OUT UNTIL UPLOADER WEB FORM ALLOWS THE USER TO SPECIFY
+            if(this.reads["data"].hasOwnProperty("read_size")){
+                $overviewTable.append(get_table_row('Read Size', this.reads["data"]['read_size'].toLocaleString() ));
+            }else{
+                $overviewTable.append(get_table_row('Read Size', "Not Specified"));
+            }
             if (this.reads["data"].hasOwnProperty("strain")) {
                 $overviewTable.append(get_table_row('Species/Taxa', this.reads["data"]['strain']['genus'] + " " +
                 this.reads["data"]['strain']['species'] + " " +
@@ -153,7 +158,7 @@ define ([
 
             if (this.reads["data"].hasOwnProperty("single_genome")) {
                 display_value = "No";
-                if (this.reads["data"]['read_size'] === 1 ) {
+                if (this.reads["data"]['single_genome'] === 1 ) {
                     display_value = "Yes";
                 }
                 $overviewTable.append(get_table_row('Single Genome', display_value ));
@@ -189,8 +194,8 @@ define ([
 
             $divs.append($('<div id="' + tab_ids.overview + '" class="tab-pane active">').append($overviewTable));
 
-            if(this.reads["data"].hasOwnProperty("read_size")){
-                $statsTable.append(get_table_row('Total Number of Bases', this.reads["data"]['read_size'].toLocaleString() ));
+            if(this.reads["data"].hasOwnProperty("total_bases")){
+                $statsTable.append(get_table_row('Total Number of Bases', this.reads["data"]['total_bases'].toLocaleString() ));
             }else{
                 $statsTable.append(get_table_row('Total Number of Bases', "Not Specified"));
             }
@@ -208,7 +213,7 @@ define ([
             }
 
             if(this.reads["data"].hasOwnProperty("number_of_duplicates")){
-                var dup_percentage = (this.reads["data"]['number_of_duplicates'].toLocaleString() / this.reads["data"]["read_size"]) * 100;
+                var dup_percentage = (this.reads["data"]['number_of_duplicates'].toLocaleString() / this.reads["data"]["read_count"]) * 100;
                     $statsTable.append(get_table_row('Number of Duplicate Reads(%)',
                     this.reads["data"]['number_of_duplicates'].toLocaleString() + " (" + dup_percentage.toFixed(2) + "%)"
                 ));

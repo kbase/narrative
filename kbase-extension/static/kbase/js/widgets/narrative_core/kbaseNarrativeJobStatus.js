@@ -2,8 +2,12 @@
 /*jslint white:true,browser:true*/
 
 define([
+    'bluebird',
     'jquery',
+    'underscore',
     'kbwidget',
+    'narrativeConfig',
+    'kbase-client-api',
     'base/js/namespace',
     'util/timeFormat',
     'handlebars',
@@ -16,11 +20,16 @@ define([
     'text!kbase/templates/job_status/header.html',
     'text!kbase/templates/job_status/log_panel.html',
     'text!kbase/templates/job_status/log_line.html',
+    'text!kbase/templates/job_status/new_objects.html',
     'css!kbase/css/kbaseJobLog.css',
     'bootstrap'
 ], function (
+    Promise,
     $,
+    _,
     KBWidget,
+    Config,
+    KBaseClientApi,
     Jupyter,
     TimeFormat,
     Handlebars,
@@ -32,7 +41,8 @@ define([
     JobStatusTableTemplate,
     HeaderTemplate,
     LogPanelTemplate,
-    LogLineTemplate
+    LogLineTemplate,
+    NewObjectsTemplate
 ) {
     'use strict';
     return new KBWidget({
@@ -197,7 +207,7 @@ define([
             if (this.state.job_state === 'completed') {
                 // If job's complete, and we have a report, show that.
                 if (this.outputWidgetInfo && this.outputWidgetInfo.params &&
-                    this.outputWidgetInfo.params.report_name && !this.showingReport) {
+                    this.outputWidgetInfo.params.report_ref && !this.showingReport) {
                     this.showReport();
                 }
 
@@ -211,15 +221,128 @@ define([
 
         showNewObjects: function() {
             if (!this.showingNewObjects) {
-                this.tabController.addTab({tab: 'New Data Objects', showContentCallback: function() {
-                    var params = this.outputWidgetInfo.params;
-                    params.showReportText = false;
-                    params.showCreatedObjects = true;
-                    var $newObjDiv = $('<div>');
-                    new KBaseReportView($newObjDiv, params);
-                    return $newObjDiv;
-                }.bind(this)});
+                // If we have a report ref, show that widget.
+                if (this.outputWidgetInfo && this.outputWidgetInfo.params &&
+                    this.outputWidgetInfo.params.report_ref) {
+                    this.tabController.addTab({tab: 'New Data Objects', showContentCallback: function() {
+                        var params = this.outputWidgetInfo.params;
+                        params.showReportText = false;
+                        params.showCreatedObjects = true;
+                        var $newObjDiv = $('<div>');
+                        new KBaseReportView($newObjDiv, params);
+                        return $newObjDiv;
+                    }.bind(this)});
+                }
+                // If not, try to guess what we've got?
+                else {
+                    var results = this.state.result;
+                    var refs = this.guessReferences(results);
+                    if (refs && refs.length > 0) {
+                        var objRefs = [];
+                        refs.forEach(function(ref) {
+                            objRefs.push({ref: ref});
+                        });
+                        var newObjTmpl = Handlebars.compile(NewObjectsTemplate);
+                        this.tabController.addTab({tab: 'New Data Objects', showContentCallback: function() {
+                            var wsClient = new Workspace(Config.url('workspace'), {token: this.runtime.authToken()});
+                            var $div = $('<div>');
+                            Promise.resolve(wsClient.get_object_info_new({objects: objRefs}))
+                            .then(function(objInfo) {
+                                var renderedInfo = [];
+                                objInfo.forEach(function(obj) {
+                                    renderedInfo.push({
+                                        'name': obj[1],
+                                        'type': obj[2].split('-')[0].split('.')[1],
+                                        'fullType': obj[2]
+                                        // 'description': objsCreated[k].description ? objsCreated[k].description : '',
+                                        // 'ws_info': objI[k]
+                                    });
+                                });
+                                var $objTable = $(newObjTmpl(renderedInfo));
+                                for (var i=0; i<objInfo.length; i++) {
+                                    var info = objInfo[0];
+                                    $objTable.find('#' + objInfo[i][1]).click(function() {
+                                        this.openViewerCell(this.createInfoObject(info));
+                                    }.bind(this));
+                                }
+                                $div.append($objTable);
+                            }.bind(this));
+                            return $div;
+                        }.bind(this)});
+                    }
+                }
                 this.showingNewObjects = true;
+            }
+        },
+
+        openViewerCell: function (info) {
+            var cell = Jupyter.notebook.get_selected_cell();
+            var near_idx = 0;
+            if (cell) {
+                near_idx = Jupyter.notebook.find_cell_index(cell);
+                $(cell.element).off('dblclick');
+                $(cell.element).off('keydown');
+            }
+            this.trigger('createViewerCell.Narrative', {
+                'nearCellIdx': near_idx,
+                'widget': 'kbaseNarrativeDataCell',
+                'info': info
+            });
+        },
+
+        createInfoObject: function (info) {
+            return _.object(['id', 'name', 'type', 'save_date', 'version',
+                'saved_by', 'ws_id', 'ws_name', 'chsum', 'size',
+                'meta'], info);
+        },
+
+        /**
+         * Given any object, if there are references in it, those get returned as an Array.
+         * Does not search keys for Objects, just values.
+         * Handles whether it's a string, array, or object.
+         * Scans recursively, too. Fun!
+         */
+        guessReferences: function(obj) {
+            /* 3 cases.
+             * 1. obj == string
+             * - test for xxx/yyy/zzz format. if so == ref
+             * 2. obj == object
+             * - scan all values with guessReferences
+             * 3. obj == Array
+             * - scan all elements with guessReferences
+             */
+            var type = Object.prototype.toString.call(obj);
+            switch(type) {
+                case '[object String]':
+                    if (obj.match(/^[^\/]+\/[^\/]+(\/[^\/]+)?$/)) {
+                        return [obj];
+                    }
+                    else {
+                        return null;
+                    }
+
+                case '[object Array]':
+                    var ret = [];
+                    obj.forEach(function (elem) {
+                        var refs = this.guessReferences(elem);
+                        if (refs) {
+                            ret = ret.concat(refs);
+                        }
+                    }.bind(this));
+                    return ret;
+
+                case '[object Object]':
+                    var ret = [];
+                    Object.keys(obj).forEach(function(key) {
+                        var refs = this.guessReferences(obj[key]);
+                        if (refs) {
+                            ret = ret.concat(refs);
+                        }
+                    }.bind(this));
+                    return ret;
+
+                default:
+                    return null;
             }
         },
 

@@ -12818,7 +12818,7 @@ function ShockClient(params) {
     self.check_file = function(file, ret, errorCallback) {
     	var promise = jQuery.Deferred();
 	    var fsize = file.size;
-	    var ftime = String(self.getFileLastModificationTime(file));
+	    var ftime = self.getFileLastModificationTime(file);
 	    var filters = {'file_size': fsize, 'file_time': ftime, 'file_name': file.name, 'limit': 1};
 	    self.get_nodes(filters, function (data) {
 	    	ret(data.length == 0 ? null : data[0]);

@@ -177,6 +177,16 @@ define (
             this.fakeButton.innerHTML = inSelectFileMode ? "Select File" : "Cancel";
         },
         
+        getFileLastModificationTime: function (file) {
+            if (file.lastModifiedDate) {
+                return file.lastModifiedDate.getTime();
+            } else if (file.lastModified) {
+                return file.lastModified;
+            } else {
+                return 0;
+            }
+        },
+        
         fileSelected: function (nameText, prcText, realButton) {
             if (realButton.files.length != 1)
                 return;
@@ -193,7 +203,7 @@ define (
             self.onChange();
             console.log("kbaseNarrativeParameterFileInput.fileSelected: after self.onChange()");
             var curTime = new Date().getTime();
-            var ujsKey = "File:"+file.size+":"+file.lastModifiedDate.getTime()+":"+file.name+":"+self.getUser();
+            var ujsKey = "File:"+file.size+":"+String(this.getFileLastModificationTime(file))+":"+file.name+":"+self.getUser();
             var ujsClient = new UserAndJobState(self.options.ujsUrl, {'token': self.token});
             var shockClient = new ShockClient({url: self.options.shockUrl, token: self.token});
             ujsClient.get_has_state(self.options.serviceNameInUJS, ujsKey, 0, function(data) {

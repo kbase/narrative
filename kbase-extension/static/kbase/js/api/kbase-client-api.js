@@ -13053,11 +13053,21 @@ function ShockClient(params) {
 	    });
 		return promise;
     };
+    
+    self.getFileLastModificationTime = function (file) {
+        if (file.lastModifiedDate) {
+            return file.lastModifiedDate.getTime();
+        } else if (file.lastModified) {
+            return file.lastModified;
+        } else {
+            return 0;
+        }
+    };
 
     self.check_file = function(file, ret, errorCallback) {
     	var promise = jQuery.Deferred();
 	    var fsize = file.size;
-	    var ftime = file.lastModifiedDate.getTime();
+	    var ftime = self.getFileLastModificationTime(file);
 	    var filters = {'file_size': fsize, 'file_time': ftime, 'file_name': file.name, 'limit': 1};
 	    self.get_nodes(filters, function (data) {
 	    	ret(data.length == 0 ? null : data[0]);
@@ -13085,7 +13095,7 @@ function ShockClient(params) {
 		    		"incomplete": (lastChunk ? "0" : "1"),
 		    		"file_size": "" + file.size,
 		    		"file_name": file.name,
-		    		"file_time": "" + file.lastModifiedDate.getTime(),
+		    		"file_time": String(self.getFileLastModificationTime(file)),
 		    		"chunks": "" + (currentChunk+1),
 		    		"chunk_size": "" + chunkSize};
 		    var aFileParts = [ JSON.stringify(incomplete_attr) ];
@@ -13177,7 +13187,7 @@ function ShockClient(params) {
     			var chunkSize = self.chunkSize;
     			var chunks = Math.ceil(file.size / chunkSize);
     			var incomplete_attr = { "incomplete": "1", "file_size": "" + file.size, "file_name": file.name,
-    					"file_time": "" + file.lastModifiedDate.getTime(), "chunk_size": "" + chunkSize};
+    					"file_time": String(self.getFileLastModificationTime(file)), "chunk_size": "" + chunkSize};
     			var aFileParts = [ JSON.stringify(incomplete_attr) ];
     			var oMyBlob = new Blob(aFileParts, { "type" : "text\/json" });
     			var fd = new FormData();
@@ -13214,7 +13224,7 @@ function ShockClient(params) {
 				if (data &&
 						data["attributes"]["file_size"] === ("" + file.size) &&
 						data["attributes"]["file_name"] === file.name &&
-    					data["attributes"]["file_time"] === ("" + file.lastModifiedDate.getTime())) {
+    					data["attributes"]["file_time"] === (String(self.getFileLastModificationTime(file)))) {
 					processNode(data);
 				} else {
 					searchForIncomplete();

@@ -44,6 +44,7 @@ define (
         shockURL: Config.url('shock'),
         exportURL: Config.url('data_import_export'),
         nmsURL: Config.url('narrative_method_store'),
+        nmsTypesURL: Config.url('narrative_method_store_types'),
         eeURL: Config.url('job_service'),
         timer: null,
         downloadSpecCache: null,    // {'lastUpdateTime': <millisec.>, 'types': {<type>: <spec>}}
@@ -60,7 +61,10 @@ define (
             if (lastUpdateTime) {
                 this.render();
             } else {
-                var nms = new NarrativeMethodStore(this.nmsURL, { token: this.token });
+                if (!this.nmsTypesURL) {
+                    this.nmsTypesURL = this.nmsURL;
+                }
+                var nms = new NarrativeMethodStore(this.nmsTypesURL, { token: this.token });
                 nms.list_categories({'load_methods': 0, 'load_apps' : 0, 'load_types' : 1},
                         $.proxy(function(data) {
                             var aTypes = data[3];

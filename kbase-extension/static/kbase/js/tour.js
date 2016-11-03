@@ -80,7 +80,7 @@ define([
                 element: $('.kb-side-tab[kb-data-id="0"]').find('button > .fa-arrow-right').first(), //$('.kb-side-tab[kb-data-id="0"] > button > .fa-arrow-right'),
                 title: 'Data Slideout',
                 placement: 'left',
-                content: 'This button opens the data slideout, which allows you to add data to your Narrative from a variety of sources.',
+                content: 'This arrow opens the data slideout, which allows you to add data to your Narrative from a variety of sources.',
                 onShow: function(tour) {
                     that.openDataSlideout(true);
                 }
@@ -129,7 +129,7 @@ define([
                 element: '.kb-side-overlay-container .kb-side-header:nth-child(5)', // import tab
                 title: 'Import Data',
                 placement: 'bottom',
-                content: 'Finally, the <i>Import</i> tab allows you to upload your own data for analysis. This and other data you add are private unless you choose to share your Narrative. Click the drop-down menu to see a list of currently uploadable data typestab allows you to upload your own data for analysis. This and other data you add are private unless you choose to share your Narrative. Click the drop-down menu to see a list of currently uploadable data types.',
+                content: 'Finally, the <i>Import</i> tab allows you to upload your own data for analysis. Any data you add are kept private unless you choose to share your Narrative. This and other data you add are private unless you choose to share your Narrative. Click the drop-down menu to see a list of currently uploadable data types.',
                 onShow: function(tour) {
                     that.openDataSlideout(true);
                     $('.kb-side-overlay-container .kb-side-header:nth-child(5)').click();
@@ -139,7 +139,7 @@ define([
                 element: '.kb-narr-side-panel-set > .kb-side-separator:nth-child(2)', // The 'Apps' area
                 title: 'Apps in KBase',
                 placement: 'right',
-                content: 'In KBase, you can run complex analyses on the data in your Narrative by using Apps. All of the Apps available in KBase are listed just below the Data Panel. Click an App name to add it to your Narrative, or click the “...” that appears to the right of the name to see more information about the App.',
+                content: 'In KBase, you can run complex analyses on the data in your Narrative by using Apps. All of the Apps available in KBase are listed just below the Data Panel. Click an App name to add it to your Narrative, or click the “...” that appears to the right of the name when hovering your mouse to see more information about the App.',
                 onShow: function(tour) {
                     $('.kb-side-header[kb-data-id="0"]').click();
                     that.openDataSlideout(false);
@@ -149,7 +149,7 @@ define([
                 element: '.kb-side-separator:nth-child(2) .kb-function-body .kb-data-list-obj-row:first', //'.kb-narr-side-panel-set > .kb-side-separator:nth-child(2)', // [...] or more... btn on first app
                 title: 'App Information',
                 placement: 'right',
-                content: 'To see a brief description of an App, click the short description under its name. The more... link at the end of this description will open another tab with detailed information about the App.',
+                content: 'After clicking the "..." to see a short description of an App, click the "more..." link at the end of the description to open another tab with detailed information about the App.',
                 onShow: function(tour) {
                     $('.kb-side-header[kb-data-id="0"]').click();
                     $('.kb-side-separator:nth-child(2) .kb-function-body .kb-data-list-obj-row:first').click();
@@ -169,12 +169,12 @@ define([
                 element: '#kb-add-md-cell',
                 title: 'Markdown Cells',
                 placement: 'left',
-                content: 'You can include formatted text in your Narratives in markdown cells, which can be inserted by clicking the paragraph icon at the bottom of the Narrative. These cells can contain raw text, HTML, or LaTeX.'
+                content: 'You can include formatted text in your Narratives in markdown cells, which can be inserted by clicking the paragraph icon at the bottom of the Narrative. Markdown cells can also contain raw text, HTML, or LaTeX.'
             },
             {
                 title: "End of Basic Features Tour",
                 orphan: true,
-                content: "<p>You have now been introduced to the basic features of the Narrative Interface. We hope you conduct interesting and creative research using these tools and are able to expand your collaborator network with other KBase users. If you have any questions or feature requests, please follow the Contact Us link in the hamburger menu at the top left. <p>To learn about advanced features of the Narrative Interface, click the right arrow button to proceed. Click the exit button to return to your Narrative.",
+                content: "<p>You have now been introduced to the basic features of the Narrative Interface. We hope you conduct interesting and creative research using these tools and are able to expand your collaborator network with other KBase users. If you have any questions or feature requests, please follow the Contact Us link in the hamburger menu at the top left. <p>To learn about advanced features of the Narrative Interface, click the right arrow button to proceed. To exit the tour, click the X at the top right of this box.",
                 backdrop: true
             },
             {
@@ -240,7 +240,7 @@ define([
             this.narrative.hideOverlay();
             // $(document).trigger('hideSidePanelOverlay.Narrative');
         }
-    }
+    };
 
     NarrativeTour.prototype.start = function () {
         console.log("let's start the tour");
@@ -267,4 +267,3 @@ define([
     return {'Tour': NarrativeTour};
 
 });
-

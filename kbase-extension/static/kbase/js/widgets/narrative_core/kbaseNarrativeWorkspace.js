@@ -1,5 +1,6 @@
-/*global define*/
+/*global define, document*/
 /*jslint white:true,browser:true,devel:true*/
+/*eslint-env browser*/
 
 /**
  * Top-level 'widget' for the workspace interaction with the KBase narrative.
@@ -43,8 +44,7 @@ define([
     'kbaseTabs',
     'common/props',
     'kb_service/client/narrativeMethodStore',
-
-    'bootstrap',
+    'bootstrap'
 ], function(
     Jupyter,
     Runtime,
@@ -146,7 +146,7 @@ define([
             );
 
             $(document).on('dataUpdated.Narrative',
-                function(event) {
+                function() {
                     if (Jupyter && Jupyter.notebook) {
                         // XXX: This is a hell of a hack. I hate
                         // using the 'first time' bit like this,
@@ -475,6 +475,33 @@ define([
         },
 
         determineMethodCellType: function(spec) {
+            console.log('DETERMINING CELL TYPE', spec);
+            
+            switch (spec.info.id) {
+                case 'ReadGroupEditor/ReadGroupEditor':
+                    return 'editor';
+            }
+
+            // Should be working after this PR will be deployed:
+            // https://github.com/kbase/narrative_method_store/pull/36
+            switch (spec.info.app_type) {
+                case 'app':
+                    return 'app';
+                    break;
+                case 'viewer':
+                    return 'view';
+                    break;
+                case 'editor':
+                    return 'editor';
+                    break;
+                //case 'widget':
+                //    return 'widget';
+                //    break;
+            }
+            // spec.info.app_type should be "app" by default, but we still
+            // use logic from below until we switch all viewers to app_type.
+
+
             // An app will execute via the method described in the behavior. If
             // such a method is not described, it is by definition not an
             // executing app.
@@ -492,28 +519,20 @@ define([
                 return 'view';
             }
 
-            // A very small class of methods are just non-app-calling widgets.
+            // This should disappear soon. Handling for new cell types prior
+            // to the spec.info.app_type property
             switch (spec.info.id) {
                 //case 'model_support/edit_model':
-                case 'fba_tools/edit_metabolic_model':
-                case 'fba_tools/create_or_edit_media':
+                //case 'fba_tools/edit_metabolic_model':
+                //case 'fba_tools/create_or_edit_media':                
                 //case 'model_support/edit_media':
-                    return 'widget';
+                case 'ReadGroupEditor/ReadGroupEditor':
+                    return 'editor';
             }
 
             // ... while in reality, ANY app which does not execute is for now
             // considered a viewer.
-
             return 'view';
-
-            //            if (!spec.parameters.some(function (parameter) {
-            //                return (parameter.ui_class === 'output');
-            //            })) {
-            //                return 'app';
-            //            };
-            //
-            //            console.error('ERROR - could not determine cell type', spec);
-            //            throw new Error('Could not determine cell type');
         },
 
 

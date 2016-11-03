@@ -23,7 +23,7 @@ define (
 		Config,
 		kbaseAuthenticatedWidget,
 		jquery_dataTables,
-		bootstrap,
+		jquery_dataTables_bootstrap,
 		knhx,
 		widgetMaxWidthCorrection
 	) {
@@ -74,7 +74,7 @@ define (
             this.$mainPanel.empty();
             this.loadFeatureSet();
         },
-        
+
 
         features: null, // genomeId : [{fid: x, data: x}]
 
@@ -113,7 +113,7 @@ define (
                 });
         },
 
-        
+
         genomeLookupTable: null, // genomeId: { featureId: indexInFeatureList }
         genomeObjectInfo: null, //{},
         featureTableData: null, // list for datatables
@@ -134,7 +134,7 @@ define (
                         self.genomeObjectInfo[subdata_query[k].ref] = data[k].info;
                         self.genomeLookupTable[subdata_query[k].ref] = {}
                         for (var f=0; f<data[k].data.features.length; f++) {
-                            self.genomeLookupTable[subdata_query[k].ref][data[k].data.features[f].id] = f; 
+                            self.genomeLookupTable[subdata_query[k].ref][data[k].data.features[f].id] = f;
                         }
                     }
 
@@ -156,8 +156,8 @@ define (
                                 for(var f=0; f<g.features.length; f++) {
                                     var aliases = "None";
                                     if(g.features[f].aliases) {
-                                        if(g.features[f].aliases.length>0) { 
-                                            aliases= g.features[f].aliases.join(', '); 
+                                        if(g.features[f].aliases.length>0) {
+                                            aliases= g.features[f].aliases.join(', ');
                                         }
                                     }
 
@@ -239,7 +239,7 @@ define (
                 errString = error;
             else if (error.error && error.error.message)
                 errString = error.error.message;
-            
+
             var $errorDiv = $("<div>")
                             .addClass("alert alert-danger")
                             .append("<b>Error:</b>")
@@ -263,7 +263,7 @@ define (
                     obj['objid'] = objectID;
                 else
                     obj['name'] = objectID;
-                
+
                 if (objectVer)
                     obj['ver'] = objectVer;
             }

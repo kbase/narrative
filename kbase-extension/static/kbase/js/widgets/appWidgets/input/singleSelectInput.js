@@ -31,6 +31,7 @@ define([
         // Nothing to do...
 
         options.enabled = true;
+        options.required = spec.required();
 
         model.availableValues = spec.spec.dropdown_options.options;
 

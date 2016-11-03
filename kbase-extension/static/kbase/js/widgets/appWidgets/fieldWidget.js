@@ -57,7 +57,8 @@ define([
                 parameterSpec: config.parameterSpec,
                 workspaceInfo: config.workspaceInfo,
                 workspaceId: config.workspaceId,
-                fieldSpec: config.fieldSpec
+                fieldSpec: config.fieldSpec,
+                referenceType: config.referenceType
             });
         } catch (ex) {
             inputControl = ErrorControlFactory.make({

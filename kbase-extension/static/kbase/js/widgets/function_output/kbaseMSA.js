@@ -9,11 +9,13 @@ define (
 		'kbwidget',
 		'bootstrap',
 		'jquery',
+        'narrativeConfig',
 		'kbaseAuthenticatedWidget'
 	], function(
 		KBWidget,
 		bootstrap,
 		$,
+        Config,
 		kbaseAuthenticatedWidget
 	) {
     return KBWidget({
@@ -24,14 +26,14 @@ define (
             msaID: null,
             workspaceID: null,
             kbCache: null,
-            workspaceURL: window.kbconfig.urls.workspace,
-            loadingImage: window.kbconfig.loading_gif,
+            workspaceURL: Config.url('workspace'),
+            loadingImage: Config.get('loading_gif'),
             height: null,
         },
 
         pref: null,
         timer: null,
-        loadingImage: window.kbconfig.loading_gif,
+        loadingImage: Config.get('loading_gif'),
         token: null,
         aminoAcidColors: {
         	//// Pos.charged ////////
@@ -90,7 +92,7 @@ define (
             this.loading(false);
             this.loadMSA();
         },
-        
+
         loadMSA: function() {
             var prom;
             var objId = this.buildObjectIdentity(this.options.workspaceID, this.options.msaID, null, null);
@@ -100,7 +102,7 @@ define (
                 prom = this.wsClient.get_objects([objId]);
 
             var self = this;
-            
+
             $.when(prom).done($.proxy(function(objArr) {
                 self.$elem.empty();
                 self.$elem.append(''+
@@ -114,7 +116,7 @@ define (
                 self.$elem.append(canvasDiv);
                 watchForWidgetMaxWidthCorrection(canvasDivId);
                 var canvas = document.getElementById(canvasId);
-                
+
                 var aln = objArr[0].data.alignment;
                 var size = 0;
                 var len = null;
@@ -126,7 +128,7 @@ define (
                 		max_lbl_w = lbl_w;
                 	len = aln[key].length;
                 }
-                
+
                 canvas.width = max_lbl_w + (2 + len) * 8;
             	canvas.height = size * 12 + 2;
                 var line = 0;
@@ -180,14 +182,14 @@ define (
         		ret = "#ffffff";
         	return ret;
         },
-        
+
         renderError: function(error) {
             errString = "Sorry, an unknown error occurred";
             if (typeof error === "string")
                 errString = error;
             else if (error.error && error.error.message)
                 errString = error.error.message;
-            
+
             var $errorDiv = $("<div>")
                             .addClass("alert alert-danger")
                             .append("<b>Error:</b>")
@@ -220,7 +222,7 @@ define (
             		obj['objid'] = objectID;
             	else
             		obj['name'] = objectID;
-            	
+
             	if (objectVer)
             		obj['ver'] = objectVer;
             }
@@ -247,7 +249,7 @@ define (
         },
 
         uuid: function() {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, 
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,
                 function(c) {
                     var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
                     return v.toString(16);

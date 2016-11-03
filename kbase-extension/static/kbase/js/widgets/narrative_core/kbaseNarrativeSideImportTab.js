@@ -1,5 +1,6 @@
-/*global define*/
-/*jslint white: true*/
+/*global define,console*/
+/*jslint white: true;*/
+/*eslint-env browser*/
 /**
  * "Import" tab on data side panel.
  * @author Roman Sutormin <rsutormin@lbl.gov>
@@ -96,12 +97,10 @@ define (
             var confirmButton = $('<button type="button" data-dismiss="modal">')
                                 .addClass("btn")
                                 .append("Confirm")
-                                .click(
-                                    $.proxy(function(event) {
-                                       self.stopTimer();
-                                       self.back();
-                                    }, this)
-                                );
+                                .click(function() {
+                                    self.stopTimer();
+                                    self.back();
+								}.bind(this));
 
             self.$warningModal.append(
                 $('<div>').addClass('modal-dialog').append(
@@ -197,7 +196,7 @@ define (
                         }
                     }
                     var keys = [];
-                    for (var key in self.types) {
+                    for (key in self.types) {
                         keys.push(key);
                     }
                     keys.sort(function(a,b) {return self.types[a]["name"].localeCompare(self.types[b]["name"])});
@@ -206,7 +205,7 @@ define (
                     }
                     $dropdown.select2({
                         minimumResultsForSearch: -1,
-                        formatSelection: function(object, container) {
+                        formatSelection: function(object) {
                             var display = '<span class="kb-parameter-data-selection">'+object.text+'</span>';
                             return display;
                         }
@@ -223,7 +222,7 @@ define (
             );
             return this;
         },
-        
+
         getVersionTag: function() {
             var tag = Jupyter.narrative.sidePanel.$methodsWidget.currentTag;
             if (!tag) {
@@ -231,7 +230,7 @@ define (
             }
             return tag;
         },
-        
+
         getMethodSpecs: function(callback, errorCallback) {
             var self = this;
             var tag = self.getVersionTag();
@@ -247,13 +246,13 @@ define (
                     if (self.allMethodIds[tag][methodId]) {
                         methodIds.push(methodId);
                     } else {
-                        console.log("Importer method id=" + methodId + " is skipped for " + 
+                        console.log("Importer method id=" + methodId + " is skipped for " +
                                 "tag \"" + tag + "\"");
                     }
                 }
-                var prom1 = self.methClient.get_method_full_info({'ids': methodIds, 
+                var prom1 = self.methClient.get_method_full_info({'ids': methodIds,
                     'tag' : tag});
-                var prom2 = self.methClient.get_method_spec({'ids': methodIds, 
+                var prom2 = self.methClient.get_method_spec({'ids': methodIds,
                     'tag' : tag});
                 $.when(prom1, prom2).done(function(fullInfoList, specs) {
                     self.methodFullInfo[tag] = {};
@@ -261,7 +260,7 @@ define (
                         self.methodFullInfo[tag][fullInfoList[i].id] = fullInfoList[i];
                     }
                     self.methods[tag] = {};
-                    for (var i in specs) {
+                    for (i in specs) {
                         self.methods[tag][specs[i].info.id] = specs[i];
                     }
                     callback(self.methodFullInfo[tag], self.methods[tag], tag);
@@ -272,7 +271,7 @@ define (
                 errorCallback(error);
             });
         },
-        
+
         showWidget: function(type, methodFullInfo, methods, tag) {
             var self = this;
             this.selectedType = type;
@@ -290,13 +289,13 @@ define (
             }
             var numberOfTabs = importMethodIds.length;
             if (numberOfTabs > 1) {
-                var $header = $('<div>');
-                var $body = $('<div>');
+                $header = $('<div>');
+                $body = $('<div>');
                 this.widgetPanelCard2.append($header).append($body);
             }
 
-            for (var methodPos in importMethodIds) {
-                self.showTab(importMethodIds, methodPos, $header, $body, 
+            for (methodPos in importMethodIds) {
+                self.showTab(importMethodIds, methodPos, $header, $body,
                         numberOfTabs, methodFullInfo, methods);
             }
             var $importButton = $('<button>')
@@ -359,7 +358,7 @@ define (
             self.widgetPanelCard2.append($buttons);
         },
 
-        showTab: function(importMethodIds, methodPos, $header, $body, 
+        showTab: function(importMethodIds, methodPos, $header, $body,
                 numberOfTabs, methodFullInfo, methods) {
             var self = this;
             var methodId = importMethodIds[methodPos];
@@ -374,7 +373,7 @@ define (
             var $inputDiv = $('<div>');
 
             var methodUuid = 'import-method-details-'+StringUtil.uuid();
-            var buttonLabel = 'details';
+            // var buttonLabel = 'details';
             var methodTitle = methodSpec.info.tooltip.trim();
             var methodDescr = methodFullInfo[methodId].description.trim();
             var $overviewSwitch = $("<a/>").html('more...');
@@ -546,7 +545,7 @@ define (
                             var data = ret.content.data;
                             if (!data)
                                 return;
-                            var session = ret.header.session;
+                            // var session = ret.header.session;
                             var jobId = data['text/plain'];
                             var methodName = methodSpec.info.name;
                             self.createImportStatusCell(methodName, jobId);
@@ -611,7 +610,7 @@ define (
             return this;
         },
 
-        loggedOutCallback: function(event, auth) {
+        loggedOutCallback: function(event) {
             this.token = null;
             this.render();
             return this;

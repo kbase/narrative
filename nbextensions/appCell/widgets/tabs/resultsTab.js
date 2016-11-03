@@ -26,6 +26,7 @@ define([
             nms;
         function start(arg) {
             return Promise.try(function () {
+
                 container = arg.node;
                 model = arg.model;
                 ui = UI.make({node: container}),
@@ -50,7 +51,6 @@ define([
                     ' at ',
                     finishDate.toLocaleTimeString()
                 ].join('')));
-
 
                 // If there's a "report_ref" key in the results, load and show the report.
                 if (result.params.report_name) {
@@ -84,7 +84,7 @@ define([
         }
 
         function renderReportView(params) {
-            ui.setContent('report',
+            /*ui.setContent('report',
                 ui.buildCollapsiblePanel({
                     title: 'Report',
                     name: 'report-toggle',
@@ -95,7 +95,8 @@ define([
                         div({dataElement: 'report-widget'})
                     ]
                 })
-            );
+            );*/
+            ui.setContent('report', div({dataElement: 'report-widget'}));
             new KBaseReportView($(ui.getElement('report-widget')), params);
         }
 

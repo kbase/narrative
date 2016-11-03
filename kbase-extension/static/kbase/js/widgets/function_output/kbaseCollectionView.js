@@ -6,12 +6,14 @@ define (
 		'kbwidget',
 		'bootstrap',
 		'jquery',
+        'narrativeConfig',
 		'kbaseAuthenticatedWidget',
 		'kbStandaloneTable'
 	], function(
 		KBWidget,
 		bootstrap,
 		$,
+        Config,
 		kbaseAuthenticatedWidget,
 		kbStandaloneTable
 	) {
@@ -24,14 +26,14 @@ define (
 	        id: null,
 	        ws: null
         },
-	    ws_url: window.kbconfig.urls.workspace,
-	    loading_image: window.kbconfig.loading_gif,
-        
+        ws_url: Config.url('workspace'),
+	    loading_image: Config.get('loading_gif'),
+
 	    init: function(options) {
             this._super(options);
             return this;
         },
-	
+
         render: function() {
 	        var self = this;
 
@@ -51,13 +53,13 @@ define (
 		            container.empty();
 		            container.append('<div><p>'+msg+'>/p></div>');
 		        } else {
-			        // parse data		            
+			        // parse data
 			        var d = data[0]['data'];
 			        var idList = [];
 			        for (var i=0; i<d.members.length; i++) {
 				        idList.push({ ref: d.members[i].URL });
 			        }
-                
+
                     if (idList.length > 0) {
 			            kbws.get_objects(idList, function(resData) {
                             var tdata = [];
@@ -74,12 +76,12 @@ define (
                                     resData[i].data.created
                                 ]);
                             }
-                        
+
 				            var tlen = 0;
                             if (window.hasOwnProperty('rendererTable') && rendererTable.length) {
                                 tlen = rendererTable.length;
                             }
-				        
+
 				            var html = '<h4>Metagenome Collection '+d.name+'</h4><div id="collectionTable'+tlen+'" style="width: 95%;"></div>';
 		            	    container.empty();
 		            	    container.append(html);

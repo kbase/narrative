@@ -1,3 +1,4 @@
+/*global console,document*/
 /**
  * A class to parse color values
  * @author Stoyan Stefanov <sstoo@gmail.com>
@@ -269,7 +270,7 @@ function RGBColor(color_string)
         var processor = color_defs[i].process;
         var bits = re.exec(color_string);
         if (bits) {
-            channels = processor(bits);
+            var channels = processor(bits);
             this.r = channels[0];
             this.g = channels[1];
             this.b = channels[2];
@@ -286,7 +287,7 @@ function RGBColor(color_string)
     // some getters
     this.toRGB = function () {
         return 'rgb(' + this.r + ', ' + this.g + ', ' + this.b + ')';
-    }
+    };
     this.toHex = function () {
         var r = this.r.toString(16);
         var g = this.g.toString(16);
@@ -295,7 +296,7 @@ function RGBColor(color_string)
         if (g.length == 1) g = '0' + g;
         if (b.length == 1) b = '0' + b;
         return '#' + r + g + b;
-    }
+    };
 
     // help
     this.getHelpXML = function () {
@@ -334,10 +335,11 @@ function RGBColor(color_string)
                 list_item.appendChild(list_item_value);
                 xml.appendChild(list_item);
 
-            } catch(e){}
+            } catch (e) {
+                console.error("RGBCOLOR: error while creating help.");
+            }
         }
         return xml;
-
-    }
+    };
 
 }

@@ -1,4 +1,4 @@
-/*global define*/
+/*global define,window,console,require*/
 /*jslint white:true,browser:true*/
 /**
  * Loads the required narrative configuration files.
@@ -133,7 +133,7 @@ define([
                 return config;
             });
         })
-        .catch(function (error) {
+        .catch(function () {
             console.error('Config: unable to process remote data configuration options. Searching locally.');
             // hate embedding this stuff, but it seems the only good way.
             // the filename is the last step of that url path (after the last /)
@@ -189,5 +189,5 @@ define([
         url: url,
         get: get,
         debug: debug
-    }
+    };
 });

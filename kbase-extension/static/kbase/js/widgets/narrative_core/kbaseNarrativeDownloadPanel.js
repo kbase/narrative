@@ -120,7 +120,6 @@ define (
                     	var url = self.exportURL + '/download?' + 
                     	    'ws='+encodeURIComponent(self.wsId)+
                     	    '&id='+encodeURIComponent(self.objId)+
-                    	    '&token='+encodeURIComponent(self.token)+
                     		'&url='+encodeURIComponent(self.wsUrl) + '&wszip=1'+
                     		'&name=' + encodeURIComponent(self.objId + '.JSON.zip');
                     	self.downloadFile(url);
@@ -256,8 +255,7 @@ define (
 			console.log("Shock node ID: " + shockNode);
         	var shockClient = new ShockClient({url: self.shockURL, token: self.token});
         	var downloadShockNodeWithName = function(name) {
-    			var url = self.exportURL + '/download?id='+shockNode+'&token='+
-    				encodeURIComponent(self.token)+'&del=1';
+    			var url = self.exportURL + '/download?id='+shockNode+'&del=1';
     			if (unzip) {
     				url += '&unzip='+encodeURIComponent(unzip);
     			} else {

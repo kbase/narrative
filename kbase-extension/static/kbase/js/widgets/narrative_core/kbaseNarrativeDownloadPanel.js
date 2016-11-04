@@ -43,8 +43,10 @@ define (
         ujsURL: Config.url('user_and_job_state'),
         shockURL: Config.url('shock'),
         exportURL: Config.url('data_import_export'),
+        useDynamicDownloadSupport: false,
         nmsURL: Config.url('narrative_method_store'),
         eeURL: Config.url('job_service'),
+        srvWizURL: Config.url('service_wizard'),
         timer: null,
         downloadSpecCache: null,    // {'lastUpdateTime': <millisec.>, 'types': {<type>: <spec>}}
 
@@ -117,13 +119,12 @@ define (
     		$btnTd.append($('<button>').addClass('kb-data-list-btn')
                     .append('JSON')
                     .click(function() {
-                    	var url = self.exportURL + '/download?' + 
+                    	var urlSuffix = '/download?' + 
                     	    'ws='+encodeURIComponent(self.wsId)+
                     	    '&id='+encodeURIComponent(self.objId)+
-                    	    '&token='+encodeURIComponent(self.token)+
                     		'&url='+encodeURIComponent(self.wsUrl) + '&wszip=1'+
                     		'&name=' + encodeURIComponent(self.objId + '.JSON.zip');
-                    	self.downloadFile(url);
+                    	self.downloadFile(urlSuffix);
                     }));
     		$btnTd.append($('<button>').addClass('kb-data-list-cancel-btn')
     		        .append('Cancel')
@@ -256,21 +257,39 @@ define (
 			console.log("Shock node ID: " + shockNode);
         	var shockClient = new ShockClient({url: self.shockURL, token: self.token});
         	var downloadShockNodeWithName = function(name) {
-    			var url = self.exportURL + '/download?id='+shockNode+'&token='+
-    				encodeURIComponent(self.token)+'&del=1';
+    			var urlSuffix = '/download?id='+shockNode+'&del=1';
     			if (unzip) {
-    				url += '&unzip='+encodeURIComponent(unzip);
+    			    urlSuffix += '&unzip='+encodeURIComponent(unzip);
     			} else {
-    				url += '&name='+encodeURIComponent(name);
+    			    urlSuffix += '&name='+encodeURIComponent(name);
     			}
     			if (remoteShockUrl)
-    				url += '&url='+encodeURIComponent(remoteShockUrl);
-    			self.downloadFile(url);
+    			    urlSuffix += '&url='+encodeURIComponent(remoteShockUrl);
+    			self.downloadFile(urlSuffix);
         	};
         	downloadShockNodeWithName(wsObjectName + ".zip");
         },
         
-        downloadFile: function(url) {
+        downloadFile: function(urlSuffix) {
+            var self = this;
+            if (self.useDynamicDownloadSupport) {
+                var genericClient = new GenericClient(self.srvWizURL, {token: self.token}, null,
+                        false);
+                genericClient.sync_call("ServiceWizard.get_service_status",
+                        [{module_name: 'NarrativeDownloadSupport', version: 'dev'}], function(data) {
+                    var urlPrefix = data[0]['url'];
+                    self.downloadFileInner(urlPrefix + urlSuffix);
+                },
+                function(error){
+                    console.error(error);
+                    self.showError(error);
+                });
+            } else {
+                self.downloadFileInner(self.exportURL + urlSuffix);
+            }            
+        },
+
+        downloadFileInner: function(url) {
         	console.log("Downloading url=" + url);
         	var hiddenIFrameID = 'hiddenDownloader';
             var iframe = document.getElementById(hiddenIFrameID);

@@ -390,12 +390,6 @@ class AppManager(object):
 
         # Get the spec & params
         spec = self.spec_manager.get_spec(app_id, tag)
-        app_type = spec['info'].get('app_type', 'app')
-
-        if app_type == 'app':
-            raise ValueError('This app appears to be a long-running job! ' +
-                             'Please start it using the run_app function ' +
-                             'instead.')
 
         if 'behavior' not in spec:
             raise ValueError("This app appears invalid - " +
@@ -504,10 +498,6 @@ class AppManager(object):
 
         # Get the spec & params
         spec = self.spec_manager.get_spec(app_id, tag)
-        app_type = spec['info'].get('app_type', 'app')
-
-        if app_type == 'app':
-            raise ValueError('This app appears to be a long-running job! Please start it using the run_app function instead.')
 
         if 'behavior' not in spec:
             raise ValueError("This app appears invalid - it has no defined behavior")

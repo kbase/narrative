@@ -474,58 +474,28 @@ define([
             });
         },
 
+
+        /*
+        For now we need to keep the "spec grokking" in place.
+        A little bit like duck typing, we inspect the properties of the app 
+        spec to determine if it is an app, editor, or viewer.
+        */
         determineMethodCellType: function(spec) {
-
-            // Should be working after this PR will be deployed:
-            // https://github.com/kbase/narrative_method_store/pull/36
-            switch (spec.info.app_type) {
-                case 'app':
-                    return 'app';
-                    break;
-                case 'viewer':
-                    return 'view';
-                    break;
-                case 'editor':
-                    return 'editor';
-                    break;
-                //case 'widget':
-                //    return 'widget';
-                //    break;
-            }
-            // spec.info.app_type should be "app" by default, but we still
-            // use logic from below until we switch all viewers to app_type.
-
-
+            
             // An app will execute via the method described in the behavior. If
             // such a method is not described, it is by definition not an
             // executing app.
-            if ((spec.behavior.kb_service_method && spec.behavior.kb_service_name) ||
-                (spec.behavior.script_module && spec.behavior.script_name)) {
-                return 'app';
+            if (spec.behavior.kb_service_name && spec.behavior.kb_service_method) {
+                switch (spec.info.app_type) {
+                    case 'app':
+                        return 'app';
+                    case 'editor':
+                        return 'editor';
+                    default:
+                        throw new Error('This app does not specify spec.info.app_type');
+                }
             }
 
-            // The category property is supposedly used to indicate that the app
-            // is a viewer, but this is not used very reliably.
-            // Still, we look at that here...
-            if (spec.info.categories.some(function(category) {
-                    return (category === 'viewers');
-                })) {
-                return 'view';
-            }
-
-            // This should disappear soon. Handling for new cell types prior
-            // to the spec.info.app_type property
-            switch (spec.info.id) {
-                //case 'model_support/edit_model':
-                //case 'fba_tools/edit_metabolic_model':
-                //case 'fba_tools/create_or_edit_media':
-                //case 'model_support/edit_media':
-                case 'ReadGroupEditor/ReadGroupEditor':
-                    return 'editor';
-            }
-
-            // ... while in reality, ANY app which does not execute is for now
-            // considered a viewer.
             return 'view';
         },
 

@@ -478,8 +478,9 @@ define([
             console.log('DETERMINING CELL TYPE', spec);
             
             switch (spec.info.id) {
-                case 'ReadGroupEditor/ReadGroupEditor':
-                    return 'editor';
+                case 'eapearson_GroupedParametersTest/validate_contact':
+                case 'eapearson_GroupedParametersTest/validate_bug':
+                    return 'app2';
             }
 
             // Should be working after this PR will be deployed:

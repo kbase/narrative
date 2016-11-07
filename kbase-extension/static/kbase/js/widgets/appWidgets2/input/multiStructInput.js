@@ -300,8 +300,8 @@ define([
             inputBus.on('sync', function (message) {
                 var value = {};
                 console.log('sync', spec);
-                Object.keys(spec.parameters).forEach(function (id) {
-                    var parameter = spec.parameters[id];
+                Object.keys(spec.parameters.layout).forEach(function (id) {
+                    var parameter = spec.parameters.specs[id];
                     value[id] = parameter.data.defaultValue;
                 });
                 if (value) {

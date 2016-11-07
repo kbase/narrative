@@ -475,6 +475,7 @@ define([
             }
             
             if (isEmptyString(value)) {
+                parsedValue = '';
                 if (constraints.required) {
                     diagnosis = 'required-missing';
                     errorMessage = 'value is required';

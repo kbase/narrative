@@ -128,7 +128,7 @@ define([
                 // If the cell has been set with the metadata key kbase.type === 'app'
                 // we have a app cell.
                 $([Jupyter.events]).on('inserted.Cell', function (event, data) {
-                    if (!data.kbase || data.kbase.type !== 'app') {
+                    if (!data.kbase || data.kbase.type !== 'app2') {
                         return;
                     }
 

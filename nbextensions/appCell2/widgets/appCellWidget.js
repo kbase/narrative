@@ -1,13 +1,12 @@
 /*global define*/
-/*jslint white:true,browser:true*/
+/*jslint white:true,browser:true,single:true,multivar:true*/
 
 define([
+    'require',
     'jquery',
     'bluebird',
     'uuid',
     'base/js/namespace',
-    'base/js/dialog',
-    'common/parameterSpec',
     'common/runtime',
     'common/events',
     'common/error',
@@ -15,7 +14,6 @@ define([
     'kb_common/html',
     'common/props',
     'kb_service/client/narrativeMethodStore',
-    'kb_service/client/workspace',
     'common/pythonInterop',
     'common/utils',
     'common/unodep',
@@ -24,8 +22,8 @@ define([
     'common/cellUtils',
     'common/busEventManager',
     'common/format',
+    'common/spec',
     'google-code-prettify/prettify',
-    'narrativeConfig',
     './appCellWidget-fsm',
     './tabs/runStatsTab',
     './tabs/jobStateTab',
@@ -35,12 +33,11 @@ define([
     'css!google-code-prettify/prettify.css',
     'css!font-awesome.css'
 ], function (
+    require,
     $,
     Promise,
     Uuid,
     Jupyter,
-    dialog,
-    ParameterSpec,
     Runtime,
     Events,
     ToErr,
@@ -48,7 +45,6 @@ define([
     html,
     Props,
     NarrativeMethodStore,
-    Workspace,
     PythonInterop,
     utils,
     utils2,
@@ -57,8 +53,8 @@ define([
     cellUtils,
     BusEventManager,
     format,
+    Spec,
     PR,
-    narrativeConfig,
     AppStates,
     runStatsTabWidget,
     jobStateTabWidget,
@@ -82,14 +78,15 @@ define([
             // TODO: the cell bus should be created and managed through main.js,
             // that is, the extension.
             cellBus = runtime.bus().makeChannelBus({
-            cell: utils.getMeta(cell, 'attributes', 'id')
-        }, 'A cell channel'),
+                cell: utils.getMeta(cell, 'attributes', 'id')
+            }, 'A cell channel'),
             bus = runtime.bus().makeChannelBus(null, 'A app cell widget'),
             busEventManager = BusEventManager.make({
                 bus: runtime.bus()
             }),
             env = {},
             model,
+            spec,
             // HMM. Sync with metadata, or just keep everything there?
             settings = {
                 showNotifications: {
@@ -107,7 +104,7 @@ define([
                     element: 'about-app'
                 }
             },
-        widgets = {},
+            widgets = {},
             inputBusses = [],
             inputBusMap = {},
             fsm,
@@ -160,17 +157,18 @@ define([
 
         function loadParamsWidget(arg) {
             return new Promise(function (resolve, reject) {
-                require(['nbextensions/appCell/widgets/appParamsWidget'], function (Widget) {
+                require(['./appParamsWidget'], function (Widget) {
                     // TODO: widget should make own bus.
                     var bus = runtime.bus().makeChannelBus(null, 'Parent comm bus for input widget'),
                         widget = Widget.make({
                             bus: bus,
                             workspaceInfo: workspaceInfo
                         });
+                    console.log('RUNNING', model.getItem('app'));
                     bus.emit('run', {
                         node: arg.node,
                         appSpec: model.getItem('app.spec'),
-                        parameters: env.parameters
+                        parameters: model.getItem('app.parameters')
                     });
 
                     bus.on('sync-params', function (message) {
@@ -234,9 +232,7 @@ define([
 
         function loadViewParamsWidget(arg) {
             return new Promise(function (resolve, reject) {
-                require([
-                    'nbextensions/appCell/widgets/appParamsViewWidget'
-                ], function (Widget) {
+                require(['./appParamsViewWidget'], function (Widget) {
                     // TODO: widget should make own bus
                     var bus = runtime.bus().makeChannelBus(null, 'Parent comm bus for load input view widget'),
                         widget = Widget.make({
@@ -280,7 +276,7 @@ define([
                     });
                     bus.emit('run', {
                         node: arg.node,
-                        parameters: env.parameters
+                        parameters: model.getItem('app.parameters')
                     });
 
                     return widget.start()
@@ -371,7 +367,7 @@ define([
         function loadWidget(name) {
             return new Promise(function (resolve, reject) {
                 console.log('loading widget', name);
-                require('nbextensions/appCell/widgets/tabs/' + name, function (Widget) {
+                require('./tabs/' + name, function (Widget) {
                     resolve(Widget);
                 }, function (err) {
                     reject(err);
@@ -1152,7 +1148,39 @@ define([
                 events: events
             };
         }
+        
+        // TODO: move to ... validation? specs?
+        function isEmpty(value) {
+            
+            if (value === undefined || value === null) {
+                return true;
+            }
 
+            switch (typeof value) {
+                case 'string':
+                    if (value.length === 0) {
+                        return true;
+                    }
+                    break;
+                case 'number':
+                    return false;
+                case 'object': 
+                    if (value instanceof Array) {
+                        if (value.length === 0) {
+                            return true;
+                        }
+                    }
+                    if (Object.keys(value).length === 0) {
+                        return true;
+                    }
+                    break;
+            }
+            return false;
+            
+        }
+
+        // this should be elevated to the collection of parameters. 
+        // Perhaps the top level parameter should be a special field wrapping a struct?
         function validateModel() {
             /*
              * Validation is currently very simple.
@@ -1178,25 +1206,38 @@ define([
              *
              *
              */
-            var params = model.getItem('params'),
-                errors = env.parameters.map(function (parameterSpec) {
-                    if (parameterSpec.required()) {
-                        if (parameterSpec.isEmpty(params[parameterSpec.id()])) {
-                            return {
-                                diagnosis: 'required-missing',
-                                errorMessage: 'The ' + parameterSpec.dataType() + ' "' + parameterSpec.id() + '" is required but was not provided'
-                            };
-                        }
-                    }
-                }).filter(function (error) {
-                if (error) {
-                    return true;
-                }
-                return false;
-            });
+            console.log('validating model...', model.getItem('params'));
+            var validation = spec.validateModel(model.getItem('params'));
+            console.log('VALIDATION', validation);
+            
             return {
-                isValid: (errors.length === 0),
-                errors: errors
+                isValid: true,
+                errors: []
+            };
+            
+            
+//            var params = model.getItem('params'),
+//                parameters = model.getItem('app.parameters'),
+//                errors = parameters.layout.map(function (id) {
+//                    var spec = parameters.specs[id];
+//                    if (spec.data.constraints.required) {
+//                        if (isEmpty(params[spec.id])) {
+//                            return {
+//                                diagnosis: 'required-missing',
+//                                errorMessage: 'The ' + spec.data.type + ' "' + spec.id + '" is required but was not provided'
+//                            };
+//                        }
+//                    }
+//                }).filter(function (error) {
+//                if (error) {
+//                    return true;
+//                }
+//                return false;
+//            });
+//            console.log('VALID?', errors);
+            return {
+                isValid: (validation.length === 0),
+                errors: validation
             };
         }
 
@@ -2584,19 +2625,23 @@ define([
             // natural storage as array, but are supposed to be provided as
             // a string with comma separators
             var params = model.getItem('params'),
-                paramSpecs = env.parameters,
-                paramsToExport = {};
+                paramsToExport = {},
+                parameters = model.getItem('app.parameters');
+            
+            console.log('PRAMETERS', parameters, params);
 
             Object.keys(params).forEach(function (key) {
+                console.log('KEY', key);
                 var value = params[key],
-                    paramSpec = env.parameterMap[key];
+                    paramSpec = parameters.specs[key];
 
                 if (!paramSpec) {
-                    console.error('Parameter ' + key + ' is not defined in the parameter map', env.parameterMap, env.parameters);
+                    console.error('Parameter ' + key + ' is not defined in the parameter map', parameters);
                     throw new Error('Parameter ' + key + ' is not defined in the parameter map');
                 }
 
-                if (paramSpec.spec.field_type === 'textsubdata') {
+                // TODO: this should be a spec method - export
+                if (paramSpec.data.type === 'textsubdata') {
                     if (value && value instanceof Array) {
                         value = value.join(',');
                     }
@@ -2611,9 +2656,7 @@ define([
 
         function loadOutputWidget() {
             return new Promise(function (resolve, reject) {
-                require([
-                    'nbextensions/appCell/widgets/appOutputWidget'
-                ], function (Widget) {
+                require(['./appOutputWidget'], function (Widget) {
                     var widget = Widget.make({
                         cellId: utils.getMeta(cell, 'attributes', 'id')
                     });
@@ -2751,14 +2794,14 @@ define([
                     }
 
                     // Create a map of parameters for easy access
-                    var parameterMap = {};
-                    env.parameters = model.getItem('app.spec.parameters').map(function (parameterSpec) {
-                        // tee hee
-                        var param = ParameterSpec.make({parameterSpec: parameterSpec});
-                        parameterMap[param.id()] = param;
-                        return param;
-                    });
-                    env.parameterMap = parameterMap;
+//                    var parameterMap = {};
+//                    env.parameters = model.getItem('app.spec.parameters').map(function (parameterSpec) {
+//                        // tee hee
+//                        var param = ParameterSpec.make({parameterSpec: parameterSpec});
+//                        parameterMap[param.id()] = param;
+//                        return param;
+//                    });
+//                    env.parameterMap = parameterMap;
 
 
                     var appRef = [model.getItem('app.id'), model.getItem('app.tag')].filter(toBoolean).join('/'),
@@ -2828,6 +2871,10 @@ define([
                 utils.setMeta(cell, 'appCell', props.getRawObject());
                 // saveNarrative();
             }
+        });
+        
+        spec = Spec.make({
+            appSpec: model.getItem('app.spec')            
         });
 
         return {

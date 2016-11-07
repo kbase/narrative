@@ -124,6 +124,9 @@ define([
                                     newValue: result.parsedValue
                                 });
                             } else if (result.diagnosis === 'required-missing') {
+                                // If a field is "made empty", causing a required-missing state,
+                                // we still want to store and propagate the changes.
+                                console.log("REQUIRED, BUT MISSING", result);
                                 setModelValue(result.parsedValue);
                                 bus.emit('changed', {
                                     newValue: result.parsedValue

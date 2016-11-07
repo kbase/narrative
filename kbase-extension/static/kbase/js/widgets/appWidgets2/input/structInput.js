@@ -29,6 +29,7 @@ define([
         resolver = Resolver.make();
 
     function factory(config) {
+        console.log('STRUCT INPUT', config);
         var options = {},
             spec = config.parameterSpec,
             constraints = spec.data.constraints,
@@ -37,7 +38,6 @@ define([
             bus = config.bus,
             ui,
             model = {
-
             },
             viewModel = {},
             runtime = Runtime.make(),
@@ -134,7 +134,7 @@ define([
 
         function makeInputControl(events, bus) {
             var promiseOfFields = fieldLayout.map(function (fieldName) {
-                var fieldSpec = struct[fieldName];
+                var fieldSpec = struct.specs[fieldName];
 
                 return makeSingleInputControl(fieldSpec, events, bus);
             });
@@ -162,6 +162,7 @@ define([
          * wrapper around the input widget itself.
          */
         function makeSingleInputControl(fieldSpec, events) {
+            console.log('GETTING control for', fieldSpec);
             return resolver.getInputWidgetFactory(fieldSpec)
                 .then(function (widgetFactory) {
 
@@ -191,6 +192,7 @@ define([
                     fieldBus.on('validation', function (message) {
                         if (message.diagnosis === 'optional-empty') {
                             bus.emit('changed', {
+                                parameter: fieldSpec.id,
                                 newValue: viewModel
                             });
                         }

@@ -12,7 +12,8 @@ define([
     'common/appUtils',
     'common/jupyter',
     './widgets/appInfoDialog',
-    './widgets/appCellWidget'
+    './widgets/appCellWidget',
+    'common/spec'
 ], function (
     Promise,
     Uuid,
@@ -24,7 +25,8 @@ define([
     AppUtils,
     jupyter,
     appInfoDialog,
-    AppCellWidget
+    AppCellWidget,
+    Spec
     ) {
     'use strict';
 
@@ -38,7 +40,7 @@ define([
         if (!cell.metadata.kbase) {
             return false;
         }
-        if (cell.metadata.kbase.type !== 'app') {
+        if (cell.metadata.kbase.type !== 'app2') {
             return false;
         }
         return true;
@@ -47,8 +49,17 @@ define([
     function factory(config) {
         var cell = config.cell,
             workspaceInfo = config.workspaceInfo,
-            runtime = Runtime.make();
+            runtime = Runtime.make(),
+            spec; 
 
+
+        /*
+         * Create an "empty" data structure based on a param/model specification
+         * Each model field is populated with the default value as provided by the 
+         * spec or empty value for the data type
+         */
+        // TODO: move to spec module
+        // TODO: recursively initialize params.
         function initializeParams(appSpec) {
             var defaultParams = {};
             appSpec.parameters.forEach(function (parameterSpec) {
@@ -187,9 +198,18 @@ define([
         function upgradeToAppCell(appSpec, appTag) {
             return Promise.try(function () {
                 // Create base app cell
-                var meta = {
+               
+                
+                // console.log('about to convert appspec', appSpec);
+                // TODO: this should capture the entire app spec, so don't need
+                // to carry appSpec around.
+                spec = Spec.make({
+                    appSpec: appSpec
+                });
+                
+                 var meta = {
                     kbase: {
-                        type: 'app',
+                        type: 'app2',
                         attributes: {
                             id: new Uuid(4).format(),
                             status: 'new',
@@ -201,7 +221,8 @@ define([
                                 gitCommitHash: appSpec.info.git_commit_hash,
                                 version: appSpec.info.ver,
                                 tag: appTag,
-                                spec: appSpec
+                                spec: appSpec,
+                                parameters: spec.getSpec().parameters
                             },
                             params: null,
                             output: {
@@ -211,8 +232,10 @@ define([
                     }
                 };
                 cell.metadata = meta;
+                
                 // Add the params
-                initializeParams(appSpec);
+                utils.setCellMeta(cell, 'kbase.appCell.params', spec.makeEmptyModel());
+                // initializeParams(appSpec);
                 // Complete the cell setup.
                 return setupCell();
             })

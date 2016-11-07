@@ -47,29 +47,11 @@ define([
         }
 
         function resetModelValue() {
-            if (spec.spec.default_values && spec.spec.default_values.length > 0) {
-                model.setItem('value', spec.spec.default_values[0]);
+            if (spec.defaultValue) {
+                model.setItem('value', spec.defaultValue);
             } else {
                 model.setItem('value', undefined);
             }
-        }
-
-        /*
-         *
-         * Text fields can occur in multiples.
-         * We have a choice, treat single-text fields as a own widget
-         * or as a special case of multiple-entry -- 
-         * with a min-items of 1 and max-items of 1.
-         * 
-         *
-         */
-
-        function copyProps(from, props) {
-            var newObj = {};
-            props.forEach(function (prop) {
-                newObj[prop] = from[prop];
-            });
-            return newObj;
         }
 
         function validate() {
@@ -82,22 +64,7 @@ define([
                     };
                 }
 
-                var rawValue = getInputValue(),
-                    validationOptions = copyProps(spec.spec.text_options, ['min_float', 'max_float']),
-                    validationResult;
-
-                validationOptions.required = spec.required();
-                validationResult = Validation.validateFloatString(rawValue, validationOptions);
-                
-                return validationResult;
-
-//                return {
-//                    isValid: validationResult.isValid,
-//                    validated: true,
-//                    diagnosis: validationResult.diagnosis,
-//                    errorMessage: validationResult.errorMessage,
-//                    value: validationResult.parsedValue
-//                };
+                return Validation.validateFloatString(getInputValue(), spec.data.constraints);
             });
         }
 
@@ -109,8 +76,8 @@ define([
         function makeInputControl(currentValue, events, bus) {
             // CONTROL
             var initialControlValue,
-                min = spec.spec.text_options.min_float,
-                max = spec.spec.text_options.max_float;
+                min = spec.data.constraints.min,
+                max = spec.data.constraints.max;
             if (currentValue) {
                 initialControlValue = String(currentValue);
             }

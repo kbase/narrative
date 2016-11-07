@@ -143,27 +143,28 @@ define([
         function hideError() {
             places.field.classList.remove('-error');
             places.messagePanel.classList.add('hidden');
-            places.feedbackIndicator.classes = '';
+            places.feedbackIndicator.className = '';
         }
 
         function feedbackNone() {
-            places.feedbackIndicator.classes = '';
+            places.feedbackIndicator.className = '';
             places.feedbackIndicator.classList.add('hidden');
         }
 
         function feedbackOk() {
-            places.feedbackIndicator.classes = '';
+            places.feedbackIndicator.className = '';
             places.feedbackIndicator.setAttribute('title', 'input is ok');
             places.feedbackIndicator.classList.remove('hidden');
         }
 
         function feedbackRequired() {
-            places.feedbackIndicator.classes = 'kb-app-parameter-required-glyph fa fa-arrow-left';
+            console.log('feedback required', places.feedbackIndicator);
+            places.feedbackIndicator.className = 'kb-app-parameter-required-glyph fa fa-arrow-left';
             places.feedbackIndicator.setAttribute('title', 'required field');
         }
 
         function feedbackError(row) {
-            places.feedbackIndicator.classes = 'kb-app-parameter-required-glyph fa fa-ban';
+            places.feedbackIndicator.className = 'kb-app-parameter-required-glyph fa fa-ban';
         }
 
         function rawSpec(spec) {
@@ -395,6 +396,7 @@ define([
             attach(arg.node);
             return Promise.try(function () {
                 bus.on('validation', function (message) {
+                    console.log('validation...', message);
                     switch (message.diagnosis) {
                         case 'valid':
                             feedbackOk();

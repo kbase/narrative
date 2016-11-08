@@ -18,11 +18,12 @@
  */
 define([
     'jquery',
+    'require',
     'base/js/namespace',
     'bluebird',
     'uuid',
     'kb_common/html',
-    './widgets/editorCellWidget',
+    './widgets/editors/readsSetEditor',
     'common/runtime',
     'common/parameterSpec',
     'common/utils',
@@ -37,11 +38,12 @@ define([
     'bootstrap'
 ], function (
     $,
+    require,
     Jupyter,
     Promise,
     Uuid,
     html,
-    EditorCellWidget,
+    ReadsSetEditor,
     Runtime,
     ParameterSpec,
     utils,
@@ -134,17 +136,17 @@ define([
             cell.metadata = meta;
         })
             //.then(function () {
-                // Add the params
-                //return setupParams(cell, appSpec);
+            // Add the params
+            //return setupParams(cell, appSpec);
             //})
             .then(function () {
                 // Complete the cell setup.
                 return setupCell(cell);
             });
-            //.then(function (cellStuff) {
-            //    // Initialize the cell to its default state.
-            //    cellStuff.bus.emit('reset-to-defaults');
-            //});
+        //.then(function (cellStuff) {
+        //    // Initialize the cell to its default state.
+        //    cellStuff.bus.emit('reset-to-defaults');
+        //});
     }
 
     function specializeCell(cell) {
@@ -192,6 +194,34 @@ define([
         };
     }
 
+
+    function getEditorModule(type) {
+        return new Promise(function (resolve, reject) {
+            var moduleName;
+            
+            // Dispatch on the editor type.
+            // Type is passed in the widgets.input spec property
+            // Editors are located in ./widgets/editors            
+            switch (type) {
+                case 'reads_set_editor':
+                    moduleName = 'readsSetEditor';
+                    break;
+                default:
+                    reject(new Error('Unknown editor type: ' + type));
+                    return;
+            }
+            var modulePath = './widgets/editors/' + moduleName;
+
+            // Wrap the module require in a promise.
+            require([modulePath], function (Editor) {
+                resolve(Editor);
+            }, function (err) {
+                console.error('ERROR loading module', moduleName, err);
+                reject(new Error('Error loading module ' + moduleName));
+            });
+        });
+    }
+
     function setupCell(cell) {
         return Promise.try(function () {
             if (cell.cell_type !== 'code') {
@@ -215,55 +245,63 @@ define([
             utils.setMeta(cell, 'attributes', 'lastLoaded', (new Date()).toUTCString());
 
             // TODO: the code cell input widget should instantiate its state
-            // from the cell!!!!
-            var cellBus = runtime.bus().makeChannelBus(null, 'Parent comm for The Cell Bus'),
-                appId = utils.getCellMeta(cell, 'kbase.editorCell.app.id'),
-                appTag = utils.getCellMeta(cell, 'kbase.editorCell.app.tag'),
-                editorCellWidget = EditorCellWidget.make({
-                    bus: cellBus,
-                    cell: cell,
-                    runtime: runtime,
-                    workspaceInfo: workspaceInfo
-                }),
-                dom = Dom.make({node: cell.input[0]}),
-                kbaseNode = dom.createNode(div({
-                    dataSubareaType: 'editor-cell-input'
-                }));
+            // from the cell!!!!            
+            var editorType = utils.getCellMeta(cell, 'kbase.editorCell.app.appSpec.widgets.input');
 
-            // Create (above) and place the main container for the input cell.
-            cell.input.after($(kbaseNode));
-            cell.kbase.node = kbaseNode;
-            cell.kbase.$node = $(kbaseNode);
+            return getEditorModule(editorType)
+                .then(function (editorModule) {
 
-            jupyter.disableKeyListenersForCell(cell);
+                    var cellBus = runtime.bus().makeChannelBus(null, 'Parent comm for The Cell Bus'),
+                        appId = utils.getCellMeta(cell, 'kbase.editorCell.app.id'),
+                        appTag = utils.getCellMeta(cell, 'kbase.editorCell.app.tag');
 
-            return editorCellWidget.init()
-                .then(function () {
-                    return editorCellWidget.attach(kbaseNode);
-                })
-                .then(function () {
-                    return editorCellWidget.start();
-                })
-                .then(function () {
-                    return editorCellWidget.run({
-                        appId: appId,
-                        appTag: appTag,
-                        authToken: runtime.authToken()
-                    });
-                })
-                .then(function () {
-                    // AppCellController.start();
-                    cell.renderMinMax();
-                    return {
-                        widget: editorCellWidget,
-                        bus: cellBus
-                    };
-                })
-                .catch(function (err) {
-                    console.error('ERROR starting app cell', err);
-                    alert('Error starting app cell');
+                    //  determine the editor type based on the 
+                    var editor = editorModule.make({
+                        bus: cellBus,
+                        cell: cell,
+                        runtime: runtime,
+                        workspaceInfo: workspaceInfo
+                    }),
+                        dom = Dom.make({node: cell.input[0]}),
+                        kbaseNode = dom.createNode(div({
+                            dataSubareaType: 'editor-cell-input'
+                        }));
+
+                    // Create (above) and place the main container for the input cell.
+                    cell.input.after($(kbaseNode));
+                    cell.kbase.node = kbaseNode;
+                    cell.kbase.$node = $(kbaseNode);
+
+                    jupyter.disableKeyListenersForCell(cell);
+
+                    return editor.init()
+                        .then(function () {
+                            return editor.attach(kbaseNode);
+                        })
+                        .then(function () {
+                            return editor.start();
+                        })
+                        .then(function () {
+                            return editor.run({
+                                appId: appId,
+                                appTag: appTag,
+                                authToken: runtime.authToken()
+                            });
+                        })
+                        .then(function () {
+                            // AppCellController.start();
+                            cell.renderMinMax();
+                            return {
+                                widget: editor,
+                                bus: cellBus
+                            };
+                        })
+                        .catch(function (err) {
+                            console.error('ERROR starting app cell', err);
+                            alert('Error starting app cell');
+                        });
                 });
-        });
+            });
     }
 
     function setupNotebook() {
@@ -313,7 +351,7 @@ define([
         // dataUpdated.Narrative is emitted by the data sidebar list
         // after it has fetched and updated its data. Not the best of
         // triggers that the ws has changed, not the worst.
-        
+
         // TODO: complete the work for narrative startup and migrate this (and all such instances)
         //       into the core startup function.
         $(document).on('dataUpdated.Narrative', function () {

@@ -128,10 +128,10 @@ define([
                     deferred.resolve(result);
                 },
                 error: function (xhr, textStatus, errorThrown) {
-                    var errObj = JSON.parse(xhr.responseText);
-                    console.error('ERR?', errObj , xhr);
-                    console.error('ERR!', errObj.error.error.replace('\n', '<br>'));
-                    console.error('URL', _url, _use_url_lookup);
+                    // var errObj = JSON.parse(xhr.responseText);
+                    // console.error('ERR?', errObj , xhr);
+                    // console.error('ERR!', errObj.error.error.replace('\n', '<br>'));
+                    // console.error('URL', _url, _use_url_lookup);
                     var error;
                     if (xhr.responseText) {
                         try {

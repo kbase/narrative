@@ -15,10 +15,10 @@ define([
         iconColorMapping = icons.color_mapping;
 
     function overwriteDataIcon(params) {
-        return buildDataIcon(params.elt, params.type, params.stacked, params.indent);
+        return buildDataIcon(params.elt, params.type, params.stacked, params.indent, false);
     }
 
-    function buildDataIcon($logo, type, stacked, indent) {
+    function buildDataIcon($logo, type, stacked, indent, fromPalette) {
         if (indent === undefined || indent === null) {
             indent = 0;
         }
@@ -34,7 +34,11 @@ define([
         // For 'stacked' (set) icons, add a shifted-over
         // circle first, as the bottom layer, then also add a border
         // to the top one.
-        var circle_classes = 'fa fa-circle fa-stack-2x';
+        var baseIcon = 'circle';
+        if (fromPalette) {
+            baseIcon = 'square';
+        }
+        var circle_classes = 'fa fa-' + baseIcon + ' fa-stack-2x';
         var circle_color = logoColorLookup(type);
         var cmax = function(x) { return x > 255 ? 255 : x; };
         if (stacked) {

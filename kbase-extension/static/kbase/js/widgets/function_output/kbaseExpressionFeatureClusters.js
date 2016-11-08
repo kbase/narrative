@@ -295,9 +295,8 @@ define (
 				var $actionButton = $(e.target);
 				if ($actionButton.prop("tagName") !== "BUTTON")
 				    $actionButton = $actionButton.parent();
-				var x = $actionButton.position().left + $('#notebook-container').scrollLeft();
-				var y = $actionButton.position().top + $('#notebook-container').scrollTop() + $actionButton[0].offsetHeight;
-
+				var x = $actionButton.position().left;
+				var y = $actionButton.position().top + $actionButton[0].offsetHeight;
 				self.$menu
                     .data("invokedOn", $actionButton)
                     .css({
@@ -372,7 +371,7 @@ define (
 
 		buildActionMenu: function($container){
 			var $menu = $(' \
-				<ul id="contextMenu" class="dropdown-menu" role="menu" style="display:none; list-style:none" > \
+				<ul id="contextMenu" class="dropdown-menu" role="menu" style="display:none; list-style:none; margin:0" > \
 				    <li><a tabindex="-1" href="#" methodInput="view_expression_profile">View expression profile</a></li> \
 				    <li><a tabindex="-1" href="#" methodInput="view_expression_pairwise_correlation">View pairwise correlation</a></li> \
 				    <li><a tabindex="-1" href="#" methodInput="view_expression_heatmap">View in sortable condition heatmap</a></li> \

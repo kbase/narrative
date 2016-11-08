@@ -15,7 +15,8 @@ define([
     'kbwidget',
     'kbaseNarrativeControlPanel',
     'api/NewWorkspace',
-    'kbase-generic-client-api'
+    'kbase-generic-client-api',
+    'util/timeFormat'
 ], function (
     $,
     Jupyter,
@@ -26,7 +27,8 @@ define([
     KBWidget,
     ControlPanel,
     NewWorkspace,
-    GenericClient
+    GenericClient,
+    TimeFormat
 ) {
     'use strict';
     return new KBWidget({
@@ -75,9 +77,7 @@ define([
 
             $(document).on(
                 'copyThis.Narrative', function (e, panel, active, jump) {
-                    console.debug("CopyThisNarrative triggered, params=",
-                        {panel: panel, active: active, jump: jump});
-                    this.copyThisNarrative(panel, active, jump)
+                    this.copyThisNarrative(panel, active, jump);
                 }.bind(this)
             );
 
@@ -138,9 +138,7 @@ define([
              *    a. One to fetch all object info for those Narratives (assuming it's under 10000, that'll get fixed if it gets larger)
              *    b. One for each batch of 1000 workspaces to get permissions for
              */
-            var wsInfoProm = Promise.resolve(this.ws.list_workspace_info({excludeGlobal: 1}));
-
-            var narDataProm = wsInfoProm
+            Promise.resolve(this.ws.list_workspace_info({excludeGlobal: 1}))
             .then(function (wsList) {
                 this.narData = {
                     mine: [],
@@ -284,20 +282,22 @@ define([
         },
 
         renderHeader: function () {
-            var self = this;
-            if (self.$mainPanel) {
-                self.$mainPanel.empty();
+            if (this.$mainPanel) {
+                this.$mainPanel.empty();
 
                 var $msgPanel = $("<div>").css({'margin': '10px', 'text-align': 'center'});
-                self.$copyThisNarrBtn = self.makeCopyThisNarrativeBtn($msgPanel);
-                self.$mainPanel.append(
-                    $('<div>').css({'margin': '10px', 'text-align': 'center'})
-                    .append(self.makeNewNarrativeBtn())
-                    .append(self.$copyThisNarrBtn)
-                    .append($msgPanel));
-
-                self.$narPanel = $('<div>');
-                self.$mainPanel.append(self.$narPanel);
+                var $newNarrPanel = $("<div>").css({'margin': '10px', 'text-align': 'center'});
+                this.$copyThisNarrBtn = this.makeCopyThisNarrativeBtn($msgPanel);
+                this.$mainPanel.append(
+                    $('<div>')
+                    .css({'margin': '10px', 'text-align': 'center'})
+                    .append(this.makeNewNarrativeBtn($newNarrPanel))
+                    .append(this.$copyThisNarrBtn)
+                    .append($msgPanel)
+                    .append($newNarrPanel)
+                );
+                this.$narPanel = $('<div>');
+                this.$mainPanel.append(this.$narPanel);
             }
         },
 
@@ -367,22 +367,33 @@ define([
                     }));
                 self.$narPanel.append($advancedDiv);
 
-
-                var $selectWsContainer = $('<select id="setPrimaryNarSelectWs">').addClass('form-control');
-                var $selectNarContainer = $('<select id="setPrimaryNarSelectNar">').addClass('form-control').hide();
-                var $setBtn = $('<button>').addClass('btn btn-default').append('Set this Narrative').hide();
+                var $selectWsContainer = $('<select id="setPrimaryNarSelectWs">')
+                                         .addClass('form-control');
+                var $selectNarContainer = $('<select id="setPrimaryNarSelectNar">')
+                                          .addClass('form-control')
+                                          .hide();
+                var $setBtn = $('<button>')
+                              .addClass('btn btn-default')
+                              .append('Set this Narrative')
+                              .hide();
                 var $setPrimary = $('<div>').append(
-                    $('<div>').addClass('form-group').css({'text-align': 'center'})
-                    .append($('<label for="setPrimaryNarSelectWs">').append("Set Active Narrative for Workspace"))
-                    .append($selectWsContainer)
-                    .append($selectNarContainer)
-                    .append($setBtn));
+                        $('<div>')
+                        .addClass('form-group')
+                        .css({'text-align': 'center'})
+                        .append($('<label for="setPrimaryNarSelectWs">')
+                                .append("Set Active Narrative for Workspace"))
+                        .append($selectWsContainer)
+                        .append($selectNarContainer)
+                        .append($setBtn)
+                    );
 
                 self.narData.allWs.sort(function (a, b) {
-                    if (a.ws_info[1].toLowerCase() > b.ws_info[1].toLowerCase())
-                        return 1; // sort by name
-                    if (a.ws_info[1].toLowerCase() < b.ws_info[1].toLowerCase())
-                        return -1;  // sort by name
+                    var aName = a.ws_info[1].toLowerCase();
+                    var bName = b.ws_info[1].toLowerCase();
+                    if (aName > bName)
+                        return 1;
+                    if (bName < aName)
+                        return -1;
                     return 0;
                 });
 
@@ -390,51 +401,58 @@ define([
                     var info = self.narData.allWs[k].ws_info;
                     $selectWsContainer.append($('<option value="' + info[1] + '">').append(info[1] + ' (id=' + info[0] + ')'));
                 }
+
                 $selectWsContainer.on('change',
                     function () {
                         $selectNarContainer.empty();
-                        self.ws.list_objects({
-                            workspaces: [$selectWsContainer.val()],
-                            type: "KBaseNarrative.Narrative",
-                            includeMetadata: 1
-                        },
-                            function (objList) {
-                                if (objList.length == 0) {
-                                    $selectNarContainer.append($('<option value="none">').append('No Narratives'));
-                                    $setBtn.prop('disabled', true);
-                                    $selectNarContainer.prop('disabled', true);
-                                    return;
-                                }
-                                $setBtn.prop('disabled', false);
-                                $selectNarContainer.prop('disabled', false);
+                        Promise.resolve(self.serviceClient.sync_call(
+                            "NarrativeService.list_objects_with_sets",
+                            [{
+                                types: ['KBaseNarrative.Narrative'],
+                                workspaces: [$selectWsContainer.val()]
+                            }]
+                        ))
+                        .then(function(objList) {
+                            objList = objList[0].data;
+                            if (objList.length === 0) {
+                                $selectNarContainer.append($('<option value="none">').append('No Narratives'));
+                                $setBtn.prop('disabled', true);
+                                $selectNarContainer.prop('disabled', true);
+                                return;
+                            }
+                            $setBtn.prop('disabled', false);
+                            $selectNarContainer.prop('disabled', false);
 
-                                // sort by date
-                                objList.sort(function (a, b) {
-                                    if (a[3] > b[3])
-                                        return -1; // sort by date
-                                    if (a[3] < b[3])
-                                        return 1;  // sort by date
-                                    return 0;
-                                });
-                                self.advancedSetNarLookup = {};
-                                // add the list to the select
-                                for (var i = 0; i < objList.length; i++) {
-                                    var narDispName = objList[i][1];
-                                    if (objList[i][10].name) {
-                                        narDispName = objList[i][10].name;
-                                    }
-                                    self.advancedSetNarLookup[objList[i][0]] = narDispName;
-                                    $selectNarContainer.append($('<option value="' + objList[i][0] + '">')
-                                        .append(narDispName + ' (id=' + objList[i][0] + ')'));
-                                }
-                            },
-                            function (error) {
-                                console.error(error);
+                            // sort by date
+                            objList.sort(function (a, b) {
+                                var aDate = a.object_info[3];
+                                var bDate = b.object_info[3];
+                                if (aDate > bDate)
+                                    return -1; // sort by date
+                                if (aDate < bDate)
+                                    return 1;  // sort by date
+                                return 0;
                             });
-
+                            self.advancedSetNarLookup = {};
+                            // add the list to the select
+                            for (var i = 0; i < objList.length; i++) {
+                                var info = objList[i].object_info;
+                                var narDispName = info[1];
+                                if (info[10] && info[10].name) {
+                                    narDispName = info[10].name;
+                                }
+                                self.advancedSetNarLookup[info[0]] = narDispName;
+                                $selectNarContainer.append($('<option value="' + info[0] + '">')
+                                                   .append(narDispName + ' (id=' + info[0] + ')'));
+                            }
+                        })
+                        .catch(function(error) {
+                            console.error(error);
+                        });
                         $selectNarContainer.show();
                         $setBtn.show();
-                    });
+                    }
+                );
                 $selectWsContainer.change();
                 $setBtn.on('click',
                     function () {
@@ -587,7 +605,7 @@ define([
                                         }
                                         $tbl.append($('<tr>')
                                             .append($('<td>').append($revertBtn))
-                                            .append($('<td>').append(self.getTimeStampStr(history[k][3]) + ' by ' + history[k][5] + summary))
+                                            .append($('<td>').append(TimeFormat.getTimeStampStr(history[k][3], true) + ' by ' + history[k][5] + summary))
                                             .append($('<td>').append($('<span>').css({margin: '4px'}).addClass('fa fa-info pull-right'))
                                                 .tooltip({title: history[k][2] + '<br>' + history[k][10].name + '<br>' + history[k][8] + '<br>' + history[k][9] + ' bytes', container: 'body', html: true, placement: 'bottom'}))
                                             );
@@ -595,7 +613,11 @@ define([
                                     self.setInteractionPanel($interactionPanel, 'Version History', $tbl);
                                 },
                                 function (error) {
-                                    var errorMessage = "Error! " + error.error.message;
+                                    var msg = 'An unknown error occurred';
+                                    if (error.error && error.error.message) {
+                                        msg = error.error.message;
+                                    }
+                                    var errorMessage = "Error! " + msg;
                                     console.log(errorMessage);
                                     console.error(error);
                                     self.setInteractionError($interactionPanel, errorMessage);
@@ -830,7 +852,7 @@ define([
                             })*/
                         .append('<br>'));
                 }
-                $dataCol.append($('<span>').addClass('kb-data-list-type').append(this.getTimeStampStr(data.nar_info[3])));
+                $dataCol.append($('<span>').addClass('kb-data-list-type').append(TimeFormat.getTimeStampStr(data.nar_info[3], true)));
 
 
                 // Render the share toolbar layout.
@@ -915,8 +937,6 @@ define([
                         .append($dataCol)
                         .append($ctrCol)))
                 .append($interactionPanel);
-            //.append($alertContainer)
-            //.append($shareContainer);
 
             var $narDivContainer = $('<div>')
                 .append($narDiv);
@@ -1094,19 +1114,57 @@ define([
             });
         },
 
-        makeNewNarrativeBtn: function () {
-            var self = this;
-            var active = '<span class="fa fa-plus"></span> New Narrative';
-            var $working = $('<span>').append("Building Narrative...");
+        makeNewNarrativeBtn: function ($msgPanel) {
+            var activeStr = '<span class="fa fa-plus"></span> New Narrative',
+                workingStr = 'Building...',
+                doneStr = 'Link below',
+                errorStr = 'Error!';
             var $btn =
-                $('<button>').addClass('kb-primary-btn').append(active)
+                $('<button>').addClass('kb-primary-btn').append(activeStr)
                 .on('click', function () {
-                    // just open the link, don't do the work here...
-                    window.open(self.options.new_narrative_link);
-                });
-
+                    $btn.prop('disabled', true)
+                        .empty()
+                        .append(workingStr);
+                    Promise.resolve(this.serviceClient.sync_call(
+                        "NarrativeService.create_new_narrative",
+                        [{}]
+                    ))
+                    .then(function(results) {
+                        $btn.empty().append(doneStr);
+                        var url = "/narrative/" + results[0].narrativeInfo.obj_id;
+                        var $newNarrLink = $('<a>')
+                            .attr('href', url)
+                            .attr('target', '_blank')
+                            .append('Click here to open your new temporary Narrative.')
+                            .click(function() {
+                                $msgPanel.slideUp();
+                                $btn.empty().append(activeStr).prop('disabled', false);
+                            }.bind(this));
+                        $msgPanel.empty()
+                                 .append($newNarrLink)
+                                 .slideDown();
+                    }.bind(this))
+                    .catch(function(error) {
+                        console.error(error);
+                        var $errorAlert = $('<div>')
+                                         .addClass('alert alert-danger')
+                                         .attr('role', 'alert');
+                        var $dismissBtn = $('<button type="button" class="close" aria-label="Close">')
+                                         .append('<span aria-hidden="true">&times;</span>')
+                                         .click(function() {
+                                             $errorAlert.remove();
+                                             $msgPanel.slideUp();
+                                             $btn.empty().append(activeStr).prop('disabled', false);
+                                         });
+                        $errorAlert.append($dismissBtn)
+                                   .append('Sorry, an error occurred while creating your new Narrative. Please try again.');
+                        $btn.empty().append(errorStr);
+                        $msgPanel.empty().append($errorAlert).slideDown();
+                    });
+                }.bind(this));
             return $btn;
         },
+
         getNarSummary: function (nar_info) {
             var summary = '';
             if (nar_info[10].methods) {
@@ -1236,32 +1294,6 @@ define([
                     }]);
             }
             return $container;
-        },
-
-        // edited from: http://stackoverflow.com/questions/3177836/how-to-format-time-since-xxx-e-g-4-minutes-ago-similar-to-stack-exchange-site
-        getTimeStampStr: function (objInfoTimeStamp) {
-            var date = new Date(objInfoTimeStamp);
-            var seconds = Math.floor((new Date() - date) / 1000);
-
-            // f-ing safari, need to add extra ':' delimiter to parse the timestamp
-            if (isNaN(seconds)) {
-                var tokens = objInfoTimeStamp.split('+');  // this is just the date without the GMT offset
-                var newTimestamp = tokens[0] + '+' + tokens[0].substr(0, 2) + ":" + tokens[1].substr(2, 2);
-                date = new Date(newTimestamp);
-                seconds = Math.floor((new Date() - date) / 1000);
-                if (isNaN(seconds)) {
-                    // just in case that didn't work either, then parse without the timezone offset, but
-                    // then just show the day and forget the fancy stuff...
-                    date = new Date(tokens[0]);
-                    return this.monthLookup[date.getMonth()] + " " + date.getDate() + ", " + date.getFullYear();
-                }
-            }
-
-            // keep it simple, just give a date
-            return this.monthLookup[date.getMonth()] + " " + date.getDate() + ", " + date.getFullYear();
-        },
-        monthLookup: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
-        /* we really need to stop all this copy pasting */
-
+        }
     });
 });

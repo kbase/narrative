@@ -89,7 +89,7 @@ define([], function () {
                 return defaultValue;
         }
     }
-    function updateDefaultValue(converted, spec) {
+    function defaultValue(converted, spec) {
         var defaultValues = spec.default_values || [];
         // No default value and not required? null value
 
@@ -109,21 +109,23 @@ define([], function () {
                 return coerceToIntBoolean(defaultValues[0]);
             case 'custom_textsubdata':
                 if (!defaultValues) {
-
+                    // ??
                 }
                 break;
         }
 
+        // No default in spec, yet required.
         if (!defaultValues && converted.required) {
-            return converted.nullValue;
+            return converted.data.nullValue;
         }
+
         if (defaultValues.length === 0) {
-            return converted.nullValue;
+            return converted.data.nullValue;
         }
         // also weird case of a default value of the empty string, which is really
         // the same as null...
         if (defaultValues[0] === '') {
-            return converted.nullValue;
+            return converted.data.nullValue;
         }
 
         // Singular item?
@@ -133,6 +135,9 @@ define([], function () {
         return defaultValues.map(function (defaultValue) {
             return defaultToNative(converted, defaultValue);
         });
+    }
+    function updateDefaultValue(converted, spec) {
+        converted.data.defaultValue = defaultValue(converted,spec);
     }
 
     function grokDataType(spec) {
@@ -495,6 +500,12 @@ define([], function () {
         var type;
         var defaultValue;
         var nullValue;
+        // Collect params into group and remove from original params collection.
+        var groupParams = {};
+        group.parameter_ids.forEach(function (id) {
+            groupParams[id] = params[id];
+            delete params[id];
+        });
         if (group.allow_multiple === 1) {
             multiple = true;
             type = '[]struct';
@@ -505,13 +516,14 @@ define([], function () {
             type = 'struct';
             defaultValue = {};
             nullValue = {};
+            // Default value is a struct of default values of the
+            // struct members. Note that this is fundamentally different
+            // from a list of structs/ groups.
+            Object.keys(groupParams).forEach(function (id) {
+                defaultValue[id] = groupParams[id].data.defaultValue;
+                nullValue[id] = groupParams[id].data.nullValue;
+            });
         }
-        // Collect params into group and remove from original params collection.
-        var groupParams = {};
-        group.parameter_ids.forEach(function (id) {
-            groupParams[id] = params[id];
-            delete params[id];
-        });
         var structSpec = {
             id: group.id,
             multipleItems: multiple,

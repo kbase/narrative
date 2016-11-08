@@ -234,14 +234,14 @@ define([
                 cell.metadata = meta;
                 
                 // Add the params
-                utils.setCellMeta(cell, 'kbase.appCell.params', spec.makeEmptyModel());
+                utils.setCellMeta(cell, 'kbase.appCell.params', spec.makeDefaultedModel());
                 // initializeParams(appSpec);
                 // Complete the cell setup.
                 return setupCell();
             })
                 .then(function (cellStuff) {
                     // Initialize the cell to its default state.
-                    cellStuff.bus.emit('reset-to-defaults');
+                    // cellStuff.bus.emit('reset-to-defaults');
                 });
         }
 

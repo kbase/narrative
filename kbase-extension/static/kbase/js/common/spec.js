@@ -35,10 +35,22 @@ define([
            var model = {};
            console.log('making empty model from ', spec);
            spec.parameters.layout.forEach(function (id) {
-               model[id] = spec.parameters.specs[id].defaultValue || spec.parameters.specs[id].data.nullValue;
+               model[id] = spec.parameters.specs[id].data.defaultValue || spec.parameters.specs[id].data.nullValue;
            });
            return model;
        }
+
+       function makeDefaultedModel() {
+           var model = {};
+           console.log('making empty model from ', spec);
+           spec.parameters.layout.forEach(function (id) {
+               console.log('DDEEFF??', id, spec.parameters.specs[id]);
+               model[id] = spec.parameters.specs[id].data.defaultValue || spec.parameters.specs[id].data.nullValue;
+           });
+           console.log('DEFAULTED', model);
+           return model;
+       }
+       
        
        function validateModel(model) {
            // TODO: spec at the top level should be a struct...
@@ -55,6 +67,7 @@ define([
        return Object.freeze({
            getSpec: getSpec,
            makeEmptyModel: makeEmptyModel,
+           makeDefaultedModel: makeDefaultedModel,
            validateModel: validateModel
        });
    }

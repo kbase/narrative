@@ -1127,7 +1127,7 @@ define([
                         .append(workingStr);
                     Promise.resolve(this.serviceClient.sync_call(
                         "NarrativeService.create_new_narrative",
-                        [{}]
+                        [{ includeIntroCell: 1 }]
                     ))
                     .then(function(results) {
                         $btn.empty().append(doneStr);

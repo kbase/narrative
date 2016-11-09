@@ -1060,7 +1060,10 @@ define([
                 }
             }
             if (type === 'Genome' || type === 'GenomeAnnotation') {
-                if (metadata.hasOwnProperty('Name')) {
+                if (metadata === null ) {
+                    $type.text(type)
+                }
+                else if (metadata.hasOwnProperty('Name')) {
                     $type.text(type + ': ' + metadata['Name']);
                 }
             }

@@ -1,6 +1,11 @@
 /*global define*/
 /*jslint white:true,browser:true*/
 
+/*
+ * Duplicate reads set editor widget, merely as an example of a second editor
+ * to play with.
+ */
+
 define([
     'bluebird',
     'uuid',
@@ -18,7 +23,7 @@ define([
     'common/ui',
     'common/fsm',
     'google-code-prettify/prettify',
-    './editorCell-fsm',
+    '../editorCell-fsm',
 
     'css!google-code-prettify/prettify.css',
     'css!font-awesome.css'
@@ -547,7 +552,7 @@ define([
                                     ]
                                 }),
                                 ui.buildCollapsiblePanel({
-                                    title: 'Select Object to Edit',
+                                    title: 'Select or Create an Object to Edit',
                                     name: 'edit-object-selector',
                                     hidden: false,
                                     type: 'default',

@@ -52,8 +52,7 @@ define([
             dom, ui,
             bus = runtime.bus().makeChannelBus(null, 'object selector bus'),
             model = Props.make(),
-            availableReadsSets,
-            selectedReadsSetItem;
+            availableReadsSets, availableReadsSetsMap;
 
         function doCreate(e) {
             e.preventDefault();
@@ -120,15 +119,39 @@ define([
             layout.events.attachEvents(container);
         }
 
-        function selectItem(ref) {
+//        function selectItem(ref) {
+//            // this is (currently) a select, so we need to 
+//            // unselect any selected item and
+//            // find the matching option and select it
+//            //console.log('autoselect', ref);
+//            var control = ui.getElement('object-selector').querySelector('select');
+//            var selected = control.querySelectorAll('[selected]');
+//            //console.log('autoselect', control, selected);
+//            if (selected.length > 1) {
+//                for (var i = 0; i < selected.length; i += 1) {
+//                    selected.item(i).removeAttribute('selected');
+//                }
+//            }
+//            var newlySelected = control.querySelector('option[value="' + ref + '"]');
+//            
+//            //console.log('autoselect', newlySelected);
+//            if (newlySelected) {
+//                newlySelected.setAttribute('selected', '');
+//            }
+//            
+//            // And we need to force the change for this
+//            emitChanged();
+//        }
+        
+        function emitChanged() {
             bus.emit('changed', {
-                newObjectRef: ref
+                value: availableReadsSetsMap[model.getItem('objectRef')]
             });
         }
 
         function doItemSelected(event) {
-            var newValue = event.target.value;
-            selectItem(newValue);
+            model.setItem('objectRef', event.target.value);
+            emitChanged();
         }
 
         function renderAvailableObjects() {
@@ -143,14 +166,18 @@ define([
                     workspace: String(workspaceInfo.name),
                     include_set_item_info: 1
                 },
-                controlNode = container.querySelector('[data-element="object-selector"]');
+                controlNode = container.querySelector('[data-element="object-selector"]'),
+                selectedItem = model.getItem('objectRef');
 
             controlNode.innerHTML = html.loading();
 
             return setApiClient.callFunc('list_sets', [params])
                 .then(function (result) {
+                    availableReadsSetsMap = {};
                     availableReadsSets = result[0].sets.map(function (resultItem) {
-                        return serviceUtils.objectInfoToObject(resultItem.info);
+                        var info = serviceUtils.objectInfoToObject(resultItem.info);
+                        availableReadsSetsMap[info.ref] = info;
+                        return info;
                     });
                     var content = (function () {
                         if (availableReadsSets.length === 0) {
@@ -163,7 +190,11 @@ define([
                             id: events.addEvent({type: 'change', handler: doItemSelected})
                         }, [option({value: ''}, '-- select a reads set --')]
                             .concat(availableReadsSets.map(function (objectInfo) {
-                                return option({value: objectInfo.ref}, objectInfo.name);
+                                var selected = false;
+                                if (selectedItem === objectInfo.ref) {
+                                    selected = true;
+                                }
+                                return option({value: objectInfo.ref, selected: selected}, objectInfo.name);
                             })));
                     }());
 
@@ -226,17 +257,8 @@ define([
             return Promise.try(function () {
                 bus.on('run', function (message) {
                     doAttach(message.node);
+                    model.setItem('objectRef', message.selectedSet);
                     renderAvailableObjects()
-                        .then(function (itemCount) {
-                            // TODO: fetch the selected item and send to the app.
-                            if (availableReadsSets.length) {
-                                // TODO: use the currently selected item, which may have
-                                // been restored from state.
-                                if (selectedReadsSetItem) {
-                                    selectItem(availableReadsSets[selectedReadsSetItem].ref);
-                                }
-                            }
-                        })
                         .catch(function (err) {
                             console.log('ERROR', err);
                             bus.emit('fatal-error', {

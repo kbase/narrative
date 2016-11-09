@@ -3,6 +3,25 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v4.2.1 (more notes will follow).
 
+### Version 3.1.0-alpha-4
+__Changes__
+- Adjust visuals in Reads viewer.
+- Adjust tooltip for objects from other Narratives.
+- Changed functionality of object copying in data slideout.
+
+### Version 3.1.0-alpha-3
+__Changes__
+- Updated ReadsSet viewer and Reads viewer.
+- Modified icons for elements from an external Narrative.
+- Improved usability for set editors.
+- Fixed missing upload functions bug.
+- Fixed issues with Narrative copying (from the Narratives panel)
+
+### Version 3.1.0-alpha-2
+__Changes__
+- Fixes problem with data hierarchy when sub-elements are from a different Narrative.
+- Puts a visual label on things from another Narrative.
+
 ### Version 3.1.0-alpha-1
 __Changes__
 - Introduces the concept of data sets with hierarchical manipulation.

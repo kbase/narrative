@@ -1,5 +1,5 @@
 /* global define,Jupyter,KBError */
-/* global Workspace, SetAPI */
+/* global Workspace */
 /* jslint white: true */
 /* eslint no-console: 0 */
 /**
@@ -11,6 +11,7 @@ define([
     'jquery',
     'underscore',
     'bluebird',
+    'base/js/namespace',
     'narrativeConfig',
     'util/string',
     'util/display',
@@ -30,6 +31,7 @@ define([
     $,
     _,
     Promise,
+    Jupyter,
     Config,
     StringUtil,
     DisplayUtil,
@@ -98,7 +100,6 @@ define([
         downloadSpecCache: {tag: 'dev'},
         controlClickHnd: {}, // click handlers for control buttons
         my_user_id: null,
-        setAPI: null,
         serviceClient: null,
 
         objectRowTmpl: Handlebars.compile(ObjectRowHtml),
@@ -131,7 +132,7 @@ define([
          * @return Identifier (string)
          */
         itemId: function(obj) {
-            return obj[0];
+            return obj[6] + '/' + obj[0];
         },
 
         /**
@@ -168,7 +169,6 @@ define([
         inAnySet: function(item_info) {
             if (this.setViewMode) {
                 var item_id = this.itemId(item_info);
-                //console.debug('item_id = ', item_id);
                 return _.has(this.setItems, item_id);
             }
             else {
@@ -179,20 +179,6 @@ define([
         getSetInfo: function(obj_info) {
             return this.setInfo[this.itemId(obj_info)];
         },
-
-        // /**
-        //  * Toggle whether set is 'expanded' or not.
-        //  *
-        //  * @param item_info an object info tuple, as returned by the
-        //  *                  workspace API for list_objects()
-        //  * @return New state of 'expanded'
-        //  */
-        // toggleSetExpanded: function (item_info) {
-        //     var set_id = this.itemId(item_info);
-        //     var new_value = !this.setInfo[set_id].expanded;
-        //     this.setInfo[set_id].expanded = new_value;
-        //     return new_value;
-        // },
 
         /**
          * Get item parents.
@@ -242,21 +228,6 @@ define([
         },
 
         /**
-         * Get a list of workspace items which are set/group types.
-         *
-         * @return Promise-wrapped list of items.
-         */
-        getWorkspaceSets: function(ws_id) {
-            try {
-                var params = {workspace: '' + ws_id, include_set_item_info: true};
-                return this.setAPI.list_sets(params);
-            }
-            catch(e) {
-                return Promise.reject('Cannot get sets for workspace ' + ws_id + ' :' + e);
-            }
-        },
-
-        /**
          * @method init
          * Builds the DOM structure for the widget.
          * Includes the tables and panel.
@@ -301,12 +272,10 @@ define([
 
             if (this._attributes.auth) {
                 this.ws = new Workspace(this.options.ws_url, this._attributes.auth);
-                this.initSetAPI(this._attributes.auth);
             }
 
             // listener for refresh
             $(document).on('updateDataList.Narrative', function () {
-                self.initSetAPI(this._attributes.auth);
                 self.refresh();
             })
 
@@ -315,6 +284,8 @@ define([
             if (this.options.ws_name) {
                 this.ws_name = this.options.ws_name;
             }
+
+            this.wsId = Number(Jupyter.narrative.workspaceId);
 
             return this;
         },
@@ -327,17 +298,6 @@ define([
                     this.$mainListDiv.css({'height': height});
                 }
             }
-        },
-
-        /**
-         * Initialize Set API
-         */
-        initSetAPI: function(auth) {
-            if (!this.setAPI) {
-                var token = {'token': auth.token};
-                this.setAPI = new SetAPI(Config.url('service_wizard'), token, null, null, null, '<1.0.0');
-            }
-            return this.setAPI;
         },
 
         /**
@@ -413,7 +373,7 @@ define([
             .catch(function (error) {
                 console.error('DataList: when checking for updates:', error);
                 if (showError) {
-                    this.showBlockingError('Error: Unable to connect to KBase data.');
+                    this.showBlockingError('Sorry, an error occurred while fetching your data.', {'error': 'Unable to connect to KBase database.'});
                 }
             }.bind(this));
         },
@@ -494,12 +454,11 @@ define([
          * This empties out the main data div and injects an error into it.
          * Used mainly when lookups fail.
          */
-        showBlockingError: function (error) {
+        showBlockingError: function (title, error) {
             this.$mainListDiv.empty();
             this.$mainListDiv.append(
-                $('<div>').css({'color': '#F44336', 'margin': '10px'})
-                .append(error)
-                );
+                DisplayUtil.createError(title, error)
+            );
             this.loadingDiv.div.hide();
             this.$mainListDiv.show();
         },
@@ -507,13 +466,17 @@ define([
         fetchWorkspaceData: function () {
             var addObjectInfo = function(objInfo) {
                 // Get the object info
+                var objId = this.itemId(objInfo); //objInfo[6] + '/' + objInfo[0]; // + '/' + objInfo[2]
+                if (this.dataObjects[objId]) {
+                    return;
+                }
                 var key = StringUtil.uuid();
-                var objId = objInfo[0];
                 this.dataObjects[objId] = {
                     key: key,
                     $div: null,
                     info: objInfo,
-                    attached: false
+                    attached: false,
+                    fromPalette: this.wsId !== objInfo[6]
                 };
                 this.keyToObjId[key] = objId;
                 this.viewOrder.push({
@@ -541,9 +504,9 @@ define([
             }.bind(this);
 
             var updateSetInfo = function(obj) {
-                var setId = obj.object_info[0];
+                var setId = this.itemId(obj.object_info); //obj.object_info[6] + '/' + obj.object_info[0];
                 obj.set_items.set_items_info.forEach(function(setItem) {
-                    var itemId = setItem[0];
+                    var itemId = this.itemId(setItem); //setItem[6] + '/' + setItem[0];
                     if (!this.setInfo[setId]) {
                         this.setInfo[setId] = {
                             div: null,
@@ -556,6 +519,9 @@ define([
                         this.setItems[itemId] = {};
                     }
                     this.setItems[itemId][setId] = 1;
+                    if (!this.dataObjects[itemId]) {
+                        addObjectInfo(setItem);
+                    }
                 }.bind(this));
             }.bind(this);
 
@@ -567,8 +533,6 @@ define([
             )
             .then(function(result) {
                 result = result[0]['data'];
-                console.log('NEW WORKSPACE LIST FUN');
-                console.log(result);
 
                 for (var i=0; i<result.length; i++) {
                     var obj = result[i];
@@ -577,10 +541,8 @@ define([
                     if (objInfo[2].indexOf('KBaseNarrative') === 0) {
                         continue;
                     }
-                    if (!this.dataObjects[objInfo[0]]) {
-                        addObjectInfo(objInfo);
-                    }
-
+                    // Only adds to dataObjects, etc., if it's not already there.
+                    addObjectInfo(objInfo);
                     // if there's set info, update that.
                     if (obj.set_items) {
                         updateSetInfo(obj);
@@ -588,9 +550,10 @@ define([
                 }
             }.bind(this))
             .catch(function (error) {
-                this.showBlockingError(error);
+                this.showBlockingError("Sorry, an error occurred while fetching your data.", error);
                 console.error(error);
-                KBError("kbaseNarrativeDataList.getNextDataChunk", error.error.message);
+                KBError("kbaseNarrativeDataList.fetchWorkspaceData", error.error.message);
+                throw error;
             }.bind(this));
 
         },
@@ -630,7 +593,7 @@ define([
             }
         },
 
-        addDataControls: function (object_info, $alertContainer) {
+        addDataControls: function (object_info, $alertContainer, fromPalette) {
             var self = this;
             var $btnToolbar = $('<span>')
                 .addClass('btn-group');
@@ -667,7 +630,6 @@ define([
                 .click(function () {
                     this.trigger('filterMethods.Narrative', 'out_type:' + object_info[2].split('-')[0].split('.')[1]);
                 }.bind(this));
-
 
             var $openLandingPage = $('<span>')
                 .tooltip({
@@ -816,7 +778,7 @@ define([
                     new kbaseNarrativeDownloadPanel(downloadPanel, {
                         token: self._attributes.auth.token, type: type, wsId: wsId, objId: objId,
                         downloadSpecCache: self.downloadSpecCache});
-                });
+                    });
 
             var $rename = $('<span>')
                 .addClass(btnClasses).css(css)
@@ -923,16 +885,19 @@ define([
 
             if (!Jupyter.narrative.readonly) {
                 $btnToolbar.append($filterMethodInput)
-                    .append($filterMethodOutput);
+                           .append($filterMethodOutput);
             }
             $btnToolbar.append($openLandingPage);
-            if (!Jupyter.narrative.readonly)
+            if (!Jupyter.narrative.readonly && !fromPalette) {
                 $btnToolbar.append($openHistory);
+            }
             $btnToolbar.append($openProvenance);
             if (!Jupyter.narrative.readonly) {
-                $btnToolbar.append($download)
-                    .append($rename)
-                    .append($delete);
+                $btnToolbar.append($download);
+            }
+            if (!Jupyter.narrative.readonly && !fromPalette) {
+                $btnToolbar.append($rename)
+                           .append($delete);
             }
 
             return $btnToolbar;
@@ -999,7 +964,7 @@ define([
 
             // Remember the icons
             var data_icon_param = {elt: $logo, type: type, stacked: is_set, indent: 0};
-            Icon.buildDataIcon($logo, type, is_set, 0);
+            Icon.buildDataIcon($logo, type, is_set, 0, objData.fromPalette);
 
             // Save params for this icon, so we can update later when sets get "discovered"
             this.dataIconParam[this.itemId(object_info)] = data_icon_param;
@@ -1008,6 +973,7 @@ define([
             $logo.click(function (e) {
                 e.stopPropagation();
                 // For sets, click toggles -- everything else, adds a viewer (?!)
+
                 if (self.isAViewedSet(object_info)) {
                     objData.expanded = !objData.expanded;
                     self.toggleSetExpansion(objId, $box);
@@ -1042,6 +1008,24 @@ define([
 
             var $version = $('<span>').addClass("kb-data-list-version").append('v' + object_info[4]);
             var $type = $('<div>').addClass("kb-data-list-type").append(type);
+            var $paletteIcon = '';
+            if (objData.fromPalette) {
+                $paletteIcon = $('<span>')
+                    .addClass('pull-right')
+                    .append($('<i>')
+                            .addClass('fa fa-link')
+                            .css({color: '#888'}))
+                    .tooltip({
+                        title: 'This is a reference to an object in another narrative.\n' +
+                               'Currently, this will not display properly unless you\n' +
+                               'have access to that Narrative.',
+                        placement: 'left',
+                        delay: {
+                            show: Config.get('tooltip').showDelay,
+                            hide: Config.get('tooltip').hideDelay
+                        }
+                    });
+            }
 
             var $date = $('<span>').addClass("kb-data-list-date").append(TimeFormat.getTimeStampStr(object_info[3]));
             var $byUser = $('<span>').addClass("kb-data-list-edit-by");
@@ -1052,7 +1036,7 @@ define([
                         window.open('/#people/' + object_info[5]);
                     });
             }
-            var metadata = object_info[10];
+            var metadata = object_info[10] || {};
             var metadataText = '';
             for (var key in metadata) {
                 if (metadata.hasOwnProperty(key)) {
@@ -1076,7 +1060,7 @@ define([
                 '<a href="/#spec/type/' + object_info[2] + '" target="_blank">' + (type_tokens[1].replace('-', '&#8209;')) + '.' + type_tokens[2] + '</a>';
             var $moreRow = $('<div>').addClass("kb-data-list-more-div").hide()
                 .append($('<div>').css({'text-align': 'center', 'margin': '5pt'})
-                    .append(self.addDataControls(object_info, $alertDiv)).append($alertDiv))
+                    .append(self.addDataControls(object_info, $alertDiv, objData.fromPalette)).append($alertDiv))
                 .append(
                     $('<table style="width:100%;">')
                     .append("<tr><th>Permament Id</th><td>" + object_info[6] + "/" + object_info[0] + "/" + object_info[4] + '</td></tr>')
@@ -1105,7 +1089,7 @@ define([
             };
 
             var $mainDiv = $('<div>').addClass('kb-data-list-info').css({padding: '0px', margin: '0px'})
-                .append($name).append($version).append('<br>')
+                .append($name).append($version).append($paletteIcon).append('<br>')
                 .append($('<table>').css({width: '100%'})
                     .append($('<tr>')
                         .append($('<td>').css({width: '80%'})
@@ -1288,10 +1272,10 @@ define([
                 $(cell.element).off('keydown');
             }
             var obj = this.dataObjects[this.keyToObjId[key]], // _.findWhere(self.objectList, {key: key});
-                info = self.createInfoObject(obj.info);
+                info = this.createInfoObject(obj.info);
             // Insert the narrative data cell into the div we just rendered
             // new kbaseNarrativeDataCell($('#' + cell_id), {cell: cell, info: info});
-            self.trigger('createViewerCell.Narrative', {
+            this.trigger('createViewerCell.Narrative', {
                 'nearCellIdx': near_idx,
                 'widget': 'kbaseNarrativeDataCell',
                 'info': info
@@ -1386,9 +1370,9 @@ define([
                 .append("date")
                 .on('click', function () {
                     self.sortData(function (a, b) {
-                        if (self.dataObjects[a].info[3] > self.dataObjects[b].info[3])
+                        if (self.dataObjects[a.objId].info[3] > self.dataObjects[b.objId].info[3])
                             return -1; // sort by date
-                        if (self.dataObjects[a].info[3] < self.dataObjects[b].info[3])
+                        if (self.dataObjects[a.objId].info[3] < self.dataObjects[b.objId].info[3])
                             return 1;  // sort by date
                         return 0;
                     });
@@ -1399,9 +1383,9 @@ define([
                 .append("name")
                 .on('click', function () {
                     self.sortData(function (a, b) {
-                        if (self.dataObjects[a].info[1].toUpperCase() < self.dataObjects[b].info[1].toUpperCase())
+                        if (self.dataObjects[a.objId].info[1].toUpperCase() < self.dataObjects[b.objId].info[1].toUpperCase())
                             return -1; // sort by name
-                        if (self.dataObjects[a].info[1].toUpperCase() > self.dataObjects[b].info[1].toUpperCase())
+                        if (self.dataObjects[a.objId].info[1].toUpperCase() > self.dataObjects[b.objId].info[1].toUpperCase())
                             return 1;
                         return 0;
                     });
@@ -1448,30 +1432,14 @@ define([
                 })
                 .append('<span class="fa fa-copy"></span>')
                 .on('click', function () {
+                    self.setViewMode = !self.setViewMode;
                     if (self.setViewMode) {
-                        // Turn OFF set view mode
-                        self.setViewMode = false;
-                        self.renderList();
-                        $('#kb-data-list-hierctl').removeAttr('enabled');
-                        // re-enable other controls
-                        // _.each(viewModeDisableCtl, function(ctl) {
-                        //     var ctl_id = '#kb-data-list-' + ctl + 'ctl';
-                        //     $(ctl_id + ' span').removeClass('inviso');
-                        //     $(ctl_id).on('click', self.controlClickHnd[ctl]);
-                        // });
+                        $('#kb-data-list-hierctl').attr('enabled', '1');
                     }
                     else {
-                        // Turn ON set view mode
-                        self.setViewMode = true;
-                        self.renderList();
-                        $('#kb-data-list-hierctl').attr('enabled', '1');
-                        // disable some other controls
-                        // _.each(viewModeDisableCtl, function(ctl) {
-                        //     var ctl_id = '#kb-data-list-' + ctl + 'ctl';
-                        //     $(ctl_id + ' span').addClass('inviso');
-                        //     $(ctl_id).off('click');
-                        // });
+                        $('#kb-data-list-hierctl').removeAttr('enabled');
                     }
+                    self.renderList();
                 });
 
             // Search control

@@ -30,13 +30,13 @@ module.exports.Auth = Object.create({}, {
     getSession: {
         value: function (req) {
             // NB not validating during this feasibility test.
-            // 
+            //
             // Check the userid from the cookie against the requested user
 
             // Validate the token (via signature)
 
             // NB the original lua implementation used the kbase_sessionid, but
-            // in the code the session id variable is set to the username, so I 
+            // in the code the session id variable is set to the username, so I
             // presume this was a change in implementation to key of of the username
             // for containers rather than session -- but the variable names and comments
             // were not updated.
@@ -45,7 +45,7 @@ module.exports.Auth = Object.create({}, {
             }
             var cookies = cookie.parse(req.headers.cookie);
 
-            var narrCookie = cookies.kbase_narr_session;
+            var narrCookie = cookies.kbase_session;
             if (!narrCookie) {
                 throw HttpError.make(401, 'Auth required', 'Sorry, you need to log in');
                 // throw new Error('No narrative auth cookie');
@@ -63,7 +63,7 @@ module.exports.Auth = Object.create({}, {
     },
     renderLogin: {
         value: function (req, res, url) {
-            res.statusCode = 200;            
+            res.statusCode = 200;
             res.setHeader('Content-Type', 'text/html');
             var content = '<form action="/signin" method="POST">'+
                           'Username: <input type="text" name="username"><br>'+
@@ -71,7 +71,7 @@ module.exports.Auth = Object.create({}, {
                           '<input type="text" name="return_uri" value="' + url.query.return_uri + '">'+
                           '<button type="submit">Sign In</button>'+
                           '</form>';
-            
+
             res.write(content);
             res.end();
         }
@@ -86,12 +86,11 @@ module.exports.Auth = Object.create({}, {
                 var formData = QueryString.parse(data);
                 var username = formData.username;
                 var password = formData.password;
-                
-                res.setHeader('Set-Cookie', [cookie.serialize('kbase_session', username), 
-                                             cookie.serialize('kbase_narr_session', username)]);
-                
+
+                res.setHeader('Set-Cookie', [cookie.serialize('kbase_session', username)]);
+
                 console.log(formData);
-                
+
                 var location = formData.return_uri;
                 res.statusCode = 302;
                 res.setHeader('Location', location);

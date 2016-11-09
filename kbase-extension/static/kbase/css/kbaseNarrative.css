@@ -1368,9 +1368,9 @@ div#notebook_panel {
     display: inline-block;
     height: 56px;
     width: 56px;
-    padding: 0; 
+    padding: 0;
     margin: 0 4px 0 4px;
-    vertical-align: top; 
+    vertical-align: top;
     border: 0px red solid;
     line-height: 56px;
     overflow: hidden;
@@ -2244,6 +2244,10 @@ button.kb-data-obj {
     box-shadow: 1px 1px 1px 1px #aaa;
     -webkit-box-shadow: 1px 1px 1px 1px #aaa;
     moz-box-shadow: 1px 1px 1px 1px #aaa;
+}
+
+.palette {
+    background: #F5F5F5 !important;
 }
 
 .kb-data-list-obj-row-selected {
@@ -3220,4 +3224,3 @@ button.kb-data-obj {
 }
 
 /* bootstrap sillines */
-

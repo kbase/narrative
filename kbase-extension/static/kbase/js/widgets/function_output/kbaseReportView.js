@@ -13,6 +13,7 @@ define(
         'util/string',
         'common/ui',
         'kb_common/html',
+        'kbase-generic-client-api',
 
         'jquery-dataTables',
         'jquery-dataTables-bootstrap',
@@ -25,7 +26,8 @@ define(
     Config,
     StringUtil,
     UI,
-    html
+    html,
+    GenericClient
 
     ) {
     return KBWidget({
@@ -104,7 +106,7 @@ define(
               window.location.href = self.properPreauthURL(d.data.url);
             });
           }).fail(function(d) {
-            console.log("FAILED ", d);
+            //console.log("FAILED ", d);
           });
         },
 
@@ -121,10 +123,10 @@ define(
             var self = this;
             self.loading(true);
 
-            var objIdentity = self.buildObjectIdentity(this.options.workspace_name, this.options.report_name, null, this.options.report_ref);
+            self.objIdentity = self.buildObjectIdentity(this.options.workspace_name, this.options.report_name, null, this.options.report_ref);
 
-            //objIdentity = {ref : "11699/2/6"};
-            self.ws.get_objects([objIdentity],
+            //self.objIdentity = {ref : "11699/2/77"};
+            self.ws.get_objects([self.objIdentity],
                 function (data) {
                     self.reportData = data[0].data;
                     self.render();
@@ -323,10 +325,9 @@ define(
                 var $report_window = $('<textarea style="width:100%;font-family:Monaco,monospace;font-size:9pt;color:#555;resize:vertical;" rows="' +
                     self.options.report_window_line_height + '" readonly>')
                     .append(self.reportData.text_message);
-                var reportHTML = $.jqElem('div').append($report_iframe).append($report_window).html();
+                var reportHTML = $.jqElem('div').append($report_iframe).html();
 
                 var someDiv = div({dataElement : 'report-section'});
-
                 self.$mainPanel.append(someDiv);
 
                 var download_link_id = StringUtil.uuid();
@@ -360,59 +361,89 @@ define(
                         body: reportHTML
                     })
                 );
+
+                var sumDiv = div({dataElement : 'summary-section'});
+                self.$mainPanel.append(sumDiv);
+
+                var sumTitle = $.jqElem('div')
+                  .append('Summary')
+                  .html();
+                ;
+
+                ui.setContent('summary-section',
+                    ui.buildCollapsiblePanel({
+                        title: sumTitle,
+                        name: 'summary-section-toggle',
+                        hidden: false,
+                        type: 'default',
+                        classes: ['kb-panel-container'],
+                        body: $.jqElem('div').append($report_window).html()
+                    })
+                );
             }
 
             if (self.options.showHTML) {
-              var someDiv = div({dataElement : 'downloadable-html'});
-              self.$mainPanel.append(someDiv);
 
-              var body = 'No files to download';
+              var genericClient = new GenericClient(Config.url('service_wizard'), this.authToken(), null, false);
 
-              if (self.reportData.html_links && self.reportData.html_links.length) {
-                var $ul = $.jqElem('ul');
-                $.each(
-                  self.reportData.html_links,
-                  function (i, v) {
+              genericClient.sync_call("ServiceWizard.get_service_status", [{module_name : "HTMLFileSetServ", "version": "dev"}]).then(function(data) {
 
-                    var link_id = StringUtil.uuid();
+                var htmlServiceURL = data[0].url;
 
-                    //self.preauthMagicClick(v.URL + '?download_url', link_id);
+                var someDiv = div({dataElement : 'downloadable-html'});
+                self.$mainPanel.append(someDiv);
 
+                var body = 'No files to download';
 
-                    $ul.append(
-                      $.jqElem('li')
-                        .append(
-                          $.jqElem('a')
-                            //.attr('href', self.importExportLink(v.URL, v.name || 'download-' + i) )
-                            .on('click', function(e) {
-                              e.preventDefault();
-                              window.location.href = self.importExportLink(v.URL, v.name || 'download-' + i);
-                            })
-                            .attr('id', link_id)
-                            .append(v.name || v.URL)
-                        )
-                    );
+                if (self.reportData.html_links && self.reportData.html_links.length) {
+                  var $ul = $.jqElem('ul');
+                  $.each(
+                    self.reportData.html_links,
+                    function (i, v) {
 
-                    setTimeout(function() {
-                      $('#' + link_id).on('click', function(e) {
-                        e.stopPropagation();
-                        window.location.href = self.importExportLink(v.URL, v.name || 'download');
-                      })}, 1);
-                  }
+                      var link_id = StringUtil.uuid();
+
+                      //self.preauthMagicClick(v.URL + '?download_url', link_id);
+
+                      var linkURL = [htmlServiceURL, 'api', 'v1', self.objIdentity.ref, '$', i, v.name].join("/");
+
+                      $ul.append(
+                        $.jqElem('li')
+                          .append(
+                            $.jqElem('a')
+                              .attr('href', linkURL )
+                              .attr('target', '_blank')
+                              /*.on('click', function(e) {
+                                e.preventDefault();
+                                window.location.href = self.importExportLink(v.URL, v.name || 'download-' + i);
+                              })*/
+                              .attr('id', link_id)
+                              .append(v.name || v.URL)
+                          )
+                      );
+
+                      /*setTimeout(function() {
+                        $('#' + link_id).on('click', function(e) {
+                          e.stopPropagation();
+                          window.location.href = self.importExportLink(v.URL, v.name || 'download');
+                        })}, 1);*/
+                    }
+                  );
+
+                  body = $.jqElem('div').append($ul).html();
+                }
+                ui.setContent('downloadable-html',
+                    ui.buildCollapsiblePanel({
+                        title: 'Links',
+                        name: 'downloadable-html-toggle',
+                        hidden: false,
+                        type: 'default',
+                        classes: ['kb-panel-container'],
+                        body: body
+                    })
                 );
 
-                body = $.jqElem('div').append($ul).html();
-              }
-              ui.setContent('downloadable-html',
-                  ui.buildCollapsiblePanel({
-                      title: 'Links',
-                      name: 'downloadable-html-toggle',
-                      hidden: false,
-                      type: 'default',
-                      classes: ['kb-panel-container'],
-                      body: body
-                  })
-              );
+              });
 
             }
 

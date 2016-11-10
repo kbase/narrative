@@ -57,7 +57,7 @@ define([
             // expects:
             // name, id, version for appInfo
             this.appInfo = this.options.info;
-            
+
             var cellNode = this.$elem.closest('.cell').get(0);
             function findCell() {
                 var cells = Jupyter.notebook.get_cell_elements().toArray().filter(function (element) {
@@ -70,11 +70,11 @@ define([
                     return $(cells[0]).data('cell');
                 }
                 throw new Error('Cannot find the cell node!', cellNode, cells);
-                
+
             }
-            
+
             this.cell = findCell();
-            
+
             // this.cell = Jupyter.narrative.getCellByKbaseId(this.$elem.attr('id'));
             //console.log('initializing with job id = ' + this.jobId);
             if (!this.jobId) {
@@ -106,7 +106,7 @@ define([
                     type: 'job-status'
                 },
                 handle: function (message) {
-                    console.log('Have job status', message);
+                    // console.log('Have job status', message);
                     this.handleJobStatus(message);
                 }.bind(this)
             });

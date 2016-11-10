@@ -5,9 +5,6 @@ Eventually this will be incorporated into a service
 sychan@lbl.gov
 """
 
-import logging
-logging.getLogger("tornado.application").addHandler(logging.StreamHandler())
-
 from traitlets.config import Config
 from nbconvert.preprocessors.execute import ExecutePreprocessor, CellExecutionError
 from biokbase.narrative.exporter.preprocessor import NarrativePreprocessor
@@ -18,6 +15,9 @@ import os
 from pprint import pprint, pformat
 import argparse
 from os.path import abspath, dirname, join, isfile
+import logging
+
+logging.getLogger("tornado.application").addHandler(logging.StreamHandler())
 
 
 def get_output(notebook, all=False, codecells=False):
@@ -89,7 +89,7 @@ def execute_notebook(notebook):
 def check_environment():
     # Check for required environment variables that will cause errors when
     # trying to run the narrative
-    for x in ['KB_WORKSPACE_ID', 'KB_AUTH_TOKEN']:
+    for x in ['KB_AUTH_TOKEN']:
         if x not in os.environ:
             raise KeyError('The environment variable ' + x +
                            ' must be defined to run this script')
@@ -111,6 +111,7 @@ def run_narrative(narrative):
     # get the notebook from workspace and then run it. Raise an exception
     # if it fails to execute
     kb_notebook = get_notebook(narrative)
+    os.environ['KB_WORKSPACE_ID'] = kb_notebook['metadata']['ws_name']
     try:
         result_notebook, resources_out = execute_notebook(kb_notebook)
     except CellExecutionError:

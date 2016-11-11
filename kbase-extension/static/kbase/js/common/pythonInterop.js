@@ -102,6 +102,26 @@ define([
         return pythonCode;
     }
 
+    function buildAppRunner2(cellId, runId, app, params) {
+        var positionalArgs = [
+                pythonifyValue(app.id),
+                pythonifyValue(params, {autoIndent: true})
+            ],
+            namedArgs = objectToNamedArgs({
+                tag: app.tag,
+                version: app.version,
+                cell_id: cellId,
+                run_id: runId
+            }),
+            args = positionalArgs.concat(namedArgs),
+            pythonCode = [
+                'from biokbase.narrative.jobs.appmanager import AppManager',
+                'AppManager().run_app2(' + buildNiceArgsList(args) + ')'
+            ].join('\n');
+
+        return pythonCode;
+    }
+
 
     function buildEditorRunner(cellId, runId, app, params) {
         var positionalArgs = [
@@ -204,6 +224,7 @@ define([
         objectToNamedArgs: objectToNamedArgs,
         pythonifyValue: pythonifyValue,
         buildAppRunner: buildAppRunner,
+        buildAppRunner2: buildAppRunner2,
         buildEditorRunner: buildEditorRunner,
         buildViewRunner: buildViewRunner,
         buildOutputRunner: buildOutputRunner,

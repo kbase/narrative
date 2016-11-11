@@ -103,6 +103,10 @@ jupyter nbextension enable dataCell/main --sys-prefix
 jupyter nbextension install $(pwd)/editorCell --symlink --sys-prefix
 jupyter nbextension enable editorCell/main --sys-prefix
 
+jupyter nbextension install $(pwd)/appCell2 --symlink --sys-prefix
+jupyter nbextension enable appCell2/main --sys-prefix
+
+
 jupyter nbextension enable --py --sys-prefix widgetsnbextension
 
 console "Done installing nbextension"

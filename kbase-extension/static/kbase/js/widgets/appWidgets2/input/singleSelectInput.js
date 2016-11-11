@@ -5,21 +5,28 @@ define([
     'kb_common/html',
     '../validation',
     'common/events',
-    'common/dom',
+    'common/ui',
     'bootstrap',
     'css!font-awesome'
-], function (Promise, html, Validation, Events, Dom) {
+], function (
+    Promise,
+    html,
+    Validation,
+    Events,
+    UI) {
     'use strict';
 
     // Constants
     var t = html.tag,
-        div = t('div'), select = t('select'), option = t('option');
+        div = t('div'),
+        select = t('select'),
+        option = t('option');
 
     function factory(config) {
         var options = {},
             spec = config.parameterSpec,
             parent,
-            dom,
+            ui,
             container,
             bus = config.bus,
             model = {
@@ -34,6 +41,12 @@ define([
 
         model.availableValues = spec.data.constraints.options;
 
+        model.availableValuesMap = {};
+        model.availableValues.forEach(function (item, index) {
+            item.index = index;
+            model.availableValuesMap[item.value] = item;
+        });
+
 
         /*
          * If the parameter is optional, and is empty, return null.
@@ -45,13 +58,13 @@ define([
          */
 
         function getInputValue() {
-            var control = dom.getElement('input-container.input'),
+            var control = ui.getElement('input-container.input'),
                 selected = control.selectedOptions;
-            
+
             if (selected.length === 0) {
                 return;
             }
-            
+
             // we are modeling a single string value, so we always just get the 
             // first selected element, which is all there should be!
             return selected.item(0).value;
@@ -79,9 +92,29 @@ define([
 
                 var rawValue = getInputValue(),
                     validationResult = Validation.validateTextString(rawValue, spec.data.constraints);
-                    
+
                 return validationResult;
             });
+        }
+
+        function handleChanged() {
+            return {
+                type: 'change',
+                handler: function () {
+                    validate()
+                        .then(function (result) {
+                            if (result.isValid) {
+                                bus.emit('changed', {
+                                    newValue: result.value
+                                });
+                            }
+                            bus.emit('validation', {
+                                errorMessage: result.errorMessage,
+                                diagnosis: result.diagnosis
+                            });
+                        });
+                }
+            }
         }
 
         function makeInputControl(events) {
@@ -100,43 +133,46 @@ define([
 
             // CONTROL
             return select({
-                id: events.addEvent({type: 'change', handler: function () {
-                        validate()
-                            .then(function (result) {
-                                if (result.isValid) {
-                                    bus.emit('changed', {
-                                        newValue: result.value
-                                    });
-                                }
-                                bus.emit('validation', {
-                                    errorMessage: result.errorMessage,
-                                    diagnosis: result.diagnosis
-                                });
-                            });
-                    }}),
+                id: events.addEvents({ events: [handleChanged()] }),
                 class: 'form-control',
                 dataElement: 'input'
-            }, [option({value: ''}, '')].concat(selectOptions));
+            }, [option({ value: '' }, '')].concat(selectOptions));
         }
 
-        function render(input) {
-            Promise.try(function () {
-                var events = Events.make(),
-                    inputControl = makeInputControl(events);
-                    
-                dom.setContent('input-container', inputControl);
-                events.attachEvents(container);
-            })
-                .then(function () {
-                    autoValidate();
-                });
+        // function render(input) {
+        //     Promise.try(function () {
+        //         var events = Events.make(),
+        //             inputControl = makeInputControl(events);
+
+        //         dom.setContent('input-container', inputControl);
+        //         events.attachEvents(container);
+        //     })
+        //         .then(function () {
+        //             autoValidate();
+        //         });
+        // }
+
+        function updateDisplay() {
+            // assuming the model has been modified...
+            var control = ui.getElement('input-control.input');
+            // loop through the options, selecting the one with the value.
+            // unselect
+            if (control.selectedIndex >= 0) {
+                control.options.item(control.selectedIndex).selected = false;
+            }
+            var selectedItem = model.availableValuesMap[model.value];
+            if (selectedItem) {
+                control.options.item(selectedItem.index + 1).selected = true;
+            }
         }
 
         function layout(events) {
             var content = div({
                 dataElement: 'main-panel'
             }, [
-                div({dataElement: 'input-container'})
+                div({ dataElement: 'input-container' },
+                    makeInputControl(events)
+                )
             ]);
             return {
                 content: content,
@@ -156,23 +192,25 @@ define([
 
         function setModelValue(value) {
             return Promise.try(function () {
-                if (model.value !== value) {
-                    model.value = value;
-                    return true;
-                }
-                return false;
-            })
+                    if (model.value !== value) {
+                        model.value = value;
+                        return true;
+                    }
+                    return false;
+                })
                 .then(function (changed) {
-                    render();
+                    updateDisplay();
+                    autoValidate();
                 });
         }
 
         function unsetModelValue() {
             return Promise.try(function () {
-                model.value = undefined;
-            })
+                    model.value = undefined;
+                })
                 .then(function (changed) {
-                    render();
+                    updateDisplay();
+                    autoValidate();
                 });
         }
 
@@ -192,13 +230,13 @@ define([
                 bus.on('run', function (message) {
                     parent = message.node;
                     container = parent.appendChild(document.createElement('div'));
-                    dom = Dom.make({node: container});
+                    ui = UI.make({ node: container });
 
-                    var events = Events.make(),
+                    var events = Events.make({ node: container }),
                         theLayout = layout(events);
 
                     container.innerHTML = theLayout.content;
-                    events.attachEvents(container);
+                    events.attachEvents();
 
                     bus.on('reset-to-defaults', function () {
                         resetModelValue();
@@ -211,17 +249,24 @@ define([
             });
         }
 
-//        function run(input) {
-//            return Promise.try(function () {
-//                return render(input);
-//            })
-//            .then(function () {
-//                return autoValidate();
-//            });
-//        }
+        function stop() {
+            return Promise.try(function () {
+                // nothing to do. 
+            });
+        }
+
+        //        function run(input) {
+        //            return Promise.try(function () {
+        //                return render(input);
+        //            })
+        //            .then(function () {
+        //                return autoValidate();
+        //            });
+        //        }
 
         return {
-            start: start
+            start: start,
+            stop: stop
         };
     }
 

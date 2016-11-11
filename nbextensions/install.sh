@@ -32,3 +32,6 @@ jupyter nbextension enable widgetCell/main --sys-prefix
 
 jupyter nbextension install ${dir}/editorCell --symlink --sys-prefix
 jupyter nbextension enable editorCell/main --sys-prefix
+
+jupyter nbextension install ${dir}/appCell2 --symlink --sys-prefix
+jupyter nbextension enable appCell2/main --sys-prefix

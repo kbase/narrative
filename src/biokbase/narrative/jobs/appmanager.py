@@ -319,6 +319,211 @@ class AppManager(object):
         else:
             return new_job
 
+    def run_app2(self, app_id, params, tag="release", version=None,
+                cell_id=None, run_id=None, **kwargs):
+        """
+        Attempts to run the app, returns a Job with the running app info.
+        If this is given a cell_id, then returns None. If not, it returns the
+        generated Job object.
+
+        Parameters:
+        -----------
+        app_id - should be from the app spec, e.g. 'build_a_metabolic_model'
+                    or 'MegaHit/run_megahit'.
+        params - this is hte dictionary of parameters to tbe used with the app.
+                 They can be found by using the app_usage function. If any
+                 non-optional apps are missing, a ValueError will be raised.
+        tag - optional, one of [release|beta|dev] (default=release)
+        version - optional, a semantic version string. Only released modules
+                  have versions, so if the tag is not 'release', and a version
+                  is given, a ValueError will be raised.
+        **kwargs - these are the set of parameters to be used with the app.
+                   They can be found by using the app_usage function. If any
+                   non-optional apps are missing, a ValueError will be raised.
+
+        Example:
+        --------
+        run_app('MegaHit/run_megahit',
+                {
+                    'read_library_name' : 'My_PE_Library',
+                    'output_contigset_name' : 'My_Contig_Assembly'
+                },
+                version='>=1.0.0'
+        )
+        """
+
+        try:
+            if params is None:
+                params = dict()
+            return self._run_app2_internal(app_id, params, tag, version,
+                                          cell_id, run_id, **kwargs)
+        except Exception as e:
+            e_type = type(e).__name__
+            e_message = str(e).replace('<', '&lt;').replace('>', '&gt;')
+            e_trace = traceback.format_exc()
+            e_trace = e_trace.replace('<', '&lt;').replace('>', '&gt;')
+            e_code = getattr(e, 'code', -1)
+            e_source = getattr(e, 'source', 'appmanager')
+            self._send_comm_message('run_status', {
+                'event': 'error',
+                'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
+                'cell_id': cell_id,
+                'run_id': run_id,
+                'error_message': e_message,
+                'error_type': e_type,
+                'error_stacktrace': e_trace,
+                'error_code': e_code,
+                'error_source': e_source
+            })
+            print("Error while trying to start your app (run_app)!\n" +
+                  "-----------------------------------------------\n" +
+                  str(e))
+            return
+
+    def _run_app2_internal(self, app_id, params, tag, version,
+                          cell_id, run_id, **kwargs):
+        """
+        Attemps to run the app, returns a Job with the running app info.
+        Should *hopefully* also inject that app into the Narrative's metadata.
+        Probably need some kind of JavaScript-foo to get that to work.
+
+        Parameters:
+        -----------
+        app_id - should be from the app spec, e.g. 'build_a_metabolic_model'
+                    or 'MegaHit/run_megahit'.
+        params - the dictionary of parameters.
+        tag - optional, one of [release|beta|dev] (default=release)
+        version - optional, a semantic version string. Only released modules
+                  have versions, so if the tag is not 'release', and a version
+                  is given, a ValueError will be raised.
+        **kwargs - these are the set of parameters to be used with the app.
+                   They can be found by using the app_usage function. If any
+                   non-optional apps are missing, a ValueError will be raised.
+        """
+
+        # TODO: this needs restructuring so that we can send back validation
+        # failure messages. Perhaps a separate function and catch the errors,
+        # or return an error structure.
+
+        # Intro tests:
+        self.spec_manager.check_app(app_id, tag, raise_exception=True)
+
+        if version is not None and tag != "release":
+            if re.match(r'\d+\.\d+\.\d+', version) is not None:
+                raise ValueError(
+                    "Semantic versions only apply to released app modules. " +
+                    "You can use a Git commit hash instead to specify a " +
+                    "version.")
+
+        # Get the spec & params
+        spec = self.spec_manager.get_spec(app_id, tag)
+
+        # There's some branching to do here.
+        # Cases:
+        # app has behavior.kb_service_input_mapping - valid long-running app.
+        # app has behavior.output_mapping - not kb_service_input_mapping or
+        #     script_module - it's a viewer and should return immediately
+        # app has other things besides kb_service_input_mapping - not valid.
+        if 'behavior' not in spec:
+            raise Exception("This app appears invalid - " +
+                            "it has no defined behavior")
+
+        if 'kb_service_input_mapping' not in spec['behavior']:
+            raise Exception("This app does not appear to be a long-running " +
+                            "job! Please use 'run_local_app' to start this " +
+                            "instead.")
+
+        # Preflight check the params - all required ones are present, all
+        # values are the right type, all numerical values are in given ranges
+        spec_params = self.spec_manager.app_params(spec)
+        spec_params_map = dict((spec_params[i]['id'], spec_params[i])
+                               for i in range(len(spec_params)))
+
+        #(params, ws_input_refs) = self._validate_parameters(app_id,
+        #                                                    tag,
+        #                                                    spec_params,
+        #                                                    params)
+
+        ws_id = system_variable('workspace_id')
+        if ws_id is None:
+            raise ValueError('Unable to retrive current ' +
+                             'Narrative workspace information!')
+
+        input_vals = self._map_inputs(
+            spec['behavior']['kb_service_input_mapping'],
+            params,
+            spec_params_map)
+
+        service_method = spec['behavior']['kb_service_method']
+        service_name = spec['behavior']['kb_service_name']
+        service_ver = spec['behavior'].get('kb_service_version', None)
+        # service_url = spec['behavior']['kb_service_url']
+
+        # Let the given version override the spec's version.
+        if version is not None:
+            service_ver = version
+
+        # This is what calls the function in the back end - Module.method
+        # This isn't the same as the app spec id.
+        function_name = service_name + '.' + service_method
+        job_meta = {'tag': tag}
+        if cell_id is not None:
+            job_meta['cell_id'] = cell_id
+        if run_id is not None:
+            job_meta['run_id'] = run_id
+
+        # This is the input set for NJSW.run_job. Now we need the worksapce id
+        # and whatever fits in the metadata.
+        job_runner_inputs = {
+            'method': function_name,
+            'service_ver': service_ver,
+            'params': input_vals,
+            'app_id': app_id,
+            'wsid': ws_id,
+            'meta': job_meta
+        }
+        #if len(ws_input_refs) > 0:
+        #    job_runner_inputs['source_ws_objects'] = ws_input_refs
+
+        # Log that we're trying to run a job...
+        log_info = {
+            'app_id': app_id,
+            'tag': tag,
+            'version': service_ver,
+            'username': system_variable('user_id'),
+            'wsid': ws_id
+        }
+        kblogging.log_event(self._log, "run_app", log_info)
+
+        try:
+            job_id = self.njs.run_job(job_runner_inputs)
+        except Exception as e:
+            log_info.update({'err': str(e)})
+            kblogging.log_event(self._log, "run_app_error", log_info)
+            raise transform_job_exception(e)
+
+        new_job = Job(job_id,
+                      app_id,
+                      [params],
+                      system_variable('user_id'),
+                      tag=tag,
+                      app_version=service_ver,
+                      cell_id=cell_id,
+                      run_id=run_id)
+
+        self._send_comm_message('run_status', {
+            'event': 'launched_job',
+            'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
+            'cell_id': cell_id,
+            'run_id': run_id,
+            'job_id': job_id
+        })
+        JobManager().register_new_job(new_job)
+        if cell_id is not None:
+            return
+        else:
+            return new_job            
+
     def run_local_app(self, app_id, params, tag="release", version=None,
                       cell_id=None, run_id=None, **kwargs):
         """
@@ -797,7 +1002,7 @@ class AppManager(object):
             for param_id in id_map:
                 # ensure that the param referenced in the group param list
                 # exists in the spec. 
-                # NB: This should really never happen if thesdk registration 
+                # NB: This should really never happen if the sdk registration 
                 # process validates them.
                 if param_id not in spec_params:
                     msg = "Unknown parameter id in group mapping: " + param_id

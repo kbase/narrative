@@ -5,9 +5,6 @@ Eventually this will be incorporated into a service
 sychan@lbl.gov
 """
 
-import logging
-logging.getLogger("tornado.application").addHandler(logging.StreamHandler())
-
 from traitlets.config import Config
 from nbconvert.preprocessors.execute import ExecutePreprocessor, CellExecutionError
 from biokbase.narrative.exporter.preprocessor import NarrativePreprocessor
@@ -18,6 +15,9 @@ import os
 from pprint import pprint, pformat
 import argparse
 from os.path import abspath, dirname, join, isfile
+import logging
+
+logging.getLogger("tornado.application").addHandler(logging.StreamHandler())
 
 
 def get_output(notebook, all=False, codecells=False):
@@ -78,10 +78,16 @@ def execute_notebook(notebook):
                                  'templates')
     c.TemplateExporter.template_path = ['.', nar_templates]
 
-    # Initialize the notebook execution object, and run the notebook. We set a
-    # 10 minute timeout for now, but it may need to be bumped up. Using
-    # /tmp as the directory where the notebook will be run.
-    ep = ExecutePreprocessor(timeout=600)
+    # Initialize the notebook execution object, and run the notebook. If a
+    # timeout (in seconds) is defined in KB_CELL_TIMEOUT, use that for
+    # how long we allow a cell to run before timing it out, otherwise use
+    # a default value of 60 minutes.
+    # /tmp is the directory where the notebook will be run.
+    if 'KB_CELL_TIMEOUT' in os.environ:
+        timeout = int(os.environ['KB_CELL_TIMEOUT'])
+    else:
+        timeout = 3600
+    ep = ExecutePreprocessor(timeout=timeout)
     resources = {'metadata': {'path': '/tmp'}}
     return(ep.preprocess(notebook, resources))
 
@@ -89,7 +95,7 @@ def execute_notebook(notebook):
 def check_environment():
     # Check for required environment variables that will cause errors when
     # trying to run the narrative
-    for x in ['KB_WORKSPACE_ID', 'KB_AUTH_TOKEN']:
+    for x in ['KB_AUTH_TOKEN']:
         if x not in os.environ:
             raise KeyError('The environment variable ' + x +
                            ' must be defined to run this script')
@@ -111,6 +117,7 @@ def run_narrative(narrative):
     # get the notebook from workspace and then run it. Raise an exception
     # if it fails to execute
     kb_notebook = get_notebook(narrative)
+    os.environ['KB_WORKSPACE_ID'] = kb_notebook['metadata']['ws_name']
     try:
         result_notebook, resources_out = execute_notebook(kb_notebook)
     except CellExecutionError:

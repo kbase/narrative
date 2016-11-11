@@ -444,7 +444,7 @@ function addCdnModules(baseUrl) {
             // text:  'requirejs-text/2.0.14/text',
             css: 'require-css/0.1.8/css',
             'font-awesome': 'font-awesome/4.5.0/css/font-awesome',
-            handlebars: 'handlebars/4.0.5/handlebars',
+            // handlebars: 'handlebars/4.0.5/handlebars',
             'google-code-prettify': 'google-code-prettify/1.2.0/'
         },
         paths = {};
@@ -457,3 +457,5 @@ function addCdnModules(baseUrl) {
         paths: paths
     });
 }
+
+addCdnModules();

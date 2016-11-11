@@ -22,11 +22,15 @@ define([
 
     // Constants
     var t = html.tag,
-        div = t('div'), button = t('button');
+        div = t('div'),
+        button = t('button');
 
     function factory(config) {
         var options = {},
+            // The spec for the struct is actally in the parameters now, which is always
+            // the parameter with id 'item'.
             spec = config.parameterSpec,
+            structSpec = spec.parameters.specs.item,
             container,
             parent,
             bus = config.bus,
@@ -37,6 +41,8 @@ define([
             runtime = Runtime.make(),
             widgets = [];
 
+        console.log('STRUCT SPEC?', spec);
+
         function normalizeModel() {
             var newModel = model.value.filter(function (item) {
                 return item ? true : false;
@@ -46,21 +52,21 @@ define([
 
         function setModelValue(value, index) {
             return Promise.try(function () {
-                if (index !== undefined) {
-                    if (value) {
-                        model.value[index] = value;
+                    if (index !== undefined) {
+                        if (value) {
+                            model.value[index] = value;
+                        } else {
+                            model.value.splice(index, 1);
+                        }
                     } else {
-                        model.value.splice(index, 1);
+                        if (value) {
+                            model.value = value;
+                        } else {
+                            unsetModelValue();
+                        }
                     }
-                } else {
-                    if (value) {
-                        model.value = value;
-                    } else {
-                        unsetModelValue();
-                    }
-                }
-                normalizeModel();
-            })
+                    normalizeModel();
+                })
                 .then(function () {
                     render();
                 });
@@ -68,8 +74,8 @@ define([
 
         function addModelValue(value) {
             return Promise.try(function () {
-                model.value.push(value);
-            })
+                    model.value.push(value);
+                })
                 .then(function () {
                     render();
                 });
@@ -77,8 +83,8 @@ define([
 
         function unsetModelValue() {
             return Promise.try(function () {
-                model.value = [];
-            })
+                    model.value = [];
+                })
                 .then(function (changed) {
                     render();
                 });
@@ -132,7 +138,7 @@ define([
                         diagnosis: 'disabled'
                     };
                 }
-                
+
                 // don't validate yet.
                 return Validation.validateTrue(rawValue);
 
@@ -162,7 +168,7 @@ define([
                 inputBus = runtime.bus().makeChannelBus(null, 'Multi int input bus'),
                 inputWidget = structInputWidget.make({
                     bus: inputBus,
-                    parameterSpec: spec,
+                    parameterSpec: structSpec,
                     spec: spec,
                     fieldSpec: config.fieldSpec,
                     showOwnMessages: true
@@ -173,7 +179,7 @@ define([
                     bus: inputBus,
                     index: index
                 },
-                placeholder = div({id: widgetId}),
+                placeholder = div({ id: widgetId }),
                 errorRow;
 
             widgets.push(widgetWrapper);
@@ -187,16 +193,16 @@ define([
                     });
                 }
             });
-//            inputBus.on('validation', function (message) {
-//                if (message.diagnosis === 'optional-empty') {
-//                    // alert('delete me!');
-//                    model.value.splice(widgetWrapper.index, 1);
-//                    bus.emit('changed', {
-//                        newValue: model.value
-//                    });
-//                    render();
-//                }
-//            });
+            //            inputBus.on('validation', function (message) {
+            //                if (message.diagnosis === 'optional-empty') {
+            //                    // alert('delete me!');
+            //                    model.value.splice(widgetWrapper.index, 1);
+            //                    bus.emit('changed', {
+            //                        newValue: model.value
+            //                    });
+            //                    render();
+            //                }
+            //            });
             inputBus.on('changed', function (message) {
                 model.value[index] = message.newValue;
                 // TODO: validate the main control...
@@ -205,19 +211,21 @@ define([
                     newValue: model.value
                 });
             });
-            
+
             inputBus.on('touched', function (message) {
                 console.log('touched');
                 bus.emit('touched');
             });
 
-            preButton = div({class: 'input-group-addon', style: {width: '5ex', padding: '0'}}, String(index + 1) + '.');
-            postButton = div({class: 'input-group-addon', style: {padding: '0'}}, button({
+            preButton = div({ class: 'input-group-addon', style: { width: '5ex', padding: '0' } }, String(index + 1) + '.');
+            postButton = div({ class: 'input-group-addon', style: { padding: '0' } }, button({
                 class: 'btn btn-danger btn-link btn-xs',
                 type: 'button',
-                style: {width: '4ex'},
+                style: { width: '4ex' },
                 dataIndex: String(index),
-                id: events.addEvent({type: 'click', handler: function (e) {
+                id: events.addEvent({
+                    type: 'click',
+                    handler: function (e) {
                         // no, we don't need to consult the control, we just remove 
                         // it...
                         model.value.splice(widgetWrapper.index, 1);
@@ -229,10 +237,11 @@ define([
                             newValue: model.value
                         });
                         render();
-                    }})
+                    }
+                })
             }, 'x'));
-            return div({dataElement: 'input-row', dataIndex: String(index), style: {width: '100%'}}, [
-                div({class: 'input-group'}, [
+            return div({ dataElement: 'input-row', dataIndex: String(index), style: { width: '100%' } }, [
+                div({ class: 'input-group' }, [
                     preButton,
                     placeholder,
                     postButton
@@ -240,95 +249,60 @@ define([
             ]);
         }
 
-        function makeNewInputControl(events, bus) {
-            // CONTROL
-            var preButton, postButton,
-                widgetId = html.genId(),
-                inputBus = runtime.bus().makeChannelBus(null, '"new input" parent comm bus'),
-                inputWidget = structInputWidget.make({
-                    bus: inputBus,
-                    // initialValue: config.initialValue,
-                    parameterSpec: spec,
-                    spec: spec,
-                    fieldSpec: config.fieldSpec,
-                    showOwnMessages: true
-                }),
-                errorRow,
-                placeholder = div({id: widgetId});
-
-            widgets.push({
-                id: widgetId,
-                instance: inputWidget,
-                bus: inputBus
-            });
-
-//            inputBus.on('changed', function (message) {
-//                model.value.push(message.newValue);
-//
-//                // TODO: and insert a new row ...
-//
-//                // first attempt, re-render the whole shebang.
-//                render();
-//
-//                // TODO: validate the main control...
-//                bus.emit('changed', {
-//                    newValue: model.value
-//                });
-//            });
-
-            preButton = div({class: 'input-group-addon', style: {width: '5ex', padding: '0'}}, '');
-            postButton = div({class: 'input-group-addon', style: {padding: '0'}}, button({
-                class: 'btn btn-primary btn-link btn-xs',
-                type: 'button',
-                style: {width: '4ex'},
-                id: events.addEvent({type: 'click', handler: function (e) {
-                        inputBus.emit('submit');
-                    }})
-            }, '+'));
-            
-            inputBus.on('submitted', function (message) {
-                console.log('submitted', message);
-                model.value.push(message.value);
-                render();
-                bus.emit('changed', {
-                    newValue: model.value
-                });
-            });
-            
-            // The new item control does not actually have any data to sync
-            // to, so we feed it the default values from the spec.
-            inputBus.on('sync', function (message) {
-                var value = {};
-                console.log('sync', spec);
-                Object.keys(spec.parameters).forEach(function (id) {
-                    var parameter = spec.parameters[id];
-                    value[id] = parameter.data.defaultValue;
-                });
-                if (value) {
-                    inputBus.emit('update', {
-                        value: value
-                    });
+        function handleAddNew() {
+            return {
+                type: 'click',
+                handler: function (e) {
+                    addModelValue(JSON.parse(JSON.stringify(structSpec.data.defaultValue)));
+                    render();
                 }
-            });
-
-            return div({dataElement: 'input-row', style: {width: '100%'}}, [
-                div({class: 'input-group'}, [
-                    preButton,
-                    placeholder,
-                    postButton
-                ])
-            ]);
+            };
         }
 
         function makeInputControl(events, bus) {
             var items = model.value.map(function (value, index) {
                 return makeSingleInputControl(value, index, events, bus);
             });
+            var existing;
+            if (items.length > 0) {
+                existing = items;
+            } else {
+                existing = [
+                    div({}, 'No items, please add one below')
+                ];
+            }
 
-            items = items.concat(makeNewInputControl(events, bus));
-            
-            var content = items.join('\n');
-            return content;
+            /*
+            Note about the button toolbar at the bottom of the phones list.
+            It would be nice to use a button inside a group inside a toolbar.
+            Semantically tight, extensible, right? Problem is they are implemented
+            as floats, so centering is not possible. So we use our own versions
+            */
+            return existing.concat([
+                div({
+                    class: '',
+                    role: '',
+                    style: {
+                        border: '1px solid #ccc',
+                        //backgroundColor: '#eee',
+                        padding: '6px',
+                        textAlign: 'center'
+                    }
+                }, [
+                    div({
+                        style: {
+                            textAlign: 'center',
+                            display: 'inline-block'
+                        }
+                    }, [
+                        button({
+                            type: 'button',
+                            class: 'btn btn-default',
+                            id: events.addEvents({ events: [handleAddNew()] })
+                        }, 'Add New')
+                    ])
+                ])
+            ]).join('\n');
         }
 
         function render() {
@@ -364,21 +338,21 @@ define([
             var content = div({
                 dataElement: 'main-panel'
             }, [
-                div({dataElement: 'input-container'})
+                div({ dataElement: 'input-container' })
             ]);
             return {
                 content: content,
                 events: events
             };
         }
-        
+
         function autoValidate() {
             return Promise.all(model.value.map(function (value, index) {
-                // could get from DOM, but the model is the same.
-                var rawValue = container.querySelector('[data-index="' + index + '"]').value;
-                // console.log('VALIDATE', value);
-                return validate(rawValue);
-            }))
+                    // could get from DOM, but the model is the same.
+                    var rawValue = container.querySelector('[data-index="' + index + '"]').value;
+                    // console.log('VALIDATE', value);
+                    return validate(rawValue);
+                }))
                 .then(function (results) {
                     // a bit of a hack -- we need to handle the 
                     // validation here, and update the individual rows
@@ -414,7 +388,7 @@ define([
                 bus.on('run', function (message) {
                     parent = message.node;
                     container = parent.appendChild(document.createElement('div'));
-                    ui = UI.make({node: container});
+                    ui = UI.make({ node: container });
 
                     var events = Events.make(),
                         theLayout = layout(events);

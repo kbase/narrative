@@ -482,6 +482,12 @@ define([
         */
         determineMethodCellType: function(spec) {
             
+            // TODO: remove this switch when merging in grouped paramters and 
+            // legacy parameters.
+            if (spec.parameter_groups && spec.parameter_groups.length > 0) {
+                return 'app2';
+            }
+
             // An app will execute via the method described in the behavior. If
             // such a method is not described, it is by definition not an
             // executing app.

@@ -14,16 +14,16 @@ define([
 
     // Constants
     var t = html.tag,
-        div = t('div'), input = t('input'), label = t('label');
+        div = t('div'),
+        input = t('input'),
+        label = t('label');
 
     function factory(config) {
         var options = {},
             spec = config.parameterSpec,
-            checkboxOptions,
             container,
             $container,
             bus = config.bus,
-            constraints,
             model = {
                 updates: 0,
                 value: undefined
@@ -31,28 +31,28 @@ define([
 
         // Validate configuration.
         // Nothing to do...
-        
+
         // validate
-        if (!spec.spec.checkbox_options) {
-            throw new Error('Checkbox control does not have checkbox_options configured');
-        }
-        checkboxOptions = spec.spec.checkbox_options;
-        if (checkboxOptions.checked_value === undefined) {
-            throw new Error('Checkbox spec option checked_value is not configured');
-        }
-        if (checkboxOptions.unchecked_value === undefined) {
-            throw new Error('Checkbox spec option unchecked_value is not configured');
-        }
+        //if (!spec.spec.checkbox_options) {
+        //    throw new Error('Checkbox control does not have checkbox_options configured');
+        //}
+        // checkboxOptions = spec.spec.checkbox_options;
+        // if (spec.trueValue === undefined) {
+        //     throw new Error('Checkbox spec option checked_value is not configured');
+        // }
+        // if (spec.falseValue === undefined) {
+        //     throw new Error('Checkbox spec option unchecked_value is not configured');
+        // }
 
         options.enabled = true;
 
-        constraints = {
-            valueChecked: checkboxOptions.checked_value,
-            valueUnchecked: checkboxOptions.unchecked_value
-        };
+        // constraints = {
+        //     valueChecked: checkboxOptions.checked_value,
+        //     valueUnchecked: checkboxOptions.unchecked_value
+        // };
 
         // Is this a valid spec?
-        
+
         //if (spec.required() && spec.defaultValue() === null) {
         //    // console.log('CHECK', spec.defaultValue(), spec.nullValue(), spec.dataType());
         //    throw new Error('This checkbox is required yet has an undefined default value');
@@ -71,9 +71,9 @@ define([
         function getInputValue() {
             var checkbox = container.querySelector('[data-element="input-container"] [data-element="input"]');
             if (checkbox.checked) {
-                return constraints.valueChecked;
+                return 1;
             }
-            return constraints.valueUnchecked;
+            return 0;
         }
 
         /*
@@ -83,12 +83,12 @@ define([
          */
         function setModelValue(value) {
             return Promise.try(function () {
-                if (model.value !== value) {
-                    model.value = value;
-                    return true;
-                }
-                return false;
-            })
+                    if (model.value !== value) {
+                        model.value = value;
+                        return true;
+                    }
+                    return false;
+                })
                 .then(function (changed) {
                     render();
                 });
@@ -96,8 +96,8 @@ define([
 
         function unsetModelValue() {
             return Promise.try(function () {
-                model.value = undefined;
-            })
+                    model.value = undefined;
+                })
                 .then(function (changed) {
                     render();
                 });
@@ -108,28 +108,28 @@ define([
                 return false;
             }
             switch (value.trim()) {
-                case '1':
-                case 'true':
-                    return true;
-                case '0':
-                case 'false':
-                case '':
-                    return false;
+            case '1':
+            case 'true':
+                return true;
+            case '0':
+            case 'false':
+            case '':
+                return false;
             }
         }
 
         function resetModelValue() {
             if (spec.spec.default_values && spec.spec.default_values.length > 0) {
                 if (meansChecked(spec.spec.default_values[0])) {
-                    setModelValue(constraints.valueChecked);
+                    setModelValue(1);
                 } else {
-                    setModelValue(constraints.valueUnchecked);
+                    setModelValue(0);
                 }
             } else {
                 // NOTE: we set the checkbox explicitly to the "unchecked value" 
                 // if no default value is provided.
                 // unsetModelValue();
-                setModelValue(constraints.valueUnchecked);
+                setModelValue(0);
             }
         }
 
@@ -142,14 +142,6 @@ define([
          * 
          *
          */
-
-        function copyProps(from, props) {
-            var newObj = {};
-            props.forEach(function (prop) {
-                newObj[prop] = from[prop];
-            });
-            return newObj;
-        }
 
         function validate() {
             return Promise.try(function () {
@@ -166,10 +158,10 @@ define([
                     // make this a validation option, although not specified as 
                     // such in the spec.
                     validationOptions = {
-                        required: spec.required(),
-                        values: [constraints.valueChecked, constraints.valueUnchecked]
+                        required: spec.data.constraints.required,
+                        values: [0, 1]
                     },
-                validationResult;
+                    validationResult;
 
                 validationResult = Validation.validateSet(rawValue, validationOptions);
 
@@ -184,41 +176,40 @@ define([
          */
         function makeInputControl(currentValue, events, bus) {
             // CONTROL
-            var checked = false,
-                booleanString = 'no';
-            if (model.value === constraints.valueChecked) {
+            var checked = false;
+            if (model.value === 1) {
                 checked = true;
-                booleanString = 'yes';
             }
             return label([
                 input({
                     id: events.addEvents({
-                        events: [
-                            {
-                                type: 'change',
-                                handler: function (e) {
-                                    validate()
-                                        .then(function (result) {
-                                            if (result.isValid) {
-                                                bus.emit('changed', {
-                                                    newValue: result.value
-                                                });
-                                                setModelValue(result.value);
-                                            }
-                                            bus.emit('validation', {
-                                                errorMessage: result.errorMessage,
-                                                diagnosis: result.diagnosis
+                        events: [{
+                            type: 'change',
+                            handler: function (e) {
+                                validate()
+                                    .then(function (result) {
+                                        if (result.isValid) {
+                                            bus.emit('changed', {
+                                                newValue: result.value
                                             });
+                                            setModelValue(result.value);
+                                        }
+                                        bus.emit('validation', {
+                                            errorMessage: result.errorMessage,
+                                            diagnosis: result.diagnosis
                                         });
-                                }
+                                    });
                             }
-                        ]}),
+                        }]
+                    }),
                     type: 'checkbox',
                     dataElement: 'input',
                     checked: checked,
-                    value: constraints.valueChecked
-                })]);
+                    value: 1
+                })
+            ]);
         }
+
         function autoValidate() {
             return validate()
                 .then(function (result) {
@@ -228,14 +219,15 @@ define([
                     });
                 });
         }
+
         function render() {
             Promise.try(function () {
-                var events = Events.make(),
-                    inputControl = makeInputControl(model.value, events, bus);
+                    var events = Events.make(),
+                        inputControl = makeInputControl(model.value, events, bus);
 
-                $container.find('[data-element="input-container"]').html(inputControl);
-                events.attachEvents(container);
-            })
+                    $container.find('[data-element="input-container"]').html(inputControl);
+                    events.attachEvents(container);
+                })
                 .then(function () {
                     return autoValidate();
                 });
@@ -245,7 +237,7 @@ define([
             var content = div({
                 dataElement: 'main-panel'
             }, [
-                div({dataElement: 'input-container'})
+                div({ dataElement: 'input-container' })
             ]);
             return {
                 content: content,
@@ -256,8 +248,7 @@ define([
 
         // LIFECYCLE API
 
-        function init() {
-        }
+        function init() {}
 
         function attach(node) {
             return Promise.try(function () {

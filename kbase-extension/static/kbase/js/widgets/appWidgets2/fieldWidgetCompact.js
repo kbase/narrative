@@ -141,8 +141,8 @@ define([
         function clearError() {
             places.field.classList.remove('-error');
             places.field.classList.remove('-warning');
-            places.message.remove('-error');
-            places.message.remove('-warning');
+            places.message.classList.remove('-error');
+            places.message.classList.remove('-warning');
             places.message.innerHTML = '';
             places.messagePanel.classList.add('hidden');
         }
@@ -165,7 +165,6 @@ define([
         }
 
         function feedbackRequired() {
-            console.log('feedback required', places.feedbackIndicator);
             places.feedbackIndicator.className = 'kb-app-parameter-required-glyph fa fa-arrow-left';
             places.feedbackIndicator.setAttribute('title', 'required field');
         }
@@ -175,7 +174,6 @@ define([
         }
 
         function rawSpec(spec) {
-            console.log('RAW SPEC', spec);
             var specText = JSON.stringify(spec, false, 3),
                 fixedSpec = specText.replace(/</g, '&lt;').replace(/>/g, '&gt;');
             return pre({ class: 'prettyprint lang-json', style: { fontSize: '80%' } }, fixedSpec);
@@ -290,24 +288,16 @@ define([
 
         function render(events) {
             var ids = {
-                    fieldPanel: html.genId(),
-                    messagePanel: html.genId(),
-                    message: html.genId(),
-                    infoPanel: html.genId(),
-                    feedback: html.genId(),
-                    feedbackIndicator: html.genId(),
-                    inputControl: html.genId()
-                },
-                feedbackTip;
+                fieldPanel: html.genId(),
+                messagePanel: html.genId(),
+                message: html.genId(),
+                infoPanel: html.genId(),
+                feedback: html.genId(),
+                feedbackIndicator: html.genId(),
+                inputControl: html.genId()
+            };
 
             // FEEDBACK
-            if (spec.data.constraints.required) {
-                feedbackTip = span({
-                    class: 'kb-app-parameter-required-glyph fa fa-arrow-left',
-                    title: 'required field',
-                    dataElement: 'feedback'
-                });
-            }
 
             var infoId = html.genId();
 
@@ -380,11 +370,13 @@ define([
                     dataElement: 'message-panel'
                 }, [
                     div({ class: 'col-md-3' }),
-                    div({ class: 'col-md-9' }, div({
-                        id: ids.message,
-                        class: 'message',
-                        dataElement: 'message'
-                    }))
+                    div({ class: 'col-md-9' }, [
+                        div({
+                            id: ids.message,
+                            class: 'message',
+                            dataElement: 'message'
+                        }, 'yeah')
+                    ])
                 ]),
                 div({
                     id: ids.infoPanel,
@@ -439,7 +431,6 @@ define([
             attach(arg.node);
             return Promise.try(function () {
                 bus.on('validation', function (message) {
-                    console.log('validation...', message);
                     switch (message.diagnosis) {
                     case 'valid':
                         feedbackOk();

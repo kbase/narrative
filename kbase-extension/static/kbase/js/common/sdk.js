@@ -281,6 +281,11 @@ define([], function () {
                 };
                 break;
             case 'checkbox':
+                // In theory, the checkbox
+                constraints = {
+                    min: 0,
+                    max: 0
+                };
                 break;
             }
             break;
@@ -595,7 +600,6 @@ define([], function () {
     }
 
     function convertAppSpec(sdkAppSpec) {
-
         // Parameters
 
         var parameterSpecs = {},

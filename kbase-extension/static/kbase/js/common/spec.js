@@ -9,7 +9,7 @@ define([
     './lang',
     './sdk',
     './specValidation'
-], function(lang, sdk, Validation) {
+], function (lang, sdk, Validation) {
     'use strict';
 
     function factory(config) {
@@ -23,6 +23,8 @@ define([
             throw new Error('Either a spec or appSpec must be provided');
         }
 
+        console.log('SPEC IS', spec);
+
         function getSpec() {
             return spec;
         }
@@ -35,7 +37,7 @@ define([
         function makeEmptyModel() {
             var model = {};
             console.log('making empty model from ', spec);
-            spec.parameters.layout.forEach(function(id) {
+            spec.parameters.layout.forEach(function (id) {
                 model[id] = spec.parameters.specs[id].data.defaultValue || spec.parameters.specs[id].data.nullValue;
             });
             return model;
@@ -43,7 +45,7 @@ define([
 
         function makeDefaultedModel() {
             var model = {};
-            spec.parameters.layout.forEach(function(id) {
+            spec.parameters.layout.forEach(function (id) {
                 model[id] = lang.copy(spec.parameters.specs[id].data.defaultValue)
             });
             return model;
@@ -55,11 +57,10 @@ define([
             var results = {};
             var validation = Validation.make();
             console.log('validating with', spec);
-            return spec.parameters.layout.forEach(function(id) {
+            spec.parameters.layout.forEach(function (id) {
                 console.log('validating parameter', id, spec.parameters.specs);
                 results[id] = validation.validateModel(spec.parameters.specs[id], model[id]);
             });
-            console.log('validation results', results);
             return results;
         }
 
@@ -72,7 +73,7 @@ define([
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
         }
     };

@@ -29,8 +29,15 @@ define([
     'use strict';
 
     var t = html.tag,
-        div = t('div'), span = t('span'), label = t('label'), button = t('button'),
-        table = t('table'), tr = t('tr'), th = t('th'), td = t('td'), pre = t('pre'),
+        div = t('div'),
+        span = t('span'),
+        label = t('label'),
+        button = t('button'),
+        table = t('table'),
+        tr = t('tr'),
+        th = t('th'),
+        td = t('td'),
+        pre = t('pre'),
         classSets = {
             standard: {
                 nameColClass: 'col-md-2',
@@ -83,7 +90,7 @@ define([
                     class: 'alert alert-' + messageDef.type,
                     role: 'alert'
                 }, [
-                    span({style: {fontWeight: 'bold'}}, messageDef.title),
+                    span({ style: { fontWeight: 'bold' } }, messageDef.title),
                     ': ',
                     messageDef.message,
                     ' ',
@@ -96,7 +103,7 @@ define([
                                 showMessageDialog(messageDef.id);
                             }
                         })
-                    }, ui.buildIcon({name: 'info-circle'}))
+                    }, ui.buildIcon({ name: 'info-circle' }))
                 ]);
             return {
                 events: events,
@@ -168,68 +175,70 @@ define([
         }
 
         function rawSpec(spec) {
+            console.log('RAW SPEC', spec);
             var specText = JSON.stringify(spec, false, 3),
                 fixedSpec = specText.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-            return pre({class: 'prettyprint lang-json', style: {fontSize: '80%'}}, fixedSpec);
+            return pre({ class: 'prettyprint lang-json', style: { fontSize: '80%' } }, fixedSpec);
         }
 
         function parameterInfoContent(spec) {
-            return div({style: {padding: '0px'}}, [
-                div({style: {fontWeight: 'bold'}}, spec.ui.label),
-                div({style: {fontStyle: 'italic'}}, spec.id),
-                div({style: {fontSize: '80%'}}, spec.ui.description)
+            return div({ style: { padding: '0px' } }, [
+                div({ style: { fontWeight: 'bold' } }, spec.ui.label),
+                div({ style: { fontStyle: 'italic' } }, spec.id),
+                div({ style: { fontSize: '80%' } }, spec.ui.description)
             ]);
         }
+
         function parameterInfoTypeRules(spec) {
             switch (spec.data.type) {
-                case 'float':
-                    return [
-                        tr([th('Min'), td(spec.data.constraints.min)]), // update this in the spec
-                        tr([th('Max'), td(spec.data.constraints.max)])
-                    ];
-                case 'int':
-                    // just for now ...
-//                    if (spec.spec.field_type === 'checkbox') {
-//                        return [
-//                            // TODO: fix
-//                            tr([th('Value when checked'), td(Props.getDataItem(spec.spec, 'checkbox_options.checked_value', UI.na()))]),
-//                            tr([th('Value when un-checked'), td(Props.getDataItem(spec.spec, 'checkbox_options.unchecked_value', UI.na()))])
-//                        ];
-//                    }
-                    return [
-                        tr([th('Min'), td(spec.data.constraints.min)]),
-                        tr([th('Max'), td(spec.data.constraints.max)])
-                    ];
+            case 'float':
+                return [
+                    tr([th('Min'), td(spec.data.constraints.min)]), // update this in the spec
+                    tr([th('Max'), td(spec.data.constraints.max)])
+                ];
+            case 'int':
+                // just for now ...
+                //                    if (spec.spec.field_type === 'checkbox') {
+                //                        return [
+                //                            // TODO: fix
+                //                            tr([th('Value when checked'), td(Props.getDataItem(spec.spec, 'checkbox_options.checked_value', UI.na()))]),
+                //                            tr([th('Value when un-checked'), td(Props.getDataItem(spec.spec, 'checkbox_options.unchecked_value', UI.na()))])
+                //                        ];
+                //                    }
+                return [
+                    tr([th('Min'), td(spec.data.constraints.min)]),
+                    tr([th('Max'), td(spec.data.constraints.max)])
+                ];
             }
         }
 
         function parameterInfoRules(spec) {
-            return table({class: 'table table-striped'}, [
+            return table({ class: 'table table-striped' }, [
                 tr([th('Required'), td(spec.data.constraints.required ? 'yes' : 'no')]),
                 tr([th('Data type'), td(spec.data.type)]),
                 // tr([th('Field type'), td(spec.spec.field_type)]),
                 tr([th('Multiple values?'), td(spec.multipleItems ? 'yes' : 'no')]),
                 (function () {
-//                    if (!spec.spec.default_values) {
-//                        return;
-//                    }
-//                    if (spec.spec.default_values.length === 0) {
-//                        return;
-//                    }
-//                    var defaultValues = spec.defaultValue();
-//                    if (defaultValues instanceof Array) {
-//                        return tr([th('Default value'), td(defaultValues.join('<br>'))]);
-//                    }
+                    //                    if (!spec.spec.default_values) {
+                    //                        return;
+                    //                    }
+                    //                    if (spec.spec.default_values.length === 0) {
+                    //                        return;
+                    //                    }
+                    //                    var defaultValues = spec.defaultValue();
+                    //                    if (defaultValues instanceof Array) {
+                    //                        return tr([th('Default value'), td(defaultValues.join('<br>'))]);
+                    //                    }
                     return tr([th('Default value'), td(spec.data.defaultValue)]);
                 }()),
                 (function () {
                     if (spec.data.constraints.types) {
-                        return tr([th('Valid types'), td(spec.data.constraints.types.join('<br>'))]);                        
+                        return tr([th('Valid types'), td(spec.data.constraints.types.join('<br>'))]);
                     }
-                    
+
                     //if (spec.spec.text_options && spec.spec.text_options.valid_ws_types && spec.spec.text_options.valid_ws_types.length > 0) {//
-    //                    return tr([th('Valid types'), td(spec.spec.text_options.valid_ws_types.join('<br>'))]);
-      //              }
+                    //                    return tr([th('Valid types'), td(spec.spec.text_options.valid_ws_types.join('<br>'))]);
+                    //              }
                 }())
             ].concat(parameterInfoTypeRules(spec)));
         }
@@ -252,13 +261,12 @@ define([
 
             return div([
                 // div({dataElement: 'little-tip'}, parameterInfoLittleTip(spec)),
-                div({dataElement: 'big-tip', class: 'hidden'}, html.makeTabs({
+                div({ dataElement: 'big-tip', class: 'hidden' }, html.makeTabs({
                     alignRight: true,
-                    tabs: [
-                        {
+                    tabs: [{
                             label: 'Description',
                             name: 'description',
-                            content: div({style: {padding: '0px'}}, infoTipText)
+                            content: div({ style: { padding: '0px' } }, infoTipText)
                         },
                         {
                             label: 'About',
@@ -275,12 +283,22 @@ define([
                             name: 'spec',
                             content: rawSpec(spec)
                         }
-                    ]}))
+                    ]
+                }))
             ]);
         }
 
         function render(events) {
-            var feedbackTip;
+            var ids = {
+                    fieldPanel: html.genId(),
+                    messagePanel: html.genId(),
+                    message: html.genId(),
+                    infoPanel: html.genId(),
+                    feedback: html.genId(),
+                    feedbackIndicator: html.genId(),
+                    inputControl: html.genId()
+                },
+                feedbackTip;
 
             // FEEDBACK
             if (spec.data.constraints.required) {
@@ -306,18 +324,23 @@ define([
                 id: fieldId
             }, [
                 div({
+                    id: ids.fieldPanel,
                     class: 'form-group kb-app-parameter-input field-panel',
                     dataElement: 'field-panel',
                     style: {
                         marginBottom: '0'
                     }
                 }, [
-                    label({class: 'col-md-3 xcontrol-label kb-app-parameter-name control-label'}, [
+                    label({ class: 'col-md-3 xcontrol-label kb-app-parameter-name control-label' }, [
                         spec.ui.label || spec.ui.id
                     ]),
-                    div({class: 'input-group col-md-9'}, [
-                        div({dataElement: 'input-control'}),
+                    div({ class: 'input-group col-md-9' }, [
                         div({
+                            id: ids.inputControl,
+                            dataElement: 'input-control'
+                        }),
+                        div({
+                            id: ids.feedback,
                             class: 'input-group-addon',
                             dataElement: 'feedback',
                             style: {
@@ -325,7 +348,10 @@ define([
                                 padding: '0'
                             }
                         }, [
-                            div({dataElement: 'indicator'})
+                            div({
+                                id: ids.feedbackIndicator,
+                                dataElement: 'indicator'
+                            })
                         ]),
                         div({
                             class: 'input-group-addon',
@@ -334,61 +360,78 @@ define([
                                 padding: '0'
                             }
                         }, [
-                            div({dataElement: 'info'}, button({
+                            div({ dataElement: 'info' }, button({
                                 class: 'btn btn-link btn-xs',
                                 type: 'button',
                                 id: events.addEvent({
                                     type: 'click',
                                     handler: function () {
-                                        ui.getElement('big-tip').classList.toggle('hidden');
+                                        places.infoPanel.querySelector('[data-element="big-tip"]').classList.toggle('hidden');
+                                        // ui.getElement('big-tip').classList.toggle('hidden');
                                     }
                                 })
-                            }, span({class: 'fa fa-info-circle'})))
+                            }, span({ class: 'fa fa-info-circle' })))
                         ])
                     ])
                 ]),
-                div({class: 'message-panel hidden', dataElement: 'message-panel'}, [
-                    div({class: 'col-md-3'}),
-                    div({class: 'col-md-9'}, div({
+                div({
+                    id: ids.messagePanel,
+                    class: 'message-panel hidden',
+                    dataElement: 'message-panel'
+                }, [
+                    div({ class: 'col-md-3' }),
+                    div({ class: 'col-md-9' }, div({
+                        id: ids.message,
                         class: 'message',
                         dataElement: 'message'
                     }))
                 ]),
-                div({class: 'info-panel row', dataElement: 'info-panel'}, [
-                    div({class: 'col-md-12'}, div({id: infoId}, [
+                div({
+                    id: ids.infoPanel,
+                    class: 'info-panel row',
+                    dataElement: 'info-panel'
+                }, [
+                    div({ class: 'col-md-12' }, div({ id: infoId }, [
                         renderInfoTip()
                     ]))
 
                 ])
             ]);
 
-            return content;
+            return {
+                content: content,
+                places: ids
+            };
         }
 
         // LIFECYCLE
 
         function attach(node) {
-            var events = Events.make();
-
             container = node;
-            container.innerHTML = render(events);
-            events.attachEvents(container);
-            ui = UI.make({node: container});
-            // TODO: use the pattern in which the redner returns an object,
+            ui = UI.make({ node: container });
+            var events = Events.make({
+                node: container
+            });
+
+            var rendered = render(events);
+            container.innerHTML = rendered.content;
+            events.attachEvents();
+            // TODO: use the pattern in which the render returns an object,
             // which includes events and other functions to be run after
             // content is added to the dom.
             PR.prettyPrint(null, container);
 
             places = {
                 field: document.getElementById(fieldId),
-                message: ui.getElement('message'),
-                messagePanel: ui.getElement('message-panel'),
-                feedback: ui.getElement('feedback'),
-                feedbackIndicator: ui.getElement('feedback.indicator'),
-                removalButton: ui.getElement('removal-button')
+                message: document.getElementById(rendered.places.message),
+                messagePanel: document.getElementById(rendered.places.messagePanel),
+                infoPanel: document.getElementById(rendered.places.infoPanel),
+                feedback: document.getElementById(rendered.places.feedback),
+                feedbackIndicator: document.getElementById(rendered.places.feedbackIndicator),
+                inputControl: document.getElementById(rendered.places.inputControl)
             };
             if (inputControl.attach) {
-                return inputControl.attach(ui.getElement('input-control'));
+                return inputControl.attach(places.inputControl);
             }
         }
 
@@ -398,34 +441,34 @@ define([
                 bus.on('validation', function (message) {
                     console.log('validation...', message);
                     switch (message.diagnosis) {
-                        case 'valid':
-                            feedbackOk();
-                            clearError();
-                            break;
-                        case 'required-missing':
-                            feedbackRequired();
-                            clearError();
-                            break;
-                        case 'suspect':
-                            feedbackOk();
-                            clearError();
-                            setWarning({
-                                message: message.shortMessage,
-                                id: message.messageId
-                            });
-                            break;
-                        case 'invalid':
-                            feedbackError();
-                            clearError();
-                            setError({
-                                id: message.messageId,
-                                message: message.errorMessage
-                            });
-                            break;
-                        case 'optional-empty':
-                            feedbackNone();
-                            clearError();
-                            break;
+                    case 'valid':
+                        feedbackOk();
+                        clearError();
+                        break;
+                    case 'required-missing':
+                        feedbackRequired();
+                        clearError();
+                        break;
+                    case 'suspect':
+                        feedbackOk();
+                        clearError();
+                        setWarning({
+                            message: message.shortMessage,
+                            id: message.messageId
+                        });
+                        break;
+                    case 'invalid':
+                        feedbackError();
+                        clearError();
+                        setError({
+                            id: message.messageId,
+                            message: message.errorMessage
+                        });
+                        break;
+                    case 'optional-empty':
+                        feedbackNone();
+                        clearError();
+                        break;
                     }
                 });
                 bus.on('touched', function (message) {
@@ -441,7 +484,7 @@ define([
                     return inputControl.start()
                         .then(function () {
                             bus.emit('run', {
-                                node: ui.getElement('input-control')
+                                node: places.inputControl
                             });
                         });
                 }

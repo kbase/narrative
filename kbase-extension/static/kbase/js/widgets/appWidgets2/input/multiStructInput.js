@@ -22,7 +22,8 @@ define([
 
     // Constants
     var t = html.tag,
-        div = t('div'), button = t('button');
+        div = t('div'),
+        button = t('button');
 
     function factory(config) {
         var options = {},
@@ -51,21 +52,21 @@ define([
 
         function setModelValue(value, index) {
             return Promise.try(function () {
-                if (index !== undefined) {
-                    if (value) {
-                        model.value[index] = value;
+                    if (index !== undefined) {
+                        if (value) {
+                            model.value[index] = value;
+                        } else {
+                            model.value.splice(index, 1);
+                        }
                     } else {
-                        model.value.splice(index, 1);
+                        if (value) {
+                            model.value = value;
+                        } else {
+                            unsetModelValue();
+                        }
                     }
-                } else {
-                    if (value) {
-                        model.value = value;
-                    } else {
-                        unsetModelValue();
-                    }
-                }
-                normalizeModel();
-            })
+                    normalizeModel();
+                })
                 .then(function () {
                     render();
                 });
@@ -73,8 +74,8 @@ define([
 
         function addModelValue(value) {
             return Promise.try(function () {
-                model.value.push(value);
-            })
+                    model.value.push(value);
+                })
                 .then(function () {
                     render();
                 });
@@ -82,8 +83,8 @@ define([
 
         function unsetModelValue() {
             return Promise.try(function () {
-                model.value = [];
-            })
+                    model.value = [];
+                })
                 .then(function (changed) {
                     render();
                 });
@@ -137,7 +138,7 @@ define([
                         diagnosis: 'disabled'
                     };
                 }
-                
+
                 // don't validate yet.
                 return Validation.validateTrue(rawValue);
 
@@ -178,7 +179,7 @@ define([
                     bus: inputBus,
                     index: index
                 },
-                placeholder = div({id: widgetId}),
+                placeholder = div({ id: widgetId }),
                 errorRow;
 
             widgets.push(widgetWrapper);
@@ -192,16 +193,16 @@ define([
                     });
                 }
             });
-//            inputBus.on('validation', function (message) {
-//                if (message.diagnosis === 'optional-empty') {
-//                    // alert('delete me!');
-//                    model.value.splice(widgetWrapper.index, 1);
-//                    bus.emit('changed', {
-//                        newValue: model.value
-//                    });
-//                    render();
-//                }
-//            });
+            //            inputBus.on('validation', function (message) {
+            //                if (message.diagnosis === 'optional-empty') {
+            //                    // alert('delete me!');
+            //                    model.value.splice(widgetWrapper.index, 1);
+            //                    bus.emit('changed', {
+            //                        newValue: model.value
+            //                    });
+            //                    render();
+            //                }
+            //            });
             inputBus.on('changed', function (message) {
                 model.value[index] = message.newValue;
                 // TODO: validate the main control...
@@ -210,19 +211,21 @@ define([
                     newValue: model.value
                 });
             });
-            
+
             inputBus.on('touched', function (message) {
                 console.log('touched');
                 bus.emit('touched');
             });
 
-            preButton = div({class: 'input-group-addon', style: {width: '5ex', padding: '0'}}, String(index + 1) + '.');
-            postButton = div({class: 'input-group-addon', style: {padding: '0'}}, button({
+            preButton = div({ class: 'input-group-addon', style: { width: '5ex', padding: '0' } }, String(index + 1) + '.');
+            postButton = div({ class: 'input-group-addon', style: { padding: '0' } }, button({
                 class: 'btn btn-danger btn-link btn-xs',
                 type: 'button',
-                style: {width: '4ex'},
+                style: { width: '4ex' },
                 dataIndex: String(index),
-                id: events.addEvent({type: 'click', handler: function (e) {
+                id: events.addEvent({
+                    type: 'click',
+                    handler: function (e) {
                         // no, we don't need to consult the control, we just remove 
                         // it...
                         model.value.splice(widgetWrapper.index, 1);
@@ -234,10 +237,11 @@ define([
                             newValue: model.value
                         });
                         render();
-                    }})
+                    }
+                })
             }, 'x'));
-            return div({dataElement: 'input-row', dataIndex: String(index), style: {width: '100%'}}, [
-                div({class: 'input-group'}, [
+            return div({ dataElement: 'input-row', dataIndex: String(index), style: { width: '100%' } }, [
+                div({ class: 'input-group' }, [
                     preButton,
                     placeholder,
                     postButton
@@ -249,7 +253,6 @@ define([
             return {
                 type: 'click',
                 handler: function (e) {
-                    console.log('defaultvalue', structSpec);
                     addModelValue(JSON.parse(JSON.stringify(structSpec.data.defaultValue)));
                     render();
                 }
@@ -295,7 +298,7 @@ define([
                         button({
                             type: 'button',
                             class: 'btn btn-default',
-                            id: events.addEvents({events: [handleAddNew()]})
+                            id: events.addEvents({ events: [handleAddNew()] })
                         }, 'Add New')
                     ])
                 ])
@@ -335,21 +338,21 @@ define([
             var content = div({
                 dataElement: 'main-panel'
             }, [
-                div({dataElement: 'input-container'})
+                div({ dataElement: 'input-container' })
             ]);
             return {
                 content: content,
                 events: events
             };
         }
-        
+
         function autoValidate() {
             return Promise.all(model.value.map(function (value, index) {
-                // could get from DOM, but the model is the same.
-                var rawValue = container.querySelector('[data-index="' + index + '"]').value;
-                // console.log('VALIDATE', value);
-                return validate(rawValue);
-            }))
+                    // could get from DOM, but the model is the same.
+                    var rawValue = container.querySelector('[data-index="' + index + '"]').value;
+                    // console.log('VALIDATE', value);
+                    return validate(rawValue);
+                }))
                 .then(function (results) {
                     // a bit of a hack -- we need to handle the 
                     // validation here, and update the individual rows
@@ -385,7 +388,7 @@ define([
                 bus.on('run', function (message) {
                     parent = message.node;
                     container = parent.appendChild(document.createElement('div'));
-                    ui = UI.make({node: container});
+                    ui = UI.make({ node: container });
 
                     var events = Events.make(),
                         theLayout = layout(events);

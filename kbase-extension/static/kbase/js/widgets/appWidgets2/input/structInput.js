@@ -25,7 +25,8 @@ define([
 
     // Constants
     var t = html.tag,
-        div = t('div'), span = t('span'),
+        div = t('div'),
+        span = t('span'),
         resolver = Resolver.make();
 
     function factory(config) {
@@ -37,8 +38,7 @@ define([
             parent,
             bus = config.bus,
             ui,
-            model = {
-            },
+            model = {},
             viewModel = {},
             runtime = Runtime.make(),
             structFields,
@@ -47,9 +47,9 @@ define([
 
         function setModelValue(value, index) {
             return Promise.try(function () {
-                model.value = value;
-                
-            })
+                    model.value = value;
+
+                })
                 .then(function () {
                     // render();
                 })
@@ -60,8 +60,8 @@ define([
 
         function unsetModelValue() {
             return Promise.try(function () {
-                model.value = {};
-            })
+                    model.value = {};
+                })
                 .then(function (changed) {
                     // render();
                 });
@@ -69,7 +69,7 @@ define([
 
         function resetModelValue() {
             if (spec.defaultValue) {
-                setModelValue(spec.defaultValue);
+                setModelValue(JSON.parse(JSON.stringify(spec.defaultValue)));
             } else {
                 unsetModelValue();
             }
@@ -145,11 +145,11 @@ define([
 
             return Promise.all(promiseOfFields)
                 .then(function (fields) {
-                    var layout = div({style: {border: '1px silver solid', padding: '4px'}}, 
+                    var layout = div({ style: { border: '1px silver solid', padding: '4px' } },
                         fields.map(function (field) {
-                        return div({id: field.id, style: {border: '0px orange dashed', padding: '0px'}});
-                    }).join('\n'));
-                    
+                            return div({ id: field.id, style: { border: '0px orange dashed', padding: '0px' } });
+                        }).join('\n'));
+
                     return {
                         content: layout,
                         fields: fields
@@ -221,7 +221,7 @@ define([
         }
 
 
-        
+
         /*
          * Render the struct input control and place, place it into the dom,
          * attach events, and start up the field widgets.
@@ -234,7 +234,7 @@ define([
                     result.fields.forEach(function (field) {
                         structFields[field.fieldName] = field;
                     });
-                        
+
                     // Start up all the widgets
                     return Promise.all(
                         result.fields.map(function (field) {
@@ -248,23 +248,23 @@ define([
                     ui.setContent('input-container', 'ERROR!' + err.message);
                 });
         }
-        
+
         function render(events) {
             container.innerHTML = div({
-                        dataElement: 'main-panel'
-                    }, [
-                        div({dataElement: 'input-container'})
-                    ]);
-            
+                dataElement: 'main-panel'
+            }, [
+                div({ dataElement: 'input-container' })
+            ]);
+
             return renderStruct(events);
         }
 
         function autoValidate() {
             return Promise.all(model.value.map(function (value, index) {
-                // could get from DOM, but the model is the same.
-                var rawValue = container.querySelector('[data-index="' + index + '"]').value;
-                return validate(rawValue);
-            }))
+                    // could get from DOM, but the model is the same.
+                    var rawValue = container.querySelector('[data-index="' + index + '"]').value;
+                    return validate(rawValue);
+                }))
                 .then(function (results) {
                     // a bit of a hack -- we need to handle the 
                     // validation here, and update the individual rows
@@ -292,7 +292,7 @@ define([
         }
 
         // LIFECYCLE API
-        
+
         // Okay, we need to 
 
         function start() {
@@ -300,46 +300,46 @@ define([
                 bus.on('run', function (message) {
                     var events = Events.make();
                     Promise.try(function () {
-                        parent = message.node;
-                        console.log('STRUCT PARENT?', parent, message);
-                        container = parent.appendChild(document.createElement('div'));
-                        ui = UI.make({node: container});
+                            parent = message.node;
+                            console.log('STRUCT PARENT?', parent, message);
+                            container = parent.appendChild(document.createElement('div'));
+                            ui = UI.make({ node: container });
 
-                        return render(events);
-                    })
-                    .then(function (theLayout) {
-                        events.attachEvents(container);
+                            return render(events);
+                        })
+                        .then(function (theLayout) {
+                            events.attachEvents(container);
 
-                        bus.on('reset-to-defaults', function (message) {
-                            resetModelValue();
-                        });
-                        bus.on('update', function (message) {
-                            // Update the model, and since we have sub widgets,
-                            // we should send the individual data to them.
-                            // setModelValue(message.value);
-                            viewModel = message.value;
+                            bus.on('reset-to-defaults', function (message) {
+                                resetModelValue();
+                            });
+                            bus.on('update', function (message) {
+                                // Update the model, and since we have sub widgets,
+                                // we should send the individual data to them.
+                                // setModelValue(message.value);
+                                viewModel = message.value;
                                 console.log('struct update', message);
-                            Object.keys(message.value).forEach(function (id) {
-                                structFields[id].bus.emit('update', {
-                                    value: message.value[id]
+                                Object.keys(message.value).forEach(function (id) {
+                                    structFields[id].bus.emit('update', {
+                                        value: message.value[id]
+                                    });
+                                });
+
+                            });
+                            // A fake submit.
+                            bus.on('submit', function () {
+                                bus.emit('submitted', {
+                                    value: viewModel
                                 });
                             });
-
+                            // The controller of this widget will be smart enough to 
+                            // know...
+                            bus.emit('sync');
+                        })
+                        .catch(function (err) {
+                            console.error('ERROR', err);
+                            container.innerHTML = err.message;
                         });
-                        // A fake submit.
-                        bus.on('submit', function () {
-                            bus.emit('submitted', {
-                                value: viewModel
-                            });
-                        });
-                        // The controller of this widget will be smart enough to 
-                        // know...
-                        bus.emit('sync');
-                    })
-                    .catch(function (err) {
-                        console.error('ERROR',err);
-                        container.innerHTML = err.message;
-                    });
                 });
             });
         }

@@ -330,7 +330,7 @@ define([
                         // no availale objects, so it empties the model...
                         //if (matching.length === 0) {
                         //    model.value = null;
-                       // }
+                        // }
 
                         render()
                             .then(function() {

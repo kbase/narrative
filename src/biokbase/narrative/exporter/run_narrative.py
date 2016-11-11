@@ -78,10 +78,16 @@ def execute_notebook(notebook):
                                  'templates')
     c.TemplateExporter.template_path = ['.', nar_templates]
 
-    # Initialize the notebook execution object, and run the notebook. We set a
-    # 10 minute timeout for now, but it may need to be bumped up. Using
-    # /tmp as the directory where the notebook will be run.
-    ep = ExecutePreprocessor(timeout=600)
+    # Initialize the notebook execution object, and run the notebook. If a
+    # timeout (in seconds) is defined in KB_CELL_TIMEOUT, use that for
+    # how long we allow a cell to run before timing it out, otherwise use
+    # a default value of 60 minutes.
+    # /tmp is the directory where the notebook will be run.
+    if 'KB_CELL_TIMEOUT' in os.environ:
+        timeout = int(os.environ['KB_CELL_TIMEOUT'])
+    else:
+        timeout = 3600
+    ep = ExecutePreprocessor(timeout=timeout)
     resources = {'metadata': {'path': '/tmp'}}
     return(ep.preprocess(notebook, resources))
 

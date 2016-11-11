@@ -26,7 +26,10 @@ define([
 
     function factory(config) {
         var options = {},
+            // The spec for the struct is actally in the parameters now, which is always
+            // the parameter with id 'item'.
             spec = config.parameterSpec,
+            structSpec = spec.parameters.specs.item,
             container,
             parent,
             bus = config.bus,
@@ -36,6 +39,8 @@ define([
             },
             runtime = Runtime.make(),
             widgets = [];
+
+        console.log('STRUCT SPEC?', spec);
 
         function normalizeModel() {
             var newModel = model.value.filter(function (item) {
@@ -162,7 +167,7 @@ define([
                 inputBus = runtime.bus().makeChannelBus(null, 'Multi int input bus'),
                 inputWidget = structInputWidget.make({
                     bus: inputBus,
-                    parameterSpec: spec,
+                    parameterSpec: structSpec,
                     spec: spec,
                     fieldSpec: config.fieldSpec,
                     showOwnMessages: true
@@ -240,95 +245,61 @@ define([
             ]);
         }
 
-        function makeNewInputControl(events, bus) {
-            // CONTROL
-            var preButton, postButton,
-                widgetId = html.genId(),
-                inputBus = runtime.bus().makeChannelBus(null, '"new input" parent comm bus'),
-                inputWidget = structInputWidget.make({
-                    bus: inputBus,
-                    // initialValue: config.initialValue,
-                    parameterSpec: spec,
-                    spec: spec,
-                    fieldSpec: config.fieldSpec,
-                    showOwnMessages: true
-                }),
-                errorRow,
-                placeholder = div({id: widgetId});
-
-            widgets.push({
-                id: widgetId,
-                instance: inputWidget,
-                bus: inputBus
-            });
-
-//            inputBus.on('changed', function (message) {
-//                model.value.push(message.newValue);
-//
-//                // TODO: and insert a new row ...
-//
-//                // first attempt, re-render the whole shebang.
-//                render();
-//
-//                // TODO: validate the main control...
-//                bus.emit('changed', {
-//                    newValue: model.value
-//                });
-//            });
-
-            preButton = div({class: 'input-group-addon', style: {width: '5ex', padding: '0'}}, '');
-            postButton = div({class: 'input-group-addon', style: {padding: '0'}}, button({
-                class: 'btn btn-primary btn-link btn-xs',
-                type: 'button',
-                style: {width: '4ex'},
-                id: events.addEvent({type: 'click', handler: function (e) {
-                        inputBus.emit('submit');
-                    }})
-            }, '+'));
-            
-            inputBus.on('submitted', function (message) {
-                console.log('submitted', message);
-                model.value.push(message.value);
-                render();
-                bus.emit('changed', {
-                    newValue: model.value
-                });
-            });
-            
-            // The new item control does not actually have any data to sync
-            // to, so we feed it the default values from the spec.
-            inputBus.on('sync', function (message) {
-                var value = {};
-                console.log('sync', spec);
-                Object.keys(spec.parameters.layout).forEach(function (id) {
-                    var parameter = spec.parameters.specs[id];
-                    value[id] = parameter.data.defaultValue;
-                });
-                if (value) {
-                    inputBus.emit('update', {
-                        value: value
-                    });
+        function handleAddNew() {
+            return {
+                type: 'click',
+                handler: function (e) {
+                    console.log('defaultvalue', structSpec);
+                    addModelValue(JSON.parse(JSON.stringify(structSpec.data.defaultValue)));
+                    render();
                 }
-            });
-
-            return div({dataElement: 'input-row', style: {width: '100%'}}, [
-                div({class: 'input-group'}, [
-                    preButton,
-                    placeholder,
-                    postButton
-                ])
-            ]);
+            };
         }
 
         function makeInputControl(events, bus) {
             var items = model.value.map(function (value, index) {
                 return makeSingleInputControl(value, index, events, bus);
             });
+            var existing;
+            if (items.length > 0) {
+                existing = items;
+            } else {
+                existing = [
+                    div({}, 'No items, please add one below')
+                ];
+            }
 
-            items = items.concat(makeNewInputControl(events, bus));
-            
-            var content = items.join('\n');
-            return content;
+            /*
+            Note about the button toolbar at the bottom of the phones list.
+            It would be nice to use a button inside a group inside a toolbar.
+            Semantically tight, extensible, right? Problem is they are implemented
+            as floats, so centering is not possible. So we use our own versions
+            */
+            return existing.concat([
+                div({
+                    class: '',
+                    role: '',
+                    style: {
+                        border: '1px solid #ccc',
+                        //backgroundColor: '#eee',
+                        padding: '6px',
+                        textAlign: 'center'
+                    }
+                }, [
+                    div({
+                        style: {
+                            textAlign: 'center',
+                            display: 'inline-block'
+                        }
+                    }, [
+                        button({
+                            type: 'button',
+                            class: 'btn btn-default',
+                            id: events.addEvents({events: [handleAddNew()]})
+                        }, 'Add New')
+                    ])
+                ])
+            ]).join('\n');
         }
 
         function render() {

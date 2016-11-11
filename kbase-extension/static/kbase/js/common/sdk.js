@@ -148,6 +148,7 @@ define([], function () {
         switch (spec.field_type) {
             case 'checkbox':
                 return 'int';
+            case 'textarea':
             case 'dropdown':
                 if (spec.allow_multiple) {
                     return '[]string';
@@ -495,38 +496,12 @@ define([], function () {
         return converted;
     }
 
-    function convertGroup(group, params) {
-        var multiple;
-        var type;
-        var defaultValue;
-        var nullValue;
-        // Collect params into group and remove from original params collection.
-        var groupParams = {};
-        group.parameter_ids.forEach(function (id) {
-            groupParams[id] = params[id];
-            delete params[id];
-        });
-        if (group.allow_multiple === 1) {
-            multiple = true;
-            type = '[]struct';
-            defaultValue = [];
-            nullValue = [];
-        } else {
-            multiple = false;
-            type = 'struct';
-            defaultValue = {};
-            nullValue = {};
-            // Default value is a struct of default values of the
-            // struct members. Note that this is fundamentally different
-            // from a list of structs/ groups.
-            Object.keys(groupParams).forEach(function (id) {
-                defaultValue[id] = groupParams[id].data.defaultValue;
-                nullValue[id] = groupParams[id].data.nullValue;
-            });
-        }
+    function convertGroupList(group, params) {
+        var defaultValue = [];
+        var nullValue = [];
         var structSpec = {
             id: group.id,
-            multipleItems: multiple,
+            multipleItems: true,
             ui: {
                 label: group.ui_name,
                 description: group.description,
@@ -536,7 +511,7 @@ define([], function () {
                 layout: group.parameter_ids
             },
             data: {
-                type: type,
+                type: '[]struct',                
                 constraints: {
                     required: (function () {
                         if (group.optional === 1) {
@@ -548,17 +523,74 @@ define([], function () {
                 defaultValue: defaultValue,
                 nullValue: nullValue
             },
+            // may not need this, but it is consistent with struct.
+            parameters: {
+                layout: ['item'],
+                specs: {
+                    item: convertGroupToStruct(group, params)
+                }
+            }
+        };
+        params[group.id] = structSpec;
+
+        return structSpec;
+    }
+
+    function convertGroupToStruct(group, params) {
+        // Collect params into group and remove from original params collection.
+        var groupParams = {};
+        group.parameter_ids.forEach(function (id) {
+            groupParams[id] = params[id];
+            delete params[id];
+        });
+        var defaultValue = {};
+        var nullValue = {};
+        // Default value is a struct of default values of the
+        // struct members. Note that this is fundamentally different
+        // from a list of structs/ groups.
+        Object.keys(groupParams).forEach(function (id) {
+            defaultValue[id] = groupParams[id].data.defaultValue;
+            nullValue[id] = groupParams[id].data.nullValue;
+        });
+        var required;
+        if (group.optional === 1) {
+            required = false;
+        } else {
+            required = true;
+        }
+        var structSpec = {
+            id: group.id,
+            multipleItems: false,
+            ui: {
+                label: group.ui_name,
+                description: group.description,
+                hint: group.short_hint,
+                class: group.ui_class || 'parameter',
+                control: '',
+                layout: group.parameter_ids
+            },
+            data: {
+                type: 'struct',
+                constraints: {
+                    required: required
+                },
+                defaultValue: defaultValue,
+                nullValue: nullValue
+            },
             parameters: {
                 layout: group.parameter_ids,
                 specs: groupParams
             }
         };
-        params[group.id] = structSpec;
-
-        //updateNullValue(converted, spec);
-        //updateDefaultValue(converted, spec);
-
         return structSpec;
+    }
+
+    function convertGroup(group, params) {
+        if (group.allow_multiple === 1) {
+            return convertGroupList(group, params);
+        }
+        var structSpec =  convertGroupToStruct(group, params);
+        params[group.id] = structSpec;
     }
 
     function convertAppSpec(sdkAppSpec) {

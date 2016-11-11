@@ -301,6 +301,7 @@ define([
                     var events = Events.make();
                     Promise.try(function () {
                         parent = message.node;
+                        console.log('STRUCT PARENT?', parent, message);
                         container = parent.appendChild(document.createElement('div'));
                         ui = UI.make({node: container});
 

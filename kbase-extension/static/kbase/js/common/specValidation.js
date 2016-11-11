@@ -36,7 +36,7 @@ define([
         return false;
     }
 
-    function validateWorkspaceObjectNameString(value, spec) {
+    function validateWorkspaceObjectNameString(spec, value) {
         var parsedValue,
             messageId, shortMessage, errorMessage, diagnosis = 'valid';
 
@@ -82,7 +82,7 @@ define([
         };
     }
 
-    function validateString(value, spec) {
+    function validateString(spec, value) {
         var parsedValue,
             errorMessage, diagnosis = 'valid',
             c = spec.data.constraints,
@@ -91,7 +91,7 @@ define([
         if (c.type) {
             switch (c.type) {
                 case 'WorkspaceObjectName':
-                    return validateWorkspaceObjectNameString(value, spec);
+                    return validateWorkspaceObjectNameString(spec, value);
             }
         }
 
@@ -131,7 +131,7 @@ define([
         };
     }
 
-    function validateStruct(value, spec) {
+    function validateStruct(spec, value) {
         var parsedValue,
             errorMessage, diagnosis = 'valid',
             c = spec.data.constraints;
@@ -140,7 +140,7 @@ define([
 
         // is it empty? what does it mean for it to be empty?
         // each member is empty.
-        console.log('validating struct', value, spec);
+        console.log('validating struct', spec, value);
 
         // use the spec to validate each member
         var result = {};
@@ -156,12 +156,14 @@ define([
 
         return result;
     }
-    function validateStructList(value, spec) {
+    function validateStructList(spec, value) {
         var parsedValue,
             errorMessage, diagnosis = 'valid',
             c = spec.data.constraints;
 
         // make sure it is a plain object
+
+        console.log('validataing struct list', spec, value);
 
         // is it empty? what does it mean for it to be empty?
         // each member is empty.
@@ -198,7 +200,7 @@ define([
             // yes, the spec for a struct list is identical (for now) to 
             // a struct. 
             // TODO: we need an ordered set type to wrap the struct!!!!!!
-            return validateStruct(item, spec);
+            return validateStruct(spec.parameters.specs.item, item);
         });
 
         return results;
@@ -232,7 +234,7 @@ define([
         }
 
         return function (value) {
-            return fun(value, spec);
+            return fun(spec, value);
         };
     }
 

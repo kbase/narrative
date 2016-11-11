@@ -203,6 +203,7 @@ define([
                 // console.log('about to convert appspec', appSpec);
                 // TODO: this should capture the entire app spec, so don't need
                 // to carry appSpec around.
+                console.log('converting spec', appSpec);
                 spec = Spec.make({
                     appSpec: appSpec
                 });

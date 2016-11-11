@@ -42,12 +42,10 @@ define([
 
        function makeDefaultedModel() {
            var model = {};
-           console.log('making empty model from ', spec);
+           console.log('MAKING DEFAULTED', spec);
            spec.parameters.layout.forEach(function (id) {
-               console.log('DDEEFF??', id, spec.parameters.specs[id]);
                model[id] = spec.parameters.specs[id].data.defaultValue || spec.parameters.specs[id].data.nullValue;
            });
-           console.log('DEFAULTED', model);
            return model;
        }
        
@@ -58,6 +56,7 @@ define([
            var validation = Validation.make();
            console.log('validating with', spec);
            return spec.parameters.layout.forEach(function (id) {
+               console.log('validating parameter', id, spec.parameters.specs);
                 results[id] = validation.validateModel(spec.parameters.specs[id], model[id]);
            });
            console.log('validation results', results);

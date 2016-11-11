@@ -390,12 +390,6 @@ class AppManager(object):
 
         # Get the spec & params
         spec = self.spec_manager.get_spec(app_id, tag)
-        app_type = spec['info'].get('app_type', 'app')
-
-        if app_type == 'app':
-            raise ValueError('This app appears to be a long-running job! ' +
-                             'Please start it using the run_app function ' +
-                             'instead.')
 
         if 'behavior' not in spec:
             raise ValueError("This app appears invalid - " +
@@ -437,46 +431,15 @@ class AppManager(object):
             'run_id': run_id
         })
 
-        if app_type == 'view':
-            # now just map onto outputs.
-            (output_widget, widget_params) = map_outputs_from_state([],
-                                                                    params,
-                                                                    spec)
-            return WidgetManager().show_output_widget(output_widget,
-                                                      widget_params,
-                                                      cell_id=cell_id, tag=tag)
-        elif app_type == 'editor':
-            spec_params_map = dict((spec_params[i]['id'], spec_params[i])
-                                   for i in range(len(spec_params)))
-            input_vals = self._map_inputs(
-                spec['behavior']['kb_service_input_mapping'],
-                params,
-                spec_params_map
-            )
-            function_name = "{}.{}".format(
-                spec['behavior']['kb_service_name'],
-                spec['behavior']['kb_service_method']
-            )
-            try:
-                # result = [
-                #     function_name,
-                #     input_vals,
-                #     tag
-                # ]
-                result = self.service_client.sync_call(
-                    function_name,
-                    input_vals,
-                    service_version=tag
-                )[0]
-                if (cell_id):
-                    self.send_cell_message('local_app_result', cell_id, run_id, {
-                        'result': result
-                    });
-                else:
-                    return result
+        (output_widget, widget_params) = map_outputs_from_state([],
+                                                                params,
+                                                                spec)
 
-            except:
-                raise
+        # All a local app does is route the inputs to outputs through the 
+        # spec's mapping, and then feed that into the specified output widget.
+        return WidgetManager().show_output_widget(output_widget,
+                                                  widget_params,
+                                                  cell_id=cell_id, tag=tag)
 
     def run_dynamic_service(self, app_id, params, tag="release", version=None,
                       cell_id=None, run_id=None, **kwargs):
@@ -535,10 +498,6 @@ class AppManager(object):
 
         # Get the spec & params
         spec = self.spec_manager.get_spec(app_id, tag)
-        app_type = spec['info'].get('app_type', 'app')
-
-        if app_type == 'app':
-            raise ValueError('This app appears to be a long-running job! Please start it using the run_app function instead.')
 
         if 'behavior' not in spec:
             raise ValueError("This app appears invalid - it has no defined behavior")
@@ -549,13 +508,6 @@ class AppManager(object):
             # It's an old NJS script. These don't work anymore.
             raise ValueError('This app relies on a service that is now obsolete. Please contact the administrator.')
 
-        # for now, just map the inputs to outputs.
-        # First, validate.
-        # Preflight check the params - all required ones are present, all values are the right type, all numerical values are in given ranges
-        #spec_params = self.spec_manager.app_params(spec)
-        ###(params, ws_refs) = self._validate_parameters(app_id, tag,
-        ###                                             spec_params, params)
-
         # Log that we're trying to run a job...
         log_info = {
             'app_id': app_id,
@@ -565,25 +517,30 @@ class AppManager(object):
         }
         kblogging.log_event(self._log, "run_dynamic_service", log_info)
 
-        #spec_params_map = dict((spec_params[i]['id'],spec_params[i]) for i in range(len(spec_params)))
-        #input_vals = self._map_inputs(spec['behavior']['kb_service_input_mapping'], params, spec_params_map)
+        # Silly to keep this here, but we do not validate the incoming parameters.
+        # If they are provided by the UI (we have cell_id), they are constructed 
+        # according to the spec, so are trusted;
+        # Otherwise, if they are the product of direct code cell entry, this is a mode we do not
+        # "support", so we can let it fail hard.
+        # In the future when code cell interaction is supported for users, we will need to provide
+        # robust validation and error reporting, but this may end up being (should be) provided by the
+        # sdk execution infrastructure anyway
+
         input_vals = params
         function_name = spec['behavior']['kb_service_name'] + '.' + spec['behavior']['kb_service_method']
         try:
-            # result = [
-            #     function_name,
-            #     input_vals,
-            #     tag
-            # ]
             result = self.service_client.sync_call(
                 function_name,
                 input_vals,
                 service_version=tag
             )[0]
+            # if a ui call (a cell_id is defined) we send a result message, otherwise
+            # just the raw result for display in a code cell. This is how we "support"
+            # code cells for internal usage.
             if cell_id:
                 self.send_cell_message('result', cell_id, run_id, {
                     'result': result
-                });
+                })
             else:
                 return result
         except:

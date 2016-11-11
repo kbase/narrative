@@ -4,31 +4,45 @@ require.config({
     // Jupyter does some magic where it merges its /static/ directory
     // with this one (kbase-profile/static)
     paths : {
+        bluebird                                : 'ext_components/bluebird/js/browser/bluebird.min',
+        'bootstrap-slider'                      : 'ext_components/bootstrap-slider/bootstrap-slider',
+        'jquery-dataTables'                     : 'ext_components/datatables/media/js/jquery.dataTables.min',
+        'jquery-dataTables-bootstrap'           : 'ext_components/datatables/media/js/dataTables.bootstrap.min',
+        d3                                      : 'ext_components/d3/d3.min',
+        domReady                                : 'ext_components/requirejs/domReady',
         dropzone                                : 'ext_components/dropzone/dist/dropzone-amd-module',
+        handlebars                              : 'ext_components/handlebars/handlebars',
+        json                                    : 'ext_components/requirejs-plugins/src/json',
+        'jquery-nearest'                        : 'ext_components/jquery-nearest/src/jquery.nearest.min',
+        plotly                                  : 'ext_components/plotly.js/dist/plotly.min',
+        kb_common                               : 'ext_components/kbase-common-js/dist/kb/common/',
+        kb_service                              : 'ext_components/kbase-service-clients-js/dist/kb_service/',
+        numeral                                 : 'ext_components/numeral/numeral',
+        text                                    : 'ext_components/requirejs-plugins/lib/text',
+        'tipsy'                                 : 'ext_components/jquery.tipsy/js/jquery.tipsy',
+        underscore                              : 'ext_components/underscore/underscore-min',
+
+        // not under bower control
+        colorbrewer                             : 'ext_packages/colorbrewer/colorbrewer.min',
+        jqueryCookie                            : 'ext_packages/jquery-extensions/js/jquery.cookie.min',
+        'jquery-svg'                            : 'ext_packages/jquery-extensions/js/jquery.svg',
+        'knhx'                                  : 'ext_packages/knhxtree/js/knhx',
+        'knhx_menu'                             : 'ext_packages/knhxtree/js/menu',
+        'knhx_excanvas'                         : 'ext_packages/knhxtree/js/excanvas',
+        'knhx_canvastext'                       : 'ext_packages/knhxtree/js/canvastext',
+        'knhx_easytree'                         : 'ext_packages/knhxtree/js/easytree',
+
         narrativeTour                           : 'kbase/js/tour',
         kbaseInputTest                          : 'kbase/js/widgets/function_input/kbaseInputTest',
         api                                     : 'kbase/js/api',
-        bluebird                                : 'ext_components/bluebird/js/browser/bluebird.min',
-        plotly                                  : 'ext_components/plotly.js/dist/plotly.min',
         util                                    : 'kbase/js/util/',
         narrative_core                          : 'kbase/js/widgets/narrative_core',
         configPath                              : 'kbase',
         narrativeViewers                        : 'kbase/js/widgets/narrative_core/narrativeViewers',
-        domReady                                : 'ext_components/requirejs/domReady',
-        json                                    : 'ext_components/requirejs-plugins/src/json',
-        text                                    : 'ext_components/requirejs-plugins/lib/text',
         jquery                                  : 'components/jquery/jquery.min',
         jqueryui                                : 'components/jquery-ui/ui/minified/jquery-ui.min',
-        'jquery-svg'                            : 'ext_components/jquery-extensions/js/jquery.svg',
-        'jquery-dataTables'                     : 'ext_components/datatables/media/js/jquery.dataTables.min',
-        'jquery-dataTables-bootstrap'           : 'ext_components/datatables/media/js/dataTables.bootstrap.min',
-        'jquery-nearest'                        : 'ext_components/jquery-nearest/src/jquery.nearest.min',
-        jqueryCookie                            : 'ext_components/jquery-extensions/js/jquery.cookie.min',
         select2                                 : 'kbase/js/patched-components/select2/select2',
         bootstrap                               : 'components/bootstrap/js/bootstrap.min',
-        underscore                              : 'ext_components/underscore/underscore-min',
-        'bootstrap-slider'                      : 'ext_components/bootstrap-slider/bootstrap-slider',
-        'tipsy'                                 : 'ext_components/jquery.tipsy/js/jquery.tipsy',
         // 'css'                                   : 'ext_components/require-css/css.min',
 
         narrativeConfig                         : 'kbase/js/narrativeConfig',
@@ -106,6 +120,7 @@ require.config({
         'kbaseNarrativeError'                   : 'kbase/js/widgets/function_output/kbaseNarrativeError',
         'narrativeManager'                      : 'kbase/js/api/NarrativeManager',
         'ipythonCellMenu'                       : 'kbase/js/widgets/narrative_core/ipythonCellMenu',
+        
 
         // not yet ADMs, but still load with Require
         'kbaseNarrativeAppCell'                 : 'kbase/js/widgets/narrative_core/kbaseNarrativeAppCell',
@@ -139,10 +154,10 @@ require.config({
         'kbaseSamplePropertyHistogramInput'     : 'kbase/js/widgets/function_input/kbaseSamplePropertyHistogramInput',
         'kbaseSampleProperty2DPlotInput'        : 'kbase/js/widgets/function_input/kbaseSampleProperty2DPlotInput',
 
-        'kbaseNarrativeParameterCustomTextSubdataInput' :  'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterCustomTextSubdataInput',
-        'kbaseNarrativeParameterCustomButtonInput'      : 'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterCustomButtonInput',
+        'kbaseNarrativeParameterCustomTextSubdataInput'  : 'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterCustomTextSubdataInput',
+        'kbaseNarrativeParameterCustomButtonInput'       : 'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterCustomButtonInput',
         'kbaseNarrativeParameterCustomDropdownGroupInput': 'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterCustomDropdownGroupInput',
-        'kbaseNarrativeParameterAjaxTextSubdataInput'   :  'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterAjaxTextSubdataInput',
+        'kbaseNarrativeParameterAjaxTextSubdataInput'    :  'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterAjaxTextSubdataInput',
         /***
          * END CUSTOM INPUT WIDGETS
          ***/
@@ -152,8 +167,8 @@ require.config({
         /***
          * CUSTOM OUTPUT AND VIEWER WIDGETS
          ***/
-	    'kbaseReadsViewer'                       : 'kbase/js/widgets/function_output/kbaseReadsViewer',
-        'kbaseReadsSetView'                      : 'kbase/js/widgets/function_output/kbaseReadsSetView',
+	    'kbaseReadsViewer'                      : 'kbase/js/widgets/function_output/kbaseReadsViewer',
+        'kbaseReadsSetView'                     : 'kbase/js/widgets/function_output/kbaseReadsSetView',
         'kbaseMatrix2DAbstract'                 : 'kbase/js/widgets/function_output/kbaseMatrix2DAbstract',
         'kbaseGrowthMatrixAbstract'             : 'kbase/js/widgets/function_output/kbaseGrowthMatrixAbstract',
         'kbaseGrowthMatrix'                     : 'kbase/js/widgets/function_output/kbaseGrowthMatrix',
@@ -200,11 +215,6 @@ require.config({
 
         // another implementation of kbaseTabs needed for kbaseTabTable
         'kbaseTabTableTabs'                     : 'kbase/js/widgets/function_output/modeling/kbaseTabs',
-        'knhx'                                  : 'ext_components/knhxtree/js/knhx',
-        'knhx_menu'                             : 'ext_components/knhxtree/js/menu',
-        'knhx_excanvas'                         : 'ext_components/knhxtree/js/excanvas',
-        'knhx_canvastext'                       : 'ext_components/knhxtree/js/canvastext',
-        'knhx_easytree'                         : 'ext_components/knhxtree/js/easytree',
         'kbaseTree'                             : 'kbase/js/widgets/function_output/kbaseTree',
         'kbaseContigBrowserButtons'             : 'kbase/js/widgets/genomes/kbaseContigBrowserButtons',
         'ContigBrowserPanel'                    : 'kbase/js/widgets/function_output/contigBrowserPanel',
@@ -287,22 +297,17 @@ require.config({
         'kbaseReportView'                       : 'kbase/js/widgets/function_output/kbaseReportView',
         'kbaseExpressionVolcanoPlot'            : 'kbase/js/widgets/function_output/kbaseExpressionVolcanoPlot',
 
-
-
         /***
          * END CUSTOM OUTPUT WIDGETS
          ***/
 
-        'd3'                                    : 'ext_components/d3/d3.min',
-        'colorbrewer'                           : 'ext_components/colorbrewer/colorbrewer.min',
-        'handlebars'                            : 'ext_components/handlebars/handlebars',
-        'numeral'                               : 'ext_components/numeral/numeral',
         'kbwidget'                              : 'kbase/js/kbwidget',
         'kbaseAccordion'                        : 'kbase/js/widgets/kbaseAccordion',
         'kbaseAuthenticatedWidget'              : 'kbase/js/widgets/kbaseAuthenticatedWidget',
         'kbaseTable'                            : 'kbase/js/widgets/kbaseTable',
         'kbasePanel'                            : 'kbase/js/widgets/kbasePanel',
-        'kbaseDeletePrompt'                     : 'kbase/js/widgets/kbaseDeletePrompt',
+        'kbaseDeletePrompt'                     : 'kbase/js/widgets/kbaseDeletePrompt'
+
     },
     shim : {
         underscore : {
@@ -426,15 +431,14 @@ require.config({
     }
 });
 
-
 function addCdnModules(baseUrl) {
     if (!baseUrl) {
         baseUrl = 'https://ci.kbase.us/cdn/files';
         // baseUrl = 'http://cdn.kbase.us/cdn';
     }
     var modules = {
-            kb_common: 'kbase-common-js/1.7.0/',
-            kb_service: 'kbase-service-clients-js/2.9.1/',
+            //kb_common: 'kbase-common-js/1.7.0/',
+            //kb_service: 'kbase-service-clients-js/2.9.1/',
             uuid: 'pure-uuid/1.3.0/uuid',
             // TODO: we need to reconcile Jupyter and KBase external deps
             // text:  'requirejs-text/2.0.14/text',

@@ -1135,7 +1135,6 @@ define([
                         renderUI();
                         
                         // Now we need to reload the editor with thew new item.
-                        // console.log('RESULT', message);
                         model.setItem('current.readsSetRef', message.message.result.set_ref);
                         model.setItem('current.readsSet.object', serviceUtils.objectInfoToObject(message.message.result.set_info));
                         updateEditor(message.message.result.set_ref);
@@ -1285,7 +1284,6 @@ define([
 
                     bus.on('parameter-changed', function (message) {
                         // We simply store the new value for the parameter.
-                        console.log('parameter-changed', message);
                         model.setItem(['params', message.parameter, 'value'], message.newValue);
                         model.setItem(['params', message.parameter, 'changed'], true);
                         model.setItem(['params', message.parameter, 'touched'], false);
@@ -1437,7 +1435,7 @@ define([
                         });
 
                 }, function (err) {
-                    console.log('ERROR', err);
+                    console.error('ERROR', err);
                     reject(err);
                 });
             });
@@ -1445,9 +1443,6 @@ define([
         
         
         function renderCurrentlyEditing(info) {
-            
-            // console.log('INFO', info);
-            
             var content = table({class: 'table table-striped'}, [
                 tr([th('Name'), td({style: {fontWeight: 'bold'}}, info.name)]),
                 tr([th('Ref'), td(info.ref)]),
@@ -1624,7 +1619,6 @@ define([
                         // Call this when we have a new object to edit. It will 
                         // take care of updating the cell state as well as
                         // rendering the object.
-                        console.log('changed', message);
                         doEditObject(message.value);                        
                     });
                     widget.bus.on('create-new-set', function (message) {
@@ -1741,11 +1735,9 @@ define([
             }
         });
         
-        // console.log('EDITOR STATE', utils.getCellMeta(cell, 'kbase.editorCell'));
         editorState = Props.make({
             data: utils.getCellMeta(cell, 'kbase.editorCell'),
             onUpdate: function (props) {
-                console.log('setting editor cell metadata to editorState', props.getRawObject());
                 utils.setCellMeta(cell, 'kbase.editorCell', props.getRawObject());
                 renderUI();
             }

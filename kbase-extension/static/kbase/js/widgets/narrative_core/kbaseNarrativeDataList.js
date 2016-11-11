@@ -528,7 +528,8 @@ define([
             return Promise.resolve(
                 this.serviceClient.sync_call(
                     'NarrativeService.list_objects_with_sets',
-                    [{'ws_name': this.ws_name}]
+                    [{'ws_name': this.ws_name,
+                      'includeMetadata': 1}]
                 )
             )
             .then(function(result) {

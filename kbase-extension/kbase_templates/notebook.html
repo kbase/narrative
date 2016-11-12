@@ -17,7 +17,7 @@ window.mathjax_url = "{{mathjax_url}}";
 {{super()}}
 <link rel="stylesheet" href="{{ static_url("kbase/css/contigBrowserStyles.css") }}" type="text/css" />
 <link rel="stylesheet" href="{{ static_url("ext_components/datatables/media/css/dataTables.bootstrap.min.css") }}" type="text/css" />
-<link rel="stylesheet" href="{{ static_url("ext_components/select2/select2.css") }}" type="text/css" />
+<link rel="stylesheet" href="{{ static_url("ext_components/select2/dist/css/select2.css") }}" type="text/css" />
 <link rel="stylesheet" href="{{ static_url("ext_components/select2-bootstrap-css/select2-bootstrap.css") }}" type="text/css" />
 
 <link rel="stylesheet" href="{{ static_url("notebook/css/override.css") }}" type="text/css" />
@@ -141,6 +141,6 @@ data-notebook-path="{{notebook_path}}"
     running the main IPython stack, a little wrapper script had to be written. More details there. -->
 <script src="{{ static_url("narrativeMain.js") }}" charset="utf-8"></script>
 <!-- not used in this version, but left behind for posterity.
-    <script src="{{ static_url("notebook/js/main.js") }}" charset="utf-8"></script> 
+    <script src="{{ static_url("notebook/js/main.js") }}" charset="utf-8"></script>
 -->
 {% endblock %}

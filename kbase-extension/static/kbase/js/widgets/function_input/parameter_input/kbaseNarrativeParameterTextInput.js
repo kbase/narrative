@@ -196,7 +196,7 @@ define([
             }
 
             var form_id = spec.id;
-            var $input = $('<input id="' + form_id + '" placeholder="' + placeholder + '"' +
+            var $input = $('<select id="' + form_id + '" placeholder="' + placeholder + '"' +
                 ' value="' + defaultValue + '" type="text" style="width:100%"/>').addClass("form-control")
                 .on("input", function () {
                     self.isValid()
@@ -206,7 +206,7 @@ define([
                 if (spec.text_options.valid_ws_types) {
                     if (spec.text_options.valid_ws_types.length > 0) {
                         self.isUsingSelect2 = true;
-                        $input = $('<input id="' + form_id + '" type="text" style="width:100%" />')
+                        $input = $('<select id="' + form_id + '" type="text" style="width:100%" />')
                             .on("change", function () {
                                 self.isValid()
                             });
@@ -404,110 +404,137 @@ define([
         setupSelect2: function ($input, placeholder, defaultValue) {
             var self = this;
             var noMatchesFoundStr = "No matching data found.";
+            var tags = false;
             if (self.isOutputName) {
                 noMatchesFoundStr = "Enter a name for the output data object.";
+                tags = true;
             }
-            $input.select2({
-                matcher: self.select2Matcher,
-                formatNoMatches: noMatchesFoundStr,
-                placeholder: placeholder,
-                allowClear: true,
-                selectOnBlur: true,
-                query: function (query) {
-                    var data = {results: []};
+            console.log($input);
+            $.fn.select2.amd.require([
+                'select2/utils',
+                'select2/dropdown',
+                'select2/dropdown/closeOnSelect',
+                'select2/dropdown/attachBody',
+                'select2/selection/search',
+                'select2/selection/single'
+            ], function (Utils, Dropdown, CloseOnSelect, AttachBody, Search, SingleSelect) {
+                var SelectionAdapter = Utils.Decorate(SingleSelect, Search);
 
-                    // if there is a current selection (this is a bit of a hack) we
-                    // prefill the input box so we don't have to do additional typing
-                    if (query.term.trim() === "" && $input.select2('data') && $input.data('select2').kbaseHackLastSelection) {
-                        var searchbox = $input.data('select2').search;
-                        if (searchbox) {
-                            $(searchbox).val($input.select2('data').text);
-                            query.term = $input.select2('data').text;
-                            $input.data('select2').kbaseHackLastSelection = null;
+                // var DropdownAdapter = Utils.Decorate(
+                //     Utils.Decorate(Dropdown, CloseOnSelect),
+                //     AttachBody
+                // );
+
+                $input.select2({
+                    language: {
+                        noResults: function() {
+                            return noMatchesFoundStr;
                         }
-                    }
-                    $input.data('select2').kbaseHackLastTerm = query.term;
-
-                    // populate the names from our valid data object list
-                    var exactMatch = false;
-                    if (self.validDataObjectList) {
-                        for (var i = 0; i < self.validDataObjectList.length; i++) {
-                            var d = self.validDataObjectList[i];
-                            if (query.term.trim() !== "") {
-                                if (self.select2Matcher(query.term, d.name)) {
-                                    if (query.term === d.name) {
-                                        exactMatch = true;
-                                    }
-                                    data.results.push({id: d.name, text: d.name, info: d.info});
-                                }
-                                // search metadata too
-                                else if (d.info[10]) {
-                                    for (var key in d.info[10]) {
-                                        if (d.info[10].hasOwnProperty(key)) {
-                                            if (self.select2Matcher(query.term, d.info[10][key])) {
-                                                data.results.push({id: d.name, text: d.name,
-                                                    mm: key + ' - ' + d.info[10][key], info: d.info});
-                                                // allow us to show metadata match!
-                                            }
-                                        }
-                                    }
-                                }
-
-                            } else {
-                                data.results.push({id: d.name, text: d.name, info: d.info});
-                            }
-                        }
-                    }
-
-                    //always allow the name if it is set as an output name, unshift it to the front...
-                    if (query.term.trim() !== "") {
-                        if (self.isOutputName && !exactMatch) {
-                            data.results.unshift({id: query.term, text: query.term});
-                        }
-                    }
-
-                    // paginate results
-                    var pageSize = self.options.wsObjSelectPageSize;
-                    query.callback({results: data.results.slice((query.page - 1) * pageSize, query.page * pageSize),
-                        more: data.results.length >= query.page * pageSize});
-                },
-                formatSelection: function (object, container) {
-                    var display = '<span class="kb-parameter-data-selection">' + object.text + '</span>';
-                    return display;
-                },
-                formatResult: function (object, container, query) {
-                    var display = '<span style="word-wrap:break-word;"><b>' + object.text + "</b></span>";
-                    if (object.info) {
-                        // we can add additional info here in the dropdown ...
-                        display = display + " (v" + object.info[4] + ")<br>";
-                        if (object.mm) {
-                            display = display + "&nbsp&nbsp&nbsp<i>" + object.mm + "</i><br>";
-                        }
-                        display = display + "&nbsp&nbsp&nbsp<i>updated " + self.getTimeStampStr(object.info[3]) + "</i>";
-                    }
-                    return display;
-                }
+                    },
+                    // dropdownAdapter: DropdownAdapter,
+                    // selectionAdapter: SelectionAdapter,
+                    tags: true,
+                });
             })
-                .on("select2-selecting",
-                    function (e) {
-                        $input.data('select2').kbaseHackLastSelection = e.choice;
-                    }
-                )
-                .on("select2-focus",
-                    function (e) {
-                        // Jupyter.narrative.disableKeyboardManager();
-                    }
-                )
-                .on("select2-blur",
-                    function (e) {
-                        // Jupyter.narrative.enableKeyboardManager();
-                    }
-                );
 
 
-            if (defaultValue) {
-                $input.select2("data", {id: defaultValue, text: defaultValue});
-            }
+            // $input.select2({
+            //     // matcher: self.select2Matcher,
+            //     language: {
+            //         noResults: function() {
+            //             return noMatchesFoundStr;
+            //         }
+            //     },
+            //     ajax: {},
+            //     tags: tags,
+            //     tokenSeparators:[' ',','],
+            //     // placeholder: placeholder,
+            //     // allowClear: true,
+            //     // selectOnBlur: true,
+            //     // query: function (query) {
+            //     //     var data = {results: []};
+            //     //
+            //     //     // if there is a current selection (this is a bit of a hack) we
+            //     //     // prefill the input box so we don't have to do additional typing
+            //     //     if (query.term.trim() === "" && $input.select2('data') && $input.data('select2').kbaseHackLastSelection) {
+            //     //         var searchbox = $input.data('select2').search;
+            //     //         if (searchbox) {
+            //     //             $(searchbox).val($input.select2('data').text);
+            //     //             query.term = $input.select2('data').text;
+            //     //             $input.data('select2').kbaseHackLastSelection = null;
+            //     //         }
+            //     //     }
+            //     //     $input.data('select2').kbaseHackLastTerm = query.term;
+            //     //
+            //     //     // populate the names from our valid data object list
+            //     //     var exactMatch = false;
+            //     //     if (self.validDataObjectList) {
+            //     //         for (var i = 0; i < self.validDataObjectList.length; i++) {
+            //     //             var d = self.validDataObjectList[i];
+            //     //             if (query.term.trim() !== "") {
+            //     //                 if (self.select2Matcher(query.term, d.name)) {
+            //     //                     if (query.term === d.name) {
+            //     //                         exactMatch = true;
+            //     //                     }
+            //     //                     data.results.push({id: d.name, text: d.name, info: d.info});
+            //     //                 }
+            //     //                 // search metadata too
+            //     //                 else if (d.info[10]) {
+            //     //                     for (var key in d.info[10]) {
+            //     //                         if (d.info[10].hasOwnProperty(key)) {
+            //     //                             if (self.select2Matcher(query.term, d.info[10][key])) {
+            //     //                                 data.results.push({id: d.name, text: d.name,
+            //     //                                     mm: key + ' - ' + d.info[10][key], info: d.info});
+            //     //                                 // allow us to show metadata match!
+            //     //                             }
+            //     //                         }
+            //     //                     }
+            //     //                 }
+            //     //
+            //     //             } else {
+            //     //                 data.results.push({id: d.name, text: d.name, info: d.info});
+            //     //             }
+            //     //         }
+            //     //     }
+            //     //
+            //     //     //always allow the name if it is set as an output name, unshift it to the front...
+            //     //     if (query.term.trim() !== "") {
+            //     //         if (self.isOutputName && !exactMatch) {
+            //     //             data.results.unshift({id: query.term, text: query.term});
+            //     //         }
+            //     //     }
+            //     //
+            //     //     // paginate results
+            //     //     var pageSize = self.options.wsObjSelectPageSize;
+            //     //     query.callback({results: data.results.slice((query.page - 1) * pageSize, query.page * pageSize),
+            //     //         more: data.results.length >= query.page * pageSize});
+            //     // },
+            //     templateSelection: function (object) {
+            //         var display = '<span class="kb-parameter-data-selection">' + object.text + '</span>';
+            //         return $(display);
+            //     },
+            //     templateResult: function (object) {
+            //         var display = '<span style="word-wrap:break-word;"><b>' + object.text + "</b></span>";
+            //         if (object.info) {
+            //             // we can add additional info here in the dropdown ...
+            //             display = display + " (v" + object.info[4] + ")<br>";
+            //             if (object.mm) {
+            //                 display = display + "&nbsp&nbsp&nbsp<i>" + object.mm + "</i><br>";
+            //             }
+            //             display = display + "&nbsp&nbsp&nbsp<i>updated " + self.getTimeStampStr(object.info[3]) + "</i>";
+            //         }
+            //         return $(display);
+            //     }
+            // });
+            // // .on("select2-selecting",
+            // //     function (e) {
+            // //         $input.data('select2').kbaseHackLastSelection = e.choice;
+            // //     }
+            // // );
+            // //
+            // // if (defaultValue) {
+            // //     $input.select2("data", {id: defaultValue, text: defaultValue});
+            // // }
         },
         /* private method */
         select2Matcher: function (term, text) {
@@ -687,11 +714,11 @@ define([
             // disable the input
             this.enabled = false;
             for (var i = 0; i < this.rowInfo.length; i++) {
-                if (this.isUsingSelect2) {
-                    this.rowInfo[i].$input.select2('disable', true);
-                } else {
-                    this.rowInfo[i].$input.prop('disabled', true);
-                }
+                // if (this.isUsingSelect2) {
+                //     this.rowInfo[i].$input.select2('disable', true);
+                // } else {
+                this.rowInfo[i].$input.prop('disabled', true);
+                // }
                 // stylize the row div
                 this.rowInfo[i].$feedback.removeClass();
                 if (this.rowInfo[i].$removalButton) {
@@ -707,11 +734,11 @@ define([
             // enable the input
             this.enabled = true;
             for (var i = 0; i < this.rowInfo.length; i++) {
-                if (this.isUsingSelect2) {
-                    this.rowInfo[i].$input.select2('enable', true);
-                } else {
-                    this.rowInfo[i].$input.prop('disabled', false);
-                }
+                // if (this.isUsingSelect2) {
+                //     this.rowInfo[i].$input.select2('enable', true);
+                // } else {
+                this.rowInfo[i].$input.prop('disabled', false);
+                // }
                 if (this.rowInfo[i].$removalButton) {
                     this.rowInfo[i].$removalButton.show();
                 }
@@ -722,11 +749,11 @@ define([
         lockInputs: function () {
             if (this.enabled) {
                 for (var i = 0; i < this.rowInfo.length; i++) {
-                    if (this.isUsingSelect2) {
-                        this.rowInfo[i].$input.select2('disable', true);
-                    } else {
-                        this.rowInfo[i].$input.prop('disabled', true);
-                    }
+                    // if (this.isUsingSelect2) {
+                    //     this.rowInfo[i].$input.select2('disable', true);
+                    // } else {
+                    this.rowInfo[i].$input.prop('disabled', true);
+                    // }
                 }
             }
             for (var i = 0; i < this.rowInfo.length; i++) {
@@ -740,11 +767,11 @@ define([
         unlockInputs: function () {
             if (this.enabled) {
                 for (var i = 0; i < this.rowInfo.length; i++) {
-                    if (this.isUsingSelect2) {
-                        this.rowInfo[i].$input.select2('enable', true);
-                    } else {
-                        this.rowInfo[i].$input.prop('disabled', false);
-                    }
+                    // if (this.isUsingSelect2) {
+                    //     this.rowInfo[i].$input.select2('enable', true);
+                    // } else {
+                    this.rowInfo[i].$input.prop('disabled', false);
+                    // }
                     if (this.rowInfo[i].$removalButton) {
                         this.rowInfo[i].$removalButton.show();
                     }
@@ -795,9 +822,9 @@ define([
                 if (this.enabled) {
                     this.rowInfo[i].$input.select2("data", {id: value, text: value});
                 } else {
-                    this.rowInfo[i].$input.select2('disable', false);
+                    this.rowInfo[i].$input.prop('disable', false);
                     this.rowInfo[i].$input.select2("data", {id: value, text: value});
-                    this.rowInfo[i].$input.select2('disable', true);
+                    this.rowInfo[i].$input.prop('disable', true);
                 }
             } else {
                 this.rowInfo[i].$input.val(value);

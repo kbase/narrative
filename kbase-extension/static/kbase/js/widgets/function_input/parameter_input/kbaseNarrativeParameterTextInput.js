@@ -348,57 +348,57 @@ define([
 
             // update the validDataObjectList
             this.trigger('dataLoadedQuery.Narrative', [lookupTypes, this.IGNORE_VERSION, $.proxy(
-                    function (objects) {
-                        // we know from each parameter what each input type is.
-                        // we also know how many of each type there is.
-                        // so, iterate over all parameters and fulfill cases as below.
-                        // extract the object infos
-                        var allObjInfo = [];
-                        for (var typeName in objects) {
-                            if (objects.hasOwnProperty(typeName)) {
-                                for (var i = 0; i < objects[typeName].length; i++) {
-                                    allObjInfo.push(objects[typeName][i]);
-                                }
+                function (objects) {
+                    // we know from each parameter what each input type is.
+                    // we also know how many of each type there is.
+                    // so, iterate over all parameters and fulfill cases as below.
+                    // extract the object infos
+                    var allObjInfo = [];
+                    for (var typeName in objects) {
+                        if (objects.hasOwnProperty(typeName)) {
+                            for (var i = 0; i < objects[typeName].length; i++) {
+                                allObjInfo.push(objects[typeName][i]);
                             }
                         }
-                        // sort them by date, then by name
-                        allObjInfo.sort(function (a, b) {
-                            if (a[3] > b[3])
-                                return -1; // sort by date
-                            if (a[3] < b[3])
-                                return 1;  // sort by date
-                            if (a[1] < b[1])
-                                return -1; // sort by name
-                            if (a[1] > b[1])
-                                return 1;  // sort by name
-                            return 0;
-                        });
-                        /* object info
-                         0: id
-                         1: name
-                         2: type
-                         3: timestamp
-                         4: version
-                         5: owner
-                         6: ws id
-                         7: ws name
-                         8: checksum
-                         9: size
-                         10: metadata*/
+                    }
+                    // sort them by date, then by name
+                    allObjInfo.sort(function (a, b) {
+                        if (a[3] > b[3])
+                            return -1; // sort by date
+                        if (a[3] < b[3])
+                            return 1;  // sort by date
+                        if (a[1] < b[1])
+                            return -1; // sort by name
+                        if (a[1] > b[1])
+                            return 1;  // sort by name
+                        return 0;
+                    });
+                    /* object info
+                     0: id
+                     1: name
+                     2: type
+                     3: timestamp
+                     4: version
+                     5: owner
+                     6: ws id
+                     7: ws name
+                     8: checksum
+                     9: size
+                     10: metadata*/
 
-                        // populate the valid data object list
-                        self.validDataObjectList = [];
-                        for (var i = 0; i < allObjInfo.length; i++) {
-                            self.validDataObjectList.push({name: allObjInfo[i][1], info: allObjInfo[i]});
-                        }
+                    // populate the valid data object list
+                    self.validDataObjectList = [];
+                    for (var i = 0; i < allObjInfo.length; i++) {
+                        self.validDataObjectList.push({name: allObjInfo[i][1], info: allObjInfo[i]});
+                    }
 
-                        // refresh the input options
-                        if (self.isUsingSelect2) {
-                            self.$elem.find("#" + this.spec.id).trigger("change");
-                        }
-                    },
-                    this
-                    )]);
+                    // refresh the input options
+                    if (self.isUsingSelect2) {
+                        self.$elem.find("#" + this.spec.id).trigger("change");
+                    }
+                },
+                this
+                )]);
         },
         /* private method - note: if placeholder is empty, then users cannot cancel a selection*/
         setupSelect2: function ($input, placeholder, defaultValue) {
@@ -410,131 +410,129 @@ define([
                 tags = true;
             }
             console.log($input);
-            $.fn.select2.amd.require([
-                'select2/utils',
-                'select2/dropdown',
-                'select2/dropdown/closeOnSelect',
-                'select2/dropdown/attachBody',
-                'select2/selection/search',
-                'select2/selection/single'
-            ], function (Utils, Dropdown, CloseOnSelect, AttachBody, Search, SingleSelect) {
-                var SelectionAdapter = Utils.Decorate(SingleSelect, Search);
-
-                // var DropdownAdapter = Utils.Decorate(
-                //     Utils.Decorate(Dropdown, CloseOnSelect),
-                //     AttachBody
-                // );
-
-                $input.select2({
-                    language: {
-                        noResults: function() {
-                            return noMatchesFoundStr;
-                        }
-                    },
-                    // dropdownAdapter: DropdownAdapter,
-                    // selectionAdapter: SelectionAdapter,
-                    tags: true,
-                });
-            })
-
-
-            // $input.select2({
-            //     // matcher: self.select2Matcher,
-            //     language: {
-            //         noResults: function() {
-            //             return noMatchesFoundStr;
-            //         }
-            //     },
-            //     ajax: {},
-            //     tags: tags,
-            //     tokenSeparators:[' ',','],
-            //     // placeholder: placeholder,
-            //     // allowClear: true,
-            //     // selectOnBlur: true,
-            //     // query: function (query) {
-            //     //     var data = {results: []};
-            //     //
-            //     //     // if there is a current selection (this is a bit of a hack) we
-            //     //     // prefill the input box so we don't have to do additional typing
-            //     //     if (query.term.trim() === "" && $input.select2('data') && $input.data('select2').kbaseHackLastSelection) {
-            //     //         var searchbox = $input.data('select2').search;
-            //     //         if (searchbox) {
-            //     //             $(searchbox).val($input.select2('data').text);
-            //     //             query.term = $input.select2('data').text;
-            //     //             $input.data('select2').kbaseHackLastSelection = null;
-            //     //         }
-            //     //     }
-            //     //     $input.data('select2').kbaseHackLastTerm = query.term;
-            //     //
-            //     //     // populate the names from our valid data object list
-            //     //     var exactMatch = false;
-            //     //     if (self.validDataObjectList) {
-            //     //         for (var i = 0; i < self.validDataObjectList.length; i++) {
-            //     //             var d = self.validDataObjectList[i];
-            //     //             if (query.term.trim() !== "") {
-            //     //                 if (self.select2Matcher(query.term, d.name)) {
-            //     //                     if (query.term === d.name) {
-            //     //                         exactMatch = true;
-            //     //                     }
-            //     //                     data.results.push({id: d.name, text: d.name, info: d.info});
-            //     //                 }
-            //     //                 // search metadata too
-            //     //                 else if (d.info[10]) {
-            //     //                     for (var key in d.info[10]) {
-            //     //                         if (d.info[10].hasOwnProperty(key)) {
-            //     //                             if (self.select2Matcher(query.term, d.info[10][key])) {
-            //     //                                 data.results.push({id: d.name, text: d.name,
-            //     //                                     mm: key + ' - ' + d.info[10][key], info: d.info});
-            //     //                                 // allow us to show metadata match!
-            //     //                             }
-            //     //                         }
-            //     //                     }
-            //     //                 }
-            //     //
-            //     //             } else {
-            //     //                 data.results.push({id: d.name, text: d.name, info: d.info});
-            //     //             }
-            //     //         }
-            //     //     }
-            //     //
-            //     //     //always allow the name if it is set as an output name, unshift it to the front...
-            //     //     if (query.term.trim() !== "") {
-            //     //         if (self.isOutputName && !exactMatch) {
-            //     //             data.results.unshift({id: query.term, text: query.term});
-            //     //         }
-            //     //     }
-            //     //
-            //     //     // paginate results
-            //     //     var pageSize = self.options.wsObjSelectPageSize;
-            //     //     query.callback({results: data.results.slice((query.page - 1) * pageSize, query.page * pageSize),
-            //     //         more: data.results.length >= query.page * pageSize});
-            //     // },
-            //     templateSelection: function (object) {
-            //         var display = '<span class="kb-parameter-data-selection">' + object.text + '</span>';
-            //         return $(display);
-            //     },
-            //     templateResult: function (object) {
-            //         var display = '<span style="word-wrap:break-word;"><b>' + object.text + "</b></span>";
-            //         if (object.info) {
-            //             // we can add additional info here in the dropdown ...
-            //             display = display + " (v" + object.info[4] + ")<br>";
-            //             if (object.mm) {
-            //                 display = display + "&nbsp&nbsp&nbsp<i>" + object.mm + "</i><br>";
+            // $.fn.select2.amd.require([
+            //     'select2/utils',
+            //     'select2/dropdown',
+            //     'select2/dropdown/closeOnSelect',
+            //     'select2/dropdown/attachBody',
+            //     'select2/selection/search',
+            //     'select2/selection/single'
+            // ], function (Utils, Dropdown, CloseOnSelect, AttachBody, Search, SingleSelect) {
+            //     var SelectionAdapter = Utils.Decorate(SingleSelect, Search);
+            //
+            //     // var DropdownAdapter = Utils.Decorate(
+            //     //     Utils.Decorate(Dropdown, CloseOnSelect),
+            //     //     AttachBody
+            //     // );
+            //
+            //     $input.select2({
+            //         language: {
+            //             noResults: function() {
+            //                 return noMatchesFoundStr;
             //             }
-            //             display = display + "&nbsp&nbsp&nbsp<i>updated " + self.getTimeStampStr(object.info[3]) + "</i>";
-            //         }
-            //         return $(display);
+            //         },
+            //         // dropdownAdapter: DropdownAdapter,
+            //         // selectionAdapter: SelectionAdapter,
+            //         tags: true,
+            //     });
+            // })
+
+
+            $input.select2({
+                // matcher: self.select2Matcher,
+                language: {
+                    noResults: function() {
+                        return noMatchesFoundStr;
+                    }
+                },
+                tags: tags,
+                placeholder: placeholder,
+                allowClear: true,
+                selectOnBlur: true,
+                // query: function (query) {
+                //     var data = {results: []};
+                //
+                //     // if there is a current selection (this is a bit of a hack) we
+                //     // prefill the input box so we don't have to do additional typing
+                //     if (query.term.trim() === "" && $input.select2('data') && $input.data('select2').kbaseHackLastSelection) {
+                //         var searchbox = $input.data('select2').search;
+                //         if (searchbox) {
+                //             $(searchbox).val($input.select2('data').text);
+                //             query.term = $input.select2('data').text;
+                //             $input.data('select2').kbaseHackLastSelection = null;
+                //         }
+                //     }
+                //     $input.data('select2').kbaseHackLastTerm = query.term;
+                //
+                //     // populate the names from our valid data object list
+                //     var exactMatch = false;
+                //     if (self.validDataObjectList) {
+                //         for (var i = 0; i < self.validDataObjectList.length; i++) {
+                //             var d = self.validDataObjectList[i];
+                //             if (query.term.trim() !== "") {
+                //                 if (self.select2Matcher(query.term, d.name)) {
+                //                     if (query.term === d.name) {
+                //                         exactMatch = true;
+                //                     }
+                //                     data.results.push({id: d.name, text: d.name, info: d.info});
+                //                 }
+                //                 // search metadata too
+                //                 else if (d.info[10]) {
+                //                     for (var key in d.info[10]) {
+                //                         if (d.info[10].hasOwnProperty(key)) {
+                //                             if (self.select2Matcher(query.term, d.info[10][key])) {
+                //                                 data.results.push({id: d.name, text: d.name,
+                //                                     mm: key + ' - ' + d.info[10][key], info: d.info});
+                //                                 // allow us to show metadata match!
+                //                             }
+                //                         }
+                //                     }
+                //                 }
+                //
+                //             } else {
+                //                 data.results.push({id: d.name, text: d.name, info: d.info});
+                //             }
+                //         }
+                //     }
+                //
+                //     //always allow the name if it is set as an output name, unshift it to the front...
+                //     if (query.term.trim() !== "") {
+                //         if (self.isOutputName && !exactMatch) {
+                //             data.results.unshift({id: query.term, text: query.term});
+                //         }
+                //     }
+                //
+                //     // paginate results
+                //     var pageSize = self.options.wsObjSelectPageSize;
+                //     query.callback({results: data.results.slice((query.page - 1) * pageSize, query.page * pageSize),
+                //         more: data.results.length >= query.page * pageSize});
+                // },
+                templateSelection: function (object) {
+                    var display = '<span class="kb-parameter-data-selection">' + object.text + '</span>';
+                    return $(display);
+                },
+                templateResult: function (object) {
+                    var display = '<span style="word-wrap:break-word;"><b>' + object.text + "</b></span>";
+                    if (object.info) {
+                        // we can add additional info here in the dropdown ...
+                        display = display + " (v" + object.info[4] + ")<br>";
+                        if (object.mm) {
+                            display = display + "&nbsp&nbsp&nbsp<i>" + object.mm + "</i><br>";
+                        }
+                        display = display + "&nbsp&nbsp&nbsp<i>updated " + self.getTimeStampStr(object.info[3]) + "</i>";
+                    }
+                    return $(display);
+                }
+            });
+            // .on("select2-selecting",
+            //     function (e) {
+            //         $input.data('select2').kbaseHackLastSelection = e.choice;
             //     }
-            // });
-            // // .on("select2-selecting",
-            // //     function (e) {
-            // //         $input.data('select2').kbaseHackLastSelection = e.choice;
-            // //     }
-            // // );
-            // //
-            // // if (defaultValue) {
-            // //     $input.select2("data", {id: defaultValue, text: defaultValue});
-            // // }
+            // );
+            //
+            // if (defaultValue) {
+            //     $input.select2("data", {id: defaultValue, text: defaultValue});
+            // }
         },
         /* private method */
         select2Matcher: function (term, text) {

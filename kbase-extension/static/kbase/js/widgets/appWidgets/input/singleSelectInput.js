@@ -2,13 +2,15 @@
 /*jslint white:true,browser:true*/
 define([
     'bluebird',
+    'jquery',
     'kb_common/html',
     'common/validation',
     'common/events',
     'common/dom',
     'bootstrap',
-    'css!font-awesome'
-], function (Promise, html, Validation, Events, Dom) {
+    'css!font-awesome',
+    'select2'
+], function (Promise, $, html, Validation, Events, Dom) {
     'use strict';
 
     // Constants
@@ -48,12 +50,12 @@ define([
         function getInputValue() {
             var control = dom.getElement('input-container.input'),
                 selected = control.selectedOptions;
-            
+
             if (selected.length === 0) {
                 return;
             }
-            
-            // we are modeling a single string value, so we always just get the 
+
+            // we are modeling a single string value, so we always just get the
             // first selected element, which is all there should be!
             return selected.item(0).value;
         }
@@ -62,9 +64,9 @@ define([
          *
          * Text fields can occur in multiples.
          * We have a choice, treat single-text fields as a own widget
-         * or as a special case of multiple-entry -- 
+         * or as a special case of multiple-entry --
          * with a min-items of 1 and max-items of 1.
-         * 
+         *
          *
          */
 
@@ -82,7 +84,7 @@ define([
                     validationResult = Validation.validateTextString(rawValue, {
                         required: options.required
                     });
-                    
+
                 return validationResult;
             });
         }
@@ -103,36 +105,45 @@ define([
 
             // CONTROL
             return select({
-                id: events.addEvent({type: 'change', handler: function () {
-                        validate()
-                            .then(function (result) {
-                                if (result.isValid) {
-                                    bus.emit('changed', {
-                                        newValue: result.value
-                                    });
-                                }
-                                bus.emit('validation', {
-                                    errorMessage: result.errorMessage,
-                                    diagnosis: result.diagnosis
-                                });
-                            });
-                    }}),
                 class: 'form-control',
                 dataElement: 'input'
             }, [option({value: ''}, '')].concat(selectOptions));
+        }
+
+        function formatObjectDisplay(object) {
+            if (!object.text) {
+                return $(div({style: 'height: 20px'}));
+            }
+            return object.text;
         }
 
         function render(input) {
             Promise.try(function () {
                 var events = Events.make(),
                     inputControl = makeInputControl(events);
-                    
+
                 dom.setContent('input-container', inputControl);
-                events.attachEvents(container);
-            })
-                .then(function () {
-                    autoValidate();
+                $(dom.getElement('input-container.input')).select2({
+                    templateResult: formatObjectDisplay
+                })
+                .on('change', function() {
+                    validate()
+                    .then(function (result) {
+                        if (result.isValid) {
+                            bus.emit('changed', {
+                                newValue: result.value
+                            });
+                        }
+                        bus.emit('validation', {
+                            errorMessage: result.errorMessage,
+                            diagnosis: result.diagnosis
+                        });
+                    });
                 });
+            })
+            .then(function () {
+                autoValidate();
+            });
         }
 
         function layout(events) {

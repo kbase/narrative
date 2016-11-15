@@ -3,6 +3,7 @@
 
 define([
     './input/singleTextInput',
+    './input/autocompleteSingleTextInput',
     './input/multiTextInput',
     './input/singleSelectInput',
     './input/singleIntInput',
@@ -27,6 +28,7 @@ define([
     './input/readsGroupEditor'
 ], function (
     SingleTextInputWidget,
+    AutocompleteTextInputWidget,
     MultiTextInputWidget,
     SingleSelectInputWidget,
     SingleIntInputWidget,
@@ -79,6 +81,9 @@ define([
                 case 'text':
                     switch (fieldType) {
                         case 'text':
+                            return {
+                            };
+                        case 'autocomplete':
                             return {
                             };
                         case 'dropdown':
@@ -197,9 +202,12 @@ define([
                     if (parameterSpec.multipleItems()) {
                         return UndefinedInputWidget;
                     }
+                    return AutocompleteTextInputWidget;
                     switch (fieldType) {
                         case 'text':
                             return SingleTextInputWidget;
+                        case 'autocomplete':
+                            return AutocompleteTextInputWidget;
                         case 'dropdown':
                             return SingleSelectInputWidget;
                         case 'textarea':

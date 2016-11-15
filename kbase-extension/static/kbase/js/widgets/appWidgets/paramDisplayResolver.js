@@ -26,14 +26,13 @@ define([
     'use strict';
 
     function factory(config) {
-
         function getWidgetFactory(parameterSpec) {
             var dataType = parameterSpec.dataType(),
                 spec = parameterSpec.spec,
                 fieldType = spec.field_type;
 
             // NOTE:
-            // field_type is text or dropdown, but does not always correspond to the 
+            // field_type is text or dropdown, but does not always correspond to the
             // type of control to build. E.g. selecting a workspace object is actually
             // a dropdown even though the field_type is 'text'.
 
@@ -45,6 +44,8 @@ define([
                     }
                     switch (fieldType) {
                         case 'text':
+                            return SingleTextDisplayWidget;
+                        case 'autocomplete':
                             return SingleTextDisplayWidget;
                         case 'dropdown':
                             return SingleSelectDisplay;
@@ -119,7 +120,6 @@ define([
                         case 'custom_button':
                             return UndefinedDisplayWidget;
                         case 'textsubdata':
-                            console.log('TEXTSUBDATA', parameterSpec);
                             if (parameterSpec.multipleItems()) {
                                 return UndefinedDisplayWidget;
                             }
@@ -127,7 +127,6 @@ define([
                         case 'file':
                             return UndefinedDisplayWidget;
                         case 'custom_textsubdata':
-                            console.log('CUSTOM_TEXTSUBDATA', parameterSpec);
                             if (parameterSpec.multipleItems()) {
                                 return UndefinedDisplayWidget;
                             }

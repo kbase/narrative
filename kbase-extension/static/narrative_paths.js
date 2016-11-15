@@ -53,6 +53,7 @@ require.config({
         'TaxonAPI-client-api'                   : 'kbase/js/api/TaxonAPIClient',
         'GenomeSearchUtil-client-api'           : 'kbase/js/api/GenomeSearchUtilClient',
         'SetAPI-client-api'                     : 'kbase/js/api/SetAPIClient',
+        'Taxonomy-client-api'                   : 'kbase/js/api/TaxonomyAPIClient',
 
         'njs-wrapper-client-api'                : 'kbase/js/api/NarrativeJobServiceWrapper',
         kbaseNarrativeJobStatus                 : 'kbase/js/widgets/narrative_core/kbaseNarrativeJobStatus',
@@ -295,6 +296,8 @@ require.config({
 
         'd3'                                    : 'ext_components/d3/d3.min',
         'colorbrewer'                           : 'ext_components/colorbrewer/colorbrewer.min',
+        'typeahead'                             : 'ext_components/typeahead/typeahead.jquery',
+        'bloodhound'                             : 'ext_components/typeahead/bloodhound',
         'handlebars'                            : 'ext_components/handlebars/handlebars',
         'numeral'                               : 'ext_components/numeral/numeral',
         'kbwidget'                              : 'kbase/js/kbwidget',
@@ -305,6 +308,10 @@ require.config({
         'kbaseDeletePrompt'                     : 'kbase/js/widgets/kbaseDeletePrompt',
     },
     shim : {
+        bloodhound: {
+           deps: ['jquery'],
+           exports: 'Bloodhound'
+        },
         underscore : {
             exports: '_'
         },

@@ -12,6 +12,7 @@ define([
     'common/events',
     'common/runtime',
     'common/dom',
+    'util/timeFormat',
     'select2',
     'bootstrap',
     'css!font-awesome'
@@ -26,12 +27,13 @@ define([
     Validation,
     Events,
     Runtime,
-    Dom) {
+    Dom,
+    TimeFormat) {
     'use strict';
 
     // Constants
     var t = html.tag,
-        div = t('div'),
+        div = t('div'), span = t('span'), b = t('b'),
         select = t('select'), option = t('option');
 
     function factory(config) {
@@ -75,13 +77,13 @@ define([
                     .map(function (objectInfo, idx) {
                         var selected = false,
                             ref = idx; //getObjectRef(objectInfo);
-                        if (ref === model.value) {
+                        if (getObjectRef(objectInfo) === model.value) {
                             selected = true;
                         }
                         return option({
                             value: ref,
                             selected: selected
-                        }, objectInfo.name + ' ' + objectInfo.ref);
+                        }, objectInfo.name);
                     });
             }
 
@@ -151,9 +153,8 @@ define([
 
         function validate() {
             return Promise.try(function () {
-                var rawValue = getInputValue(),
-                    objInfo = model.availableValues[rawValue],
-                    processedValue = undefined,
+                var objInfo = model.availableValues[getInputValue()],
+                    processedValue = '',
                     validationOptions = {
                         required: constraints.required,
                         authToken: runtime.authToken(),
@@ -223,6 +224,27 @@ define([
                 });
         }
 
+        /**
+         * Formats the display of an object in the dropdown.
+         */
+        function formatObjectDisplay(object) {
+            if (!object.id) {
+                return $('<div style="display:block; height:20px">').append(object.text);
+            }
+            var objectInfo = model.availableValues[object.id];
+            return $(div([
+                span({style: 'word-wrap: break-word'}, [
+                    b(objectInfo.name)
+                ]),
+                ' (v' + objectInfo.version + ')<br>',
+                div({style: 'margin-left: 7px'}, [
+                    '<i>' + objectInfo.typeName + '</i><br>',
+                    'Narrative id: ' + objectInfo.wsid + '<br>',
+                    'updated ' + TimeFormat.getTimeStampStr(objectInfo.save_date) + ' by ' + objectInfo.saved_by
+                ])
+            ]));
+        }
+
         /*
          * Creates the markup
          * Places it into the dom node
@@ -237,20 +259,7 @@ define([
                 dom.setContent('input-container', content);
 
                 $(dom.getElement('input-container.input')).select2({
-                    templateResult: function (object) {
-                        if (!object.id) {
-                            return object.text;
-                        }
-                        var objectInfo = model.availableValues[object.id];
-                        var display = [
-                            '<span style="word-wrap:break-word;"><b>' + objectInfo.name + '</b></span>',
-                            ' (v' + objectInfo.version + ')<br>',
-                            '&nbsp;&nbsp;&nbsp;' + objectInfo.typeName + '<br>',
-                            '&nbsp;&nbsp;&nbsp;updated ' + objectInfo.save_date + ' by ' + objectInfo.saved_by
-                        ].join('');
-                        return $('<div>').append(display);
-                    },
-
+                    templateResult: formatObjectDisplay,
                     templateSelection: function(object) {
                         if (!object.id) {
                             return object.text;

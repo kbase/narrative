@@ -12,7 +12,8 @@ define ([
     'narrativeConfig',
     'kbase-client-api',
     'util/string',
-    'util/display'
+    'util/display',
+    'kbase-generic-client-api'
 ], function (
     Promise,
     KBWidget,
@@ -22,7 +23,8 @@ define ([
     Config,
     KBaseClientApi,
     StringUtil,
-    DisplayUtil
+    DisplayUtil,
+    GenericClient
 ) {
     'use strict';
     return KBWidget({
@@ -44,8 +46,7 @@ define ([
 
         init: function(options) {
             this._super(options);
-            this.wsUrl = Config.url('workspace');
-
+//            this.wsUrl = Config.url('workspace');
             return this;
         },
 
@@ -55,7 +56,9 @@ define ([
             } else {
                 this.reference =  this.options.wsName + '/' + this.options.objId;
             }
-            Promise.resolve(this.wsClient.get_objects([{ref: this.reference}]))
+ //           Promise.resolve(this.wsClient.get_objects([{ref: this.reference}]))
+ //          Promise.resolve(this.client.get_reads_info_all([{ref: this.reference}]))
+            Promise.resolve(this.client.sync_call("ReadsAPI.get_reads_info_all_formatted",[{workspace_obj_ref: this.reference}]))
             .then(function(results) {
                 this.reads = results[0];
                 //		this.$elem.append('<div>' + JSON.stringify(this.reads) + '</div>');
@@ -113,30 +116,20 @@ define ([
             function get_table_row(key, value) {
                 return $('<tr>').append($('<td>').append($('<b>' + key + '</b>'))).append($('<td>').append(value));
             }
-
             // Build the overview table
-            if (this.reads["info"][2].startsWith("KBaseFile.PairedEndLibrary")) {
-                reads_type = 'Paired End';
-            } else if (this.reads["info"][2].startsWith("KBaseFile.SingleEndLibrary")) {
-                reads_type = 'Single End';
-            }
 
             $overviewTable.append(get_table_row(
                 'Name',
                 '<a href="/#dataview/' + this.reference + '" target="_blank">' +
-                this.reads["info"][1] +'</a>'
+                this.reads["Name"] +'</a>'
             ));
             // leave out version for now, because that is not passed into data widgets
 
-            if(this.reads["data"].hasOwnProperty("read_count")) {
-                $overviewTable.append(get_table_row('Number of Reads', this.reads["data"]['read_count'].toLocaleString() ));
-                $statsTable.append(get_table_row('Number of Reads', this.reads["data"]['read_count'].toLocaleString() ));
-            } else {
-                $overviewTable.append(get_table_row('Number of Reads', "Not Specified"));
-                $statsTable.append(get_table_row('Number of Reads', "Not Specified"));
-            }
 
-            $overviewTable.append(get_table_row('Type', reads_type ));
+            $overviewTable.append(get_table_row('Number of Reads', this.reads['Number_of_Reads']));
+            $statsTable.append(get_table_row('Number of Reads', this.reads['Number_of_Reads']));
+
+            $overviewTable.append(get_table_row('Type', this.reads["Type"]));
 
             /* KEEP COMMENTED OUT UNTIL UPLOADER WEB FORM ALLOWS THE USER TO SPECIFY
             if(this.reads["data"].hasOwnProperty("read_size")){
@@ -152,125 +145,29 @@ define ([
             else {
                 $overviewTable.append(get_table_row('Species/Taxa', 'Not specified' ));
             }
-            */
+ *///Put in end comments
 
-            $overviewTable.append(get_table_row('Platform', this.reads["data"]['sequencing_tech'] ));
+            $overviewTable.append(get_table_row('Platform', this.reads['Platform'] ));
+            $overviewTable.append(get_table_row('Single Genome', this.reads['Single_Genome'] ));
 
-            if (this.reads["data"].hasOwnProperty("single_genome")) {
-                display_value = "No";
-                if (this.reads["data"]['single_genome'] === 1 ) {
-                    display_value = "Yes";
-                }
-                $overviewTable.append(get_table_row('Single Genome', display_value ));
-            } else {
-                $overviewTable.append(get_table_row('Single Genome', "Not Specified"));
+            if (this.reads["Type"] === "Paired End") {
+                $overviewTable.append(get_table_row('Insert Size Mean', this.reads['Insert_Size_Mean'] ));
+                $overviewTable.append(get_table_row('Insert Size Std Dev', this.reads['Insert_Size_Std_Dev'] ));
+                $overviewTable.append(get_table_row('Outward Read Orientation', this.reads['Outward_Read_Orientation'] ));
             }
-
-            if (reads_type === "Paired End") {
-                if(this.reads["data"].hasOwnProperty("insert_size_mean")){
-                    $overviewTable.append(get_table_row('Insert Size Mean', this.reads["data"]['insert_size_mean'] ));
-                }else{
-                    $overviewTable.append(get_table_row('Insert Size Mean', "Not Specified"));
-                }
-
-                if(this.reads["data"].hasOwnProperty("insert_size_std_dev")){
-                    $overviewTable.append(get_table_row('Insert Size Std Dev', this.reads["data"]['insert_size_std_dev'] ));
-                }else{
-                    $overviewTable.append(get_table_row('Insert Size Std Dev', "Not Specified"));
-                }
-
-                var display_value = "No";//temp value for display purposes
-
-                if(this.reads["data"].hasOwnProperty("read_orientation_outward")){
-                    display_value = "No";
-                    if (this.reads["data"]['read_orientation_outward'] === 1 ){
-                        display_value = "Yes";
-                    }
-                    $overviewTable.append(get_table_row('Outward Read Orientation', display_value ));
-                }else{
-                    $overviewTable.append(get_table_row('Outward Read Orientation', "Not Specified"));
-                }
-            }
-
             $divs.append($('<div id="' + tab_ids.overview + '" class="tab-pane active">').append($overviewTable));
 
-            if(this.reads["data"].hasOwnProperty("total_bases")){
-                $statsTable.append(get_table_row('Total Number of Bases', this.reads["data"]['total_bases'].toLocaleString() ));
-            }else{
-                $statsTable.append(get_table_row('Total Number of Bases', "Not Specified"));
-            }
+            //Stats portion
+            $statsTable.append(get_table_row('Total Number of Bases', this.reads['Total_Number_of_Bases']));
+            $statsTable.append(get_table_row('Mean Read Length', this.reads['Mean_Read_Length']));
+            $statsTable.append(get_table_row('Read Length Std Dev', this.reads['Read_Length_Std_Dev']));
+            $statsTable.append(get_table_row('Number of Duplicate Reads(%)',this.reads['Number_of_Duplicate_Reads']));
+            $statsTable.append(get_table_row('Phred Type', this.reads['Phred_Type']));
+            $statsTable.append(get_table_row('Quality Score Mean (Std Dev)',this.reads['Quality_Score_Mean_Std_Dev']));
+            $statsTable.append(get_table_row('Quality Score (Min/Max)',this.reads['Quality_Score_Min_Max']));
+            $statsTable.append(get_table_row('GC Percentage', this.reads['GC_Percentage']));
+            $statsTable.append(get_table_row('Base Percentages', this.reads['Base_Percentages']));
 
-            if(this.reads["data"].hasOwnProperty("read_length_mean")){
-                $statsTable.append(get_table_row('Mean Read Length', this.reads["data"]['read_length_mean'].toLocaleString() ));
-            }else{
-                $statsTable.append(get_table_row('Mean Read Length', "Not Specified"));
-            }
-
-            if(this.reads["data"].hasOwnProperty("read_length_stdev")){
-                $statsTable.append(get_table_row('Read Length Std Dev', this.reads["data"]['read_length_stdev'].toLocaleString() ));
-            }else{
-                $statsTable.append(get_table_row('Read Length Std Dev', "Not Specified"));
-            }
-
-            if(this.reads["data"].hasOwnProperty("number_of_duplicates")){
-                var dup_percentage = (this.reads["data"]['number_of_duplicates'].toLocaleString() / this.reads["data"]["read_count"]) * 100;
-                    $statsTable.append(get_table_row('Number of Duplicate Reads(%)',
-                    this.reads["data"]['number_of_duplicates'].toLocaleString() + " (" + dup_percentage.toFixed(2) + "%)"
-                ));
-            } else {
-                $statsTable.append(get_table_row('Number of Duplicate Reads', "Not Specified"));
-            }
-
-            if (this.reads["data"].hasOwnProperty("phred_type")){
-                $statsTable.append(get_table_row('Phred Type', this.reads["data"]['phred_type'] ));
-            } else {
-                $statsTable.append(get_table_row('Phred Type', "Not Specified"));
-            }
-
-            if ((this.reads["data"].hasOwnProperty("qual_mean")) && (this.reads["data"].hasOwnProperty("qual_stdev"))) {
-                $statsTable.append(get_table_row('Quality Score Mean (Std Dev)',
-                this.reads["data"]['qual_mean'].toFixed(2) + " (" +
-                this.reads["data"]['qual_stdev'].toFixed(2) + ")"));
-            }
-
-            if ((this.reads["data"].hasOwnProperty("qual_min")) && (this.reads["data"].hasOwnProperty("qual_max"))){
-                $statsTable.append(get_table_row('Quality Score (Min/Max)',
-                this.reads["data"]['qual_min'].toFixed(2) + " / " +
-                this.reads["data"]['qual_max'].toFixed(2)));
-            }
-
-
-            if (this.reads["data"].hasOwnProperty("gc_content")) {
-                $statsTable.append(get_table_row('GC Percentage', (this.reads["data"]['gc_content'] * 100).toFixed(2) + "%" ));
-            } else {
-                $statsTable.append(get_table_row('GC Percentage', "Not Specified"));
-            }
-
-            if (this.reads["data"].hasOwnProperty("base_percentages")) {
-                var keys = [];
-                for (var key in this.reads["data"]["base_percentages"]) {
-                    keys.push(key);
-                }
-                keys.sort();
-                var len = keys.length,
-                    percent,
-                    base_percentages = "",
-                    N_base_percentage = "";
-                for (var i = 0; i < len; i++){
-                    percent = (this.reads["data"]["base_percentages"][keys[i]]).toFixed(2);
-                    if (keys[i] === "N"){
-                        N_base_percentage += keys[i] + " (" + percent + "%)";
-                    }else{
-                        base_percentages += keys[i] + " (" + percent + "%), ";
-                    }
-                }
-                if (N_base_percentage === ""){
-                    base_percentages = base_percentages.slice(0,-2);
-                }else{
-                    base_percentages += N_base_percentage;
-                }
-                $statsTable.append(get_table_row('Base Percentages', base_percentages));
-            }
             $divs.append($('<div id="' + tab_ids.stats + '" class="tab-pane">').append($statsTable));
             $container.append($tabs);
             $container.append($divs);
@@ -280,7 +177,9 @@ define ([
         loggedInCallback: function(event, auth) {
             this.token = auth.token;
 
-            this.wsClient = new Workspace(this.wsUrl, auth);
+//            this.wsClient = new Workspace(this.wsUrl, auth);
+            this.url = Config.url('service_wizard');
+            this.client = new GenericClient(this.url, auth); // just put this where the workspace client init code is
             this.render();
             return this;
         },

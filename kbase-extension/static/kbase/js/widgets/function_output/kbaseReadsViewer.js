@@ -46,7 +46,6 @@ define ([
 
         init: function(options) {
             this._super(options);
-//            this.wsUrl = Config.url('workspace');
             return this;
         },
 
@@ -56,8 +55,6 @@ define ([
             } else {
                 this.reference =  this.options.wsName + '/' + this.options.objId;
             }
- //           Promise.resolve(this.wsClient.get_objects([{ref: this.reference}]))
- //          Promise.resolve(this.client.get_reads_info_all([{ref: this.reference}]))
             Promise.resolve(this.client.sync_call("ReadsAPI.get_reads_info_all_formatted",[{workspace_obj_ref: this.reference}]))
             .then(function(results) {
                 this.reads = results[0];
@@ -145,7 +142,7 @@ define ([
             else {
                 $overviewTable.append(get_table_row('Species/Taxa', 'Not specified' ));
             }
- *///Put in end comments
+            */
 
             $overviewTable.append(get_table_row('Platform', this.reads['Platform'] ));
             $overviewTable.append(get_table_row('Single Genome', this.reads['Single_Genome'] ));
@@ -177,7 +174,6 @@ define ([
         loggedInCallback: function(event, auth) {
             this.token = auth.token;
 
-//            this.wsClient = new Workspace(this.wsUrl, auth);
             this.url = Config.url('service_wizard');
             this.client = new GenericClient(this.url, auth); // just put this where the workspace client init code is
             this.render();

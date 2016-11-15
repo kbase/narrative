@@ -57,21 +57,24 @@ define([
         }
 
         function makeInputControl(events, bus) {
-            // There is an input control, and a dropdown,
-            // TODO select2 after we get a handle on this...
             var selectOptions;
             if (model.availableValues) {
+                var filteredOptions = [];
                 selectOptions = model.availableValues
-                    .filter(function (objectInfo) {
+                    .filter(function (objectInfo, idx) {
                         if (model.blacklistValues) {
                             return !model.blacklistValues.some(function (value) {
-                                return (value === getObjectRef(objectInfo));
+                                if (value === getObjectRef(objectInfo)) {
+                                    filteredOptions.push(idx);
+                                    return true;
+                                }
+                                return false;
                             });
                         }
                     })
-                    .map(function (objectInfo) {
+                    .map(function (objectInfo, idx) {
                         var selected = false,
-                            ref = getObjectRef(objectInfo);
+                            ref = idx; //getObjectRef(objectInfo);
                         if (ref === model.value) {
                             selected = true;
                         }
@@ -149,29 +152,35 @@ define([
         function validate() {
             return Promise.try(function () {
                 var rawValue = getInputValue(),
+                    objInfo = model.availableValues[rawValue],
+                    processedValue = undefined,
                     validationOptions = {
                         required: constraints.required,
                         authToken: runtime.authToken(),
                         workspaceServiceUrl: runtime.config('services.workspace.url')
                     };
 
+                if (objInfo) {
+                    processedValue = objectRefType === 'ref' ? objInfo.ref : objInfo.name;
+                }
+
                 switch (objectRefType) {
                     case 'ref':
-                        return Validation.validateWorkspaceObjectRef(rawValue, validationOptions);
+                        return Validation.validateWorkspaceObjectRef(processedValue, validationOptions);
                     case 'name':
                     default:
-                        return Validation.validateWorkspaceObjectName(rawValue, validationOptions);
+                        return Validation.validateWorkspaceObjectName(processedValue, validationOptions);
                 }
             })
-                .then(function (validationResult) {
-                    return {
-                        isValid: validationResult.isValid,
-                        validated: true,
-                        diagnosis: validationResult.diagnosis,
-                        errorMessage: validationResult.errorMessage,
-                        value: validationResult.parsedValue
-                    };
-                });
+            .then(function (validationResult) {
+                return {
+                    isValid: validationResult.isValid,
+                    validated: true,
+                    diagnosis: validationResult.diagnosis,
+                    errorMessage: validationResult.errorMessage,
+                    value: validationResult.parsedValue
+                };
+            });
         }
 
         function getObjectsByType(type) {
@@ -183,7 +192,6 @@ define([
                 Object.keys(data).forEach(function(typeKey) {
                     objList = objList.concat(data[typeKey]);
                 });
-                console.log(objList);
                 return objList.map(function (objectInfo) {
                     return serviceUtils.objectInfoToObject(objectInfo);
                 });
@@ -227,18 +235,27 @@ define([
                     content = div({class: 'input-group', style: {width: '100%'}}, inputControl);
 
                 dom.setContent('input-container', content);
+
                 $(dom.getElement('input-container.input')).select2({
-                    formatResult: function (object, container, query) {
-                        var display = '<span style="word-wrap:break-word;"><b>' + object.text + "</b></span>";
-                        if (object.info) {
-                            // we can add additional info here in the dropdown ...
-                            display = display + " (v" + object.info[4] + ")<br>";
-                            if (object.mm) {
-                                display = display + "&nbsp&nbsp&nbsp<i>" + object.mm + "</i><br>";
-                            }
-                            display = display + "&nbsp&nbsp&nbsp<i>updated " + self.getTimeStampStr(object.info[3]) + "</i>";
+                    templateResult: function (object) {
+                        if (!object.id) {
+                            return object.text;
                         }
-                        return display;
+                        var objectInfo = model.availableValues[object.id];
+                        var display = [
+                            '<span style="word-wrap:break-word;"><b>' + objectInfo.name + '</b></span>',
+                            ' (v' + objectInfo.version + ')<br>',
+                            '&nbsp;&nbsp;&nbsp;' + objectInfo.typeName + '<br>',
+                            '&nbsp;&nbsp;&nbsp;updated ' + objectInfo.save_date + ' by ' + objectInfo.saved_by
+                        ].join('');
+                        return $('<div>').append(display);
+                    },
+
+                    templateSelection: function(object) {
+                        if (!object.id) {
+                            return object.text;
+                        }
+                        return model.availableValues[object.id].name;
                     }
                 }).on('change', function() {
                     validate()

@@ -2,7 +2,6 @@
 /*jslint white:true,browser:true*/
 define([
     'bluebird',
-    'jquery',
     'base/js/namespace',
     'kb_common/html',
     'kb_common/utils',
@@ -12,12 +11,10 @@ define([
     'common/events',
     'common/runtime',
     'common/dom',
-    'select2',
     'bootstrap',
     'css!font-awesome'
 ], function (
     Promise,
-    $,
     Jupyter,
     html,
     utils,
@@ -246,7 +243,6 @@ define([
 
                 dom.setContent('input-container', content);
                 events.attachEvents(container);
-
             });
         }
 

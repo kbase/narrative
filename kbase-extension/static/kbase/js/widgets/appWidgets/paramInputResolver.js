@@ -265,6 +265,7 @@ define([
                 case 'subdata':
                     return SingleSubdataWidget;
                 case '[]string':
+                case '[]text':
                     switch (fieldType) {
                         case 'dropdown':
                             return MultiSelectInputWidget;

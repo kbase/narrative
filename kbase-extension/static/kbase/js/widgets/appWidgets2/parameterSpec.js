@@ -1,5 +1,5 @@
 /*global define*/
-/*jstlint white:true,browser:true*/
+/*jstlint white:true,browser:true,single:true*/
 
 define([
 ], function () {
@@ -111,7 +111,6 @@ define([
                     break;
                 case 'group':
                     return 'struct';
-                    break;
                 // case 'reads_group_editor':
                 //     return 'reads_group_editor';
             }
@@ -130,8 +129,8 @@ define([
             if (validateAs) {
                 if (spec.allow_multiple) {
                     return '[]' + validateAs;
-                } else
-                    return validateAs;
+                }
+                return validateAs;
             }
 
             // Some parameter specs have valid_ws_types as an empty set, which

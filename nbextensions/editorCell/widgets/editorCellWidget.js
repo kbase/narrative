@@ -114,23 +114,6 @@ define([
 
         }
 
-        function getEditorSpec() {
-            var spec = {
-                target: {
-                    id: 'name',
-                    description: 'Name of the Reads Set',
-                    short_hint: 'The name of the set of sequence reads',
-                    type: 'objectName',
-                    constraints: {
-                        types: ['KBaseSets.ReadsSet']
-                    }
-                },
-                fields: [
-
-                ]
-            };
-        }
-
         function getParameters() {
             return {
                 name: {
@@ -174,24 +157,6 @@ define([
                         defaultValue: ''
                     }
                 },
-//                integers: {
-//                    id: 'integers',
-//                    multipleItems: true,
-//                    ui: {
-//                        label: 'Integers',
-//                        description: 'Enter some numbers, er, integers',
-//                        hint: 'This is where youentere integers',
-//                        class: 'parameter'
-//                    },
-//                    data: {
-//                        type: '[]int',
-//                        constraints: {
-//                            required: true,
-//                            min: 10,
-//                            max: 100
-//                        }
-//                    }
-//                },
                 items: {
                     id: 'items',
                     multipleItems: false,
@@ -250,81 +215,9 @@ define([
                                 defaultValue: null
                             }
                         }
-//                        data_attachments: {
-//                            id: 'data_attachments',
-//
-//                            multipleItems: false,
-//
-//                            ui: {
-//                                label: 'Data Attachment',
-//                                description: 'A data attachment',
-//                                hint: 'Hint 3',
-//                                class: 'parameter',
-//                                layout: ['name', 'ref']
-//                            },
-//                            data: {
-//                                type: '[]struct',
-//                                constraints: {
-//                                    required: true
-//                                },
-//                                defaultValue: {}
-//                            },
-//                            parameters: {
-//                                name: {
-//                                    id: 'name',
-//                                    ui: {
-//                                        label: 'Label',
-//                                        description: 'Label for the data attachment',
-//                                        hint: 'Hint for data attachment',
-//                                        class: 'parameter'
-//                                    },
-//                                    data: {
-//                                        type: 'string',
-//                                        constraints: {
-//                                            required: true
-//                                        }
-//                                    }
-//                                },
-//                                ref: {
-//                                    id: 'ref',
-//                                    ui: {
-//                                        label: 'Data Obj',
-//                                        description: 'Object reference',
-//                                        hint: 'Object reference',
-//                                        class: 'parameter'
-//                                    },
-//                                    data: {
-//                                        type: 'workspaceObjectRef',
-//                                        constraints: {
-//                                            types: [null]
-//                                        }
-//                                    }
-//                                }
-//                            }
-//                        }
+
                     }
                 }
-//                ,
-//                items: {
-//                    id: 'items',
-//
-//                    multipleItems: true,
-//
-//                    ui: {
-//                        label: 'Items',
-//                        description: 'A set of Reads Objects',
-//                        hint: 'The set of Reads Objects',
-//                        class: 'parameter'
-//                    },
-//                    data: {
-//                        type: '[]workspaceObjectName',
-//                        constraints: {
-//                            required: false,
-//                            types: ['KBaseFile.SingleEndLibrary', 'KBaseFile.PairedEndLibrary']
-//                        },
-//                        defaultValue: null
-//                    }
-//                }
             };
         }
 

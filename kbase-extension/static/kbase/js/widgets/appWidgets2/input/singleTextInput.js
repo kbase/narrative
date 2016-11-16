@@ -17,11 +17,12 @@ define([
     Events,
     UI,
     inputUtils
-    ) {
+) {
     'use strict';
 
     var t = html.tag,
-        div = t('div'), input = t('input');
+        div = t('div'),
+        input = t('input');
 
     function factory(config) {
         var constraints = config.parameterSpec.data.constraints,
@@ -38,11 +39,11 @@ define([
         function getControlValue() {
             return ui.getElement('input-container.input').value;
         }
-        
+
         function setControlValue(newValue) {
             ui.getElement('input-container.input').value = newValue;
         }
-        
+
         // MODEL
 
         function setModelValue(value) {
@@ -67,7 +68,7 @@ define([
                 unsetModelValue();
             }
         }
-        
+
         /*
          *
          * Text fields can occur in multiples.
@@ -86,16 +87,18 @@ define([
                 return validationResult;
             });
         }
-        
+
         // DOM
 
         var autoChangeTimer;
+
         function cancelTouched() {
             if (autoChangeTimer) {
                 window.clearTimeout(autoChangeTimer);
                 autoChangeTimer = null;
             }
         }
+
         function handleTouched(interval) {
             var editPauseInterval = interval || 2000;
             return {
@@ -124,6 +127,8 @@ define([
                                     newValue: result.parsedValue
                                 });
                             } else if (result.diagnosis === 'required-missing') {
+                                // If a field is "made empty", causing a required-missing state,
+                                // we still want to store and propagate the changes.
                                 setModelValue(result.parsedValue);
                                 bus.emit('changed', {
                                     newValue: result.parsedValue
@@ -164,7 +169,7 @@ define([
             var content = div({
                 dataElement: 'main-panel'
             }, [
-                div({dataElement: 'input-container'}, [
+                div({ dataElement: 'input-container' }, [
                     makeInputControl(events)
                 ])
             ]);
@@ -193,7 +198,7 @@ define([
 
                     parent = message.node;
                     container = parent.appendChild(document.createElement('div'));
-                    ui = UI.make({node: message.node});
+                    ui = UI.make({ node: message.node });
 
                     var events = Events.make(),
                         theLayout = render(events);
@@ -201,7 +206,7 @@ define([
                     container.innerHTML = theLayout.content;
                     events.attachEvents(container);
 
-                    bus.on('reset-to-defaults', function (message) {
+                    bus.on('reset-to-defaults', function () {
                         resetModelValue();
                     });
                     bus.on('update', function (message) {
@@ -211,7 +216,7 @@ define([
                 });
             });
         }
-        
+
         function stop() {
             return Promise.try(function () {
                 // nothing to do. 

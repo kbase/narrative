@@ -2,6 +2,7 @@
 /*jslint white:true,browser:true*/
 define([
     'bluebird',
+    'base/js/namespace',
     'kb_common/html',
     'kb_common/utils',
     'kb_service/client/workspace',
@@ -14,6 +15,7 @@ define([
     'css!font-awesome'
 ], function (
     Promise,
+    Jupyter,
     html,
     utils,
     Workspace,
@@ -73,7 +75,7 @@ define([
                         return option({
                             value: ref,
                             selected: selected
-                        }, objectInfo.name);
+                        }, objectInfo.name + ' ' + objectInfo.ref);
                     });
             }
 
@@ -118,7 +120,7 @@ define([
             if (selected.length === 0) {
                 return;
             }
-            // we are modeling a single string value, so we always just get the 
+            // we are modeling a single string value, so we always just get the
             // first selected element, which is all there should be!
             return selected.item(0).value;
         }
@@ -167,14 +169,14 @@ define([
                         authToken: runtime.authToken(),
                         workspaceServiceUrl: runtime.config('services.workspace.url')
                     };
-                    
+
                 switch (objectRefType) {
                     case 'ref':
                         return Validation.validateWorkspaceObjectRef(rawValue, validationOptions);
                     case 'name':
                     default:
                         return Validation.validateWorkspaceObjectName(rawValue, validationOptions);
-                }                        
+                }
             })
                 .then(function (validationResult) {
                     return {
@@ -188,18 +190,20 @@ define([
         }
 
         function getObjectsByType(type) {
-            var workspace = new Workspace(runtime.config('services.workspace.url'), {
-                token: runtime.authToken()
-            });
-            return workspace.list_objects({
-                type: type,
-                ids: [workspaceId]
+            return Promise.try(function() {
+                return Jupyter.narrative.sidePanel.$dataWidget.getLoadedData(type);
             })
-                .then(function (data) {
-                    return data.map(function (objectInfo) {
-                        return serviceUtils.objectInfoToObject(objectInfo);
-                    });
+            .then(function(data) {
+                var objList = [];
+                Object.keys(data).forEach(function(typeKey) {
+                    objList = objList.concat(data[typeKey]);
                 });
+                console.log(objList);
+                return objList.map(function (objectInfo) {
+                    return serviceUtils.objectInfoToObject(objectInfo);
+                });
+            });
+
         }
 
         function fetchData() {
@@ -268,7 +272,7 @@ define([
                     });
                 });
         }
-        
+
         function getObjectRef(objectInfo) {
             switch (objectRefType) {
                 case 'name':

@@ -548,7 +548,7 @@ define([
                         continue;
                     }
                     // Only adds to dataObjects, etc., if it's not already there.
-                    addObjectInfo(objInfo);
+                    addObjectInfo(objInfo, obj.dp_info);
                     // if there's set info, update that.
                     if (obj.set_items) {
                         updateSetInfo(obj);

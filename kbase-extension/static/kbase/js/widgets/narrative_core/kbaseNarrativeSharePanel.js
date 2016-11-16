@@ -18,8 +18,7 @@ define (
 		bootstrap,
 		$,
 		Config,
-		kbaseAuthenticatedWidget,
-		select2
+		kbaseAuthenticatedWidget
 	) {
     'use strict';
     return KBWidget({
@@ -43,7 +42,7 @@ define (
         $notificationPanel: null,
         init: function (options) {
             this._super(options);
-            
+
             this.$notificationPanel = $('<div>');
             this.$elem.append(this.$notificationPanel);
 
@@ -129,7 +128,7 @@ define (
             }
         },
         /*
-         
+
          WORKSPACE INFO
          0: ws_id id
          1: ws_name workspace
@@ -140,8 +139,8 @@ define (
          6: permission globalread,
          7: lock_status lockstat
          8: usermeta metadata
-         
-         
+
+
          */
         isPrivate: true, // set if this ws is private or public
         render: function () {

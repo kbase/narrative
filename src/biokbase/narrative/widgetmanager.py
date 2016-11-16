@@ -363,8 +363,8 @@ class WidgetManager(object):
             obj_ref = params['ref']  # may include ref-path (or chain, not sure which one is text)
         else:
             raise ValueError("Neither 'info' nor 'ref' field is set in input parameters")
-        info_tuple = clients.get('workspace').get_object_info_new({'objects': [{'ref': obj_ref}]
-                                                                   })[0]
+        info_tuple = clients.get('workspace').get_object_info_new({'objects': [{'ref': obj_ref}],
+                                                                   'includeMetadata': 1})[0]
         input_data['info'] = info
         input_data['info_tuple'] = info_tuple
 

@@ -98,7 +98,7 @@ define (
             var error_message = this.options.error_message;
             var type_spec = this.options.type_spec;
             var app_spec = this.options.app_spec;
-            var output = this.output;
+            var output = this.options.output;
             
             var onViewerCreated = function (widget) {
                 widgetTitleElem.empty()

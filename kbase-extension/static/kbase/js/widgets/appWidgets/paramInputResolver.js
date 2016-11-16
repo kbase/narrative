@@ -202,7 +202,6 @@ define([
                     if (parameterSpec.multipleItems()) {
                         return UndefinedInputWidget;
                     }
-                    return AutocompleteTextInputWidget;
                     switch (fieldType) {
                         case 'text':
                             return SingleTextInputWidget;

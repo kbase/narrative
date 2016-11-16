@@ -469,7 +469,7 @@ define([
                 var objId = this.itemId(objInfo); //objInfo[6] + '/' + objInfo[0]; // + '/' + objInfo[2]
                 var fullDpReference = null;
                 if (dpInfo && dpInfo.ref) {
-                    fullDpReference = dpInfo.ref + ';' + objId;
+                    fullDpReference = dpInfo.ref + ';' + objInfo[6] + '/' + objInfo[0] + '/' + objInfo[4];
                 }
                 if (this.dataObjects[objId]) {
                     return;

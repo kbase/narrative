@@ -39,6 +39,11 @@ define (
         version: '0.0.1',
         options: {
             info: null, // object info
+            info_tuple: null,
+            error_message: null,
+            type_spec: null,
+            app_spec: null,
+            output: null,
             cell: null, // Jupyter cell
             lp_url: Config.url('landing_pages')
         },
@@ -55,7 +60,12 @@ define (
          */
         init: function (options) {
             this._super(options);
-            this.obj_info = options.info;
+            //console.log("kbaseNarrativeDataCell: options=", JSON.stringify(options, null, 2));
+            if (options.info_tuple) {
+                this.obj_info = this.createInfoObject(options.info_tuple);
+            } else {
+                this.obj_info = options.info;
+            }
             this.obj_info.bare_type = /[^-]*/.exec(this.obj_info.type);
             this.obj_info.simple_date = /[^+]*/.exec(this.obj_info.save_date);
             this.ip_cell = options.cell;
@@ -67,6 +77,7 @@ define (
             return this;
         },
         render: function () {
+            var self = this;
             var $label = $('<span>').addClass('label label-info').append('Data'),
                 baseClass = 'kb-cell-output',
                 panelClass = 'panel-default',
@@ -84,18 +95,27 @@ define (
             var type_module = type_tokens[0];
             var type = type_tokens[1].split('-')[0];
 
-            Viewers.createViewer(this).then(function (widget) {
+            var error_message = this.options.error_message;
+            var type_spec = this.options.type_spec;
+            var app_spec = this.options.app_spec;
+            var output = this.output;
+            
+            var onViewerCreated = function (widget) {
                 widgetTitleElem.empty()
-                    .append(widget.title)
-                    .append('&nbsp;<a href="' + this.shortMarkdownDesc(this.obj_info,
-                        this.options.lp_url) + '" target="_blank">' + this.obj_info.name + '</a>');
+                .append(widget.title)
+                .append('&nbsp;<a href="' + self.shortMarkdownDesc(self.obj_info,
+                    self.options.lp_url) + '" target="_blank">' + self.obj_info.name + '</a>');
 
-                this.metadataRender(this.$elem);
-                this.$elem.append(widget.widget);
-                this.$elem.closest('.cell').trigger('set-title', [this.obj_info.name]);
-                
-            }.bind(this));
+                self.metadataRender(self.$elem);
+                self.$elem.append(widget.widget);
+                self.$elem.closest('.cell').trigger('set-title', [self.obj_info.name]);
+            };
 
+            if (error_message || type_spec || app_spec || output) {
+                onViewerCreated(this.createViewer(error_message, type_spec, app_spec, output));
+            } else {
+                Viewers.createViewer(this).then(onViewerCreated);
+            }
             // Return the rendered widget
             return this;
         },
@@ -356,6 +376,59 @@ define (
                 ++u;
             } while(bytes >= thresh && u < units.length - 1);
             return bytes.toFixed(1)+' '+units[u];
+        },
+        
+        createInfoObject: function (info) {
+            return _.object(['id', 'name', 'type', 'save_date', 'version',
+                'saved_by', 'ws_id', 'ws_name', 'chsum', 'size',
+                'meta'], info);
+        },
+        
+        createViewer: function(error_message, type_spec, app_spec, output_params) {
+            var o = this.obj_info;
+            if (error_message) {
+                console.error("Error loading viewer spec: ", error_message);
+                var mdDesc = '';
+                if (_.isEmpty(o.meta)) {
+                    mdDesc += "No metadata";
+                } else {
+                    mdDesc += "Metadata";
+                    _.each(_.pairs(o.meta), function (p) {
+                        mdDesc += '\n' + p[0] + ': ' + p[1];
+                    });
+                }
+                return {widget: $('<div>').append($('<pre>').append(mdDesc)), 
+                    title: 'Unknown Data Type'};
+            }
+            
+            var output = $.extend({}, output_params);
+            output._obj_info = o;
+            output.widgetTitle = type_spec.name || 'Unknown Data Type';
+            output.landing_page_url_prefix = type_spec.landing_page_url_prefix;
+            var outputWidget = app_spec.widgets.output;
+            var w = null;
+            // XXX: Temporary until all widgets are loaded with Require.
+            // First, try to load it from global space.
+            var $elem = $('<div>');
+            try {
+                w = $elem[outputWidget](output);
+            }
+            // If that fails, try to load with require.
+            // If THAT fails, fail with an error (though the error should be improved)
+            catch (err) {
+                require([outputWidget], function (W) {
+                    w = new W($elem, output);
+                    return w;
+                }, function (reqErr) {
+                    console.error("errors occurred while making widget: " + outputWidget, {'firstTry': err, 'requireErr': reqErr});
+                    $elem = defaultViewer(dataCell);
+                    output.widgetTitle = 'Unknown Data Type';
+                });
+            }
+            return {
+                widget: $elem,
+                title: output.widgetTitle
+            };
         }
      
     });

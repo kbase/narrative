@@ -2038,6 +2038,7 @@ define([
 
 
         createViewerCell: function(cellIndex, data, widget) {
+            console.trace("In kbaseNarrativeWorkspace.createViewerCell");
             var placement = data.placement || 'below';
             var cell;
             if (placement === 'above') {

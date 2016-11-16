@@ -11,6 +11,7 @@ class SpecManager(object):
     __instance = None
 
     app_specs = dict()
+    type_specs = dict()
 
     def __new__(cls):
         if SpecManager.__instance is None:
@@ -23,17 +24,26 @@ class SpecManager(object):
 
         return self.app_specs[tag][app_id]
 
+    def get_type_spec(self, type_id, raise_exception=True):
+        if (type_id not in self.type_specs) and raise_exception:
+            raise ValueError('Unknown type id "{}"'.format(type_id))
+        return self.type_specs.get(type_id)
+
     def reload(self):
         """
         Reloads all app specs into memory from the latest update.
         """
+        client = clients.get('narrative_method_store')
         for tag in app_version_tags:
-            specs = clients.get('narrative_method_store').list_methods_spec({'tag': tag})
+            specs = client.list_methods_spec({'tag': tag})
 
             spec_dict = dict()
             for spec in specs:
                 spec_dict[spec['info']['id']] = spec
             self.app_specs[tag] = spec_dict
+        
+        # And let's load all types from the beginning and cache them
+        self.type_specs = client.list_categories({'load_types': 1})[3]
 
     def app_description(self, app_id, tag='release'):
         """

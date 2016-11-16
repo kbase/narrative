@@ -71,24 +71,10 @@ define([
          */
 
         function getInputValue() {
-console.log("GIV", dom.getElement('autocomplete-container.input').value);
-/*console.log("GIV");
-        console.log("ACI", dom.getElement('autocomplete-container.input'));
-        console.log("AC2", dom.getElement('autocomplete-container.input').getAttribute('id'));
-        var $val = $( dom.getElement('autocomplete-container.input').getAttribute('id') );
-        console.log("V2", $val);
-        console.log($val.typeahead('val')); */
-                /*console.log("GIV");
-        console.log("ACI", dom.getElement('autocomplete-container.input'));
-        console.log("AC2", $(dom.getElement('autocomplete-container.input')));
-        console.log($('#' + ic_id));
-        console.log($('#' + ic_id).val);
-        console.log($('#' + ic_id).val());*/
             return dom.getElement('autocomplete-container.input').value;
         }
 
         function setModelValue(value) {
-        console.log("SMV ", value);
             return Promise.try(function () {
                 if (model.value !== value) {
                     model.value = value;
@@ -129,7 +115,6 @@ console.log("GIV", dom.getElement('autocomplete-container.input').value);
          */
 
         function validate() {
-        console.log("CALLS VALIDATE");
             return Promise.try(function () {
                 if (!options.enabled) {
                     return {
@@ -143,7 +128,6 @@ console.log("GIV", dom.getElement('autocomplete-container.input').value);
                     validationResult = Validation.validateTextString(rawValue, {
                         required: constraints.required
                     });
-console.log("VR ? ", validationResult);
                 return validationResult;
             });
         }
@@ -237,7 +221,6 @@ console.log("VR ? ", validationResult);
             Promise.try(function () {
                 var events = Events.make(),
                     inputControl = makeInputControl(model.value, events, bus);
-console.log("IC", $(inputControl).attr('id'));
 ic_id = $(inputControl).attr('id');
 
 
@@ -260,16 +243,13 @@ var dog = new Bloodhound({
   remote : {
     url : 'http://kbase.us/some/fake/url',  //bloodhound remote requires a URL
     filter : function(query, settings) {
-      console.log("FILTERS WITH ", query, settings);
       return query.hits;
       return states;
     },
     prepare : function(settings) {
-      console.log("PREPS", settings);
       return settings;
     },
     transport : function(options, onSuccess, onError) {
-      console.log("TRANSPORTS ON", options, onSuccess, onError);
       genericClient.sync_call("taxonomy_service.search_taxonomy", [
         {
           private : 0,
@@ -279,7 +259,6 @@ var dog = new Bloodhound({
           start : 0,
         }
       ]).then(function(d) {
-      console.log("GOT BACK DATAz", d);
         onSuccess(d[0]);
       }).fail(function(e) {
         onError(e);
@@ -288,12 +267,7 @@ var dog = new Bloodhound({
     }
   }
 });
-console.log("ATTEMPT IT HERE #1");
-console.log("SW", Config.url('service_wizard'), Runtime.make().authToken());
-console.log("ATTEMPT IT HERE #2");
-console.log("ATTEMPT IT HERE #3");
 
-                  //console.log("IC#Zz", $('#' + ic_id).val());
                   $('#' + ic_id).typeahead({
                     hint : true,
                     highlight : true,

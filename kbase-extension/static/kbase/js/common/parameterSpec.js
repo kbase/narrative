@@ -397,6 +397,7 @@ define([
                             throw new Error('Unknown []workspaceObjectName ui class');
                     }
                 case '[]string':
+                case '[]text':
                     switch (fieldType) {
                         case 'dropdown':
                             return {

@@ -69,7 +69,7 @@ define([
         }
 
         /*
-         * A workspace ref, but using names ... 
+         * A workspace ref, but using names ...
          */
         function validateWorkspaceObjectNameRef(value, options) {
             var parsedValue,
@@ -90,6 +90,38 @@ define([
                 } else if (!/^\d+\/\d+\/\d+/.test(value)) {
                     diagnosis = 'invalid';
                     errorMessage = 'Invalid object reference format (#/#/#)';
+                } else {
+                    diagnosis = 'valid';
+                }
+            }
+            return {
+                isValid: errorMessage ? false : true,
+                errorMessage: errorMessage,
+                diagnosis: diagnosis,
+                value: value,
+                parsedValue: parsedValue
+            };
+        }
+
+        function validateWorkspaceDataPaletteRef(value, options) {
+            var parsedValue,
+                errorMessage, diagnosis;
+
+            if (typeof value !== 'string') {
+                diagnosis = 'invalid';
+                errorMessage = 'value must be a string in data reference format';
+            } else {
+                parsedValue = value.trim();
+                if (!parsedValue) {
+                    if (options.required) {
+                        diagnosis = 'required-missing';
+                        errorMessage = 'value is required';
+                    } else {
+                        diagnosis = 'optional-empty';
+                    }
+                } else if (!/^\d+\/\d+(\/\d+)?(;\d+\/\d+(\/\d+)?)*/.test(value)) {
+                    diagnosis = 'invalid';
+                    errorMessage = 'Invalid object reference path -  ( should be #/#/#;#/#/#;...)';
                 } else {
                     diagnosis = 'valid';
                 }
@@ -254,7 +286,7 @@ define([
                     };
                 });
         }
-        
+
         function validateWorkspaceObjectRefSet(value, options) {
             // TODO: validate each item.
             var parsedValue,
@@ -272,9 +304,9 @@ define([
                             errorMessage = 'value is required';
                         } else {
                             diagnosis = 'optional-empty';
-                        }                        
+                        }
                     } else {
-                        // TODO: validate each object name and report errors...                        
+                        // TODO: validate each object name and report errors...
                     }
                 }
             })
@@ -446,7 +478,7 @@ define([
                     diagnosis = 'valid';
                 }
             }
-            
+
             return {
                 isValid: errorMessage ? false : true,
                 errorMessage: errorMessage,
@@ -503,7 +535,7 @@ define([
                 parsedValue: parsedSet
             };
         }
-        
+
         function stringToBoolean(value) {
             switch (value.toLowerCase(value)) {
                 case 'true':
@@ -520,7 +552,7 @@ define([
                     throw new Error('Invalid format for boolean: ' + value);
             }
         }
-        
+
         // As with all validators, the key is that this validates form input,
         // in its raw form. For booleans is a string taking the form of a boolean
         // symbol. E.g. a checkbox may have a value of "true" or falsy, or a boolean
@@ -559,6 +591,7 @@ define([
         }
 
         return {
+            validateWorkspaceDataPaletteRef: validateWorkspaceDataPaletteRef,
             validateWorkspaceObjectName: validateWorkspaceObjectName,
             validateWorkspaceObjectRef: validateWorkspaceObjectRef,
             validateWorkspaceObjectRefSet: validateWorkspaceObjectRefSet,

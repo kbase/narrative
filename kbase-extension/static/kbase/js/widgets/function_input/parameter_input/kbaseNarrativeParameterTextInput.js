@@ -199,27 +199,19 @@ define([
             var $input = $('<select id="' + form_id + '" placeholder="' + placeholder + '"' +
                 ' value="' + defaultValue + '" type="text" style="width:100%"/>').addClass("form-control")
                 .on("input", function () {
-                    self.isValid()
-                })
+                    self.isValid();
+                });
 
-            if (spec.text_options) {
-                if (spec.text_options.valid_ws_types) {
-                    if (spec.text_options.valid_ws_types.length > 0) {
-                        self.isUsingSelect2 = true;
-                        $input = $('<select id="' + form_id + '" type="text" style="width:100%" />')
-                            .on("change", function () {
-                                self.isValid()
-                            });
-                        //this.validDataObjectList = []; - why was this here? ...
-                    }
-                }
+            if (spec.text_options &&
+                spec.text_options.valid_ws_types &&
+                spec.text_options.valid_ws_types.length > 0) {
+                self.isUsingSelect2 = true;
+                $input = $('<select id="' + form_id + '" type="text" style="width:100%" />')
+                    .on("change", function () {
+                        self.isValid()
+                    });
+                    //this.validDataObjectList = []; - why was this here? ...
             }
-            $input.on('focus', function(e) {
-                // Jupyter.narrative.disableKeyboardManager();
-            })
-            .on('blur', function(e) {
-                // Jupyter.narrative.enableKeyboardManager();
-            });
 
             var $feedbackTip = $("<span>").removeClass();
             if (self.required && showHint) {  // it must be required, and it must be the first element (showHint is only added on first row)
@@ -389,19 +381,26 @@ define([
                     // populate the valid data object list
                     self.validDataObjectList = [];
                     for (var i = 0; i < allObjInfo.length; i++) {
-                        self.validDataObjectList.push({name: allObjInfo[i][1], info: allObjInfo[i]});
+                        self.validDataObjectList.push({
+                            id: allObjInfo[i][1],
+                            text: allObjInfo[i][1],
+                            name: allObjInfo[i][1],
+                            info: allObjInfo[i]
+                        });
                     }
 
                     // refresh the input options
                     if (self.isUsingSelect2) {
-                        self.$elem.find("#" + this.spec.id).trigger("change");
+                        // self.$elem.find("#" + this.spec.id).trigger("change");
+
+                        self.setupSelect2(self.$elem.find("#" + this.spec.id), " ", null, self.validDataObjectList);//select2({data: self.validDataObjectList, tags: true, allowClear: true, selectOnBlur: true});
                     }
                 },
                 this
                 )]);
         },
         /* private method - note: if placeholder is empty, then users cannot cancel a selection*/
-        setupSelect2: function ($input, placeholder, defaultValue) {
+        setupSelect2: function ($input, placeholder, defaultValue, data) {
             var self = this;
             var noMatchesFoundStr = "No matching data found.";
             var tags = false;
@@ -410,36 +409,8 @@ define([
                 tags = true;
             }
             console.log($input);
-            // $.fn.select2.amd.require([
-            //     'select2/utils',
-            //     'select2/dropdown',
-            //     'select2/dropdown/closeOnSelect',
-            //     'select2/dropdown/attachBody',
-            //     'select2/selection/search',
-            //     'select2/selection/single'
-            // ], function (Utils, Dropdown, CloseOnSelect, AttachBody, Search, SingleSelect) {
-            //     var SelectionAdapter = Utils.Decorate(SingleSelect, Search);
-            //
-            //     // var DropdownAdapter = Utils.Decorate(
-            //     //     Utils.Decorate(Dropdown, CloseOnSelect),
-            //     //     AttachBody
-            //     // );
-            //
-            //     $input.select2({
-            //         language: {
-            //             noResults: function() {
-            //                 return noMatchesFoundStr;
-            //             }
-            //         },
-            //         // dropdownAdapter: DropdownAdapter,
-            //         // selectionAdapter: SelectionAdapter,
-            //         tags: true,
-            //     });
-            // })
-
-
             $input.select2({
-                // matcher: self.select2Matcher,
+                data: data,
                 language: {
                     noResults: function() {
                         return noMatchesFoundStr;
@@ -449,64 +420,6 @@ define([
                 placeholder: placeholder,
                 allowClear: true,
                 selectOnBlur: true,
-                // query: function (query) {
-                //     var data = {results: []};
-                //
-                //     // if there is a current selection (this is a bit of a hack) we
-                //     // prefill the input box so we don't have to do additional typing
-                //     if (query.term.trim() === "" && $input.select2('data') && $input.data('select2').kbaseHackLastSelection) {
-                //         var searchbox = $input.data('select2').search;
-                //         if (searchbox) {
-                //             $(searchbox).val($input.select2('data').text);
-                //             query.term = $input.select2('data').text;
-                //             $input.data('select2').kbaseHackLastSelection = null;
-                //         }
-                //     }
-                //     $input.data('select2').kbaseHackLastTerm = query.term;
-                //
-                //     // populate the names from our valid data object list
-                //     var exactMatch = false;
-                //     if (self.validDataObjectList) {
-                //         for (var i = 0; i < self.validDataObjectList.length; i++) {
-                //             var d = self.validDataObjectList[i];
-                //             if (query.term.trim() !== "") {
-                //                 if (self.select2Matcher(query.term, d.name)) {
-                //                     if (query.term === d.name) {
-                //                         exactMatch = true;
-                //                     }
-                //                     data.results.push({id: d.name, text: d.name, info: d.info});
-                //                 }
-                //                 // search metadata too
-                //                 else if (d.info[10]) {
-                //                     for (var key in d.info[10]) {
-                //                         if (d.info[10].hasOwnProperty(key)) {
-                //                             if (self.select2Matcher(query.term, d.info[10][key])) {
-                //                                 data.results.push({id: d.name, text: d.name,
-                //                                     mm: key + ' - ' + d.info[10][key], info: d.info});
-                //                                 // allow us to show metadata match!
-                //                             }
-                //                         }
-                //                     }
-                //                 }
-                //
-                //             } else {
-                //                 data.results.push({id: d.name, text: d.name, info: d.info});
-                //             }
-                //         }
-                //     }
-                //
-                //     //always allow the name if it is set as an output name, unshift it to the front...
-                //     if (query.term.trim() !== "") {
-                //         if (self.isOutputName && !exactMatch) {
-                //             data.results.unshift({id: query.term, text: query.term});
-                //         }
-                //     }
-                //
-                //     // paginate results
-                //     var pageSize = self.options.wsObjSelectPageSize;
-                //     query.callback({results: data.results.slice((query.page - 1) * pageSize, query.page * pageSize),
-                //         more: data.results.length >= query.page * pageSize});
-                // },
                 templateSelection: function (object) {
                     var display = '<span class="kb-parameter-data-selection">' + object.text + '</span>';
                     return $(display);
@@ -524,15 +437,6 @@ define([
                     return $(display);
                 }
             });
-            // .on("select2-selecting",
-            //     function (e) {
-            //         $input.data('select2').kbaseHackLastSelection = e.choice;
-            //     }
-            // );
-            //
-            // if (defaultValue) {
-            //     $input.select2("data", {id: defaultValue, text: defaultValue});
-            // }
         },
         /* private method */
         select2Matcher: function (term, text) {
@@ -845,7 +749,8 @@ define([
              *    what it's expected to validate as.
              */
             for (var i=0; i<this.rowInfo.length; i++) {
-                var val = this.rowInfo[i].$input.val().trim();
+                var val = this.rowInfo[i].$input.val() || '';
+                val = val.trim();
                 if (!isOptional || val.length > 0) {
                     if (!ignoreType) {
                         val = this.coerceType(val);

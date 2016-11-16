@@ -464,9 +464,13 @@ define([
         },
 
         fetchWorkspaceData: function () {
-            var addObjectInfo = function(objInfo) {
+            var addObjectInfo = function(objInfo, dpInfo) {
                 // Get the object info
                 var objId = this.itemId(objInfo); //objInfo[6] + '/' + objInfo[0]; // + '/' + objInfo[2]
+                var fullDpReference = null;
+                if (dpInfo && dpInfo.ref) {
+                    fullDpReference = dpInfo.ref + ';' + objId;
+                }
                 if (this.dataObjects[objId]) {
                     return;
                 }
@@ -476,7 +480,8 @@ define([
                     $div: null,
                     info: objInfo,
                     attached: false,
-                    fromPalette: this.wsId !== objInfo[6]
+                    fromPalette: this.wsId !== objInfo[6],
+                    refPath: fullDpReference
                 };
                 this.keyToObjId[key] = objId;
                 this.viewOrder.push({
@@ -490,7 +495,7 @@ define([
                 if (!(typeKey in this.objData)) {
                     this.objData[typeKey] = [];
                 }
-                this.objData[typeKey].push(objInfo);
+                this.objData[typeKey].push(objInfo.concat(fullDpReference));
 
                 // get the count of objects for each type
                 var typeName = typeKey.split('.')[1];
@@ -520,7 +525,7 @@ define([
                     }
                     this.setItems[itemId][setId] = 1;
                     if (!this.dataObjects[itemId]) {
-                        addObjectInfo(setItem);
+                        addObjectInfo(setItem, obj.dp_info);
                     }
                 }.bind(this));
             }.bind(this);

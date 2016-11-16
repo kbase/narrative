@@ -161,19 +161,24 @@ define([
                         workspaceServiceUrl: runtime.config('services.workspace.url')
                     };
 
+                if (objInfo && objInfo.dataPaletteRef) {
+                    return Validation.validateWorkspaceDataPaletteRef(objInfo.dataPaletteRef, validationOptions);
+                }
+
                 if (objInfo) {
                     processedValue = objectRefType === 'ref' ? objInfo.ref : objInfo.name;
                 }
 
                 switch (objectRefType) {
                     case 'ref':
-                        return Validation.validateWorkspaceObjectRef(processedValue, validationOptions);
+                        return Validation.validateWorkspaceDataPaletteRef(processedValue, validationOptions);
                     case 'name':
                     default:
                         return Validation.validateWorkspaceObjectName(processedValue, validationOptions);
                 }
             })
             .then(function (validationResult) {
+
                 return {
                     isValid: validationResult.isValid,
                     validated: true,
@@ -194,10 +199,15 @@ define([
                     objList = objList.concat(data[typeKey]);
                 });
                 return objList.map(function (objectInfo) {
-                    return serviceUtils.objectInfoToObject(objectInfo);
+                    var obj = serviceUtils.objectInfoToObject(objectInfo);
+                    // TODO - port this into kb_service/utils...
+                    obj.dataPaletteRef = null;
+                    if (objectInfo.length > 11) {
+                        obj.dataPaletteRef = objectInfo[11];
+                    }
+                    return obj;
                 });
             });
-
         }
 
         function fetchData() {

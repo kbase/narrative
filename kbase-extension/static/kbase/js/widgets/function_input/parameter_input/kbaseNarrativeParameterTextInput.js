@@ -12,6 +12,8 @@ define([
     'kbaseNarrativeParameterInput',
     'common/runtime',
     'base/js/namespace',
+    'util/timeFormat',
+    'util/string',
     'select2',
     'bootstrap'
 ], function (
@@ -20,7 +22,9 @@ define([
     Config,
     kbaseNarrativeParameterInput,
     Runtime,
-    Jupyter
+    Jupyter,
+    TimeFormat,
+    StringUtil
     ) {
     'use strict';
     return KBWidget({
@@ -103,9 +107,6 @@ define([
                     self.isOutputName = true;
                 }
             }
-
-            //self.$mainPanel.addClass("kb-method-parameter-panel")
-            //        .hover(function(){$(this).toggleClass('kb-method-parameter-panel-hover');});;
 
             self.rowInfo = [];
             self.$rowsContainer = $("<div>");
@@ -238,7 +239,7 @@ define([
                 .append($('<div>').css({"width": "100%", "display": "inline-block"}).append($input))
                 .append($('<div>').css({"display": "inline-block"}).append($feedbackTip));
             var $hintCol = $('<div>').addClass(self.hintColClass).addClass("kb-method-parameter-hint");
-            var uuidForRemoval = self.genUUID();
+            var uuidForRemoval = StringUtil.uuid();
             var $removalButton = null;
             if (showHint) {
                 $hintCol.append(spec.short_hint);
@@ -391,9 +392,7 @@ define([
 
                     // refresh the input options
                     if (self.isUsingSelect2) {
-                        // self.$elem.find("#" + this.spec.id).trigger("change");
-
-                        self.setupSelect2(self.$elem.find("#" + this.spec.id), " ", null, self.validDataObjectList);//select2({data: self.validDataObjectList, tags: true, allowClear: true, selectOnBlur: true});
+                        self.setupSelect2(self.$elem.find("#" + this.spec.id), " ", null, self.validDataObjectList);
                     }
                 },
                 this
@@ -432,7 +431,7 @@ define([
                         if (object.mm) {
                             display = display + "&nbsp&nbsp&nbsp<i>" + object.mm + "</i><br>";
                         }
-                        display = display + "&nbsp&nbsp&nbsp<i>updated " + self.getTimeStampStr(object.info[3]) + "</i>";
+                        display = display + "&nbsp&nbsp&nbsp<i>updated " + TimeFormat.getTimeStampStr(object.info[3]) + "</i>";
                     }
                     return $(display);
                 }
@@ -616,12 +615,7 @@ define([
             // disable the input
             this.enabled = false;
             for (var i = 0; i < this.rowInfo.length; i++) {
-                // if (this.isUsingSelect2) {
-                //     this.rowInfo[i].$input.select2('disable', true);
-                // } else {
                 this.rowInfo[i].$input.prop('disabled', true);
-                // }
-                // stylize the row div
                 this.rowInfo[i].$feedback.removeClass();
                 if (this.rowInfo[i].$removalButton) {
                     this.rowInfo[i].$removalButton.hide();
@@ -636,11 +630,7 @@ define([
             // enable the input
             this.enabled = true;
             for (var i = 0; i < this.rowInfo.length; i++) {
-                // if (this.isUsingSelect2) {
-                //     this.rowInfo[i].$input.select2('enable', true);
-                // } else {
                 this.rowInfo[i].$input.prop('disabled', false);
-                // }
                 if (this.rowInfo[i].$removalButton) {
                     this.rowInfo[i].$removalButton.show();
                 }
@@ -651,11 +641,7 @@ define([
         lockInputs: function () {
             if (this.enabled) {
                 for (var i = 0; i < this.rowInfo.length; i++) {
-                    // if (this.isUsingSelect2) {
-                    //     this.rowInfo[i].$input.select2('disable', true);
-                    // } else {
                     this.rowInfo[i].$input.prop('disabled', true);
-                    // }
                 }
             }
             for (var i = 0; i < this.rowInfo.length; i++) {
@@ -669,11 +655,7 @@ define([
         unlockInputs: function () {
             if (this.enabled) {
                 for (var i = 0; i < this.rowInfo.length; i++) {
-                    // if (this.isUsingSelect2) {
-                    //     this.rowInfo[i].$input.select2('enable', true);
-                    // } else {
                     this.rowInfo[i].$input.prop('disabled', false);
-                    // }
                     if (this.rowInfo[i].$removalButton) {
                         this.rowInfo[i].$removalButton.show();
                     }
@@ -798,51 +780,6 @@ define([
             }
         },
 
-        // edited from: http://stackoverflow.com/questions/3177836/how-to-format-time-since-xxx-e-g-4-minutes-ago-similar-to-stack-exchange-site
-        getTimeStampStr: function (objInfoTimeStamp) {
-            var date = new Date(objInfoTimeStamp);
-            var seconds = Math.floor((new Date() - date) / 1000);
-
-            // f-ing safari, need to add extra ':' delimiter to parse the timestamp
-            if (isNaN(seconds)) {
-                var tokens = objInfoTimeStamp.split('+');  // this is just the date without the GMT offset
-                var newTimestamp = tokens[0] + '+' + tokens[0].substr(0, 2) + ":" + tokens[1].substr(2, 2);
-                date = new Date(newTimestamp);
-                seconds = Math.floor((new Date() - date) / 1000);
-                if (isNaN(seconds)) {
-                    // just in case that didn't work either, then parse without the timezone offset, but
-                    // then just show the day and forget the fancy stuff...
-                    date = new Date(tokens[0]);
-                    return this.monthLookup[date.getMonth()] + " " + date.getDate() + ", " + date.getFullYear();
-                }
-            }
-            var interval = Math.floor(seconds / 31536000);
-            if (interval > 1) {
-                return self.monthLookup[date.getMonth()] + " " + date.getDate() + ", " + date.getFullYear();
-            }
-            interval = Math.floor(seconds / 2592000);
-            if (interval > 1) {
-                if (interval < 4) {
-                    return interval + " months";
-                } else {
-                    return this.monthLookup[date.getMonth()] + " " + date.getDate() + ", " + date.getFullYear();
-                }
-            }
-            interval = Math.floor(seconds / 86400);
-            if (interval > 1) {
-                return interval + " days ago";
-            }
-            interval = Math.floor(seconds / 3600);
-            if (interval > 1) {
-                return interval + " hours ago";
-            }
-            interval = Math.floor(seconds / 60);
-            if (interval > 1) {
-                return interval + " minutes ago";
-            }
-            return Math.floor(seconds) + " seconds ago";
-        },
-        monthLookup: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
         // make a randomized string, assuming it's for an output.
         generateRandomOutputString: function (generProps) {
             var strArr = [];
@@ -891,12 +828,6 @@ define([
                     this.setParameterValue(this.generateRandomOutputString(generatedValueMapping));
                 }
             }
-        },
-        genUUID: function () {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-                var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-                return v.toString(16);
-            });
         },
     });
 });

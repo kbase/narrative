@@ -2,6 +2,7 @@
 /*jslint white:true,browser:true*/
 define([
     'bluebird',
+    'jquery',
     'base/js/namespace',
     'kb_common/html',
     'kb_common/utils',
@@ -17,6 +18,7 @@ define([
     'css!font-awesome'
 ], function (
     Promise,
+    $,
     Jupyter,
     html,
     utils,
@@ -86,30 +88,12 @@ define([
             }
 
             // CONTROL
-            return select({
-                id: events.addEvent({type: 'change', handler: function (e) {
-                        validate()
-                            .then(function (result) {
-                                if (result.isValid) {
-                                    model.value = result.value;
-                                    bus.emit('changed', {
-                                        newValue: result.value
-                                    });
-                                } else if (result.diagnosis === 'required-missing') {
-                                    model.value = result.value;
-                                    bus.emit('changed', {
-                                        newValue: result.value
-                                    });
-                                }
-                                bus.emit('validation', {
-                                    errorMessage: result.errorMessage,
-                                    diagnosis: result.diagnosis
-                                });
-                            });
-                    }}),
+            var selectElem = select({
                 class: 'form-control',
                 dataElement: 'input'
             }, [option({value: ''}, '')].concat(selectOptions));
+
+            return selectElem;
         }
 
         /*
@@ -283,7 +267,37 @@ define([
                     content = div({class: 'input-group', style: {width: '100%'}}, inputControl);
 
                 dom.setContent('input-container', content);
+
+                $(dom.getElement('input-container.input')).select2({
+                    templateResult: formatObjectDisplay,
+                    templateSelection: function(object) {
+                        if (!object.id) {
+                            return object.text;
+                        }
+                        return model.availableValues[object.id].name;
+                    }
+                }).on('change', function() {
+                    validate()
+                        .then(function (result) {
+                            if (result.isValid) {
+                                model.value = result.value;
+                                bus.emit('changed', {
+                                    newValue: result.value
+                                });
+                            } else if (result.diagnosis === 'required-missing') {
+                                model.value = result.value;
+                                bus.emit('changed', {
+                                    newValue: result.value
+                                });
+                            }
+                            bus.emit('validation', {
+                                errorMessage: result.errorMessage,
+                                diagnosis: result.diagnosis
+                            });
+                        });
+                });
                 events.attachEvents(container);
+
             });
         }
 

@@ -278,10 +278,6 @@ define(
                     }
                     this.disableKeyboardManager();
                 }
-
-                //!! arg!! I have to refresh to get reattach the events, which are lost when
-                //the popover is hidden!!!  makes it a little slower because we refetch permissions from ws each time
-                shareWidget.refresh();
                 return sharePanel;
             }.bind(this)
         });

@@ -22,10 +22,7 @@
     "requirejs-plugins": "^1.0.3",
     "requirejs-text": "2.0.14",
     "select2": "4.0.3",
-    "select2-bootstrap-css": "^1.4.5",
-    "underscore": "~1.8.3"
-  },
-  "resolutions": {
-    "select2": "4.0.3"
+    "underscore": "~1.8.3",
+    "select2-bootstrap-theme": "^0.1.0-beta.9"
   }
 }

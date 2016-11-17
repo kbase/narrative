@@ -470,12 +470,14 @@ def validate_param_value(param, value, workspace):
                 info = _ws_client.get_object_info_new({
                     'objects': [{'ref': value}]
                 })[0]
+                path_items[len(path_items) - 1] = "{}/{}/{}".format(info[6], info[0], info[4])
+                ws_ref = ';'.join(path_items)
             # Otherwise, assume it's a name, not a reference.
             else:
                 info = _ws_client.get_object_info_new({
                     'objects': [{'workspace': workspace, 'name': value}]
                 })[0]
-            ws_ref = "{}/{}/{}".format(info[6], info[0], info[4])
+                ws_ref = "{}/{}/{}".format(info[6], info[0], info[4])
             type_ok = False
             for t in param['allowed_types']:
                 if re.match(t, info[2]):

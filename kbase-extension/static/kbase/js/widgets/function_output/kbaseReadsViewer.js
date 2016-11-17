@@ -31,13 +31,14 @@ define ([
         /*
         * (required) Your widget should be named in CamelCase.
         */
-        name: 'kbaseDefaultNarrativeOutput',
+        name: 'kbaseReadsViewer',
         parent : kbaseAuthenticatedWidget,
         version: "1.0.0",
         token: null,
         width: 1150,
         options: {
-            wsId: null,
+            obj_ref: null,
+//            wsId: null,
             wsName: null,
             objId: null,
             jobId: null,
@@ -50,10 +51,15 @@ define ([
         },
 
         render: function() {
-            if (this.options._obj_info) {
-                this.reference =  this.options.wsName + '/' + this.options.objId + '/' + this.options._obj_info['version'];
-            } else {
-                this.reference =  this.options.wsName + '/' + this.options.objId;
+            if (this.options.obj_ref) {
+                this.reference = this.options.obj_ref;
+            }
+            else{
+                if (this.options._obj_info) {
+                    this.reference =  this.options.wsName + '/' + this.options.objId + '/' + this.options._obj_info['version'];
+                } else {
+                    this.reference =  this.options.wsName + '/' + this.options.objId;
+                }
             }
             Promise.resolve(this.client.sync_call("ReadsAPI.get_reads_info_all_formatted",[{workspace_obj_ref: this.reference}]))
             .then(function(results) {

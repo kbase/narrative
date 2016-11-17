@@ -31,6 +31,9 @@ require.config({
         'knhx_excanvas'                         : 'ext_packages/knhxtree/js/excanvas',
         'knhx_canvastext'                       : 'ext_packages/knhxtree/js/canvastext',
         'knhx_easytree'                         : 'ext_packages/knhxtree/js/easytree',
+        'typeahead'                             : 'ext_components/typeahead/typeahead.jquery',
+        'bloodhound'                             : 'ext_components/typeahead/bloodhound',
+
 
         narrativeTour                           : 'kbase/js/tour',
         kbaseInputTest                          : 'kbase/js/widgets/function_input/kbaseInputTest',
@@ -67,6 +70,7 @@ require.config({
         'TaxonAPI-client-api'                   : 'kbase/js/api/TaxonAPIClient',
         'GenomeSearchUtil-client-api'           : 'kbase/js/api/GenomeSearchUtilClient',
         'SetAPI-client-api'                     : 'kbase/js/api/SetAPIClient',
+        'Taxonomy-client-api'                   : 'kbase/js/api/TaxonomyAPIClient',
 
         'njs-wrapper-client-api'                : 'kbase/js/api/NarrativeJobServiceWrapper',
         kbaseNarrativeJobStatus                 : 'kbase/js/widgets/narrative_core/kbaseNarrativeJobStatus',
@@ -310,6 +314,10 @@ require.config({
 
     },
     shim : {
+        bloodhound: {
+           deps: ['jquery'],
+           exports: 'Bloodhound'
+        },
         underscore : {
             exports: '_'
         },

@@ -201,6 +201,23 @@ define([
         return pythonCode;
     }
 
+    function buildDataWidgetRunner2(ref, cellId, title, tag) {
+        var positionalArgs = [
+                pythonifyValue(ref)
+            ];
+        var namedArgs = objectToNamedArgs({
+                cell_id: cellId,
+                title: title,
+                tag: tag
+            });
+        var args = positionalArgs.concat(namedArgs);
+        var pythonCode = [
+                'from biokbase.narrative.widgetmanager import WidgetManager',
+                'WidgetManager().show_data_widget2(' + buildNiceArgsList(args) + ')'
+            ].join('\n');
+        return pythonCode;
+    }
+
     function buildCustomWidgetRunner(cellId, runId, app) {
         var positionalArgs = [
                 pythonifyValue(app.id)
@@ -229,6 +246,7 @@ define([
         buildViewRunner: buildViewRunner,
         buildOutputRunner: buildOutputRunner,
         buildCustomWidgetRunner: buildCustomWidgetRunner,
-        buildDataWidgetRunner: buildDataWidgetRunner
+        buildDataWidgetRunner: buildDataWidgetRunner,
+        buildDataWidgetRunner2: buildDataWidgetRunner2
     };
 });

@@ -360,7 +360,7 @@ class WidgetManager(object):
             info = params['info']
             obj_ref = str(info['ws_id']) + '/' + str(info['id']) + '/' + str(info['version'])
         elif 'ref' in params:
-            obj_ref = params['ref']  # may include ref-path (or chain, not sure which one is text)
+            obj_ref = params['ref']  # may include ref-path
         else:
             raise ValueError("Neither 'info' nor 'ref' field is set in input parameters")
         info_tuple = clients.get('workspace').get_object_info_new({'objects': [{'ref': obj_ref}],

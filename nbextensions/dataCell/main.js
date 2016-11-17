@@ -164,7 +164,17 @@ define([
             // We just need to generate, set, and execute the output
             // the first time (for now).
 
-            var cellText = PythonInterop.buildDataWidgetRunner('kbaseNarrativeDataCell', cellId, data.objectInfo);
+            var tag = Jupyter.narrative.sidePanel.$methodsWidget.currentTag;
+            if (!tag) {
+                tag = "release";
+            }
+            var objInfo = data.objectInfo;
+            var ref = objInfo.ref_path;
+            if (!ref) {
+                ref = objInfo.ws_id + '/' + objInfo.id + '/' + objInfo.version;
+            }
+            var title = (objInfo && objInfo.name) ? objInfo.name : 'Data Viewer';
+            var cellText = PythonInterop.buildDataWidgetRunner2(ref, cellId, title, tag);
 
             cell.set_text(cellText);
             cell.execute();

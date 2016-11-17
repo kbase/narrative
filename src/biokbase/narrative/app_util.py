@@ -133,6 +133,61 @@ def _untransform(transform_type, value):
     else:
         return value
 
+
+def app_param(p):
+    p_info = {'id': p['id'], 'is_group': False}
+
+    if p['optional']==0:
+        p_info['optional'] = False
+    else:
+        p_info['optional'] = True
+
+    p_info['short_hint'] = p['short_hint']
+    p_info['description'] = p['description']
+    p_info['type'] = p['field_type'].lower()
+    p_info['is_output'] = False
+
+    p_info['allow_multiple'] = False
+    if p['allow_multiple'] == 1:
+        p_info['allow_multiple'] = True
+
+    if p_info['type'] == 'dropdown':
+        p_info['allowed_values'] = [ opt['value'] for opt in p['dropdown_options']['options'] ]
+    if p_info['type'] == 'checkbox':
+        p_info['allowed_values'] = [True, False]
+
+    defaults = p['default_values']
+    # remove any empty strings, because that's silly
+    defaults = [x for x in defaults if x]
+    if p_info['allow_multiple']:
+        p_info['default'] = defaults
+    else:
+        p_info['default'] = defaults[0] if len(defaults) > 0 else None
+
+    if 'checkbox_options' in p and len(p['checkbox_options'].keys()) == 2:
+        p_info['checkbox_map'] = [p['checkbox_options']['checked_value'], p['checkbox_options']['unchecked_value']]
+
+    if 'text_options' in p:
+        opts = p['text_options']
+        if 'is_output_name' in opts:
+            p_info['is_output'] = opts['is_output_name']
+        if 'valid_ws_types' in opts and len(opts['valid_ws_types']) > 0:
+            p_info['allowed_types'] = opts['valid_ws_types']
+        if 'validate_as' in opts and p_info['type'] != 'checkbox':
+            p_info['type'] = opts['validate_as']
+        if 'min_float' in opts:
+            p_info['min_val'] = opts['min_float']
+        if 'min_int' in opts:
+            p_info['min_val'] = opts['min_int']
+        if 'max_float' in opts:
+            p_info['max_val'] = opts['max_float']
+        if 'max_int' in opts:
+            p_info['max_val'] = opts['max_int']
+        if 'regex_constraint' in opts and len(opts['regex_constraint']):
+            p_info['regex_constraint'] = opts['regex_constraint']
+    return p_info
+
+
 def map_outputs_from_state(state, params, app_spec):
     """
     Returns the dict of output values from a completed app.
@@ -145,16 +200,27 @@ def map_outputs_from_state(state, params, app_spec):
     if out_mapping_key not in app_spec['behavior']:
         out_mapping_key = 'output_mapping' # for viewers or short-running things, but the inner keys are the same.
 
+    spec_params = dict((app_spec_param['id'], app_param(app_spec_param))
+                       for app_spec_param in app_spec['parameters'])
+
     for out_param in app_spec['behavior'].get(out_mapping_key, []):
         value = None
+        input_param_id = None
         if 'narrative_system_variable' in out_param:
             value = system_variable(out_param['narrative_system_variable'])
         elif 'constant_value' in out_param:
             value = out_param['constant_value']
         elif 'input_parameter' in out_param:
-            value = params.get(out_param['input_parameter'], None)
+            input_param_id = out_param['input_parameter']
+            value = params.get(input_param_id, None)
         elif 'service_method_output_path' in out_param:
             value = get_result_sub_path(state['result'], out_param['service_method_output_path'])
+        
+        if 'target_type_transform' in out_param:
+            spec_param = None
+            if input_param_id:
+                spec_param = spec_params[input_param_id]
+            value = transform_param_value(out_param['target_type_transform'], value, spec_param)
 
         p_id = out_param.get('target_property', None)
         if p_id is not None:
@@ -536,3 +602,95 @@ def validate_param_value(param, value, workspace):
 
     # Whew. Passed all filters!
     return (ws_ref, None)
+
+
+def resolve_ref(workspace, value):
+    ret = None
+    if '/' in value:
+        path_items = [item.strip() for item in value.split(';')]
+        for path_item in path_items:
+            if len(path_item.split('/')) > 3:
+                raise ValueError('Object reference {} has too many slashes  - should be workspace/object/version(optional)'.format(value))
+            # return (ws_ref, 'Data reference named {} does not have the right format - should be workspace/object/version(optional)')
+        info = _ws_client.get_object_info_new({'objects': [{'ref': value}]})[0]
+        path_items[len(path_items) - 1] = "{}/{}/{}".format(info[6], info[0], info[4])
+        ret = ';'.join(path_items)
+    # Otherwise, assume it's a name, not a reference.
+    else:
+        info = _ws_client.get_object_info_new({'objects': [{'workspace': workspace, 'name': value}]})[0]
+        ret = "{}/{}/{}".format(info[6], info[0], info[4])
+    return ret
+
+
+def resolve_ref_if_typed(value, spec_param):
+    """
+    For a given value and associated spec, if this is not an output param,
+    then ensure that the reference points to an object in the current
+    workspace, and transform the value into an absolute reference to it.
+    """
+    is_output = 'is_output' in spec_param and spec_param['is_output'] == 1
+    if 'allowed_types' in spec_param and not is_output:
+        allowed_types = spec_param['allowed_types']
+        if len(allowed_types) > 0:
+            workspace = system_variable('workspace')
+            return resolve_ref(workspace, value)
+    return value
+
+
+def transform_param_value(transform_type, value, spec_param):
+    """
+    Transforms an input according to the rules given in
+    NarrativeMethodStore.ServiceMethodInputMapping
+    Really, there are three types of transforms possible:
+      1. ref - turns the input string into a workspace ref.
+      2. int - tries to coerce the input string into an int.
+      3. list<type> - turns the given list into a list of the given type.
+      (4.) none or None - doesn't transform.
+
+    Returns a transformed (or not) value.
+    """
+    if transform_type == "none" or transform_type == "object-name" or transform_type is None:
+        return value
+
+    elif transform_type == "ref" or transform_type == "unresolved-ref":
+        # make unresolved workspace ref (like 'ws-name/obj-name')
+        if (value is not None) and ('/' not in value):
+            value = system_variable('workspace') + '/' + value
+        return value
+
+    elif transform_type == "resolved-ref":
+        # make a workspace ref
+        if value is not None:
+            value = resolve_ref(system_variable('workspace'), value)
+        return value
+
+    elif transform_type == "future-default":
+        # let's guess base on spec_param
+        if spec_param is None:
+            return value
+        else:
+            if value is not None:
+                value = resolve_ref_if_typed(value, spec_param)
+            return value
+
+    elif transform_type == "int":
+        # make it an integer, OR 0.
+        if value is None or len(str(value).strip()) == 0:
+            return None
+        return int(value)
+
+    elif transform_type.startswith("list<") and \
+            transform_type.endswith(">"):
+        # make it a list of transformed types.
+        list_type = transform_type[5:-1]
+        if isinstance(value, list):
+            ret = []
+            for pos in range(0, len(value)):
+                ret.append(transform_param_value(list_type, value[pos], None))
+            return ret
+        else:
+            return [transform_param_value(list_type, value, None)]
+
+    else:
+        raise ValueError("Unsupported Transformation type: " +
+                         transform_type)

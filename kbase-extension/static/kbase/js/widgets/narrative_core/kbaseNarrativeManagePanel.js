@@ -14,6 +14,7 @@ define([
     'bluebird',
     'kbwidget',
     'kbaseNarrativeControlPanel',
+    'kbaseNarrativeSharePanel',
     'api/NewWorkspace',
     'kbase-generic-client-api',
     'util/timeFormat'
@@ -26,6 +27,7 @@ define([
     Promise,
     KBWidget,
     ControlPanel,
+    kbaseNarrativeSharePanel,
     NewWorkspace,
     GenericClient,
     TimeFormat

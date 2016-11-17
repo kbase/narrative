@@ -220,19 +220,9 @@ define (
 
                 if (isOwner) {
                     var $addUsersDiv = $('<div>').css({'margin-top': '10px'});
-                    var $input = $('<input>')
+                    var $input = $('<select>')
                         .attr('type', 'text')
-                        .css({'width': self.options.add_user_input_width})
-                        .on('select2-focus', function () {
-                            if (Jupyter && Jupyter.narrative) {
-                                Jupyter.narrative.disableKeyboardManager();
-                            }
-                        })
-                        .on('select2-blur', function () {
-                            if (Jupyter && Jupyter.narrative) {
-                                Jupyter.narrative.enableKeyboardManager();
-                            }
-                        });
+                        .css({'width': self.options.add_user_input_width});
 
                     var $addAction =
                         $('<div>')
@@ -478,20 +468,20 @@ define (
                         query.callback({results: results});
                     }
                 },
-                formatSelection: function (object, container) {
+                templateSelection: function (object, container) {
                     if (object.found) {
                         var toShow = self.renderUserIconAndName(object.id, object.text);
                         return $('<div>').append(toShow[0]).append(toShow[1].css({'white-space': 'normal'})).html(); // wrapped in a div that we drop
                     }
-                    return "<b>" + object.text + "</b> (not found)";
+                    return $("<b>" + object.text + "</b> (not found)");
                 },
-                formatResult: function (object, container, query) {
+                templateResult: function (object, container, query) {
                     if (object.found) {
                         var toShow = self.renderUserIconAndName(object.id, object.text);
                         // hack on a hack on a hack!
                         return $('<div>').append(toShow[0]).append(toShow[1].html()).html(); // wrapped in a div that we drop
                     }
-                    return "<b>" + object.text + "</b> (not found)";
+                    return $("<b>" + object.text + "</b> (not found)");
                 }
             });
         },

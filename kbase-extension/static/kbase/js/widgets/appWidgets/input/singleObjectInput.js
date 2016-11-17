@@ -378,35 +378,37 @@ define([
             return Promise.try(function () {
                 bus.on('run', function (message) {
                     parent = message.node;
-                    container = parent.appendChild(document.createElement('div'));
-                    dom = Dom.make({node: container});
+                    if (parent) {
+                        container = parent.appendChild(document.createElement('div'));
+                        dom = Dom.make({node: container});
 
-                    var events = Events.make(),
-                        theLayout = layout(events);
+                        var events = Events.make(),
+                            theLayout = layout(events);
 
-                    container.innerHTML = theLayout.content;
-                    events.attachEvents(container);
+                        container.innerHTML = theLayout.content;
+                        events.attachEvents(container);
 
-                    return fetchData()
-                        .then(function (data) {
-                            model.availableValues = data;
-                            render();
-                        })
-                        .then(function () {
-                            bus.on('reset-to-defaults', function (message) {
-                                resetModelValue();
+                        return fetchData()
+                            .then(function (data) {
+                                model.availableValues = data;
+                                render();
+                            })
+                            .then(function () {
+                                bus.on('reset-to-defaults', function (message) {
+                                    resetModelValue();
+                                });
+                                bus.on('update', function (message) {
+                                    setModelValue(message.value);
+                                });
+                                //bus.on('workspace-changed', function (message) {
+                                //    doWorkspaceChanged();
+                                //});
+                                runtime.bus().on('workspace-changed', function (message) {
+                                    doWorkspaceChanged();
+                                });
+                                bus.emit('sync');
                             });
-                            bus.on('update', function (message) {
-                                setModelValue(message.value);
-                            });
-                            //bus.on('workspace-changed', function (message) {
-                            //    doWorkspaceChanged();
-                            //});
-                            runtime.bus().on('workspace-changed', function (message) {
-                                doWorkspaceChanged();
-                            });
-                            bus.emit('sync');
-                        });
+                    }
                 });
             });
         }

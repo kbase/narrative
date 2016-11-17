@@ -251,9 +251,9 @@ define([], function () {
             switch (fieldType) {
             case 'text':
                 constraints = {
-                    min: spec.text_options.min_length,
-                    max: spec.text_options.max_length,
-                    validate: spec.text_options.validate_as
+                    min: spec.text_options ? spec.text_options.min_length : undefined,
+                    max: spec.text_options ? spec.text_options.max_length : undefined,
+                    validate: spec.text_options ? spec.text_options.validate_as : undefined
                 };
                 break;
             case 'dropdown':
@@ -437,7 +437,7 @@ define([], function () {
         case 'struct':
             break;
         case 'unspecified':
-            // a bunch of field types are untyped, and there are no 
+            // a bunch of field types are untyped, and there are no
             // options for them...
             switch (fieldType) {
             case 'text':
@@ -617,7 +617,7 @@ define([], function () {
 
         sdkAppSpec.parameter_groups.forEach(function (group) {
             convertGroup(group, parameterSpecs);
-            // don't know how the group is ordered in the spec ... so just append it later.            
+            // don't know how the group is ordered in the spec ... so just append it later.
         });
 
         // first filter out the paramters which have been moved into groups,

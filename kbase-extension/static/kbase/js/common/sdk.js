@@ -238,7 +238,7 @@ define([], function () {
         var dataType = converted.data.type;
         var fieldType = converted.ui.type;
         var paramClass = converted.ui.class;
-        var constraints;
+        var constraints = {};
 
         // NOTE:
         // field_type is text or dropdown, but does not always correspond to the
@@ -250,23 +250,29 @@ define([], function () {
         case 'text':
             switch (fieldType) {
             case 'text':
-                constraints = {
-                    min: spec.text_options ? spec.text_options.min_length : undefined,
-                    max: spec.text_options ? spec.text_options.max_length : undefined,
-                    validate: spec.text_options ? spec.text_options.validate_as : undefined
-                };
+                if (spec.text_options) {
+                    constraints = {
+                        min: spec.text_options.min_length,
+                        max: spec.text_options.max_length,
+                        validate: spec.text_options.validate_as
+                    };
+                }
                 break;
             case 'dropdown':
-                constraints = {
-                    options: spec.dropdown_options.options
-                };
+                if (spec.dropdown_options) {
+                    constraints = {
+                        options: spec.dropdown_options.options
+                    };
+                }
                 break;
             case 'textarea':
-                constraints = {
-                    min: spec.text_options.min_length,
-                    max: spec.text_options.max_length,
-                    nRows: spec.text_options.n_rows
-                };
+                if (spec.text_options) {
+                    constraints = {
+                        min: spec.text_options.min_length,
+                        max: spec.text_options.max_length,
+                        nRows: spec.text_options.n_rows
+                    };
+                }
                 break;
             default:
                 throw new Error('Unknown text param field type');
@@ -275,10 +281,12 @@ define([], function () {
         case 'int':
             switch (fieldType) {
             case 'text':
-                constraints = {
-                    min: spec.text_options.min_int,
-                    max: spec.text_options.max_int
-                };
+                if (spec.text_options) {
+                    constraints = {
+                        min: spec.text_options.min_int,
+                        max: spec.text_options.max_int
+                    };
+                }
                 break;
             case 'checkbox':
                 // In theory, the checkbox
@@ -290,26 +298,29 @@ define([], function () {
             }
             break;
         case 'float':
-            constraints = {
-                min: spec.text_options.min_float,
-                max: spec.text_options.max_float
-            };
+            if (spec.text_options) {
+                constraints = {
+                    min: spec.text_options.min_float,
+                    max: spec.text_options.max_float
+                };
+            }
             break;
         case 'workspaceObjectName':
+            var validTypes = spec.text_options ? spec.text_options.valid_ws_types : [];
             switch (paramClass) {
             case 'input':
                 constraints = {
-                    types: spec.text_options.valid_ws_types
+                    types: validTypes
                 };
                 break;
             case 'output':
                 constraints = {
-                    types: spec.text_options.valid_ws_types
+                    types: validTypes
                 };
                 break;
             case 'parameter':
                 constraints = {
-                    types: spec.text_options.valid_ws_types
+                    types: validTypes
                 };
                 break;
             default:
@@ -317,15 +328,16 @@ define([], function () {
             }
             break;
         case '[]workspaceObjectName':
+            var validTypes = spec.text_options ? spec.text_options.valid_ws_types : [];
             switch (paramClass) {
             case 'input':
                 constraints = {
-                    types: spec.text_options.valid_ws_types
+                    types: validTypes
                 };
                 break;
             case 'parameter':
                 constraints = {
-                    types: spec.text_options.valid_ws_types
+                    types: validTypes
                 };
                 break;
             default:
@@ -345,25 +357,27 @@ define([], function () {
             }
             break;
         case 'subdata':
-            constraints = {
-                multiple: false,
-                // The parameter containing the object name we derive data from
-                referredParameter: spec.subdata_selection.parameter_id,
-                // The "included" parameter to for the workspace call
-                subdataIncluded: spec.subdata_selection.subdata_included,
-                // These are for navigating the results.
+            if (spec.subdata_selection) {
+                constraints = {
+                    // The parameter containing the object name we derive data from
+                    referredParameter: spec.subdata_selection.parameter_id,
+                    // The "included" parameter to for the workspace call
+                    subdataIncluded: spec.subdata_selection.subdata_included,
+                    // These are for navigating the results.
 
-                // This is the property path to the part of the subdata
-                // we want to deal with.
-                path: spec.subdata_selection.path_to_subdata,
-                // This is used to pluck a value off of the leaf array
-                // items, object properties (if object), object values (if 'value'),
-                // or otherwise just use the property key. This becomes the "id"
-                // of the subdata item.
-                selectionId: spec.subdata_selection.selection_id,
-                // Used to generate a description for each item. Becomes the "desc".
-                displayTemplate: spec.subdata_selection.description_template
-            };
+                    // This is the property path to the part of the subdata
+                    // we want to deal with.
+                    path: spec.subdata_selection.path_to_subdata,
+                    // This is used to pluck a value off of the leaf array
+                    // items, object properties (if object), object values (if 'value'),
+                    // or otherwise just use the property key. This becomes the "id"
+                    // of the subdata item.
+                    selectionId: spec.subdata_selection.selection_id,
+                    // Used to generate a description for each item. Becomes the "desc".
+                    displayTemplate: spec.subdata_selection.description_template
+                };
+            }
+            constraints.multiple = false;
             break;
             //                case 'xxinput_property_x':
             //                    return {

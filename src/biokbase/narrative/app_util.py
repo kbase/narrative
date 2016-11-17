@@ -460,10 +460,13 @@ def validate_param_value(param, value, workspace):
         try:
             # If we see a / , assume it's already an object reference.
             if '/' in value:
-                if len(value.split('/')) > 3:
-                    return (ws_ref, 'Data reference named {} does not '
-                                    'have the right format - should be '
-                                    'workspace/object/version(optional)')
+                path_items = [item.strip() for item in value.split(';')]
+                for path_item in path_items:
+                    if len(path_item.split('/')) > 3:
+                        return (ws_ref, ('Data reference named {} does not ' +
+                                         'have the right format - should be ' +
+                                         'workspace/object/version(optional)'
+                                         ).format(value))
                 info = _ws_client.get_object_info_new({
                     'objects': [{'ref': value}]
                 })[0]

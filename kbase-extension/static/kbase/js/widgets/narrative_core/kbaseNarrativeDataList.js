@@ -584,6 +584,45 @@ define([
             return this.objData;
         },
 
+        getDataObjectByRef: function(ref) {
+            if (!ref) {
+                return null;
+            }
+            // if it's part of a ref chain, just get the last one
+            if (ref.indexOf(';') >= 0) {
+                var refSplit = ref.split(';');
+                ref = refSplit[refSplit.length-1];
+            }
+            // carve off the version, if present
+            var refSegments = ref.split('/');
+            if (refSegments.length < 2 || refSegments.length > 3) {
+                return null;
+            }
+            ref = refSegments[0] + '/' + refSegments[1];
+            if (this.dataObjects[ref]) {
+                return this.dataObjects[ref].info;
+            }
+            return null;
+        },
+
+        getDataObjectByName: function(name, wsId) {
+            // means we gotta search. Oof.
+            var objInfo = null;
+            Object.keys(this.dataObjects).forEach(function(id) {
+                var obj = this.dataObjects[id];
+                if (obj.info[1] === name) {
+                    if (wsId) {
+                        if (wsId === obj.info[6]) {
+                            objInfo = obj.info;
+                        }
+                    } else {
+                        objInfo = obj.info;
+                    }
+                }
+            }.bind(this));
+            return objInfo;
+        },
+
         $currentSelectedRow: null,
         selectedObject: null,
 

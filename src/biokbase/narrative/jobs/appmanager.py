@@ -888,15 +888,21 @@ class AppManager(object):
         return validate_parameters(app_id, tag, spec_params, params)
 
     def _resolve_ref(self, workspace, value):
+        ret = None
         if '/' in value:
-            if len(value.split('/')) > 3:
-                raise ValueError('Object reference {} has too many slashes  - should be workspace/object/version(optional)'.format(value))
+            path_items = [item.strip() for item in value.split(';')]
+            for path_item in path_items:
+                if len(path_item.split('/')) > 3:
+                    raise ValueError('Object reference {} has too many slashes  - should be workspace/object/version(optional)'.format(value))
                 # return (ws_ref, 'Data reference named {} does not have the right format - should be workspace/object/version(optional)')
             info = self.ws_client.get_object_info_new({'objects': [{'ref': value}]})[0]
+            path_items[len(path_items) - 1] = "{}/{}/{}".format(info[6], info[0], info[4])
+            ret = ';'.join(path_items)
         # Otherwise, assume it's a name, not a reference.
         else:
             info = self.ws_client.get_object_info_new({'objects': [{'workspace': workspace, 'name': value}]})[0]
-        return "{}/{}/{}".format(info[6], info[0], info[4])
+            ret = "{}/{}/{}".format(info[6], info[0], info[4])
+        return ret
 
 #    def _resolve_ref(self, workspace, obj_name):
 #        info = self.ws_client.get_object_info_new({'objects': [{'workspace': workspace,
@@ -1043,7 +1049,7 @@ class AppManager(object):
 
         elif transform_type == "ref" or transform_type == "unresolved-ref":
             # make unresolved workspace ref (like 'ws-name/obj-name')
-            if value is not None:
+            if (value is not None) and ('/' not in value):
                 value = system_variable('workspace') + '/' + value
             return value
 

@@ -416,7 +416,6 @@ define (
             var self = this;
             var noMatchesFoundStr = "Search by Name or Username";//"no users found";
 
-            console.log('INITIALIZING SHARE SELECT2');
             $.fn.select2.amd.require([
                 'select2/data/array',
                 'select2/utils'

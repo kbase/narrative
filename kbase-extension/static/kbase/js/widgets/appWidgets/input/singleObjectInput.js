@@ -51,7 +51,8 @@ define([
             },
             runtime = Runtime.make();
 
-        model.blacklistValues = config.blacklist || [];
+        // TODO: getting rid of blacklist temporarily until we work out how to state-ify everything by reference.
+        model.blacklistValues = []; //config.blacklist || [];
 
         // Validate configuration.
         if (!workspaceId) {

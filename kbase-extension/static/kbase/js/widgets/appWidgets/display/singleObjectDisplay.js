@@ -69,29 +69,6 @@ define([
                 }
                 return null;
             });
-            // }).then(function (objectInfo) {
-            //     if (objectInfo) {
-            //         return serviceUtils.objectInfoToObject(objectInfo);
-            //     }
-            //     return null;
-            // })
-
-            // var workspace = new Workspace(runtime.config('services.workspace.url'), {
-            //     token: runtime.authToken()
-            // });
-            // return workspace.get_object_info_new({
-            //     objects: [getObjectRef()],
-            //     includeMetadata: 1,
-            //     ignoreErrors: 1
-            //
-            // })
-            //     .then(function (data) {
-            //         var objectInfo = data[0];
-            //         if (objectInfo) {
-            //             return serviceUtils.objectInfoToObject(objectInfo);
-            //         }
-            //         return null;
-            //     });
         }
 
         // VIEW

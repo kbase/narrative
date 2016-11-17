@@ -21,6 +21,7 @@ require.config({
         text                                    : 'ext_components/requirejs-plugins/lib/text',
         'tipsy'                                 : 'ext_components/jquery.tipsy/js/jquery.tipsy',
         underscore                              : 'ext_components/underscore/underscore-min',
+        select2                                 : 'ext_components/select2/dist/js/select2.full.min',//kbase/js/patched-components/select2/select2',
 
         // not under bower control
         colorbrewer                             : 'ext_packages/colorbrewer/colorbrewer.min',
@@ -44,7 +45,6 @@ require.config({
         narrativeViewers                        : 'kbase/js/widgets/narrative_core/narrativeViewers',
         jquery                                  : 'components/jquery/jquery.min',
         jqueryui                                : 'components/jquery-ui/ui/minified/jquery-ui.min',
-        select2                                 : 'kbase/js/patched-components/select2/select2',
         bootstrap                               : 'components/bootstrap/js/bootstrap.min',
         // 'css'                                   : 'ext_components/require-css/css.min',
 

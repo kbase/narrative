@@ -2132,7 +2132,7 @@ button.kb-data-obj {
     /*padding: 0 0 5px 0;*/
 }
 .kb-data-obj-panel-info dl dt:after {
-    content: ":";    
+    content: ":";
 }
 .kb-data-obj-panel-info dl dd {
     margin: 0 0 0 100px;
@@ -2167,7 +2167,7 @@ button.kb-data-obj {
 
 /*
  * END: View details on KBase objects
- *------------------------------------------ 
+ *------------------------------------------
  */
 
 /* default blue button in the new style */
@@ -2814,6 +2814,17 @@ button.kb-data-obj {
     width:auto;
     height:auto;
 }
+
+.kb-share-select {
+    width: 200px;
+}
+
+/* hack to make the selection fill the width */
+.kb-share-select .select2-selection__choice {
+    width: 100% !important;
+    background-color: #F5F5F5 !important;
+}
+
 
 .kb-nar-manager-titles {
     font-family: 'OxygenBold';

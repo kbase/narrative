@@ -2,6 +2,7 @@
 /*jslint white:true,browser:true*/
 define([
     'bluebird',
+    'jquery',
     'base/js/namespace',
     'kb_common/html',
     'kb_common/utils',
@@ -11,10 +12,13 @@ define([
     'common/events',
     'common/runtime',
     'common/dom',
+    'util/timeFormat',
+    'select2',
     'bootstrap',
     'css!font-awesome'
 ], function (
     Promise,
+    $,
     Jupyter,
     html,
     utils,
@@ -23,12 +27,13 @@ define([
     Validation,
     Events,
     Runtime,
-    Dom) {
+    Dom,
+    TimeFormat) {
     'use strict';
 
     // Constants
     var t = html.tag,
-        div = t('div'),
+        div = t('div'), span = t('span'), b = t('b'),
         select = t('select'), option = t('option');
 
     function factory(config) {
@@ -46,7 +51,8 @@ define([
             },
             runtime = Runtime.make();
 
-        model.blacklistValues = config.blacklist || [];
+        // TODO: getting rid of blacklist temporarily until we work out how to state-ify everything by reference.
+        model.blacklistValues = []; //config.blacklist || [];
 
         // Validate configuration.
         if (!workspaceId) {
@@ -54,56 +60,41 @@ define([
         }
 
         function makeInputControl(events, bus) {
-            // There is an input control, and a dropdown,
-            // TODO select2 after we get a handle on this...
             var selectOptions;
             if (model.availableValues) {
+                var filteredOptions = [];
                 selectOptions = model.availableValues
-                    .filter(function (objectInfo) {
+                    .filter(function (objectInfo, idx) {
                         if (model.blacklistValues) {
                             return !model.blacklistValues.some(function (value) {
-                                return (value === getObjectRef(objectInfo));
+                                if (value === getObjectRef(objectInfo)) {
+                                    filteredOptions.push(idx);
+                                    return true;
+                                }
+                                return false;
                             });
                         }
                     })
-                    .map(function (objectInfo) {
+                    .map(function (objectInfo, idx) {
                         var selected = false,
-                            ref = getObjectRef(objectInfo);
-                        if (ref === model.value) {
+                            ref = idx; //getObjectRef(objectInfo);
+                        if (getObjectRef(objectInfo) === model.value) {
                             selected = true;
                         }
                         return option({
                             value: ref,
                             selected: selected
-                        }, objectInfo.name + ' ' + objectInfo.ref);
+                        }, objectInfo.name);
                     });
             }
 
             // CONTROL
-            return select({
-                id: events.addEvent({type: 'change', handler: function (e) {
-                        validate()
-                            .then(function (result) {
-                                if (result.isValid) {
-                                    model.value = result.value;
-                                    bus.emit('changed', {
-                                        newValue: result.value
-                                    });
-                                } else if (result.diagnosis === 'required-missing') {
-                                    model.value = result.value;
-                                    bus.emit('changed', {
-                                        newValue: result.value
-                                    });
-                                }
-                                bus.emit('validation', {
-                                    errorMessage: result.errorMessage,
-                                    diagnosis: result.diagnosis
-                                });
-                            });
-                    }}),
+            var selectElem = select({
                 class: 'form-control',
                 dataElement: 'input'
             }, [option({value: ''}, '')].concat(selectOptions));
+
+            return selectElem;
         }
 
         /*
@@ -163,30 +154,40 @@ define([
 
         function validate() {
             return Promise.try(function () {
-                var rawValue = getInputValue(),
+                var objInfo = model.availableValues[getInputValue()],
+                    processedValue = '',
                     validationOptions = {
                         required: constraints.required,
                         authToken: runtime.authToken(),
                         workspaceServiceUrl: runtime.config('services.workspace.url')
                     };
 
+                if (objInfo && objInfo.dataPaletteRef) {
+                    return Validation.validateWorkspaceDataPaletteRef(objInfo.dataPaletteRef, validationOptions);
+                }
+
+                if (objInfo) {
+                    processedValue = objectRefType === 'ref' ? objInfo.ref : objInfo.name;
+                }
+
                 switch (objectRefType) {
                     case 'ref':
-                        return Validation.validateWorkspaceObjectRef(rawValue, validationOptions);
+                        return Validation.validateWorkspaceDataPaletteRef(processedValue, validationOptions);
                     case 'name':
                     default:
-                        return Validation.validateWorkspaceObjectName(rawValue, validationOptions);
+                        return Validation.validateWorkspaceObjectName(processedValue, validationOptions);
                 }
             })
-                .then(function (validationResult) {
-                    return {
-                        isValid: validationResult.isValid,
-                        validated: true,
-                        diagnosis: validationResult.diagnosis,
-                        errorMessage: validationResult.errorMessage,
-                        value: validationResult.parsedValue
-                    };
-                });
+            .then(function (validationResult) {
+
+                return {
+                    isValid: validationResult.isValid,
+                    validated: true,
+                    diagnosis: validationResult.diagnosis,
+                    errorMessage: validationResult.errorMessage,
+                    value: validationResult.parsedValue
+                };
+            });
         }
 
         function getObjectsByType(type) {
@@ -198,12 +199,16 @@ define([
                 Object.keys(data).forEach(function(typeKey) {
                     objList = objList.concat(data[typeKey]);
                 });
-                console.log(objList);
                 return objList.map(function (objectInfo) {
-                    return serviceUtils.objectInfoToObject(objectInfo);
+                    var obj = serviceUtils.objectInfoToObject(objectInfo);
+                    // TODO - port this into kb_service/utils...
+                    obj.dataPaletteRef = null;
+                    if (objectInfo.length > 11) {
+                        obj.dataPaletteRef = objectInfo[11];
+                    }
+                    return obj;
                 });
             });
-
         }
 
         function fetchData() {
@@ -218,16 +223,37 @@ define([
                 })
                 .then(function (objects) {
                     objects.sort(function (a, b) {
-                        if (a.name < b.name) {
-                            return -1;
+                        if (a.saveDate < b.saveDate) {
+                            return 1;
                         }
-                        if (a.name === b.name) {
+                        if (a.saveDate === b.saveDate) {
                             return 0;
                         }
-                        return 1;
+                        return -1;
                     });
                     return objects;
                 });
+        }
+
+        /**
+         * Formats the display of an object in the dropdown.
+         */
+        function formatObjectDisplay(object) {
+            if (!object.id) {
+                return $('<div style="display:block; height:20px">').append(object.text);
+            }
+            var objectInfo = model.availableValues[object.id];
+            return $(div([
+                span({style: 'word-wrap: break-word'}, [
+                    b(objectInfo.name)
+                ]),
+                ' (v' + objectInfo.version + ')<br>',
+                div({style: 'margin-left: 7px'}, [
+                    '<i>' + objectInfo.typeName + '</i><br>',
+                    'Narrative id: ' + objectInfo.wsid + '<br>',
+                    'updated ' + TimeFormat.getTimeStampStr(objectInfo.save_date) + ' by ' + objectInfo.saved_by
+                ])
+            ]));
         }
 
         /*
@@ -242,7 +268,37 @@ define([
                     content = div({class: 'input-group', style: {width: '100%'}}, inputControl);
 
                 dom.setContent('input-container', content);
+
+                $(dom.getElement('input-container.input')).select2({
+                    templateResult: formatObjectDisplay,
+                    templateSelection: function(object) {
+                        if (!object.id) {
+                            return object.text;
+                        }
+                        return model.availableValues[object.id].name;
+                    }
+                }).on('change', function() {
+                    validate()
+                        .then(function (result) {
+                            if (result.isValid) {
+                                model.value = result.value;
+                                bus.emit('changed', {
+                                    newValue: result.value
+                                });
+                            } else if (result.diagnosis === 'required-missing') {
+                                model.value = result.value;
+                                bus.emit('changed', {
+                                    newValue: result.value
+                                });
+                            }
+                            bus.emit('validation', {
+                                errorMessage: result.errorMessage,
+                                diagnosis: result.diagnosis
+                            });
+                        });
+                });
                 events.attachEvents(container);
+
             });
         }
 
@@ -323,35 +379,37 @@ define([
             return Promise.try(function () {
                 bus.on('run', function (message) {
                     parent = message.node;
-                    container = parent.appendChild(document.createElement('div'));
-                    dom = Dom.make({node: container});
+                    if (parent) {
+                        container = parent.appendChild(document.createElement('div'));
+                        dom = Dom.make({node: container});
 
-                    var events = Events.make(),
-                        theLayout = layout(events);
+                        var events = Events.make(),
+                            theLayout = layout(events);
 
-                    container.innerHTML = theLayout.content;
-                    events.attachEvents(container);
+                        container.innerHTML = theLayout.content;
+                        events.attachEvents(container);
 
-                    return fetchData()
-                        .then(function (data) {
-                            model.availableValues = data;
-                            render();
-                        })
-                        .then(function () {
-                            bus.on('reset-to-defaults', function (message) {
-                                resetModelValue();
+                        return fetchData()
+                            .then(function (data) {
+                                model.availableValues = data;
+                                render();
+                            })
+                            .then(function () {
+                                bus.on('reset-to-defaults', function (message) {
+                                    resetModelValue();
+                                });
+                                bus.on('update', function (message) {
+                                    setModelValue(message.value);
+                                });
+                                //bus.on('workspace-changed', function (message) {
+                                //    doWorkspaceChanged();
+                                //});
+                                runtime.bus().on('workspace-changed', function (message) {
+                                    doWorkspaceChanged();
+                                });
+                                bus.emit('sync');
                             });
-                            bus.on('update', function (message) {
-                                setModelValue(message.value);
-                            });
-                            //bus.on('workspace-changed', function (message) {
-                            //    doWorkspaceChanged();
-                            //});
-                            runtime.bus().on('workspace-changed', function (message) {
-                                doWorkspaceChanged();
-                            });
-                            bus.emit('sync');
-                        });
+                    }
                 });
             });
         }

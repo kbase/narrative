@@ -28,7 +28,7 @@ define([
 
         // Validate configuration.
         // Nothing to do...
-        
+
         options.environment = config.isInSidePanel ? 'sidePanel' : 'standard';
         options.multiple = spec.multipleItems();
         options.required = spec.required();
@@ -56,12 +56,12 @@ define([
          *
          * Text fields can occur in multiples.
          * We have a choice, treat single-text fields as a own widget
-         * or as a special case of multiple-entry -- 
+         * or as a special case of multiple-entry --
          * with a min-items of 1 and max-items of 1.
-         * 
+         *
          *
          */
-        
+
         function copyProps(from, props) {
             var newObj = {};
             props.forEach(function (prop) {
@@ -82,7 +82,7 @@ define([
 
                 var rawValue = getInputValue(),
                     // TODO should actually create the set of checkbox values and
-                    // make this a validation option, although not specified as 
+                    // make this a validation option, although not specified as
                     // such in the spec.
                     validationOptions = {
                         required: spec.required(),
@@ -109,7 +109,7 @@ define([
          * Places it into the dom node
          * Hooks up event listeners
          */
-        
+
         function makeInputControl(currentValue, data, events, bus) {
             var selectOptions = [
                 option({

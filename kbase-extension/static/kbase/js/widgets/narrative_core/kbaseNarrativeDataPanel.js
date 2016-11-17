@@ -288,6 +288,18 @@ define([
             }
         },
 
+        getDataObjectByName: function(name) {
+            if (this.dataListWidget) {
+                return this.dataListWidget.getDataObjectByName(name);
+            }
+        },
+
+        getDataObjectByRef: function(ref) {
+            if (this.dataListWidget) {
+                return this.dataListWidget.getDataObjectByRef(ref);
+            }
+        },
+
         buildTabs: function (tabs, isOuter) {
             var $header = $('<div>');
             var $body = $('<div>');

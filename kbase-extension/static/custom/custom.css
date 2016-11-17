@@ -4,6 +4,15 @@ CSS should go in /kbase-extension/static/kbase/css/kbaseNarrative.css
 
 (or the specific css file if available)
 */
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+    background-color: #337ab7;
+    color: #FFF;
+}
+
+.select2-container--default .select2-results__option--highlighted[aria-selected] span {
+    color: #FFF !important;
+}
+
 
 #site {
     overflow: visible;

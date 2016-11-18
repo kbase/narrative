@@ -174,7 +174,7 @@ define([
                 ref = objInfo.ws_id + '/' + objInfo.id + '/' + objInfo.version;
             }
             var title = (objInfo && objInfo.name) ? objInfo.name : 'Data Viewer';
-            var cellText = PythonInterop.buildDataWidgetRunner2(ref, cellId, title, tag);
+            var cellText = PythonInterop.buildDataWidgetRunner(ref, cellId, title, tag);
 
             cell.set_text(cellText);
             cell.execute();

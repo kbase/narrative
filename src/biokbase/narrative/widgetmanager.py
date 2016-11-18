@@ -337,35 +337,21 @@ class WidgetManager(object):
                                              timestamp=int(round(time.time()*1000)))
         return Javascript(data=js, lib=None, css=None)
 
-    def show_data_widget2(self, ref, title="", cell_id=None, tag="release"):
-        return self.show_data_widget("kbaseNarrativeDataCell", {'ref': ref}, 
-                                     title=title, cell_id=cell_id, tag=tag)
-
-    def show_data_widget(self, widget_name, params, title="", cell_id=None, tag="release"):
+    def show_data_widget(self, ref, title="", cell_id=None, tag="release"):
         """
         Renders a widget using the generic kbaseNarrativeOutputWidget container.
 
         Parameters
         ----------
-        widget_name : string
-            The name of the widget to print the widgets for.
-        params : dict
-            The dictionary of parameters that gets fed into the widget.
+        ref : string
+            Reference to object turning into parameters that get fed into the widget.
+            This reference may include ref-path.
         """
 
-        input_data = dict(params)
-        obj_ref = None
-        info = None
-        if 'info' in params:
-            info = params['info']
-            obj_ref = str(info['ws_id']) + '/' + str(info['id']) + '/' + str(info['version'])
-        elif 'ref' in params:
-            obj_ref = params['ref']  # may include ref-path
-        else:
-            raise ValueError("Neither 'info' nor 'ref' field is set in input parameters")
-        info_tuple = clients.get('workspace').get_object_info_new({'objects': [{'ref': obj_ref}],
+        widget_name = "kbaseNarrativeDataCell"
+        input_data = dict()
+        info_tuple = clients.get('workspace').get_object_info_new({'objects': [{'ref': ref}],
                                                                    'includeMetadata': 1})[0]
-        input_data['info'] = info
         input_data['info_tuple'] = info_tuple
 
         bare_type = info_tuple[2].split('-')[0]
@@ -385,11 +371,11 @@ class WidgetManager(object):
             # Let's build output according to mappings in method-spec
             spec_params = self._sm.app_params(spec)
             input_params = {}
-            is_ref_path = ';' in obj_ref
+            is_ref_path = ';' in ref
             is_external = info_tuple[7] != os.environ['KB_WORKSPACE_ID']
             # it's not safe to use reference yet (until we switch to them all over the Apps)
             # But in case we deal with ref-path we have to do it anyway:
-            obj_param_value = obj_ref if (is_ref_path or is_external) else info_tuple[1]
+            obj_param_value = ref if (is_ref_path or is_external) else info_tuple[1]
             for param in spec_params:
                 if any(t == bare_type for t in param['allowed_types']):
                     input_params[param['id']] = obj_param_value

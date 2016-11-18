@@ -182,26 +182,7 @@ define([
         return pythonCode;
     }
 
-    function buildDataWidgetRunner(jqueryWidgetName, cellId, objectInfo) {
-        var title = (objectInfo && objectInfo.name) ? objectInfo.name : 'Data Viewer',
-            positionalArgs = [
-                pythonifyValue(jqueryWidgetName),
-                pythonifyValue({info: objectInfo})
-            ],
-            namedArgs = objectToNamedArgs({
-                cell_id: cellId,
-                title: title
-            }),
-            args = positionalArgs.concat(namedArgs),
-            pythonCode = [
-                'from biokbase.narrative.widgetmanager import WidgetManager',
-                'WidgetManager().show_data_widget(' + buildNiceArgsList(args) + ')'
-            ].join('\n');
-
-        return pythonCode;
-    }
-
-    function buildDataWidgetRunner2(ref, cellId, title, tag) {
+    function buildDataWidgetRunner(ref, cellId, title, tag) {
         var positionalArgs = [
                 pythonifyValue(ref)
             ];
@@ -213,7 +194,7 @@ define([
         var args = positionalArgs.concat(namedArgs);
         var pythonCode = [
                 'from biokbase.narrative.widgetmanager import WidgetManager',
-                'WidgetManager().show_data_widget2(' + buildNiceArgsList(args) + ')'
+                'WidgetManager().show_data_widget(' + buildNiceArgsList(args) + ')'
             ].join('\n');
         return pythonCode;
     }
@@ -246,7 +227,6 @@ define([
         buildViewRunner: buildViewRunner,
         buildOutputRunner: buildOutputRunner,
         buildCustomWidgetRunner: buildCustomWidgetRunner,
-        buildDataWidgetRunner: buildDataWidgetRunner,
-        buildDataWidgetRunner2: buildDataWidgetRunner2
+        buildDataWidgetRunner: buildDataWidgetRunner
     };
 });

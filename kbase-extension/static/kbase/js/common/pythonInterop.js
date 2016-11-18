@@ -182,22 +182,20 @@ define([
         return pythonCode;
     }
 
-    function buildDataWidgetRunner(jqueryWidgetName, cellId, objectInfo) {
-        var title = (objectInfo && objectInfo.name) ? objectInfo.name : 'Data Viewer',
-            positionalArgs = [
-                pythonifyValue(jqueryWidgetName),
-                pythonifyValue({info: objectInfo})
-            ],
-            namedArgs = objectToNamedArgs({
+    function buildDataWidgetRunner(ref, cellId, title, tag) {
+        var positionalArgs = [
+                pythonifyValue(ref)
+            ];
+        var namedArgs = objectToNamedArgs({
                 cell_id: cellId,
-                title: title
-            }),
-            args = positionalArgs.concat(namedArgs),
-            pythonCode = [
+                title: title,
+                tag: tag
+            });
+        var args = positionalArgs.concat(namedArgs);
+        var pythonCode = [
                 'from biokbase.narrative.widgetmanager import WidgetManager',
                 'WidgetManager().show_data_widget(' + buildNiceArgsList(args) + ')'
             ].join('\n');
-
         return pythonCode;
     }
 

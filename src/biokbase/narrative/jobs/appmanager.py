@@ -13,7 +13,10 @@ from biokbase.narrative.app_util import (
     validate_parameters,
     check_parameter,
     validate_group_values,
-    validate_param_value
+    validate_param_value,
+    resolve_ref,
+    resolve_ref_if_typed,
+    transform_param_value
 )
 from biokbase.narrative.exception_util import (
     transform_job_exception
@@ -888,41 +891,15 @@ class AppManager(object):
         return validate_parameters(app_id, tag, spec_params, params)
 
     def _resolve_ref(self, workspace, value):
-        ret = None
-        if '/' in value:
-            path_items = [item.strip() for item in value.split(';')]
-            for path_item in path_items:
-                if len(path_item.split('/')) > 3:
-                    raise ValueError('Object reference {} has too many slashes  - should be workspace/object/version(optional)'.format(value))
-                # return (ws_ref, 'Data reference named {} does not have the right format - should be workspace/object/version(optional)')
-            info = self.ws_client.get_object_info_new({'objects': [{'ref': value}]})[0]
-            path_items[len(path_items) - 1] = "{}/{}/{}".format(info[6], info[0], info[4])
-            ret = ';'.join(path_items)
-        # Otherwise, assume it's a name, not a reference.
-        else:
-            info = self.ws_client.get_object_info_new({'objects': [{'workspace': workspace, 'name': value}]})[0]
-            ret = "{}/{}/{}".format(info[6], info[0], info[4])
-        return ret
+        return resolve_ref(workspace, value)
 
-#    def _resolve_ref(self, workspace, obj_name):
-#        info = self.ws_client.get_object_info_new({'objects': [{'workspace': workspace,
-#                                                                'name': obj_name}]})[0]
-#        return "{}/{}/{}".format(info[6], info[0], info[4])
-
-
-    # For a given value and associated spec, if this is not an output param,
-    # then ensure that the reference points to an object in the current
-    # workspace, and transform the value into an absolute reference to it.
-    # Note that for 
-    # 
     def _resolve_ref_if_typed(self, value, spec_param):
-        is_output = 'is_output' in spec_param and spec_param['is_output'] == 1
-        if 'allowed_types' in spec_param and not is_output:
-            allowed_types = spec_param['allowed_types']
-            if len(allowed_types) > 0:
-                workspace = system_variable('workspace')
-                return self._resolve_ref(workspace, value)
-        return value
+        """
+        For a given value and associated spec, if this is not an output param,
+        then ensure that the reference points to an object in the current
+        workspace, and transform the value into an absolute reference to it.
+        """
+        return resolve_ref_if_typed(value, spec_param)
 
     def _map_group_inputs(self, value, spec_param, spec_params):
         if isinstance(value, list):
@@ -1044,51 +1021,7 @@ class AppManager(object):
 
         Returns a transformed (or not) value.
         """
-        if transform_type == "none" or transform_type == "object-name" or transform_type is None:
-            return value
-
-        elif transform_type == "ref" or transform_type == "unresolved-ref":
-            # make unresolved workspace ref (like 'ws-name/obj-name')
-            if (value is not None) and ('/' not in value):
-                value = system_variable('workspace') + '/' + value
-            return value
-
-        elif transform_type == "resolved-ref":
-            # make a workspace ref
-            if value is not None:
-                value = self._resolve_ref(system_variable('workspace'), value)
-            return value
-
-        elif transform_type == "future-default":
-            # let's guess base on spec_param
-            if spec_param is None:
-                return value
-            else:
-                if value is not None:
-                    value = self._resolve_ref_if_typed(value, spec_param)
-                return value
-
-        elif transform_type == "int":
-            # make it an integer, OR 0.
-            if value is None or len(str(value).strip()) == 0:
-                return None
-            return int(value)
-
-        elif transform_type.startswith("list<") and \
-                transform_type.endswith(">"):
-            # make it a list of transformed types.
-            list_type = transform_type[5:-1]
-            if isinstance(value, list):
-                ret = []
-                for pos in range(0, len(value)):
-                    ret.append(self._transform_input(list_type, value[pos], None))
-                return ret
-            else:
-                return [self._transform_input(list_type, value, None)]
-
-        else:
-            raise ValueError("Unsupported Transformation type: " +
-                             transform_type)
+        return transform_param_value(transform_type, value, spec_param)
 
     def _generate_input(self, generator):
         """

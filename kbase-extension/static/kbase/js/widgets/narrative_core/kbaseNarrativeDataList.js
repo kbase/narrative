@@ -1206,7 +1206,7 @@ define([
             targetDiv.addEventListener('drop', function (e) {
                 var data = JSON.parse(e.dataTransfer.getData('info')),
                     obj = self.dataObjects[self.keyToObjId[data.key]],
-                    info = self.createInfoObject(obj.info),
+                    info = self.createInfoObject(obj.info, obj.refPath),
                     cell, cellIndex, placement;
 
                 if (e.target.getAttribute('cellIs') === 'below') {
@@ -1238,7 +1238,7 @@ define([
             var node = $row.parent().get(0),
                 key = $row.attr('kb-oid'),
                 obj = this.dataObjects[this.keyToObjId[key]], //_.findWhere(this.objectList, {key: key}),
-                info = this.createInfoObject(obj.info),
+                info = this.createInfoObject(obj.info, obj.refPath),
                 data = {
                     widget: 'kbaseNarrativeDataCell',
                     info: info,
@@ -1298,10 +1298,14 @@ define([
          * Helper function to create named object attrs from
          * list of fields returned from Workspace service.
          */
-        createInfoObject: function (info) {
-            return _.object(['id', 'name', 'type', 'save_date', 'version',
+        createInfoObject: function (info, refPath) {
+            var ret = _.object(['id', 'name', 'type', 'save_date', 'version',
                 'saved_by', 'ws_id', 'ws_name', 'chsum', 'size',
                 'meta'], info);
+            if (refPath) {
+                ret['ref_path'] = refPath;
+            }
+            return ret;
         },
         // ============= end DnD ================
 
@@ -1314,7 +1318,7 @@ define([
                 $(cell.element).off('keydown');
             }
             var obj = this.dataObjects[this.keyToObjId[key]], // _.findWhere(self.objectList, {key: key});
-                info = this.createInfoObject(obj.info);
+                info = this.createInfoObject(obj.info, obj.refPath);
             // Insert the narrative data cell into the div we just rendered
             // new kbaseNarrativeDataCell($('#' + cell_id), {cell: cell, info: info});
             this.trigger('createViewerCell.Narrative', {

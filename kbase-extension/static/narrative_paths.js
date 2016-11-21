@@ -107,6 +107,7 @@ require.config({
         'kbaseNarrativeDownloadPanel'           : 'kbase/js/widgets/narrative_core/kbaseNarrativeDownloadPanel',
         'kbaseNarrativeSharePanel'              : 'kbase/js/widgets/narrative_core/kbaseNarrativeSharePanel',
         'kbaseNarrativeExampleDataTab'          : 'kbase/js/widgets/narrative_core/kbaseNarrativeExampleDataTab',
+        'kbaseNarrativeStagingDataTab'          : 'kbase/js/widgets/narrative_core/kbaseNarrativeStagingDataTab',
         'kbaseNarrativeSideImportTab'           : 'kbase/js/widgets/narrative_core/kbaseNarrativeSideImportTab',
         'kbaseNarrativeSidePublicTab'           : 'kbase/js/widgets/narrative_core/kbaseNarrativeSidePublicTab',
         'kbaseNarrativeCell'                    : 'kbase/js/widgets/narrative_core/kbaseNarrativeCell',

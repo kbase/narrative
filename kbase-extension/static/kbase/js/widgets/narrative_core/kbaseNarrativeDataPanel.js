@@ -30,6 +30,7 @@ define([
     'kbaseNarrativeSidePublicTab',
     'kbaseNarrativeSideImportTab',
     'kbaseNarrativeExampleDataTab',
+    'kbaseNarrativeStagingDataTab',
     'kbaseLogin',
     'kbase-generic-client-api',
     'bootstrap'
@@ -47,6 +48,7 @@ define([
     kbaseNarrativeSidePublicTab,
     kbaseNarrativeSideImportTab,
     kbaseNarrativeExampleDataTab,
+    kbaseNarrativeStagingDataTab,
     kbaseLogin,
     GenericClient
     ) {
@@ -219,6 +221,9 @@ define([
                         this.exampleTab.getExampleDataAndRender();
                     }.bind(this),
                     function () {
+                    }.bind(this),
+                    function () {
+                        this.stagingTab.render();
                     }.bind(this)
                 ];
             } else {
@@ -446,7 +451,8 @@ define([
                 sharedPanel = $('<div class="kb-import-content kb-import-shared">'),
                 publicPanel = $('<div class="kb-import-content kb-import-public">'),
                 importPanel = $('<div class="kb-import-content kb-import-import">'),
-                examplePanel = $('<div class="kb-import-content">');
+                examplePanel = $('<div class="kb-import-content">'),
+                stagingPanel = $('<div class="kb-import-content">');
 
             // add tabs
             var $tabs = this.buildTabs([
@@ -455,6 +461,7 @@ define([
                 {tabName: '<small>Public</small>', content: publicPanel},
                 {tabName: '<small>Example</small>', content: examplePanel},
                 {tabName: '<small>Import</small>', content: importPanel},
+                {tabName: '<small>Staging<small>', content: stagingPanel}
             ]);
 
 
@@ -558,6 +565,7 @@ define([
             this.publicTab = new kbaseNarrativeSidePublicTab(publicPanel, {$importStatus: importStatus, ws_name: this.ws_name});
             this.importTab = new kbaseNarrativeSideImportTab(importPanel, {ws_name: this.ws_name});
             this.exampleTab = new kbaseNarrativeExampleDataTab(examplePanel, {$importStatus: importStatus, ws_name: this.ws_name});
+            this.stagingTab = new kbaseNarrativeStagingDataTab(stagingPanel);
 
             // It is silly to invoke a new object for each widget
             var auth = {token: this.$login.session('token')};

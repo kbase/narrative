@@ -195,14 +195,16 @@ define([
         function start() {
             bus.on('run', function (message) {
                 root = message.node;
-                container = root.appendChild(document.createElement('div'));
-                ui = UI.make({node: container});
-                model.currentJobState = message.jobState;
-                if (message.output) {
-                    importModel(message.output);
-                }
+                if (root) {
+                    container = root.appendChild(document.createElement('div'));
+                    ui = UI.make({node: container});
+                    model.currentJobState = message.jobState;
+                    if (message.output) {
+                        importModel(message.output);
+                    }
 
-                render();
+                    render();
+                }
 
                 bus.on('update', function (message) {
                     model.currentJobState = message.jobState;

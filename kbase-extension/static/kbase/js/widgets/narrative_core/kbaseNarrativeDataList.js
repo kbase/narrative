@@ -464,9 +464,13 @@ define([
         },
 
         fetchWorkspaceData: function () {
-            var addObjectInfo = function(objInfo) {
+            var addObjectInfo = function(objInfo, dpInfo) {
                 // Get the object info
                 var objId = this.itemId(objInfo); //objInfo[6] + '/' + objInfo[0]; // + '/' + objInfo[2]
+                var fullDpReference = null;
+                if (dpInfo && dpInfo.ref) {
+                    fullDpReference = dpInfo.ref + ';' + objInfo[6] + '/' + objInfo[0] + '/' + objInfo[4];
+                }
                 if (this.dataObjects[objId]) {
                     return;
                 }
@@ -476,7 +480,8 @@ define([
                     $div: null,
                     info: objInfo,
                     attached: false,
-                    fromPalette: this.wsId !== objInfo[6]
+                    fromPalette: this.wsId !== objInfo[6],
+                    refPath: fullDpReference
                 };
                 this.keyToObjId[key] = objId;
                 this.viewOrder.push({
@@ -490,7 +495,7 @@ define([
                 if (!(typeKey in this.objData)) {
                     this.objData[typeKey] = [];
                 }
-                this.objData[typeKey].push(objInfo);
+                this.objData[typeKey].push(objInfo.concat(fullDpReference));
 
                 // get the count of objects for each type
                 var typeName = typeKey.split('.')[1];
@@ -520,7 +525,7 @@ define([
                     }
                     this.setItems[itemId][setId] = 1;
                     if (!this.dataObjects[itemId]) {
-                        addObjectInfo(setItem);
+                        addObjectInfo(setItem, obj.dp_info);
                     }
                 }.bind(this));
             }.bind(this);
@@ -528,7 +533,8 @@ define([
             return Promise.resolve(
                 this.serviceClient.sync_call(
                     'NarrativeService.list_objects_with_sets',
-                    [{'ws_name': this.ws_name}]
+                    [{'ws_name': this.ws_name,
+                      'includeMetadata': 1}]
                 )
             )
             .then(function(result) {
@@ -542,7 +548,7 @@ define([
                         continue;
                     }
                     // Only adds to dataObjects, etc., if it's not already there.
-                    addObjectInfo(objInfo);
+                    addObjectInfo(objInfo, obj.dp_info);
                     // if there's set info, update that.
                     if (obj.set_items) {
                         updateSetInfo(obj);
@@ -576,6 +582,45 @@ define([
                 return dataSet;
             }
             return this.objData;
+        },
+
+        getDataObjectByRef: function(ref) {
+            if (!ref) {
+                return null;
+            }
+            // if it's part of a ref chain, just get the last one
+            if (ref.indexOf(';') >= 0) {
+                var refSplit = ref.split(';');
+                ref = refSplit[refSplit.length-1];
+            }
+            // carve off the version, if present
+            var refSegments = ref.split('/');
+            if (refSegments.length < 2 || refSegments.length > 3) {
+                return null;
+            }
+            ref = refSegments[0] + '/' + refSegments[1];
+            if (this.dataObjects[ref]) {
+                return this.dataObjects[ref].info;
+            }
+            return null;
+        },
+
+        getDataObjectByName: function(name, wsId) {
+            // means we gotta search. Oof.
+            var objInfo = null;
+            Object.keys(this.dataObjects).forEach(function(id) {
+                var obj = this.dataObjects[id];
+                if (obj.info[1] === name) {
+                    if (wsId) {
+                        if (wsId === obj.info[6]) {
+                            objInfo = obj.info;
+                        }
+                    } else {
+                        objInfo = obj.info;
+                    }
+                }
+            }.bind(this));
+            return objInfo;
         },
 
         $currentSelectedRow: null,
@@ -1161,7 +1206,7 @@ define([
             targetDiv.addEventListener('drop', function (e) {
                 var data = JSON.parse(e.dataTransfer.getData('info')),
                     obj = self.dataObjects[self.keyToObjId[data.key]],
-                    info = self.createInfoObject(obj.info),
+                    info = self.createInfoObject(obj.info, obj.refPath),
                     cell, cellIndex, placement;
 
                 if (e.target.getAttribute('cellIs') === 'below') {
@@ -1193,7 +1238,7 @@ define([
             var node = $row.parent().get(0),
                 key = $row.attr('kb-oid'),
                 obj = this.dataObjects[this.keyToObjId[key]], //_.findWhere(this.objectList, {key: key}),
-                info = this.createInfoObject(obj.info),
+                info = this.createInfoObject(obj.info, obj.refPath),
                 data = {
                     widget: 'kbaseNarrativeDataCell',
                     info: info,
@@ -1253,10 +1298,14 @@ define([
          * Helper function to create named object attrs from
          * list of fields returned from Workspace service.
          */
-        createInfoObject: function (info) {
-            return _.object(['id', 'name', 'type', 'save_date', 'version',
+        createInfoObject: function (info, refPath) {
+            var ret = _.object(['id', 'name', 'type', 'save_date', 'version',
                 'saved_by', 'ws_id', 'ws_name', 'chsum', 'size',
                 'meta'], info);
+            if (refPath) {
+                ret['ref_path'] = refPath;
+            }
+            return ret;
         },
         // ============= end DnD ================
 
@@ -1269,7 +1318,7 @@ define([
                 $(cell.element).off('keydown');
             }
             var obj = this.dataObjects[this.keyToObjId[key]], // _.findWhere(self.objectList, {key: key});
-                info = this.createInfoObject(obj.info);
+                info = this.createInfoObject(obj.info, obj.refPath);
             // Insert the narrative data cell into the div we just rendered
             // new kbaseNarrativeDataCell($('#' + cell_id), {cell: cell, info: info});
             this.trigger('createViewerCell.Narrative', {

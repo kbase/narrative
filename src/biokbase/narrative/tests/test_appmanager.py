@@ -250,6 +250,9 @@ class AppManagerTestCase(unittest.TestCase):
             u'workspace': ws_name
         }]
         self.assertDictEqual(expected[0], mapped_inputs[0])
+        ref_path = ws_name + '/MyReadsSet; ' + ws_name + "/rhodobacterium.art.q10.PE.reads" 
+        ret = self.am._transform_input("resolved-ref", ref_path, None)
+        self.assertEqual(ret, "wjriehl:1475006266615/MyReadsSet;11635/10/1")
         if prev_ws_id is None:
             del(os.environ['KB_WORKSPACE_ID'])
         else:
@@ -285,12 +288,22 @@ class AppManagerTestCase(unittest.TestCase):
                 'expected': ws_name + '/' + 'input_value'
             },
             {
+                'value': ws_name + "/input_value",
+                'type': 'ref',
+                'expected': ws_name + '/' + 'input_value'
+            },
+            {
                 'value': 'input_value',
                 'type': 'unresolved-ref',
                 'expected': ws_name + '/' + 'input_value'
             },
             {
                 'value': 'rhodobacterium.art.q20.int.PE.reads',
+                'type': 'resolved-ref',
+                'expected': '11635/9/1'
+            },
+            {
+                'value': ws_name + "/rhodobacterium.art.q20.int.PE.reads",
                 'type': 'resolved-ref',
                 'expected': '11635/9/1'
             },

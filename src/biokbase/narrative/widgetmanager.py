@@ -24,6 +24,10 @@ import uuid
 import time
 from pprint import pprint
 from biokbase.narrative.jobs.specmanager import SpecManager
+import biokbase.narrative.clients as clients
+from biokbase.narrative.app_util import map_outputs_from_state
+from biokbase.narrative.app_util import validate_parameters
+
 
 class WidgetManager(object):
     """
@@ -333,20 +337,54 @@ class WidgetManager(object):
                                              timestamp=int(round(time.time()*1000)))
         return Javascript(data=js, lib=None, css=None)
 
-    def show_data_widget(self, widget_name, object_info, title="", cell_id=None):
+    def show_data_widget(self, ref, title="", cell_id=None, tag="release"):
         """
         Renders a widget using the generic kbaseNarrativeOutputWidget container.
 
         Parameters
         ----------
-        widget_name : string
-            The name of the widget to print the widgets for.
-        params : dict
-            The dictionary of parameters that gets fed into the widget.
+        ref : string
+            Reference to object turning into parameters that get fed into the widget.
+            This reference may include ref-path.
         """
 
+        widget_name = "kbaseNarrativeDataCell"
         input_data = dict()
-        input_data.update(object_info)
+        info_tuple = clients.get('workspace').get_object_info_new({'objects': [{'ref': ref}],
+                                                                   'includeMetadata': 1})[0]
+        input_data['info_tuple'] = info_tuple
+
+        bare_type = info_tuple[2].split('-')[0]
+        
+        type_spec = self._sm.get_type_spec(bare_type, raise_exception=False)
+        if type_spec is None:
+            input_data['error_message'] = "Type-spec wasn't found for '" + bare_type + "'"
+        elif 'view_method_ids' not in type_spec or len(type_spec['view_method_ids']) != 1:
+            input_data['error_message'] = ("Type-spec for '" + bare_type + "' should " +
+                                           "have exactly one ID in 'view_method_ids' field")
+        else:
+            input_data['type_spec'] = type_spec
+            method_id = type_spec['view_method_ids'][0]
+            spec = self._sm.get_spec(method_id, tag=tag)
+            input_data['app_spec'] = spec
+            
+            # Let's build output according to mappings in method-spec
+            spec_params = self._sm.app_params(spec)
+            input_params = {}
+            is_ref_path = ';' in ref
+            is_external = info_tuple[7] != os.environ['KB_WORKSPACE_ID']
+            # it's not safe to use reference yet (until we switch to them all over the Apps)
+            # But in case we deal with ref-path we have to do it anyway:
+            obj_param_value = ref if (is_ref_path or is_external) else info_tuple[1]
+            for param in spec_params:
+                if any(t == bare_type for t in param['allowed_types']):
+                    input_params[param['id']] = obj_param_value
+    
+            (input_params, ws_refs) = validate_parameters(method_id, tag,
+                                                          spec_params, input_params)
+            (output_widget, output) = map_outputs_from_state([], input_params, spec)
+            input_data['output'] = output
+        
         input_template = """
         element.html("<div id='{{input_id}}' class='kb-vis-area'></div>");
 
@@ -363,7 +401,6 @@ class WidgetManager(object):
         """
 
         js = Template(input_template).render(input_id=self._cell_id_prefix + str(uuid.uuid4()),
-                                             output_type=type,
                                              widget_name=widget_name,
                                              input_data=json.dumps(input_data),
                                              cell_title=title,

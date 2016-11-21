@@ -327,6 +327,13 @@ define([
                                 min: spec.text_options ? spec.text_options.min_length : null,
                                 max: spec.text_options ? spec.text_options.max_length : null
                             };
+                        case 'autocomplete':
+                            return {
+                                required: required(),
+                                defaultValue: defaultValue(),
+                                min: spec.text_options ? spec.text_options.min_length : null,
+                                max: spec.text_options ? spec.text_options.max_length : null
+                            };
                         case 'dropdown':
                             return {
                             };
@@ -397,6 +404,7 @@ define([
                             throw new Error('Unknown []workspaceObjectName ui class');
                     }
                 case '[]string':
+                case '[]text':
                     switch (fieldType) {
                         case 'dropdown':
                             return {

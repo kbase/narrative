@@ -61,8 +61,6 @@ define([
     debug = config.mode === "debug";
     config.debug = debug;
 
-    addCdnModules(config.urls['cdn']);
-
     // Add a remote UI-common to the Require.js config
     require.config({
         paths: {

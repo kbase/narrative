@@ -602,6 +602,8 @@ define([], function () {
     function convertAppSpec(sdkAppSpec) {
         // Parameters
 
+        console.log('SDK APP SPEC', sdkAppSpec);
+
         var parameterSpecs = {},
             parameterLayout;
 

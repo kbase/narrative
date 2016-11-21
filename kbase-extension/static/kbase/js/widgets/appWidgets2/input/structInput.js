@@ -7,6 +7,7 @@ define([
     'common/events',
     'common/ui',
     'common/runtime',
+    'common/lang',
     '../inputParamResolver',
     '../fieldWidgetCompact',
 
@@ -19,6 +20,7 @@ define([
     Events,
     UI,
     Runtime,
+    lang,
     Resolver,
     FieldWidget) {
     'use strict';
@@ -26,28 +28,42 @@ define([
     // Constants
     var t = html.tag,
         div = t('div'),
+        input = t('input'),
         span = t('span'),
         resolver = Resolver.make();
 
     function factory(config) {
-        console.log('STRUCT INPUT', config);
-        var options = {},
-            spec = config.parameterSpec,
-            constraints = spec.data.constraints,
+        var spec = config.parameterSpec,
             container,
             parent,
             bus = config.bus,
             ui,
-            model = {},
-            viewModel = {},
+            viewModel = {
+                data: {},
+                meta: {
+                    enabled: null
+                }
+            },
             runtime = Runtime.make(),
-            structFields,
+            structFields = null,
+            // model = {
+            //     value: {},
+            //     enabled: null
+            // },
+            // structFields,
             fieldLayout = spec.ui.layout,
-            struct = spec.parameters;
+            struct = spec.parameters,
+            places = {};
 
-        function setModelValue(value, index) {
+        if (spec.data.constraints.required) {
+            viewModel.meta.enabled = true;
+        } else {
+            viewModel.meta.enabled = false;
+        }
+
+        function setModelValue(value) {
             return Promise.try(function () {
-                    model.value = value;
+                    viewModel.data = value;
 
                 })
                 .then(function () {
@@ -60,7 +76,7 @@ define([
 
         function unsetModelValue() {
             return Promise.try(function () {
-                    model.value = {};
+                    viewModel.data = {};
                 })
                 .then(function (changed) {
                     // render();
@@ -69,7 +85,7 @@ define([
 
         function resetModelValue() {
             if (spec.defaultValue) {
-                setModelValue(JSON.parse(JSON.stringify(spec.defaultValue)));
+                setModelValue(lang.copy(spec.defaultValue));
             } else {
                 unsetModelValue();
             }
@@ -109,7 +125,7 @@ define([
         function validate(rawValue) {
             return Promise.try(function () {
                 var validationOptions = {
-                    required: spec.required()
+                    required: spec.data.constraints.required
                 };
                 return Validation.validateTextString(rawValue, validationOptions);
             });
@@ -132,6 +148,68 @@ define([
         // we also need to stop them, so we will need to have a structure for the widgets.
         // either do that here, or in makesingleinputcontrol as it used to do
 
+        function doToggleEnableControl(ev) {
+            var label = document.querySelector('#' + places.enableControl + ' [data-element="label"]');
+            if (viewModel.meta.enabled) {
+                viewModel.meta.enabled = false;
+                label.innerHTML = 'Enable';
+                Object.keys(structFields).forEach(function (id) {
+                    var field = structFields[id];
+                    field.bus.emit('disable');
+                });
+            } else {
+                viewModel.meta.enabled = true;
+                label.innerHTML = 'Disable';
+                Object.keys(structFields).forEach(function (id) {
+                    var field = structFields[id];
+                    field.bus.emit('enable');
+                });
+            }
+        }
+
+        function enableControl(events) {
+            var required = spec.data.constraints.required;
+
+            places.enableControl = html.genId();
+
+            // If the group is required, there is no choice, it is always enabled.
+            if (required) {
+                return div({
+                    id: places.enableControl
+                }, [
+                    input({
+                        type: 'checkbox',
+                        checked: true,
+                        readonly: true,
+                        disabled: true
+                    }),
+                    ' This group is required'
+                ]);
+            }
+
+            var label;
+            if (viewModel.meta.enabled) {
+                label = 'Disable';
+            } else {
+                label = 'Enable'
+            }
+            return div({
+                id: places.enableControl
+            }, [
+                input({
+                    id: events.addEvent({
+                        type: 'click',
+                        handler: function (e) {
+                            doToggleEnableControl(e);
+                        }
+                    }),
+                    type: 'checkbox',
+                    checked: false
+                }),
+                span({ dataElement: 'label' }, label)
+            ]);
+        }
+
         function makeInputControl(events, bus) {
             var promiseOfFields = fieldLayout.map(function (fieldName) {
                 var fieldSpec = struct.specs[fieldName];
@@ -145,10 +223,16 @@ define([
 
             return Promise.all(promiseOfFields)
                 .then(function (fields) {
-                    var layout = div({ style: { border: '1px silver solid', padding: '4px' } },
+                    var layout = div({ style: { border: '1px silver solid', padding: '4px' } }, [
+                        div({
+                            class: 'row'
+                        }, [
+                            enableControl(events)
+                        ])
+                    ].concat(
                         fields.map(function (field) {
                             return div({ id: field.id, style: { border: '0px orange dashed', padding: '0px' } });
-                        }).join('\n'));
+                        })).join('\n'));
 
                     return {
                         content: layout,
@@ -162,7 +246,6 @@ define([
          * wrapper around the input widget itself.
          */
         function makeSingleInputControl(fieldSpec, events) {
-            console.log('GETTING control for', fieldSpec);
             return resolver.getInputWidgetFactory(fieldSpec)
                 .then(function (widgetFactory) {
 
@@ -182,7 +265,7 @@ define([
 
                     // set up listeners for the input
                     fieldBus.on('sync', function (message) {
-                        var value = viewModel[fieldSpec.id];
+                        var value = viewModel.data[fieldSpec.id];
                         if (value) {
                             fieldBus.emit('update', {
                                 value: value
@@ -192,16 +275,14 @@ define([
                     fieldBus.on('validation', function (message) {
                         if (message.diagnosis === 'optional-empty') {
                             bus.emit('changed', {
-                                parameter: fieldSpec.id,
-                                newValue: viewModel
+                                newValue: viewModel.data
                             });
                         }
                     });
                     fieldBus.on('changed', function (message) {
-                        viewModel[fieldSpec.id] = message.newValue;
+                        viewModel.data[fieldSpec.id] = message.newValue;
                         bus.emit('changed', {
-                            parameter: fieldSpec.id,
-                            newValue: viewModel
+                            newValue: viewModel.data
                         });
                     });
 
@@ -235,6 +316,7 @@ define([
                         structFields[field.fieldName] = field;
                     });
 
+
                     // Start up all the widgets
                     return Promise.all(
                         result.fields.map(function (field) {
@@ -242,6 +324,15 @@ define([
                                 node: document.getElementById(field.id)
                             });
                         }));
+                })
+                .then(function () {
+                    Object.keys(structFields).forEach(function (id) {
+                        if (viewModel.meta.enabled) {
+                            structFields[id].bus.emit('enable');
+                        } else {
+                            structFields[id].bus.emit('disable');
+                        }
+                    })
                 })
                 .catch(function (err) {
                     console.error(err);
@@ -259,37 +350,37 @@ define([
             return renderStruct(events);
         }
 
-        function autoValidate() {
-            return Promise.all(model.value.map(function (value, index) {
-                    // could get from DOM, but the model is the same.
-                    var rawValue = container.querySelector('[data-index="' + index + '"]').value;
-                    return validate(rawValue);
-                }))
-                .then(function (results) {
-                    // a bit of a hack -- we need to handle the 
-                    // validation here, and update the individual rows
-                    // for now -- just create one mega message.
-                    var errorMessages = [],
-                        validationMessage;
-                    results.forEach(function (result, index) {
-                        if (result.errorMessage) {
-                            errorMessages.push(result.errorMessage + ' in item ' + index);
-                        }
-                    });
-                    if (errorMessages.length) {
-                        validationMessage = {
-                            diagnosis: 'invalid',
-                            errorMessage: errorMessages.join('<br/>')
-                        };
-                    } else {
-                        validationMessage = {
-                            diagnosis: 'valid'
-                        };
-                    }
-                    bus.emit('validation', validationMessage);
+        // function autoValidate() {
+        //     return Promise.all(viewModel.data.map(function (value, index) {
+        //             // could get from DOM, but the model is the same.
+        //             var rawValue = container.querySelector('[data-index="' + index + '"]').value;
+        //             return validate(rawValue);
+        //         }))
+        //         .then(function (results) {
+        //             // a bit of a hack -- we need to handle the 
+        //             // validation here, and update the individual rows
+        //             // for now -- just create one mega message.
+        //             var errorMessages = [],
+        //                 validationMessage;
+        //             results.forEach(function (result, index) {
+        //                 if (result.errorMessage) {
+        //                     errorMessages.push(result.errorMessage + ' in item ' + index);
+        //                 }
+        //             });
+        //             if (errorMessages.length) {
+        //                 validationMessage = {
+        //                     diagnosis: 'invalid',
+        //                     errorMessage: errorMessages.join('<br/>')
+        //                 };
+        //             } else {
+        //                 validationMessage = {
+        //                     diagnosis: 'valid'
+        //                 };
+        //             }
+        //             bus.emit('validation', validationMessage);
 
-                });
-        }
+        //         });
+        // }
 
         // LIFECYCLE API
 
@@ -313,11 +404,12 @@ define([
                             bus.on('reset-to-defaults', function (message) {
                                 resetModelValue();
                             });
+
                             bus.on('update', function (message) {
                                 // Update the model, and since we have sub widgets,
                                 // we should send the individual data to them.
                                 // setModelValue(message.value);
-                                viewModel = message.value;
+                                viewModel.data = message.value;
                                 console.log('struct update', message);
                                 Object.keys(message.value).forEach(function (id) {
                                     structFields[id].bus.emit('update', {
@@ -329,7 +421,7 @@ define([
                             // A fake submit.
                             bus.on('submit', function () {
                                 bus.emit('submitted', {
-                                    value: viewModel
+                                    value: viewModel.data
                                 });
                             });
                             // The controller of this widget will be smart enough to 

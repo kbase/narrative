@@ -27,7 +27,7 @@ define([
     appInfoDialog,
     AppCellWidget,
     Spec
-    ) {
+) {
     'use strict';
 
     var t = html.tag,
@@ -40,17 +40,17 @@ define([
         if (!cell.metadata.kbase) {
             return false;
         }
-        if (cell.metadata.kbase.type !== 'app2') {
-            return false;
+        if (cell.metadata.kbase.type === 'app2' || cell.metadata.kbase.type === 'app') {
+            return true;
         }
-        return true;
+        return false;
     }
 
     function factory(config) {
         var cell = config.cell,
             workspaceInfo = config.workspaceInfo,
             runtime = Runtime.make(),
-            spec; 
+            spec;
 
 
         /*
@@ -63,7 +63,7 @@ define([
         function initializeParams(appSpec) {
             var defaultParams = {};
             appSpec.parameters.forEach(function (parameterSpec) {
-                var param = ParameterSpec.make({parameterSpec: parameterSpec}),
+                var param = ParameterSpec.make({ parameterSpec: parameterSpec }),
                     defaultValue = param.defaultValue();
 
                 // A default value may be undefined, e.g. if the parameter is required and there is no default value.
@@ -132,8 +132,7 @@ define([
 
                 // The kbase property is only used for managing runtime state of the cell
                 // for kbase. Anything to be persistent should be on the metadata.
-                cell.kbase = {
-                };
+                cell.kbase = {};
 
                 // Update metadata.
                 utils.setCellMeta(cell, 'kbase.attributes.lastLoaded', (new Date()).toUTCString());
@@ -147,14 +146,14 @@ define([
                         runtime: runtime,
                         workspaceInfo: workspaceInfo
                     }),
-                    dom = Dom.make({node: cell.input[0]}),
-                    kbaseNode = dom.createNode(div({dataSubareaType: 'app-cell-input'}));
+                    dom = Dom.make({ node: cell.input[0] }),
+                    kbaseNode = dom.createNode(div({ dataSubareaType: 'app-cell-input' }));
                 // inserting after, with raw dom, means telling the parent node
                 // to insert a node before the node following the one we are 
                 // referencing. If there is no next sibling, the null value
                 // causes insertBefore to actually ... insert at the end!
                 cell.input[0].parentNode.insertBefore(kbaseNode, cell.input[0].nextSibling);
-                
+
                 /*
                  * This is required for all KBase cells in order to disable the 
                  * Jupyter keyboard management. Although a app startup code remaps
@@ -197,49 +196,51 @@ define([
 
         function upgradeToAppCell(appSpec, appTag) {
             return Promise.try(function () {
-                // Create base app cell
-               
-                
-                // console.log('about to convert appspec', appSpec);
-                // TODO: this should capture the entire app spec, so don't need
-                // to carry appSpec around.
-                console.log('converting spec', appSpec);
-                spec = Spec.make({
-                    appSpec: appSpec
-                });
-                
-                 var meta = {
-                    kbase: {
-                        type: 'app2',
-                        attributes: {
-                            id: new Uuid(4).format(),
-                            status: 'new',
-                            created: (new Date()).toUTCString()
-                        },
-                        appCell: {
-                            app: {
-                                id: appSpec.info.id,
-                                gitCommitHash: appSpec.info.git_commit_hash,
-                                version: appSpec.info.ver,
-                                tag: appTag,
-                                spec: appSpec,
-                                parameters: spec.getSpec().parameters
+                    // Create base app cell
+
+
+                    // console.log('about to convert appspec', appSpec);
+                    // TODO: this should capture the entire app spec, so don't need
+                    // to carry appSpec around.
+                    console.log('converting spec', appSpec);
+                    spec = Spec.make({
+                        appSpec: appSpec
+                    });
+
+                    console.log('converted params...', spec.getSpec().parameters);
+
+                    var meta = {
+                        kbase: {
+                            type: 'app2',
+                            attributes: {
+                                id: new Uuid(4).format(),
+                                status: 'new',
+                                created: (new Date()).toUTCString()
                             },
-                            params: null,
-                            output: {
-                                byJob: {}
+                            appCell: {
+                                app: {
+                                    id: appSpec.info.id,
+                                    gitCommitHash: appSpec.info.git_commit_hash,
+                                    version: appSpec.info.ver,
+                                    tag: appTag,
+                                    // TODO: remove the spec from the cell metadata
+                                    spec: appSpec
+                                },
+                                params: null,
+                                output: {
+                                    byJob: {}
+                                }
                             }
                         }
-                    }
-                };
-                cell.metadata = meta;
-                
-                // Add the params
-                utils.setCellMeta(cell, 'kbase.appCell.params', spec.makeDefaultedModel());
-                // initializeParams(appSpec);
-                // Complete the cell setup.
-                return setupCell();
-            })
+                    };
+                    cell.metadata = meta;
+
+                    // Add the params
+                    utils.setCellMeta(cell, 'kbase.appCell.params', spec.makeDefaultedModel());
+                    // initializeParams(appSpec);
+                    // Complete the cell setup.
+                    return setupCell();
+                })
                 .then(function (cellStuff) {
                     // Initialize the cell to its default state.
                     // cellStuff.bus.emit('reset-to-defaults');

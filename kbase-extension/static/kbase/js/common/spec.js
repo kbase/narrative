@@ -23,8 +23,6 @@ define([
             throw new Error('Either a spec or appSpec must be provided');
         }
 
-        console.log('SPEC IS', spec);
-
         function getSpec() {
             return spec;
         }
@@ -56,9 +54,7 @@ define([
             // TODO: spec at the top level should be a struct...
             var results = {};
             var validation = Validation.make();
-            console.log('validating with', spec);
             spec.parameters.layout.forEach(function (id) {
-                console.log('validating parameter', id, spec.parameters.specs);
                 results[id] = validation.validateModel(spec.parameters.specs[id], model[id]);
             });
             return results;

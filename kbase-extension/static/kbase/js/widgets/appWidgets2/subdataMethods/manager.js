@@ -35,28 +35,29 @@ define([
 
         function workspaceCall(subObjectIdentity) {
             return new Workspace(runtime.config('services.workspace.url'), {
-                token: runtime.authToken()
-            })
+                    token: runtime.authToken()
+                })
                 .get_object_subset([subObjectIdentity]);
         }
 
-        function genericClientCall(subdataOptions, subObjectIdentity) {
+        function genericClientCall(subdataSelection, subObjectIdentity) {
             var swUrl = runtime.config('services.workspace.url').replace("ws", "service_wizard"),
                 genericClient = new GenericClient(swUrl, {
                     token: runtime.authToken()
                 });
-            return genericClient.sync_call(subdataOptions.subdata_selection.service_function,
-                [[subObjectIdentity]], null, null,
-                subdataOptions.subdata_selection.service_version);
+            return genericClient.sync_call(subdataSelection.service_function, [
+                    [subObjectIdentity]
+                ], null, null,
+                subdataSelection.service_version);
         }
 
         function makeLabel(item, showSourceObjectName) {
-            return div({style: {wordWrap: 'break-word'}}, [
-                div({style: {fontWeight: 'bold'}}, item.id),
+            return div({ style: { wordWrap: 'break-word' } }, [
+                div({ style: { fontWeight: 'bold' } }, item.id),
                 item.desc,
                 (function () {
                     if (showSourceObjectName && item.objectName) {
-                        return div({style: {padding: '0px', fontStyle: 'italic'}}, item.objectName);
+                        return div({ style: { padding: '0px', fontStyle: 'italic' } }, item.objectName);
                     }
                 }())
             ]);
@@ -64,23 +65,23 @@ define([
 
         function standardFetchData(arg) {
             var referenceObjectRef = arg.referenceObjectRef,
-                subdataOptions = arg.spec.spec.textsubdata_options,
+                subdataSelection = arg.spec.constraints.subdataSelection,
                 subObjectIdentity = {
                     ref: referenceObjectRef,
-                    included: subdataOptions.subdata_selection.subdata_included
+                    included: subdataSelection.subdata_included
                 },
-            dataCall;
-            if (subdataOptions.subdata_selection.service_function) {
-                dataCall = genericClientCall(subdataOptions, subObjectIdentity);
+                dataCall;
+            if (subdataSelection.service_function) {
+                dataCall = genericClientCall(subdataSelection, subObjectIdentity);
             } else {
                 dataCall = workspaceCall(subObjectIdentity);
             }
             return dataCall
                 .then(function (results) {
                     var values = [],
-                        selectionId = subdataOptions.subdata_selection.selection_id,
-                        descriptionFields = subdataOptions.subdata_selection.selection_description || [],
-                        descriptionTemplateText = subdataOptions.subdata_selection.description_template,
+                        selectionId = subdataSelection.selection_id,
+                        descriptionFields = subdataSelection.selection_description || [],
+                        descriptionTemplateText = subdataSelection.description_template,
                         descriptionTemplate;
 
                     if (!descriptionTemplateText) {
@@ -100,7 +101,7 @@ define([
                             result = result[0];
                         }
 
-                        var subdata = Props.getDataItem(result.data, subdataOptions.subdata_selection.path_to_subdata);
+                        var subdata = Props.getDataItem(result.data, subdataSelection.path_to_subdata);
 
                         if (!subdata) {
                             return;
@@ -146,19 +147,19 @@ define([
 
                                 if (selectionId) {
                                     switch (typeof datum) {
-                                        case 'object':
-                                            id = datum[selectionId];
-                                            break;
-                                        case 'string':
-                                        case 'number':
-                                            if (selectionId === 'value') {
-                                                id = datum;
-                                            } else {
-                                                id = key;
-                                            }
-                                            break;
-                                        default:
+                                    case 'object':
+                                        id = datum[selectionId];
+                                        break;
+                                    case 'string':
+                                    case 'number':
+                                        if (selectionId === 'value') {
+                                            id = datum;
+                                        } else {
                                             id = key;
+                                        }
+                                        break;
+                                    default:
+                                        id = key;
                                     }
                                 } else {
                                     id = key;
@@ -175,7 +176,7 @@ define([
                         }
                     });
                     return values.map(function (item) {
-                        item.text = makeLabel(item, subdataOptions.show_src_obj);
+                        item.text = makeLabel(item, arg.spec.ui.showSourceObject);
                         return item;
                     });
                 })
@@ -196,43 +197,43 @@ define([
 
         function getSubdataInfo(appSpec, paramSpec) {
             switch (appSpec.widgets.input) {
-                case 'kbaseSamplePropertyHistogramInput':
-                    switch (paramSpec.id) {
-                        case 'input_samples':
-                            return SamplePropertyHistogram.make().getMethod();
-                        default:
-                            throw new Error('Unknown custom parameter id for ' + appSpec.widgets.input);
-                    }
-                case 'kbaseSampleProperty2DPlotInput':
-                    switch (paramSpec.id) {
-                        case 'input_property_x':
-                        case 'input_property_y':
-                            return SampleProperty.make().getMethod();
-                        default:
-                            throw new Error('Unknown custom parameter id for ' + appSpec.widgets.input);
-                    }
-                case 'kbaseGrowthParamsPlotInput':
-                    switch (paramSpec.id) {
-                        case 'input_condition_param':
-                            return GrowthCondition.make().getMethod();
-                        default:
-                            throw new Error('Unknown custom parameter id for ' + appSpec.widgets.input);
-                    }
-                case 'kbaseGrowthCurvesInput':
-                    return GrowthCurves.make().getMethod();
+            case 'kbaseSamplePropertyHistogramInput':
+                switch (paramSpec.id) {
+                case 'input_samples':
+                    return SamplePropertyHistogram.make().getMethod();
                 default:
-                    throw new Error('Sorry, input widget ' + appSpec.widgets.input + ' is not recognized');
+                    throw new Error('Unknown custom parameter id for ' + appSpec.widgets.input);
+                }
+            case 'kbaseSampleProperty2DPlotInput':
+                switch (paramSpec.id) {
+                case 'input_property_x':
+                case 'input_property_y':
+                    return SampleProperty.make().getMethod();
+                default:
+                    throw new Error('Unknown custom parameter id for ' + appSpec.widgets.input);
+                }
+            case 'kbaseGrowthParamsPlotInput':
+                switch (paramSpec.id) {
+                case 'input_condition_param':
+                    return GrowthCondition.make().getMethod();
+                default:
+                    throw new Error('Unknown custom parameter id for ' + appSpec.widgets.input);
+                }
+            case 'kbaseGrowthCurvesInput':
+                return GrowthCurves.make().getMethod();
+            default:
+                throw new Error('Sorry, input widget ' + appSpec.widgets.input + ' is not recognized');
             }
         }
 
         function customFetchDataNormal(arg) {
             var workspace = new Workspace(runtime.config('services.workspace.url'), {
-                token: runtime.authToken()
-            }),
+                    token: runtime.authToken()
+                }),
                 query = [{
-                        ref: arg.referenceObjectRef,
-                        included: arg.included
-                    }];
+                    ref: arg.referenceObjectRef,
+                    included: arg.included
+                }];
             return workspace.get_object_subset(query)
                 .then(function (result) {
                     return arg.extractItems(result, arg.params);
@@ -244,13 +245,13 @@ define([
                 workspace = new Workspace(runtime.config('services.workspace.url'), {
                     token: runtime.authToken()
                 });
-            return workspace.get_objects([{ref: referenceObjectRef}])
+            return workspace.get_objects([{ ref: referenceObjectRef }])
                 .then(function (data) {
                     var nextRef = arg.getRef(data),
                         query = [{
-                                ref: nextRef,
-                                included: arg.included
-                            }];
+                            ref: nextRef,
+                            included: arg.included
+                        }];
                     return workspace.get_object_subset(query);
                 })
                 .then(function (result) {

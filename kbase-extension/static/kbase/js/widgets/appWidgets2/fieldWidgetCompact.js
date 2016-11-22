@@ -327,7 +327,6 @@ define([
             } else {
                 advanced = '';
             }
-            console.log('RENDERING...', spec);
             var content = div({
                 class: ['form-horizontal', 'kb-app-parameter-row', 'parameter-panel', advanced].join(' '),
                 dataAdvancedParameter: spec.ui.advanced,

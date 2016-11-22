@@ -24,7 +24,7 @@ define([
     Props,
     Jupyter,
     SubdataMethods
-    ) {
+) {
     'use strict';
 
     /*
@@ -44,14 +44,16 @@ define([
 
     // Constants
     var t = html.tag,
-        div = t('div'), p = t('p'), span = t('span'),
+        div = t('div'),
+        p = t('p'),
+        span = t('span'),
         input = t('input'),
-        option = t('option'), button = t('button');
+        option = t('option'),
+        button = t('button');
 
     function factory(config) {
         var options = {},
             spec = config.parameterSpec,
-            subdataOptions = spec.spec.textsubdata_options,
             parent,
             container,
             workspaceId = config.workspaceId,
@@ -61,7 +63,7 @@ define([
             options = {
                 objectSelectionPageSize: 20
             },
-        runtime = Runtime.make(),
+            runtime = Runtime.make(),
             ui;
 
         // Validate configuration.
@@ -79,7 +81,7 @@ define([
         function buildOptions() {
             var availableValues = model.getItem('availableValues'),
                 value = model.getItem('value') || [],
-                selectOptions = [option({value: ''}, '')];
+                selectOptions = [option({ value: '' }, '')];
             if (!availableValues) {
                 return selectOptions;
             }
@@ -195,100 +197,101 @@ define([
                 from = model.getItem('showFrom'),
                 to = model.getItem('showTo'),
                 itemsToShow = items.slice(from, to),
-                events = Events.make({node: container}),
+                events = Events.make({ node: container }),
                 content;
 
             if (itemsToShow.length === 0) {
-                content = div({style: {textAlign: 'center'}}, 'no available values');
+                content = div({ style: { textAlign: 'center' } }, 'no available values');
             } else {
                 content = itemsToShow.map(function (item, index) {
-                    var isSelected = selected.some(function (id) {
-                        return (item.id === id);
-                    }),
-                        disabled = isSelected;
-                    return div({class: 'row', style: {border: '1px #CCC solid'}}, [
-                        div({
-                            class: 'col-md-2',
-                            style: {
-                                verticalAlign: 'middle',
-                                borderRadius: '3px',
-                                padding: '2px',
-                                backgroundColor: '#EEE',
-                                color: '#444',
-                                textAlign: 'right',
-                                paddingRight: '6px',
-                                fontFamily: 'monospace'
-                            }
-                        }, String(from + index + 1)),
-                        div({
-                            class: 'col-md-8',
-                            style: {
-                                padding: '2px'
-                            }
-                        }, item.text),
-                        div({class: 'col-md-2',
-                            style: {
-                                padding: '2px',
-                                textAlign: 'right',
-                                verticalAlign: 'top'
-                            }
-                        }, [
-                            (function () {
-                                if (disabled) {
-                                    return span({
-                                        class: 'kb-btn-icon',
-                                        type: 'button',
-                                        dataToggle: 'tooltip',
-                                        title: 'Remove from selected',
-                                        id: events.addEvent({
-                                            type: 'click',
-                                            handler: function () {
-                                                doRemoveSelectedAvailableItem(item.id);
-                                            }
-                                        })
-                                    }, [
-                                        span({
-                                            class: 'fa fa-minus-circle',
-                                            style: {
-                                                color: 'red',
-                                                fontSize: '200%'
-                                            }
-                                        })
-                                    ]);
+                        var isSelected = selected.some(function (id) {
+                                return (item.id === id);
+                            }),
+                            disabled = isSelected;
+                        return div({ class: 'row', style: { border: '1px #CCC solid' } }, [
+                            div({
+                                class: 'col-md-2',
+                                style: {
+                                    verticalAlign: 'middle',
+                                    borderRadius: '3px',
+                                    padding: '2px',
+                                    backgroundColor: '#EEE',
+                                    color: '#444',
+                                    textAlign: 'right',
+                                    paddingRight: '6px',
+                                    fontFamily: 'monospace'
                                 }
-                                if (allowSelection) {
-                                    return span({
-                                        class: 'kb-btn-icon',
-                                        type: 'button',
-                                        dataToggle: 'tooltip',
-                                        title: 'Add to selected',
-                                        dataItemId: item.id,
-                                        id: events.addEvent({
-                                            type: 'click',
-                                            handler: function () {
-                                                doAddItem(item.id);
-                                            }
-                                        })}, [span({
+                            }, String(from + index + 1)),
+                            div({
+                                class: 'col-md-8',
+                                style: {
+                                    padding: '2px'
+                                }
+                            }, item.text),
+                            div({
+                                class: 'col-md-2',
+                                style: {
+                                    padding: '2px',
+                                    textAlign: 'right',
+                                    verticalAlign: 'top'
+                                }
+                            }, [
+                                (function () {
+                                    if (disabled) {
+                                        return span({
+                                            class: 'kb-btn-icon',
+                                            type: 'button',
+                                            dataToggle: 'tooltip',
+                                            title: 'Remove from selected',
+                                            id: events.addEvent({
+                                                type: 'click',
+                                                handler: function () {
+                                                    doRemoveSelectedAvailableItem(item.id);
+                                                }
+                                            })
+                                        }, [
+                                            span({
+                                                class: 'fa fa-minus-circle',
+                                                style: {
+                                                    color: 'red',
+                                                    fontSize: '200%'
+                                                }
+                                            })
+                                        ]);
+                                    }
+                                    if (allowSelection) {
+                                        return span({
+                                            class: 'kb-btn-icon',
+                                            type: 'button',
+                                            dataToggle: 'tooltip',
+                                            title: 'Add to selected',
+                                            dataItemId: item.id,
+                                            id: events.addEvent({
+                                                type: 'click',
+                                                handler: function () {
+                                                    doAddItem(item.id);
+                                                }
+                                            })
+                                        }, [span({
                                             class: 'fa fa-plus-circle',
                                             style: {
                                                 color: 'green',
                                                 fontSize: '200%'
                                             }
-                                        })
-                                    ]);
-                                }
-                                return span({
-                                    class: 'kb-btn-icon',
-                                    type: 'button',
-                                    dataToggle: 'tooltip',
-                                    title: 'Can\'t add - remove one first',
-                                    dataItemId: item.id
-                                }, span({class: 'fa fa-ban', style: {color: 'silver', fontSize: '200%'}}));
-                            }())
+                                        })]);
+                                    }
+                                    return span({
+                                        class: 'kb-btn-icon',
+                                        type: 'button',
+                                        dataToggle: 'tooltip',
+                                        title: 'Can\'t add - remove one first',
+                                        dataItemId: item.id
+                                    }, span({ class: 'fa fa-ban', style: { color: 'silver', fontSize: '200%' } }));
+                                }())
 
-                        ])
-                    ]);
-                })
+                            ])
+                        ]);
+                    })
                     .join('\n');
             }
 
@@ -300,11 +303,11 @@ define([
         function renderSelectedItems() {
             var selectedItems = model.getItem('selectedItems', []),
                 valuesMap = model.getItem('availableValuesMap', {}),
-                events = Events.make({node: container}),
+                events = Events.make({ node: container }),
                 content;
 
             if (selectedItems.length === 0) {
-                content = div({style: {textAlign: 'center'}}, 'no selected values');
+                content = div({ style: { textAlign: 'center' } }, 'no selected values');
             } else {
                 content = selectedItems.map(function (itemId, index) {
                     var item = valuesMap[itemId];
@@ -314,7 +317,7 @@ define([
                         };
                     }
 
-                    return div({class: 'row', style: {border: '1px #CCC solid', borderCollapse: 'collapse', boxSizing: 'border-box'}}, [
+                    return div({ class: 'row', style: { border: '1px #CCC solid', borderCollapse: 'collapse', boxSizing: 'border-box' } }, [
                         div({
                             class: 'col-md-2',
                             style: {
@@ -361,7 +364,7 @@ define([
                                         doRemoveSelectedItem(index);
                                     }
                                 })
-                            }, span({class: 'fa fa-minus-circle', style: {color: 'red', fontSize: '200%'}}))
+                            }, span({ class: 'fa fa-minus-circle', style: { color: 'red', fontSize: '200%' } }))
                         ])
                     ]);
                 }).join('\n');
@@ -373,7 +376,7 @@ define([
 
         function renderSearchBox() {
             var items = model.getItem('availableValues', []),
-                events = Events.make({node: container}),
+                events = Events.make({ node: container }),
                 content;
 
             //if (items.length === 0) {
@@ -381,11 +384,11 @@ define([
             //} else {
             content = input({
                 class: 'form-contol',
-                style: {xwidth: '100%'},
+                style: { xwidth: '100%' },
                 placeholder: 'search',
                 value: model.getItem('filter') || '',
-                id: events.addEvents({events: [
-                        {
+                id: events.addEvents({
+                    events: [{
                             type: 'keyup',
                             handler: function (e) {
                                 doSearchKeyUp(e);
@@ -410,7 +413,8 @@ define([
                                 Jupyter.narrative.disableKeyboardManager();
                             }
                         }
-                    ]})
+                    ]
+                })
             });
             //}
 
@@ -424,11 +428,11 @@ define([
                 content;
 
             if (availableItems.length === 0) {
-                content = span({style: {fontStyle: 'italic'}}, [
+                content = span({ style: { fontStyle: 'italic' } }, [
                     ' - no available items'
                 ]);
             } else {
-                content = span({style: {fontStyle: 'italic'}}, [
+                content = span({ style: { fontStyle: 'italic' } }, [
                     ' - filtering ',
                     span([
                         String(filteredItems.length),
@@ -443,7 +447,7 @@ define([
 
         function renderToolbar() {
             var items = model.getItem('filteredAvailableItems', []),
-                events = Events.make({node: container}),
+                events = Events.make({ node: container }),
                 content;
 
             if (items.length === 0) {
@@ -453,47 +457,47 @@ define([
                     button({
                         type: 'button',
                         class: 'btn btn-default',
-                        style: {xwidth: '100%'},
+                        style: { xwidth: '100%' },
                         id: events.addEvent({
                             type: 'click',
                             handler: function () {
                                 doFirstPage();
                             }
                         })
-                    }, ui.buildIcon({name: 'step-forward', rotate: 270})),
+                    }, ui.buildIcon({ name: 'step-forward', rotate: 270 })),
                     button({
                         class: 'btn btn-default',
                         type: 'button',
-                        style: {xwidth: '50%'},
+                        style: { xwidth: '50%' },
                         id: events.addEvent({
                             type: 'click',
                             handler: function () {
                                 doPreviousPage();
                             }
                         })
-                    }, ui.buildIcon({name: 'caret-up'})),
+                    }, ui.buildIcon({ name: 'caret-up' })),
                     button({
                         class: 'btn btn-default',
                         type: 'button',
-                        style: {xwidth: '100%'},
+                        style: { xwidth: '100%' },
                         id: events.addEvent({
                             type: 'click',
                             handler: function () {
                                 doNextPage();
                             }
                         })
-                    }, ui.buildIcon({name: 'caret-down'})),
+                    }, ui.buildIcon({ name: 'caret-down' })),
                     button({
                         type: 'button',
                         class: 'btn btn-default',
-                        style: {xwidth: '100%'},
+                        style: { xwidth: '100%' },
                         id: events.addEvent({
                             type: 'click',
                             handler: function () {
                                 doLastPage();
                             }
                         })
-                    }, ui.buildIcon({name: 'step-forward', rotate: 90}))
+                    }, ui.buildIcon({ name: 'step-forward', rotate: 90 }))
                 ]);
             }
 
@@ -537,15 +541,19 @@ define([
         function doPreviousPage() {
             movePageStart(-5);
         }
+
         function doNextPage() {
             movePageStart(5);
         }
+
         function doFirstPage() {
             setPageStart(0);
         }
+
         function doLastPage() {
             setPageStart(model.getItem('filteredAvailableItems').length);
         }
+
         function doSearchKeyUp(e) {
             if (e.target.value.length > 2) {
                 model.setItem('filter', e.target.value);
@@ -567,7 +575,7 @@ define([
                 availableValues = model.getItem('availableValues'),
                 value = model.getItem('value') || [];
 
-            if (subdataOptions.multiselection) {
+            if (spec.ui.multiSelection) {
                 size = 10;
                 multiple = true;
             }
@@ -580,62 +588,62 @@ define([
                         padding: '3px',
                         border: '1px silver solid'
                     }
-                }, 'Items will be available after selecting a value for ' + subdataOptions.subdata_selection.parameter_id);
+                }, 'Items will be available after selecting a value for ' + spec.constraints.subdataSelection.parameter_id);
             }
 
             selectOptions = buildOptions();
 
             return div([
-//                div({class: 'row'}, [
-//                    div({class: 'col-md-6', style: {paddingBottom: '6px'}}, [
-//                        div({
-//                            style: {
-//                                fontWeight: 'bold',
-//                                textDecoration: 'underline',
-//                                fontStyle: 'italic',
-//                                textAlign: 'center'
-//                            }
-//                        }, 'Available')
-//                    ]),
-//                    div({class: 'col-md-6'}, [
-//                        div({
-//                            style: {
-//                                fontWeight: 'bold',
-//                                textDecoration: 'underline',
-//                                fontStyle: 'italic',
-//                                textAlign: 'center'
-//                            }
-//                        }, 'Selected')
-//                    ])
-//                ]),
+                //                div({class: 'row'}, [
+                //                    div({class: 'col-md-6', style: {paddingBottom: '6px'}}, [
+                //                        div({
+                //                            style: {
+                //                                fontWeight: 'bold',
+                //                                textDecoration: 'underline',
+                //                                fontStyle: 'italic',
+                //                                textAlign: 'center'
+                //                            }
+                //                        }, 'Available')
+                //                    ]),
+                //                    div({class: 'col-md-6'}, [
+                //                        div({
+                //                            style: {
+                //                                fontWeight: 'bold',
+                //                                textDecoration: 'underline',
+                //                                fontStyle: 'italic',
+                //                                textAlign: 'center'
+                //                            }
+                //                        }, 'Selected')
+                //                    ])
+                //                ]),
                 ui.buildCollapsiblePanel({
-                    title: span(['Available Items', span({dataElement: 'stats'})]),
+                    title: span(['Available Items', span({ dataElement: 'stats' })]),
                     classes: ['kb-panel-light'],
-                    body: div({dataElement: 'available-items-area', style: {marginTop: '10px'}}, [
-                        div({class: 'row'}, [
+                    body: div({ dataElement: 'available-items-area', style: { marginTop: '10px' } }, [
+                        div({ class: 'row' }, [
                             div({
                                 class: 'col-md-6'
                             }, [
-                                span({dataElement: 'search-box'})
+                                span({ dataElement: 'search-box' })
                             ]),
-//                            div({
-//                                class: 'col-md-3'
-//                            }, [
-//                                span({
-//                                    dataElement: 'stats',
-//                                    style: {
-//                                        fontStyle: 'italic'
-//                                    }
-//                                })
-//                            ]),
+                            //                            div({
+                            //                                class: 'col-md-3'
+                            //                            }, [
+                            //                                span({
+                            //                                    dataElement: 'stats',
+                            //                                    style: {
+                            //                                        fontStyle: 'italic'
+                            //                                    }
+                            //                                })
+                            //                            ]),
                             div({
                                 class: 'col-md-6',
-                                style: {textAlign: 'right'},
+                                style: { textAlign: 'right' },
                                 dataElement: 'toolbar'
                             })
                         ]),
-                        div({class: 'row', style: {marginTop: '4px'}}, [
-                            div({class: 'col-md-12'},
+                        div({ class: 'row', style: { marginTop: '4px' } }, [
+                            div({ class: 'col-md-12' },
                                 div({
                                     style: {
                                         border: '1px silver solid'
@@ -656,24 +664,24 @@ define([
                     })
                 })
 
-//                div({class: 'row'}, [
-//                    div({class: 'col-md-6'},
-//                        div({
-//                            style: {
-//                                border: '1px silver solid',
-//                                xheight: '100px'
-//                            },
-//                            dataElement: 'available-items'
-//                        })),
-//                    div({class: 'col-md-6'},
-//                        div({
-//                            style: {
-//                                border: '1px silver solid',
-//                                xheight: '100px'
-//                            },
-//                            dataElement: 'selected-items'
-//                        }))
-//                ])
+                //                div({class: 'row'}, [
+                //                    div({class: 'col-md-6'},
+                //                        div({
+                //                            style: {
+                //                                border: '1px silver solid',
+                //                                xheight: '100px'
+                //                            },
+                //                            dataElement: 'available-items'
+                //                        })),
+                //                    div({class: 'col-md-6'},
+                //                        div({
+                //                            style: {
+                //                                border: '1px silver solid',
+                //                                xheight: '100px'
+                //                            },
+                //                            dataElement: 'selected-items'
+                //                        }))
+                //                ])
             ]);
         }
 
@@ -690,26 +698,26 @@ define([
          */
         function updateInputControl(changedProperty) {
             switch (changedProperty) {
-                case 'value':
-                    // just change the selections.
-                    var count = buildCount();
-                    ui.setContent('input-control.count', count);
+            case 'value':
+                // just change the selections.
+                var count = buildCount();
+                ui.setContent('input-control.count', count);
 
-                    break;
-                case 'availableValues':
-                    // rebuild the options
-                    // re-apply the selections from the value
-                    var options = buildOptions(),
-                        count = buildCount();
-                    ui.setContent('input-control.input', options);
-                    ui.setContent('input-control.count', count);
+                break;
+            case 'availableValues':
+                // rebuild the options
+                // re-apply the selections from the value
+                var options = buildOptions(),
+                    count = buildCount();
+                ui.setContent('input-control.input', options);
+                ui.setContent('input-control.count', count);
 
-                    break;
-                case 'referenceObjectName':
-                    // refetch the available values
-                    // set available values
-                    // update input control for available values
-                    // set value to null
+                break;
+            case 'referenceObjectName':
+                // refetch the available values
+                // set available values
+                // update input control for available values
+                // set value to null
 
 
             }
@@ -724,17 +732,17 @@ define([
          * values.
          */
         function getInputValue() {
-//            var control = ui.getElement('input-container.input');
-//            if (!control) {
-//                return null;
-//            }
-//            var input = control.selectedOptions,
-//                i, values = [];
-//            for (i = 0; i < input.length; i += 1) {
-//                values.push(input.item(i).value);
-//            }
-//            // cute ... allows selecting multiple values but does not expect a sequence...
-//            return values;
+            //            var control = ui.getElement('input-container.input');
+            //            if (!control) {
+            //                return null;
+            //            }
+            //            var input = control.selectedOptions,
+            //                i, values = [];
+            //            for (i = 0; i < input.length; i += 1) {
+            //                values.push(input.item(i).value);
+            //            }
+            //            // cute ... allows selecting multiple values but does not expect a sequence...
+            //            return values;
             return model.getItem('selectedItems');
         }
 
@@ -751,21 +759,21 @@ define([
 
         function validate() {
             return Promise.try(function () {
-                if (!options.enabled) {
-                    return {
-                        isValid: true,
-                        validated: false,
-                        diagnosis: 'disabled'
-                    };
-                }
+                    if (!options.enabled) {
+                        return {
+                            isValid: true,
+                            validated: false,
+                            diagnosis: 'disabled'
+                        };
+                    }
 
-                var rawValue = getInputValue(),
-                    validationOptions = {
-                        required: spec.required()
-                    };
+                    var rawValue = getInputValue(),
+                        validationOptions = {
+                            required: spec.required()
+                        };
 
-                return Validation.validateStringSet(rawValue, validationOptions);
-            })
+                    return Validation.validateStringSet(rawValue, validationOptions);
+                })
                 .then(function (validationResult) {
                     return {
                         isValid: validationResult.isValid,
@@ -789,7 +797,7 @@ define([
 
         function fetchData() {
             var referenceObjectName = model.getItem('referenceObjectName'),
-                referenceObjectRef = spec.spec.textsubdata_options.subdata_selection.constant_ref;
+                referenceObjectRef = spec.data.subdataSelection.constant_ref;
 
             if (!referenceObjectRef) {
                 if (!referenceObjectName) {
@@ -806,20 +814,20 @@ define([
 
         function syncAvailableValues() {
             return Promise.try(function () {
-                return fetchData();
-            })
+                    return fetchData();
+                })
                 .then(function (data) {
                     if (!data) {
                         return " no data? ";
                     }
-                    
+
                     // If default values have been provided, prepend them to the data.
-                    
+
                     // We use the raw default values here since we are not really using
                     // it as the default value, but as a set of additional items
                     // to select.
                     var defaultValues = spec.spec.default_values;
-                    if (defaultValues && (defaultValues instanceof Array) && (defaultValues.length > 0) ) {
+                    if (defaultValues && (defaultValues instanceof Array) && (defaultValues.length > 0)) {
                         defaultValues.forEach(function (itemId) {
                             if (itemId && itemId.trim().length > 0) {
                                 data.unshift({
@@ -829,7 +837,7 @@ define([
                             }
                         });
                     }
-                    
+
                     // The data represents the total available subdata, with all
                     // necessary fields for display. We build from that three
                     // additional structures
@@ -873,25 +881,25 @@ define([
          */
         function render() {
             return Promise.try(function () {
-                // check to see if we have to render inputControl.
-                var events = Events.make({node: container}),
-                    inputControl = makeInputControl(events, bus),
-                    content = div({
-                        class: 'input-group',
-                        style: {
-                            width: '100%'
-                        }
-                    }, inputControl);
+                    // check to see if we have to render inputControl.
+                    var events = Events.make({ node: container }),
+                        inputControl = makeInputControl(events, bus),
+                        content = div({
+                            class: 'input-group',
+                            style: {
+                                width: '100%'
+                            }
+                        }, inputControl);
 
-                ui.setContent('input-container', content);
-                renderSearchBox();
-                renderStats();
-                renderToolbar();
-                renderAvailableItems();
-                renderSelectedItems();
+                    ui.setContent('input-container', content);
+                    renderSearchBox();
+                    renderStats();
+                    renderToolbar();
+                    renderAvailableItems();
+                    renderSelectedItems();
 
-                events.attachEvents();
-            })
+                    events.attachEvents();
+                })
                 .then(function () {
                     return autoValidate();
                 })
@@ -919,7 +927,7 @@ define([
             };
         }
 
-        
+
 
         function registerEvents() {
             /*
@@ -997,11 +1005,11 @@ define([
                         });
                 }
             });
-            
+
             bus.listen({
                 key: {
                     type: 'parameter-changed',
-                    parameter: subdataOptions.subdata_selection.parameter_id
+                    parameter: spec.constraints.subdataSelection.parameter_id
                 },
                 handle: function (message) {
                     var newValue = message.newValue;
@@ -1024,7 +1032,7 @@ define([
             bus.listen({
                 key: {
                     type: 'parameter-value',
-                    parameter: subdataOptions.subdata_selection.parameter_id
+                    parameter: spec.constraints.subdataSelection.parameter_id
                 },
                 handle: function (message) {
                     var newValue = message.newValue;
@@ -1049,19 +1057,19 @@ define([
             // Rather than explicitly refer to that parameter, we have a
             // generic capability to receive updates for that value, after
             // which we re-fetch the values, and re-render the control.
-//            bus.on('update-reference-object', function (message) {
-//                model.setItem('referenceObjectName', value)
-//                setReferenceValue(message.objectRef);
-//            });
+            //            bus.on('update-reference-object', function (message) {
+            //                model.setItem('referenceObjectName', value)
+            //                setReferenceValue(message.objectRef);
+            //            });
             bus.emit('sync');
 
             bus.request({
-                parameterName: spec.id()
-            }, {
-                key: {
-                    type: 'get-parameter'
-                }
-            })
+                    parameterName: spec.id()
+                }, {
+                    key: {
+                        type: 'get-parameter'
+                    }
+                })
                 .then(function (message) {
                     console.log('Now i got it again', message);
                 });
@@ -1106,20 +1114,20 @@ define([
                         theLayout = layout(events);
 
                     container.innerHTML = theLayout.content;
-//
-//                    bus.request({
-//                        parameter: subdataOptions.subdata_selection.parameter_id
-//                    }, {
-//                        type: 'get-parameter'
-//                    })
-//                        .then(function (message) {
-//                            model.setItem('referenceObjectName', message.value);
-//                            render();
-//                        })
-//                        .catch(function (err) {
-//                            console.error('ERROR getting parameter ' + subdataOptions.subdata_selection.parameter_id);
-//                        });
-//
+                    //
+                    //                    bus.request({
+                    //                        parameter: subdataOptions.subdata_selection.parameter_id
+                    //                    }, {
+                    //                        type: 'get-parameter'
+                    //                    })
+                    //                        .then(function (message) {
+                    //                            model.setItem('referenceObjectName', message.value);
+                    //                            render();
+                    //                        })
+                    //                        .catch(function (err) {
+                    //                            console.error('ERROR getting parameter ' + subdataOptions.subdata_selection.parameter_id);
+                    //                        });
+                    //
 
                     render();
 
@@ -1131,23 +1139,21 @@ define([
                     // Get initial data.
                     // Weird, but will make it look nicer.
                     Promise.all([
-                        bus.request({
-                            parameterName: spec.id()
-                        },
-                            {
+                            bus.request({
+                                parameterName: spec.id()
+                            }, {
                                 key: {
                                     type: 'get-parameter'
                                 }
                             }),
-                        bus.request({
-                            parameterName: subdataOptions.subdata_selection.parameter_id
-                        },
-                            {
+                            bus.request({
+                                parameterName: spec.constraints.subdataSelection.parameter_id
+                            }, {
                                 key: {
                                     type: 'get-parameter'
                                 }
                             })
-                    ])
+                        ])
                         .spread(function (paramValue, referencedParamValue) {
                             // hmm, the default value of a subdata is null, but that does
                             // not play nice with the model props defaulting mechanism which
@@ -1193,8 +1199,7 @@ define([
                 value: null,
                 showFrom: 0,
                 showTo: 5
-            }
-            ,
+            },
             onUpdate: function (props) {
                 // cheap version
                 //renderSearchBox();

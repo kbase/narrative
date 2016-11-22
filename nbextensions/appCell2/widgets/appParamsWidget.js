@@ -305,8 +305,6 @@ define([
                 areaSelector = '[data-element="' + areaElement + '"]',
                 advancedInputs = container.querySelectorAll(areaSelector + ' [data-advanced-parameter]');
 
-            console.log('rendering advanced...', advancedInputs);
-
             if (advancedInputs.length === 0) {
                 ui.setContent([areaElement, 'advanced-hidden-message'], '');
                 // ui.disableButton('toggle-advanced');
@@ -654,7 +652,6 @@ define([
                     //     }));
                     // })
                     .then(function () {
-                        console.log('About to render advanced...');
                         renderAdvanced('input-objects');
                         renderAdvanced('parameters');
                     });

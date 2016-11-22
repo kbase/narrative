@@ -176,7 +176,7 @@ define([
                     bus.emit('run', {
                         node: arg.node,
                         appSpec: model.getItem('app.spec'),
-                        parameters: model.getItem('app.parameters')
+                        parameters: spec.getSpec().parameters
                     });
 
                     bus.on('sync-params', function (message) {
@@ -283,7 +283,7 @@ define([
                     });
                     bus.emit('run', {
                         node: arg.node,
-                        parameters: model.getItem('app.parameters')
+                        parameters: spec.getSpec().parameters
                     });
 
                     return widget.start()
@@ -1239,7 +1239,9 @@ define([
              *
              *
              */
-            var validation = spec.validateModel(model.getItem('params'));
+
+            // TODO: ENABLE THIS
+            //var validation = spec.validateModel(model.getItem('params'));
 
             return {
                 isValid: true,
@@ -2326,7 +2328,8 @@ define([
 
                     stop();
 
-                    Jupyter.notebook.delete_cell(Jupyter.notebook.find_cell_index(cell));
+                    var cellIndex = Jupyter.notebook.find_cell_index(cell);
+                    Jupyter.notebook.delete_cell(cellIndex);
                 });
         }
 
@@ -2659,7 +2662,7 @@ define([
             // a string with comma separators
             var params = model.getItem('params'),
                 paramsToExport = {},
-                parameters = model.getItem('app.parameters');
+                parameters = spec.getSpec().parameters;
 
 
             Object.keys(params).forEach(function (key) {

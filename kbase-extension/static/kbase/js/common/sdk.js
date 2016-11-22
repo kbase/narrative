@@ -236,6 +236,20 @@ define([
         return 'unspecified';
     }
 
+    function updateUI(converted, spec) {
+        var dataType = converted.data.type;
+        var fieldType = converted.ui.type;
+        var paramClass = converted.ui.class;
+
+        switch (dataType) {
+        case 'subdata':
+            converted.ui.multiSelection = spec.textsubdata_options.multiselection ? true : false;
+            converted.ui.showSourceObject = spec.textsubdata_options.show_src_obj ? true : false;
+            break;
+        }
+
+    }
+
     /*
      * These need to be really fleshed out...
      */
@@ -361,24 +375,28 @@ define([
             }
             break;
         case 'subdata':
+
             constraints = {
                 multiple: false,
-                // The parameter containing the object name we derive data from
-                referredParameter: spec.subdata_selection.parameter_id,
-                // The "included" parameter to for the workspace call
-                subdataIncluded: spec.subdata_selection.subdata_included,
-                // These are for navigating the results.
+                subdataSelection: spec.textsubdata_options.subdata_selection
 
-                // This is the property path to the part of the subdata
-                // we want to deal with.
-                path: spec.subdata_selection.path_to_subdata,
-                // This is used to pluck a value off of the leaf array
-                // items, object properties (if object), object values (if 'value'),
-                // or otherwise just use the property key. This becomes the "id"
-                // of the subdata item.
-                selectionId: spec.subdata_selection.selection_id,
-                // Used to generate a description for each item. Becomes the "desc".
-                displayTemplate: spec.subdata_selection.description_template
+                //     // The parameter containing the object name we derive data from
+                //     referredParameter: spec.textsubdata_options.subdata_selection.parameter_id,
+                //     // The "included" parameter to for the workspace call
+                //     subdataIncluded: spec.textsubdata_options.subdata_selection.subdata_included,
+                //     // These are for navigating the results.
+
+                //     // This is the property path to the part of the subdata
+                //     // we want to deal with.
+                //     path: spec.textsubdata_options.subdata_selection.path_to_subdata,
+                //     // This is used to pluck a value off of the leaf array
+                //     // items, object properties (if object), object values (if 'value'),
+                //     // or otherwise just use the property key. This becomes the "id"
+                //     // of the subdata item.
+                //     selectionId: spec.textsubdata_options.subdata_selection.selection_id,
+                //     // Used to generate a description for each item. Becomes the "desc".
+                //     displayTemplate: spec.textsubdata_options.subdata_selection.description_template
+                // }
             };
             break;
             //                case 'xxinput_property_x':
@@ -514,6 +532,7 @@ define([
         updateNullValue(converted, spec);
         updateDefaultValue(converted, spec);
         updateConstraints(converted, spec);
+        updateUI(converted, spec);
 
         return converted;
     }
@@ -571,7 +590,6 @@ define([
         // struct members. Note that this is fundamentally different
         // from a list of structs/ groups.
         Object.keys(groupParams).forEach(function (id) {
-            // console.log('STRUCT DEF', id, groupParams)
             defaultValue[id] = groupParams[id].data.defaultValue;
             nullValue[id] = groupParams[id].data.nullValue;
         });
@@ -657,8 +675,6 @@ define([
             .concat(groups.map(function (group) {
                 return group.id;
             }));
-
-        console.log('CONVERTED SPEC', parameterSpecs);
 
         return {
             parameters: {

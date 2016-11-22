@@ -1,7 +1,3 @@
-<div class="row" style="margin-bottom: 5px">
-    <div class="pull-left">{{path}}</div>
-    <div class="pull-right"><span id="refresh"><i class="fa fa-refresh"></i></span></div>
-</div>
 <table class="table table-striped">
     <thead>
         <tr>
@@ -14,7 +10,7 @@
     <tbody>
     {{#each files}}
         <tr>
-            <td><span><i class="fa {{#if isFolder}}fa-folder-o{{else}}fa-file-o{{/if}}"></i></span></td>
+            <td style="text-align:center">{{isFolder}}</td>
             <td>{{name}}</td>
             <td>{{size}}</td>
             <td>{{mtime}}</td>

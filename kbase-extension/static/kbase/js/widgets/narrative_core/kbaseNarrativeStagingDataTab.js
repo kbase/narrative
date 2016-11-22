@@ -19,6 +19,7 @@ define([
     'text!kbase/templates/data_staging/dropped_file.html',
     'text!kbase/templates/data_staging/ftp_file_row.html',
     'text!kbase/templates/data_staging/ftp_file_table.html',
+    'text!kbase/templates/data_staging/ftp_file_header.html',
     'css!ext_components/dropzone/dist/dropzone.css',
     'jquery-dataTables'
 ], function(
@@ -35,7 +36,8 @@ define([
     DropzoneAreaHtml,
     DropFileHtml,
     FtpFileRowHtml,
-    FtpFileTableHtml
+    FtpFileTableHtml,
+    FtpFileHeaderHtml
 ) {
     return new KBWidget({
         name: 'kbaseNarrativeStagingDataTab',
@@ -47,11 +49,17 @@ define([
             this.dropFileTmpl = Handlebars.compile(DropFileHtml);
             this.ftpFileRowTmpl = Handlebars.compile(FtpFileRowHtml);
             this.ftpFileTableTmpl = Handlebars.compile(FtpFileTableHtml);
+            this.ftpFileHeaderTmpl = Handlebars.compile(FtpFileHeaderHtml);
             this.ftpUrl = Config.url('ftp_api_url');
             this.path = '/' + Jupyter.narrative.userId;
 
             this.render();
             return this;
+        },
+
+        updatePath: function(newPath) {
+            this.path = newPath;
+            this.$elem.find('input[name="destPath"]').val(newPath);
         },
 
         render: function() {
@@ -84,12 +92,13 @@ define([
                 // remove loading row
             });
             dz.on('complete', function() {
-                this.fetchFtpFiles(this.path);
+                this.updateView();
             }.bind(this));
             this.updateView();
         },
 
         updateView: function() {
+            this.$myFiles.empty();
             this.fetchFtpFiles(this.path);
         },
 
@@ -102,24 +111,47 @@ define([
                 }
             }))
             .then(function(results) {
-                this.renderFiles(path, results);
+                this.renderFileHeader();
+                this.renderFiles(results);
             }.bind(this))
             .catch(function(error) {
                 console.error(error);
             });
         },
 
-        renderFiles: function(path, files) {
-            this.$myFiles.empty();
-            // files.forEach(function(file) {
-            //     file.mtime = TimeFormat.getTimeStampStr(file.mtime);
-            //     file.size = StringUtil.readableBytes(file.size);
-            // }.bind(this));
-            var $fileTable = $(this.ftpFileTableTmpl({path: path, files: files}));
+        renderFileHeader: function() {
+            var splitPath = this.path;
+            if (splitPath.startsWith('/')) {
+                splitPath = splitPath.substring(1);
+            }
+            splitPath = splitPath.split('/');
+            var pathTerms = [];
+            for (var i=0; i<splitPath.length; i++) {
+                var prevPath = '';
+                if (i > 0) {
+                    prevPath = pathTerms[i-1].subpath;
+                }
+                pathTerms[i] = {
+                    term: splitPath[i],
+                    subpath: prevPath + '/' + splitPath[i]
+                };
+            }
+            this.$myFiles.append(this.ftpFileHeaderTmpl({path: pathTerms}));
+            this.$myFiles.find('a').click(function(e) {
+                this.updatePath($(e.currentTarget).data().element);
+                this.updateView();
+            }.bind(this));
+            this.$myFiles.find('button#refresh').click(function() {
+                this.updateView();
+            }.bind(this));
+        },
+
+        renderFiles: function(files) {
+            var $fileTable = $(this.ftpFileTableTmpl({files: files}));
             this.$myFiles.append($fileTable)
             this.$myFiles.find('table').dataTable({
                 bLengthChange: false,
-                aaSorting: [[3, 'asc']],
+                aaSorting: [[3, 'desc']],
                 aoColumnDefs: [{
                     aTargets: [ 2 ],
                     mRender: function(data, type, full) {
@@ -140,9 +172,27 @@ define([
                         }
                     },
                     sType: 'numeric'
+                }, {
+                    aTargets: [ 0 ],
+                    mRender: function(data, type, full) {
+                        if (type === 'display') {
+                            var isFolder = data === 'true' ? true : false;
+                            var icon = isFolder ? "folder" : "file-o";
+                            var disp = "<span><i class='fa fa-" + icon + "'></i></span>";
+                            if (isFolder) {
+                                disp = "<button data-name='" + full[1] + "' class='btn btn-xs btn-default'>" + disp + "</button>";
+                            }
+                            return disp;
+                        } else {
+                            return data;
+                        }
+                    }
                 }]
             });
-            this.$myFiles.find('span.fa-refresh').click(function() { alert('what'); });
-        }
+            this.$myFiles.find('table button').on('click', function(e) {
+                this.updatePath(this.path += '/' + $(e.currentTarget).data().name);
+                this.updateView();
+            }.bind(this));
+        },
     });
 });

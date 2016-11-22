@@ -223,7 +223,7 @@ define([
                     function () {
                     }.bind(this),
                     function () {
-                        this.stagingTab.render();
+                        this.stagingTab.updateView();
                     }.bind(this)
                 ];
             } else {

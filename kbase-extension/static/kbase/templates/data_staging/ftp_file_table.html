@@ -1,0 +1,24 @@
+<div class="row" style="margin-bottom: 5px">
+    <div class="pull-left">{{path}}</div>
+    <div class="pull-right"><span id="refresh"><i class="fa fa-refresh"></i></span></div>
+</div>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th></th>
+            <th>Name</th>
+            <th>Size</th>
+            <th>Mod Time</th>
+        </tr>
+    </thead>
+    <tbody>
+    {{#each files}}
+        <tr>
+            <td><span><i class="fa {{#if isFolder}}fa-folder-o{{else}}fa-file-o{{/if}}"></i></span></td>
+            <td>{{name}}</td>
+            <td>{{size}}</td>
+            <td>{{mtime}}</td>
+        </tr>
+    {{/each}}
+    </tbody>
+</table>

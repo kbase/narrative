@@ -193,14 +193,13 @@ define([
                             parameterSpec: parameterSpec,
                             bus: fieldBus,
                             workspaceId: workspaceInfo.id,
-                            referenceType: 'ref'
+                            referenceType: 'name'
                         })
                     };
                 });
         }
 
         function makeFieldWidgetx(appSpec, parameterSpec, value) {
-            console.log('MAKE FIELD WIDGET')
             var fieldBus = runtime.bus().makeChannelBus(null, 'A field widget'),
                 inputWidget = paramResolver.getInputWidgetFactory(parameterSpec);
 
@@ -223,7 +222,6 @@ define([
             });
 
             fieldBus.on('sync-params', function (message) {
-                console.log('request sync params', message);
                 parentBus.emit('sync-params', {
                     parameters: message.parameters
                 });
@@ -254,7 +252,6 @@ define([
                     type: 'get-parameter'
                 },
                 handle: function (message) {
-                    console.log('GOT?', message);
                     if (message.parameterName) {
                         return parentBus.request(message, {
                             key: {
@@ -307,6 +304,9 @@ define([
             var areaElement = area + '-area',
                 areaSelector = '[data-element="' + areaElement + '"]',
                 advancedInputs = container.querySelectorAll(areaSelector + ' [data-advanced-parameter]');
+
+            console.log('rendering advanced...', advancedInputs);
+
             if (advancedInputs.length === 0) {
                 ui.setContent([areaElement, 'advanced-hidden-message'], '');
                 // ui.disableButton('toggle-advanced');
@@ -619,7 +619,6 @@ define([
                             return Promise.all(parameterParams.layout.map(function (parameterId) {
                                 var spec = parameterParams.paramMap[parameterId];
                                 try {
-                                    console.log('PARAM---', parameterParams);
                                     return makeFieldWidget(appSpec, spec, model.getItem(['params', spec.id]))
                                         .then(function (result) {
                                             widgets.push(result);
@@ -638,17 +637,24 @@ define([
                             }));
                         }
                     })
+                    // .then(function () {
+                    //     console.log('advance-ing...');
+                    //     return Promise.all(widgets.map(function (widget) {
+                    //         return widget.widget.start()
+                    //             .catch(function (err) {
+                    //                 console.error('error', err, widget);
+                    //                 throw err;
+                    //             })
+                    //     }));
+                    // })
+                    // .then(function () {
+                    //     console.log('advance-ing2...');
+                    //     return Promise.all(widgets.map(function (widget) {
+                    //         return widget.widget.run(params);
+                    //     }));
+                    // })
                     .then(function () {
-                        return Promise.all(widgets.map(function (widget) {
-                            return widget.widget.start();
-                        }));
-                    })
-                    .then(function () {
-                        return Promise.all(widgets.map(function (widget) {
-                            return widget.widget.run(params);
-                        }));
-                    })
-                    .then(function () {
+                        console.log('About to render advanced...');
                         renderAdvanced('input-objects');
                         renderAdvanced('parameters');
                     });
@@ -663,8 +669,6 @@ define([
                 // parent will send us our initial parameters
                 parentBus.on('run', function (message) {
                     doAttach(message.node);
-
-                    console.log('running app params widget', message.parameters);
 
                     model.setItem('appSpec', message.appSpec);
                     model.setItem('parameters', message.parameters);

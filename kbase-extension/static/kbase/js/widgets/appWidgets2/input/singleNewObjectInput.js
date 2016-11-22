@@ -14,7 +14,8 @@ define([
 
     // Constants
     var t = html.tag,
-        div = t('div'), input = t('input');
+        div = t('div'),
+        input = t('input');
 
     function factory(config) {
         var options = {},
@@ -50,12 +51,12 @@ define([
 
         function setModelValue(value) {
             return Promise.try(function () {
-                if (model.value !== value) {
-                    model.value = value;
-                    return true;
-                }
-                return false;
-            })
+                    if (model.value !== value) {
+                        model.value = value;
+                        return true;
+                    }
+                    return false;
+                })
                 .then(function (changed) {
                     render();
                 });
@@ -63,16 +64,16 @@ define([
 
         function unsetModelValue() {
             return Promise.try(function () {
-                model.value = undefined;
-            })
+                    model.value = undefined;
+                })
                 .then(function (changed) {
                     render();
                 });
         }
 
         function resetModelValue() {
-            if (spec.spec.default_values && spec.spec.default_values.length > 0) {
-                setModelValue(spec.spec.default_values[0]);
+            if (spec.data.defaultValue) {
+                setModelValue(spec.data.defaultValue);
             } else {
                 unsetModelValue();
             }
@@ -90,53 +91,58 @@ define([
 
         function validate() {
             return Promise.try(function () {
-                if (!options.enabled) {
-                    return {
-                        isValid: true,
-                        validated: false,
-                        diagnosis: 'disabled'
-                    };
-                }
+                    if (!options.enabled) {
+                        return {
+                            isValid: true,
+                            validated: false,
+                            diagnosis: 'disabled'
+                        };
+                    }
 
-                var rawValue = getInputValue(),
-                    validationOptions = {
-                        required: spec.required(),
-                        shouldNotExist: true,
-                        workspaceId: workspaceId,
-                        types: spec.spec.text_options.valid_ws_types,
-                        authToken: runtime.authToken(),
-                        workspaceServiceUrl: runtime.config('services.workspace.url')
-                    };
+                    var rawValue = getInputValue(),
+                        validationOptions = {
+                            required: spec.data.constraints.required,
+                            shouldNotExist: true,
+                            workspaceId: workspaceId,
+                            types: spec.data.constraints.types,
+                            authToken: runtime.authToken(),
+                            workspaceServiceUrl: runtime.config('services.workspace.url')
+                        };
 
-                return Validation.validateWorkspaceObjectName(rawValue, validationOptions);
-            })
+                    return Validation.validateWorkspaceObjectName(rawValue, validationOptions);
+                })
                 .then(function (validationResult) {
                     // TODO: should pass the validation object through untouched...
                     return validationResult;
-//                    return {
-//                        isValid: validationResult.isValid,
-//                        validated: true,
-//                        diagnosis: validationResult.diagnosis,
-//                        errorMessage: validationResult.errorMessage,
-//                        shortMessage: validationResult.shortMessage,
-//                        value: validationResult.parsedValue
-//                    };
+                    //                    return {
+                    //                        isValid: validationResult.isValid,
+                    //                        validated: true,
+                    //                        diagnosis: validationResult.diagnosis,
+                    //                        errorMessage: validationResult.errorMessage,
+                    //                        shortMessage: validationResult.shortMessage,
+                    //                        value: validationResult.parsedValue
+                    //                    };
                 });
         }
 
-        function handleTouched(interval) {
-            var editPauseTimer,
-                editPauseInterval = interval || 2000;
+        var autoChangeTimer;
 
+        function cancelTouched() {
+            if (autoChangeTimer) {
+                window.clearTimeout(autoChangeTimer);
+                autoChangeTimer = null;
+            }
+        }
+
+        function handleTouched(interval) {
+            var editPauseInterval = interval || 500;
             return {
                 type: 'keyup',
                 handler: function (e) {
                     bus.emit('touched');
-                    if (editPauseTimer) {
-                        window.clearTimeout(editPauseTimer);
-                    }
-                    editPauseTimer = window.setTimeout(function () {
-                        editPauseTimer = null;
+                    cancelTouched();
+                    autoChangeTimer = window.setTimeout(function () {
+                        autoChangeTimer = null;
                         e.target.dispatchEvent(new Event('change'));
                     }, editPauseInterval);
                 }
@@ -181,7 +187,8 @@ define([
                 id: events.addEvents({
                     events: [
                         handleChanged(), handleTouched()
-                    ]}),
+                    ]
+                }),
                 class: 'form-control',
                 dataElement: 'input',
                 value: currentValue
@@ -190,12 +197,12 @@ define([
 
         function render() {
             Promise.try(function () {
-                var events = Events.make(),
-                    inputControl = makeInputControl(model.value, events, bus);
+                    var events = Events.make(),
+                        inputControl = makeInputControl(model.value, events, bus);
 
-                dom.setContent('input-container', inputControl);
-                events.attachEvents(container);
-            })
+                    dom.setContent('input-container', inputControl);
+                    events.attachEvents(container);
+                })
                 .then(function () {
                     return autoValidate();
                 });
@@ -205,7 +212,7 @@ define([
             var content = div({
                 dataElement: 'main-panel'
             }, [
-                div({dataElement: 'input-container'})
+                div({ dataElement: 'input-container' })
             ]);
             return {
                 content: content,
@@ -233,7 +240,7 @@ define([
                 bus.on('run', function (message) {
                     parent = message.node;
                     container = parent.appendChild(document.createElement('div'));
-                    dom = Dom.make({node: container});
+                    dom = Dom.make({ node: container });
 
                     var events = Events.make(),
                         theLayout = layout(events);

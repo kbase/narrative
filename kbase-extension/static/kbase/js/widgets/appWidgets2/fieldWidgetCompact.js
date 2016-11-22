@@ -322,15 +322,15 @@ define([
             var infoId = html.genId();
 
             var advanced;
-            if (spec.ui.isAdvanced) {
+            if (spec.ui.advanced) {
                 advanced = 'advanced-parameter-hidden';
             } else {
                 advanced = '';
             }
-
+            console.log('RENDERING...', spec);
             var content = div({
                 class: ['form-horizontal', 'kb-app-parameter-row', 'parameter-panel', advanced].join(' '),
-                dataAdvancedParameter: spec.ui.isAdvanced,
+                dataAdvancedParameter: spec.ui.advanced,
                 id: fieldId,
                 style: { position: 'relative' }
             }, [
@@ -463,7 +463,6 @@ define([
         }
 
         function start(arg) {
-            console.log('START field widget', arg, spec);
             attach(arg.node);
             return Promise.try(function () {
                 bus.on('validation', function (message) {

@@ -27,7 +27,8 @@ define([
     // Constants
     var t = html.tag,
         div = t('div'),
-        select = t('select'), option = t('option');
+        select = t('select'),
+        option = t('option');
 
     function factory(config) {
         var constraints = config.parameterSpec.data.constraints,
@@ -79,7 +80,9 @@ define([
 
             // CONTROL
             return select({
-                id: events.addEvent({type: 'change', handler: function (e) {
+                id: events.addEvent({
+                    type: 'change',
+                    handler: function (e) {
                         validate()
                             .then(function (result) {
                                 if (result.isValid) {
@@ -98,10 +101,11 @@ define([
                                     diagnosis: result.diagnosis
                                 });
                             });
-                    }}),
+                    }
+                }),
                 class: 'form-control',
                 dataElement: 'input'
-            }, [option({value: ''}, '')].concat(selectOptions));
+            }, [option({ value: '' }, '')].concat(selectOptions));
         }
 
         /*
@@ -125,12 +129,12 @@ define([
 
         function setModelValue(value) {
             return Promise.try(function () {
-                if (model.value !== value) {
-                    model.value = value;
-                    return true;
-                }
-                return false;
-            })
+                    if (model.value !== value) {
+                        model.value = value;
+                        return true;
+                    }
+                    return false;
+                })
                 .then(function (changed) {
                     return render();
                 })
@@ -141,8 +145,8 @@ define([
 
         function unsetModelValue() {
             return Promise.try(function () {
-                model.value = undefined;
-            })
+                    model.value = undefined;
+                })
                 .then(function (changed) {
                     render();
                 })
@@ -161,21 +165,24 @@ define([
 
         function validate() {
             return Promise.try(function () {
-                var rawValue = getInputValue(),
-                    validationOptions = {
-                        required: constraints.required,
-                        authToken: runtime.authToken(),
-                        workspaceServiceUrl: runtime.config('services.workspace.url')
-                    };
-                    
-                switch (objectRefType) {
+                    var rawValue = getInputValue(),
+                        validationOptions = {
+                            required: constraints.required,
+                            authToken: runtime.authToken(),
+                            workspaceServiceUrl: runtime.config('services.workspace.url')
+                        };
+
+
+
+                    switch (objectRefType) {
                     case 'ref':
                         return Validation.validateWorkspaceObjectRef(rawValue, validationOptions);
                     case 'name':
                     default:
-                        return Validation.validateWorkspaceObjectName(rawValue, validationOptions);
-                }                        
-            })
+                        return Validation.validateText(rawValue, validationOptions);
+                        // return Validation.validateWorkspaceObjectName(rawValue, validationOptions);
+                    }
+                })
                 .then(function (validationResult) {
                     return {
                         isValid: validationResult.isValid,
@@ -188,25 +195,28 @@ define([
         }
 
         function getObjectsByType(type) {
-            var workspace = new Workspace(runtime.config('services.workspace.url'), {
-                token: runtime.authToken()
+            return new Promise(function (resolve) {
+                // wow, creative (ab)use of trigger!
+                $(document).trigger('dataLoadedQuery.Narrative', [
+                    [type], 0,
+                    function (data) {
+                        var items = [];
+                        Object.keys(data).forEach(function (type) {
+                            data[type].forEach(function (objInfo) {
+                                items.push(serviceUtils.objectInfoToObject(objInfo));
+                            });
+                        });
+                        resolve(items);
+                    }
+                ]);
             });
-            return workspace.list_objects({
-                type: type,
-                ids: [workspaceId]
-            })
-                .then(function (data) {
-                    return data.map(function (objectInfo) {
-                        return serviceUtils.objectInfoToObject(objectInfo);
-                    });
-                });
         }
 
         function fetchData() {
             var types = constraints.types;
             return Promise.all(types.map(function (type) {
-                return getObjectsByType(type);
-            }))
+                    return getObjectsByType(type);
+                }))
                 .then(function (objectSets) {
                     // we could also use [] rather than Array.prototype, but
                     // this way is both more mysterious and better performing.
@@ -235,7 +245,7 @@ define([
             return Promise.try(function () {
                 var events = Events.make(),
                     inputControl = makeInputControl(events, bus),
-                    content = div({class: 'input-group', style: {width: '100%'}}, inputControl);
+                    content = div({ class: 'input-group', style: { width: '100%' } }, inputControl);
 
                 dom.setContent('input-container', content);
                 events.attachEvents(container);
@@ -251,7 +261,7 @@ define([
             var content = div({
                 dataElement: 'main-panel'
             }, [
-                div({dataElement: 'input-container'})
+                div({ dataElement: 'input-container' })
             ]);
             return {
                 content: content,
@@ -268,15 +278,24 @@ define([
                     });
                 });
         }
-        
+
         function getObjectRef(objectInfo) {
             switch (objectRefType) {
-                case 'name':
+            case 'name':
+                // to accomodate object by name but in a data palette, we need
+                // to include the workspace id or name.
+                // If the object is in this Narrative Workspace, only use the name;
+                // If elsewhere, use the full reference.
+                if (objectInfo.wsid === workspaceId) {
                     return objectInfo.name;
-                case 'ref':
+                } else {
                     return objectInfo.ref;
-                default:
-                    throw new Error('Unsupported object reference type ' + objectRefType);
+                }
+            case 'ref':
+                // By reference, use the absolute ref.
+                return objectInfo.ref;
+            default:
+                throw new Error('Unsupported object reference type ' + objectRefType);
             }
         }
 
@@ -318,7 +337,7 @@ define([
                 bus.on('run', function (message) {
                     parent = message.node;
                     container = parent.appendChild(document.createElement('div'));
-                    dom = Dom.make({node: container});
+                    dom = Dom.make({ node: container });
 
                     var events = Events.make(),
                         theLayout = layout(events);

@@ -162,9 +162,9 @@ define([
         case 'textsubdata':
             return 'subdata';
         case 'custom_textsubdata':
-            if (spec.allow_multiple) {
-                return '[]string';
-            }
+            //if (spec.allow_multiple) {
+            //    return '[]string';
+            //}
             return 'string';
             //var custom = customTextSubdata();
             //if (custom) {
@@ -193,30 +193,30 @@ define([
          */
         if (!spec.text_options) {
             // consider it plain, unconstrained text.
-            if (spec.allow_multiple) {
-                return '[]string';
-            }
+            //if (spec.allow_multiple) {
+            //    return '[]string';
+            //}
             return 'string';
-        }
-        var validateAs = spec.text_options.validate_as;
-        if (validateAs) {
-            // For int and float, "validateAs" overrides the type.
-            if (validateAs === 'int' || validateAs === 'float') {
-                if (spec.allow_multiple) {
-                    return '[]' + validateAs;
+        } else {
+            var validateAs = spec.text_options.validate_as;
+            if (validateAs) {
+                // For int and float, "validateAs" overrides the type.
+                if (validateAs === 'int' || validateAs === 'float') {
+                    //if (spec.allow_multiple) {
+                    //    return '[]' + validateAs;
+                    //}
+                    return validateAs;
                 }
-                return validateAs;
             }
-        }
 
-        // Some parameter specs have valid_ws_types as an empty set, which
-        // does not mean what it could, it means that it is not an option.
-        if (spec.text_options.valid_ws_types && spec.text_options.valid_ws_types.length > 0) {
-            // we now have refs, but no way of specifying that the 
-            if (spec.allow_multiple) {
-                return '[]workspaceObjectName';
-            } else {
+            // Some parameter specs have valid_ws_types as an empty set, which
+            // does not mean what it could, it means that it is not an option.
+            if (spec.text_options.valid_ws_types && spec.text_options.valid_ws_types.length > 0) {
+                //if (spec.allow_multiple) {
+                //    return '[]workspaceObjectName';
+                //} else {
                 return 'workspaceObjectName';
+                //}
             }
         }
 
@@ -226,11 +226,11 @@ define([
 
         switch (spec.field_type) {
         case 'text':
-            if (spec.allow_multiple) {
-                return '[]string';
-            } else {
-                return 'string';
-            }
+            //if (spec.allow_multiple) {
+            //    return '[]string';
+            //} else {
+            return 'string';
+            //}
         }
 
         return 'unspecified';
@@ -256,9 +256,9 @@ define([
             switch (fieldType) {
             case 'text':
                 constraints = {
-                    min: Props.getDataItem(spec, 'text_options.min_length'),
-                    max: Props.getDataItem(spec, 'text_options.max_length'),
-                    validate: Props.getDataItem(spec, 'text_options.validate_as')
+                    min: Props.getDataItem(spec, 'text_options.min_length', null),
+                    max: Props.getDataItem(spec, 'text_options.max_length', null),
+                    validate: Props.getDataItem(spec, 'text_options.validate_as', null)
                 };
                 break;
             case 'dropdown':
@@ -268,22 +268,21 @@ define([
                 break;
             case 'textarea':
                 constraints = {
-                    min: Props.getDataItem(spec, 'text_options.min_length'),
-                    max: Props.getDataItem(spec, 'text_options.max_length'),
-                    nRows: Props.getDataItem(spec, 'text_options.n_rows', 5)
+                    min: Props.getDataItem(spec, 'text_options.min_length', null),
+                    max: Props.getDataItem(spec, 'text_options.max_length', null),
+                    nRows: Props.getDataItem(spec, 'text_options.n_rows', null)
                 };
                 break;
             default:
                 throw new Error('Unknown text param field type');
             }
             break;
-        case '[]int':
         case 'int':
             switch (fieldType) {
             case 'text':
                 constraints = {
-                    min: Props.getDataItem(spec, 'text_options.min_int'),
-                    max: Props.getDataItem(spec, 'text_options.max_int')
+                    min: spec.text_options.min_int,
+                    max: spec.text_options.max_int
                 };
                 break;
             case 'checkbox':
@@ -295,11 +294,10 @@ define([
                 break;
             }
             break;
-        case '[]float':
         case 'float':
             constraints = {
-                min: Props.getDataItem(spec, 'text_options.min_float'),
-                max: Props.getDataItem(spec, 'text_options.max_float')
+                min: spec.text_options.min_float,
+                max: spec.text_options.max_float
             };
             break;
         case 'workspaceObjectName':
@@ -335,17 +333,8 @@ define([
                     types: spec.text_options.valid_ws_types
                 };
                 break;
-            case 'output':
-                // TODO: this accomodates a common mistake, to mark an input type 
-                // as output. One cannot specify multiple output objects, so we can
-                // pretty well safely assume this was a mistake.
-                console.warn('App spec form []workspaceObjectName indicates output, but that is not possible', spec);
-                constraints = {
-                    types: spec.text_options.valid_ws_types
-                };
-                break;
             default:
-                throw new Error('Unknown []workspaceObjectName ui class: ' + paramClass);
+                throw new Error('Unknown []workspaceObjectName ui class');
             }
             break;
         case '[]string':
@@ -361,24 +350,25 @@ define([
             }
             break;
         case 'subdata':
+            console.log('SUBDTA', spec);
             constraints = {
                 multiple: false,
                 // The parameter containing the object name we derive data from
-                referredParameter: spec.subdata_selection.parameter_id,
+                referredParameter: spec.textsubdata_options.subdata_selection.parameter_id,
                 // The "included" parameter to for the workspace call
-                subdataIncluded: spec.subdata_selection.subdata_included,
+                subdataIncluded: spec.textsubdata_options.subdata_selection.subdata_included,
                 // These are for navigating the results.
 
                 // This is the property path to the part of the subdata
                 // we want to deal with.
-                path: spec.subdata_selection.path_to_subdata,
+                path: spec.textsubdata_options.subdata_selection.path_to_subdata,
                 // This is used to pluck a value off of the leaf array
                 // items, object properties (if object), object values (if 'value'),
                 // or otherwise just use the property key. This becomes the "id"
                 // of the subdata item.
-                selectionId: spec.subdata_selection.selection_id,
+                selectionId: spec.textsubdata_options.subdata_selection.selection_id,
                 // Used to generate a description for each item. Becomes the "desc".
-                displayTemplate: spec.subdata_selection.description_template
+                displayTemplate: spec.textsubdata_options.subdata_selection.description_template
             };
             break;
             //                case 'xxinput_property_x':
@@ -485,23 +475,21 @@ define([
 
     // Stepwise conversion
 
-    // now with grouped params
+    // now with grouped params 
 
     function convertParameter(spec) {
         var dataType = grokDataType(spec);
         var multiple = (spec.allow_multiple ? true : false);
         var required = (spec.optional ? false : true);
-        var converted = {
-            id: spec.id,
-            multipleItems: multiple,
+
+        var paramSpec = {
             ui: {
                 label: spec.ui_name,
                 hint: spec.short_hint,
                 description: spec.description,
                 class: spec.ui_class,
                 type: spec.field_type,
-                control: spec.field_type,
-                advanced: spec.advanced ? true : false
+                control: spec.field_type
             },
             data: {
                 type: dataType,
@@ -511,11 +499,34 @@ define([
             }
         };
 
-        updateNullValue(converted, spec);
-        updateDefaultValue(converted, spec);
-        updateConstraints(converted, spec);
+        updateNullValue(paramSpec, spec);
+        updateDefaultValue(paramSpec, spec);
+        updateConstraints(paramSpec, spec);
 
-        return converted;
+        if (multiple) {
+            return {
+                spec: {
+                    ui: {
+                        label: spec.ui_name,
+                        hint: spec.short_hint,
+                        description: spec.description,
+                        class: spec.ui_class || 'parameter',
+                        border: spec.with_border === 0 ? true : false
+                    },
+                    data: {
+                        type: 'list',
+                        constraints: {},
+                        list: {
+                            spec: paramSpec
+                        }
+                    }
+                }
+            };
+        }
+
+        return {
+            spec: paramSpec
+        };
     }
 
     function convertGroupList(group, params) {
@@ -572,8 +583,8 @@ define([
         // from a list of structs/ groups.
         Object.keys(groupParams).forEach(function (id) {
             // console.log('STRUCT DEF', id, groupParams)
-            defaultValue[id] = groupParams[id].data.defaultValue;
-            nullValue[id] = groupParams[id].data.nullValue;
+            defaultValue[id] = groupParams[id].spec.data.defaultValue;
+            nullValue[id] = groupParams[id].spec.data.nullValue;
         });
         var required;
         if (group.optional === 1) {
@@ -582,16 +593,13 @@ define([
             required = true;
         }
         var structSpec = {
-            id: group.id,
-            multipleItems: false,
             ui: {
                 label: group.ui_name,
                 description: group.description,
                 hint: group.short_hint,
                 class: group.ui_class || 'parameter',
                 control: '',
-                layout: group.parameter_ids,
-                advanced: group.advanced ? true : false
+                layout: group.parameter_ids
             },
             data: {
                 type: 'struct',
@@ -599,48 +607,75 @@ define([
                     required: required
                 },
                 defaultValue: defaultValue,
-                nullValue: nullValue
-            },
-            parameters: {
-                layout: group.parameter_ids,
-                specs: groupParams
+                nullValue: nullValue,
+                struct: {
+                    layout: group.parameter_ids,
+                    fields: groupParams
+                }
             }
         };
         return structSpec;
     }
 
+    function makeListSpec(spec, params) {
+
+    }
+
     function convertGroup(group, params) {
-        if (group.allow_multiple === 1) {
-            return convertGroupList(group, params);
-        }
         var structSpec = convertGroupToStruct(group, params);
-        params[group.id] = structSpec;
+        if (group.allow_multiple === 1) {
+            // wrap in a list
+            console.log('GROUP', group);
+            var listSpec = {
+                spec: {
+                    ui: {
+                        label: group.ui_name,
+                        hint: group.short_hint,
+                        description: group.description,
+                        class: group.ui_class || 'parameter',
+                        border: group.with_border === 0 ? true : false
+                    },
+                    data: {
+                        type: 'list',
+                        constraints: {},
+                        list: {
+                            spec: structSpec
+                        }
+                    }
+                }
+            };
+            params[group.id] = listSpec;
+        } else {
+            // var structSpec = convertGroupToStruct(group, params);
+            params[group.id] = {
+                spec: structSpec
+            };
+        }
     }
 
     function convertAppSpec(sdkAppSpec) {
         // Parameters
 
+        /// console.log('SDK APP SPEC', sdkAppSpec);
+
         var parameterSpecs = {},
             parameterLayout;
 
         // First convert all parameters
+        sdkAppSpec.parameters.forEach(function (parameter) {
+            parameterSpecs[parameter.id] = convertParameter(parameter);
+        });
+
 
         // Then for all groups, create a parameter of type struct,
         // and populate it with the specified parameters, removing them from
         // the top level of parameters.
 
-        sdkAppSpec.parameters.forEach(function (parameter) {
-            parameterSpecs[parameter.id] = convertParameter(parameter);
+        var groups = sdkAppSpec.parameter_groups || [];
+        groups.forEach(function (group) {
+            convertGroup(group, parameterSpecs);
+            // don't know how the group is ordered in the spec ... so just append it later.            
         });
-
-        var groups = [];
-        if (sdkAppSpec.parameter_groups) {
-            groups = sdkAppSpec.parameter_groups;
-            sdkAppSpec.parameter_groups.forEach(function (group) {
-                convertGroup(group, parameterSpecs);
-                // don't know how the group is ordered in the spec ... so just append it later.            
-            });
-        }
 
         // first filter out the paramters which have been moved into groups,
         // and then add the groups in.
@@ -658,12 +693,15 @@ define([
                 return group.id;
             }));
 
-        console.log('CONVERTED SPEC', parameterSpecs);
-
         return {
-            parameters: {
-                layout: parameterLayout,
-                specs: parameterSpecs
+            spec: {
+                data: {
+                    type: 'struct',
+                    struct: {
+                        layout: parameterLayout,
+                        fields: parameterSpecs
+                    }
+                }
             }
         };
 

@@ -375,7 +375,6 @@ define([
 
         function loadWidget(name) {
             return new Promise(function (resolve, reject) {
-                console.log('loading widget', name);
                 require('./tabs/' + name, function (Widget) {
                     resolve(Widget);
                 }, function (err) {
@@ -1240,9 +1239,7 @@ define([
              *
              *
              */
-            console.log('validating model...', model.getItem('params'));
             var validation = spec.validateModel(model.getItem('params'));
-            console.log('VALIDATION', validation);
 
             return {
                 isValid: true,
@@ -2664,10 +2661,8 @@ define([
                 paramsToExport = {},
                 parameters = model.getItem('app.parameters');
 
-            console.log('PRAMETERS', parameters, params);
 
             Object.keys(params).forEach(function (key) {
-                console.log('KEY', key);
                 var value = params[key],
                     paramSpec = parameters.specs[key];
 

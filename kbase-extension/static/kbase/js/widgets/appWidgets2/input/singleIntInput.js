@@ -45,8 +45,10 @@ define([
                 // do something.
                 enabled = true;
                 var control = ui.getElement('input-container.input');
-                control.disabled = false;
-                control.readonly = false;
+                if (control) {
+                    control.disabled = false;
+                    control.readonly = false;
+                }
             }
         }
 
@@ -55,8 +57,10 @@ define([
                 // do something
                 enabled = false;
                 var control = ui.getElement('input-container.input');
-                control.disabled = true;
-                control.readonly = true;
+                if (control) {
+                    control.disabled = true;
+                    control.readonly = true;
+                }
             }
         }
 

@@ -3,22 +3,22 @@
 
 define([
     'bluebird',
-    'nbextensions/appCell/widgets/jobLogViewer'
-], function (Promise, LogViewer) {
+    'nbextensions/appCell2/widgets/jobLogViewer'
+], function(Promise, LogViewer) {
     'use strict';
 
     function loadLogViewer(args) {
-        return new Promise(function (resolve, reject) {
+        return new Promise(function(resolve, reject) {
             var logViewer = LogViewer.make();
             logViewer.start()
-                .then(function () {
+                .then(function() {
                     logViewer.bus.emit('run', {
                         node: args.node,
                         jobId: args.jobId
                     });
                     resolve(logViewer);
                 })
-                .catch(function (err) {
+                .catch(function(err) {
                     reject(err);
                 });
         });
@@ -26,21 +26,22 @@ define([
 
     function factory(config) {
         var container, widget, model = config.model;
+
         function start(arg) {
-            return Promise.try(function () {
+            return Promise.try(function() {
                 container = arg.node;
                 return loadLogViewer({
-                    node: container,
-                    jobId: model.getItem('exec.jobState.job_id')
-                })
-                    .then(function (w) {
+                        node: container,
+                        jobId: model.getItem('exec.jobState.job_id')
+                    })
+                    .then(function(w) {
                         widget = w;
                     });
             });
         }
 
         function stop() {
-            return Promise.try(function () {
+            return Promise.try(function() {
                 if (widget) {
                     return widget.stop();
                 }
@@ -54,7 +55,7 @@ define([
     }
 
     return {
-        make: function (config) {
+        make: function(config) {
             return factory(config);
         }
     };

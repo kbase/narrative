@@ -22,16 +22,16 @@ function addCdnModules(baseUrl) {
         // baseUrl = 'http://cdn.kbase.us/cdn';
     }
     var modules = {
-        kb_common: 'kbase-common-js/1.5.4/',
-        kb_service: 'kbase-service-clients-js/2.9.1/',
-        uuid: 'pure-uuid/1.3.0/uuid',
-        text:  'requirejs-text/2.0.14/text',
-        css: 'require-css/0.1.8/css',
-        'font-awesome': 'font-awesome/4.3.0/css/font-awesome',
-        bluebird: 'bluebird/3.3.4/bluebird',
-        jquery: 'jquery/2.2.2/jquery',
-        bootstrap: 'bootstrap/3.3.6/js/bootstrap',
-        bootstrap_css: 'bootstrap/3.3.6/css/bootstrap'
+            kb_common: 'kbase-common-js/1.5.4/',
+            kb_service: 'kbase-service-clients-js/2.9.1/',
+            uuid: 'pure-uuid/1.3.0/uuid',
+            text: 'requirejs-text/2.0.14/text',
+            css: 'require-css/0.1.8/css',
+            'font-awesome': 'font-awesome/4.3.0/css/font-awesome',
+            bluebird: 'bluebird/3.3.4/bluebird',
+            jquery: 'jquery/2.2.2/jquery',
+            bootstrap: 'bootstrap/3.3.6/js/bootstrap',
+            bootstrap_css: 'bootstrap/3.3.6/css/bootstrap'
         },
         paths = {};
 

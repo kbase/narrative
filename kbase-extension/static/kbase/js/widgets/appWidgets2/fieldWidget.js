@@ -20,18 +20,25 @@ define([
     './input/errorInput',
     'css!google-code-prettify/prettify.css'
 ], function (
-    Promise, 
-    $, 
-    PR, 
-    html, 
-    Events, 
-    UI, 
-    Props, 
+    Promise,
+    $,
+    PR,
+    html,
+    Events,
+    UI,
+    Props,
     ErrorControlFactory) {
     'use strict';
     var t = html.tag,
-        div = t('div'), span = t('span'), label = t('label'), button = t('button'),
-        table = t('table'), tr = t('tr'), th = t('th'), td = t('td'), pre = t('pre'),
+        div = t('div'),
+        span = t('span'),
+        label = t('label'),
+        button = t('button'),
+        table = t('table'),
+        tr = t('tr'),
+        th = t('th'),
+        td = t('td'),
+        pre = t('pre'),
         textarea = t('textarea'),
         classSets = {
             standard: {
@@ -91,7 +98,7 @@ define([
                     class: 'alert alert-' + messageDef.type,
                     role: 'alert'
                 }, [
-                    span({style: {fontWeight: 'bold'}}, messageDef.title),
+                    span({ style: { fontWeight: 'bold' } }, messageDef.title),
                     ': ',
                     messageDef.message,
                     ' ',
@@ -104,7 +111,7 @@ define([
                                 showMessageDialog(messageDef.id);
                             }
                         })
-                    }, ui.buildIcon({name: 'info-circle'}))
+                    }, ui.buildIcon({ name: 'info-circle' }))
                 ]);
             return {
                 events: events,
@@ -193,40 +200,41 @@ define([
         function rawSpec(spec) {
             var specText = JSON.stringify(spec.spec, false, 3),
                 fixedSpec = specText.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-            return pre({class: 'prettyprint lang-json', style: {fontSize: '80%'}}, fixedSpec);
+            return pre({ class: 'prettyprint lang-json', style: { fontSize: '80%' } }, fixedSpec);
         }
 
         function parameterInfoContent(spec) {
-            return div({style: {padding: '4px'}}, [
-                div({style: {fontWeight: 'bold'}}, spec.label()),
-                div({style: {fontStyle: 'italic'}}, spec.name()),
-                div({style: {fontSize: '80%'}}, spec.description())
+            return div({ style: { padding: '4px' } }, [
+                div({ style: { fontWeight: 'bold' } }, spec.label()),
+                div({ style: { fontStyle: 'italic' } }, spec.name()),
+                div({ style: { fontSize: '80%' } }, spec.description())
             ]);
         }
+
         function parameterInfoTypeRules(spec) {
             switch (spec.dataType()) {
-                case 'float':
+            case 'float':
+                return [
+                    tr([th('Min'), td(spec.spec.text_options.min_float)]),
+                    tr([th('Max'), td(spec.spec.text_options.max_float)])
+                ];
+            case 'int':
+                // just for now ...
+                if (spec.spec.field_type === 'checkbox') {
                     return [
-                        tr([th('Min'), td(spec.spec.text_options.min_float)]),
-                        tr([th('Max'), td(spec.spec.text_options.max_float)])
+                        tr([th('Value when checked'), td(Props.getDataItem(spec.spec, 'checkbox_options.checked_value', UI.na()))]),
+                        tr([th('Value when un-checked'), td(Props.getDataItem(spec.spec, 'checkbox_options.unchecked_value', UI.na()))])
                     ];
-                case 'int':
-                    // just for now ...
-                    if (spec.spec.field_type === 'checkbox') {
-                        return [
-                            tr([th('Value when checked'), td(Props.getDataItem(spec.spec, 'checkbox_options.checked_value', UI.na()))]),
-                            tr([th('Value when un-checked'), td(Props.getDataItem(spec.spec, 'checkbox_options.unchecked_value', UI.na()))])
-                        ];
-                    }
-                    return [
-                        tr([th('Min'), td(spec.spec.text_options.min_int)]),
-                        tr([th('Max'), td(spec.spec.text_options.max_int)])
-                    ];
+                }
+                return [
+                    tr([th('Min'), td(spec.spec.text_options.min_int)]),
+                    tr([th('Max'), td(spec.spec.text_options.max_int)])
+                ];
             }
         }
 
         function parameterInfoRules(spec) {
-            return table({class: 'table table-striped'}, [
+            return table({ class: 'table table-striped' }, [
                 tr([th('Required'), td(spec.required() ? 'yes' : 'no')]),
                 tr([th('Data type'), td(spec.dataType())]),
                 tr([th('Field type'), td(spec.spec.field_type)]),
@@ -270,13 +278,12 @@ define([
 
             return div([
                 // div({dataElement: 'little-tip'}, parameterInfoLittleTip(spec)),
-                div({dataElement: 'big-tip', class: 'hidden'}, html.makeTabs({
+                div({ dataElement: 'big-tip', class: 'hidden' }, html.makeTabs({
                     alignRight: true,
-                    tabs: [
-                        {
+                    tabs: [{
                             label: 'Description',
                             name: 'description',
-                            content: div({style: {padding: '4px'}}, infoTipText)
+                            content: div({ style: { padding: '4px' } }, infoTipText)
                         },
                         {
                             label: 'About',
@@ -293,14 +300,15 @@ define([
                             name: 'spec',
                             content: rawSpec(spec)
                         }
-                    ]}))
+                    ]
+                }))
             ]);
         }
-//        function renderLabelTip() {
-//            return div([
-//                div({dataElement: 'little-tip', style: {display: 'none'}}, parameterInfoLittleTip(spec))
-//            ]);
-//        }
+        //        function renderLabelTip() {
+        //            return div([
+        //                div({dataElement: 'little-tip', style: {display: 'none'}}, parameterInfoLittleTip(spec))
+        //            ]);
+        //        }
 
         function render(events) {
             var placeholder = '',
@@ -323,6 +331,8 @@ define([
 
             var infoId = html.genId();
 
+            console.log('HERE, really?');
+
             var advanced;
             if (spec.spec.advanced) {
                 advanced = 'advanced-parameter-hidden';
@@ -330,42 +340,42 @@ define([
                 advanced = '';
             }
 
-            var content = div({class: ['form-horizontal', 'kb-app-parameter-row', 'parameter-panel', advanced].join(' '), dataAdvancedParameter: spec.isAdvanced(), style: {marginTop: '8px'}, id: fieldId}, [
-                div({class: 'form-group kb-app-parameter-input field-panel', dataElement: 'field-panel', style: {marginBottom: '0'}}, [
-                    label({class: 'col-md-3 xcontrol-label kb-app-parameter-name control-label'}, [
+            var content = div({ class: ['form-horizontal', 'kb-app-parameter-row', 'parameter-panel', advanced].join(' '), dataAdvancedParameter: spec.isAdvanced(), style: { marginTop: '8px' }, id: fieldId }, [
+                div({ class: 'form-group kb-app-parameter-input field-panel', dataElement: 'field-panel', style: { marginBottom: '0' } }, [
+                    label({ class: 'col-md-3 xcontrol-label kb-app-parameter-name control-label' }, [
                         spec.label() || spec.id()
                     ]),
-                    div({class: 'input-group col-md-9', style: {xwidth: '100%'}}, [
-                        div({dataElement: 'input-control'}),
-                        div({class: 'input-group-addon', dataElement: 'feedback', style: {width: '30px', padding: '0'}}, [
-                            div({dataElement: 'indicator'})
+                    div({ class: 'input-group col-md-9', style: { xwidth: '100%' } }, [
+                        div({ dataElement: 'input-control' }),
+                        div({ class: 'input-group-addon', dataElement: 'feedback', style: { width: '30px', padding: '0' } }, [
+                            div({ dataElement: 'indicator' })
                         ]),
-                        div({class: 'input-group-addon', style: {width: '30px', padding: '0'}}, [
-                            div({dataElement: 'info'}, button({
-                                class: 'btn btn-link btn-xs',
-                                type: 'button',
-                                id: events.addEvent({
-                                    type: 'click',
-                                    handler: function () {
-                                        var bigTip = container.querySelector('[data-element="big-tip"]');
-                                        bigTip.classList.toggle('hidden');
-                                    }
-                                })
-                            },
-                                span({class: 'fa fa-info-circle'})
-                                ))
+                        div({ class: 'input-group-addon', style: { width: '30px', padding: '0' } }, [
+                            div({ dataElement: 'info' }, button({
+                                    class: 'btn btn-link btn-xs',
+                                    type: 'button',
+                                    id: events.addEvent({
+                                        type: 'click',
+                                        handler: function () {
+                                            var bigTip = container.querySelector('[data-element="big-tip"]');
+                                            bigTip.classList.toggle('hidden');
+                                        }
+                                    })
+                                },
+                                span({ class: 'fa fa-info-circle' })
+                            ))
                         ])
                     ])
                 ]),
-                div({class: 'message-panel hidden', dataElement: 'message-panel'}, [
-                    div({class: 'col-md-3'}),
-                    div({class: 'col-md-9'}, div({
+                div({ class: 'message-panel hidden', dataElement: 'message-panel' }, [
+                    div({ class: 'col-md-3' }),
+                    div({ class: 'col-md-9' }, div({
                         class: 'message',
                         dataElement: 'message'
                     }))
                 ]),
-                div({class: 'info-panel row', dataElement: 'info-panel'}, [
-                    div({class: 'col-md-12'}, div({id: infoId}, [
+                div({ class: 'info-panel row', dataElement: 'info-panel' }, [
+                    div({ class: 'col-md-12' }, div({ id: infoId }, [
                         renderInfoTip()
                     ]))
 
@@ -384,7 +394,7 @@ define([
                 container = node;
                 container.innerHTML = render(events);
                 events.attachEvents(container);
-                ui = UI.make({node: container});
+                ui = UI.make({ node: container });
                 // TODO: use the pattern in which the redner returns an object,
                 // which includes events and other functions to be run after
                 // content is added to the dom.
@@ -412,34 +422,34 @@ define([
             return Promise.try(function () {
                 bus.on('validation', function (message) {
                     switch (message.diagnosis) {
-                        case 'valid':
-                            feedbackOk();
-                            clearError();
-                            break;
-                        case 'required-missing':
-                            feedbackRequired();
-                            clearError();
-                            break;
-                        case 'suspect':
-                            feedbackOk();
-                            clearError();
-                            setWarning({
-                                message: message.shortMessage,
-                                id: message.messageId
-                            });
-                            break;
-                        case 'invalid':
-                            feedbackError();
-                            clearError();
-                            setError({
-                                id: message.messageId,
-                                message: message.errorMessage
-                            });
-                            break;
-                        case 'optional-empty':
-                            feedbackNone();
-                            clearError();
-                            break;
+                    case 'valid':
+                        feedbackOk();
+                        clearError();
+                        break;
+                    case 'required-missing':
+                        feedbackRequired();
+                        clearError();
+                        break;
+                    case 'suspect':
+                        feedbackOk();
+                        clearError();
+                        setWarning({
+                            message: message.shortMessage,
+                            id: message.messageId
+                        });
+                        break;
+                    case 'invalid':
+                        feedbackError();
+                        clearError();
+                        setError({
+                            id: message.messageId,
+                            message: message.errorMessage
+                        });
+                        break;
+                    case 'optional-empty':
+                        feedbackNone();
+                        clearError();
+                        break;
                     }
                 });
                 bus.on('touched', function (message) {
@@ -451,7 +461,7 @@ define([
                 })
                 bus.on('saved', function (message) {
                     console.log('FIELD detected saved');
-                    
+
                 });
                 if (inputControl.start) {
                     return inputControl.start()

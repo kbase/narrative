@@ -15,7 +15,8 @@ define([
 
     // Constants
     var t = html.tag,
-        div = t('div'), input = t('input');
+        div = t('div'),
+        input = t('input');
 
     function factory(config) {
         var options = {},
@@ -51,12 +52,12 @@ define([
 
         function setModelValue(value) {
             return Promise.try(function () {
-                if (model.value !== value) {
-                    model.value = value;
-                    return true;
-                }
-                return false;
-            })
+                    if (model.value !== value) {
+                        model.value = value;
+                        return true;
+                    }
+                    return false;
+                })
                 .then(function (changed) {
                     render();
                 });
@@ -64,8 +65,8 @@ define([
 
         function unsetModelValue() {
             return Promise.try(function () {
-                model.value = undefined;
-            })
+                    model.value = undefined;
+                })
                 .then(function (changed) {
                     render();
                 });
@@ -91,37 +92,39 @@ define([
 
         function validate() {
             return Promise.try(function () {
-                if (!options.enabled) {
-                    return {
-                        isValid: true,
-                        validated: false,
-                        diagnosis: 'disabled'
-                    };
-                }
+                    if (!options.enabled) {
+                        return {
+                            isValid: true,
+                            validated: false,
+                            diagnosis: 'disabled'
+                        };
+                    }
 
-                var rawValue = getInputValue(),
-                    validationOptions = {
-                        required: spec.required(),
-                        shouldNotExist: true,
-                        workspaceId: workspaceId,
-                        types: spec.spec.text_options.valid_ws_types,
-                        authToken: runtime.authToken(),
-                        workspaceServiceUrl: runtime.config('services.workspace.url')
-                    };
+                    console.log('VALIDATEing', spec);
 
-                return Validation.validateWorkspaceObjectName(rawValue, validationOptions);
-            })
+                    var rawValue = getInputValue(),
+                        validationOptions = {
+                            required: spec.required(),
+                            shouldNotExist: true,
+                            workspaceId: workspaceId,
+                            types: spec.spec.text_options.valid_ws_types,
+                            authToken: runtime.authToken(),
+                            workspaceServiceUrl: runtime.config('services.workspace.url')
+                        };
+
+                    return Validation.validateWorkspaceObjectName(rawValue, validationOptions);
+                })
                 .then(function (validationResult) {
                     // TODO: should pass the validation object through untouched...
                     return validationResult;
-//                    return {
-//                        isValid: validationResult.isValid,
-//                        validated: true,
-//                        diagnosis: validationResult.diagnosis,
-//                        errorMessage: validationResult.errorMessage,
-//                        shortMessage: validationResult.shortMessage,
-//                        value: validationResult.parsedValue
-//                    };
+                    //                    return {
+                    //                        isValid: validationResult.isValid,
+                    //                        validated: true,
+                    //                        diagnosis: validationResult.diagnosis,
+                    //                        errorMessage: validationResult.errorMessage,
+                    //                        shortMessage: validationResult.shortMessage,
+                    //                        value: validationResult.parsedValue
+                    //                    };
                 });
         }
 
@@ -180,7 +183,8 @@ define([
                 id: events.addEvents({
                     events: [
                         evaluateChange(), changeOnPause()
-                    ]}),
+                    ]
+                }),
                 class: 'form-control',
                 dataElement: 'input',
                 value: currentValue
@@ -189,12 +193,12 @@ define([
 
         function render() {
             Promise.try(function () {
-                var events = Events.make(),
-                    inputControl = makeInputControl(model.value, events, bus);
+                    var events = Events.make(),
+                        inputControl = makeInputControl(model.value, events, bus);
 
-                dom.setContent('input-container', inputControl);
-                events.attachEvents(container);
-            })
+                    dom.setContent('input-container', inputControl);
+                    events.attachEvents(container);
+                })
                 .then(function () {
                     return autoValidate();
                 });
@@ -204,7 +208,7 @@ define([
             var content = div({
                 dataElement: 'main-panel'
             }, [
-                div({dataElement: 'input-container'})
+                div({ dataElement: 'input-container' })
             ]);
             return {
                 content: content,
@@ -232,7 +236,7 @@ define([
                 bus.on('run', function (message) {
                     parent = message.node;
                     container = parent.appendChild(document.createElement('div'));
-                    dom = Dom.make({node: container});
+                    dom = Dom.make({ node: container });
 
                     var events = Events.make(),
                         theLayout = layout(events);

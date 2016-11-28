@@ -71,6 +71,7 @@ define([
          */
 
         function getInputValue() {
+        console.log("GIV", dom.getElement('autocomplete-container.input').value);
             return dom.getElement('autocomplete-container.input').value;
         }
 
@@ -128,6 +129,9 @@ define([
                     validationResult = Validation.validateTextString(rawValue, {
                         required: constraints.required
                     });
+                console.log("RETURNS VR ", validationResult);
+                validationResult.isValid = false;
+                validationResult.errorMessage = 'Some unknown thing';
                 return validationResult;
             });
         }
@@ -215,75 +219,114 @@ define([
         }
 
         function render() {
+          var ic_id;
 
-            var ic_id;
+          Promise.try(function () {
+              var events = Events.make(),
+              inputControl = makeInputControl(model.value, events, bus);
+              ic_id = $(inputControl).attr('id');
+              dom.setContent('autocomplete-container', inputControl);
+              events.attachEvents(container);
+          })
+          .then(function () {
+            setTimeout(function() {
 
-            Promise.try(function () {
-                var events = Events.make(),
-                    inputControl = makeInputControl(model.value, events, bus);
-ic_id = $(inputControl).attr('id');
+              var genericClient = new GenericClient(Config.url('service_wizard'), {token : Runtime.make().authToken()});
 
-
-
-
-                dom.setContent('autocomplete-container', inputControl);
-                events.attachEvents(container);
-            })
-                .then(function () {
-                setTimeout(function() {
-
-                var genericClient = new GenericClient(Config.url('service_wizard'), {token : Runtime.make().authToken()});
-
-
-
-var dog = new Bloodhound({
-  datumTokenizer: Bloodhound.tokenizers.whitespace,
-  queryTokenizer: Bloodhound.tokenizers.whitespace,
-  // `states` is an array of state names defined in "The Basics"
-  remote : {
-    url : 'http://kbase.us/some/fake/url',  //bloodhound remote requires a URL
-    filter : function(query, settings) {
-      return query.hits;
-      return states;
-    },
-    prepare : function(settings) {
-      return settings;
-    },
-    transport : function(options, onSuccess, onError) {
-      genericClient.sync_call("taxonomy_service.search_taxonomy", [
-        {
-          private : 0,
-          public : 1,
-          search : options.url,
-          limit : 10,
-          start : 0,
-        }
-      ]).then(function(d) {
-        onSuccess(d[0]);
-      }).fail(function(e) {
-        onError(e);
-      });
-
-    }
-  }
-});
-
-                  $('#' + ic_id).typeahead({
-                    hint : true,
-                    highlight : true,
-                    minLength : 2,
-                    limit : 10,
+              var publicDog = new Bloodhound({
+                datumTokenizer: Bloodhound.tokenizers.whitespace,
+                queryTokenizer: Bloodhound.tokenizers.whitespace,
+                // `states` is an array of state names defined in "The Basics"
+                remote : {
+                  url : 'http://kbase.us/some/fake/url',  //bloodhound remote requires a URL
+                  filter : function(query, settings) {
+                    return query.hits;
+                    return states;
                   },
-                  {
-                    name : 'states',
-                    source : dog,
-                    display : function(v) {
-                      return v.label
-                    }
-                  });
-                }, 1);
-                    return autoValidate();
-                });
+                  prepare : function(settings) {
+                    return settings;
+                  },
+                  transport : function(options, onSuccess, onError) {
+                    genericClient.sync_call("taxonomy_service.search_taxonomy", [
+                      {
+                        private : 0,
+                        public : 1,
+                        search : options.url,
+                        limit : 10,
+                        start : 0,
+                      }
+                    ]).then(function(d) {
+                      onSuccess(d[0]);
+                    }).fail(function(e) {
+                      onError(e);
+                    });
+
+                  }
+                }
+              });
+
+              var privateDog = new Bloodhound({
+                datumTokenizer: Bloodhound.tokenizers.whitespace,
+                queryTokenizer: Bloodhound.tokenizers.whitespace,
+                // `states` is an array of state names defined in "The Basics"
+                remote : {
+                  url : 'http://kbase.us/some/fake/url',  //bloodhound remote requires a URL
+                  filter : function(query, settings) {
+                    return query.hits;
+                    return states;
+                  },
+                  prepare : function(settings) {
+                    return settings;
+                  },
+                  transport : function(options, onSuccess, onError) {
+                    genericClient.sync_call("taxonomy_service.search_taxonomy", [
+                      {
+                        private : 1,
+                        public : 0,
+                        search : options.url,
+                        limit : 10,
+                        start : 0,
+                      }
+                    ]).then(function(d) {
+                      onSuccess(d[0]);
+                    }).fail(function(e) {
+                      onError(e);
+                    });
+
+                  }
+                }
+              });
+
+              $('#' + ic_id).typeahead({
+                hint : true,
+                highlight : true,
+                minLength : 2,
+                limit : 40,
+              },
+              {
+                name : 'public',
+                source : publicDog,
+                display : function(v) {
+                  return v.label
+                },
+                templates: { header: '<h4 class="tt-header">Public data</h4>' }
+              },
+              {
+                name : 'private',
+                source : privateDog,
+                display : function(v) {
+                  return v.label
+                },
+                templates: { header: '<h4 class="tt-header">Private data</h4>' }
+              });
+            }, 1);
+
+            // I was unable to make this work any other way.
+            // https://www.youtube.com/watch?v=PVhTDNlbsSc
+            setTimeout(function() { $('.twitter-typeahead').css('width', '100%') }, 1);
+
+            return autoValidate();
+          });
         }
 
         function layout(events) {

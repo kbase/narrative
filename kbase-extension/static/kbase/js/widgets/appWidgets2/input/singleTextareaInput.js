@@ -20,7 +20,8 @@ define([
 
     // Constants
     var t = html.tag,
-        div = t('div'), textarea = t('textarea');
+        div = t('div'),
+        textarea = t('textarea');
 
     function factory(config) {
         var spec = config.parameterSpec,
@@ -37,7 +38,7 @@ define([
             };
 
         // CONTROL
-       
+
         function getControlValue() {
             return ui.getElement('input-container.input').value;
         }
@@ -45,7 +46,7 @@ define([
         function setControlValue(newValue) {
             ui.getElement('input-container.input').value = newValue;
         }
-        
+
         // MODEL
 
         // NB this is a trusted method. The value had better be valid,
@@ -57,11 +58,13 @@ define([
             }
             model.value = value;
             setControlValue(value);
+            autoValidate();
         }
-        
+
         function unsetModelValue() {
             model.value = undefined;
             setControlValue(model.value);
+            autoValidate();
         }
 
         function resetModelValue() {
@@ -80,14 +83,26 @@ define([
                 return validationResult;
             });
         }
-        
+
+        function autoValidate() {
+            return validate()
+                .then(function (result) {
+                    bus.emit('validation', {
+                        errorMessage: result.errorMessage,
+                        diagnosis: result.diagnosis
+                    });
+                });
+        }
+
         var autoChangeTimer;
+
         function cancelTouched() {
             if (autoChangeTimer) {
                 window.clearTimeout(autoChangeTimer);
                 autoChangeTimer = null;
             }
         }
+
         function handleTouched(interval) {
             var editPauseInterval = interval || 2000;
             return {
@@ -150,7 +165,8 @@ define([
         function makeInputControl(events) {
             return textarea({
                 id: events.addEvents({
-                    events: [handleChanged(), handleTouched()]}),
+                    events: [handleChanged(), handleTouched()]
+                }),
                 class: 'form-control',
                 dataElement: 'input',
                 rows: options.rowCount
@@ -161,7 +177,7 @@ define([
             var content = div({
                 dataElement: 'main-panel'
             }, [
-                div({dataElement: 'input-container'}, [
+                div({ dataElement: 'input-container' }, [
                     makeInputControl(events)
                 ])
             ]);
@@ -177,7 +193,7 @@ define([
                 bus.on('run', function (message) {
                     // parent = message.node;
                     container = message.node.appendChild(document.createElement('div'));
-                    ui = UI.make({node: container});
+                    ui = UI.make({ node: container });
 
                     var events = Events.make(),
                         theLayout = render(events);
@@ -199,7 +215,7 @@ define([
                 });
             });
         }
-        
+
         return {
             start: start
         };

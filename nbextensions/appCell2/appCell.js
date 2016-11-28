@@ -14,7 +14,7 @@ define([
     './widgets/appInfoDialog',
     './widgets/appCellWidget',
     'common/spec'
-], function (
+], function(
     Promise,
     Uuid,
     ParameterSpec,
@@ -27,7 +27,7 @@ define([
     appInfoDialog,
     AppCellWidget,
     Spec
-    ) {
+) {
     'use strict';
 
     var t = html.tag,
@@ -40,17 +40,17 @@ define([
         if (!cell.metadata.kbase) {
             return false;
         }
-        if (cell.metadata.kbase.type !== 'app2') {
-            return false;
+        if (cell.metadata.kbase.type === 'app2' || cell.metadata.kbase.type === 'app') {
+            return true;
         }
-        return true;
+        return false;
     }
 
     function factory(config) {
         var cell = config.cell,
             workspaceInfo = config.workspaceInfo,
             runtime = Runtime.make(),
-            spec; 
+            spec;
 
 
         /*
@@ -62,8 +62,8 @@ define([
         // TODO: recursively initialize params.
         function initializeParams(appSpec) {
             var defaultParams = {};
-            appSpec.parameters.forEach(function (parameterSpec) {
-                var param = ParameterSpec.make({parameterSpec: parameterSpec}),
+            appSpec.parameters.forEach(function(parameterSpec) {
+                var param = ParameterSpec.make({ parameterSpec: parameterSpec }),
                     defaultValue = param.defaultValue();
 
                 // A default value may be undefined, e.g. if the parameter is required and there is no default value.
@@ -75,7 +75,7 @@ define([
         }
 
         function specializeCell() {
-            cell.minimize = function () {
+            cell.minimize = function() {
                 var inputArea = this.input.find('.input_area'),
                     outputArea = this.element.find('.output_wrapper'),
                     viewInputArea = this.element.find('[data-subarea-type="app-cell-input"]'),
@@ -89,7 +89,7 @@ define([
                 viewInputArea.addClass('hidden');
             };
 
-            cell.maximize = function () {
+            cell.maximize = function() {
                 var inputArea = this.input.find('.input_area'),
                     outputArea = this.element.find('.output_wrapper'),
                     viewInputArea = this.element.find('[data-subarea-type="app-cell-input"]'),
@@ -101,16 +101,16 @@ define([
                 outputArea.removeClass('hidden');
                 viewInputArea.removeClass('hidden');
             };
-            cell.getIcon = function () {
+            cell.getIcon = function() {
                 return AppUtils.makeToolbarAppIcon(utils.getCellMeta(cell, 'kbase.appCell.app.spec'));
             };
-            cell.renderIcon = function () {
+            cell.renderIcon = function() {
                 var iconNode = this.element[0].querySelector('.celltoolbar [data-element="icon"]');
                 if (iconNode) {
                     iconNode.innerHTML = AppUtils.makeToolbarAppIcon(utils.getCellMeta(cell, 'kbase.appCell.app.spec'));
                 }
             };
-            cell.showInfo = function () {
+            cell.showInfo = function() {
                 var app = utils.getCellMeta(cell, 'kbase.appCell.app');
                 appInfoDialog.show({
                     id: app.spec.info.id,
@@ -122,7 +122,7 @@ define([
         }
 
         function setupCell() {
-            return Promise.try(function () {
+            return Promise.try(function() {
                 // Only handle kbase cells.
                 if (!isAppCell(cell)) {
                     return;
@@ -132,8 +132,7 @@ define([
 
                 // The kbase property is only used for managing runtime state of the cell
                 // for kbase. Anything to be persistent should be on the metadata.
-                cell.kbase = {
-                };
+                cell.kbase = {};
 
                 // Update metadata.
                 utils.setCellMeta(cell, 'kbase.attributes.lastLoaded', (new Date()).toUTCString());
@@ -147,14 +146,14 @@ define([
                         runtime: runtime,
                         workspaceInfo: workspaceInfo
                     }),
-                    dom = Dom.make({node: cell.input[0]}),
-                    kbaseNode = dom.createNode(div({dataSubareaType: 'app-cell-input'}));
+                    dom = Dom.make({ node: cell.input[0] }),
+                    kbaseNode = dom.createNode(div({ dataSubareaType: 'app-cell-input' }));
                 // inserting after, with raw dom, means telling the parent node
                 // to insert a node before the node following the one we are 
                 // referencing. If there is no next sibling, the null value
                 // causes insertBefore to actually ... insert at the end!
                 cell.input[0].parentNode.insertBefore(kbaseNode, cell.input[0].nextSibling);
-                
+
                 /*
                  * This is required for all KBase cells in order to disable the 
                  * Jupyter keyboard management. Although a app startup code remaps
@@ -169,18 +168,18 @@ define([
                 // cell.kbase.$node = $(kbaseNode);
 
                 return appCellWidget.init()
-                    .then(function () {
+                    .then(function() {
                         return appCellWidget.attach(kbaseNode);
                     })
-                    .then(function () {
+                    .then(function() {
                         return appCellWidget.start();
                     })
-                    .then(function () {
+                    .then(function() {
                         return appCellWidget.run({
                             authToken: runtime.authToken()
                         });
                     })
-                    .then(function () {
+                    .then(function() {
                         cell.renderMinMax();
 
                         return {
@@ -188,7 +187,7 @@ define([
                             bus: cellBus
                         };
                     })
-                    .catch(function (err) {
+                    .catch(function(err) {
                         console.error('ERROR starting app cell', err);
                         alert('Error starting app cell: ' + err.message);
                     });
@@ -196,51 +195,49 @@ define([
         }
 
         function upgradeToAppCell(appSpec, appTag) {
-            return Promise.try(function () {
-                // Create base app cell
-               
-                
-                // console.log('about to convert appspec', appSpec);
-                // TODO: this should capture the entire app spec, so don't need
-                // to carry appSpec around.
-                console.log('converting spec', appSpec);
-                spec = Spec.make({
-                    appSpec: appSpec
-                });
-                
-                 var meta = {
-                    kbase: {
-                        type: 'app2',
-                        attributes: {
-                            id: new Uuid(4).format(),
-                            status: 'new',
-                            created: (new Date()).toUTCString()
-                        },
-                        appCell: {
-                            app: {
-                                id: appSpec.info.id,
-                                gitCommitHash: appSpec.info.git_commit_hash,
-                                version: appSpec.info.ver,
-                                tag: appTag,
-                                spec: appSpec,
-                                parameters: spec.getSpec().parameters
+            return Promise.try(function() {
+                    // Create base app cell
+
+                    // console.log('about to convert appspec', appSpec);
+                    // TODO: this should capture the entire app spec, so don't need
+                    // to carry appSpec around.
+                    spec = Spec.make({
+                        appSpec: appSpec
+                    });
+
+                    var meta = {
+                        kbase: {
+                            type: 'app',
+                            attributes: {
+                                id: new Uuid(4).format(),
+                                status: 'new',
+                                created: (new Date()).toUTCString()
                             },
-                            params: null,
-                            output: {
-                                byJob: {}
+                            appCell: {
+                                app: {
+                                    id: appSpec.info.id,
+                                    gitCommitHash: appSpec.info.git_commit_hash,
+                                    version: appSpec.info.ver,
+                                    tag: appTag,
+                                    // TODO: remove the spec from the cell metadata
+                                    spec: appSpec
+                                },
+                                params: null,
+                                output: {
+                                    byJob: {}
+                                }
                             }
                         }
-                    }
-                };
-                cell.metadata = meta;
-                
-                // Add the params
-                utils.setCellMeta(cell, 'kbase.appCell.params', spec.makeDefaultedModel());
-                // initializeParams(appSpec);
-                // Complete the cell setup.
-                return setupCell();
-            })
-                .then(function (cellStuff) {
+                    };
+                    cell.metadata = meta;
+
+                    // Add the params
+                    utils.setCellMeta(cell, 'kbase.appCell.params', spec.makeDefaultedModel());
+                    // initializeParams(appSpec);
+                    // Complete the cell setup.
+                    return setupCell();
+                })
+                .then(function(cellStuff) {
                     // Initialize the cell to its default state.
                     // cellStuff.bus.emit('reset-to-defaults');
                 });
@@ -254,7 +251,7 @@ define([
     }
 
     return {
-        make: function (config) {
+        make: function(config) {
             return factory(config);
         },
         isAppCell: isAppCell

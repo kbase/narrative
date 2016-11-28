@@ -7,11 +7,10 @@ define([
 ], function (
     $,
     Promise
-    ) {
+) {
     'use strict';
-    function GenericClient(url, auth, auth_cb, use_url_lookup, timeout, async_job_check_time_ms) {
-        var self = this;
 
+    function GenericClient(url, auth, auth_cb, use_url_lookup, timeout, async_job_check_time_ms) {
         this.url = url;
         var lookup_url = url;
         this.use_url_lookup = use_url_lookup;
@@ -26,7 +25,7 @@ define([
             this.async_job_check_time_ms = 5000;
         }
 
-        var _auth = auth ? auth : {'token': '', 'user_id': ''};
+        var _auth = auth ? auth : { 'token': '', 'user_id': '' };
         var _auth_cb = auth_cb;
 
 
@@ -47,11 +46,10 @@ define([
             if (_use_url_lookup) {
                 var deferred = $.Deferred();
                 var module_name = service_method.split('.')[0];
-                console.log('looking up service module', module_name, service_version);
                 json_call_ajax(_url, 'ServiceWizard.get_service_status', [{
-                        module_name: module_name,
-                        version: service_version || null
-                    }], 1, function (service_status_ret) {
+                    module_name: module_name,
+                    version: service_version || null
+                }], 1, function (service_status_ret) {
                     _url = service_status_ret.url;
                     json_call_ajax(_url, service_method, param_list, 0, _callback, _errorCallback, deferred);
                 }, function (err) {
@@ -95,8 +93,8 @@ define([
             };
 
             var beforeSend = null;
-            var token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
-                : (_auth.token ? _auth.token : null);
+            var token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb() :
+                (_auth.token ? _auth.token : null);
             if (token !== null) {
                 beforeSend = function (xhr) {
                     xhr.setRequestHeader("Authorization", token);
@@ -128,10 +126,6 @@ define([
                     deferred.resolve(result);
                 },
                 error: function (xhr, textStatus, errorThrown) {
-                    // var errObj = JSON.parse(xhr.responseText);
-                    // console.error('ERR?', errObj , xhr);
-                    // console.error('ERR!', errObj.error.error.replace('\n', '<br>'));
-                    // console.error('URL', _url, _use_url_lookup);
                     var error;
                     if (xhr.responseText) {
                         try {

@@ -1,5 +1,9 @@
 @import url("//fonts.googleapis.com/css?family=Roboto");
 
+.kb-dropzone {
+    border: 2px dashed #2196F3 !important;
+    margin-bottom:5px
+}
 
 .kb-ga-seq {
     word-wrap: break-word;

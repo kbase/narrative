@@ -1,6 +1,4 @@
 /**
- * TODO: Sortable file table
- * TODO: Navigable file table (click on folders, go back, etc)
  * TODO: Drag and drop folders
  * TODO: Style drag and drop
  */
@@ -85,6 +83,17 @@ define([
                 paramName: 'uploads',
                 previewTemplate: this.dropFileTmpl()
             });
+            dz.on("totaluploadprogress", function(progress) {
+                $dropzoneElem.find("#total-progress .progress-bar").style.width = progress + "%";
+            });
+            // dz.on("sending", function(file) {
+            //     // Show the total progress bar when upload starts
+            //     // document.querySelector("#total-progress").style.opacity = "1";
+            //     // And disable the start button
+            //     file.previewElement.querySelector(".start").setAttribute("disabled", "disabled");
+            // });
+
+
             dz.on('success', function() {
                 // set green checkmark.
             });

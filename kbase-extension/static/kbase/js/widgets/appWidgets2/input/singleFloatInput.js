@@ -148,7 +148,7 @@ define([
             }
             return div({ style: { width: '100%' }, dataElement: 'input-wrapper' }, [
                 div({ class: 'input-group', style: { width: '100%' } }, [
-                    (min ? div({ class: 'input-group-addon', fontFamily: 'monospace' }, String(min) + ' &#8804; ') : ''),
+                    (typeof min === 'number' ? div({ class: 'input-group-addon', fontFamily: 'monospace' }, String(min) + ' &#8804; ') : ''),
                     input({
                         id: events.addEvents({
                             events: [handleChanged(), handleTouched()]
@@ -158,7 +158,7 @@ define([
                         dataType: 'float',
                         value: initialControlValue
                     }),
-                    (max ? div({ class: 'input-group-addon', fontFamily: 'monospace' }, ' &#8804; ' + String(max)) : '')
+                    (typeof max === 'number' ? div({ class: 'input-group-addon', fontFamily: 'monospace' }, ' &#8804; ' + String(max)) : '')
                 ]),
                 div({ dataElement: 'message', style: { backgroundColor: 'red', color: 'white' } })
             ]);

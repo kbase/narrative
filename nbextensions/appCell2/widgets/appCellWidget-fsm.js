@@ -1,12 +1,10 @@
 /*global define*/
 /*jslint white:true,browser:true*/
 
-define([
-], function () {
+define([], function () {
     'use strict';
 
-    var appStates = [
-        {
+    var appStates = [{
             state: {
                 mode: 'new'
             },
@@ -42,7 +40,7 @@ define([
                     hide: ['internal-error', 'parameters-group', 'output-group', 'parameters-display-group', 'exec-group']
                 },
                 appStatus: {
-                    classes: ['kb-app-status-default'],                    
+                    classes: ['kb-app-status-default'],
                     icon: {
                         xcolor: 'black',
                         type: 'minus'
@@ -51,8 +49,7 @@ define([
                 label: 'new',
                 message: ''
             },
-            next: [
-                {
+            next: [{
                     mode: 'internal-error'
                 },
                 {
@@ -108,8 +105,7 @@ define([
                 label: 'editing',
                 message: 'You may edit the parameters for this App. You must fill in all required parameters (indicated by red arrows) before you can run the App.'
             },
-            next: [
-                {
+            next: [{
                     mode: 'editing',
                     params: 'complete',
                     code: 'built'
@@ -171,8 +167,7 @@ define([
                 label: 'editing',
                 message: 'You have completed the required parameters for this App; you may run it or continue to edit parameters.'
             },
-            next: [
-                {
+            next: [{
                     mode: 'editing',
                     params: 'incomplete'
                 },
@@ -256,17 +251,15 @@ define([
                     show: ['parameters-display-group', 'exec-group', 'output-group'],
                     hide: ['parameters-group']
                 },
-                messages: [
-                    {
-                        widget: 'paramsDisplayWidget',
-                        message: {},
-                        address: {
-                            key: {
-                                type: 'sync-all-parameters'
-                            }
+                messages: [{
+                    widget: 'paramsDisplayWidget',
+                    message: {},
+                    address: {
+                        key: {
+                            type: 'sync-all-parameters'
                         }
                     }
-                ],
+                }],
                 appStatus: {
                     classes: ['kb-app-status-primary'],
                     icon: {
@@ -279,22 +272,17 @@ define([
             },
             on: {
                 enter: {
-                    messages: [
-                        {
-                            emit: 'sync-all-display-parameters'
-                        }
-                    ]
+                    messages: [{
+                        emit: 'sync-all-display-parameters'
+                    }]
                 },
                 resume: {
-                    messages: [
-                        {
-                            emit: 'sync-all-display-parameters'
-                        }
-                    ]
+                    messages: [{
+                        emit: 'sync-all-display-parameters'
+                    }]
                 }
             },
-            next: [
-                {
+            next: [{
                     mode: 'processing',
                     stage: 'launched'
                 },
@@ -360,15 +348,12 @@ define([
             },
             on: {
                 resume: {
-                    messages: [
-                        {
-                            emit: 'sync-all-display-parameters'
-                        }
-                    ]
+                    messages: [{
+                        emit: 'sync-all-display-parameters'
+                    }]
                 }
             },
-            next: [
-                {
+            next: [{
                     mode: 'processing',
                     stage: 'launched'
                 },
@@ -431,7 +416,7 @@ define([
                         enabled: false,
                         hidden: true
                     }
-                },                
+                },
                 actionButton: {
                     name: 'cancel'
                 },
@@ -451,29 +436,22 @@ define([
             },
             on: {
                 enter: {
-                    messages: [
-                        {
-                            emit: 'start-queueing'
-                        }
-                    ]
+                    messages: [{
+                        emit: 'start-queueing'
+                    }]
                 },
                 resume: {
-                    messages: [
-                        {
-                            emit: 'start-queueing'
-                        }
-                    ]
+                    messages: [{
+                        emit: 'start-queueing'
+                    }]
                 },
                 exit: {
-                    messages: [
-                        {
-                            emit: 'stop-queueing'
-                        }
-                    ]
+                    messages: [{
+                        emit: 'stop-queueing'
+                    }]
                 }
             },
-            next: [
-                {
+            next: [{
                     mode: 'processing',
                     stage: 'running'
                 },
@@ -489,6 +467,9 @@ define([
                 },
                 {
                     mode: 'success'
+                },
+                {
+                    mode: 'error'
                 },
                 {
                     mode: 'error',
@@ -541,7 +522,7 @@ define([
                         enabled: false,
                         hidden: true
                     }
-                },            
+                },
                 actionButton: {
                     name: 'cancel'
                 },
@@ -561,29 +542,22 @@ define([
             },
             on: {
                 enter: {
-                    messages: [
-                        {
-                            emit: 'start-running'
-                        }
-                    ]
+                    messages: [{
+                        emit: 'start-running'
+                    }]
                 },
                 resume: {
-                    messages: [
-                        {
-                            emit: 'start-running'
-                        }
-                    ]
+                    messages: [{
+                        emit: 'start-running'
+                    }]
                 },
                 exit: {
-                    messages: [
-                        {
-                            emit: 'stop-running'
-                        }
-                    ]
+                    messages: [{
+                        emit: 'stop-running'
+                    }]
                 }
             },
-            next: [
-                {
+            next: [{
                     mode: 'processing',
                     stage: 'running'
                 },
@@ -636,7 +610,7 @@ define([
                         enabled: false,
                         hidden: true
                     }
-                },            
+                },
                 actionButton: {
                     name: 'cancel',
                     default: true
@@ -655,8 +629,7 @@ define([
                 label: 'canceling...',
                 message: 'Canceling App execution...'
             },
-            next: [
-                {
+            next: [{
                     mode: 'canceled'
                 },
                 // In case the cancelation request was denied
@@ -710,7 +683,7 @@ define([
                         enabled: false,
                         hidden: true
                     }
-                },                            
+                },
                 actionButton: {
                     name: 'reRunApp'
                 },
@@ -728,8 +701,7 @@ define([
                 label: 'canceled',
                 message: 'App execution has been successfully canceled.'
             },
-            next: [
-                {
+            next: [{
                     mode: 'canceled'
                 },
                 {
@@ -766,7 +738,7 @@ define([
                         enabled: false,
                         hidden: true
                     }
-                },               
+                },
                 actionButton: {
                     name: 'reRunApp'
                 },
@@ -786,29 +758,22 @@ define([
             },
             on: {
                 enter: {
-                    messages: [
-                        {
-                            emit: 'on-success'
-                        }
-                    ]
+                    messages: [{
+                        emit: 'on-success'
+                    }]
                 },
                 resume: {
-                    messages: [
-                        {
-                            emit: 'on-success'
-                        }
-                    ]
+                    messages: [{
+                        emit: 'on-success'
+                    }]
                 },
                 exit: {
-                    messages: [
-                        {
-                            emit: 'exit-success'
-                        }
-                    ]
-                }                
+                    messages: [{
+                        emit: 'exit-success'
+                    }]
+                }
             },
-            next: [
-                {
+            next: [{
                     mode: 'success'
                 },
                 {
@@ -849,7 +814,7 @@ define([
                         enabled: true,
                         selected: true
                     }
-                },               
+                },
                 actionButton: {
                     name: 'reRunApp'
                 },
@@ -867,8 +832,7 @@ define([
                 label: 'error',
                 message: 'There was an error launching the App.'
             },
-            next: [
-                {
+            next: [{
                     mode: 'error',
                     stage: 'launching'
                 },
@@ -911,7 +875,7 @@ define([
                         enabled: true,
                         selected: true
                     }
-                },               
+                },
                 actionButton: {
                     name: 'reRunApp'
                 },
@@ -929,8 +893,7 @@ define([
                 label: 'error',
                 message: 'An error was encountered while the App was queued.'
             },
-            next: [
-                {
+            next: [{
                     mode: 'error',
                     stage: 'queued'
                 },
@@ -973,7 +936,7 @@ define([
                         enabled: true,
                         selected: true
                     }
-                },               
+                },
                 actionButton: {
                     name: 'reRunApp'
                 },
@@ -991,8 +954,7 @@ define([
                 label: 'error',
                 message: 'An error was encountered running the App.'
             },
-            next: [
-                {
+            next: [{
                     mode: 'error',
                     stage: 'running'
                 },
@@ -1034,7 +996,7 @@ define([
                         enabled: true,
                         selected: true
                     }
-                },               
+                },
                 actionButton: {
                     name: 'reRunApp'
                 },
@@ -1043,7 +1005,7 @@ define([
                     hide: ['parameters-group']
                 },
                 appStatus: {
-                    classes: ['kb-status-danger'],                    
+                    classes: ['kb-status-danger'],
                     icon: {
                         xcolor: 'red',
                         type: 'exclamation-circle'
@@ -1052,8 +1014,7 @@ define([
                 label: 'error',
                 message: 'An error was encountered.'
             },
-            next: [
-                {
+            next: [{
                     mode: 'error'
                 },
                 {
@@ -1094,7 +1055,7 @@ define([
                         enabled: true,
                         selected: true
                     }
-                },               
+                },
                 actionButton: {
                     name: 'resetApp'
                 },
@@ -1103,7 +1064,7 @@ define([
                     hide: ['parameters-group', 'parameters-display-group', 'exec-group', 'output-group']
                 },
                 appStatus: {
-                    classes: ['kb-status-danger'],                    
+                    classes: ['kb-status-danger'],
                     icon: {
                         xcolor: 'red',
                         type: 'exclamation-circle'
@@ -1112,8 +1073,7 @@ define([
                 label: 'error',
                 message: 'An internal error was encountered.'
             },
-            next: [
-                {
+            next: [{
                     mode: 'internal-error'
                 },
                 // We will let a user attempt to reset the app.

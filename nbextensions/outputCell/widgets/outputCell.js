@@ -14,12 +14,13 @@ define([
     Props,
     UI,
     html,
-    Jupyter
-    ) {
+    JupyterInterop
+) {
     'use strict';
 
     var t = html.tag,
-        div = t('div'), p = t('p');
+        div = t('div'),
+        p = t('p');
 
     function factory(config) {
         var cell = config.cell,
@@ -37,7 +38,6 @@ define([
 
         function doDeleteCell() {
             var parentCellId = Props.getDataItem(cell.metadata, 'kbase.outputCell.parentCellId');
-            console.log('META', cell.metadata);
             var content = div([
                 p([
                     'Deleting this cell will remove the data visualization, ',
@@ -47,28 +47,26 @@ define([
                 p(['Parent cell id is ', parentCellId]),
                 p('Continue to delete this data cell?')
             ]);
-            ui.showConfirmDialog({title: 'Confirm Cell Deletion', body: content})
+            ui.showConfirmDialog({ title: 'Confirm Cell Deletion', body: content })
                 .then(function (confirmed) {
                     if (!confirmed) {
                         return;
                     }
-
-                    console.log('sending', Props.getDataItem(cell.metadata, 'kbase.outputCell.jobId'), Props.getDataItem(cell.metadata, 'kbase.attributes.id'));
                     runtime.bus().send({
-                      jobId: Props.getDataItem(cell.metadata, 'kbase.outputCell.jobId'),
-                      outputCellId: Props.getDataItem(cell.metadata, 'kbase.attributes.id')
+                        jobId: Props.getDataItem(cell.metadata, 'kbase.outputCell.jobId'),
+                        outputCellId: Props.getDataItem(cell.metadata, 'kbase.attributes.id')
                     }, {
                         channel: {
-                          cell: parentCellId
+                            cell: parentCellId
                         },
                         key: {
-                          type: 'output-cell-removed'
+                            type: 'output-cell-removed'
                         }
                     });
 
                     bus.emit('stop');
 
-                    Jupyter.deleteCell(cell);
+                    JupyterInterop.deleteCell(cell);
                 });
         }
 
@@ -78,7 +76,7 @@ define([
 
         eventManager.add(bus.on('run', function (message) {
             // container = message.node;
-            ui = UI.make({node: message.node});
+            ui = UI.make({ node: message.node });
 
             // Events for comm from the parent.
             eventManager.add(bus.on('stop', function () {

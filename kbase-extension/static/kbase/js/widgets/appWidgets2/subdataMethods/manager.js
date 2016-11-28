@@ -13,7 +13,7 @@ define([
     './samplePropertyHistogram',
     './growthCondition'
 
-], function (
+], function(
     Handlebars,
     Runtime,
     Props,
@@ -35,28 +35,29 @@ define([
 
         function workspaceCall(subObjectIdentity) {
             return new Workspace(runtime.config('services.workspace.url'), {
-                token: runtime.authToken()
-            })
+                    token: runtime.authToken()
+                })
                 .get_object_subset([subObjectIdentity]);
         }
 
-        function genericClientCall(subdataOptions, subObjectIdentity) {
+        function genericClientCall(subdataSelection, subObjectIdentity) {
             var swUrl = runtime.config('services.workspace.url').replace("ws", "service_wizard"),
                 genericClient = new GenericClient(swUrl, {
                     token: runtime.authToken()
                 });
-            return genericClient.sync_call(subdataOptions.subdata_selection.service_function,
-                [[subObjectIdentity]], null, null,
-                subdataOptions.subdata_selection.service_version);
+            return genericClient.sync_call(subdataSelection.service_function, [
+                    [subObjectIdentity]
+                ], null, null,
+                subdataSelection.service_version);
         }
 
         function makeLabel(item, showSourceObjectName) {
-            return div({style: {wordWrap: 'break-word'}}, [
-                div({style: {fontWeight: 'bold'}}, item.id),
+            return div({ style: { wordWrap: 'break-word' } }, [
+                div({ style: { fontWeight: 'bold' } }, item.id),
                 item.desc,
-                (function () {
+                (function() {
                     if (showSourceObjectName && item.objectName) {
-                        return div({style: {padding: '0px', fontStyle: 'italic'}}, item.objectName);
+                        return div({ style: { padding: '0px', fontStyle: 'italic' } }, item.objectName);
                     }
                 }())
             ]);
@@ -64,33 +65,33 @@ define([
 
         function standardFetchData(arg) {
             var referenceObjectRef = arg.referenceObjectRef,
-                subdataOptions = arg.spec.spec.textsubdata_options,
+                subdataSelection = arg.spec.data.constraints.subdataSelection,
                 subObjectIdentity = {
                     ref: referenceObjectRef,
-                    included: subdataOptions.subdata_selection.subdata_included
+                    included: subdataSelection.subdata_included
                 },
-            dataCall;
-            if (subdataOptions.subdata_selection.service_function) {
-                dataCall = genericClientCall(subdataOptions, subObjectIdentity);
+                dataCall;
+            if (subdataSelection.service_function) {
+                dataCall = genericClientCall(subdataSelection, subObjectIdentity);
             } else {
                 dataCall = workspaceCall(subObjectIdentity);
             }
             return dataCall
-                .then(function (results) {
+                .then(function(results) {
                     var values = [],
-                        selectionId = subdataOptions.subdata_selection.selection_id,
-                        descriptionFields = subdataOptions.subdata_selection.selection_description || [],
-                        descriptionTemplateText = subdataOptions.subdata_selection.description_template,
+                        selectionId = subdataSelection.selection_id,
+                        descriptionFields = subdataSelection.selection_description || [],
+                        descriptionTemplateText = subdataSelection.description_template,
                         descriptionTemplate;
 
                     if (!descriptionTemplateText) {
-                        descriptionTemplateText = descriptionFields.map(function (field) {
+                        descriptionTemplateText = descriptionFields.map(function(field) {
                             return '{{' + field + '}}';
                         }).join(' - ');
                     }
 
                     descriptionTemplate = Handlebars.compile(descriptionTemplateText);
-                    results.forEach(function (result) {
+                    results.forEach(function(result) {
                         if (!result) {
                             return;
                         }
@@ -100,7 +101,7 @@ define([
                             result = result[0];
                         }
 
-                        var subdata = Props.getDataItem(result.data, subdataOptions.subdata_selection.path_to_subdata);
+                        var subdata = Props.getDataItem(result.data, subdataSelection.path_to_subdata);
 
                         if (!subdata) {
                             return;
@@ -127,7 +128,7 @@ define([
                         if (subdata instanceof Array) {
                             // For arrays we pluck off the "selectionId" property from
                             // each item.
-                            subdata.forEach(function (datum) {
+                            subdata.forEach(function(datum) {
                                 var id = datum;
                                 if (selectionId && typeof id === 'object') {
                                     id = datum[selectionId];
@@ -140,7 +141,7 @@ define([
                                 });
                             });
                         } else {
-                            Object.keys(subdata).forEach(function (key) {
+                            Object.keys(subdata).forEach(function(key) {
                                 var datum = subdata[key],
                                     id;
 
@@ -174,14 +175,14 @@ define([
                             });
                         }
                     });
-                    return values.map(function (item) {
-                        item.text = makeLabel(item, subdataOptions.show_src_obj);
+                    return values.map(function(item) {
+                        item.text = makeLabel(item, arg.spec.ui.showSourceObject);
                         return item;
                     });
                 })
-                .then(function (data) {
+                .then(function(data) {
                     // sort by id now.
-                    data.sort(function (a, b) {
+                    data.sort(function(a, b) {
                         if (a.id > b.id) {
                             return 1;
                         }
@@ -227,14 +228,14 @@ define([
 
         function customFetchDataNormal(arg) {
             var workspace = new Workspace(runtime.config('services.workspace.url'), {
-                token: runtime.authToken()
-            }),
+                    token: runtime.authToken()
+                }),
                 query = [{
-                        ref: arg.referenceObjectRef,
-                        included: arg.included
-                    }];
+                    ref: arg.referenceObjectRef,
+                    included: arg.included
+                }];
             return workspace.get_object_subset(query)
-                .then(function (result) {
+                .then(function(result) {
                     return arg.extractItems(result, arg.params);
                 });
         }
@@ -244,16 +245,16 @@ define([
                 workspace = new Workspace(runtime.config('services.workspace.url'), {
                     token: runtime.authToken()
                 });
-            return workspace.get_objects([{ref: referenceObjectRef}])
-                .then(function (data) {
+            return workspace.get_objects([{ ref: referenceObjectRef }])
+                .then(function(data) {
                     var nextRef = arg.getRef(data),
                         query = [{
-                                ref: nextRef,
-                                included: arg.included
-                            }];
+                            ref: nextRef,
+                            included: arg.included
+                        }];
                     return workspace.get_object_subset(query);
                 })
-                .then(function (result) {
+                .then(function(result) {
                     return arg.extractItems(result, arg.params);
                 });
         }
@@ -274,7 +275,7 @@ define([
     }
 
     return {
-        make: function (config) {
+        make: function(config) {
             return factory(config);
         }
     };

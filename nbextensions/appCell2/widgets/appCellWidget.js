@@ -61,12 +61,21 @@ define([
     resultsTabWidget,
     logTabWidget,
     errorTabWidget
-    ) {
+) {
     'use strict';
     var t = html.tag,
-        div = t('div'), span = t('span'), a = t('a'),
-        table = t('table'), tr = t('tr'), th = t('th'), td = t('td'),
-        pre = t('pre'), input = t('input'), img = t('img'), p = t('p'), blockquote = t('blockquote'),
+        div = t('div'),
+        span = t('span'),
+        a = t('a'),
+        table = t('table'),
+        tr = t('tr'),
+        th = t('th'),
+        td = t('td'),
+        pre = t('pre'),
+        input = t('input'),
+        img = t('img'),
+        p = t('p'),
+        blockquote = t('blockquote'),
         appStates = AppStates;
 
     function factory(config) {
@@ -164,11 +173,10 @@ define([
                             bus: bus,
                             workspaceInfo: workspaceInfo
                         });
-                    console.log('RUNNING', model.getItem('app'));
                     bus.emit('run', {
                         node: arg.node,
                         appSpec: model.getItem('app.spec'),
-                        parameters: model.getItem('app.parameters')
+                        parameters: spec.getSpec().parameters
                     });
 
                     bus.on('sync-params', function (message) {
@@ -176,20 +184,19 @@ define([
                             bus.send({
                                 parameter: paramId,
                                 value: model.getItem(['params', message.parameter])
-                            },
-                                {
-                                    key: {
-                                        type: 'update',
-                                        parameter: message.parameter
-                                    }
-                                });
+                            }, {
+                                key: {
+                                    type: 'update',
+                                    parameter: message.parameter
+                                }
+                            });
                         });
                     });
 
                     bus.on('parameter-sync', function (message) {
                         var value = model.getItem(['params', message.parameter]);
                         bus.send({
-//                            parameter: message.parameter,
+                            //                            parameter: message.parameter,
                             value: value
                         }, {
                             // This points the update back to a listener on this key
@@ -276,7 +283,7 @@ define([
                     });
                     bus.emit('run', {
                         node: arg.node,
-                        parameters: model.getItem('app.parameters')
+                        parameters: spec.getSpec().parameters
                     });
 
                     return widget.start()
@@ -297,11 +304,12 @@ define([
             function factory(config) {
                 var container,
                     widget;
+
                 function start(arg) {
                     container = arg.node;
                     return loadParamsWidget({
-                        node: container
-                    })
+                            node: container
+                        })
                         .then(function (result) {
                             widget = result;
                         });
@@ -333,11 +341,12 @@ define([
             function factory(config) {
                 var container,
                     widget;
+
                 function start(arg) {
                     container = arg.node;
                     return loadViewParamsWidget({
-                        node: container
-                    })
+                            node: container
+                        })
                         .then(function (result) {
                             widget = result;
                         });
@@ -366,7 +375,6 @@ define([
 
         function loadWidget(name) {
             return new Promise(function (resolve, reject) {
-                console.log('loading widget', name);
                 require('./tabs/' + name, function (Widget) {
                     resolve(Widget);
                 }, function (err) {
@@ -527,12 +535,12 @@ define([
                     xicon: 'bar-chart',
                     widget: runStatsTabWidget
                 },
-//                jobState: {
-//                    label: 'State',
-//                    xicon: 'table',
-//                    features: ['developer'],
-//                    widget: jobStateTabWidget
-//                },
+                //                jobState: {
+                //                    label: 'State',
+                //                    xicon: 'table',
+                //                    features: ['developer'],
+                //                    widget: jobStateTabWidget
+                //                },
                 logs: {
                     label: 'Log',
                     xicon: 'list',
@@ -572,38 +580,38 @@ define([
             }
 
             switch (app.tag) {
-                case 'release':
-                    return {
-                        ids: [app.spec.info.id],
-                        tag: 'release',
-                        version: app.spec.info.ver
-                    };
-                case 'dev':
-                case 'beta':
-                    return {
-                        ids: [app.spec.info.id],
-                        tag: app.tag
-                    };
-                default:
-                    // we may be able to grok this.
-                    //if (app.spec.info.ver) {
-                    //    return {
-                    //        ids: [app.spec.info.id],
-                    //        tag: 'release',
-                    //        version: app.spec.info.ver
-                    //    };
-                    //}
-                    console.error('Invalid tag', app);
-                    throw new ToErr.KBError({
-                        type: 'internal-app-cell-error',
-                        message: 'This app cell is corrrupt -- the app tag ' + String(app.tag) + ' is not recognized',
-                        advice: [
-                            'This condition should never occur outside of a development environment',
-                            'The tag of the app associated with the app cell must be one of "release", "beta", or "dev"',
-                            'Chances are that this app cell was inserted in a development environment in which the app cell structure was in flux',
-                            'You should remove this app cell from the narrative an insert an new one'
-                        ]
-                    });
+            case 'release':
+                return {
+                    ids: [app.spec.info.id],
+                    tag: 'release',
+                    version: app.spec.info.ver
+                };
+            case 'dev':
+            case 'beta':
+                return {
+                    ids: [app.spec.info.id],
+                    tag: app.tag
+                };
+            default:
+                // we may be able to grok this.
+                //if (app.spec.info.ver) {
+                //    return {
+                //        ids: [app.spec.info.id],
+                //        tag: 'release',
+                //        version: app.spec.info.ver
+                //    };
+                //}
+                console.error('Invalid tag', app);
+                throw new ToErr.KBError({
+                    type: 'internal-app-cell-error',
+                    message: 'This app cell is corrrupt -- the app tag ' + String(app.tag) + ' is not recognized',
+                    advice: [
+                        'This condition should never occur outside of a development environment',
+                        'The tag of the app associated with the app cell must be one of "release", "beta", or "dev"',
+                        'Chances are that this app cell was inserted in a development environment in which the app cell structure was in flux',
+                        'You should remove this app cell from the narrative an insert an new one'
+                    ]
+                });
             }
 
         }
@@ -636,14 +644,14 @@ define([
                 // Note the 1.2em seems to be the de-facto work around to have a list
                 // align left with other blocks yet retain the bullet and the
                 // indentation for list items.
-                advice = ul({style: {paddingLeft: '1.2em'}}, advice.map(function (adv) {
+                advice = ul({ style: { paddingLeft: '1.2em' } }, advice.map(function (adv) {
                     return li(adv);
                 }));
             } else {
                 advice = 'no advice';
             }
             if (info) {
-                info = html.makeObjTable(info, {rotated: true, classes: []});
+                info = html.makeObjTable(info, { rotated: true, classes: [] });
             } else {
                 info = 'no additional info';
             }
@@ -657,75 +665,76 @@ define([
         function showFsmBar() {
             var currentState = fsm.getCurrentState(),
                 content = Object.keys(currentState.state).map(function (key) {
-                return span([
-                    span({style: {fontStyle: 'italic'}}, key),
-                    ' : ',
-                    span({style: {padding: '4px', fontWeight: 'noramal', border: '1px silver solid', backgroundColor: 'gray', color: 'white'}}, currentState.state[key])
-                ]);
-            }).join('  ');
+                    return span([
+                        span({ style: { fontStyle: 'italic' } }, key),
+                        ' : ',
+                        span({ style: { padding: '4px', fontWeight: 'noramal', border: '1px silver solid', backgroundColor: 'gray', color: 'white' } }, currentState.state[key])
+                    ]);
+                }).join('  ');
 
             ui.setContent('fsm-display.content', content);
         }
 
         function renderAppSpec() {
-//            if (!env.appSpec) {
-//                return;
-//            }
-//            var specText = JSON.stringify(env.appSpec, false, 3),
-//                 fixedText = specText.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            //            if (!env.appSpec) {
+            //                return;
+            //            }
+            //            var specText = JSON.stringify(env.appSpec, false, 3),
+            //                 fixedText = specText.replace(/</g, '&lt;').replace(/>/g, '&gt;');
             return pre({
                 dataElement: 'spec',
                 class: 'prettyprint lang-json',
-                style: {fontSize: '80%'}});
+                style: { fontSize: '80%' }
+            });
         }
 
         function renderAppSummary() {
-            return table({class: 'table table-striped'}, [
+            return table({ class: 'table table-striped' }, [
                 tr([
                     th('Name'),
-                    td({dataElement: 'name'})
+                    td({ dataElement: 'name' })
                 ]),
                 ui.ifAdvanced(function () {
                     return tr([
                         th('Module'),
-                        td({dataElement: 'module'})
+                        td({ dataElement: 'module' })
                     ]);
                 }),
                 tr([
                     th('Id'),
-                    td({dataElement: 'id'})
+                    td({ dataElement: 'id' })
                 ]),
                 tr([
                     th('Version'),
-                    td({dataElement: 'version'})
+                    td({ dataElement: 'version' })
                 ]),
                 tr([
                     th('Summary'),
-                    td({dataElement: 'summary'})
+                    td({ dataElement: 'summary' })
                 ]),
                 tr([
                     th('Authors'),
-                    td({dataElement: 'authors'})
+                    td({ dataElement: 'authors' })
                 ]),
                 ui.ifAdvanced(function () {
                     return tr([
                         th('Git commit hash'),
-                        td({dataElement: 'git-commit-hash'})
+                        td({ dataElement: 'git-commit-hash' })
                     ]);
                 }),
                 tr([
                     th('More info'),
-                    td({dataElement: 'catalog-link'})
+                    td({ dataElement: 'catalog-link' })
                 ])
             ]);
         }
 
         function renderAboutApp() {
             var aboutTabs = [{
-                    label: 'Summary',
-                    name: 'summary',
-                    content: renderAppSummary()
-                }];
+                label: 'Summary',
+                name: 'summary',
+                content: renderAppSummary()
+            }];
             if (ui.isDeveloper()) {
                 aboutTabs.push({
                     label: 'Spec',
@@ -747,6 +756,7 @@ define([
             // node.style.display = null;
             node.classList.remove('hidden');
         }
+
         function hideElement(name) {
             var node = ui.getElement(name);
             if (!node) {
@@ -770,13 +780,13 @@ define([
 
             value = model.getItem(['user-settings', settingName], setting.defaultValue);
             switch (setting.type) {
-                case 'toggle':
-                    if (value) {
-                        showElement(setting.element);
-                    } else {
-                        hideElement(setting.element);
-                    }
-                    break;
+            case 'toggle':
+                if (value) {
+                    showElement(setting.element);
+                } else {
+                    hideElement(setting.element);
+                }
+                break;
             }
         }
 
@@ -790,28 +800,28 @@ define([
         }
 
         function renderSettings() {
-            var events = Events.make({node: container}),
+            var events = Events.make({ node: container }),
                 content = Object.keys(settings).map(function (key) {
-                var setting = settings[key],
-                    settingsValue = model.getItem(['user-settings', key]) || setting.defaultValue;
-                return div({}, [
-                    input({
-                        type: 'checkbox',
-                        checked: (settingsValue ? true : false),
-                        dataSetting: key,
-                        value: key,
-                        //dataToggle: 'tooltip',
-                        //title: setting.help || '',
-                        id: events.addEvent({
-                            type: 'change',
-                            handler: function (e) {
-                                doChangeSetting(e);
-                            }
-                        })
-                    }),
-                    span({style: {marginLeft: '4px', fontStyle: 'italic'}}, setting.label)
-                ]);
-            }).join('\n');
+                    var setting = settings[key],
+                        settingsValue = model.getItem(['user-settings', key]) || setting.defaultValue;
+                    return div({}, [
+                        input({
+                            type: 'checkbox',
+                            checked: (settingsValue ? true : false),
+                            dataSetting: key,
+                            value: key,
+                            //dataToggle: 'tooltip',
+                            //title: setting.help || '',
+                            id: events.addEvent({
+                                type: 'change',
+                                handler: function (e) {
+                                    doChangeSetting(e);
+                                }
+                            })
+                        }),
+                        span({ style: { marginLeft: '4px', fontStyle: 'italic' } }, setting.label)
+                    ]);
+                }).join('\n');
             ui.setContent('settings.content', div([
                 p('These options show or hide optional areas of the app cell'),
                 content
@@ -847,7 +857,7 @@ define([
                 return ui.na();
             }()));
             var appRef = [appSpec.info.id, model.getItem('app').tag].filter(toBoolean).join('/'),
-                link = a({href: '/#appcatalog/app/' + appRef, target: '_blank'}, 'Catalog Page');
+                link = a({ href: '/#appcatalog/app/' + appRef, target: '_blank' }, 'Catalog Page');
             ui.setContent('about-app.catalog-link', link);
         }
 
@@ -857,59 +867,60 @@ define([
             }
             var specText = JSON.stringify(model.getItem('app.spec'), false, 3),
                 fixedText = specText.replace(/</g, '&lt;').replace(/>/g, '&gt;'),
-                content = pre({class: 'prettyprint lang-json', style: {fontSize: '80%'}}, fixedText);
+                content = pre({ class: 'prettyprint lang-json', style: { fontSize: '80%' } }, fixedText);
             ui.setContent('about-app.spec', content);
         }
 
         function doActionButton(data) {
             switch (data.action) {
-                case 'runApp':
-                    doRun();
-                    break;
-                case 'reRunApp':
-                    doRerun();
-                    break;
-                case 'resetApp':
-                    doResetApp();
-                    break;
-                case 'cancel':
-                    doCancel();
-                    break;
-                default:
-                    alert('Undefined action:' + data.action);
+            case 'runApp':
+                doRun();
+                break;
+            case 'reRunApp':
+                doRerun();
+                break;
+            case 'resetApp':
+                doResetApp();
+                break;
+            case 'cancel':
+                doCancel();
+                break;
+            default:
+                alert('Undefined action:' + data.action);
             }
         }
 
         function buildRunControlPanelRunButtons(events) {
-            return div({class: 'btn-group'},
+            return div({ class: 'btn-group' },
                 Object.keys(actionButtons.availableButtons).map(function (key) {
-                var button = actionButtons.availableButtons[key],
-                    classes = ['kb-flat-btn', 'kb-btn-action'].concat(button.classes);
-                return ui.buildButton({
-                    tip: button.help,
-                    name: key,
-                    events: events,
-                    type: button.type || 'default',
-                    classes: classes,
-                    hidden: true,
-                    event: {
-                        type: 'actionButton',
-                        data: {
-                            action: key
+                    var button = actionButtons.availableButtons[key],
+                        classes = ['kb-flat-btn', 'kb-btn-action'].concat(button.classes);
+                    return ui.buildButton({
+                        tip: button.help,
+                        name: key,
+                        events: events,
+                        type: button.type || 'default',
+                        classes: classes,
+                        hidden: true,
+                        event: {
+                            type: 'actionButton',
+                            data: {
+                                action: key
+                            }
+                        },
+                        icon: {
+                            name: button.icon.name,
+                            size: 3
                         }
-                    },
-                    icon: {
-                        name: button.icon.name,
-                        size: 3
-                    }
-                });
-            })
-                );
+                    });
+                })
+            );
         }
 
         function buildRunControlPanelDisplayButtons(events) {
             var buttons = Object.keys(controlBarTabs.tabs).map(function (key) {
-                var tab = controlBarTabs.tabs[key], icon;
+                var tab = controlBarTabs.tabs[key],
+                    icon;
                 if (!tab) {
                     console.warn('Tab not defined: ' + key);
                     return;
@@ -951,100 +962,122 @@ define([
         }
 
         function buildRunControlPanel(events) {
-            return div({dataElement: 'run-control-panel'}, [
+            return div({ dataElement: 'run-control-panel' }, [
                 div({
-                    style: {border: '1px silver solid', height: '100px', position: 'relative'}
+                    style: { border: '1px silver solid', height: '100px', position: 'relative' }
                 }, [
-                    div({style: {position: 'absolute', top: '0', bottom: '0', left: '0', right: '0'}}, [
-                        div({dataElement: 'status', style: {
-                                position: 'absolute', left: '0', top: '0',
+                    div({ style: { position: 'absolute', top: '0', bottom: '0', left: '0', right: '0' } }, [
+                        div({
+                            dataElement: 'status',
+                            style: {
+                                position: 'absolute',
+                                left: '0',
+                                top: '0',
                                 width: '100px',
                                 height: '100px',
                                 borderRight: '1px silver solid'
-                            }}, [
-                            div({style: {height: '40px', marginTop: '10px', textAlign: 'center', lineHeight: '40px', verticalAlign: 'middle'}}, [
-                                span({dataElement: 'indicator'}, [
-                                    span({dataElement: 'icon', class: 'fa fa-question fa-2x', style: {lineHeight: '40px'}})
+                            }
+                        }, [
+                            div({ style: { height: '40px', marginTop: '10px', textAlign: 'center', lineHeight: '40px', verticalAlign: 'middle' } }, [
+                                span({ dataElement: 'indicator' }, [
+                                    span({ dataElement: 'icon', class: 'fa fa-question fa-2x', style: { lineHeight: '40px' } })
                                 ])
                             ]),
-                            div({dataElement: 'message', style: {height: '20px', marginTop: '5px', textAlign: 'center'}}, 'status'),
-                            div({dataElement: 'measure', style: {height: '20px', marginBotton: '5px', textAlign: 'center'}})
+                            div({ dataElement: 'message', style: { height: '20px', marginTop: '5px', textAlign: 'center' } }, 'status'),
+                            div({ dataElement: 'measure', style: { height: '20px', marginBotton: '5px', textAlign: 'center' } })
                         ]),
-                        div({dataElement: 'toolbar', style: {
-                                position: 'absolute', left: '100px', right: '100px', top: '0',
+                        div({
+                            dataElement: 'toolbar',
+                            style: {
+                                position: 'absolute',
+                                left: '100px',
+                                right: '100px',
+                                top: '0',
                                 height: '100px',
                                 borderRight: '1px silver solid'
-                            }}, [
-                            div({style: {
+                            }
+                        }, [
+                            div({
+                                style: {
                                     height: '50px',
                                     padding: '5px',
                                     xborderBottom: '1px silver solid'
-                                }}, [
-                                div({dataElement: 'message'})
+                                }
+                            }, [
+                                div({ dataElement: 'message' })
                             ]),
-                            div({style: {
+                            div({
+                                style: {
                                     height: '50px',
                                     lineHeight: '50px',
                                     paddingLeft: '15px',
                                     verticalAlign: 'bottom'
-                                }}, [
-                                div({class: 'btn-toolbar',
+                                }
+                            }, [
+                                div({
+                                    class: 'btn-toolbar',
                                     style: {
                                         display: 'inline-block',
                                         verticalAlign: 'bottom'
-                                    }}, buildRunControlPanelDisplayButtons(events))
+                                    }
+                                }, buildRunControlPanelDisplayButtons(events))
                             ])
                         ]),
-                        div({style: {
+                        div({
+                            style: {
                                 width: '100px',
                                 height: '100px',
                                 position: 'absolute',
                                 top: '0',
                                 right: '0'
-                            }}, [
-                            div({style: {
+                            }
+                        }, [
+                            div({
+                                style: {
                                     height: '100px',
                                     textAlign: 'center',
                                     lineHeight: '100px',
                                     verticalAlign: 'middle',
                                     textStyle: 'italic'
-                                }}, [
+                                }
+                            }, [
                                 buildRunControlPanelRunButtons(events)
                             ])
                         ])
                     ])
                 ]),
-                div({dataElement: 'tab-pane',
+                div({
+                    dataElement: 'tab-pane',
                     // style: {
                     //     border: '1px rgb(32, 77, 16) solid',
                     //     padding: '4px',
                     //     backgroundColor: '#f5f5f5'
                     // }
                 }, [
-                    div({dataElement: 'widget'})
+                    div({ dataElement: 'widget' })
                 ])
             ]);
         }
 
         function renderLayout() {
             var events = Events.make(),
-                content = div({class: 'kbase-extension kb-app-cell', style: {display: 'flex', alignItems: 'stretch'}}, [
-                    div({class: 'prompt', dataElement: 'prompt', style: {display: 'flex', alignItems: 'stretch', flexDirection: 'column'}}, [
-                        div({dataElement: 'status'})
+                content = div({ class: 'kbase-extension kb-app-cell', style: { display: 'flex', alignItems: 'stretch' } }, [
+                    div({ class: 'prompt', dataElement: 'prompt', style: { display: 'flex', alignItems: 'stretch', flexDirection: 'column' } }, [
+                        div({ dataElement: 'status' })
                     ]),
                     div({
                         class: 'body',
                         dataElement: 'body',
-                        style: {display: 'flex', alignItems: 'stretch', flexDirection: 'column', flex: '1'}
+                        style: { display: 'flex', alignItems: 'stretch', flexDirection: 'column', flex: '1' }
                     }, [
-                        div({dataElement: 'widget', style: {display: 'block', width: '100%'}}, [
-                            div({class: 'container-fluid'}, [
+                        div({ dataElement: 'widget', style: { display: 'block', width: '100%' } }, [
+                            div({ class: 'container-fluid' }, [
                                 div({
                                     class: 'kb-app-warning alert alert-warning hidden',
                                     dataElement: 'outdated',
                                     role: 'alert'
                                 }, [
-                                    span({style: {'font-weight': 'bold'}}, 'Warning'),
+                                    span({ style: { 'font-weight': 'bold' } }, 'Warning'),
                                     ': this app appears to be out of date. Running it may cause undesired results. Add a new "<b>' + model.getItem('app.spec.info.name') + '</b>" App for the most recent version.'
                                 ]),
                                 ui.buildPanel({
@@ -1053,7 +1086,7 @@ define([
                                     hidden: true,
                                     type: 'default',
                                     classes: ['kb-panel-container'],
-                                    body: div({dataElement: 'content'})
+                                    body: div({ dataElement: 'content' })
                                 }),
                                 ui.buildCollapsiblePanel({
                                     title: 'Notifications',
@@ -1062,7 +1095,7 @@ define([
                                     type: 'default',
                                     classes: ['kb-panel-container'],
                                     body: [
-                                        div({dataElement: 'content'})
+                                        div({ dataElement: 'content' })
                                     ]
                                 }),
                                 ui.buildCollapsiblePanel({
@@ -1073,7 +1106,7 @@ define([
                                     type: 'default',
                                     classes: ['kb-panel-container'],
                                     body: [
-                                        div({dataElement: 'about-app'}, renderAboutApp())
+                                        div({ dataElement: 'about-app' }, renderAboutApp())
                                     ]
                                 }),
                                 (function () {
@@ -1087,58 +1120,58 @@ define([
                                         type: 'default',
                                         classes: ['kb-panel-container'],
                                         body: [
-                                            div({dataElement: 'fsm-display', style: {marginBottom: '4px'}}, [
-                                                span({style: {marginRight: '4px'}}, 'FSM'),
-                                                span({dataElement: 'content'})
+                                            div({ dataElement: 'fsm-display', style: { marginBottom: '4px' } }, [
+                                                span({ style: { marginRight: '4px' } }, 'FSM'),
+                                                span({ dataElement: 'content' })
                                             ]),
                                             div([
-                                                ui.makeButton('Show Code', 'toggle-code-view', {events: events}),
-                                                ui.makeButton('Edit Metadata', 'edit-cell-metadata', {events: events}),
-                                                ui.makeButton('Edit Notebook Metadata', 'edit-notebook-metadata', {events: events})
+                                                ui.makeButton('Show Code', 'toggle-code-view', { events: events }),
+                                                ui.makeButton('Edit Metadata', 'edit-cell-metadata', { events: events }),
+                                                ui.makeButton('Edit Notebook Metadata', 'edit-notebook-metadata', { events: events })
                                             ])
                                         ]
                                     });
                                 }()),
                                 buildRunControlPanel(events)
-                                    // ui.buildCollapsiblePanel({
-                                    //     title: 'Output ' + span({class: 'fa fa-arrow-left'}),
-                                    //     name: 'output-group',
-                                    //     hidden: true,
-                                    //     type: 'default',
-                                    //     classes: ['kb-panel-container'],
-                                    //     body: div({dataElement: 'widget'})
-                                    // }),
-//                                ui.buildPanel({
-//                                    title: 'Error',
-//                                    name: 'fatal-error',
-//                                    hidden: true,
-//                                    type: 'danger',
-//                                    classes: ['kb-panel-container'],
-//                                    body: div([
-//                                        div({class: 'alert alert-danger'}, 'This App cell could not load due to errors described below'),
-//                                        ui.buildGridTable({
-//                                            row: {
-//                                                style: {marginBottom: '6px'}
-//                                            },
-//                                            cols: [
-//                                                {
-//                                                    width: 2,
-//                                                    style: {fontWeight: 'bold'}
-//                                                },
-//                                                {
-//                                                    width: 10
-//                                                }
-//                                            ],
-//                                            table: [
-//                                                ['Title', div({dataElement: 'title'})],
-//                                                ['Message', div({dataElement: 'message'})],
-//                                                ['Advice', div({dataElement: 'advice'})],
-//                                                ['Info', div({dataElement: 'info'})],
-//                                                ['Details', div({dataElement: 'detail', style: {maxHeight: '300px', maxWidth: '100%', overflow: 'scroll', fontFamily: 'monospace'}})]
-//                                            ]
-//                                        })
-//                                    ])
-//                                })
+                                // ui.buildCollapsiblePanel({
+                                //     title: 'Output ' + span({class: 'fa fa-arrow-left'}),
+                                //     name: 'output-group',
+                                //     hidden: true,
+                                //     type: 'default',
+                                //     classes: ['kb-panel-container'],
+                                //     body: div({dataElement: 'widget'})
+                                // }),
+                                //                                ui.buildPanel({
+                                //                                    title: 'Error',
+                                //                                    name: 'fatal-error',
+                                //                                    hidden: true,
+                                //                                    type: 'danger',
+                                //                                    classes: ['kb-panel-container'],
+                                //                                    body: div([
+                                //                                        div({class: 'alert alert-danger'}, 'This App cell could not load due to errors described below'),
+                                //                                        ui.buildGridTable({
+                                //                                            row: {
+                                //                                                style: {marginBottom: '6px'}
+                                //                                            },
+                                //                                            cols: [
+                                //                                                {
+                                //                                                    width: 2,
+                                //                                                    style: {fontWeight: 'bold'}
+                                //                                                },
+                                //                                                {
+                                //                                                    width: 10
+                                //                                                }
+                                //                                            ],
+                                //                                            table: [
+                                //                                                ['Title', div({dataElement: 'title'})],
+                                //                                                ['Message', div({dataElement: 'message'})],
+                                //                                                ['Advice', div({dataElement: 'advice'})],
+                                //                                                ['Info', div({dataElement: 'info'})],
+                                //                                                ['Details', div({dataElement: 'detail', style: {maxHeight: '300px', maxWidth: '100%', overflow: 'scroll', fontFamily: 'monospace'}})]
+                                //                                            ]
+                                //                                        })
+                                //                                    ])
+                                //                                })
                             ])
                         ])
                     ])
@@ -1148,35 +1181,35 @@ define([
                 events: events
             };
         }
-        
+
         // TODO: move to ... validation? specs?
         function isEmpty(value) {
-            
+
             if (value === undefined || value === null) {
                 return true;
             }
 
             switch (typeof value) {
-                case 'string':
+            case 'string':
+                if (value.length === 0) {
+                    return true;
+                }
+                break;
+            case 'number':
+                return false;
+            case 'object':
+                if (value instanceof Array) {
                     if (value.length === 0) {
                         return true;
                     }
-                    break;
-                case 'number':
-                    return false;
-                case 'object': 
-                    if (value instanceof Array) {
-                        if (value.length === 0) {
-                            return true;
-                        }
-                    }
-                    if (Object.keys(value).length === 0) {
-                        return true;
-                    }
-                    break;
+                }
+                if (Object.keys(value).length === 0) {
+                    return true;
+                }
+                break;
             }
             return false;
-            
+
         }
 
         // this should be elevated to the collection of parameters. 
@@ -1206,35 +1239,35 @@ define([
              *
              *
              */
-            console.log('validating model...', model.getItem('params'));
-            var validation = spec.validateModel(model.getItem('params'));
-            console.log('VALIDATION', validation);
-            
+
+            // TODO: ENABLE THIS
+            //var validation = spec.validateModel(model.getItem('params'));
+
             return {
                 isValid: true,
                 errors: []
             };
-            
-            
-//            var params = model.getItem('params'),
-//                parameters = model.getItem('app.parameters'),
-//                errors = parameters.layout.map(function (id) {
-//                    var spec = parameters.specs[id];
-//                    if (spec.data.constraints.required) {
-//                        if (isEmpty(params[spec.id])) {
-//                            return {
-//                                diagnosis: 'required-missing',
-//                                errorMessage: 'The ' + spec.data.type + ' "' + spec.id + '" is required but was not provided'
-//                            };
-//                        }
-//                    }
-//                }).filter(function (error) {
-//                if (error) {
-//                    return true;
-//                }
-//                return false;
-//            });
-//            console.log('VALID?', errors);
+
+
+            //            var params = model.getItem('params'),
+            //                parameters = model.getItem('app.parameters'),
+            //                errors = parameters.layout.map(function (id) {
+            //                    var spec = parameters.specs[id];
+            //                    if (spec.data.constraints.required) {
+            //                        if (isEmpty(params[spec.id])) {
+            //                            return {
+            //                                diagnosis: 'required-missing',
+            //                                errorMessage: 'The ' + spec.data.type + ' "' + spec.id + '" is required but was not provided'
+            //                            };
+            //                        }
+            //                    }
+            //                }).filter(function (error) {
+            //                if (error) {
+            //                    return true;
+            //                }
+            //                return false;
+            //            });
+            //            console.log('VALID?', errors);
             return {
                 isValid: (validation.length === 0),
                 errors: validation
@@ -1248,21 +1281,21 @@ define([
         // for a beta or release tag ...
         function fixApp(app) {
             switch (app.tag) {
-                case 'release':
-                    return {
-                        id: app.id,
-                        tag: app.tag,
-                        version: app.version
-                    };
-                case 'beta':
-                case 'dev':
-                    return {
-                        id: app.id,
-                        tag: app.tag,
-                        version: app.gitCommitHash
-                    };
-                default:
-                    throw new Error('Invalid tag for app ' + app.id);
+            case 'release':
+                return {
+                    id: app.id,
+                    tag: app.tag,
+                    version: app.version
+                };
+            case 'beta':
+            case 'dev':
+                return {
+                    id: app.id,
+                    tag: app.tag,
+                    version: app.gitCommitHash
+                };
+            default:
+                throw new Error('Invalid tag for app ' + app.id);
             }
         }
 
@@ -1293,7 +1326,7 @@ define([
                 // TODO: evaluate the state of things to try to guess the state?
                 // Or is this just an error unless it is a new cell?
                 // currentState = {mode: 'editing', params: 'incomplete'};
-                currentState = {mode: 'new'};
+                currentState = { mode: 'new' };
             }
             fsm = Fsm.make({
                 states: appStates,
@@ -1325,7 +1358,7 @@ define([
                     detail: null
                 });
                 syncFatalError();
-                fsm.start({mode: 'internal-error'});
+                fsm.start({ mode: 'internal-error' });
             }
         }
 
@@ -1401,12 +1434,12 @@ define([
                 content;
 
             if (notifications.length === 0) {
-                content = span({style: {fontStyle: 'italic'}}, 'There are currently no notifications');
+                content = span({ style: { fontStyle: 'italic' } }, 'There are currently no notifications');
             } else {
                 content = notifications.map(function (notification, index) {
-                    return div({class: 'row'}, [
-                        div({class: 'col-md-10'}, notification),
-                        div({class: 'col-md-2', style: {textAlign: 'right'}}, span({}, [
+                    return div({ class: 'row' }, [
+                        div({ class: 'col-md-10' }, notification),
+                        div({ class: 'col-md-2', style: { textAlign: 'right' } }, span({}, [
                             a({
                                 class: 'btn btn-default',
                                 id: events.addEvent({
@@ -1436,37 +1469,37 @@ define([
         }
 
 
-//        function showToggle(name) {
-//
-//        }
-//
-//        function ensureToggle(name) {
-//            var propName = 'user-settings.show-' + name,
-//                elementPath = 'toggle-' + name,
-//
-//        }
-//
-//        // just simple display block/none for now
-//        function renderToggle(name) {
-//            var propName = 'user-settings.show-' + name,
-//                elementPath = 'toggle-' + name,
-//                node = dom.getElement(elementPath),
-//                originalStyle = model.getItem(propName);
-//
-//            if (orig
-//
-//        }
-//
-//        function toggleToggle(name) {
-//            var propName = 'user-settings.show-' + name;
-//            if (model.getItem(propName)) {
-//                model.setItem(propName, false);
-//            } else {
-//                model.setItem(propName, true);
-//            }
-//            renderToggle(name);
-//            return model.getItem(propName);
-//        }
+        //        function showToggle(name) {
+        //
+        //        }
+        //
+        //        function ensureToggle(name) {
+        //            var propName = 'user-settings.show-' + name,
+        //                elementPath = 'toggle-' + name,
+        //
+        //        }
+        //
+        //        // just simple display block/none for now
+        //        function renderToggle(name) {
+        //            var propName = 'user-settings.show-' + name,
+        //                elementPath = 'toggle-' + name,
+        //                node = dom.getElement(elementPath),
+        //                originalStyle = model.getItem(propName);
+        //
+        //            if (orig
+        //
+        //        }
+        //
+        //        function toggleToggle(name) {
+        //            var propName = 'user-settings.show-' + name;
+        //            if (model.getItem(propName)) {
+        //                model.setItem(propName, false);
+        //            } else {
+        //                model.setItem(propName, true);
+        //            }
+        //            renderToggle(name);
+        //            return model.getItem(propName);
+        //        }
 
         // WIDGETS
 
@@ -1576,41 +1609,41 @@ define([
 
 
             // Button state
-//            state.ui.buttons.enabled.forEach(function (button) {
-//                ui.enableButton(button);
-//            });
-//            state.ui.buttons.disabled.forEach(function (button) {
-//                ui.disableButton(button);
-//            });
-//            state.ui.buttons.hidden.forEach(function (button) {
-//                ui.hideButton(button);
-//            });
+            //            state.ui.buttons.enabled.forEach(function (button) {
+            //                ui.enableButton(button);
+            //            });
+            //            state.ui.buttons.disabled.forEach(function (button) {
+            //                ui.disableButton(button);
+            //            });
+            //            state.ui.buttons.hidden.forEach(function (button) {
+            //                ui.hideButton(button);
+            //            });
 
 
             // Element state
 
             // DISABLE for now, as the tabs have taken over most of this
             // functionality. May still be useful...
-//            state.ui.elements.show.forEach(function (element) {
-//                ui.showElement(element);
-//            });
-//            state.ui.elements.hide.forEach(function (element) {
-//                ui.hideElement(element);
-//            });
+            //            state.ui.elements.show.forEach(function (element) {
+            //                ui.showElement(element);
+            //            });
+            //            state.ui.elements.hide.forEach(function (element) {
+            //                ui.hideElement(element);
+            //            });
 
             // Emit messages for this state.
-//            if (state.ui.messages) {
-//                state.ui.messages.forEach(function (message) {
-//                    var tempBus;
-//                    if (message.widget) {
-//                        tempBus = widgets[message.widget].bus;
-//                    } else {
-//                        tempBus = inputWidgetBus;
-//                    }
-//
-//                    tempBus.send(message.message, message.address);
-//                });
-//            }
+            //            if (state.ui.messages) {
+            //                state.ui.messages.forEach(function (message) {
+            //                    var tempBus;
+            //                    if (message.widget) {
+            //                        tempBus = widgets[message.widget].bus;
+            //                    } else {
+            //                        tempBus = inputWidgetBus;
+            //                    }
+            //
+            //                    tempBus.send(message.message, message.address);
+            //                });
+            //            }
         }
 
         function toggleReadOnlyMode(readOnly) {
@@ -1639,6 +1672,7 @@ define([
         }
 
         var saveTimer = null;
+
         function saveNarrative() {
             if (saveTimer) {
                 return;
@@ -1678,14 +1712,14 @@ define([
             // reloadExecutionWidget();
 
             // TODO: evaluate the params again before we do this.
-            fsm.newState({mode: 'editing', params: 'complete', code: 'built'});
+            fsm.newState({ mode: 'editing', params: 'complete', code: 'built' });
 
             clearOutput();
 
             renderUI();
         }
 
-         function resetAppAndEdit(source) {
+        function resetAppAndEdit(source) {
             // only do this if we are not editing.
 
             model.deleteItem('exec');
@@ -1695,7 +1729,7 @@ define([
             // reloadExecutionWidget();
 
             // TODO: evaluate the params again before we do this.
-            fsm.newState({mode: 'editing', params: 'incomplete'});
+            fsm.newState({ mode: 'editing', params: 'incomplete' });
 
             clearOutput();
 
@@ -1707,7 +1741,7 @@ define([
                 p('This action will clear the Results and re-enable the Configure tab for editing. You may then change inputs and run the app again. (Any output you have already produced will be left intact.)'),
                 p('Proceed to Resume Editing?')
             ]);
-            ui.showConfirmDialog({title: 'Edit and Re-Run?', body: confirmationMessage})
+            ui.showConfirmDialog({ title: 'Edit and Re-Run?', body: confirmationMessage })
                 .then(function (confirmed) {
                     if (!confirmed) {
                         return;
@@ -1723,7 +1757,7 @@ define([
                 p('This action will clear all parameters, run statistics, and logs and place the app into Edit mode.'),
                 p('Proceed to Reset the app and Resume Editing?')
             ]);
-            ui.showConfirmDialog({title: 'Reset App?', body: confirmationMessage})
+            ui.showConfirmDialog({ title: 'Reset App?', body: confirmationMessage })
                 .then(function (confirmed) {
                     if (!confirmed) {
                         return;
@@ -1746,7 +1780,7 @@ define([
                 ]),
                 p('Continue to Cancel the running job?')
             ]);
-            ui.showConfirmDialog({title: 'Cancel Job?', body: confirmationMessage})
+            ui.showConfirmDialog({ title: 'Cancel Job?', body: confirmationMessage })
                 .then(function (confirmed) {
                     if (!confirmed) {
                         return;
@@ -1756,7 +1790,7 @@ define([
                     if (jobState) {
                         cancelJob(jobState.job_id);
 
-                        fsm.newState({mode: 'canceling'});
+                        fsm.newState({ mode: 'canceling' });
                         renderUI();
                         // the job will be deleted form the notebook when the job cancellation
                         // event is received.
@@ -1766,7 +1800,7 @@ define([
                         // In erroneous conditions it could occur if a job failed or was
                         // cancelled but the state machine got confused.
                         model.deleteItem('exec');
-                        fsm.newState({mode: 'editing', params: 'complete', code: 'built'});
+                        fsm.newState({ mode: 'editing', params: 'complete', code: 'built' });
                         renderUI();
                     }
                 });
@@ -1781,14 +1815,14 @@ define([
             // Update FSM
             var newFsmState = (function () {
                 switch (message.event) {
-                    case 'launched_job':
-                        // NEW: start listening for jobs.
-                        startListeningForJobMessages(message.job_id);
-                        return {mode: 'processing', stage: 'launched'};
-                    case 'error':
-                        return {mode: 'error', stage: 'launching'};
-                    default:
-                        throw new Error('Invalid launch state ' + message.event);
+                case 'launched_job':
+                    // NEW: start listening for jobs.
+                    startListeningForJobMessages(message.job_id);
+                    return { mode: 'processing', stage: 'launched' };
+                case 'error':
+                    return { mode: 'error', stage: 'launching' };
+                default:
+                    throw new Error('Invalid launch state ' + message.event);
                 }
             }());
             fsm.newState(newFsmState);
@@ -1800,44 +1834,44 @@ define([
             var currentState = fsm.getCurrentState(),
                 newFsmState = (function () {
                     switch (jobState.job_state) {
-                        case 'queued':
-                            return {mode: 'processing', stage: 'queued'};
-                        case 'job_started':
-                            return {mode: 'processing', stage: 'running'};
-                        case 'in-progress':
-                            return {mode: 'processing', stage: 'running'};
-                        case 'completed':
-                            stopListeningForJobMessages();
-                            return {mode: 'success'};
-                        case 'canceled':
-                            stopListeningForJobMessages();
-                            return {mode: 'canceled'};
-                        case 'suspend':
-                        case 'error':
-                            stopListeningForJobMessages();
+                    case 'queued':
+                        return { mode: 'processing', stage: 'queued' };
+                    case 'job_started':
+                        return { mode: 'processing', stage: 'running' };
+                    case 'in-progress':
+                        return { mode: 'processing', stage: 'running' };
+                    case 'completed':
+                        stopListeningForJobMessages();
+                        return { mode: 'success' };
+                    case 'canceled':
+                        stopListeningForJobMessages();
+                        return { mode: 'canceled' };
+                    case 'suspend':
+                    case 'error':
+                        stopListeningForJobMessages();
 
-                            // Due to the course granularity of job status
-                            // messages, we don't can't rely on the prior state
-                            // to inform us about what procesing stage the
-                            // error occured in -- we need to inspect the job state.
-                            var errorStage;
-                            if (jobState.exec_start_time) {
-                                errorStage = 'running';
-                            } else if (jobState.creation_time) {
-                                errorStage = 'queued';
-                            }
-                            console.log('ERROR???', jobState, errorStage);
-                            if (errorStage) {
-                                return {
-                                    mode: 'error',
-                                    stage: errorStage
-                                };
-                            }
+                        // Due to the course granularity of job status
+                        // messages, we don't can't rely on the prior state
+                        // to inform us about what procesing stage the
+                        // error occured in -- we need to inspect the job state.
+                        var errorStage;
+                        if (jobState.exec_start_time) {
+                            errorStage = 'running';
+                        } else if (jobState.creation_time) {
+                            errorStage = 'queued';
+                        }
+                        console.log('ERROR???', jobState, errorStage);
+                        if (errorStage) {
                             return {
-                                mode: 'error'
+                                mode: 'error',
+                                stage: errorStage
                             };
-                        default:
-                            throw new Error('Invalid job state ' + jobState.job_state);
+                        }
+                        return {
+                            mode: 'error'
+                        };
+                    default:
+                        throw new Error('Invalid job state ' + jobState.job_state);
                     }
                 }());
             fsm.newState(newFsmState);
@@ -1848,7 +1882,7 @@ define([
         //       it is created during the code build (since it needs to be passed
         //       to the kernel)
         function doRun() {
-            fsm.newState({mode: 'execute-requested'});
+            fsm.newState({ mode: 'execute-requested' });
 
             // Save this to the exec state change log.
             var execLog = model.getItem('exec.log');
@@ -1908,6 +1942,7 @@ define([
         }
 
         var jobListeners = [];
+
         function startListeningForJobMessages(jobId) {
             var ev;
 
@@ -2123,9 +2158,9 @@ define([
                 return;
             }
             widgets.runClock.start({
-                node: ui.getElement('run-control-panel.status.measure'),
-                startTime: jobState.exec_start_time
-            })
+                    node: ui.getElement('run-control-panel.status.measure'),
+                    startTime: jobState.exec_start_time
+                })
                 .catch(function (err) {
                     ui.setContent('run-control-panel.status.measure', 'ERROR:' + err.message);
                 });
@@ -2146,9 +2181,9 @@ define([
                 return;
             }
             widgets.runClock.start({
-                node: ui.getElement('run-control-panel.status.measure'),
-                startTime: jobState.creation_time
-            })
+                    node: ui.getElement('run-control-panel.status.measure'),
+                    startTime: jobState.creation_time
+                })
                 .catch(function (err) {
                     ui.setContent('run-control-panel.status.measure', 'ERROR:' + err.message);
                 });
@@ -2185,9 +2220,9 @@ define([
             // output has been created already, and if so just exit.
             // This protects us from the condition in which a user
             // has removed the output for the latest run.
-//            if (outputCreated) {
-//                return;
-//            }
+            //            if (outputCreated) {
+            //                return;
+            //            }
 
             // If so, is the cell still there?
             if (outputCellId) {
@@ -2242,7 +2277,7 @@ define([
             var confirmationMessage = div([
                 p('Continue to remove this app cell?')
             ]);
-            ui.showConfirmDialog({title: 'Remove Cell?', body: confirmationMessage})
+            ui.showConfirmDialog({ title: 'Remove Cell?', body: confirmationMessage })
                 .then(function (confirmed) {
                     if (!confirmed) {
                         return;
@@ -2265,7 +2300,7 @@ define([
                 ]),
                 p('Continue to delete this app cell?')
             ]);
-            ui.showConfirmDialog({title: 'Confirm Cell Deletion', body: content})
+            ui.showConfirmDialog({ title: 'Confirm Cell Deletion', body: content })
                 .then(function (confirmed) {
                     if (!confirmed) {
                         return;
@@ -2293,7 +2328,8 @@ define([
 
                     stop();
 
-                    Jupyter.notebook.delete_cell(Jupyter.notebook.find_cell_index(cell));
+                    var cellIndex = Jupyter.notebook.find_cell_index(cell);
+                    Jupyter.notebook.delete_cell(cellIndex);
                 });
         }
 
@@ -2311,7 +2347,7 @@ define([
                 // doesn't have a reference to the bus (yet).
                 cell.element.on('toggleCellSettings.cell', function () {
                     var showing = toggleSettings(cell),
-                        label = span({class: 'fa fa-cog '}),
+                        label = span({ class: 'fa fa-cog ' }),
                         buttonNode = ui.getButton('toggle-settings');
                     buttonNode.innerHTML = label;
                     if (showing) {
@@ -2341,7 +2377,7 @@ define([
 
                 busEventManager.add(bus.on('toggle-settings', function () {
                     var showing = toggleSettings(cell),
-                        label = span({class: 'fa fa-cog '}),
+                        label = span({ class: 'fa fa-cog ' }),
                         buttonNode = ui.getButton('toggle-settings');
                     buttonNode.innerHTML = label;
                     if (showing) {
@@ -2423,21 +2459,21 @@ define([
                 // var listeningForJobUpdates = false;
                 if (state) {
                     switch (state.mode) {
-                        case 'editing':
+                    case 'editing':
+                        break;
+                    case 'processing':
+                        switch (state.stage) {
+                        case 'launched':
+                        case 'queued':
+                        case 'running':
+                            startListeningForJobMessages(model.getItem('exec.jobState.job_id'));
+                            requestJobStatus(model.getItem('exec.jobState.job_id'));
                             break;
-                        case 'processing':
-                            switch (state.stage) {
-                                case 'launched':
-                                case 'queued':
-                                case 'running':
-                                    startListeningForJobMessages(model.getItem('exec.jobState.job_id'));
-                                    requestJobStatus(model.getItem('exec.jobState.job_id'));
-                                    break;
-                            }
-                            break;
-                        case 'success':
-                        case 'error':
-                            // do nothing for now
+                        }
+                        break;
+                    case 'success':
+                    case 'error':
+                        // do nothing for now
                     }
                 }
 
@@ -2446,10 +2482,10 @@ define([
                 // see if there is anything new, even if we don't expect anything
                 // new...
                 //if (!listeningForJobUpdates) {
-//                var jobId = model.getItem('exec.jobState.job_id');
-//                if (jobId) {
-//                    startListeningForJobMessages(jobId);
-//                }
+                //                var jobId = model.getItem('exec.jobState.job_id');
+                //                if (jobId) {
+                //                    startListeningForJobMessages(jobId);
+                //                }
                 //}
 
 
@@ -2505,96 +2541,96 @@ define([
                     });
                 }));
 
-//                runtime.bus().listen({
-//                    channel: {
-//                        cell: utils.getMeta(cell, 'attributes', 'id')
-//                    },
-//                    key: {
-//                        type: 'job-status',
-//                        jobId:
-//                    },
-//                    handle: function (message) {
-//
-//                        // Store the most recent job status (jobInfo) in the model and thus metadata.
-//                        // console.log('JOBSTATUS', message.job.state);
-//                        updateFromJobState(message.job.state);
-//
-//                        var existingState = model.getItem('exec.jobState');
-//                        if (!existingState || existingState.job_state !== message.job.state.job_state) {
-//                            model.setItem('exec.jobState', message.job.state);
-//                            // Forward the job info to the exec widget if it is available. (it should be!)
-//                            if (widgets.execWidget) {
-//                                widgets.execWidget.bus.emit('job-state', {
-//                                    jobState: message.job.state
-//                                });
-//                            }
-//                        } else {
-//                            if (widgets.execWidget) {
-//                                widgets.execWidget.bus.emit('job-state-updated', {
-//                                    jobId: message.job.state.job_id
-//                                });
-//                            }
-//                        }
-//                        model.setItem('exec.jobStateUpdated', new Date().getTime());
-//
-//
-//
-//                        // Evaluate the job state to generate our derived "quickStatus" used to control
-//                        // the ui...
-//
-//
-//                        // SKIP for now
-//                        return;
-//
-//                        model.setItem('job', {
-//                            updatedAt: new Date().getTime(),
-//                            info: message.job
-//                        });
-//
-//                        var jobStatus = message.job.state.job_state;
-//
-//                        // Update current status
-//                        updateRunJobStatus();
-//
-//                        renderRunStatus();
-//
-//                        updateJobDetails(message);
-//                        // updateJobLog(message);
-//
-//                        updateJobReport(message.job);
-//
-//                        // and yet another job state thing. This one takes care
-//                        // the general state of the job state communication
-//
-//                        // Update status history.
-//
-//                        // Okay, don't store multiples of the last event.
-//                        var log = cell.metadata.kbase.log;
-//                        if (!log) {
-//                            log = [];
-//                            cell.metadata.kbase.log = log;
-//                        }
-//                        if (log.length > 0) {
-//                            var lastLog = log[log.length - 1];
-//                            if (lastLog.data.status === jobStatus) {
-//                                if (lastLog.count === undefined) {
-//                                    lastLog.count = 0;
-//                                }
-//                                lastLog.count += 1;
-//                                return;
-//                            }
-//                        }
-//
-//                        utils.pushMeta(cell, 'appCell.exec.log', {
-//                            timestamp: new Date(),
-//                            event: 'jobstatus',
-//                            data: {
-//                                jobId: message.jobId,
-//                                status: jobStatus
-//                            }
-//                        });
-//                    }
-//                });
+                //                runtime.bus().listen({
+                //                    channel: {
+                //                        cell: utils.getMeta(cell, 'attributes', 'id')
+                //                    },
+                //                    key: {
+                //                        type: 'job-status',
+                //                        jobId:
+                //                    },
+                //                    handle: function (message) {
+                //
+                //                        // Store the most recent job status (jobInfo) in the model and thus metadata.
+                //                        // console.log('JOBSTATUS', message.job.state);
+                //                        updateFromJobState(message.job.state);
+                //
+                //                        var existingState = model.getItem('exec.jobState');
+                //                        if (!existingState || existingState.job_state !== message.job.state.job_state) {
+                //                            model.setItem('exec.jobState', message.job.state);
+                //                            // Forward the job info to the exec widget if it is available. (it should be!)
+                //                            if (widgets.execWidget) {
+                //                                widgets.execWidget.bus.emit('job-state', {
+                //                                    jobState: message.job.state
+                //                                });
+                //                            }
+                //                        } else {
+                //                            if (widgets.execWidget) {
+                //                                widgets.execWidget.bus.emit('job-state-updated', {
+                //                                    jobId: message.job.state.job_id
+                //                                });
+                //                            }
+                //                        }
+                //                        model.setItem('exec.jobStateUpdated', new Date().getTime());
+                //
+                //
+                //
+                //                        // Evaluate the job state to generate our derived "quickStatus" used to control
+                //                        // the ui...
+                //
+                //
+                //                        // SKIP for now
+                //                        return;
+                //
+                //                        model.setItem('job', {
+                //                            updatedAt: new Date().getTime(),
+                //                            info: message.job
+                //                        });
+                //
+                //                        var jobStatus = message.job.state.job_state;
+                //
+                //                        // Update current status
+                //                        updateRunJobStatus();
+                //
+                //                        renderRunStatus();
+                //
+                //                        updateJobDetails(message);
+                //                        // updateJobLog(message);
+                //
+                //                        updateJobReport(message.job);
+                //
+                //                        // and yet another job state thing. This one takes care
+                //                        // the general state of the job state communication
+                //
+                //                        // Update status history.
+                //
+                //                        // Okay, don't store multiples of the last event.
+                //                        var log = cell.metadata.kbase.log;
+                //                        if (!log) {
+                //                            log = [];
+                //                            cell.metadata.kbase.log = log;
+                //                        }
+                //                        if (log.length > 0) {
+                //                            var lastLog = log[log.length - 1];
+                //                            if (lastLog.data.status === jobStatus) {
+                //                                if (lastLog.count === undefined) {
+                //                                    lastLog.count = 0;
+                //                                }
+                //                                lastLog.count += 1;
+                //                                return;
+                //                            }
+                //                        }
+                //
+                //                        utils.pushMeta(cell, 'appCell.exec.log', {
+                //                            timestamp: new Date(),
+                //                            event: 'jobstatus',
+                //                            data: {
+                //                                jobId: message.jobId,
+                //                                status: jobStatus
+                //                            }
+                //                        });
+                //                    }
+                //                });
 
                 busEventManager.add(runtime.bus().on('read-only-changed', function (msg) {
                     toggleReadOnlyMode(msg.readOnly);
@@ -2626,12 +2662,10 @@ define([
             // a string with comma separators
             var params = model.getItem('params'),
                 paramsToExport = {},
-                parameters = model.getItem('app.parameters');
-            
-            console.log('PRAMETERS', parameters, params);
+                parameters = spec.getSpec().parameters;
+
 
             Object.keys(params).forEach(function (key) {
-                console.log('KEY', key);
                 var value = params[key],
                     paramSpec = parameters.specs[key];
 
@@ -2684,15 +2718,15 @@ define([
                 iconUrl = Props.getDataItem(appSpec, 'info.icon.url');
 
             if (iconUrl) {
-                return span({class: 'fa-stack fa-2x', style: {padding: '0 3px 3px 3px'}}, [
-                    img({src: nmsBase + iconUrl, style: {maxWidth: '50px', maxHeight: '50px', margin: '0x'}})
+                return span({ class: 'fa-stack fa-2x', style: { padding: '0 3px 3px 3px' } }, [
+                    img({ src: nmsBase + iconUrl, style: { maxWidth: '50px', maxHeight: '50px', margin: '0x' } })
                 ]);
             }
 
-            return span({style: ''}, [
-                span({class: 'fa-stack fa-2x', style: {textAlign: 'center', color: 'rgb(103,58,183)'}}, [
-                    span({class: 'fa fa-square fa-stack-2x', style: {color: 'rgb(103,58,183)'}}),
-                    span({class: 'fa fa-inverse fa-stack-1x fa-cube'})
+            return span({ style: '' }, [
+                span({ class: 'fa-stack fa-2x', style: { textAlign: 'center', color: 'rgb(103,58,183)' } }, [
+                    span({ class: 'fa fa-square fa-stack-2x', style: { color: 'rgb(103,58,183)' } }),
+                    span({ class: 'fa fa-inverse fa-stack-1x fa-cube' })
                 ])
             ]);
         }
@@ -2705,7 +2739,7 @@ define([
             }
 
             prompt.innerHTML = div({
-                style: {textAlign: 'center'}
+                style: { textAlign: 'center' }
             }, [
                 makeIcon()
             ]);
@@ -2715,11 +2749,11 @@ define([
             var validationResult = validateModel();
             if (validationResult.isValid) {
                 buildPython(cell, utils.getMeta(cell, 'attributes').id, model.getItem('app'), exportParams());
-                fsm.newState({mode: 'editing', params: 'complete', code: 'built'});
+                fsm.newState({ mode: 'editing', params: 'complete', code: 'built' });
                 renderUI();
             } else {
                 resetPython(cell);
-                fsm.newState({mode: 'editing', params: 'incomplete'});
+                fsm.newState({ mode: 'editing', params: 'incomplete' });
                 renderUI();
             }
         }
@@ -2782,8 +2816,8 @@ define([
             // The app reference is already in the app cell metadata.
 
             return Promise.try(function () {
-                return getAppSpec();
-            })
+                    return getAppSpec();
+                })
                 .then(function (appSpec) {
                     // Ensure that the current app spec matches our existing one.
                     var warning = checkSpec(appSpec);
@@ -2794,14 +2828,14 @@ define([
                     }
 
                     // Create a map of parameters for easy access
-//                    var parameterMap = {};
-//                    env.parameters = model.getItem('app.spec.parameters').map(function (parameterSpec) {
-//                        // tee hee
-//                        var param = ParameterSpec.make({parameterSpec: parameterSpec});
-//                        parameterMap[param.id()] = param;
-//                        return param;
-//                    });
-//                    env.parameterMap = parameterMap;
+                    //                    var parameterMap = {};
+                    //                    env.parameters = model.getItem('app.spec.parameters').map(function (parameterSpec) {
+                    //                        // tee hee
+                    //                        var param = ParameterSpec.make({parameterSpec: parameterSpec});
+                    //                        parameterMap[param.id()] = param;
+                    //                        return param;
+                    //                    });
+                    //                    env.parameterMap = parameterMap;
 
 
                     var appRef = [model.getItem('app.id'), model.getItem('app.tag')].filter(toBoolean).join('/'),
@@ -2814,7 +2848,7 @@ define([
                         // loadInputWidget(),
                         // loadInputViewWidget(),
                         // loadExecutionWidget(),
-                        loadOutputWidget()
+                        // loadOutputWidget()
                     ]);
                 })
                 .then(function () {
@@ -2830,7 +2864,7 @@ define([
                     // editing...
 
                     if (fsm.getCurrentState().state.mode === 'new') {
-                        fsm.newState({mode: 'editing', params: 'incomplete'});
+                        fsm.newState({ mode: 'editing', params: 'incomplete' });
                         evaluateAppState();
                         //
                     } else {
@@ -2853,7 +2887,7 @@ define([
                         detail: error.detail || 'no additional details'
                     });
                     syncFatalError();
-                    fsm.newState({mode: 'internal-error'});
+                    fsm.newState({ mode: 'internal-error' });
                     renderUI();
                 });
         }
@@ -2872,9 +2906,9 @@ define([
                 // saveNarrative();
             }
         });
-        
+
         spec = Spec.make({
-            appSpec: model.getItem('app.spec')            
+            appSpec: model.getItem('app.spec')
         });
 
         return {

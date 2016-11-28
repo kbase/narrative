@@ -84,3 +84,4 @@ target/
 
 # IDE / Editor
 .vscode
+/tags

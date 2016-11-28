@@ -27,7 +27,7 @@ define([
     iconsSet,
     serviceSet,
     localRequire
-    ) {
+) {
     'use strict';
 
     var config, debug;
@@ -61,8 +61,6 @@ define([
     debug = config.mode === "debug";
     config.debug = debug;
 
-    addCdnModules(config.urls['cdn']);
-
     // Add a remote UI-common to the Require.js config
     require.config({
         paths: {
@@ -77,7 +75,7 @@ define([
 
     config['services'] = {};
     Object.keys(config.urls).forEach(function (key) {
-        config.services[key] = {'url': config.urls[key], 'name': key};
+        config.services[key] = { 'url': config.urls[key], 'name': key };
     });
 
 
@@ -99,62 +97,62 @@ define([
      */
     function updateConfig() {
         return new Promise.try(function (resolve, reject) {
-            if (window.kbconfig) {
-                return window.kbconfig;
-            }
-            console.log('Config: checking remote widgets');
-            assertConfig();
-            if (!config.use_local_widgets) {
-                // var uiCommonPaths = config.urls.ui_common_root + "widget-paths.json";
-                require(['uiCommonPaths'], function (pathConfig) {
-                    for (var name in pathConfig.paths) {
-                        pathConfig.paths[name] = config.urls.ui_common_root + pathConfig.paths[name];
-                    }
-                    require.config(pathConfig);
-                    config.new_paths = pathConfig;
+                if (window.kbconfig) {
+                    return window.kbconfig;
+                }
+                console.log('Config: checking remote widgets');
+                assertConfig();
+                if (!config.use_local_widgets) {
+                    // var uiCommonPaths = config.urls.ui_common_root + "widget-paths.json";
+                    require(['uiCommonPaths'], function (pathConfig) {
+                        for (var name in pathConfig.paths) {
+                            pathConfig.paths[name] = config.urls.ui_common_root + pathConfig.paths[name];
+                        }
+                        require.config(pathConfig);
+                        config.new_paths = pathConfig;
+                        resolve(config);
+                    }, function () {
+                        console.warn("Unable to get updated widget paths. Sticking with what we've got.");
+                        resolve(config);
+                    });
+                } else {
                     resolve(config);
-                }, function () {
-                    console.warn("Unable to get updated widget paths. Sticking with what we've got.");
-                    resolve(config);
+                }
+            })
+            .then(function (config) {
+                console.log('Config: fetching remote data configuration.');
+                return Promise.resolve($.getJSON(config.urls.data_panel_sources));
+            })
+            .then(function (dataCategories) {
+                console.log('Config: processing remote data configuration.');
+                config.publicCategories = dataCategories[config.environment].publicData;
+                config.exampleData = dataCategories[config.environment].exampleData;
+                return Promise.try(function () {
+                    return config;
                 });
-            } else {
-                resolve(config);
-            }
-        })
-        .then(function (config) {
-            console.log('Config: fetching remote data configuration.');
-            return Promise.resolve($.getJSON(config.urls.data_panel_sources));
-        })
-        .then(function (dataCategories) {
-            console.log('Config: processing remote data configuration.');
-            config.publicCategories = dataCategories[config.environment].publicData;
-            config.exampleData = dataCategories[config.environment].exampleData;
-            return Promise.try(function () {
-                return config;
-            });
-        })
-        .catch(function (error) {
-            console.error('Config: unable to process remote data configuration options. Searching locally.');
-            // hate embedding this stuff, but it seems the only good way.
-            // the filename is the last step of that url path (after the last /)
-            var path = config.urls.data_panel_sources.split('/');
+            })
+            .catch(function (error) {
+                console.error('Config: unable to process remote data configuration options. Searching locally.');
+                // hate embedding this stuff, but it seems the only good way.
+                // the filename is the last step of that url path (after the last /)
+                var path = config.urls.data_panel_sources.split('/');
 
-            return Promise.resolve($.getJSON('static/kbase/config/' + path[path.length - 1]))
-                .then(function (dataCategories) {
-                    console.log('Config: processing local data configuration.');
-                    config.publicCategories = dataCategories[config.environment].publicData;
-                    config.exampleData = dataCategories[config.environment].exampleData;
-                    return Promise.try(function () {
-                        return config;
+                return Promise.resolve($.getJSON('static/kbase/config/' + path[path.length - 1]))
+                    .then(function (dataCategories) {
+                        console.log('Config: processing local data configuration.');
+                        config.publicCategories = dataCategories[config.environment].publicData;
+                        config.exampleData = dataCategories[config.environment].exampleData;
+                        return Promise.try(function () {
+                            return config;
+                        });
+                    })
+                    .catch(function (error) {
+                        console.error('Config: unable to process local configuration options, too! Public and Example data unavailable!');
+                        return Promise.try(function () {
+                            return config;
+                        });
                     });
-                })
-                .catch(function (error) {
-                    console.error('Config: unable to process local configuration options, too! Public and Example data unavailable!');
-                    return Promise.try(function () {
-                        return config;
-                    });
-                });
-        });
+            });
     }
 
     /**

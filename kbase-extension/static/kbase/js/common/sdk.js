@@ -218,7 +218,7 @@ define([
         // Some parameter specs have valid_ws_types as an empty set, which
         // does not mean what it could, it means that it is not an option.
         if (spec.text_options.valid_ws_types && spec.text_options.valid_ws_types.length > 0) {
-            // we now have refs, but no way of specifying that the 
+            // we now have refs, but no way of specifying that the
             if (spec.allow_multiple) {
                 return '[]workspaceObjectName';
             } else {
@@ -356,7 +356,7 @@ define([
                         };
                         break;
                     case 'output':
-                        // TODO: this accomodates a common mistake, to mark an input type 
+                        // TODO: this accomodates a common mistake, to mark an input type
                         // as output. One cannot specify multiple output objects, so we can
                         // pretty well safely assume this was a mistake.
                         console.warn('App spec form []workspaceObjectName indicates output, but that is not possible', spec);
@@ -477,7 +477,7 @@ define([
             case 'struct':
                 break;
             case 'unspecified':
-                // a bunch of field types are untyped, and there are no 
+                // a bunch of field types are untyped, and there are no
                 // options for them...
                 switch (fieldType) {
                     case 'text':
@@ -671,7 +671,7 @@ define([
             groups = sdkAppSpec.parameter_groups;
             sdkAppSpec.parameter_groups.forEach(function(group) {
                 convertGroup(group, parameterSpecs);
-                // don't know how the group is ordered in the spec ... so just append it later.            
+                // don't know how the group is ordered in the spec ... so just append it later.
             });
         }
 

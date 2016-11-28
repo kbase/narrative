@@ -13,7 +13,7 @@ define([
 
     'bootstrap',
     'css!font-awesome'
-], function (
+], function(
     Promise,
     html,
     Validation,
@@ -62,23 +62,23 @@ define([
         }
 
         function setModelValue(value) {
-            return Promise.try(function () {
+            return Promise.try(function() {
                     viewModel.data = value;
 
                 })
-                .then(function () {
+                .then(function() {
                     // render();
                 })
-                .catch(function (err) {
+                .catch(function(err) {
                     console.error('Error setting model value', err);
                 });
         }
 
         function unsetModelValue() {
-            return Promise.try(function () {
+            return Promise.try(function() {
                     viewModel.data = {};
                 })
-                .then(function (changed) {
+                .then(function(changed) {
                     // render();
                 });
         }
@@ -116,14 +116,14 @@ define([
 
         function copyProps(from, props) {
             var newObj = {};
-            props.forEach(function (prop) {
+            props.forEach(function(prop) {
                 newObj[prop] = from[prop];
             });
             return newObj;
         }
 
         function validate(rawValue) {
-            return Promise.try(function () {
+            return Promise.try(function() {
                 var validationOptions = {
                     required: spec.data.constraints.required
                 };
@@ -153,14 +153,14 @@ define([
             if (viewModel.meta.enabled) {
                 viewModel.meta.enabled = false;
                 label.innerHTML = 'Enable';
-                Object.keys(structFields).forEach(function (id) {
+                Object.keys(structFields).forEach(function(id) {
                     var field = structFields[id];
                     field.bus.emit('disable');
                 });
             } else {
                 viewModel.meta.enabled = true;
-                label.innerHTML = 'Disable';
-                Object.keys(structFields).forEach(function (id) {
+                label.innerHTML = 'Enabled';
+                Object.keys(structFields).forEach(function(id) {
                     var field = structFields[id];
                     field.bus.emit('enable');
                 });
@@ -199,19 +199,24 @@ define([
                 input({
                     id: events.addEvent({
                         type: 'click',
-                        handler: function (e) {
+                        handler: function(e) {
                             doToggleEnableControl(e);
                         }
                     }),
                     type: 'checkbox',
                     checked: false
                 }),
-                span({ dataElement: 'label' }, label)
+                span({
+                    dataElement: 'label',
+                    style: {
+                        marginLeft: '4px'
+                    }
+                }, label)
             ]);
         }
 
         function makeInputControl(events, bus) {
-            var promiseOfFields = fieldLayout.map(function (fieldName) {
+            var promiseOfFields = fieldLayout.map(function(fieldName) {
                 var fieldSpec = struct.specs[fieldName];
 
                 return makeSingleInputControl(fieldSpec, events, bus);
@@ -222,7 +227,7 @@ define([
 
 
             return Promise.all(promiseOfFields)
-                .then(function (fields) {
+                .then(function(fields) {
                     var layout = div({ style: { border: '1px silver solid', padding: '4px' } }, [
                         div({
                             class: 'row'
@@ -230,7 +235,7 @@ define([
                             enableControl(events)
                         ])
                     ].concat(
-                        fields.map(function (field) {
+                        fields.map(function(field) {
                             return div({ id: field.id, style: { border: '0px orange dashed', padding: '0px' } });
                         })).join('\n'));
 
@@ -247,7 +252,7 @@ define([
          */
         function makeSingleInputControl(fieldSpec, events) {
             return resolver.getInputWidgetFactory(fieldSpec)
-                .then(function (widgetFactory) {
+                .then(function(widgetFactory) {
 
                     var fieldBus = runtime.bus().makeChannelBus(null, 'Control bus'),
                         id = html.genId(),
@@ -264,7 +269,7 @@ define([
                         });
 
                     // set up listeners for the input
-                    fieldBus.on('sync', function (message) {
+                    fieldBus.on('sync', function(message) {
                         var value = viewModel.data[fieldSpec.id];
                         if (value) {
                             fieldBus.emit('update', {
@@ -272,21 +277,21 @@ define([
                             });
                         }
                     });
-                    fieldBus.on('validation', function (message) {
+                    fieldBus.on('validation', function(message) {
                         if (message.diagnosis === 'optional-empty') {
                             bus.emit('changed', {
                                 newValue: viewModel.data
                             });
                         }
                     });
-                    fieldBus.on('changed', function (message) {
+                    fieldBus.on('changed', function(message) {
                         viewModel.data[fieldSpec.id] = message.newValue;
                         bus.emit('changed', {
                             newValue: viewModel.data
                         });
                     });
 
-                    fieldBus.on('touched', function (message) {
+                    fieldBus.on('touched', function(message) {
                         bus.emit('touched', {
                             parameter: fieldSpec.id
                         });
@@ -309,24 +314,24 @@ define([
          */
         function renderStruct(events) {
             return makeInputControl(events)
-                .then(function (result) {
+                .then(function(result) {
                     ui.setContent('input-container', result.content);
                     structFields = {};
-                    result.fields.forEach(function (field) {
+                    result.fields.forEach(function(field) {
                         structFields[field.fieldName] = field;
                     });
 
 
                     // Start up all the widgets
                     return Promise.all(
-                        result.fields.map(function (field) {
+                        result.fields.map(function(field) {
                             return field.instance.start({
                                 node: document.getElementById(field.id)
                             });
                         }));
                 })
-                .then(function () {
-                    Object.keys(structFields).forEach(function (id) {
+                .then(function() {
+                    Object.keys(structFields).forEach(function(id) {
                         if (viewModel.meta.enabled) {
                             structFields[id].bus.emit('enable');
                         } else {
@@ -334,7 +339,7 @@ define([
                         }
                     })
                 })
-                .catch(function (err) {
+                .catch(function(err) {
                     console.error(err);
                     ui.setContent('input-container', 'ERROR!' + err.message);
                 });
@@ -387,10 +392,10 @@ define([
         // Okay, we need to 
 
         function start() {
-            return Promise.try(function () {
-                bus.on('run', function (message) {
+            return Promise.try(function() {
+                bus.on('run', function(message) {
                     var events = Events.make();
-                    Promise.try(function () {
+                    Promise.try(function() {
                             parent = message.node;
                             console.log('STRUCT PARENT?', parent, message);
                             container = parent.appendChild(document.createElement('div'));
@@ -398,20 +403,20 @@ define([
 
                             return render(events);
                         })
-                        .then(function (theLayout) {
+                        .then(function(theLayout) {
                             events.attachEvents(container);
 
-                            bus.on('reset-to-defaults', function (message) {
+                            bus.on('reset-to-defaults', function(message) {
                                 resetModelValue();
                             });
 
-                            bus.on('update', function (message) {
+                            bus.on('update', function(message) {
                                 // Update the model, and since we have sub widgets,
                                 // we should send the individual data to them.
                                 // setModelValue(message.value);
                                 viewModel.data = message.value;
                                 console.log('struct update', message);
-                                Object.keys(message.value).forEach(function (id) {
+                                Object.keys(message.value).forEach(function(id) {
                                     structFields[id].bus.emit('update', {
                                         value: message.value[id]
                                     });
@@ -419,7 +424,7 @@ define([
 
                             });
                             // A fake submit.
-                            bus.on('submit', function () {
+                            bus.on('submit', function() {
                                 bus.emit('submitted', {
                                     value: viewModel.data
                                 });
@@ -428,7 +433,7 @@ define([
                             // know...
                             bus.emit('sync');
                         })
-                        .catch(function (err) {
+                        .catch(function(err) {
                             console.error('ERROR', err);
                             container.innerHTML = err.message;
                         });
@@ -437,9 +442,9 @@ define([
         }
 
         function stop() {
-            return Promise.try(function () {
+            return Promise.try(function() {
                 if (structFields) {
-                    structFields.forEach(function (field) {
+                    structFields.forEach(function(field) {
                         field.stop();
                     });
                 }
@@ -453,7 +458,7 @@ define([
     }
 
     return {
-        make: function (config) {
+        make: function(config) {
             return factory(config);
         }
     };

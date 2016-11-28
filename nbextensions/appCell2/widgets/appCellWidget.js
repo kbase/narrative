@@ -2848,7 +2848,7 @@ define([
                         // loadInputWidget(),
                         // loadInputViewWidget(),
                         // loadExecutionWidget(),
-                        loadOutputWidget()
+                        // loadOutputWidget()
                     ]);
                 })
                 .then(function () {

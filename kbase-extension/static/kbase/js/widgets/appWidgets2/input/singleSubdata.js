@@ -13,7 +13,7 @@ define([
     '../subdataMethods/manager',
     'bootstrap',
     'css!font-awesome'
-], function (
+], function(
     $,
     Promise,
     html,
@@ -85,7 +85,7 @@ define([
             if (!availableValues) {
                 return selectOptions;
             }
-            return selectOptions.concat(availableValues.map(function (availableValue) {
+            return selectOptions.concat(availableValues.map(function(availableValue) {
                 var selected = false,
                     optionLabel = availableValue.id,
                     optionValue = availableValue.id;
@@ -112,7 +112,7 @@ define([
                 return items;
             }
             var re = new RegExp(filter);
-            return items.filter(function (item) {
+            return items.filter(function(item) {
                 if (item.text && item.text.match(re, 'i')) {
                     return true;
                 }
@@ -133,7 +133,7 @@ define([
 
         function didChange() {
             validate()
-                .then(function (result) {
+                .then(function(result) {
                     if (result.isValid) {
                         model.setItem('value', result.value);
                         updateInputControl('value');
@@ -163,10 +163,10 @@ define([
 
         function doRemoveSelectedItem(indexOfitemToRemove) {
             var selectedItems = model.getItem('selectedItems', []),
-                prevAllowSelection = spec.spec.textsubdata_options.multiselection || selectedItems.length === 0;
+                prevAllowSelection = spec.ui.multiSelection || selectedItems.length === 0;
             selectedItems.splice(indexOfitemToRemove, 1);
 
-            var newAllowSelection = spec.spec.textsubdata_options.multiselection || selectedItems.length === 0;
+            var newAllowSelection = spec.ui.multiSelection || selectedItems.length === 0;
             if (newAllowSelection && !prevAllowSelection) {
                 // update text areas to have md-col-7 (from md-col-10)
                 $(ui.getElement('input-container')).find('.row > .col-md-10').switchClass('col-md-10', 'col-md-7');
@@ -181,7 +181,7 @@ define([
         function doRemoveSelectedAvailableItem(idToRemove) {
             var selectedItems = model.getItem('selectedItems', []);
 
-            model.setItem('selectedItems', selectedItems.filter(function (id) {
+            model.setItem('selectedItems', selectedItems.filter(function(id) {
                 if (idToRemove === id) {
                     return false;
                 }
@@ -192,7 +192,7 @@ define([
 
         function renderAvailableItems() {
             var selected = model.getItem('selectedItems', []),
-                allowSelection = (spec.spec.textsubdata_options.multiselection || selected.length === 0),
+                allowSelection = (spec.ui.multiSelection || selected.length === 0),
                 items = model.getItem('filteredAvailableItems', []),
                 from = model.getItem('showFrom'),
                 to = model.getItem('showTo'),
@@ -203,8 +203,8 @@ define([
             if (itemsToShow.length === 0) {
                 content = div({ style: { textAlign: 'center' } }, 'no available values');
             } else {
-                content = itemsToShow.map(function (item, index) {
-                        var isSelected = selected.some(function (id) {
+                content = itemsToShow.map(function(item, index) {
+                        var isSelected = selected.some(function(id) {
                                 return (item.id === id);
                             }),
                             disabled = isSelected;
@@ -236,7 +236,7 @@ define([
                                     verticalAlign: 'top'
                                 }
                             }, [
-                                (function () {
+                                (function() {
                                     if (disabled) {
                                         return span({
                                             class: 'kb-btn-icon',
@@ -245,7 +245,7 @@ define([
                                             title: 'Remove from selected',
                                             id: events.addEvent({
                                                 type: 'click',
-                                                handler: function () {
+                                                handler: function() {
                                                     doRemoveSelectedAvailableItem(item.id);
                                                 }
                                             })
@@ -268,7 +268,7 @@ define([
                                             dataItemId: item.id,
                                             id: events.addEvent({
                                                 type: 'click',
-                                                handler: function () {
+                                                handler: function() {
                                                     doAddItem(item.id);
                                                 }
                                             })
@@ -309,7 +309,7 @@ define([
             if (selectedItems.length === 0) {
                 content = div({ style: { textAlign: 'center' } }, 'no selected values');
             } else {
-                content = selectedItems.map(function (itemId, index) {
+                content = selectedItems.map(function(itemId, index) {
                     var item = valuesMap[itemId];
                     if (item === undefined || item === null) {
                         item = {
@@ -360,7 +360,7 @@ define([
                                 title: 'Remove from selected',
                                 id: events.addEvent({
                                     type: 'click',
-                                    handler: function () {
+                                    handler: function() {
                                         doRemoveSelectedItem(index);
                                     }
                                 })
@@ -390,26 +390,26 @@ define([
                 id: events.addEvents({
                     events: [{
                             type: 'keyup',
-                            handler: function (e) {
+                            handler: function(e) {
                                 doSearchKeyUp(e);
                             }
                         },
                         {
                             type: 'focus',
-                            handler: function () {
+                            handler: function() {
                                 Jupyter.narrative.disableKeyboardManager();
                             }
                         },
                         {
                             type: 'blur',
-                            handler: function () {
+                            handler: function() {
                                 console.log('SingleSubData Search BLUR');
                                 // Jupyter.narrative.enableKeyboardManager();
                             }
                         },
                         {
                             type: 'click',
-                            handler: function () {
+                            handler: function() {
                                 Jupyter.narrative.disableKeyboardManager();
                             }
                         }
@@ -460,7 +460,7 @@ define([
                         style: { xwidth: '100%' },
                         id: events.addEvent({
                             type: 'click',
-                            handler: function () {
+                            handler: function() {
                                 doFirstPage();
                             }
                         })
@@ -471,7 +471,7 @@ define([
                         style: { xwidth: '50%' },
                         id: events.addEvent({
                             type: 'click',
-                            handler: function () {
+                            handler: function() {
                                 doPreviousPage();
                             }
                         })
@@ -482,7 +482,7 @@ define([
                         style: { xwidth: '100%' },
                         id: events.addEvent({
                             type: 'click',
-                            handler: function () {
+                            handler: function() {
                                 doNextPage();
                             }
                         })
@@ -493,7 +493,7 @@ define([
                         style: { xwidth: '100%' },
                         id: events.addEvent({
                             type: 'click',
-                            handler: function () {
+                            handler: function() {
                                 doLastPage();
                             }
                         })
@@ -588,7 +588,7 @@ define([
                         padding: '3px',
                         border: '1px silver solid'
                     }
-                }, 'Items will be available after selecting a value for ' + spec.constraints.subdataSelection.parameter_id);
+                }, 'Items will be available after selecting a value for ' + spec.data.constraints.subdataSelection.parameter_id);
             }
 
             selectOptions = buildOptions();
@@ -698,26 +698,26 @@ define([
          */
         function updateInputControl(changedProperty) {
             switch (changedProperty) {
-            case 'value':
-                // just change the selections.
-                var count = buildCount();
-                ui.setContent('input-control.count', count);
+                case 'value':
+                    // just change the selections.
+                    var count = buildCount();
+                    ui.setContent('input-control.count', count);
 
-                break;
-            case 'availableValues':
-                // rebuild the options
-                // re-apply the selections from the value
-                var options = buildOptions(),
-                    count = buildCount();
-                ui.setContent('input-control.input', options);
-                ui.setContent('input-control.count', count);
+                    break;
+                case 'availableValues':
+                    // rebuild the options
+                    // re-apply the selections from the value
+                    var options = buildOptions(),
+                        count = buildCount();
+                    ui.setContent('input-control.input', options);
+                    ui.setContent('input-control.count', count);
 
-                break;
-            case 'referenceObjectName':
-                // refetch the available values
-                // set available values
-                // update input control for available values
-                // set value to null
+                    break;
+                case 'referenceObjectName':
+                    // refetch the available values
+                    // set available values
+                    // update input control for available values
+                    // set value to null
 
 
             }
@@ -748,17 +748,11 @@ define([
 
         function resetModelValue() {
             model.reset();
-            if (spec.spec.default_values && spec.spec.default_values.length > 0) {
-                // nb i'm assuming here that this set of strings is actually comma
-                // separated string on the other side.
-                model.setItem('value', spec.spec.default_values[0].split(','));
-            } else {
-                model.setItem('value', null);
-            }
+            model.setItem('value', spec.defaultValue);
         }
 
         function validate() {
-            return Promise.try(function () {
+            return Promise.try(function() {
                     if (!options.enabled) {
                         return {
                             isValid: true,
@@ -766,15 +760,14 @@ define([
                             diagnosis: 'disabled'
                         };
                     }
-
                     var rawValue = getInputValue(),
                         validationOptions = {
-                            required: spec.required()
+                            required: spec.data.constraints.required
                         };
 
                     return Validation.validateStringSet(rawValue, validationOptions);
                 })
-                .then(function (validationResult) {
+                .then(function(validationResult) {
                     return {
                         isValid: validationResult.isValid,
                         validated: true,
@@ -787,7 +780,7 @@ define([
 
         // unsafe, but pretty.
         function getProp(obj, props) {
-            props.forEach(function (prop) {
+            props.forEach(function(prop) {
                 obj = obj[prop];
             });
             return obj;
@@ -797,7 +790,7 @@ define([
 
         function fetchData() {
             var referenceObjectName = model.getItem('referenceObjectName'),
-                referenceObjectRef = spec.data.subdataSelection.constant_ref;
+                referenceObjectRef = spec.data.constraints.subdataSelection.constant_ref;
 
             if (!referenceObjectRef) {
                 if (!referenceObjectName) {
@@ -813,10 +806,10 @@ define([
         }
 
         function syncAvailableValues() {
-            return Promise.try(function () {
+            return Promise.try(function() {
                     return fetchData();
                 })
-                .then(function (data) {
+                .then(function(data) {
                     if (!data) {
                         return " no data? ";
                     }
@@ -826,9 +819,9 @@ define([
                     // We use the raw default values here since we are not really using
                     // it as the default value, but as a set of additional items
                     // to select.
-                    var defaultValues = spec.spec.default_values;
+                    var defaultValues = spec.defaultValue;
                     if (defaultValues && (defaultValues instanceof Array) && (defaultValues.length > 0)) {
-                        defaultValues.forEach(function (itemId) {
+                        defaultValues.forEach(function(itemId) {
                             if (itemId && itemId.trim().length > 0) {
                                 data.unshift({
                                     id: itemId,
@@ -849,7 +842,7 @@ define([
 
                     // TODO: generate all of this in the fetchData -- it will be a bit faster.
                     var map = {};
-                    data.forEach(function (datum) {
+                    data.forEach(function(datum) {
                         map[datum.id] = datum;
                     });
 
@@ -865,7 +858,7 @@ define([
 
         function autoValidate() {
             return validate()
-                .then(function (result) {
+                .then(function(result) {
                     bus.emit('validation', {
                         errorMessage: result.errorMessage,
                         diagnosis: result.diagnosis
@@ -880,7 +873,7 @@ define([
          * Hooks up event listeners
          */
         function render() {
-            return Promise.try(function () {
+            return Promise.try(function() {
                     // check to see if we have to render inputControl.
                     var events = Events.make({ node: container }),
                         inputControl = makeInputControl(events, bus),
@@ -900,10 +893,10 @@ define([
 
                     events.attachEvents();
                 })
-                .then(function () {
+                .then(function() {
                     return autoValidate();
                 })
-                .catch(function (err) {
+                .catch(function(err) {
                     console.error('ERROR in render', err);
                 });
         }
@@ -934,7 +927,7 @@ define([
              * Issued when thre is a need to have all params reset to their
              * default value.
              */
-            bus.on('reset-to-defaults', function (message) {
+            bus.on('reset-to-defaults', function(message) {
                 resetModelValue();
                 // model.reset();
                 // TODO: this should really be set when the linked field is reset...
@@ -955,7 +948,7 @@ define([
             /*
              * Issued when there is an update for this param.
              */
-            bus.on('update', function (message) {
+            bus.on('update', function(message) {
                 model.setItem('value', message.value);
                 updateInputControl('value');
             });
@@ -986,9 +979,9 @@ define([
             bus.listen({
                 key: {
                     type: 'parameter-changed',
-                    parameter: spec.spec.textsubdata_options.subdata_selection.constant_ref
+                    parameter: spec.data.constraints.subdataSelection.constant_ref
                 },
-                handle: function (message) {
+                handle: function(message) {
                     var newValue = message.newValue;
                     if (message.newValue === '') {
                         newValue = null;
@@ -997,10 +990,10 @@ define([
                     model.reset();
                     model.setItem('referenceObjectName', newValue);
                     syncAvailableValues()
-                        .then(function () {
+                        .then(function() {
                             updateInputControl('availableValues');
                         })
-                        .catch(function (err) {
+                        .catch(function(err) {
                             console.error('ERROR syncing available values', err);
                         });
                 }
@@ -1009,9 +1002,9 @@ define([
             bus.listen({
                 key: {
                     type: 'parameter-changed',
-                    parameter: spec.constraints.subdataSelection.parameter_id
+                    parameter: spec.data.constraints.subdataSelection.parameter_id
                 },
-                handle: function (message) {
+                handle: function(message) {
                     var newValue = message.newValue;
                     if (message.newValue === '') {
                         newValue = null;
@@ -1020,10 +1013,10 @@ define([
                     model.reset();
                     model.setItem('referenceObjectName', newValue);
                     syncAvailableValues()
-                        .then(function () {
+                        .then(function() {
                             updateInputControl('availableValues');
                         })
-                        .catch(function (err) {
+                        .catch(function(err) {
                             console.error('ERROR syncing available values', err);
                         });
                 }
@@ -1032,9 +1025,9 @@ define([
             bus.listen({
                 key: {
                     type: 'parameter-value',
-                    parameter: spec.constraints.subdataSelection.parameter_id
+                    parameter: spec.data.constraints.subdataSelection.parameter_id
                 },
-                handle: function (message) {
+                handle: function(message) {
                     var newValue = message.newValue;
                     if (message.newValue === '') {
                         newValue = null;
@@ -1042,10 +1035,10 @@ define([
                     model.reset();
                     model.setItem('referenceObjectName', newValue);
                     syncAvailableValues()
-                        .then(function () {
+                        .then(function() {
                             updateInputControl('availableValues');
                         })
-                        .catch(function (err) {
+                        .catch(function(err) {
                             console.error('ERROR syncing available values', err);
                         });
                 }
@@ -1064,13 +1057,13 @@ define([
             bus.emit('sync');
 
             bus.request({
-                    parameterName: spec.id()
+                    parameterName: spec.id
                 }, {
                     key: {
                         type: 'get-parameter'
                     }
                 })
-                .then(function (message) {
+                .then(function(message) {
                     console.log('Now i got it again', message);
                 });
 
@@ -1102,8 +1095,8 @@ define([
         // LIFECYCLE API
 
         function start() {
-            return Promise.try(function () {
-                bus.on('run', function (message) {
+            return Promise.try(function() {
+                bus.on('run', function(message) {
                     parent = message.node;
                     container = parent.appendChild(document.createElement('div'));
                     ui = UI.make({
@@ -1140,21 +1133,21 @@ define([
                     // Weird, but will make it look nicer.
                     Promise.all([
                             bus.request({
-                                parameterName: spec.id()
+                                parameterName: spec.id
                             }, {
                                 key: {
                                     type: 'get-parameter'
                                 }
                             }),
                             bus.request({
-                                parameterName: spec.constraints.subdataSelection.parameter_id
+                                parameterName: spec.data.constraints.subdataSelection.parameter_id
                             }, {
                                 key: {
                                     type: 'get-parameter'
                                 }
                             })
                         ])
-                        .spread(function (paramValue, referencedParamValue) {
+                        .spread(function(paramValue, referencedParamValue) {
                             // hmm, the default value of a subdata is null, but that does
                             // not play nice with the model props defaulting mechanism which
                             // works with absent or undefined (null being considered an actual value, which
@@ -1174,15 +1167,15 @@ define([
                                 model.setItem('referenceObjectName', referencedParamValue.value);
                             }
                             return syncAvailableValues()
-                                .then(function () {
+                                .then(function() {
                                     updateInputControl('availableValues');
                                 })
-                                .catch(function (err) {
+                                .catch(function(err) {
                                     console.error('ERROR syncing available values', err);
                                 });
 
                         })
-                        .catch(function (err) {
+                        .catch(function(err) {
                             console.error('ERROR fetching initial data', err);
                         });
                 });
@@ -1200,7 +1193,7 @@ define([
                 showFrom: 0,
                 showTo: 5
             },
-            onUpdate: function (props) {
+            onUpdate: function(props) {
                 // cheap version
                 //renderSearchBox();
                 renderStats();
@@ -1220,7 +1213,7 @@ define([
     }
 
     return {
-        make: function (config) {
+        make: function(config) {
             return factory(config);
         }
     };

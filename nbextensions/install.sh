@@ -12,7 +12,7 @@ echo 'Root dir'
 echo ${dir}
 
 #jupyter nbextension disable appCell/main --sys-prefix
-#jupyter nbextension uninstall ${dir}/methodCell --sys-prefix
+#jupyter nbextension uninstall ${dir}/appCell --sys-prefix
 #jupyter nbextension install ${dir}/appCell --symlink --sys-prefix
 #jupyter nbextension enable appCell/main --sys-prefix
 
@@ -27,6 +27,8 @@ jupyter nbextension enable outputCell/main --sys-prefix
 jupyter nbextension install ${dir}/dataCell --symlink --sys-prefix
 jupyter nbextension enable dataCell/main --sys-prefix
 
+#jupyter nbextension disable widgetCell/main --sys-prefix
+#jupyter nbextension uninstall ${dir}/widgetCell --sys-prefix
 #jupyter nbextension install ${dir}/widgetCell --symlink --sys-prefix
 #jupyter nbextension enable widgetCell/main --sys-prefix
 

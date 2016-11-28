@@ -14,7 +14,7 @@ define([
     './widgets/appInfoDialog',
     './widgets/appCellWidget',
     'common/spec'
-], function (
+], function(
     Promise,
     Uuid,
     ParameterSpec,
@@ -62,7 +62,7 @@ define([
         // TODO: recursively initialize params.
         function initializeParams(appSpec) {
             var defaultParams = {};
-            appSpec.parameters.forEach(function (parameterSpec) {
+            appSpec.parameters.forEach(function(parameterSpec) {
                 var param = ParameterSpec.make({ parameterSpec: parameterSpec }),
                     defaultValue = param.defaultValue();
 
@@ -75,7 +75,7 @@ define([
         }
 
         function specializeCell() {
-            cell.minimize = function () {
+            cell.minimize = function() {
                 var inputArea = this.input.find('.input_area'),
                     outputArea = this.element.find('.output_wrapper'),
                     viewInputArea = this.element.find('[data-subarea-type="app-cell-input"]'),
@@ -89,7 +89,7 @@ define([
                 viewInputArea.addClass('hidden');
             };
 
-            cell.maximize = function () {
+            cell.maximize = function() {
                 var inputArea = this.input.find('.input_area'),
                     outputArea = this.element.find('.output_wrapper'),
                     viewInputArea = this.element.find('[data-subarea-type="app-cell-input"]'),
@@ -101,16 +101,16 @@ define([
                 outputArea.removeClass('hidden');
                 viewInputArea.removeClass('hidden');
             };
-            cell.getIcon = function () {
+            cell.getIcon = function() {
                 return AppUtils.makeToolbarAppIcon(utils.getCellMeta(cell, 'kbase.appCell.app.spec'));
             };
-            cell.renderIcon = function () {
+            cell.renderIcon = function() {
                 var iconNode = this.element[0].querySelector('.celltoolbar [data-element="icon"]');
                 if (iconNode) {
                     iconNode.innerHTML = AppUtils.makeToolbarAppIcon(utils.getCellMeta(cell, 'kbase.appCell.app.spec'));
                 }
             };
-            cell.showInfo = function () {
+            cell.showInfo = function() {
                 var app = utils.getCellMeta(cell, 'kbase.appCell.app');
                 appInfoDialog.show({
                     id: app.spec.info.id,
@@ -122,7 +122,7 @@ define([
         }
 
         function setupCell() {
-            return Promise.try(function () {
+            return Promise.try(function() {
                 // Only handle kbase cells.
                 if (!isAppCell(cell)) {
                     return;
@@ -168,18 +168,18 @@ define([
                 // cell.kbase.$node = $(kbaseNode);
 
                 return appCellWidget.init()
-                    .then(function () {
+                    .then(function() {
                         return appCellWidget.attach(kbaseNode);
                     })
-                    .then(function () {
+                    .then(function() {
                         return appCellWidget.start();
                     })
-                    .then(function () {
+                    .then(function() {
                         return appCellWidget.run({
                             authToken: runtime.authToken()
                         });
                     })
-                    .then(function () {
+                    .then(function() {
                         cell.renderMinMax();
 
                         return {
@@ -187,7 +187,7 @@ define([
                             bus: cellBus
                         };
                     })
-                    .catch(function (err) {
+                    .catch(function(err) {
                         console.error('ERROR starting app cell', err);
                         alert('Error starting app cell: ' + err.message);
                     });
@@ -195,23 +195,19 @@ define([
         }
 
         function upgradeToAppCell(appSpec, appTag) {
-            return Promise.try(function () {
+            return Promise.try(function() {
                     // Create base app cell
-
 
                     // console.log('about to convert appspec', appSpec);
                     // TODO: this should capture the entire app spec, so don't need
                     // to carry appSpec around.
-                    console.log('converting spec', appSpec);
                     spec = Spec.make({
                         appSpec: appSpec
                     });
 
-                    console.log('converted params...', spec.getSpec().parameters);
-
                     var meta = {
                         kbase: {
-                            type: 'app2',
+                            type: 'app',
                             attributes: {
                                 id: new Uuid(4).format(),
                                 status: 'new',
@@ -241,7 +237,7 @@ define([
                     // Complete the cell setup.
                     return setupCell();
                 })
-                .then(function (cellStuff) {
+                .then(function(cellStuff) {
                     // Initialize the cell to its default state.
                     // cellStuff.bus.emit('reset-to-defaults');
                 });
@@ -255,7 +251,7 @@ define([
     }
 
     return {
-        make: function (config) {
+        make: function(config) {
             return factory(config);
         },
         isAppCell: isAppCell

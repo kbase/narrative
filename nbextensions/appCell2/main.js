@@ -37,21 +37,21 @@ define([
     serviceUtils,
     Workspace,
     AppCell
-    ) {
+) {
     'use strict';
     var runtime = Runtime.make();
 
     function setupNotebook(workspaceInfo) {
         return Promise.all(Jupyter.notebook.get_cells().map(function (cell) {
-            if (AppCell.isAppCell(cell)) {
-                var appCell = AppCell.make({
-                    cell: cell,
-                    workspaceInfo: workspaceInfo
-                });
-                appCell.setupCell(cell);
-                return appCell;
-            }
-        }))
+                if (AppCell.isAppCell(cell)) {
+                    var appCell = AppCell.make({
+                        cell: cell,
+                        workspaceInfo: workspaceInfo
+                    });
+                    appCell.setupCell(cell);
+                    return appCell;
+                }
+            }))
             .then(function (possibleAppCells) {
                 return possibleAppCells.filter(function (appCell) {
                     if (appCell) {
@@ -68,12 +68,12 @@ define([
             workspaceId;
 
         if (workspaceName) {
-            return {workspace: workspaceName};
+            return { workspace: workspaceName };
         }
 
         workspaceId = Jupyter.notebook.metadata.ws_id; // Jupyter.notebook.metadata.kbase.ws_id;
         if (workspaceId) {
-            return {id: workspaceId};
+            return { id: workspaceId };
         }
 
         throw new Error('workspace name or id is missing from this narrative');
@@ -128,7 +128,8 @@ define([
                 // If the cell has been set with the metadata key kbase.type === 'app'
                 // we have a app cell.
                 $([Jupyter.events]).on('inserted.Cell', function (event, data) {
-                    if (!data.kbase || data.kbase.type !== 'app2') {
+                    console.log('inserted?', data);
+                    if (!data.kbase || !(data.kbase.type === 'app2' || data.kbase.type === 'app')) {
                         return;
                     }
 

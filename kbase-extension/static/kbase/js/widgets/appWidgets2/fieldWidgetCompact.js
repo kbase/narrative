@@ -54,7 +54,8 @@ define([
             inputControl,
             options = {},
             fieldId = html.genId(),
-            spec = config.parameterSpec;
+            spec = config.parameterSpec,
+            enabled;
 
         try {
             inputControl = inputControlFactory.make({
@@ -73,9 +74,28 @@ define([
             }).make();
         }
 
-        // options.isOutputName = spec.text_options && spec.text_options.is_output_name;
-        options.enabled = true;
+        enabled = true;
         options.classes = classSets.standard;
+
+        function doEnable() {
+            if (!enabled) {
+                // do something...
+                var mask = ui.getElement('field-mask');
+                mask.classList.add('hidden');
+
+                enabled = true;
+            }
+        }
+
+        function doDisable() {
+            if (enabled) {
+                // do something
+                var mask = ui.getElement('field-mask');
+                mask.classList.remove('hidden');
+
+                enabled = false;
+            }
+        }
 
         function showMessageDialog(id) {
             ui.showInfoDialog({
@@ -302,17 +322,31 @@ define([
             var infoId = html.genId();
 
             var advanced;
-            if (spec.ui.isAdvanced) {
+            if (spec.ui.advanced) {
                 advanced = 'advanced-parameter-hidden';
             } else {
                 advanced = '';
             }
-
             var content = div({
                 class: ['form-horizontal', 'kb-app-parameter-row', 'parameter-panel', advanced].join(' '),
-                dataAdvancedParameter: spec.ui.isAdvanced,
-                id: fieldId
+                dataAdvancedParameter: spec.ui.advanced,
+                id: fieldId,
+                style: { position: 'relative' }
             }, [
+                // disabled mask
+                div({
+                    dataElement: 'field-mask',
+                    class: 'hidden',
+                    style: {
+                        position: 'absolute',
+                        top: '0',
+                        bottom: '0',
+                        left: '0',
+                        right: '0',
+                        backgroundColor: 'rgba(255,255,255, 0.5)',
+                        zIndex: '100'
+                    }
+                }),
                 div({
                     id: ids.fieldPanel,
                     class: 'form-group kb-app-parameter-input field-panel',
@@ -471,6 +505,13 @@ define([
                 bus.on('saved', function (message) {
                     console.log('FIELD detected saved');
                 });
+                bus.on('enable', function (message) {
+                    doEnable();
+                });
+                bus.on('disable', function (message) {
+                    doDisable();
+                });
+
                 if (inputControl.start) {
                     return inputControl.start()
                         .then(function () {

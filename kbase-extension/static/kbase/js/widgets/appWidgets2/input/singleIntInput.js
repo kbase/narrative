@@ -5,7 +5,7 @@ define([
     'kb_common/html',
     '../validation',
     'common/events',
-    'common/dom',
+    'common/ui',
     'common/props',
     '../inputUtils',
 
@@ -16,28 +16,53 @@ define([
     html,
     Validation,
     Events,
-    Dom,
+    UI,
     Props,
     inputUtils) {
     'use strict';
 
     // Constants
     var t = html.tag,
-        div = t('div'), input = t('input');
+        div = t('div'),
+        input = t('input');
 
     function factory(config) {
-        var options = {},
+        var enabled,
             spec = config.parameterSpec,
             parent,
             container,
             bus = config.bus,
             model,
-            dom;
+            ui;
 
         // Validate configuration.
         // Nothing to do...
 
-        options.enabled = true;
+        enabled = config.enabled || true;
+
+        function doEnable() {
+            if (enabled === false) {
+                // do something.
+                enabled = true;
+                var control = ui.getElement('input-container.input');
+                if (control) {
+                    control.disabled = false;
+                    control.readonly = false;
+                }
+            }
+        }
+
+        function doDisable() {
+            if (enabled === true) {
+                // do something
+                enabled = false;
+                var control = ui.getElement('input-container.input');
+                if (control) {
+                    control.disabled = true;
+                    control.readonly = true;
+                }
+            }
+        }
 
         /*
          * If the parameter is optional, and is empty, return null.
@@ -49,7 +74,7 @@ define([
          */
 
         function getInputValue() {
-            return dom.getElement('input-container.input').value;
+            return ui.getElement('input-container.input').value;
         }
 
         function resetModelValue() {
@@ -70,23 +95,15 @@ define([
          *
          */
 
-        function copyProps(from, props) {
-            var newObj = {};
-            props.forEach(function (prop) {
-                newObj[prop] = from[prop];
-            });
-            return newObj;
-        }
-
         function validate() {
             return Promise.try(function () {
-                if (!options.enabled) {
-                    return {
-                        isValid: true,
-                        validated: false,
-                        diagnosis: 'disabled'
-                    };
-                }
+                // if (!enabled) {
+                //     return {
+                //         isValid: true,
+                //         validated: false,
+                //         diagnosis: 'disabled'
+                //     };
+                // }
 
                 return Validation.validateIntString(getInputValue(), spec.data.constraints);
             });
@@ -148,7 +165,7 @@ define([
                                         id: result.messageId,
                                         message: result.errorMessage
                                     });
-                                    dom.setContent('input-container.message', message.content);
+                                    ui.setContent('input-container.message', message.content);
                                     message.events.attachEvents();
                                 }
                             }
@@ -161,7 +178,7 @@ define([
             };
         }
 
-        function makeInputControl(currentValue, events, bus) {
+        function makeInputControl(currentValue, events) {
             // CONTROL
             var initialControlValue,
                 min = spec.data.constraints.min,
@@ -169,9 +186,9 @@ define([
             if (currentValue) {
                 initialControlValue = String(currentValue);
             }
-            return div({style: {width: '100%'}, dataElement: 'input-wrapper'}, [
-                div({class: 'input-group', style: {width: '100%'}}, [
-                    (min ? div({class: 'input-group-addon', fontFamily: 'monospace'}, String(min) + ' &#8804; ') : ''),
+            return div({ style: { width: '100%' }, dataElement: 'input-wrapper' }, [
+                div({ class: 'input-group', style: { width: '100%' } }, [
+                    (typeof min === 'number' ? div({ class: 'input-group-addon', fontFamily: 'monospace' }, String(min) + ' &#8804; ') : ''),
                     input({
                         id: events.addEvents({
                             events: [handleChanged(), handleTouched()]
@@ -181,20 +198,20 @@ define([
                         dataType: 'int',
                         value: initialControlValue
                     }),
-                    (max ? div({class: 'input-group-addon', fontFamily: 'monospace'}, ' &#8804; ' + String(max)) : '')
+                    (typeof max === 'number' ? div({ class: 'input-group-addon', fontFamily: 'monospace' }, ' &#8804; ' + String(max)) : '')
                 ]),
-                div({dataElement: 'message', style: {backgroundColor: 'red', color: 'white'}})
+                div({ dataElement: 'message', style: { backgroundColor: 'red', color: 'white' } })
             ]);
         }
 
         function render() {
             Promise.try(function () {
-                var events = Events.make(),
-                    inputControl = makeInputControl(model.getItem('value'), events, bus);
+                    var events = Events.make(),
+                        inputControl = makeInputControl(model.getItem('value'), events, bus);
 
-                dom.setContent('input-container', inputControl);
-                events.attachEvents(container);
-            })
+                    ui.setContent('input-container', inputControl);
+                    events.attachEvents(container);
+                })
                 .then(function () {
                     return autoValidate();
                 });
@@ -204,7 +221,7 @@ define([
             var content = div({
                 dataElement: 'main-panel'
             }, [
-                div({dataElement: 'input-container'})
+                div({ dataElement: 'input-container' })
             ]);
             return {
                 content: content,
@@ -229,7 +246,7 @@ define([
                 bus.on('run', function (message) {
                     parent = message.node;
                     container = parent.appendChild(document.createElement('div'));
-                    dom = Dom.make({node: container});
+                    ui = UI.make({ node: container });
 
                     var events = Events.make(),
                         theLayout = layout(events);
@@ -238,7 +255,7 @@ define([
                     events.attachEvents(container);
                     model.setItem('value', message.value);
 
-                    bus.on('reset-to-defaults', function (message) {
+                    bus.on('reset-to-defaults', function () {
                         resetModelValue();
                     });
                     bus.on('update', function (message) {
@@ -246,7 +263,14 @@ define([
                     });
                     bus.on('stop', function () {
                         bus.stop();
-                    })
+                    });
+                    bus.on('enable', function () {
+                        doEnable();
+                    });
+                    bus.on('disable', function () {
+                        doDisable();
+                    });
+
                     bus.emit('sync');
                 });
 

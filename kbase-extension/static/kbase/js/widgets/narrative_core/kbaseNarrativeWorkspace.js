@@ -481,12 +481,12 @@ define([
         spec to determine if it is an app, editor, or viewer.
         */
         determineMethodCellType: function(spec) {
-            
+
             // TODO: remove this switch when merging in grouped paramters and 
             // legacy parameters.
-            if (spec.parameter_groups && spec.parameter_groups.length > 0) {
-                return 'app2';
-            }
+            //if (spec.parameter_groups && spec.parameter_groups.length > 0) {
+            //   return 'app2';
+            //}
 
             // An app will execute via the method described in the behavior. If
             // such a method is not described, it is by definition not an
@@ -1506,7 +1506,7 @@ define([
          * just look to see if it is indeed a kbase cell, and if so we punt
          * to it.
          */
-        deleteCell: function (index) {
+        deleteCell: function(index) {
             if (index === undefined || index === null) {
                 return;
             }
@@ -1519,31 +1519,31 @@ define([
             var p = html.tag('p');
 
             if (!kbaseCellType || !cellId) {
-                UI.make({node: this.$elem[0]}).showConfirmDialog({
-                    title: 'Confirm Cell Deletion',
-                    body: [
-                        p('Cell deletion is permanent. There is no "undo" feature to recover this cell once it is deleted.'),
-                        p('Are you sure you want to delete this cell?')
-                    ]
-                })
-                .then(function (confirmed) {
-                    if (confirmed) {
-                        if (kbaseCellType && !cellId) {
-                            console.warn('KBase cell without cell id, DELETING ANYWAY!', cell.metadata);
+                UI.make({ node: this.$elem[0] }).showConfirmDialog({
+                        title: 'Confirm Cell Deletion',
+                        body: [
+                            p('Cell deletion is permanent. There is no "undo" feature to recover this cell once it is deleted.'),
+                            p('Are you sure you want to delete this cell?')
+                        ]
+                    })
+                    .then(function(confirmed) {
+                        if (confirmed) {
+                            if (kbaseCellType && !cellId) {
+                                console.warn('KBase cell without cell id, DELETING ANYWAY!', cell.metadata);
+                            }
+                            Jupyter.notebook.delete_cell(index);
                         }
-                        Jupyter.notebook.delete_cell(index);
-                    }
-                });
+                    });
                 return;
             }
 
             this.runtime.bus().send({}, {
-               channel: {
-                   cell: cellId
-               },
-               key: {
-                   type: 'delete-cell'
-               }
+                channel: {
+                    cell: cellId
+                },
+                key: {
+                    type: 'delete-cell'
+                }
             });
         },
 
@@ -2527,8 +2527,8 @@ define([
             var icon = _.has(icons, type) ? icons[type] : icons.DEFAULT;
             // background circle
             $logo.addClass("fa-stack fa-2x").css({
-                    'cursor': 'pointer'
-                });
+                'cursor': 'pointer'
+            });
             // For 'stacked' (set) icons, add a shifted-over
             // circle first, as the bottom layer, then also add a border
             // to the top one.
@@ -2554,28 +2554,27 @@ define([
                     b = parsed_color[3];
                 }
                 // Add circles with lighter colors
-                for (var i=num_stacked_circles; i > 0; i--) {
-                    var stacked_color = 'rgb(' + cmax(r + i * cstep)  + ',' +
+                for (var i = num_stacked_circles; i > 0; i--) {
+                    var stacked_color = 'rgb(' + cmax(r + i * cstep) + ',' +
                         cmax(g + i * cstep) + ',' + cmax(b + i * cstep) + ')';
                     $logo.append($('<i>')
                         .addClass(circle_classes + ' kb-data-list-logo-shiftedx' + i)
-                        .css({'color': stacked_color}));
+                        .css({ 'color': stacked_color }));
                     $logo.append($('<i>')
                         .addClass(circle_classes + ' kb-data-list-logo-shifted' + i)
-                        .css({'color': 'white'}));
+                        .css({ 'color': 'white' }));
                 }
             }
             // Assume there are CSS rules for levels of indent we care about..
             if (indent > 0) {
                 $logo.addClass('kb-data-list-level1');
-            }
-            else if ($logo.hasClass('kb-data-list-level1')) {
+            } else if ($logo.hasClass('kb-data-list-level1')) {
                 $logo.removeClass('kb-data-list-level1');
             }
 
             $logo.append($('<i>')
-                    .addClass(circle_classes)
-                    .css({'color': circle_color}));
+                .addClass(circle_classes)
+                .css({ 'color': circle_color }));
             // to avoid repetition, define the func. here that will
             // add one set of icons
             var add_logo_func = function(fa_icon, $logo, cls) {
@@ -2589,7 +2588,7 @@ define([
                 // add stack of font-awesome icons
                 _.each(icon, function(cls) { add_logo_func('fa', $logo, cls); });
             }
-    },
+        },
 
         /**
          * Whether the stack of icons is using font-awesome
@@ -2608,9 +2607,9 @@ define([
          * @param type
          * @returns {string} Color code
          */
-        logoColorLookup: function (type) {
+        logoColorLookup: function(type) {
             var color = this.icon_color_mapping[type];
-            if ( color === undefined) {
+            if (color === undefined) {
                 // fall back to primitive hack that just guesses
                 var code = 0;
                 for (var i = 0; i < type.length; code += type.charCodeAt(i++));

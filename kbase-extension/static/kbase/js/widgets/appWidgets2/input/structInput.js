@@ -174,17 +174,18 @@ define([
 
             // If the group is required, there is no choice, it is always enabled.
             if (required) {
-                return div({
-                    id: places.enableControl
-                }, [
-                    input({
-                        type: 'checkbox',
-                        checked: true,
-                        readonly: true,
-                        disabled: true
-                    }),
-                    ' This group is required'
-                ]);
+                return '';
+                // return div({
+                //     id: places.enableControl
+                // }, [
+                //     input({
+                //         type: 'checkbox',
+                //         checked: true,
+                //         readonly: true,
+                //         disabled: true
+                //     }),
+                //     ' This group is required'
+                // ]);
             }
 
             var label;
@@ -278,6 +279,7 @@ define([
                         }
                     });
                     fieldBus.on('validation', function(message) {
+                        console.log('STRUCT VALIDATION CHANGED', fieldSpec, message, viewModel.data);
                         if (message.diagnosis === 'optional-empty') {
                             bus.emit('changed', {
                                 newValue: viewModel.data
@@ -285,6 +287,7 @@ define([
                         }
                     });
                     fieldBus.on('changed', function(message) {
+                        console.log('PARAMETER CHANGED', fieldSpec, message, viewModel.data);
                         viewModel.data[fieldSpec.id] = message.newValue;
                         bus.emit('changed', {
                             newValue: viewModel.data

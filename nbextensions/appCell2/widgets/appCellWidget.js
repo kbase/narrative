@@ -219,7 +219,7 @@ define([
                     });
 
                     bus.on('parameter-changed', function(message) {
-                        console.log('PARAM CHANGED', message);
+                        // console.log('PARAM CHANGED', message);
                         model.setItem(['params', message.parameter], message.newValue);
                         evaluateAppState();
                     });
@@ -2685,7 +2685,7 @@ define([
                 paramsToExport[key] = value;
             });
 
-            console.log('EXPORTING', model.getItem('params'), paramsToExport);
+            // console.log('EXPORTING', model.getItem('params'), paramsToExport);
 
             return paramsToExport;
         }

@@ -52,7 +52,8 @@ RUN npm install && bower install --allow-root --config.interactive=false
 
 RUN /bin/bash scripts/install_narrative_docker.sh
 
-RUN ./fixupURL.sh
+RUN ./fixupURL.sh && chmod 666 /kb/dev_container/narrative/src/config.json
+RUN pip install jupyter-console
 
 WORKDIR /tmp
 RUN chown -R nobody:www-data /kb/dev_container/narrative/src/notebook/ipython_profiles /tmp/narrative /kb/dev_container/narrative/kbase-extension; find / -xdev \( -perm -4000 \) -type f -print -exec rm {} \;

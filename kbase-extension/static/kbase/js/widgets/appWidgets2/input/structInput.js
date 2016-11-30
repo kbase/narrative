@@ -174,17 +174,18 @@ define([
 
             // If the group is required, there is no choice, it is always enabled.
             if (required) {
-                return div({
-                    id: places.enableControl
-                }, [
-                    input({
-                        type: 'checkbox',
-                        checked: true,
-                        readonly: true,
-                        disabled: true
-                    }),
-                    ' This group is required'
-                ]);
+                return '';
+                // return div({
+                //     id: places.enableControl
+                // }, [
+                //     input({
+                //         type: 'checkbox',
+                //         checked: true,
+                //         readonly: true,
+                //         disabled: true
+                //     }),
+                //     ' This group is required'
+                // ]);
             }
 
             var label;
@@ -278,6 +279,7 @@ define([
                         }
                     });
                     fieldBus.on('validation', function(message) {
+                        // console.log('STRUCT VALIDATION CHANGED', fieldSpec, message, viewModel.data);
                         if (message.diagnosis === 'optional-empty') {
                             bus.emit('changed', {
                                 newValue: viewModel.data
@@ -285,6 +287,7 @@ define([
                         }
                     });
                     fieldBus.on('changed', function(message) {
+                        console.log('PARAMETER CHANGED', fieldSpec, message, viewModel.data);
                         viewModel.data[fieldSpec.id] = message.newValue;
                         bus.emit('changed', {
                             newValue: viewModel.data
@@ -397,7 +400,7 @@ define([
                     var events = Events.make();
                     Promise.try(function() {
                             parent = message.node;
-                            console.log('STRUCT PARENT?', parent, message);
+                            // console.log('STRUCT PARENT?', parent, message);
                             container = parent.appendChild(document.createElement('div'));
                             ui = UI.make({ node: container });
 
@@ -415,7 +418,7 @@ define([
                                 // we should send the individual data to them.
                                 // setModelValue(message.value);
                                 viewModel.data = message.value;
-                                console.log('struct update', message);
+                                // console.log('struct update', message);
                                 Object.keys(message.value).forEach(function(id) {
                                     structFields[id].bus.emit('update', {
                                         value: message.value[id]

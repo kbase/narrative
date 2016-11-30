@@ -28,7 +28,7 @@ define([
     'css!kbase/css/appCell.css',
     'css!./styles/main.css',
     'bootstrap'
-], function (
+], function(
     $,
     Jupyter,
     Promise,
@@ -42,7 +42,7 @@ define([
     var runtime = Runtime.make();
 
     function setupNotebook(workspaceInfo) {
-        return Promise.all(Jupyter.notebook.get_cells().map(function (cell) {
+        return Promise.all(Jupyter.notebook.get_cells().map(function(cell) {
                 if (AppCell.isAppCell(cell)) {
                     var appCell = AppCell.make({
                         cell: cell,
@@ -52,8 +52,8 @@ define([
                     return appCell;
                 }
             }))
-            .then(function (possibleAppCells) {
-                return possibleAppCells.filter(function (appCell) {
+            .then(function(possibleAppCells) {
+                return possibleAppCells.filter(function(appCell) {
                     if (appCell) {
                         return true;
                     }
@@ -105,7 +105,7 @@ define([
         // dataUpdated.Narrative is emitted by the data sidebar list
         // after it has fetched and updated its data. Not the best of
         // triggers that the ws has changed, not the worst.
-        $(document).on('dataUpdated.Narrative', function () {
+        $(document).on('dataUpdated.Narrative', function() {
             // Tell each cell that the workspace has been updated.
             // This is what is interesting, no?
             runtime.bus().emit('workspace-changed');
@@ -115,20 +115,20 @@ define([
         // the workspace name, ...
 
         setupWorkspace(runtime.config('services.workspace.url'))
-            .then(function (wsInfo) {
+            .then(function(wsInfo) {
                 workspaceInfo = serviceUtils.workspaceInfoToObject(wsInfo);
             })
-            .then(function () {
+            .then(function() {
                 return setupNotebook(workspaceInfo);
             })
-            .then(function () {
+            .then(function() {
                 // set up event hooks
 
                 // Primary hook for new cell creation.
                 // If the cell has been set with the metadata key kbase.type === 'app'
                 // we have a app cell.
-                $([Jupyter.events]).on('inserted.Cell', function (event, data) {
-                    console.log('inserted?', data);
+                $([Jupyter.events]).on('inserted.Cell', function(event, data) {
+                    // console.log('inserted?', data);
                     if (!data.kbase || !(data.kbase.type === 'app2' || data.kbase.type === 'app')) {
                         return;
                     }
@@ -138,7 +138,7 @@ define([
                         workspaceInfo: workspaceInfo
                     });
                     appCell.upgradeToAppCell(data.kbase.appSpec, data.kbase.appTag)
-                        .catch(function (err) {
+                        .catch(function(err) {
                             console.error('ERROR creating cell', err);
                             Jupyter.notebook.delete_cell(Jupyter.notebook.find_cell_index(data.cell));
                             alert('Could not insert cell due to errors.\n' + err.message);
@@ -147,7 +147,7 @@ define([
                 // also delete.Cell, edit_mode.Cell, select.Cell, command_mocd.Cell, output_appended.OutputArea ...
                 // preset_activated.CellToolbar, preset_added.CellToolbar
             })
-            .catch(function (err) {
+            .catch(function(err) {
                 console.error('ERROR setting up notebook', err);
             });
     }
@@ -166,6 +166,6 @@ define([
         // This is the sole ipython/jupyter api call
         load_ipython_extension: load_ipython_extension
     };
-}, function (err) {
+}, function(err) {
     console.log('ERROR loading appCell main', err);
 });

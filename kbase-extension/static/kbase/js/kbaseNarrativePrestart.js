@@ -186,8 +186,8 @@ define (
                         .append($('<p>').css({'margin': '1em 0 0 1em'})
                             .html('If that doesn\'t work, please ' +
                                 'contact us at ' +
-                                '<a href="mailto:help@kbase.us">help@kbase.us</a> ' +
-                                'and include the following information in your email:'))
+                                '<a href="http://kbase.us/contact-us/">http://kbase.us/contact-us/</a> ' +
+                                'and include the following information:'))
                         .append($('<p>').css({margin: '1em 0 0 2em'}).addClass('kb-err-text')
                             .text('Version: ' + full_version))
                         .append($('<p>').css({margin: '0 0 0 2em'}).addClass('kb-err-text')

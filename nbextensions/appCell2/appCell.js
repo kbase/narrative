@@ -232,6 +232,7 @@ define([
                     cell.metadata = meta;
 
                     // Add the params
+                    // console.log('SET INITIAL PARAMS', spec.makeDefaultedModel());
                     utils.setCellMeta(cell, 'kbase.appCell.params', spec.makeDefaultedModel());
                     // initializeParams(appSpec);
                     // Complete the cell setup.

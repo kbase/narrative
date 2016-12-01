@@ -1,5 +1,12 @@
 @import url("//fonts.googleapis.com/css?family=Roboto");
 
+.kb-data-staging-table-name {
+    white-space: nowrap;
+    /*width: 250px;*/
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 .kb-dropzone {
     border: 2px dashed #2196F3 !important;
     margin-bottom:5px

@@ -44,8 +44,15 @@ define([
         },
 
         updateView: function() {
-            this.$elem.empty();
-            this.fetchFtpFiles();
+            this.fetchFtpFiles()
+            .then(function(files) {
+                this.$elem.empty();
+                this.renderFileHeader();
+                this.renderFiles(files);
+            }.bind(this))
+            .catch(function(error) {
+                console.error(error);
+            });
         },
 
         setPath: function(path) {
@@ -55,18 +62,27 @@ define([
 
         fetchFtpFiles: function() {
             var token = Runtime.make().authToken();
-            Promise.resolve($.ajax({
+            return Promise.resolve($.ajax({
                 url: this.ftpUrl + '/list' + this.path,
                 headers: {
                     'Authorization': token
                 }
             }))
-            .then(function(results) {
-                this.renderFileHeader();
-                this.renderFiles(results);
-            }.bind(this))
-            .catch(function(error) {
-                console.error(error);
+            .then(function(files) {
+                return Promise.try(function() {
+                    files.forEach(function(file) {
+                        if (!file.isFolder) {
+                            file.imported = {
+                                narName: 'narrative',
+                                narUrl: '/narrative/ws.123.obj.456',
+                                objUrl: '/#dataview/123/objectName',
+                                objName: 'myObject',
+                                reportRef: 'reportRef'
+                            }
+                        }
+                    });
+                    return files;
+                });
             });
         },
 
@@ -101,6 +117,7 @@ define([
             this.$elem.append($fileTable)
             this.$elem.find('table').dataTable({
                 bLengthChange: false,
+                bAutoWidth: false,
                 aaSorting: [[3, 'desc']],
                 aoColumnDefs: [{
                     aTargets: [ 2 ],
@@ -137,11 +154,23 @@ define([
                             return data;
                         }
                     }
+                }, {
+                    aTargets: [ 1 ],
+                    sClass: 'staging-name',
+                    mRender: function(data, type, full) {
+                        if (type === 'display') {
+                            return "<div class='kb-data-staging-table-name'>" + data + "</div>";
+                        }
+                        return data;
+                    }
                 }]
             });
-            this.$elem.find('table button').on('click', function(e) {
+            this.$elem.find('table button[data-name]').on('click', function(e) {
                 this.updatePathFn(this.path += '/' + $(e.currentTarget).data().name);
             }.bind(this));
+            this.$elem.find('table button[data-report]').on('click', function(e) {
+                alert("Show report for reference '" + $(e.currentTarget).data().report + "'");
+            });
 
         }
 

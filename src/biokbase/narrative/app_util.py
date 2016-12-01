@@ -216,11 +216,10 @@ def map_outputs_from_state(state, params, app_spec):
         elif 'service_method_output_path' in out_param:
             value = get_result_sub_path(state['result'], out_param['service_method_output_path'])
         
-        if 'target_type_transform' in out_param:
-            spec_param = None
-            if input_param_id:
-                spec_param = spec_params[input_param_id]
-            value = transform_param_value(out_param['target_type_transform'], value, spec_param)
+        spec_param = None
+        if input_param_id:
+            spec_param = spec_params[input_param_id]
+        value = transform_param_value(out_param.get('target_type_transform'), value, spec_param)
 
         p_id = out_param.get('target_property', None)
         if p_id is not None:
@@ -504,12 +503,17 @@ def validate_param_value(param, value, workspace):
         return (ws_ref, "a parameter group must be of type list or dict")
     elif param['type'] == 'mapping' and not isinstance(value, dict):
         return (ws_ref, "a parameter of type 'mapping' must be a dict")
-    elif param['type'] not in ['group', 'mapping'] and \
+    elif param['type'] == 'textsubdata' and \
+            not (isinstance(value, basestring) or
+                 isinstance(value, list)):
+        return (ws_ref, "input value not supported for 'textsubdata' type - "
+                        "only str or list is supported")
+    elif param['type'] not in ['group', 'mapping', 'textsubdata'] and \
             not (isinstance(value, basestring) or
                  isinstance(value, int) or
                  isinstance(value, float)):
-        return (ws_ref, "input type not supported - "
-                        "only str, int, float, or list")
+        return (ws_ref, "input value not supported for '" + str(param['type']) +
+                        "' type - only str, int or float")
 
     # check types. basestring is pretty much anything (it'll just get
     # casted), but ints, floats, or lists are funky.
@@ -649,7 +653,10 @@ def transform_param_value(transform_type, value, spec_param):
 
     Returns a transformed (or not) value.
     """
-    if transform_type == "none" or transform_type == "object-name" or transform_type is None:
+    if transform_type is None and spec_param is not None and spec_param['type'] == 'textsubdata':
+        transform_type = "string"
+    
+    if transform_type is None or transform_type == "none" or transform_type == "object-name":
         return value
 
     elif transform_type == "ref" or transform_type == "unresolved-ref":
@@ -678,6 +685,16 @@ def transform_param_value(transform_type, value, spec_param):
         if value is None or len(str(value).strip()) == 0:
             return None
         return int(value)
+
+    elif transform_type == "string":
+        if value is None:
+            return value
+        elif isinstance(value, list):
+            return ",".join(value)
+        elif isinstance(value, dict):
+            return ",".join([key + "=" + str(value[key]) for key in value])
+        else:
+            return str(value)
 
     elif transform_type.startswith("list<") and \
             transform_type.endswith(">"):

@@ -52,6 +52,7 @@ define([
         button = t('button');
 
     function factory(config) {
+        console.error("1");
         var options = {},
             spec = config.parameterSpec,
             parent,

@@ -207,6 +207,22 @@ define([
                         });
                     });
 
+                    bus.on('set-param-state', function(message) {
+                        model.setItem('paramState', message.id, message.state);
+                    });
+
+                    bus.respond({
+                        key: {
+                            type: 'get-param-state'
+                        },
+                        handle: function(message) {
+                            return {
+                                state: model.getItem('paramState', message.id)
+                            };
+                        }
+                    });
+
+
                     bus.respond({
                         key: {
                             type: 'get-parameter'

@@ -75,7 +75,12 @@ define([
                     model.value.push(value);
                 })
                 .then(function() {
-                    render();
+                    return render();
+                })
+                .then(function() {
+                    bus.emit('changed', {
+                        newValue: model.value
+                    });
                 });
         }
 
@@ -164,6 +169,8 @@ define([
             var preButton, postButton,
                 widgetId = html.genId(),
                 inputBus = runtime.bus().makeChannelBus(null, 'Multi int input bus'),
+                // TODO: should be a very lightweight wrapper widget here,
+                // at least to create and manage the channel.
                 inputWidget = structInputWidget.make({
                     bus: inputBus,
                     parameterSpec: structSpec,
@@ -177,8 +184,7 @@ define([
                     bus: inputBus,
                     index: index
                 },
-                placeholder = div({ id: widgetId }),
-                errorRow;
+                placeholder = div({ id: widgetId });
 
             widgets.push(widgetWrapper);
 
@@ -250,7 +256,6 @@ define([
                 type: 'click',
                 handler: function(e) {
                     addModelValue(JSON.parse(JSON.stringify(structSpec.data.defaultValue)));
-                    render();
                 }
             };
         }
@@ -303,11 +308,14 @@ define([
 
         function render() {
 
+            console.log('Rendering: ', widgets, model);
+
             // if we have input widgets already, tear them down.
 
             widgets.forEach(function(widget) {
-                widget.bus.emit('stop');
-
+                console.log('stopping?', widget);
+                widget.bus.stop();
+                widget.instance.stop();
                 // TODO figure out how to remove unused channels.
                 // widget.bus.done();
             });
@@ -319,7 +327,10 @@ define([
 
             ui.setContent('input-container', control);
             widgets.forEach(function(widget) {
-                widget.instance.start()
+                console.log('starting widget...', widget);
+                widget.instance.start({
+                        node: document.getElementById(widget.id)
+                    })
                     .then(function() {
                         widget.bus.emit('run', {
                             debug: true,
@@ -405,8 +416,13 @@ define([
             });
         }
 
+        function stop() {
+            return Promise.resolve();
+        }
+
         return {
-            start: start
+            start: start,
+            stop: stop
         };
     }
 

@@ -1,5 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true*/
 define([
     'bluebird',
     'kb_common/html',
@@ -11,7 +9,7 @@ define([
 
     'bootstrap',
     'css!font-awesome'
-], function (
+], function(
     Promise,
     html,
     Validation,
@@ -29,9 +27,9 @@ define([
     function factory(config) {
         var enabled,
             spec = config.parameterSpec,
+            bus = config.bus,
             parent,
             container,
-            bus = config.bus,
             model,
             ui;
 
@@ -96,7 +94,7 @@ define([
          */
 
         function validate() {
-            return Promise.try(function () {
+            return Promise.try(function() {
                 // if (!enabled) {
                 //     return {
                 //         isValid: true,
@@ -128,10 +126,10 @@ define([
             var editPauseInterval = interval || 2000;
             return {
                 type: 'keyup',
-                handler: function (e) {
+                handler: function(e) {
                     bus.emit('touched');
                     cancelTouched();
-                    autoChangeTimer = window.setTimeout(function () {
+                    autoChangeTimer = window.setTimeout(function() {
                         autoChangeTimer = null;
                         e.target.dispatchEvent(new Event('change'));
                     }, editPauseInterval);
@@ -142,19 +140,20 @@ define([
         function handleChanged() {
             return {
                 type: 'change',
-                handler: function () {
+                handler: function() {
                     cancelTouched();
                     validate()
-                        .then(function (result) {
+                        .then(function(result) {
+                            console.log('validated...', result, spec);
                             if (result.isValid) {
                                 model.setItem('value', result.parsedValue);
                                 bus.emit('changed', {
                                     newValue: result.parsedValue
                                 });
                             } else if (result.diagnosis === 'required-missing') {
-                                model.setItem('value', result.parsedValue);
+                                model.setItem('value', spec.data.nullValue);
                                 bus.emit('changed', {
-                                    newValue: result.parsedValue
+                                    newValue: spec.data.nullValue
                                 });
                             } else {
                                 if (config.showOwnMessages) {
@@ -205,14 +204,14 @@ define([
         }
 
         function render() {
-            Promise.try(function () {
+            Promise.try(function() {
                     var events = Events.make(),
-                        inputControl = makeInputControl(model.getItem('value'), events, bus);
+                        inputControl = makeInputControl(model.getItem('value'), events);
 
                     ui.setContent('input-container', inputControl);
                     events.attachEvents(container);
                 })
-                .then(function () {
+                .then(function() {
                     return autoValidate();
                 });
         }
@@ -231,7 +230,7 @@ define([
 
         function autoValidate() {
             return validate()
-                .then(function (result) {
+                .then(function(result) {
                     bus.emit('validation', {
                         errorMessage: result.errorMessage,
                         diagnosis: result.diagnosis
@@ -241,9 +240,9 @@ define([
 
         // LIFECYCLE API
 
-        function start() {
-            return Promise.try(function () {
-                bus.on('run', function (message) {
+        function start(arg) {
+            return Promise.try(function() {
+                bus.on('run', function(message) {
                     parent = message.node;
                     container = parent.appendChild(document.createElement('div'));
                     ui = UI.make({ node: container });
@@ -255,19 +254,19 @@ define([
                     events.attachEvents(container);
                     model.setItem('value', message.value);
 
-                    bus.on('reset-to-defaults', function () {
+                    bus.on('reset-to-defaults', function() {
                         resetModelValue();
                     });
-                    bus.on('update', function (message) {
+                    bus.on('update', function(message) {
                         model.setItem('value', message.value);
                     });
-                    bus.on('stop', function () {
+                    bus.on('stop', function() {
                         bus.stop();
                     });
-                    bus.on('enable', function () {
+                    bus.on('enable', function() {
                         doEnable();
                     });
-                    bus.on('disable', function () {
+                    bus.on('disable', function() {
                         doDisable();
                     });
 
@@ -277,22 +276,30 @@ define([
             });
         }
 
+        function stop() {
+            return Promise.try(function() {
+                return null;
+            });
+        }
+
         model = Props.make({
             data: {
                 value: null
             },
-            onUpdate: function (props) {
+            onUpdate: function(props) {
                 render();
             }
         });
 
         return {
-            start: start
+            start: start,
+            stop: stop,
+            bus: bus
         };
     }
 
     return {
-        make: function (config) {
+        make: function(config) {
             return factory(config);
         }
     };

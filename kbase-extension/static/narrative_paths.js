@@ -24,6 +24,7 @@ require.config({
         underscore: 'ext_components/underscore/underscore-min',
         select2: 'ext_components/select2/dist/js/select2.full.min', //kbase/js/patched-components/select2/select2',
         uuid: 'ext_components/pure-uuid/uuid',
+        'font-awesome': 'ext_components/font-awesome/css/font-awesome',
 
         // not under bower control
         colorbrewer: 'ext_packages/colorbrewer/colorbrewer.min',

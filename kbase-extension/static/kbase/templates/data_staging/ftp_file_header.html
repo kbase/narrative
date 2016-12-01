@@ -1,8 +1,13 @@
 <div class="row" style="margin-bottom: 5px">
-    <div class="pull-left">{{#each path}}/ {{#if @last}}{{term}}{{else}}<a style="cursor:pointer" data-element="{{subpath}}">{{term}}</a>{{/if}} {{/each}}</div>
-    <div class="pull-right">
+    <div class="pull-left">
         <button id="refresh" class="btn btn-xs btn-default">
-            <span class="fa fa-refresh"></span>
+            <span><i class="fa fa-refresh fa-2x"></i></span>
+        </button>
+        {{#each path}}/ {{#if @last}}{{term}}{{else}}<a style="cursor:pointer" data-element="{{subpath}}">{{term}}</a>{{/if}} {{/each}}
+    </div>
+    <div class="pull-right">
+        <button id="help" class="btn btn-xs btn-default">
+            <span><i class="fa fa-question-circle fa-2x"></i></span>
         </button>
     </div>
 </div>

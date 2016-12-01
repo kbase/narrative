@@ -41,8 +41,6 @@ define([
             runtime = Runtime.make(),
             widgets = [];
 
-        // console.log('STRUCT SPEC?', spec);
-
         function normalizeModel() {
             var newModel = model.value.filter(function(item) {
                 return item ? true : false;
@@ -206,14 +204,12 @@ define([
             inputBus.on('changed', function(message) {
                 model.value[index] = message.newValue;
                 // TODO: validate the main control...
-                console.log('changed?', message, model);
                 bus.emit('changed', {
                     newValue: model.value
                 });
             });
 
             inputBus.on('touched', function(message) {
-                console.log('touched');
                 bus.emit('touched');
             });
 
@@ -350,7 +346,6 @@ define([
             return Promise.all(model.value.map(function(value, index) {
                     // could get from DOM, but the model is the same.
                     var rawValue = container.querySelector('[data-index="' + index + '"]').value;
-                    // console.log('VALIDATE', value);
                     return validate(rawValue);
                 }))
                 .then(function(results) {

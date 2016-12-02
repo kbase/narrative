@@ -48,7 +48,13 @@
 
 
             var conditions = [];
-            if(self.options.conditionIds) { conditions = $.map(self.options.conditionIds.split(","), $.trim); }
+            if(self.options.conditionIds) { 
+                if ($.type(self.options.conditionIds) === "array") {
+                    conditions = self.options.conditionIds;
+                } else {
+                    conditions = $.map(self.options.conditionIds.split(","), $.trim);
+                }
+            }
 
             return{
                 input_data: self.options.workspaceID + "/" + self.options.expressionMatrixID,

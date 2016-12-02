@@ -32,7 +32,7 @@ define([
     './tabs/errorTab',
     'css!google-code-prettify/prettify.css',
     'css!font-awesome.css'
-], function (
+], function(
     require,
     $,
     Promise,
@@ -165,8 +165,8 @@ define([
         // NEW - TABS
 
         function loadParamsWidget(arg) {
-            return new Promise(function (resolve, reject) {
-                require(['./appParamsWidget'], function (Widget) {
+            return new Promise(function(resolve, reject) {
+                require(['./appParamsWidget'], function(Widget) {
                     // TODO: widget should make own bus.
                     var bus = runtime.bus().makeChannelBus(null, 'Parent comm bus for input widget'),
                         widget = Widget.make({
@@ -179,8 +179,8 @@ define([
                         parameters: spec.getSpec().parameters
                     });
 
-                    bus.on('sync-params', function (message) {
-                        message.parameters.forEach(function (paramId) {
+                    bus.on('sync-params', function(message) {
+                        message.parameters.forEach(function(paramId) {
                             bus.send({
                                 parameter: paramId,
                                 value: model.getItem(['params', message.parameter])
@@ -193,7 +193,7 @@ define([
                         });
                     });
 
-                    bus.on('parameter-sync', function (message) {
+                    bus.on('parameter-sync', function(message) {
                         var value = model.getItem(['params', message.parameter]);
                         bus.send({
                             //                            parameter: message.parameter,
@@ -211,26 +211,27 @@ define([
                         key: {
                             type: 'get-parameter'
                         },
-                        handle: function (message) {
+                        handle: function(message) {
                             return {
                                 value: model.getItem(['params', message.parameterName])
                             };
                         }
                     });
 
-                    bus.on('parameter-changed', function (message) {
+                    bus.on('parameter-changed', function(message) {
+                        // console.log('PARAM CHANGED', message);
                         model.setItem(['params', message.parameter], message.newValue);
                         evaluateAppState();
                     });
 
                     return widget.start()
-                        .then(function () {
+                        .then(function() {
                             resolve({
                                 bus: bus,
                                 instance: widget
                             });
                         });
-                }, function (err) {
+                }, function(err) {
                     console.log('ERROR', err);
                     reject(err);
                 });
@@ -238,8 +239,8 @@ define([
         }
 
         function loadViewParamsWidget(arg) {
-            return new Promise(function (resolve, reject) {
-                require(['./appParamsViewWidget'], function (Widget) {
+            return new Promise(function(resolve, reject) {
+                require(['./appParamsViewWidget'], function(Widget) {
                     // TODO: widget should make own bus
                     var bus = runtime.bus().makeChannelBus(null, 'Parent comm bus for load input view widget'),
                         widget = Widget.make({
@@ -247,9 +248,9 @@ define([
                             workspaceInfo: workspaceInfo
                         });
 
-                    bus.on('sync-all-parameters', function () {
+                    bus.on('sync-all-parameters', function() {
                         var params = model.getItem('params');
-                        Object.keys(params).forEach(function (key) {
+                        Object.keys(params).forEach(function(key) {
 
                             bus.send({
                                 parameter: key,
@@ -268,7 +269,7 @@ define([
                             //});
                         });
                     });
-                    bus.on('parameter-sync', function (message) {
+                    bus.on('parameter-sync', function(message) {
                         var value = model.getItem(['params', message.parameter]);
                         bus.send({
                             parameter: message.parameter,
@@ -287,13 +288,13 @@ define([
                     });
 
                     return widget.start()
-                        .then(function () {
+                        .then(function() {
                             resolve({
                                 bus: bus,
                                 instance: widget
                             });
                         });
-                }, function (err) {
+                }, function(err) {
                     console.log('ERROR', err);
                     reject(err);
                 });
@@ -310,14 +311,14 @@ define([
                     return loadParamsWidget({
                             node: container
                         })
-                        .then(function (result) {
+                        .then(function(result) {
                             widget = result;
                         });
 
                 }
 
                 function stop() {
-                    return Promise.try(function () {
+                    return Promise.try(function() {
                         if (widget) {
                             return widget.instance.stop();
                         }
@@ -331,7 +332,7 @@ define([
             }
 
             return {
-                make: function (config) {
+                make: function(config) {
                     return factory(config);
                 }
             };
@@ -347,13 +348,13 @@ define([
                     return loadViewParamsWidget({
                             node: container
                         })
-                        .then(function (result) {
+                        .then(function(result) {
                             widget = result;
                         });
                 }
 
                 function stop() {
-                    return Promise.try(function () {
+                    return Promise.try(function() {
                         if (widget) {
                             return widget.instance.stop();
                         }
@@ -367,17 +368,17 @@ define([
             }
 
             return {
-                make: function (config) {
+                make: function(config) {
                     return factory(config);
                 }
             };
         }
 
         function loadWidget(name) {
-            return new Promise(function (resolve, reject) {
-                require('./tabs/' + name, function (Widget) {
+            return new Promise(function(resolve, reject) {
+                require('./tabs/' + name, function(Widget) {
                     resolve(Widget);
-                }, function (err) {
+                }, function(err) {
                     reject(err);
                 });
             });
@@ -394,7 +395,7 @@ define([
             } else if (viewModel === null) {
                 ui.setContent(path, '-');
             } else {
-                Object.keys(viewModel).forEach(function (key) {
+                Object.keys(viewModel).forEach(function(key) {
                     updateFromViewModel(ui, viewModel[key], path.concat(key));
                 });
             }
@@ -405,7 +406,7 @@ define([
 
             if (selectedTab.widgetModule) {
                 return loadWidget(selectedTab.widgetModule)
-                    .then(function (Widget) {
+                    .then(function(Widget) {
                         controlBarTabs.selectedTab = {
                             id: tabId,
                             widget: Widget.make()
@@ -443,10 +444,10 @@ define([
             ui.deactivateButton(controlBarTabs.selectedTab.id);
 
             return controlBarTabs.selectedTab.widget.stop()
-                .catch(function (err) {
+                .catch(function(err) {
                     console.log('ERROR stopping', err);
                 })
-                .finally(function () {
+                .finally(function() {
                     var widgetNode = ui.getElement('run-control-panel.tab-pane.widget');
                     widgetNode.removeChild(widgetNode.firstChild);
                     controlBarTabs.selectedTab = null;
@@ -459,7 +460,7 @@ define([
                     return;
                 }
                 return stopTab()
-                    .then(function () {
+                    .then(function() {
                         return startTab(tabId);
                     });
             }
@@ -474,7 +475,7 @@ define([
         }
 
         function hidePane() {
-            return Promise.try(function () {
+            return Promise.try(function() {
                 var paneNode = ui.getElement('run-control-panel.tab-pane');
                 if (paneNode) {
                     paneNode.classList.add('hidden');
@@ -483,7 +484,7 @@ define([
         }
 
         function showPane() {
-            return Promise.try(function () {
+            return Promise.try(function() {
                 var paneNode = ui.getElement('run-control-panel.tab-pane');
                 if (paneNode) {
                     paneNode.classList.remove('hidden');
@@ -499,19 +500,19 @@ define([
             if (controlBarTabs.selectedTab) {
                 if (controlBarTabs.selectedTab.id === tabId) {
                     return stopTab()
-                        .then(function () {
+                        .then(function() {
                             // hide the pane, since we just closed the only open
                             //tab.
                             return hidePane();
                         })
                 }
                 return stopTab()
-                    .then(function () {
+                    .then(function() {
                         return startTab(tabId);
                     });
             }
             return showPane()
-                .then(function () {
+                .then(function() {
                     startTab(tabId);
                 });
         }
@@ -580,38 +581,38 @@ define([
             }
 
             switch (app.tag) {
-            case 'release':
-                return {
-                    ids: [app.spec.info.id],
-                    tag: 'release',
-                    version: app.spec.info.ver
-                };
-            case 'dev':
-            case 'beta':
-                return {
-                    ids: [app.spec.info.id],
-                    tag: app.tag
-                };
-            default:
-                // we may be able to grok this.
-                //if (app.spec.info.ver) {
-                //    return {
-                //        ids: [app.spec.info.id],
-                //        tag: 'release',
-                //        version: app.spec.info.ver
-                //    };
-                //}
-                console.error('Invalid tag', app);
-                throw new ToErr.KBError({
-                    type: 'internal-app-cell-error',
-                    message: 'This app cell is corrrupt -- the app tag ' + String(app.tag) + ' is not recognized',
-                    advice: [
-                        'This condition should never occur outside of a development environment',
-                        'The tag of the app associated with the app cell must be one of "release", "beta", or "dev"',
-                        'Chances are that this app cell was inserted in a development environment in which the app cell structure was in flux',
-                        'You should remove this app cell from the narrative an insert an new one'
-                    ]
-                });
+                case 'release':
+                    return {
+                        ids: [app.spec.info.id],
+                        tag: 'release',
+                        version: app.spec.info.ver
+                    };
+                case 'dev':
+                case 'beta':
+                    return {
+                        ids: [app.spec.info.id],
+                        tag: app.tag
+                    };
+                default:
+                    // we may be able to grok this.
+                    //if (app.spec.info.ver) {
+                    //    return {
+                    //        ids: [app.spec.info.id],
+                    //        tag: 'release',
+                    //        version: app.spec.info.ver
+                    //    };
+                    //}
+                    console.error('Invalid tag', app);
+                    throw new ToErr.KBError({
+                        type: 'internal-app-cell-error',
+                        message: 'This app cell is corrrupt -- the app tag ' + String(app.tag) + ' is not recognized',
+                        advice: [
+                            'This condition should never occur outside of a development environment',
+                            'The tag of the app associated with the app cell must be one of "release", "beta", or "dev"',
+                            'Chances are that this app cell was inserted in a development environment in which the app cell structure was in flux',
+                            'You should remove this app cell from the narrative an insert an new one'
+                        ]
+                    });
             }
 
         }
@@ -623,7 +624,7 @@ define([
                 });
 
             return nms.get_method_spec(appRef)
-                .then(function (data) {
+                .then(function(data) {
                     if (!data[0]) {
                         throw new Error('App not found');
                     }
@@ -644,7 +645,7 @@ define([
                 // Note the 1.2em seems to be the de-facto work around to have a list
                 // align left with other blocks yet retain the bullet and the
                 // indentation for list items.
-                advice = ul({ style: { paddingLeft: '1.2em' } }, advice.map(function (adv) {
+                advice = ul({ style: { paddingLeft: '1.2em' } }, advice.map(function(adv) {
                     return li(adv);
                 }));
             } else {
@@ -664,7 +665,7 @@ define([
 
         function showFsmBar() {
             var currentState = fsm.getCurrentState(),
-                content = Object.keys(currentState.state).map(function (key) {
+                content = Object.keys(currentState.state).map(function(key) {
                     return span([
                         span({ style: { fontStyle: 'italic' } }, key),
                         ' : ',
@@ -694,7 +695,7 @@ define([
                     th('Name'),
                     td({ dataElement: 'name' })
                 ]),
-                ui.ifAdvanced(function () {
+                ui.ifAdvanced(function() {
                     return tr([
                         th('Module'),
                         td({ dataElement: 'module' })
@@ -716,7 +717,7 @@ define([
                     th('Authors'),
                     td({ dataElement: 'authors' })
                 ]),
-                ui.ifAdvanced(function () {
+                ui.ifAdvanced(function() {
                     return tr([
                         th('Git commit hash'),
                         td({ dataElement: 'git-commit-hash' })
@@ -780,13 +781,13 @@ define([
 
             value = model.getItem(['user-settings', settingName], setting.defaultValue);
             switch (setting.type) {
-            case 'toggle':
-                if (value) {
-                    showElement(setting.element);
-                } else {
-                    hideElement(setting.element);
-                }
-                break;
+                case 'toggle':
+                    if (value) {
+                        showElement(setting.element);
+                    } else {
+                        hideElement(setting.element);
+                    }
+                    break;
             }
         }
 
@@ -801,7 +802,7 @@ define([
 
         function renderSettings() {
             var events = Events.make({ node: container }),
-                content = Object.keys(settings).map(function (key) {
+                content = Object.keys(settings).map(function(key) {
                     var setting = settings[key],
                         settingsValue = model.getItem(['user-settings', key]) || setting.defaultValue;
                     return div({}, [
@@ -814,7 +815,7 @@ define([
                             //title: setting.help || '',
                             id: events.addEvent({
                                 type: 'change',
-                                handler: function (e) {
+                                handler: function(e) {
                                     doChangeSetting(e);
                                 }
                             })
@@ -830,7 +831,7 @@ define([
             // ui.enableTooltips('settings');
 
             //Ensure that the settings are reflected in the UI.
-            Object.keys(settings).forEach(function (key) {
+            Object.keys(settings).forEach(function(key) {
                 renderSetting(key);
             });
         }
@@ -850,7 +851,7 @@ define([
             ui.setContent('about-app.summary', appSpec.info.subtitle);
             ui.setContent('about-app.version', appSpec.info.ver);
             ui.setContent('about-app.git-commit-hash', appSpec.info.git_commit_hash || ui.na());
-            ui.setContent('about-app.authors', (function () {
+            ui.setContent('about-app.authors', (function() {
                 if (appSpec.info.authors && appSpec.info.authors.length > 0) {
                     return appSpec.info.authors.join('<br>');
                 }
@@ -873,26 +874,26 @@ define([
 
         function doActionButton(data) {
             switch (data.action) {
-            case 'runApp':
-                doRun();
-                break;
-            case 'reRunApp':
-                doRerun();
-                break;
-            case 'resetApp':
-                doResetApp();
-                break;
-            case 'cancel':
-                doCancel();
-                break;
-            default:
-                alert('Undefined action:' + data.action);
+                case 'runApp':
+                    doRun();
+                    break;
+                case 'reRunApp':
+                    doRerun();
+                    break;
+                case 'resetApp':
+                    doResetApp();
+                    break;
+                case 'cancel':
+                    doCancel();
+                    break;
+                default:
+                    alert('Undefined action:' + data.action);
             }
         }
 
         function buildRunControlPanelRunButtons(events) {
             return div({ class: 'btn-group' },
-                Object.keys(actionButtons.availableButtons).map(function (key) {
+                Object.keys(actionButtons.availableButtons).map(function(key) {
                     var button = actionButtons.availableButtons[key],
                         classes = ['kb-flat-btn', 'kb-btn-action'].concat(button.classes);
                     return ui.buildButton({
@@ -918,7 +919,7 @@ define([
         }
 
         function buildRunControlPanelDisplayButtons(events) {
-            var buttons = Object.keys(controlBarTabs.tabs).map(function (key) {
+            var buttons = Object.keys(controlBarTabs.tabs).map(function(key) {
                 var tab = controlBarTabs.tabs[key],
                     icon;
                 if (!tab) {
@@ -951,10 +952,10 @@ define([
                     },
                     icon: icon
                 });
-            }).filter(function (x) {
+            }).filter(function(x) {
                 return x ? true : false;
             });
-            bus.on('control-panel-tab', function (message) {
+            bus.on('control-panel-tab', function(message) {
                 var tab = message.data.tab;
                 toggleTab(tab);
             });
@@ -1109,7 +1110,7 @@ define([
                                         div({ dataElement: 'about-app' }, renderAboutApp())
                                     ]
                                 }),
-                                (function () {
+                                (function() {
                                     if (!ui.isDeveloper()) {
                                         return;
                                     }
@@ -1190,23 +1191,23 @@ define([
             }
 
             switch (typeof value) {
-            case 'string':
-                if (value.length === 0) {
-                    return true;
-                }
-                break;
-            case 'number':
-                return false;
-            case 'object':
-                if (value instanceof Array) {
+                case 'string':
                     if (value.length === 0) {
                         return true;
                     }
-                }
-                if (Object.keys(value).length === 0) {
-                    return true;
-                }
-                break;
+                    break;
+                case 'number':
+                    return false;
+                case 'object':
+                    if (value instanceof Array) {
+                        if (value.length === 0) {
+                            return true;
+                        }
+                    }
+                    if (Object.keys(value).length === 0) {
+                        return true;
+                    }
+                    break;
             }
             return false;
 
@@ -1281,21 +1282,21 @@ define([
         // for a beta or release tag ...
         function fixApp(app) {
             switch (app.tag) {
-            case 'release':
-                return {
-                    id: app.id,
-                    tag: app.tag,
-                    version: app.version
-                };
-            case 'beta':
-            case 'dev':
-                return {
-                    id: app.id,
-                    tag: app.tag,
-                    version: app.gitCommitHash
-                };
-            default:
-                throw new Error('Invalid tag for app ' + app.id);
+                case 'release':
+                    return {
+                        id: app.id,
+                        tag: app.tag,
+                        version: app.version
+                    };
+                case 'beta':
+                case 'dev':
+                    return {
+                        id: app.id,
+                        tag: app.tag,
+                        version: app.gitCommitHash
+                    };
+                default:
+                    throw new Error('Invalid tag for app ' + app.id);
             }
         }
 
@@ -1336,7 +1337,7 @@ define([
                 //xinitialState: {
                 //    mode: 'editing', params: 'incomplete'
                 //},
-                onNewState: function (fsm) {
+                onNewState: function(fsm) {
                     model.setItem('fsm.currentState', fsm.getCurrentState().state);
                     // save the narrative!
 
@@ -1436,7 +1437,7 @@ define([
             if (notifications.length === 0) {
                 content = span({ style: { fontStyle: 'italic' } }, 'There are currently no notifications');
             } else {
-                content = notifications.map(function (notification, index) {
+                content = notifications.map(function(notification, index) {
                     return div({ class: 'row' }, [
                         div({ class: 'col-md-10' }, notification),
                         div({ class: 'col-md-2', style: { textAlign: 'right' } }, span({}, [
@@ -1444,7 +1445,7 @@ define([
                                 class: 'btn btn-default',
                                 id: events.addEvent({
                                     type: 'click',
-                                    handler: function () {
+                                    handler: function() {
                                         doRemoveNotification(index);
                                     }
                                 })
@@ -1566,7 +1567,7 @@ define([
 
 
             // disable tab buttons
-            Object.keys(state.ui.tabs).forEach(function (tabId) {
+            Object.keys(state.ui.tabs).forEach(function(tabId) {
                 var tab = state.ui.tabs[tabId];
                 if (tab.enabled) {
                     ui.enableButton(tabId);
@@ -1677,7 +1678,7 @@ define([
             if (saveTimer) {
                 return;
             }
-            saveTimer = window.setTimeout(function () {
+            saveTimer = window.setTimeout(function() {
                 saveTimer = null;
                 JupyterProxy.saveNotebook();
             }, saveMaxFrequency);
@@ -1742,7 +1743,7 @@ define([
                 p('Proceed to Resume Editing?')
             ]);
             ui.showConfirmDialog({ title: 'Edit and Re-Run?', body: confirmationMessage })
-                .then(function (confirmed) {
+                .then(function(confirmed) {
                     if (!confirmed) {
                         return;
                     }
@@ -1758,7 +1759,7 @@ define([
                 p('Proceed to Reset the app and Resume Editing?')
             ]);
             ui.showConfirmDialog({ title: 'Reset App?', body: confirmationMessage })
-                .then(function (confirmed) {
+                .then(function(confirmed) {
                     if (!confirmed) {
                         return;
                     }
@@ -1781,7 +1782,7 @@ define([
                 p('Continue to Cancel the running job?')
             ]);
             ui.showConfirmDialog({ title: 'Cancel Job?', body: confirmationMessage })
-                .then(function (confirmed) {
+                .then(function(confirmed) {
                     if (!confirmed) {
                         return;
                     }
@@ -1813,16 +1814,16 @@ define([
             // sent once from the narrative back end.
 
             // Update FSM
-            var newFsmState = (function () {
+            var newFsmState = (function() {
                 switch (message.event) {
-                case 'launched_job':
-                    // NEW: start listening for jobs.
-                    startListeningForJobMessages(message.job_id);
-                    return { mode: 'processing', stage: 'launched' };
-                case 'error':
-                    return { mode: 'error', stage: 'launching' };
-                default:
-                    throw new Error('Invalid launch state ' + message.event);
+                    case 'launched_job':
+                        // NEW: start listening for jobs.
+                        startListeningForJobMessages(message.job_id);
+                        return { mode: 'processing', stage: 'launched' };
+                    case 'error':
+                        return { mode: 'error', stage: 'launching' };
+                    default:
+                        throw new Error('Invalid launch state ' + message.event);
                 }
             }());
             fsm.newState(newFsmState);
@@ -1832,46 +1833,46 @@ define([
         function updateFromJobState(jobState) {
 
             var currentState = fsm.getCurrentState(),
-                newFsmState = (function () {
+                newFsmState = (function() {
                     switch (jobState.job_state) {
-                    case 'queued':
-                        return { mode: 'processing', stage: 'queued' };
-                    case 'job_started':
-                        return { mode: 'processing', stage: 'running' };
-                    case 'in-progress':
-                        return { mode: 'processing', stage: 'running' };
-                    case 'completed':
-                        stopListeningForJobMessages();
-                        return { mode: 'success' };
-                    case 'canceled':
-                        stopListeningForJobMessages();
-                        return { mode: 'canceled' };
-                    case 'suspend':
-                    case 'error':
-                        stopListeningForJobMessages();
+                        case 'queued':
+                            return { mode: 'processing', stage: 'queued' };
+                        case 'job_started':
+                            return { mode: 'processing', stage: 'running' };
+                        case 'in-progress':
+                            return { mode: 'processing', stage: 'running' };
+                        case 'completed':
+                            stopListeningForJobMessages();
+                            return { mode: 'success' };
+                        case 'canceled':
+                            stopListeningForJobMessages();
+                            return { mode: 'canceled' };
+                        case 'suspend':
+                        case 'error':
+                            stopListeningForJobMessages();
 
-                        // Due to the course granularity of job status
-                        // messages, we don't can't rely on the prior state
-                        // to inform us about what procesing stage the
-                        // error occured in -- we need to inspect the job state.
-                        var errorStage;
-                        if (jobState.exec_start_time) {
-                            errorStage = 'running';
-                        } else if (jobState.creation_time) {
-                            errorStage = 'queued';
-                        }
-                        console.log('ERROR???', jobState, errorStage);
-                        if (errorStage) {
+                            // Due to the course granularity of job status
+                            // messages, we don't can't rely on the prior state
+                            // to inform us about what procesing stage the
+                            // error occured in -- we need to inspect the job state.
+                            var errorStage;
+                            if (jobState.exec_start_time) {
+                                errorStage = 'running';
+                            } else if (jobState.creation_time) {
+                                errorStage = 'queued';
+                            }
+                            console.log('ERROR???', jobState, errorStage);
+                            if (errorStage) {
+                                return {
+                                    mode: 'error',
+                                    stage: errorStage
+                                };
+                            }
                             return {
-                                mode: 'error',
-                                stage: errorStage
+                                mode: 'error'
                             };
-                        }
-                        return {
-                            mode: 'error'
-                        };
-                    default:
-                        throw new Error('Invalid job state ' + jobState.job_state);
+                        default:
+                            throw new Error('Invalid job state ' + jobState.job_state);
                     }
                 }());
             fsm.newState(newFsmState);
@@ -1904,7 +1905,7 @@ define([
         // LIFECYCLE API
 
         function init() {
-            return Promise.try(function () {
+            return Promise.try(function() {
                 initializeFSM();
                 initCodeInputArea();
                 return null;
@@ -1912,7 +1913,7 @@ define([
         }
 
         function attach(node) {
-            return Promise.try(function () {
+            return Promise.try(function() {
                 container = node;
                 ui = UI.make({
                     node: container,
@@ -1953,7 +1954,7 @@ define([
                 key: {
                     type: 'job-status'
                 },
-                handle: function (message) {
+                handle: function(message) {
                     var existingState = model.getItem('exec.jobState'),
                         newJobState = message.jobState,
                         outputWidgetInfo = message.outputWidgetInfo;
@@ -2003,7 +2004,7 @@ define([
                 key: {
                     type: 'job-canceled'
                 },
-                handle: function (message) {
+                handle: function(message) {
                     //  reset the cell into edit mode
                     var state = fsm.getCurrentState();
                     if (state.state.mode === 'editing') {
@@ -2025,7 +2026,7 @@ define([
                 key: {
                     type: 'job-does-not-exist'
                 },
-                handle: function (message) {
+                handle: function(message) {
                     //  reset the cell into edit mode
                     var state = fsm.getCurrentState();
                     if (state.state.mode === 'editing') {
@@ -2044,7 +2045,7 @@ define([
         }
 
         function stopListeningForJobMessages() {
-            jobListeners.forEach(function (listener) {
+            jobListeners.forEach(function(listener) {
                 runtime.bus().removeListener(listener);
             });
             jobListeners = [];
@@ -2115,7 +2116,7 @@ define([
 
 
             function start(arg) {
-                return Promise.try(function () {
+                return Promise.try(function() {
                     // create clock layout on container.
                     //channel.on('run', function (message) {
                     container = arg.node;
@@ -2124,7 +2125,7 @@ define([
 
                     startTime = arg.startTime;
 
-                    listeners.push(runtime.bus().on('clock-tick', function () {
+                    listeners.push(runtime.bus().on('clock-tick', function() {
                         renderClock();
                     }));
                     //});
@@ -2132,8 +2133,8 @@ define([
             }
 
             function stop() {
-                return Promise.try(function () {
-                    listeners.forEach(function (listener) {
+                return Promise.try(function() {
+                    listeners.forEach(function(listener) {
                         channel.bus().removeListener(listener);
                     });
                 });
@@ -2142,7 +2143,7 @@ define([
             return {
                 start: start,
                 stop: stop,
-                bus: function () {
+                bus: function() {
                     return bus;
                 }
             };
@@ -2161,7 +2162,7 @@ define([
                     node: ui.getElement('run-control-panel.status.measure'),
                     startTime: jobState.exec_start_time
                 })
-                .catch(function (err) {
+                .catch(function(err) {
                     ui.setContent('run-control-panel.status.measure', 'ERROR:' + err.message);
                 });
         }
@@ -2184,7 +2185,7 @@ define([
                     node: ui.getElement('run-control-panel.status.measure'),
                     startTime: jobState.creation_time
                 })
-                .catch(function (err) {
+                .catch(function(err) {
                     ui.setContent('run-control-panel.status.measure', 'ERROR:' + err.message);
                 });
         }
@@ -2278,7 +2279,7 @@ define([
                 p('Continue to remove this app cell?')
             ]);
             ui.showConfirmDialog({ title: 'Remove Cell?', body: confirmationMessage })
-                .then(function (confirmed) {
+                .then(function(confirmed) {
                     if (!confirmed) {
                         return;
                     }
@@ -2301,7 +2302,7 @@ define([
                 p('Continue to delete this app cell?')
             ]);
             ui.showConfirmDialog({ title: 'Confirm Cell Deletion', body: content })
-                .then(function (confirmed) {
+                .then(function(confirmed) {
                     if (!confirmed) {
                         return;
                     }
@@ -2313,7 +2314,7 @@ define([
 
                     // tear down all the sub widgets.
                     // TODO: make all widget behavior consistent. Either message or promise.
-                    Object.keys(widgets).forEach(function (widgetId) {
+                    Object.keys(widgets).forEach(function(widgetId) {
                         try {
                             var widget = widgets[widgetId];
                             if (widget.stop) {
@@ -2334,18 +2335,18 @@ define([
         }
 
         function start() {
-            return Promise.try(function () {
+            return Promise.try(function() {
                 /*
                  * listeners for the local input cell message bus
                  */
 
                 // DOM EVENTS
-                cell.element.on('toggleCodeArea.cell', function () {
+                cell.element.on('toggleCodeArea.cell', function() {
                     toggleCodeInputArea(cell);
                 });
                 // the settings toggle is now emitted from the toolbar, which
                 // doesn't have a reference to the bus (yet).
-                cell.element.on('toggleCellSettings.cell', function () {
+                cell.element.on('toggleCellSettings.cell', function() {
                     var showing = toggleSettings(cell),
                         label = span({ class: 'fa fa-cog ' }),
                         buttonNode = ui.getButton('toggle-settings');
@@ -2360,22 +2361,22 @@ define([
 
                 // APP CELL EVENTS
 
-                busEventManager.add(bus.on('toggle-code-view', function () {
+                busEventManager.add(bus.on('toggle-code-view', function() {
                     var showing = toggleCodeInputArea(),
                         label = showing ? 'Hide Code' : 'Show Code';
                     ui.setButtonLabel('toggle-code-view', label);
                 }));
-                busEventManager.add(bus.on('show-notifications', function () {
+                busEventManager.add(bus.on('show-notifications', function() {
                     doShowNotifications();
                 }));
-                busEventManager.add(bus.on('edit-cell-metadata', function () {
+                busEventManager.add(bus.on('edit-cell-metadata', function() {
                     doEditCellMetadata();
                 }));
-                busEventManager.add(bus.on('edit-notebook-metadata', function () {
+                busEventManager.add(bus.on('edit-notebook-metadata', function() {
                     doEditNotebookMetadata();
                 }));
 
-                busEventManager.add(bus.on('toggle-settings', function () {
+                busEventManager.add(bus.on('toggle-settings', function() {
                     var showing = toggleSettings(cell),
                         label = span({ class: 'fa fa-cog ' }),
                         buttonNode = ui.getButton('toggle-settings');
@@ -2386,41 +2387,41 @@ define([
                         buttonNode.classList.remove('active');
                     }
                 }));
-                busEventManager.add(bus.on('actionButton', function (message) {
+                busEventManager.add(bus.on('actionButton', function(message) {
                     doActionButton(message.data);
                 }));
-                busEventManager.add(bus.on('run-app', function () {
+                busEventManager.add(bus.on('run-app', function() {
                     doRun();
                 }));
-                busEventManager.add(bus.on('re-run-app', function () {
+                busEventManager.add(bus.on('re-run-app', function() {
                     doRerun();
                 }));
-                busEventManager.add(bus.on('cancel', function () {
+                busEventManager.add(bus.on('cancel', function() {
                     doCancel();
                 }));
-                busEventManager.add(bus.on('remove', function () {
+                busEventManager.add(bus.on('remove', function() {
                     doRemove();
                 }));
 
-                busEventManager.add(bus.on('start-queueing', function () {
+                busEventManager.add(bus.on('start-queueing', function() {
                     doStartQueueing();
                 }));
-                busEventManager.add(bus.on('stop-queueing', function () {
+                busEventManager.add(bus.on('stop-queueing', function() {
                     doStopQueueing();
                 }));
 
-                busEventManager.add(bus.on('start-running', function () {
+                busEventManager.add(bus.on('start-running', function() {
                     doStartRunning();
                 }));
-                busEventManager.add(bus.on('stop-running', function () {
+                busEventManager.add(bus.on('stop-running', function() {
                     doStopRunning();
                 }));
 
-                busEventManager.add(bus.on('on-success', function () {
+                busEventManager.add(bus.on('on-success', function() {
                     doOnSuccess();
                 }));
 
-                busEventManager.add(bus.on('exit-success', function () {
+                busEventManager.add(bus.on('exit-success', function() {
                     doExitSuccess();
                 }));
 
@@ -2430,11 +2431,11 @@ define([
 
                 // Events from widgets...
 
-                busEventManager.add(parentBus.on('newstate', function (message) {
+                busEventManager.add(parentBus.on('newstate', function(message) {
                     console.log('GOT NEWSTATE', message);
                 }));
 
-                busEventManager.add(parentBus.on('reset-to-defaults', function () {
+                busEventManager.add(parentBus.on('reset-to-defaults', function() {
                     bus.emit('reset-to-defaults');
                 }));
 
@@ -2459,21 +2460,21 @@ define([
                 // var listeningForJobUpdates = false;
                 if (state) {
                     switch (state.mode) {
-                    case 'editing':
-                        break;
-                    case 'processing':
-                        switch (state.stage) {
-                        case 'launched':
-                        case 'queued':
-                        case 'running':
-                            startListeningForJobMessages(model.getItem('exec.jobState.job_id'));
-                            requestJobStatus(model.getItem('exec.jobState.job_id'));
+                        case 'editing':
                             break;
-                        }
-                        break;
-                    case 'success':
-                    case 'error':
-                        // do nothing for now
+                        case 'processing':
+                            switch (state.stage) {
+                                case 'launched':
+                                case 'queued':
+                                case 'running':
+                                    startListeningForJobMessages(model.getItem('exec.jobState.job_id'));
+                                    requestJobStatus(model.getItem('exec.jobState.job_id'));
+                                    break;
+                            }
+                            break;
+                        case 'success':
+                        case 'error':
+                            // do nothing for now
                     }
                 }
 
@@ -2491,7 +2492,7 @@ define([
 
 
                 // TODO: only turn this on when we need it!
-                busEventManager.add(cellBus.on('run-status', function (message) {
+                busEventManager.add(cellBus.on('run-status', function(message) {
                     updateFromLaunchEvent(message);
 
                     model.setItem('exec.launchState', message);
@@ -2514,11 +2515,11 @@ define([
                     });
                 }));
 
-                busEventManager.add(cellBus.on('delete-cell', function (message) {
+                busEventManager.add(cellBus.on('delete-cell', function(message) {
                     doDeleteCell();
                 }));
 
-                busEventManager.add(cellBus.on('output-cell-removed', function (message) {
+                busEventManager.add(cellBus.on('output-cell-removed', function(message) {
                     var output = model.getItem('output');
 
                     if (!output.byJob[message.jobId]) {
@@ -2632,7 +2633,7 @@ define([
                 //                    }
                 //                });
 
-                busEventManager.add(runtime.bus().on('read-only-changed', function (msg) {
+                busEventManager.add(runtime.bus().on('read-only-changed', function(msg) {
                     toggleReadOnlyMode(msg.readOnly);
                 }));
 
@@ -2665,7 +2666,7 @@ define([
                 parameters = spec.getSpec().parameters;
 
 
-            Object.keys(params).forEach(function (key) {
+            Object.keys(params).forEach(function(key) {
                 var value = params[key],
                     paramSpec = parameters.specs[key];
 
@@ -2684,13 +2685,15 @@ define([
                 paramsToExport[key] = value;
             });
 
+            // console.log('EXPORTING', model.getItem('params'), paramsToExport);
+
             return paramsToExport;
         }
 
 
         function loadOutputWidget() {
-            return new Promise(function (resolve, reject) {
-                require(['./appOutputWidget'], function (Widget) {
+            return new Promise(function(resolve, reject) {
+                require(['./appOutputWidget'], function(Widget) {
                     var widget = Widget.make({
                         cellId: utils.getMeta(cell, 'attributes', 'id')
                     });
@@ -2705,7 +2708,7 @@ define([
                         output: model.getItem('output')
                     });
                     resolve();
-                }, function (err) {
+                }, function(err) {
                     reject(err);
                 });
             });
@@ -2815,10 +2818,10 @@ define([
 
             // The app reference is already in the app cell metadata.
 
-            return Promise.try(function () {
+            return Promise.try(function() {
                     return getAppSpec();
                 })
-                .then(function (appSpec) {
+                .then(function(appSpec) {
                     // Ensure that the current app spec matches our existing one.
                     var warning = checkSpec(appSpec);
                     if (warning && warning.severity === 'warning') {
@@ -2851,7 +2854,7 @@ define([
                         // loadOutputWidget()
                     ]);
                 })
-                .then(function () {
+                .then(function() {
                     // this will not change, so we can just render it here.
                     showAboutApp();
                     showAppSpec();
@@ -2859,7 +2862,7 @@ define([
                     renderUI();
                     // renderIcon();
                 })
-                .then(function () {
+                .then(function() {
                     // if we start out in 'new' state, then we need to promote to
                     // editing...
 
@@ -2874,7 +2877,7 @@ define([
                         toggleReadOnlyMode(true);
                     }
                 })
-                .catch(function (err) {
+                .catch(function(err) {
                     var error = ToErr.grokError(err);
                     console.error('ERROR loading main widgets', error);
                     addNotification('Error loading main widgets: ' + error.message);
@@ -2901,7 +2904,7 @@ define([
 
         model = Props.make({
             data: utils.getMeta(cell, 'appCell'),
-            onUpdate: function (props) {
+            onUpdate: function(props) {
                 utils.setMeta(cell, 'appCell', props.getRawObject());
                 // saveNarrative();
             }
@@ -2920,10 +2923,10 @@ define([
     }
 
     return {
-        make: function (config) {
+        make: function(config) {
             return factory(config);
         }
     };
-}, function (err) {
+}, function(err) {
     console.log('ERROR loading appCell appCellWidget', err);
 });

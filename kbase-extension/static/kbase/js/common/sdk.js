@@ -192,6 +192,8 @@ define([
                 return 'struct';
                 // case 'reads_group_editor':
                 //     return 'reads_group_editor';
+            case 'autocomplete':
+                return 'string';
         }
 
         /*
@@ -292,6 +294,9 @@ define([
                             max: Props.getDataItem(spec, 'text_options.max_length'),
                             nRows: Props.getDataItem(spec, 'text_options.n_rows', 5)
                         };
+                        break;
+                    case 'autocomplete':
+                        constraints = {};
                         break;
                     default:
                         throw new Error('Unknown text param field type');
@@ -492,6 +497,7 @@ define([
                     case 'tab':
                         break;
                     default:
+                        console.log('ERROR unspecified field type', converted, spec)
                         throw new Error('Unknown unspecified field type');
                 }
                 break;
@@ -540,7 +546,8 @@ define([
                 constraints: {
                     required: required
                 }
-            }
+            },
+            original: spec
         };
 
         updateNullValue(converted, spec);
@@ -598,6 +605,9 @@ define([
         group.parameter_ids.forEach(function(id) {
             groupParams[id] = params[id];
             delete params[id];
+
+            // TODO: figure out what to do with advanced params within groups
+            groupParams[id].ui.advanced = false;
         });
         var defaultValue = {};
         var nullValue = {};

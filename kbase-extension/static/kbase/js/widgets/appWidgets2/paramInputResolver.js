@@ -3,6 +3,7 @@
 
 define([
     './input/singleTextInput',
+    './input/autocompleteSingleTextInput',
     './input/multiTextInput',
     './input/singleSelectInput',
     './input/singleIntInput',
@@ -26,8 +27,9 @@ define([
     './input/multiCustomSelect',
     './input/readsGroupEditor',
     './input/structInput'
-], function (
+], function(
     SingleTextInputWidget,
+    AutocompleteTextInputWidget,
     MultiTextInputWidget,
     SingleSelectInputWidget,
     SingleIntInputWidget,
@@ -51,7 +53,7 @@ define([
     MultiCustomSelectWidget,
     ReadsGroupEditor,
     StructInputWidget
-    ) {
+) {
     'use strict';
 
     function factory(config) {
@@ -81,29 +83,23 @@ define([
                 case 'text':
                     switch (fieldType) {
                         case 'text':
-                            return {
-                            };
+                            return {};
                         case 'dropdown':
-                            return {
-                            };
+                            return {};
                         default:
                             throw new Error('Unknown text param field type');
                     }
                 case 'int':
                     switch (fieldType) {
                         case 'text':
-                            return {
-                            };
+                            return {};
                         case 'checkbox':
-                            return {
-                            };
+                            return {};
                         default:
-                            return {
-                            };
+                            return {};
                     }
                 case 'float':
-                    return {
-                    };
+                    return {};
                 case 'workspaceObjectName':
                     switch (parameterSpec.uiClass()) {
                         case 'input':
@@ -130,11 +126,9 @@ define([
                 case '[]string':
                     switch (fieldType) {
                         case 'dropdown':
-                            return {
-                            };
+                            return {};
                         case 'textarea':
-                            return {
-                            };
+                            return {};
                         default:
                             throw new Error('Unknown []string field type');
                     }
@@ -142,38 +136,27 @@ define([
                     // a bunch of field types are untyped:
                     switch (fieldType) {
                         case 'text':
-                            return {
-                            };
+                            return {};
                         case 'checkbox':
-                            return {
-                            };
+                            return {};
                         case 'textarea':
-                            return {
-                            };
+                            return {};
                         case 'dropdown':
-                            return {
-                            };
+                            return {};
                         case 'custom_button':
-                            return {
-                            };
+                            return {};
                         case 'textsubdata':
-                            return {
-                            };
+                            return {};
                         case 'file':
-                            return {
-                            };
+                            return {};
                         case 'custom_textsubdata':
-                            return {
-                            };
+                            return {};
                         case 'custom_widget':
-                            return {
-                            };
+                            return {};
                         case 'tab':
-                            return {
-                            };
+                            return {};
                         case 'reads_group_editor':
-                            return {
-                            };
+                            return {};
                         default:
                             throw new Error('Unknown unspecified field type');
                     }
@@ -192,7 +175,7 @@ define([
             // field_type is text or dropdown, but does not always correspond to the
             // type of control to build. E.g. selecting a workspace object is actually
             // a dropdown even though the field_type is 'text'.
-            
+
             switch (dataType) {
                 case 'string':
                 case 'text':
@@ -202,6 +185,8 @@ define([
                     switch (fieldType) {
                         case 'text':
                             return SingleTextInputWidget;
+                        case 'autocomplete':
+                            return AutocompleteTextInputWidget;
                         case 'dropdown':
                             return SingleSelectInputWidget;
                         case 'textarea':
@@ -239,7 +224,7 @@ define([
                 case 'float':
                     return SingleFloatInputWidget;
                 case '[]float':
-                   return  MultiFloatInputWidget;
+                    return MultiFloatInputWidget;
                 case 'workspaceObjectName':
                     switch (parameterSpec.uiClass()) {
                         case 'input':
@@ -293,8 +278,8 @@ define([
                     }
                     return StructInputWidget;
 
-                //case 'sample_property':
-                //    return SingleCustomSubdataWidget;
+                    //case 'sample_property':
+                    //    return SingleCustomSubdataWidget;
                 case 'unspecified':
                     // a bunch of field types are untyped:
                     switch (fieldType) {
@@ -350,7 +335,7 @@ define([
         };
     }
     return {
-        make: function (config) {
+        make: function(config) {
             return factory(config);
         }
     };

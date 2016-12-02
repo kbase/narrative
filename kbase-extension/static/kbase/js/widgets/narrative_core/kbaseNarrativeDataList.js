@@ -1006,10 +1006,9 @@ define([
                 $box.addClass('kb-data-list-level' + indent);
             }
 
-
             // Remember the icons
             var data_icon_param = {elt: $logo, type: type, stacked: is_set, indent: 0};
-            Icon.buildDataIcon($logo, type, is_set, 0, objData.fromPalette);
+            Icon.buildDataIcon($logo, type, is_set, 0);
 
             // Save params for this icon, so we can update later when sets get "discovered"
             this.dataIconParam[this.itemId(object_info)] = data_icon_param;

@@ -60,19 +60,20 @@ define([
          */
         // TODO: move to spec module
         // TODO: recursively initialize params.
-        function initializeParams(appSpec) {
-            var defaultParams = {};
-            appSpec.parameters.forEach(function(parameterSpec) {
-                var param = ParameterSpec.make({ parameterSpec: parameterSpec }),
-                    defaultValue = param.defaultValue();
+        // function initializeParams(appSpec) {
+        //     console.log('INIT PARAM', appSpec);
+        //     var defaultParams = {};
+        //     appSpec.parameters.forEach(function(parameterSpec) {
+        //         var param = ParameterSpec.make({ parameterSpec: parameterSpec }),
+        //             defaultValue = param.defaultValue();
 
-                // A default value may be undefined, e.g. if the parameter is required and there is no default value.
-                if (defaultValue !== undefined) {
-                    defaultParams[param.id()] = defaultValue;
-                }
-            });
-            utils.setCellMeta(cell, 'kbase.appCell.params', defaultParams);
-        }
+        //         // A default value may be undefined, e.g. if the parameter is required and there is no default value.
+        //         if (defaultValue !== undefined) {
+        //             defaultParams[param.id()] = defaultValue;
+        //         }
+        //     });
+        //     utils.setCellMeta(cell, 'kbase.appCell.params', defaultParams);
+        // }
 
         function specializeCell() {
             cell.minimize = function() {
@@ -245,7 +246,7 @@ define([
         }
 
         return Object.freeze({
-            initializeParams: initializeParams,
+            // initializeParams: initializeParams,
             setupCell: setupCell,
             upgradeToAppCell: upgradeToAppCell
         });

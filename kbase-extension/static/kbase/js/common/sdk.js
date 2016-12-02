@@ -562,6 +562,9 @@ define([
     function convertGroupList(group, params) {
         var defaultValue = [];
         var nullValue = [];
+        var itemSpec = convertGroupToStruct(group, params);
+        // A list-embedded struct is always required.
+        itemSpec.data.constraints.required = true;
         var structSpec = {
             id: group.id,
             multipleItems: true,
@@ -590,7 +593,7 @@ define([
             parameters: {
                 layout: ['item'],
                 specs: {
-                    item: convertGroupToStruct(group, params)
+                    item: itemSpec
                 }
             }
         };
@@ -609,21 +612,37 @@ define([
             // TODO: figure out what to do with advanced params within groups
             groupParams[id].ui.advanced = false;
         });
-        var defaultValue = {};
-        var nullValue = {};
-        // Default value is a struct of default values of the
-        // struct members. Note that this is fundamentally different
-        // from a list of structs/ groups.
-        Object.keys(groupParams).forEach(function(id) {
-            defaultValue[id] = groupParams[id].data.defaultValue;
-            nullValue[id] = groupParams[id].data.nullValue;
-        });
         var required;
         if (group.optional === 1) {
             required = false;
         } else {
             required = true;
         }
+
+        var defaultValue;
+        var nullValue;
+        var zeroValue;
+        if (required) {
+            // Default value is a struct of default values of the
+            // struct members. Note that this is fundamentally different
+            // from a list of structs/ groups.
+            defaultValue = {};
+            nullValue = {};
+            Object.keys(groupParams).forEach(function(id) {
+                defaultValue[id] = groupParams[id].data.defaultValue;
+                nullValue[id] = groupParams[id].data.nullValue;
+            });
+            zeroValue = defaultValue;
+        } else {
+            defaultValue = null;
+            nullValue = null;
+            zeroValue = {};
+            // TODO: use the initial or "0" value for each paramter as well.
+            Object.keys(groupParams).forEach(function(id) {
+                zeroValue[id] = groupParams[id].data.defaultValue;
+            });
+        }
+
         var structSpec = {
             id: group.id,
             multipleItems: false,
@@ -642,7 +661,8 @@ define([
                     required: required
                 },
                 defaultValue: defaultValue,
-                nullValue: nullValue
+                nullValue: nullValue,
+                zeroValue: zeroValue
             },
             parameters: {
                 layout: group.parameter_ids,

@@ -16,15 +16,17 @@ define([
     'common/events',
     'common/ui',
     'common/props',
+    'common/runtime',
     './input/errorInput',
     'css!google-code-prettify/prettify.css'
-], function (
+], function(
     Promise,
     PR,
     html,
     Events,
     UI,
     Props,
+    Runtime,
     ErrorControlFactory) {
     'use strict';
 
@@ -48,7 +50,8 @@ define([
 
     function factory(config) {
         var ui,
-            bus = config.bus,
+            runtime = Runtime.make(),
+            bus = runtime.bus().makeChannelBus(null, 'Field bus'),
             places, container,
             inputControlFactory = config.inputControlFactory,
             inputControl,
@@ -59,7 +62,7 @@ define([
 
         try {
             inputControl = inputControlFactory.make({
-                bus: config.bus,
+                bus: bus,
                 initialValue: config.initialValue,
                 appSpec: config.appSpec,
                 parameterSpec: config.parameterSpec,
@@ -119,7 +122,7 @@ define([
                         class: 'btn btn-link alert-link',
                         id: events.addEvent({
                             type: 'click',
-                            handler: function () {
+                            handler: function() {
                                 showMessageDialog(messageDef.id);
                             }
                         })
@@ -189,7 +192,7 @@ define([
             places.feedbackIndicator.setAttribute('title', 'required field');
         }
 
-        function feedbackError(row) {
+        function feedbackError() {
             places.feedbackIndicator.className = 'kb-app-parameter-required-glyph fa fa-ban';
         }
 
@@ -209,24 +212,24 @@ define([
 
         function parameterInfoTypeRules(spec) {
             switch (spec.data.type) {
-            case 'float':
-                return [
-                    tr([th('Min'), td(spec.data.constraints.min)]), // update this in the spec
-                    tr([th('Max'), td(spec.data.constraints.max)])
-                ];
-            case 'int':
-                // just for now ...
-                //                    if (spec.spec.field_type === 'checkbox') {
-                //                        return [
-                //                            // TODO: fix
-                //                            tr([th('Value when checked'), td(Props.getDataItem(spec.spec, 'checkbox_options.checked_value', UI.na()))]),
-                //                            tr([th('Value when un-checked'), td(Props.getDataItem(spec.spec, 'checkbox_options.unchecked_value', UI.na()))])
-                //                        ];
-                //                    }
-                return [
-                    tr([th('Min'), td(spec.data.constraints.min)]),
-                    tr([th('Max'), td(spec.data.constraints.max)])
-                ];
+                case 'float':
+                    return [
+                        tr([th('Min'), td(spec.data.constraints.min)]), // update this in the spec
+                        tr([th('Max'), td(spec.data.constraints.max)])
+                    ];
+                case 'int':
+                    // just for now ...
+                    //                    if (spec.spec.field_type === 'checkbox') {
+                    //                        return [
+                    //                            // TODO: fix
+                    //                            tr([th('Value when checked'), td(Props.getDataItem(spec.spec, 'checkbox_options.checked_value', UI.na()))]),
+                    //                            tr([th('Value when un-checked'), td(Props.getDataItem(spec.spec, 'checkbox_options.unchecked_value', UI.na()))])
+                    //                        ];
+                    //                    }
+                    return [
+                        tr([th('Min'), td(spec.data.constraints.min)]),
+                        tr([th('Max'), td(spec.data.constraints.max)])
+                    ];
             }
         }
 
@@ -236,7 +239,7 @@ define([
                 tr([th('Data type'), td(spec.data.type)]),
                 // tr([th('Field type'), td(spec.spec.field_type)]),
                 tr([th('Multiple values?'), td(spec.multipleItems ? 'yes' : 'no')]),
-                (function () {
+                (function() {
                     //                    if (!spec.spec.default_values) {
                     //                        return;
                     //                    }
@@ -249,7 +252,7 @@ define([
                     //                    }
                     return tr([th('Default value'), td(spec.data.defaultValue)]);
                 }()),
-                (function () {
+                (function() {
                     if (spec.data.constraints.types) {
                         return tr([th('Valid types'), td(spec.data.constraints.types.join('<br>'))]);
                     }
@@ -389,7 +392,7 @@ define([
                                 type: 'button',
                                 id: events.addEvent({
                                     type: 'click',
-                                    handler: function () {
+                                    handler: function() {
                                         places.infoPanel.querySelector('[data-element="big-tip"]').classList.toggle('hidden');
                                         // ui.getElement('big-tip').classList.toggle('hidden');
                                     }
@@ -463,58 +466,61 @@ define([
 
         function start(arg) {
             attach(arg.node);
-            return Promise.try(function () {
-                bus.on('validation', function (message) {
+            return Promise.try(function() {
+                bus.on('validation', function(message) {
                     switch (message.diagnosis) {
-                    case 'valid':
-                        feedbackOk();
-                        clearError();
-                        break;
-                    case 'required-missing':
-                        feedbackRequired();
-                        clearError();
-                        break;
-                    case 'suspect':
-                        feedbackOk();
-                        clearError();
-                        setWarning({
-                            message: message.shortMessage,
-                            id: message.messageId
-                        });
-                        break;
-                    case 'invalid':
-                        feedbackError();
-                        clearError();
-                        setError({
-                            id: message.messageId,
-                            message: message.errorMessage
-                        });
-                        break;
-                    case 'optional-empty':
-                        feedbackNone();
-                        clearError();
-                        break;
+                        case 'valid':
+                            feedbackOk();
+                            clearError();
+                            break;
+                        case 'required-missing':
+                            feedbackRequired();
+                            clearError();
+                            break;
+                        case 'suspect':
+                            feedbackOk();
+                            clearError();
+                            setWarning({
+                                message: message.shortMessage,
+                                id: message.messageId
+                            });
+                            break;
+                        case 'invalid':
+                            feedbackError();
+                            clearError();
+                            setError({
+                                id: message.messageId,
+                                message: message.errorMessage
+                            });
+                            break;
+                        case 'optional-empty':
+                            feedbackNone();
+                            clearError();
+                            break;
                     }
                 });
-                bus.on('touched', function (message) {
+                bus.on('touched', function(message) {
                     places.feedback.style.backgroundColor = 'yellow';
                 });
-                bus.on('changed', function () {
+                bus.on('changed', function() {
                     places.feedback.style.backgroundColor = '';
                 });
-                bus.on('saved', function (message) {
+                bus.on('saved', function(message) {
                     console.log('FIELD detected saved');
                 });
-                bus.on('enable', function (message) {
+                bus.on('enable', function(message) {
                     doEnable();
                 });
-                bus.on('disable', function (message) {
+                bus.on('disable', function(message) {
                     doDisable();
                 });
 
                 if (inputControl.start) {
-                    return inputControl.start()
-                        .then(function () {
+                    return inputControl.start({
+                            node: places.inputControl
+                        })
+                        .then(function() {
+                            // TODO: get rid of this pattern
                             bus.emit('run', {
                                 node: places.inputControl
                             });
@@ -524,19 +530,24 @@ define([
         }
 
         function stop() {
-            return Promise.try(function () {
-                return null;
-            });
+            return Promise.try(function() {
+                return inputControl.stop()
+                    .then(function() {
+                        bus.stop();
+                        return null;
+                    });
+            })
         }
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
+            bus: bus
         };
     }
 
     return {
-        make: function (config) {
+        make: function(config) {
             return factory(config);
         }
     };

@@ -218,7 +218,7 @@ def map_outputs_from_state(state, params, app_spec):
         
         spec_param = None
         if input_param_id:
-            spec_param = spec_params[input_param_id]
+            spec_param = spec_params.get(input_param_id)
         value = transform_param_value(out_param.get('target_type_transform'), value, spec_param)
 
         p_id = out_param.get('target_property', None)

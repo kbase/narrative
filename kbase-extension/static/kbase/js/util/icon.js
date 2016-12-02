@@ -42,6 +42,7 @@ define([
             var parsed_color, r, g, b;
             var cstep = 20; // color-step for overlapped circles
             var num_stacked_circles = 1; // up to 2
+            $logo.addClass('kb-data-list-logo-font' + num_stacked_circles);
             // XXX: Assume color is in form '#RRGGBB'
             if (circle_color[0] == '#') {
                 parsed_color = circle_color.match(/#(..)(..)(..)/);

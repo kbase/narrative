@@ -1281,9 +1281,9 @@ define([
 
                 // console.log('param spec', paramSpec);
                 if (paramSpec.spec.field_type === 'textsubdata') {
-                    if (value) {
+                    /*if (value) {
                         value = value.join(',');
-                    }
+                    }*/
                 }
 
                 paramsToExport[key] = value;

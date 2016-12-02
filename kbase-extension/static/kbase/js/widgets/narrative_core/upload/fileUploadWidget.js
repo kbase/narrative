@@ -39,17 +39,20 @@ define([
             this.$elem.append($dropzoneElem);
             this.dropzone = new Dropzone($dropzoneElem.get(0), {
                 url: this.ftpUrl + '/upload',
-                accept: function(file, done) {
-                    done();
-                    this.fetchFtpFiles('');
-                }.bind(this),
                 headers: {'Authorization': Runtime.make().authToken()},
                 paramName: 'uploads',
-                previewTemplate: this.dropFileTmpl()
+                previewTemplate: this.dropFileTmpl(),
+                uploadMultiple: true
+            })
+            .on('totaluploadprogress', function(progress) {
+                $dropzoneElem.find('#total-progress .progress-bar').style.width = progress + '%';
+            }.bind(this))
+            .on('addedFile', function(file) {
+
+            })
+            .on('reset', function() {
+                alert('reset!');
             });
-            this.dropzone.on("totaluploadprogress", function(progress) {
-                $dropzoneElem.find("#total-progress .progress-bar").style.width = progress + "%";
-            }.bind(this));
 
 
             // dz.on("sending", function(file) {

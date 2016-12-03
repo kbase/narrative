@@ -1016,15 +1016,7 @@ define([
 
             $logo.click(function (e) {
                 e.stopPropagation();
-                // For sets, click toggles -- everything else, adds a viewer (?!)
-
-                if (self.isAViewedSet(object_info)) {
-                    objData.expanded = !objData.expanded;
-                    self.toggleSetExpansion(objId, $box);
-                }
-                else {
-                   self.insertViewer(object_key);
-                }
+                self.insertViewer(object_key);
             });
 
             var shortName = object_info[1];
@@ -1060,10 +1052,9 @@ define([
                             .addClass('fa fa-link')
                             .css({color: '#888'}))
                     .tooltip({
-                        title: 'This is a reference to an object in another narrative.\n' +
-                               'Currently, this will not display properly unless you\n' +
-                               'have access to that Narrative.',
-                        placement: 'left',
+                        title: 'This is a reference to an object in another Narrative.',
+                        placement: 'right',
+                        container: 'body',
                         delay: {
                             show: Config.get('tooltip').showDelay,
                             hide: Config.get('tooltip').hideDelay
@@ -1130,7 +1121,7 @@ define([
             };
 
             var $mainDiv = $('<div>').addClass('kb-data-list-info').css({padding: '0px', margin: '0px'})
-                .append($name).append($version).append($paletteIcon).append('<br>')
+                .append($name).append($version).append($paletteIcon).append($toggleIcon).append('<br>')
                 .append($('<table>').css({width: '100%'})
                     .append($('<tr>')
                         .append($('<td>').css({width: '80%'})
@@ -1143,16 +1134,34 @@ define([
                         toggleAdvanced();
                     });
 
+            var $toggleIcon = '';
+            if (self.isAViewedSet(object_info)) {
+                $toggleIcon = $('<span>')
+                        .addClass('fa fa-lg fa-' + (objData.expanded ? 'chevron-down' : 'chevron-right'))
+                        .css({color: '#888', cursor: 'pointer', 'font-size': '1.2em'})
+                .click(function(e) {
+                    e.stopPropagation();
+                    objData.expanded = !objData.expanded;
+                    $toggleIcon.removeClass().addClass('fa fa-lg fa-' + (objData.expanded ? 'chevron-down' : 'chevron-right'));
+                    self.toggleSetExpansion(objId, $box);
+                });
+            }
+            var spacerCss = '';
+            if (self.setViewMode) {
+                spacerCss = 'width:1.3em; max-width:1.3em';
+            }
+            var $mainTr = $('<tr>')
+                          .append($('<td style="' + spacerCss + '">')
+                              .append($toggleIcon))
+                          .append($('<td>')
+                              .css({'width': '4em'})
+                              .append($logo))
+                          .append($('<td>')
+                              .append($mainDiv));
+
             var $topTable = $('<table>').attr('kb-oid', object_key)
                 .css({'width': '100%', 'background': '#fff'})  // set background to white looks better on DnD
-                .append($('<tr>')
-                    // logo
-                    .append($('<td>')
-                        .css({'width': '15%'})
-                        .append($logo))
-                    // main content
-                    .append($('<td>')
-                        .append($mainDiv)));
+                .append($mainTr);
 
             var $row = $('<div>').addClass('kb-data-list-obj-row')
                 .append($('<div>').addClass('kb-data-list-obj-row-main')

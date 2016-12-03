@@ -2412,6 +2412,14 @@ button.kb-data-obj {
     margin-top: 12px;
 }
 
+.kb-data-list-logo-font1 {
+    font-size: 1.7em !important;
+}
+
+.kb-data-list-logo-font2 {
+    font-size: 1.5em !important;
+}
+
 /*  Nested item indent (crude!!) */
 .kb-data-list-level1 {
     margin-left: 25px;

@@ -2,16 +2,18 @@
 /*jslint white:true,browser:true*/
 define([
     'bluebird',
+    'jquery',
     'kb_common/html',
     '../validation',
     'common/events',
     'common/ui',
     '../inputUtils',
-
+    'select2',
     'bootstrap',
     'css!font-awesome'
 ], function(
     Promise,
+    $,
     html,
     Validation,
     Events,
@@ -68,7 +70,7 @@ define([
                 return;
             }
 
-            // we are modeling a single string value, so we always just get the 
+            // we are modeling a single string value, so we always just get the
             // first selected element, which is all there should be!
             return selected.item(0).value;
         }
@@ -77,9 +79,9 @@ define([
          *
          * Text fields can occur in multiples.
          * We have a choice, treat single-text fields as a own widget
-         * or as a special case of multiple-entry -- 
+         * or as a special case of multiple-entry --
          * with a min-items of 1 and max-items of 1.
-         * 
+         *
          *
          */
 
@@ -101,44 +103,39 @@ define([
         }
 
         function handleChanged() {
-            return {
-                type: 'change',
-                handler: function() {
-                    validate()
-                        .then(function(result) {
-                            if (result.isValid) {
-                                bus.emit('changed', {
-                                    newValue: result.value
-                                });
-                            } else if (result.diagnosis === 'required-missing') {
-                                // If a field is "made empty", causing a required-missing state,
-                                // we still want to store and propagate the changes.
-                                setModelValue(result.parsedValue);
-                                bus.emit('changed', {
-                                    newValue: result.parsedValue
-                                });
-                            } else {
-                                if (config.showOwnMessages) {
-                                    var message = inputUtils.buildMessageAlert({
-                                        title: 'ERROR',
-                                        type: 'danger',
-                                        id: result.messageId,
-                                        message: result.errorMessage
-                                    });
-                                    ui.setContent('input-container.message', message.content);
-                                    message.events.attachEvents();
-                                }
-                            }
-                            bus.emit('validation', {
-                                errorMessage: result.errorMessage,
-                                diagnosis: result.diagnosis
-                            });
+            validate()
+                .then(function(result) {
+                    if (result.isValid) {
+                        bus.emit('changed', {
+                            newValue: result.value
                         });
-                }
-            }
+                    } else if (result.diagnosis === 'required-missing') {
+                        // If a field is "made empty", causing a required-missing state,
+                        // we still want to store and propagate the changes.
+                        setModelValue(result.parsedValue);
+                        bus.emit('changed', {
+                            newValue: result.parsedValue
+                        });
+                    } else {
+                        if (config.showOwnMessages) {
+                            var message = inputUtils.buildMessageAlert({
+                                title: 'ERROR',
+                                type: 'danger',
+                                id: result.messageId,
+                                message: result.errorMessage
+                            });
+                            ui.setContent('input-container.message', message.content);
+                            message.events.attachEvents();
+                        }
+                    }
+                    bus.emit('validation', {
+                        errorMessage: result.errorMessage,
+                        diagnosis: result.diagnosis
+                    });
+                });
         }
 
-        function makeInputControl(events) {
+        function makeInputControl() {
             var selected,
                 selectOptions = model.availableValues.map(function(item) {
                     selected = false;
@@ -154,24 +151,11 @@ define([
 
             // CONTROL
             return select({
-                id: events.addEvents({ events: [handleChanged()] }),
+                // id: events.addEvents({ events: [handleChanged()] }),
                 class: 'form-control',
                 dataElement: 'input'
             }, [option({ value: '' }, '')].concat(selectOptions));
         }
-
-        // function render(input) {
-        //     Promise.try(function () {
-        //         var events = Events.make(),
-        //             inputControl = makeInputControl(events);
-
-        //         dom.setContent('input-container', inputControl);
-        //         events.attachEvents(container);
-        //     })
-        //         .then(function () {
-        //             autoValidate();
-        //         });
-        // }
 
         function updateDisplay() {
             // assuming the model has been modified...
@@ -183,21 +167,21 @@ define([
             }
             var selectedItem = model.availableValuesMap[model.value];
             if (selectedItem) {
-                control.options.item(selectedItem.index + 1).selected = true;
+                $(control).select2().val(selectedItem.value).trigger('change');
             }
         }
 
-        function layout(events) {
+        function layout() {
             var content = div({
                 dataElement: 'main-panel'
             }, [
                 div({ dataElement: 'input-container' },
-                    makeInputControl(events)
+                    makeInputControl()
                 )
             ]);
             return {
                 content: content,
-                events: events
+                events: null
             };
         }
 
@@ -221,7 +205,6 @@ define([
                 })
                 .then(function(changed) {
                     updateDisplay();
-                    autoValidate();
                 });
         }
 
@@ -231,7 +214,6 @@ define([
                 })
                 .then(function(changed) {
                     updateDisplay();
-                    autoValidate();
                 });
         }
 
@@ -253,11 +235,11 @@ define([
                     container = parent.appendChild(document.createElement('div'));
                     ui = UI.make({ node: container });
 
-                    var events = Events.make({ node: container }),
-                        theLayout = layout(events);
+                    var theLayout = layout();
 
                     container.innerHTML = theLayout.content;
-                    events.attachEvents();
+                    $($(container).find('select')).select2()
+                        .on('change', handleChanged);
 
                     bus.on('reset-to-defaults', function() {
                         resetModelValue();
@@ -272,18 +254,9 @@ define([
 
         function stop() {
             return Promise.try(function() {
-                // nothing to do. 
+                // nothing to do.
             });
         }
-
-        //        function run(input) {
-        //            return Promise.try(function () {
-        //                return render(input);
-        //            })
-        //            .then(function () {
-        //                return autoValidate();
-        //            });
-        //        }
 
         return {
             start: start,

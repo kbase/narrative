@@ -452,6 +452,7 @@ define(
               self.$mainPanel.append(someDiv);
 
               var body = 'No files to download';
+              var iframe_id = StringUtil.uuid();
 
               if (self.reportData.file_links && self.reportData.file_links.length) {
                 var $ul = $.jqElem('ul');
@@ -469,24 +470,26 @@ define(
                         .append(
                           $.jqElem('a')
                             //.attr('href', self.importExportLink(v.URL, v.name || 'download-' + i) )
-                            .on('click', function(e) {
-                              e.preventDefault();
-                              window.location.href = self.importExportLink(v.URL, v.name || 'download-' + i);
-                            })
                             .attr('id', link_id)
                             .append(v.name || v.URL)
+                            .prop('download', true)
+                            .attr('download', 'download')
                         )
                     );
 
                     setTimeout(function() {
                       $('#' + link_id).on('click', function(e) {
-                        e.stopPropagation();
-                        window.location.href = self.importExportLink(v.URL, v.name || 'download');
+                        e.preventDefault(); e.stopPropagation();
+                        $('#' + iframe_id).attr('src', self.importExportLink(v.URL, v.name || 'download-' + i));
                       })}, 1);
                   }
                 );
 
-                body = $.jqElem('div').append($ul).html();
+                var $iframe = $.jqElem('iframe')
+                  .attr('id', iframe_id)
+                  .css('display', 'none');
+
+                body = $.jqElem('div').append($ul).append($iframe).html();
               }
 
               ui.setContent('downloadable-files',

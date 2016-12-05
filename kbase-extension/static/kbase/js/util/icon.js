@@ -15,10 +15,10 @@ define([
         iconColorMapping = icons.color_mapping;
 
     function overwriteDataIcon(params) {
-        return buildDataIcon(params.elt, params.type, params.stacked, params.indent, false);
+        return buildDataIcon(params.elt, params.type, params.stacked, params.indent);
     }
 
-    function buildDataIcon($logo, type, stacked, indent, fromPalette) {
+    function buildDataIcon($logo, type, stacked, indent) {
         if (indent === undefined || indent === null) {
             indent = 0;
         }
@@ -35,9 +35,6 @@ define([
         // circle first, as the bottom layer, then also add a border
         // to the top one.
         var baseIcon = 'circle';
-        if (fromPalette) {
-            baseIcon = 'square';
-        }
         var circle_classes = 'fa fa-' + baseIcon + ' fa-stack-2x';
         var circle_color = logoColorLookup(type);
         var cmax = function(x) { return x > 255 ? 255 : x; };
@@ -45,6 +42,7 @@ define([
             var parsed_color, r, g, b;
             var cstep = 20; // color-step for overlapped circles
             var num_stacked_circles = 1; // up to 2
+            $logo.addClass('kb-data-list-logo-font' + num_stacked_circles);
             // XXX: Assume color is in form '#RRGGBB'
             if (circle_color[0] == '#') {
                 parsed_color = circle_color.match(/#(..)(..)(..)/);

@@ -54,7 +54,7 @@ define([
                 paramName: 'uploads',
                 previewTemplate: this.dropFileTmpl(),
                 autoProcessQueue: true,
-                parallelUploads: 1
+                parallelUploads: 10
             })
             .on('totaluploadprogress', function(progress) {
                 $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': progress + '%'});

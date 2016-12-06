@@ -415,7 +415,7 @@ p#site-title {
 }
 
 .kb-side-overlay-container {
-    width: 700px;  /* I would advise fixing this for UX sake */
+    width: 730px;
     border : 1px solid #CECECE;
     z-index : 1030;
     background : white;

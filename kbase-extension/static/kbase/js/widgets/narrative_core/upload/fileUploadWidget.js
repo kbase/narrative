@@ -54,7 +54,8 @@ define([
                 paramName: 'uploads',
                 previewTemplate: this.dropFileTmpl(),
                 autoProcessQueue: true,
-                parallelUploads: 10
+                parallelUploads: 10,
+                maxFilesize: 20480  //20GB
             })
             .on('totaluploadprogress', function(progress) {
                 $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': progress + '%'});

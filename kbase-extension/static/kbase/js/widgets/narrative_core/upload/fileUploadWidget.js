@@ -56,22 +56,23 @@ define([
                 autoProcessQueue: true,
                 parallelUploads: 1
             })
-            .on('totaluploadprogress', function(progress) {
-                // $dropzoneElem.find('#total-progress .progress-bar').style.width = progress + '%';
-            }.bind(this))
+            // .on('totaluploadprogress', function(progress) {
+            //     // $dropzoneElem.find('#total-progress .progress-bar').style.width = progress + '%';
+            // }.bind(this))
             .on('addedFile', function(file) {
                 $dropzoneElem.find('#global-info').css({'display': 'inline'});
                 $dropzoneElem.find('#upload-message').text(this.makeUploadMessage());
             }.bind(this))
-            .on('uploadprogress', function(file, progress, bytesSent) {
-
-            })
+            // .on('uploadprogress', function(file, progress, bytesSent) {
+            //
+            // })
             .on('success', function(file, serverResponse) {
                 $dropzoneElem.find('#clear-completed').css({'display': 'inline'});
                 $dropzoneElem.find('#upload-message').text(this.makeUploadMessage());
                 file.previewElement.querySelector('#status-message').textContent = 'Completed';
                 file.previewElement.querySelector('.progress').style.display = 'none';
                 file.previewElement.querySelector('#status-message').style.display = 'inline';
+                $(file.previewElement.querySelector('.fa-ban')).removeClass('fa-ban').addClass('fa-times');
             }.bind(this))
             .on('sending', function(file) {
                 $dropzoneElem.find('#global-info').css({'display': 'inline'});
@@ -80,14 +81,6 @@ define([
             .on('reset', function() {
                 $dropzoneElem.find('#global-info').css({'display': 'none'});
             });
-
-
-            // dz.on("sending", function(file) {
-            //     // Show the total progress bar when upload starts
-            //     // document.querySelector("#total-progress").style.opacity = "1";
-            //     // And disable the start button
-            //     file.previewElement.querySelector(".start").setAttribute("disabled", "disabled");
-            // });
         },
 
         makeUploadMessage: function() {

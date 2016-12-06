@@ -56,16 +56,13 @@ define([
                 autoProcessQueue: true,
                 parallelUploads: 1
             })
-            // .on('totaluploadprogress', function(progress) {
-            //     // $dropzoneElem.find('#total-progress .progress-bar').style.width = progress + '%';
-            // }.bind(this))
+            .on('totaluploadprogress', function(progress) {
+                $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': progress + '%'});
+            }.bind(this))
             .on('addedFile', function(file) {
                 $dropzoneElem.find('#global-info').css({'display': 'inline'});
                 $dropzoneElem.find('#upload-message').text(this.makeUploadMessage());
             }.bind(this))
-            // .on('uploadprogress', function(file, progress, bytesSent) {
-            //
-            // })
             .on('success', function(file, serverResponse) {
                 $dropzoneElem.find('#clear-completed').css({'display': 'inline'});
                 $dropzoneElem.find('#upload-message').text(this.makeUploadMessage());
@@ -73,13 +70,21 @@ define([
                 file.previewElement.querySelector('.progress').style.display = 'none';
                 file.previewElement.querySelector('#status-message').style.display = 'inline';
                 $(file.previewElement.querySelector('.fa-ban')).removeClass('fa-ban').addClass('fa-times');
+                if (this.dropzone.getQueuedFiles().length === 0 &&
+                    this.dropzone.getUploadingFiles().length === 0) {
+                    $($dropzoneElem.find('#total-progress')).slideUp(function() {
+                        $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': '0%'});
+                    });
+                }
             }.bind(this))
             .on('sending', function(file) {
                 $dropzoneElem.find('#global-info').css({'display': 'inline'});
+                $($dropzoneElem.find('#total-progress')).show();
                 $dropzoneElem.find('#upload-message').text(this.makeUploadMessage());
             }.bind(this))
             .on('reset', function() {
                 $dropzoneElem.find('#global-info').css({'display': 'none'});
+                $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': '0%'});
             });
         },
 
@@ -92,12 +97,16 @@ define([
             if (numUploading === 0 && numQueued === 0) {
                 return "No files uploading.";
             }
+            var queuedText = numQueued ? ("(" + numQueued + " queued)") : "";
+            var pluralFiles = numUploading > 1 ? "s" : "";
             return [
                 "Uploading ",
                 numUploading,
-                " files (",
-                numQueued,
-                " queued) to ",
+                " file",
+                pluralFiles,
+                " ",
+                queuedText,
+                " to ",
                 this.getPath()
             ].join("");
         },

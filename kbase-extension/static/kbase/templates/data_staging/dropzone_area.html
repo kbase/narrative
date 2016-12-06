@@ -1,9 +1,18 @@
-<form class="dropzone kb-dropzone">
-    <div id="global-info" style="display:none">
-        <div id='upload-message'></div>
-        <div>Uploads will be canceled if this Narrative is closed!</div>
-        <div id="clear-completed" style="display:none">
-            <button class="btn btn-warning">Remove Completed Files</button>
+<form class="kb-dropzone dropzone" style="min-height:200px">
+    <div id="global-info" style="display:none; border-bottom 1px solid #EEE; margin-bottom: 5px">
+        <div id="total-progress" class="progress progress-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div class="progress-bar progress-bar-success" style="width:0%;"></div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div id='upload-message'></div>
+                <div>Uploads will be canceled if this Narrative is closed!</div>
+            </div>
+            <div class="col-md-6">
+                <div id="clear-completed" class="pull-right" style="display:none">
+                    <button class="btn btn-warning">Clear Completed Uploads</button>
+                </div>
+            </div>
         </div>
     </div>
     <input type="hidden" name="destPath" value="/{{username}}"/>

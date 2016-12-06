@@ -1,4 +1,11 @@
 <form class="dropzone kb-dropzone">
+    <div id="global-info" style="display:none">
+        <div id='upload-message'></div>
+        <div>Uploads will be canceled if this Narrative is closed!</div>
+        <div id="clear-completed" style="display:none">
+            <button class="btn btn-warning">Remove Completed Files</button>
+        </div>
+    </div>
     <input type="hidden" name="destPath" value="/{{username}}"/>
     <div class="dz-message">Drag and drop data files (or click) here!</div>
 </form>

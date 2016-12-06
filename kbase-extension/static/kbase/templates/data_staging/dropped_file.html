@@ -1,35 +1,22 @@
-<div style="width:100%; border: 1px solid #EEE; margin: 2px 0" class="file-row">
-    <span>
-        <p class="name" data-dz-name></p>
+<div class="row file-row" style="width:100%; border: 1px solid #EEE; margin: 2px 0; padding: 5px 0">
+    <div class="col-md-7" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+        <span class="name" data-dz-name></span>
         <strong class="error text-danger" data-dz-errormessage></strong>
-    </span>
-    <span>
-        <p class="size" data-dz-size></p>
-        <div class="progress progress-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+    </div>
+    <div class="col-md-1" style="">
+        <span class="size pull-right" data-dz-size></span>
+    </div>
+    <div class="col-md-3 text-center">
+        <div id="status-message" style="display:none"></div>
+        <div class="progress progress-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" style="margin-bottom: inherit; margin-left: 5px">
             <div class="progress-bar progress-bar-success" style="width:0%;" data-dz-uploadprogress></div>
         </div>
-    </span>
-    <span>
-        <button data-dz-remove class="btn btn-warning cancel">
-            <i class="glyphicon glyphicon-ban-circle"></i>
-            <span>Cancel</span>
-        </button>
-        <button data-dz-remove class="btn btn-danger delete">
-            <i class="glyphicon glyphicon-trash"></i>
-            <span>Delete</span>
-        </button>
-    </span>
+    </div>
+    <div class="col-md-1">
+        <div class="pull-right">
+            <button data-dz-remove class="btn btn-xs btn-warning cancel">
+                <i class="glyphicon glyphicon-ban-circle"></i>
+            </button>
+        </div>
+    </div>
 </div>
-
-
-<!--
-    <div>
-        <img data-dz-thumnbnail/><span data-dz-name></span><span data-dz-size></span>
-    </div>
-    <div class="dz-progress">
-        <span class="dz-upload" data-dz-uploadprogress></span>
-    </div>
-    <div class="dz-success-mark"><span>✔</span></div>
-    <div class="dz-error-mark"><span>✘</span></div>
-    <span data-dz-errormessage></span>
-</div> -->

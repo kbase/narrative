@@ -201,7 +201,8 @@ def update_method_cell(cell):
                 'id': method_info.get('id', 'unknown'),
                 'gitCommitHash': git_hash,
                 'version': method_info.get('ver', None),
-                'tag': tag
+                'tag': tag,
+                'spec': meta['method']
             },
             'state': {
                 'edit': 'editing',

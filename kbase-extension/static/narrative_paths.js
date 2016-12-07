@@ -29,7 +29,7 @@ require.config({
         underscore: 'ext_components/underscore/underscore-min',
         'bootstrap-slider': 'ext_components/bootstrap-slider/bootstrap-slider',
         'tipsy': 'ext_components/jquery.tipsy/js/jquery.tipsy',
-
+        'font-awesome': 'ext_components/font-awesome/css/font-awesome',
 
         // cherrypicked from develop, ugh.
         css: 'ext_components/require-css/css',

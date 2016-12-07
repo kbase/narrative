@@ -31,8 +31,17 @@ define([
 
             this.data = this.options.data;
             this.options.type = this.options.type.toLowerCase();
-            this.cell = Jupyter.narrative.getCellByKbaseId(this.options.cellId);
-            this.cell.element.trigger('hideCodeArea.cell');
+            if (this.options.cellId) {
+                this.cell = Jupyter.narrative.getCellByKbaseId(this.options.cellId);
+                if (this.cell) {
+                    this.cell.element.trigger('hideCodeArea.cell');
+                }
+                if (!this.cell) {
+                    this.$elem.closest('.cell').trigger('hideCodeArea.cell');
+                }
+            }
+            else {
+            }
             if (this.options.widget.toLowerCase() === "null") {
                 this.options.widget = 'kbaseDefaultNarrativeOutput';
             }

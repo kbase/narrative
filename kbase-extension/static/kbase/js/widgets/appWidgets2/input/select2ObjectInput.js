@@ -132,8 +132,6 @@ define([
 
             var id = model.availableValuesMap[stringValue];
 
-            console.log('setting control value', stringValue, control, id, model.availableValuesMap);
-
 
             Array.prototype.slice.call(control.selectedOptions).forEach(function(option) {
                 option.selected = false;
@@ -141,7 +139,6 @@ define([
 
             var options = Array.prototype.slice.call(control.options);
             options.forEach(function(option) {
-                console.log('selected?', option, option.value, stringValue);
                 if (option.value === id) {
                     option.selected = true;
                 }
@@ -208,7 +205,36 @@ define([
             // });
         }
 
-        function getObjectsByType(type) {
+        function filterObjectInfoByType(objects, types) {
+            return objects.map(function(objectInfo) {
+                    var fixed = serviceUtils.objectInfoToObject(objectInfo)
+                    var type = fixed.typeModule + '.' + fixed.typeName;
+                    if (types.indexOf(type) >= 0) {
+                        return fixed;
+                    }
+                })
+                .filter(function(item) {
+                    return item !== undefined;
+                });
+        }
+
+        function getObjectsByTypes(types) {
+            return runtime.bus().plisten({
+                    channel: 'data',
+                    key: {
+                        type: 'workspace-data-updated'
+                    },
+                    handle: function(message) {
+                        doWorkpaceUpdated(filterObjectInfoByType(message.data, types));
+                    }
+                })
+                .then(function(message) {
+                    console.log('GOT first workspace-data-updated', message);
+                    return filterObjectInfoByType(message.data, types);
+                });
+        }
+
+        function getObjectsByType_old(type) {
             return Promise.try(function() {
                     return Jupyter.narrative.sidePanel.$dataWidget.getLoadedData(type);
                 })
@@ -230,6 +256,23 @@ define([
         }
 
         function fetchData() {
+            var types = spec.data.constraints.types;
+            return getObjectsByTypes(types)
+                .then(function(objects) {
+                    objects.sort(function(a, b) {
+                        if (a.saveDate < b.saveDate) {
+                            return 1;
+                        }
+                        if (a.saveDate === b.saveDate) {
+                            return 0;
+                        }
+                        return -1;
+                    });
+                    return objects;
+                });
+        }
+
+        function fetchData_old() {
             var types = spec.data.constraints.types;
             return Promise.all(types.map(function(type) {
                     return getObjectsByType(type);
@@ -399,6 +442,47 @@ define([
          * rebuild the control. If there is a current value and it is no longer
          * available, issue a warning
          */
+
+        function doWorkpaceUpdated(data) {
+            // compare to availableData.
+            if (!utils.isEqual(data, model.availableValues)) {
+                model.availableValues = data;
+                var matching = model.availableValues.filter(function(value) {
+                    if (value.name === getObjectRef(value)) {
+                        return true;
+                    }
+                    return false;
+                });
+                // if (matching.length === 0) {
+                //     model.value = spec.data.nullValue;
+                // }
+                model.availableValuesMap = {};
+                // our map is a little strange.
+                // we have dataPaletteRefs, which are always ref paths
+                // we have object ref or names otherwise.
+                // whether we are using refs or names depends on the 
+                // config setting. This is because some apps don't yet accept
+                // names... 
+                // So our key is either dataPaletteRef or (ref or name)
+                model.availableValues.forEach(function(objectInfo, index) {
+                    var id;
+                    if (objectInfo.dataPaletteRef) {
+                        id = objectInfo.dataPaletteRef;
+                    } else if (objectRefType === 'ref') {
+                        id = objectInfo.ref;
+                    } else {
+                        id = objectInfo.name;
+                    }
+                    model.availableValuesMap[id] = index;
+                });
+                return render()
+                    .then(function() {
+                        setControlValue(getModelValue());
+                        autoValidate();
+                    });
+            }
+        }
+
         function doWorkspaceChanged() {
             // there are a few thin
             fetchData()
@@ -473,9 +557,9 @@ define([
                         bus.on('update', function(message) {
                             setModelValue(message.value);
                         });
-                        runtime.bus().on('workspace-changed', function() {
-                            doWorkspaceChanged();
-                        });
+                        // runtime.bus().on('workspace-changed', function() {
+                        //     doWorkspaceChanged();
+                        // });
                         //  bus.emit('sync');
 
                         setControlValue(getModelValue());

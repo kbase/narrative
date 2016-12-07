@@ -111,6 +111,8 @@ define([
             runtime.bus().emit('workspace-changed');
         });
 
+
+
         // TODO: get the kbase specific info out of the notebook, specifically
         // the workspace name, ...
 

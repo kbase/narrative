@@ -231,6 +231,34 @@ define([
                 });
         }
 
+        function filterObjectInfoByType(objects, types) {
+            return objects.map(function(objectInfo) {
+                    var type = objectInfo.typeModule + '.' + objectInfo.typeName;
+                    if (types.indexOf(type) >= 0) {
+                        return objectInfo;
+                    }
+                })
+                .filter(function(item) {
+                    return item !== undefined;
+                });
+        }
+
+        function getObjectsForTypes(types) {
+            return runtime.bus().plisten({
+                    channel: 'data',
+                    key: {
+                        type: 'workspace-data-updated'
+                    },
+                    handle: function(message) {
+                        doWorkspaceChanged(filterObjectInfoByType(message.objectInfo, types));
+                    }
+                })
+                .then(function(message) {
+                    // console.log('GOT first workspace-data-updated', message);
+                    return filterObjectInfoByType(message.objectInfo, types);
+                });
+        }
+
         function getObjectsByTypeDataPanel(type) {
             return new Promise(function(resolve) {
                 // wow, creative (ab)use of trigger!
@@ -250,6 +278,23 @@ define([
         }
 
         function fetchData() {
+            var types = spec.data.constraints.types;
+            return getObjectsForTypes(types)
+                .then(function(objects) {
+                    objects.sort(function(a, b) {
+                        if (a.saveDate < b.saveDate) {
+                            return 1;
+                        }
+                        if (a.saveDate === b.saveDate) {
+                            return 0;
+                        }
+                        return -1;
+                    });
+                    return objects;
+                });
+        }
+
+        function fetchData_narrativService() {
             var types = spec.data.constraints.types;
             return getPaletteObjectsByTypes(types)
                 // .spread(function(paletteObjects, objects) {
@@ -371,7 +416,29 @@ define([
          * rebuild the control. If there is a current value and it is no longer
          * available, issue a warning
          */
-        function doWorkspaceChanged() {
+        function doWorkspaceChanged(data) {
+
+            // compare to availableData.
+            if (!utils.isEqual(data, model.availableValues)) {
+                model.availableValues = data;
+                console.log('DATA', data);
+                var matching = model.availableValues.filter(function(value) {
+                    if (model.value && model.value === getObjectRef(value, model.value)) {
+                        return true;
+                    }
+                    return false;
+                });
+                if (matching.length === 0) {
+                    model.value = null;
+                }
+                render()
+                    .then(function() {
+                        autoValidate();
+                    });
+            }
+        }
+
+        function doWorkspaceChanged_fetch() {
             // there are a few thin
             fetchData()
                 .then(function(data) {
@@ -422,9 +489,9 @@ define([
                         bus.on('update', function(message) {
                             setModelValue(message.value);
                         });
-                        runtime.bus().on('workspace-changed', function(message) {
-                            doWorkspaceChanged();
-                        });
+                        // runtime.bus().on('workspace-changed', function(message) {
+                        //     doWorkspaceChanged();
+                        // });
                         bus.emit('sync');
                     });
             });

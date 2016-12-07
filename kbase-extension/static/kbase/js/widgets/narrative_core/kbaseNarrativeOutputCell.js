@@ -31,8 +31,13 @@ define([
 
             this.data = this.options.data;
             this.options.type = this.options.type.toLowerCase();
-            this.cell = Jupyter.narrative.getCellByKbaseId(this.options.cellId);
-            this.cell.element.trigger('hideCodeArea.cell');
+            if (this.options.cellId) {
+                this.cell = Jupyter.narrative.getCellByKbaseId(this.options.cellId);
+                if (!this.cell) {
+                    this.cell = $('#' + this.options.cellId).parents('.cell').data().cell;
+                }
+                this.cell.element.trigger('hideCodeArea.cell');
+            }
             if (this.options.widget.toLowerCase() === "null") {
                 this.options.widget = 'kbaseDefaultNarrativeOutput';
             }
@@ -87,13 +92,11 @@ define([
                 //self.cellDebug('do not render cell. not visible');
                 return;
             }
-            //self.cellDebug('visible: true');
             return self.render();
         },
         // Render cell (unconditionally)
         render: function () {
             // render the cell
-            this.cellDebug('begin: render cell');
             var icon;
             switch (this.options.type) {
                 case 'method':
@@ -114,7 +117,6 @@ define([
             }
             // remember; don't render again
             this.is_rendered = true;
-            this.cellDebug('end: render cell');
         },
         renderViewerCell: function () {
             require(['kbaseNarrativeDataCell'], $.proxy(function () {
@@ -158,30 +160,17 @@ define([
                 title += ' (' + titleSuffix + ')';
             }
 
-// TODO: a label which can appear above or instaead of the icon in the prmopt area.
-//            this.$elem
-//                .closest('.cell')
-//                .trigger('set-label', [$label.html()]);
-
-            // this.$elem
-            //     .closest('.cell')
-            //     .trigger('set-title', [title]);
-
-            // TODO: omit this? v
-//            if (!(this.cell.metadata.kbase)) {
-//                this.cell.metadata.kbase = {
-//                    'attributes': {
-//                    },
-//                    'type': 'output'
-//                };
-//            }
-//            var meta = this.cell.metadata;
-//            if (meta.kbase.type && meta.kbase.type === 'output') {
-//                meta.kbase.attributes.title = title;
-//            }
-//
-//            this.cell.metadata = meta;
-            // TODO: omit? ^
+            if (this.cell) {
+                var meta = this.cell.metadata;
+                if (!meta.kbase) {
+                    meta.kbase = {};
+                }
+                if (!meta.kbase.attributes) {
+                    meta.kbase.attributes = {};
+                }
+                meta.kbase.attributes.title = title;
+                this.cell.metadata = meta;
+            }
 
 
             var widgetData = this.options.data;

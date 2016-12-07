@@ -48,10 +48,10 @@ define([
             var _url = lookup_url;
             if (_use_url_lookup) {
                 var deferred = $.Deferred();
-                if (typeof callback === 'function') {
+                if (typeof _callback === 'function') {
                     deferred.done(_callback);
                 }
-                if (typeof errorCallback === 'function') {
+                if (typeof _errorCallback === 'function') {
                     deferred.fail(_errorCallback);
                 }
                 var module_name = service_method.split('.')[0];
@@ -80,7 +80,7 @@ define([
                 }, function (err) {
                     deferred.reject({status: 500, error: err});
                 });
-                return deferred;
+                return Promise.resolve(deferred.promise());
             } else {
                 return json_call_ajax(_url, service_method, param_list, 0, _callback, _errorCallback);
             }

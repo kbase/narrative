@@ -1094,91 +1094,97 @@ define([
 
         // LIFECYCLE API
 
-        function start() {
+        function start(arg) {
             return Promise.try(function() {
-                bus.on('run', function(message) {
-                    parent = message.node;
-                    container = parent.appendChild(document.createElement('div'));
-                    ui = UI.make({
-                        node: container
-                    });
-
-                    var events = Events.make(),
-                        theLayout = layout(events);
-
-                    container.innerHTML = theLayout.content;
-                    //
-                    //                    bus.request({
-                    //                        parameter: subdataOptions.subdata_selection.parameter_id
-                    //                    }, {
-                    //                        type: 'get-parameter'
-                    //                    })
-                    //                        .then(function (message) {
-                    //                            model.setItem('referenceObjectName', message.value);
-                    //                            render();
-                    //                        })
-                    //                        .catch(function (err) {
-                    //                            console.error('ERROR getting parameter ' + subdataOptions.subdata_selection.parameter_id);
-                    //                        });
-                    //
-
-                    render();
-
-
-                    events.attachEvents(container);
-
-                    registerEvents();
-
-                    // Get initial data.
-                    // Weird, but will make it look nicer.
-                    Promise.all([
-                            bus.request({
-                                parameterName: spec.id
-                            }, {
-                                key: {
-                                    type: 'get-parameter'
-                                }
-                            }),
-                            bus.request({
-                                parameterName: spec.data.constraints.subdataSelection.parameter_id
-                            }, {
-                                key: {
-                                    type: 'get-parameter'
-                                }
-                            })
-                        ])
-                        .spread(function(paramValue, referencedParamValue) {
-                            // hmm, the default value of a subdata is null, but that does
-                            // not play nice with the model props defaulting mechanism which
-                            // works with absent or undefined (null being considered an actual value, which
-                            // it is of course!)
-                            if (paramValue.value === null) {
-                                model.setItem('selectedItems', []);
-                            } else {
-                                var selectedItems = paramValue.value;
-                                if (!(selectedItems instanceof Array)) {
-                                    selectedItems = [selectedItems];
-                                }
-                                model.setItem('selectedItems', selectedItems);
-                            }
-                            updateInputControl('value');
-
-                            if (referencedParamValue) {
-                                model.setItem('referenceObjectName', referencedParamValue.value);
-                            }
-                            return syncAvailableValues()
-                                .then(function() {
-                                    updateInputControl('availableValues');
-                                })
-                                .catch(function(err) {
-                                    console.error('ERROR syncing available values', err);
-                                });
-
-                        })
-                        .catch(function(err) {
-                            console.error('ERROR fetching initial data', err);
-                        });
+                parent = arg.node;
+                container = parent.appendChild(document.createElement('div'));
+                ui = UI.make({
+                    node: container
                 });
+
+                var events = Events.make(),
+                    theLayout = layout(events);
+
+                container.innerHTML = theLayout.content;
+                //
+                //                    bus.request({
+                //                        parameter: subdataOptions.subdata_selection.parameter_id
+                //                    }, {
+                //                        type: 'get-parameter'
+                //                    })
+                //                        .then(function (message) {
+                //                            model.setItem('referenceObjectName', message.value);
+                //                            render();
+                //                        })
+                //                        .catch(function (err) {
+                //                            console.error('ERROR getting parameter ' + subdataOptions.subdata_selection.parameter_id);
+                //                        });
+                //
+
+                render();
+
+
+                events.attachEvents(container);
+
+                registerEvents();
+
+                // Get initial data.
+                // Weird, but will make it look nicer.
+                Promise.all([
+                        bus.request({
+                            parameterName: spec.id
+                        }, {
+                            key: {
+                                type: 'get-parameter'
+                            }
+                        }),
+                        bus.request({
+                            parameterName: spec.data.constraints.subdataSelection.parameter_id
+                        }, {
+                            key: {
+                                type: 'get-parameter'
+                            }
+                        })
+                    ])
+                    .spread(function(paramValue, referencedParamValue) {
+                        // hmm, the default value of a subdata is null, but that does
+                        // not play nice with the model props defaulting mechanism which
+                        // works with absent or undefined (null being considered an actual value, which
+                        // it is of course!)
+                        if (paramValue.value === null) {
+                            model.setItem('selectedItems', []);
+                        } else {
+                            var selectedItems = paramValue.value;
+                            if (!(selectedItems instanceof Array)) {
+                                selectedItems = [selectedItems];
+                            }
+                            model.setItem('selectedItems', selectedItems);
+                        }
+                        updateInputControl('value');
+
+                        if (referencedParamValue) {
+                            model.setItem('referenceObjectName', referencedParamValue.value);
+                        }
+                        return syncAvailableValues()
+                            .then(function() {
+                                updateInputControl('availableValues');
+                            })
+                            .catch(function(err) {
+                                console.error('ERROR syncing available values', err);
+                            });
+
+                    })
+                    .catch(function(err) {
+                        console.error('ERROR fetching initial data', err);
+                    });
+            });
+        }
+
+        function stop() {
+            return Promise.try(function() {
+                if (parent && container) {
+                    parent.removeChild(container);
+                }
             });
         }
 
@@ -1208,7 +1214,8 @@ define([
         });
 
         return {
-            start: start
+            start: start,
+            stop: stop
         };
     }
 

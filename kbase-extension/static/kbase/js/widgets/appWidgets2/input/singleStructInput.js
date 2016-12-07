@@ -3,7 +3,7 @@
 define([
     'bluebird',
     'kb_common/html',
-    '../validation',
+    '../validators/resolver',
     'common/events',
     'common/ui',
     'common/lang',
@@ -52,7 +52,7 @@ define([
             struct = spec.parameters,
             places = {};
 
-        if (spec.data.constraints.required) {
+        if (spec.data.constraints.required || config.initialValue) {
             viewModel.state.enabled = true;
         } else {
             viewModel.state.enabled = false;
@@ -120,10 +120,10 @@ define([
 
         function validate(rawValue) {
             return Promise.try(function() {
-                var validationOptions = {
-                    required: spec.data.constraints.required
-                };
-                return Validation.validateTextString(rawValue, validationOptions);
+                // var validationOptions = {
+                //     required: spec.data.constraints.required
+                // };
+                return Validation.validate(rawValue, spec);
             });
         }
 
@@ -139,8 +139,8 @@ define([
             } else {
                 // Enable it
                 viewModel.state.enabled = true;
-                label.innerHTML = 'Enabled';
-                viewModel.data = lang.copy(spec.data.zeroValue);
+                label.innerHTML = 'Disable';
+                viewModel.data = lang.copy(spec.data.defaultValue);
             }
             bus.emit('set-param-state', {
                 state: viewModel.state
@@ -172,11 +172,13 @@ define([
                 // ]);
             }
 
-            var label;
+            var label, checked;
             if (viewModel.state.enabled) {
                 label = 'Disable';
+                checked = true;
             } else {
                 label = 'Enable'
+                checked = false;
             }
             return div({
                 id: places.enableControl
@@ -189,7 +191,7 @@ define([
                         }
                     }),
                     type: 'checkbox',
-                    checked: false
+                    checked: checked
                 }),
                 span({
                     dataElement: 'label',
@@ -203,8 +205,9 @@ define([
         function makeInputControl(events, bus) {
             var promiseOfFields = fieldLayout.map(function(fieldName) {
                 var fieldSpec = struct.specs[fieldName];
+                var fieldValue = viewModel.data[fieldName];
 
-                return makeSingleInputControl(fieldSpec, events, bus);
+                return makeSingleInputControl(fieldValue, fieldSpec, events, bus);
             });
 
             // TODO: support different layouts, this is a simple stacked
@@ -225,20 +228,37 @@ define([
                 });
         }
 
+        function doChanged(id, newValue) {
+            // Absorb and propagate the new value...
+            viewModel.data[id] = lang.copy(newValue);
+            bus.emit('changed', {
+                newValue: lang.copy(viewModel.data)
+            });
+
+            // Validate and propagate.
+            // Note: the struct control does not display local error messages. Each
+            // input widget will have an error message if applicable, so not reason
+            // (at present) to have yet another one...
+
+            validate(viewModel.data)
+                .then(function(result) {
+                    bus.emit('validation', result);
+                });
+        }
+
         /*
          * The single input control wraps a field widget, which provides the 
          * wrapper around the input widget itself.
          */
-        function makeSingleInputControl(fieldSpec, events) {
+        function makeSingleInputControl(value, fieldSpec, events) {
             return resolver.getInputWidgetFactory(fieldSpec)
                 .then(function(widgetFactory) {
-
                     var id = html.genId(),
                         fieldWidget = FieldWidget.make({
                             inputControlFactory: widgetFactory,
                             showHint: true,
                             useRowHighight: true,
-                            // initialValue: value,
+                            initialValue: value,
                             // appSpec: appSpec,
                             parameterSpec: fieldSpec,
                             // workspaceId: workspaceInfo.id,
@@ -246,7 +266,7 @@ define([
                         });
 
                     // set up listeners for the input
-                    fieldWidget.bus.on('sync', function(message) {
+                    fieldWidget.bus.on('sync', function() {
                         var value = viewModel.data[fieldSpec.id];
                         if (value) {
                             fieldWidget.bus.emit('update', {
@@ -262,13 +282,10 @@ define([
                         }
                     });
                     fieldWidget.bus.on('changed', function(message) {
-                        viewModel.data[fieldSpec.id] = lang.copy(message.newValue);
-                        bus.emit('changed', {
-                            newValue: lang.copy(viewModel.data)
-                        });
+                        doChanged(fieldSpec.id, message.newValue);
                     });
 
-                    fieldWidget.bus.on('touched', function(message) {
+                    fieldWidget.bus.on('touched', function() {
                         bus.emit('touched', {
                             parameter: fieldSpec.id
                         });
@@ -384,77 +401,81 @@ define([
 
         // Okay, we need to 
 
-        function start() {
+        function start(arg) {
+            var events;
             return Promise.try(function() {
-                bus.on('run', function(message) {
-                    var events = Events.make();
-                    Promise.try(function() {
-                            parent = message.node;
-                            container = parent.appendChild(document.createElement('div'));
-                            ui = UI.make({ node: container });
+                    parent = arg.node;
+                    container = parent.appendChild(document.createElement('div'));
+                    ui = UI.make({ node: container });
+                    events = Events.make({ node: container });
 
-                            // return bus.request({}, {
-                            //     key: 'get-param-state'
-                            // });
-                        })
-                        .then(function(state) {
-                            return render(events);
-                        })
-                        .then(function() {
-                            return renderSubcontrols();
-                        })
-                        .then(function() {
-                            events.attachEvents(container);
+                    viewModel.data = lang.copy(config.initialValue);
 
-                            bus.on('reset-to-defaults', function(message) {
-                                resetModelValue();
-                            });
+                    // return bus.request({}, {
+                    //     key: 'get-param-state'
+                    // });
+                })
+                .then(function() {
+                    return render(events);
+                })
+                .then(function() {
+                    return renderSubcontrols();
+                })
+                .then(function() {
+                    events.attachEvents(container);
 
-                            bus.on('update', function(message) {
-                                // Update the model, and since we have sub widgets,
-                                // we should send the individual data to them.
-                                // setModelValue(message.value);
-                                // TODO: container environment should know about enable/disabled state?
-                                // FORNOW: just ignore
-                                if (viewModel.state.enabled) {
-                                    viewModel.data = lang.copy(message.value);
-                                    Object.keys(message.value).forEach(function(id) {
-                                        structFields[id].instance.bus.emit('update', {
-                                            value: message.value[id]
-                                        });
-                                    });
-                                }
+                    bus.on('reset-to-defaults', function() {
+                        resetModelValue();
+                    });
 
-                            });
-
-                            // A fake submit.
-                            bus.on('submit', function() {
-                                bus.emit('submitted', {
-                                    value: lang.copy(viewModel.data)
+                    bus.on('update', function(message) {
+                        // Update the model, and since we have sub widgets,
+                        // we should send the individual data to them.
+                        // setModelValue(message.value);
+                        // TODO: container environment should know about enable/disabled state?
+                        // FORNOW: just ignore
+                        if (viewModel.state.enabled) {
+                            viewModel.data = lang.copy(message.value);
+                            Object.keys(message.value).forEach(function(id) {
+                                structFields[id].instance.bus.emit('update', {
+                                    value: message.value[id]
                                 });
                             });
+                        }
 
-                            bus.on('')
-                                // The controller of this widget will be smart enough to 
-                                // know...
-                            bus.emit('sync');
-                        })
-                        .catch(function(err) {
-                            console.error('ERROR', err);
-                            container.innerHTML = err.message;
+                    });
+
+                    // A fake submit.
+                    bus.on('submit', function() {
+                        bus.emit('submitted', {
+                            value: lang.copy(viewModel.data)
                         });
+                    });
+
+                    // bus.on('')
+                    // The controller of this widget will be smart enough to 
+                    // know...
+                    // bus.emit('sync');
+                })
+                .catch(function(err) {
+                    console.error('ERROR', err);
+                    container.innerHTML = err.message;
                 });
-            });
         }
 
         function stop() {
             return Promise.try(function() {
-                if (structFields) {
-                    structFields.forEach(function(field) {
-                        field.stop();
-                    });
-                }
-            });
+                    if (structFields) {
+                        return Promise.all(Object.keys(structFields).map(function(id) {
+                            return structFields[id].instance.stop();
+                        }));
+                    }
+                })
+                .then(function() {
+                    if (parent && container) {
+                        parent.removeChild(container);
+                    }
+                });
         }
 
         return {

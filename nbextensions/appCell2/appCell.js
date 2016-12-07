@@ -4,7 +4,6 @@
 define([
     'bluebird',
     'uuid',
-    'common/parameterSpec',
     'common/utils',
     'common/runtime',
     'common/html',
@@ -17,7 +16,6 @@ define([
 ], function(
     Promise,
     Uuid,
-    ParameterSpec,
     utils,
     Runtime,
     html,
@@ -51,29 +49,6 @@ define([
             workspaceInfo = config.workspaceInfo,
             runtime = Runtime.make(),
             spec;
-
-
-        /*
-         * Create an "empty" data structure based on a param/model specification
-         * Each model field is populated with the default value as provided by the 
-         * spec or empty value for the data type
-         */
-        // TODO: move to spec module
-        // TODO: recursively initialize params.
-        // function initializeParams(appSpec) {
-        //     console.log('INIT PARAM', appSpec);
-        //     var defaultParams = {};
-        //     appSpec.parameters.forEach(function(parameterSpec) {
-        //         var param = ParameterSpec.make({ parameterSpec: parameterSpec }),
-        //             defaultValue = param.defaultValue();
-
-        //         // A default value may be undefined, e.g. if the parameter is required and there is no default value.
-        //         if (defaultValue !== undefined) {
-        //             defaultParams[param.id()] = defaultValue;
-        //         }
-        //     });
-        //     utils.setCellMeta(cell, 'kbase.appCell.params', defaultParams);
-        // }
 
         function specializeCell() {
             cell.minimize = function() {

@@ -1,20 +1,20 @@
-/*global define*/
-/*jslint white:true,browser:true*/
 define([
     'bluebird',
     'kb_common/html',
-    '../validation',
+    '../validators/text',
     'common/events',
     'common/ui',
+    'common/props',
     '../inputUtils',
     'bootstrap',
     'css!font-awesome'
-], function (
+], function(
     Promise,
     html,
     Validation,
     Events,
     UI,
+    Props,
     inputUtils) {
     'use strict';
 
@@ -25,13 +25,12 @@ define([
 
     function factory(config) {
         var spec = config.parameterSpec,
-            container,
+            parent, container,
             bus = config.bus,
             model = {
                 value: undefined
             },
             ui,
-            constraints = config.parameterSpec.data.constraints,
             options = {
                 enabled: true,
                 rowCount: spec.ui.nRows || 5
@@ -44,6 +43,9 @@ define([
         }
 
         function setControlValue(newValue) {
+            if (newValue === null) {
+                newValue = '';
+            }
             ui.getElement('input-container.input').value = newValue;
         }
 
@@ -53,44 +55,43 @@ define([
         // since it won't (can't) be validated. Validation is an event 
         // which sits between the control and the model.
         function setModelValue(value) {
-            if (model.value === value) {
+            if (value === undefined) {
                 return;
             }
-            model.value = value;
-            setControlValue(value);
-            autoValidate();
-        }
-
-        function unsetModelValue() {
-            model.value = undefined;
-            setControlValue(model.value);
-            autoValidate();
+            if (model.getItem('value') === value) {
+                return;
+            }
+            model.setItem('value', value);
         }
 
         function resetModelValue() {
-            if (spec.data.defaultValue) {
-                setModelValue(spec.data.defaultValue);
-            } else {
-                unsetModelValue();
-            }
+            setModelValue(spec.data.constraints.defaultValue);
         }
 
-        function validate() {
-            return Promise.try(function () {
-                var rawValue = getControlValue(),
-                    validationResult = Validation.validateTextString(rawValue, constraints);
+        // sync the dom to the model.
+        function syncModelToControl() {
+            setControlValue(model.getItem('value', null));
+        }
 
-                return validationResult;
+
+        // VALIDATION
+
+        function importControlValue() {
+            return Promise.try(function() {
+                return Validation.importString(getControlValue());
+            });
+        }
+
+        function validate(value) {
+            return Promise.try(function() {
+                return Validation.validate(value, spec);
             });
         }
 
         function autoValidate() {
-            return validate()
-                .then(function (result) {
-                    bus.emit('validation', {
-                        errorMessage: result.errorMessage,
-                        diagnosis: result.diagnosis
-                    });
+            return validate(model.getItem('value'))
+                .then(function(result) {
+                    bus.emit('validation', result);
                 });
         }
 
@@ -104,13 +105,13 @@ define([
         }
 
         function handleTouched(interval) {
-            var editPauseInterval = interval || 2000;
+            var editPauseInterval = interval || 100;
             return {
                 type: 'keyup',
-                handler: function (e) {
+                handler: function(e) {
                     bus.emit('touched');
                     cancelTouched();
-                    autoChangeTimer = window.setTimeout(function () {
+                    autoChangeTimer = window.setTimeout(function() {
                         autoChangeTimer = null;
                         e.target.dispatchEvent(new Event('change'));
                     }, editPauseInterval);
@@ -121,22 +122,26 @@ define([
         function handleChanged() {
             return {
                 type: 'change',
-                handler: function () {
+                handler: function() {
                     cancelTouched();
-                    validate()
-                        .then(function (result) {
+                    importControlValue()
+                        .then(function(value) {
+                            model.setItem('value', value);
+                            bus.emit('changed', {
+                                newValue: value
+                            });
+                            return validate(value);
+                        })
+                        .then(function(result) {
                             if (result.isValid) {
-                                setModelValue(result.value);
-                                bus.emit('changed', {
-                                    newValue: result.value
-                                });
+                                if (config.showOwnMessages) {
+                                    ui.setContent('input-container.message', '');
+                                }
                             } else if (result.diagnosis === 'required-missing') {
-                                setModelValue(result.value);
-                                bus.emit('changed', {
-                                    newValue: result.value
-                                });
+                                // nothing??
                             } else {
                                 if (config.showOwnMessages) {
+                                    // show error message -- new!
                                     var message = inputUtils.buildMessageAlert({
                                         title: 'ERROR',
                                         type: 'danger',
@@ -147,10 +152,13 @@ define([
                                     message.events.attachEvents();
                                 }
                             }
-
+                            bus.emit('validation', result);
+                        })
+                        .catch(function(err) {
                             bus.emit('validation', {
-                                errorMessage: result.errorMessage,
-                                diagnosis: result.diagnosis
+                                isValid: false,
+                                diagnosis: 'invalid',
+                                errorMessage: err.message
                             });
                         });
                 }
@@ -188,41 +196,59 @@ define([
         }
 
         // LIFECYCLE API
-        function start() {
-            return Promise.try(function () {
-                bus.on('run', function (message) {
-                    // parent = message.node;
-                    container = message.node.appendChild(document.createElement('div'));
-                    ui = UI.make({ node: container });
+        function start(arg) {
+            return Promise.try(function() {
+                parent = arg.node;
+                container = parent.appendChild(document.createElement('div'));
+                ui = UI.make({ node: container });
 
-                    var events = Events.make(),
-                        theLayout = render(events);
+                var events = Events.make(),
+                    theLayout = render(events);
 
-                    container.innerHTML = theLayout.content;
-                    events.attachEvents(container);
-                    setModelValue(message.value);
+                setModelValue(config.initialValue);
 
-                    bus.on('reset-to-defaults', function (message) {
-                        resetModelValue();
-                    });
-                    bus.on('update', function (message) {
-                        setModelValue(message.value);
-                    });
-                    bus.on('stop', function () {
-                        bus.stop();
-                    });
-                    bus.emit('sync');
+                container.innerHTML = theLayout.content;
+                events.attachEvents(container);
+
+                bus.on('reset-to-defaults', function() {
+                    resetModelValue();
                 });
+                bus.on('update', function(message) {
+                    setModelValue(message.value);
+                });
+                // bus.emit('sync');
+                syncModelToControl();
+                autoValidate();
             });
         }
 
+        function stop() {
+            return Promise.try(function() {
+                if (parent && container) {
+                    parent.removeChild(container);
+                }
+            });
+        }
+
+        // INIT
+
+        model = Props.make({
+            data: {
+                value: null
+            },
+            onUpdate: function() {}
+        });
+
+        setModelValue(config.initialValue);
+
         return {
-            start: start
+            start: start,
+            stop: stop
         };
     }
 
     return {
-        make: function (config) {
+        make: function(config) {
             return factory(config);
         }
     };

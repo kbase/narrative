@@ -13,7 +13,7 @@ define([
     '../subdataMethods/manager',
     'bootstrap',
     'css!font-awesome'
-], function (
+], function(
     $,
     Promise,
     html,
@@ -24,7 +24,7 @@ define([
     Props,
     Jupyter,
     SubdataMethodsManager
-    ) {
+) {
     'use strict';
 
     /*
@@ -44,9 +44,12 @@ define([
 
     // Constants
     var t = html.tag,
-        div = t('div'), p = t('p'), span = t('span'),
+        div = t('div'),
+        p = t('p'),
+        span = t('span'),
         input = t('input'),
-        option = t('option'), button = t('button');
+        option = t('option'),
+        button = t('button');
 
     function factory(config) {
         var options = {},
@@ -62,9 +65,9 @@ define([
             options = {
                 objectSelectionPageSize: 20
             },
-        runtime = Runtime.make(),
+            runtime = Runtime.make(),
             ui;
-        
+
         // Validate configuration.
         if (!workspaceId) {
             throw new Error('Workspace id required for the object widget');
@@ -77,11 +80,11 @@ define([
         function buildOptions() {
             var availableValues = model.getItem('values.available.all'),
                 value = model.getItem('value') || [],
-                selectOptions = [option({value: ''}, '')];
+                selectOptions = [option({ value: '' }, '')];
             if (!availableValues) {
                 return selectOptions;
             }
-            return selectOptions.concat(availableValues.map(function (availableValue) {
+            return selectOptions.concat(availableValues.map(function(availableValue) {
                 var selected = false,
                     optionLabel = availableValue.id,
                     optionValue = availableValue.id;
@@ -108,7 +111,7 @@ define([
                 return items;
             }
             var re = new RegExp(filter, 'i');
-            return items.filter(function (item) {
+            return items.filter(function(item) {
                 if (item.text && item.text.match(re)) {
                     return true;
                 }
@@ -129,7 +132,7 @@ define([
 
         function didChange() {
             validate()
-                .then(function (result) {
+                .then(function(result) {
                     // NOTE that as part of this control trying to be both single and 
                     // multiple, we use the value for the model - this is always an array -
                     // and the parsed value to sent off in the changed message, because
@@ -181,7 +184,7 @@ define([
         function doRemoveSelectedAvailableItem(idToRemove) {
             var selectedItems = model.getItem('value', []);
 
-            model.setItem('value', selectedItems.filter(function (id) {
+            model.setItem('value', selectedItems.filter(function(id) {
                 if (idToRemove === id) {
                     return false;
                 }
@@ -197,101 +200,102 @@ define([
                 from = model.getItem('showFrom'),
                 to = model.getItem('showTo'),
                 itemsToShow = items.slice(from, to),
-                events = Events.make({node: container}),
+                events = Events.make({ node: container }),
                 content;
 
             if (itemsToShow.length === 0) {
-                content = div({style: {textAlign: 'center'}}, 'no available values');
+                content = div({ style: { textAlign: 'center' } }, 'no available values');
             } else {
-                content = itemsToShow.map(function (item, index) {
-                    var isSelected = selected.some(function (id) {
-                        return (item.id === id);
-                    }),
-                        disabled = isSelected;
-                        
-                    return div({class: 'row', style: {border: '1px #CCC solid'}}, [
-                        div({
-                            class: 'col-md-2',
-                            style: {
-                                verticalAlign: 'middle',
-                                borderRadius: '3px',
-                                padding: '2px',
-                                backgroundColor: '#EEE',
-                                color: '#444',
-                                textAlign: 'right',
-                                paddingRight: '6px',
-                                fontFamily: 'monospace'
-                            }
-                        }, String(from + index + 1)),
-                        div({
-                            class: 'col-md-8',
-                            style: {
-                                padding: '2px'
-                            }
-                        }, item.text),
-                        div({class: 'col-md-2',
-                            style: {
-                                padding: '2px',
-                                textAlign: 'right',
-                                verticalAlign: 'top'
-                            }
-                        }, [
-                            (function () {
-                                if (disabled) {
-                                    return span({
-                                        class: 'kb-btn-icon',
-                                        type: 'button',
-                                        dataToggle: 'tooltip',
-                                        title: 'Remove from selected',
-                                        id: events.addEvent({
-                                            type: 'click',
-                                            handler: function () {
-                                                doRemoveSelectedAvailableItem(item.id);
-                                            }
-                                        })
-                                    }, [
-                                        span({
-                                            class: 'fa fa-minus-circle',
-                                            style: {
-                                                color: 'red',
-                                                fontSize: '200%'
-                                            }
-                                        })
-                                    ]);
+                content = itemsToShow.map(function(item, index) {
+                        var isSelected = selected.some(function(id) {
+                                return (item.id === id);
+                            }),
+                            disabled = isSelected;
+
+                        return div({ class: 'row', style: { border: '1px #CCC solid' } }, [
+                            div({
+                                class: 'col-md-2',
+                                style: {
+                                    verticalAlign: 'middle',
+                                    borderRadius: '3px',
+                                    padding: '2px',
+                                    backgroundColor: '#EEE',
+                                    color: '#444',
+                                    textAlign: 'right',
+                                    paddingRight: '6px',
+                                    fontFamily: 'monospace'
                                 }
-                                if (allowSelection) {
-                                    return span({
-                                        class: 'kb-btn-icon',
-                                        type: 'button',
-                                        dataToggle: 'tooltip',
-                                        title: 'Add to selected',
-                                        dataItemId: item.id,
-                                        id: events.addEvent({
-                                            type: 'click',
-                                            handler: function () {
-                                                doAddItem(item.id);
-                                            }
-                                        })}, [span({
+                            }, String(from + index + 1)),
+                            div({
+                                class: 'col-md-8',
+                                style: {
+                                    padding: '2px'
+                                }
+                            }, item.text),
+                            div({
+                                class: 'col-md-2',
+                                style: {
+                                    padding: '2px',
+                                    textAlign: 'right',
+                                    verticalAlign: 'top'
+                                }
+                            }, [
+                                (function() {
+                                    if (disabled) {
+                                        return span({
+                                            class: 'kb-btn-icon',
+                                            type: 'button',
+                                            dataToggle: 'tooltip',
+                                            title: 'Remove from selected',
+                                            id: events.addEvent({
+                                                type: 'click',
+                                                handler: function() {
+                                                    doRemoveSelectedAvailableItem(item.id);
+                                                }
+                                            })
+                                        }, [
+                                            span({
+                                                class: 'fa fa-minus-circle',
+                                                style: {
+                                                    color: 'red',
+                                                    fontSize: '200%'
+                                                }
+                                            })
+                                        ]);
+                                    }
+                                    if (allowSelection) {
+                                        return span({
+                                            class: 'kb-btn-icon',
+                                            type: 'button',
+                                            dataToggle: 'tooltip',
+                                            title: 'Add to selected',
+                                            dataItemId: item.id,
+                                            id: events.addEvent({
+                                                type: 'click',
+                                                handler: function() {
+                                                    doAddItem(item.id);
+                                                }
+                                            })
+                                        }, [span({
                                             class: 'fa fa-plus-circle',
                                             style: {
                                                 color: 'green',
                                                 fontSize: '200%'
                                             }
-                                        })
-                                    ]);
-                                }
-                                return span({
-                                    class: 'kb-btn-icon',
-                                    type: 'button',
-                                    dataToggle: 'tooltip',
-                                    title: 'Can\'t add - remove one first',
-                                    dataItemId: item.id
-                                }, span({class: 'fa fa-ban', style: {color: 'silver', fontSize: '200%'}}));
-                            }())
+                                        })]);
+                                    }
+                                    return span({
+                                        class: 'kb-btn-icon',
+                                        type: 'button',
+                                        dataToggle: 'tooltip',
+                                        title: 'Can\'t add - remove one first',
+                                        dataItemId: item.id
+                                    }, span({ class: 'fa fa-ban', style: { color: 'silver', fontSize: '200%' } }));
+                                }())
 
-                        ])
-                    ]);
-                })
+                            ])
+                        ]);
+                    })
                     .join('\n');
             }
 
@@ -303,13 +307,13 @@ define([
         function renderSelectedItems() {
             var selectedItems = model.getItem('value') || [],
                 valuesMap = model.getItem('values.available.map', {}),
-                events = Events.make({node: container}),
+                events = Events.make({ node: container }),
                 content;
-            
+
             if (selectedItems.length === 0) {
-                content = div({style: {textAlign: 'center'}}, 'no selected values');
+                content = div({ style: { textAlign: 'center' } }, 'no selected values');
             } else {
-                content = selectedItems.map(function (itemId, index) {
+                content = selectedItems.map(function(itemId, index) {
                     var item = valuesMap[itemId];
                     if (item === undefined || item === null) {
                         item = {
@@ -317,7 +321,7 @@ define([
                         };
                     }
 
-                    return div({class: 'row', style: {border: '1px #CCC solid', borderCollapse: 'collapse', boxSizing: 'border-box'}}, [
+                    return div({ class: 'row', style: { border: '1px #CCC solid', borderCollapse: 'collapse', boxSizing: 'border-box' } }, [
                         div({
                             class: 'col-md-2',
                             style: {
@@ -360,11 +364,11 @@ define([
                                 title: 'Remove from selected',
                                 id: events.addEvent({
                                     type: 'click',
-                                    handler: function () {
+                                    handler: function() {
                                         doRemoveSelectedItem(index);
                                     }
                                 })
-                            }, span({class: 'fa fa-minus-circle', style: {color: 'red', fontSize: '200%'}}))
+                            }, span({ class: 'fa fa-minus-circle', style: { color: 'red', fontSize: '200%' } }))
                         ])
                     ]);
                 }).join('\n');
@@ -376,22 +380,22 @@ define([
 
         function renderSearchBox() {
             var items = model.getItem('values.available.all', []),
-                events = Events.make({node: container}),
+                events = Events.make({ node: container }),
                 content;
 
             content = input({
                 class: 'form-contol',
-                style: {xwidth: '100%'},
+                style: { xwidth: '100%' },
                 placeholder: 'search',
                 value: model.getItem('filter') || '',
-                id: events.addEvents({events: [
-                        {
-                            type: 'keyup',
-                            handler: function (e) {
-                                doSearchKeyUp(e);
-                            }
+                id: events.addEvents({
+                    events: [{
+                        type: 'keyup',
+                        handler: function(e) {
+                            doSearchKeyUp(e);
                         }
-                    ]})
+                    }]
+                })
             });
 
             ui.setContent('search-box', content);
@@ -404,11 +408,11 @@ define([
                 content;
 
             if (availableItems.length === 0) {
-                content = span({style: {fontStyle: 'italic'}}, [
+                content = span({ style: { fontStyle: 'italic' } }, [
                     ' - no available items'
                 ]);
             } else {
-                content = span({style: {fontStyle: 'italic'}}, [
+                content = span({ style: { fontStyle: 'italic' } }, [
                     ' - showing ',
                     span([
                         String(filteredItems.length),
@@ -423,7 +427,7 @@ define([
 
         function renderToolbar() {
             var items = model.getItem('values.available.filtered', []),
-                events = Events.make({node: container}),
+                events = Events.make({ node: container }),
                 content;
 
             if (items.length === 0) {
@@ -433,47 +437,47 @@ define([
                     button({
                         type: 'button',
                         class: 'btn btn-default',
-                        style: {xwidth: '100%'},
+                        style: { xwidth: '100%' },
                         id: events.addEvent({
                             type: 'click',
-                            handler: function () {
+                            handler: function() {
                                 doFirstPage();
                             }
                         })
-                    }, ui.buildIcon({name: 'step-forward', rotate: 270})),
+                    }, ui.buildIcon({ name: 'step-forward', rotate: 270 })),
                     button({
                         class: 'btn btn-default',
                         type: 'button',
-                        style: {xwidth: '50%'},
+                        style: { xwidth: '50%' },
                         id: events.addEvent({
                             type: 'click',
-                            handler: function () {
+                            handler: function() {
                                 doPreviousPage();
                             }
                         })
-                    }, ui.buildIcon({name: 'caret-up'})),
+                    }, ui.buildIcon({ name: 'caret-up' })),
                     button({
                         class: 'btn btn-default',
                         type: 'button',
-                        style: {xwidth: '100%'},
+                        style: { xwidth: '100%' },
                         id: events.addEvent({
                             type: 'click',
-                            handler: function () {
+                            handler: function() {
                                 doNextPage();
                             }
                         })
-                    }, ui.buildIcon({name: 'caret-down'})),
+                    }, ui.buildIcon({ name: 'caret-down' })),
                     button({
                         type: 'button',
                         class: 'btn btn-default',
-                        style: {xwidth: '100%'},
+                        style: { xwidth: '100%' },
                         id: events.addEvent({
                             type: 'click',
-                            handler: function () {
+                            handler: function() {
                                 doLastPage();
                             }
                         })
-                    }, ui.buildIcon({name: 'step-forward', rotate: 90}))
+                    }, ui.buildIcon({ name: 'step-forward', rotate: 90 }))
                 ]);
             }
 
@@ -517,15 +521,19 @@ define([
         function doPreviousPage() {
             movePageStart(-5);
         }
+
         function doNextPage() {
             movePageStart(5);
         }
+
         function doFirstPage() {
             setPageStart(0);
         }
+
         function doLastPage() {
             setPageStart(model.getItem('values.available.filtered').length);
         }
+
         function doSearchKeyUp(e) {
             if (e.target.value.length > 2) {
                 model.setItem('filter', e.target.value);
@@ -556,23 +564,23 @@ define([
 
             return div([
                 ui.buildCollapsiblePanel({
-                    title: span(['Available Items', span({dataElement: 'stats'})]),
+                    title: span(['Available Items', span({ dataElement: 'stats' })]),
                     classes: ['kb-panel-light'],
-                    body: div({dataElement: 'available-items-area', style: {marginTop: '10px'}}, [
-                        div({class: 'row'}, [
+                    body: div({ dataElement: 'available-items-area', style: { marginTop: '10px' } }, [
+                        div({ class: 'row' }, [
                             div({
                                 class: 'col-md-6'
                             }, [
-                                span({dataElement: 'search-box'})
+                                span({ dataElement: 'search-box' })
                             ]),
                             div({
                                 class: 'col-md-6',
-                                style: {textAlign: 'right'},
+                                style: { textAlign: 'right' },
                                 dataElement: 'toolbar'
                             })
                         ]),
-                        div({class: 'row', style: {marginTop: '4px'}}, [
-                            div({class: 'col-md-12'},
+                        div({ class: 'row', style: { marginTop: '4px' } }, [
+                            div({ class: 'col-md-12' },
                                 div({
                                     style: {
                                         border: '1px silver solid'
@@ -651,7 +659,7 @@ define([
             if (spec.spec.default_values && spec.spec.default_values.length > 0) {
                 // nb i'm assuming here that this set of strings is actually comma
                 // separated string on the other side.
-                var defaultValues = spec.spec.default_values.filter(function (value) {
+                var defaultValues = spec.spec.default_values.filter(function(value) {
                     return (value && value.length > 0);
                 });
                 model.setItem('value', defaultValues);
@@ -661,23 +669,23 @@ define([
         }
 
         function validate() {
-            return Promise.try(function () {
-                if (!options.enabled) {
-                    return {
-                        isValid: true,
-                        validated: false,
-                        diagnosis: 'disabled'
-                    };
-                }
+            return Promise.try(function() {
+                    if (!options.enabled) {
+                        return {
+                            isValid: true,
+                            validated: false,
+                            diagnosis: 'disabled'
+                        };
+                    }
 
-                var rawValue = getInputValue(),
-                    validationOptions = {
-                        required: spec.required()
-                    };
+                    var rawValue = getInputValue(),
+                        validationOptions = {
+                            required: spec.required()
+                        };
 
-                return Validation.validateStringSet(rawValue, validationOptions);
-            })
-                .then(function (validationResult) {
+                    return Validation.validateStringSet(rawValue, validationOptions);
+                })
+                .then(function(validationResult) {
                     if (!spec.multipleItems()) {
                         // Convert to the singule-string result if this is not a 
                         // multiple item control.
@@ -697,7 +705,7 @@ define([
 
         // unsafe, but pretty.
         function getProp(obj, props) {
-            props.forEach(function (prop) {
+            props.forEach(function(prop) {
                 obj = obj[prop];
             });
             return obj;
@@ -705,7 +713,7 @@ define([
 
         // safe, but ugly.
 
-        
+
         var subdataInfo = subdataMethodsManager.getSubdataInfo(appSpec, spec.spec);
 
         function fetchData() {
@@ -727,10 +735,10 @@ define([
         }
 
         function syncAvailableValues() {
-            return Promise.try(function () {
-                return fetchData();
-            })
-                .then(function (data) {
+            return Promise.try(function() {
+                    return fetchData();
+                })
+                .then(function(data) {
                     if (!data) {
                         data = [];
                     }
@@ -746,7 +754,7 @@ define([
 
                     // TODO: generate all of this in the fetchData -- it will be a bit faster.
                     var map = {};
-                    data.forEach(function (datum) {
+                    data.forEach(function(datum) {
                         map[datum.id] = datum;
                     });
 
@@ -758,7 +766,7 @@ define([
 
         function autoValidate() {
             return validate()
-                .then(function (result) {
+                .then(function(result) {
                     bus.emit('validation', {
                         errorMessage: result.errorMessage,
                         diagnosis: result.diagnosis
@@ -772,30 +780,30 @@ define([
          * Hooks up event listeners
          */
         function render() {
-            return Promise.try(function () {
-                // check to see if we have to render inputControl.
-                var events = Events.make({node: container}),
-                    inputControl = makeInputControl(events, bus),
-                    content = div({
-                        class: 'input-group',
-                        style: {
-                            width: '100%'
-                        }
-                    }, inputControl);
+            return Promise.try(function() {
+                    // check to see if we have to render inputControl.
+                    var events = Events.make({ node: container }),
+                        inputControl = makeInputControl(events, bus),
+                        content = div({
+                            class: 'input-group',
+                            style: {
+                                width: '100%'
+                            }
+                        }, inputControl);
 
-                ui.setContent('input-container', content);
-                renderSearchBox();
-                renderStats();
-                renderToolbar();
-                renderAvailableItems();
-                renderSelectedItems();
+                    ui.setContent('input-container', content);
+                    renderSearchBox();
+                    renderStats();
+                    renderToolbar();
+                    renderAvailableItems();
+                    renderSelectedItems();
 
-                events.attachEvents();
-            })
-                .then(function () {
+                    events.attachEvents();
+                })
+                .then(function() {
                     return autoValidate();
                 })
-                .catch(function (err) {
+                .catch(function(err) {
                     console.error('ERROR in render', err);
                 });
         }
@@ -818,7 +826,7 @@ define([
                 events: events
             };
         }
-        
+
         function updateParam(paramId, value) {
             var newValue;
             if (value === '') {
@@ -826,22 +834,22 @@ define([
             } else {
                 newValue = value;
             }
-            
+
             if (newValue === model.getItem(['required-params', paramId])) {
                 return;
             }
-            
+
             model.setItem('value', []);
             model.setItem(['required-params', paramId], newValue);
-            
+
             // If any of the required parameters are missing, we need to reset the
             // primary value.
-            if (subdataInfo.params.dependencies.some(function (paramId) {
-                return (model.getItem(['required-params', paramId], null) === null);
-            })) {
+            if (subdataInfo.params.dependencies.some(function(paramId) {
+                    return (model.getItem(['required-params', paramId], null) === null);
+                })) {
                 resetModelValue();
             }
-            
+
             // If we have a change in the primary reference object, we need to 
             // resync the values derived from it (available values).            
             if (paramId === subdataInfo.params.referenceObject) {
@@ -855,7 +863,7 @@ define([
              * Issued when thre is a need to have all params reset to their
              * default value.
              */
-            bus.on('reset-to-defaults', function (message) {
+            bus.on('reset-to-defaults', function(message) {
                 resetModelValue();
                 // model.reset();
                 // TODO: this should really be set when the linked field is reset...
@@ -874,12 +882,12 @@ define([
             /*
              * Issued when there is an update for this param.
              */
-            bus.on('update', function (message) {
+            bus.on('update', function(message) {
                 // a little hack since this handles both single and multi
                 // and single will default to an empty string or null
                 // for defaulting.
                 var newValue = message.value;
-                if (!newValue || ( (typeof newValue === 'string') && newValue.length === 0) ) {
+                if (!newValue || ((typeof newValue === 'string') && newValue.length === 0)) {
                     newValue = [];
                 }
                 model.setItem('value', newValue);
@@ -887,13 +895,13 @@ define([
             });
 
             if (subdataInfo.params.dependencies) {
-                subdataInfo.params.dependencies.forEach(function (paramId) {
+                subdataInfo.params.dependencies.forEach(function(paramId) {
                     bus.listen({
                         key: {
                             type: 'parameter-changed',
                             parameter: paramId
                         },
-                        handle: function (message) {
+                        handle: function(message) {
                             updateParam(paramId, message.newValue);
                         }
                     });
@@ -903,22 +911,22 @@ define([
                             type: 'parameter-value',
                             parameter: paramId
                         },
-                        handle: function (message) {
+                        handle: function(message) {
                             updateParam(paramId, message.newValue);
                         }
                     });
                     bus.request({
-                        parameterName: paramId
-                    }, {
-                        key: {
-                            type: 'get-parameter'
-                        }
-                    })
-                        .then(function (message) {
+                            parameterName: paramId
+                        }, {
+                            key: {
+                                type: 'get-parameter'
+                            }
+                        })
+                        .then(function(message) {
                             updateParam(paramId, message.value);
                         })
-                            .catch(function (err) {
-                                console.log('ERROR getting parameter', err);
+                        .catch(function(err) {
+                            console.log('ERROR getting parameter', err);
                         });
                 });
             }
@@ -963,8 +971,8 @@ define([
         // LIFECYCLE API
 
         function start() {
-            return Promise.try(function () {
-                bus.on('run', function (message) {
+            return Promise.try(function() {
+                bus.on('run', function(message) {
                     parent = message.node;
                     container = parent.appendChild(document.createElement('div'));
                     ui = UI.make({
@@ -981,13 +989,23 @@ define([
                     events.attachEvents(container);
 
                     registerEvents();
-                    
+
                     bus.emit('sync-params', {
                         parameters: subdataInfo.params.dependencies
                     });
                 });
             });
         }
+
+        function stop() {
+            return Promise.try(function() {
+                if (container) {
+                    parent.removeChild(container);
+                }
+            });
+        }
+
+
 
         // MAIN
 
@@ -1000,7 +1018,7 @@ define([
                 showFrom: 0,
                 showTo: 5
             },
-            onUpdate: function (props) {
+            onUpdate: function(props) {
                 renderStats();
                 renderToolbar();
                 renderAvailableItems();
@@ -1009,14 +1027,15 @@ define([
         });
 
         return {
-            start: start
+            start: start,
+            stop: stop
         };
     }
 
     return {
         id: 'custom-subdata',
         version: '0.0.1',
-        make: function (config) {
+        make: function(config) {
             return factory(config);
         }
     };

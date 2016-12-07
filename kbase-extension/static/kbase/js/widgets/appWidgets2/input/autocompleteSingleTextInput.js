@@ -3,11 +3,10 @@
 define([
     'jquery',
     'bluebird',
-    'base/js/namespace',
     'kb_common/html',
     'common/validation',
     'common/events',
-    'common/dom',
+    'common/ui',
     'common/runtime',
     '../inputUtils',
     'bloodhound',
@@ -21,11 +20,10 @@ define([
 ], function(
     $,
     Promise,
-    Jupyter,
     html,
     Validation,
     Events,
-    Dom,
+    UI,
     Runtime,
     inputUtils,
     Bloodhound,
@@ -41,111 +39,63 @@ define([
         input = t('input');
 
     function factory(config) {
-        var options = {},
-            constraints,
+        var bus = config.bus,
+            spec = config.parameterSpec,
             parent,
             container,
-            bus = config.bus,
-            dom,
+            ui,
             model = {
                 value: undefined
             };
 
-        if (config.parameterSpec) {
-            constraints = config.parameterSpec.data.constraints;
-        } else {
-            constraints = config.constraints;
-        }
-
-        //
-        // Validate configuration.
-        // Nothing to do...
-
-        options.enabled = true;
-
-
-        /*
-         * If the parameter is optional, and is empty, return null.
-         * If it allows multiple values, wrap single results in an array
-         * There is a weird twist where if it ...
-         * well, hmm, the only consumer of this, isValid, expects the values
-         * to mirror the input rows, so we shouldn't really filter out any
-         * values.
-         */
-
         function getInputValue() {
-            return dom.getElement('autocomplete-container.input').value;
+            return ui.getElement('autocomplete-container.input').value;
         }
 
         function setModelValue(value) {
             return Promise.try(function() {
-                    if (model.value !== value) {
-                        model.value = value;
-                        return true;
-                    }
-                    return false;
-                })
-                .then(function(changed) {
-                    render();
-                });
-        }
-
-        function unsetModelValue() {
-            return Promise.try(function() {
-                    model.value = undefined;
-                })
-                .then(function(changed) {
-                    render();
-                });
-        }
-
-        function resetModelValue() {
-            if (constraints.defaultValue) {
-                setModelValue(constraints.defaultValue);
-            } else {
-                unsetModelValue();
-            }
-        }
-
-        /*
-         *
-         * Text fields can occur in multiples.
-         * We have a choice, treat single-text fields as a own widget
-         * or as a special case of multiple-entry --
-         * with a min-items of 1 and max-items of 1.
-         *
-         *
-         */
-
-        function validate(rawValue) {
-            return Promise.try(function() {
-                if (!options.enabled) {
-                    return {
-                        isValid: true,
-                        validated: false,
-                        diagnosis: 'disabled'
-                    };
+                if (model.value !== value) {
+                    model.value = value;
+                    bus.emit('changed', {
+                        newValue: value
+                    });
                 }
-                if (rawValue === undefined) {
-                    rawValue = getInputValue();
-                }
-                return Validation.validateTextString(rawValue, constraints);
             });
         }
 
-        /*
-         * Creates the markup
-         * Places it into the dom node
-         * Hooks up event listeners
-         */
+        function resetModelValue() {
+            model.value = spec.data.defaultValue;
+        }
+
+        // VALIDATION
+
+        function validate(rawValue) {
+            return Promise.try(function() {
+                if (rawValue === undefined) {
+                    rawValue = getInputValue();
+                }
+                return Validation.validateTextString(rawValue, spec.data.constraints);
+            });
+        }
+
+        function autoValidate() {
+            return validate()
+                .then(function(result) {
+                    bus.emit('validation', {
+                        errorMessage: result.errorMessage,
+                        diagnosis: result.diagnosis
+                    });
+                });
+        }
+
+
+        // DOM EVENTS
+
         function handleChange(newValue) {
             validate(newValue)
                 .then(function(result) {
                     if (result.isValid) {
                         setModelValue(result.parsedValue);
-                        bus.emit('changed', {
-                            newValue: result.parsedValue
-                        });
                     } else if (result.diagnosis === 'required-missing') {
                         setModelValue(result.parsedValue);
                         bus.emit('changed', {
@@ -159,7 +109,7 @@ define([
                                 id: result.messageId,
                                 message: result.errorMessage
                             });
-                            dom.setContent('autocomplete-container.message', message.content);
+                            ui.setContent('autocomplete-container.message', message.content);
                             message.events.attachEvents();
                         }
                     }
@@ -171,11 +121,16 @@ define([
                 });
         }
 
+        // RENDERING
+
         function makeInputControl(currentValue) {
             return input({
                 id: html.genId(),
                 class: 'form-control',
                 dataElement: 'input',
+                style: {
+                    width: '100%'
+                },
                 value: currentValue
             });
         }
@@ -186,13 +141,15 @@ define([
             Promise.try(function() {
                     var events = Events.make(),
                         inputControl = makeInputControl(model.value, events, bus);
-                    dom.setContent('autocomplete-container', inputControl);
+                    ui.setContent('autocomplete-container', inputControl);
                     ic_id = $(inputControl).attr('id');
                     events.attachEvents(container);
                 })
                 .then(function() {
                     setTimeout(function() {
-                        var genericClient = new GenericClient(Config.url('service_wizard'), { token: Runtime.make().authToken() });
+                        var genericClient = new GenericClient(Config.url('service_wizard'), {
+                            token: Runtime.make().authToken()
+                        });
 
                         var dog = new Bloodhound({
                             datumTokenizer: Bloodhound.tokenizers.whitespace,
@@ -218,7 +175,6 @@ define([
                                     }).fail(function(e) {
                                         onError(e);
                                     });
-
                                 }
                             }
                         });
@@ -237,7 +193,7 @@ define([
                         });
                         $control.bind('typeahead:select', function(e, suggestion) {
                             // NB for 'select' event it is the suggestion object,
-                            // for 'chnage' it is the display value as defined above.
+                            // for 'change' it is the display value as defined above.
                             // e.g. 
                             // category: "public"
                             // id: "1779/300381/1"
@@ -252,58 +208,69 @@ define([
                 });
         }
 
-        function layout(events) {
-            var content = div({
+        function layout() {
+            return div({
                 dataElement: 'main-panel'
             }, [
                 div({ dataElement: 'autocomplete-container' })
             ]);
-            return {
-                content: content,
-                events: events
-            };
         }
 
-        function autoValidate() {
-            return validate()
-                .then(function(result) {
-                    bus.emit('validation', {
-                        errorMessage: result.errorMessage,
-                        diagnosis: result.diagnosis
-                    });
-                });
+        function syncModelToControl() {
+            var controlValue;
+            if (model.value === undefined) {
+                // should never be the case ...
+                // should either be the nullValue, defaultValue, or the present value.
+                controlValue = '';
+            } else if (model.value === spec.data.nullValue) {
+                controlValue = '';
+            } else {
+                controlValue = model.value;
+            }
+            console.log('setting control to', controlValue, model);
+            ui.getElement('autocomplete-container.input').value = controlValue;
         }
-
 
         // LIFECYCLE API
 
-        function start() {
+        function start(arg) {
             return Promise.try(function() {
-                bus.on('run', function(message) {
-
-                    parent = message.node;
+                    parent = arg.node;
                     container = parent.appendChild(document.createElement('div'));
-                    dom = Dom.make({ node: message.node });
+                    ui = UI.make({ node: arg.node });
 
-                    var events = Events.make(),
-                        theLayout = layout(events);
-
-                    container.innerHTML = theLayout.content;
+                    var events = Events.make();
+                    container.innerHTML = layout(events);
                     events.attachEvents(container);
 
-                    bus.on('reset-to-defaults', function(message) {
+                    setModelValue(config.initialValue);
+
+                    bus.on('reset-to-defaults', function() {
                         resetModelValue();
                     });
                     bus.on('update', function(message) {
                         setModelValue(message.value);
                     });
-                    bus.emit('sync');
+
+                    // bus.emit('sync');
+                    return render();
+                })
+                .then(function() {
+                    syncModelToControl();
                 });
+        }
+
+        function stop() {
+            return Promise.try(function() {
+                if (container) {
+                    parent.removeChild(container);
+                }
             });
         }
 
         return {
-            start: start
+            start: start,
+            stop: stop
         };
     }
 

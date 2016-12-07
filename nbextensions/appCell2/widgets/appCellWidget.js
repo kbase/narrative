@@ -171,7 +171,8 @@ define([
                     var bus = runtime.bus().makeChannelBus(null, 'Parent comm bus for input widget'),
                         widget = Widget.make({
                             bus: bus,
-                            workspaceInfo: workspaceInfo
+                            workspaceInfo: workspaceInfo,
+                            initialParams: model.getItem('params')
                         });
                     bus.emit('run', {
                         node: arg.node,
@@ -218,10 +219,9 @@ define([
                         handle: function(message) {
                             return {
                                 state: model.getItem('paramState', message.id)
-                            };
+                            }
                         }
                     });
-
 
                     bus.respond({
                         key: {
@@ -1257,13 +1257,14 @@ define([
              *
              */
 
-            // TODO: ENABLE THIS
-            //var validation = spec.validateModel(model.getItem('params'));
 
-            return {
-                isValid: true,
-                errors: []
-            };
+            // TODO: ENABLE THIS
+            return spec.validateModel(model.getItem('params'));
+
+            // return {
+            //     isValid: true,
+            //     errors: []
+            // };
 
 
             //            var params = model.getItem('params'),
@@ -2764,17 +2765,57 @@ define([
             ]);
         }
 
-        function evaluateAppState() {
-            var validationResult = validateModel();
-            if (validationResult.isValid) {
-                buildPython(cell, utils.getMeta(cell, 'attributes').id, model.getItem('app'), exportParams());
-                fsm.newState({ mode: 'editing', params: 'complete', code: 'built' });
-                renderUI();
-            } else {
-                resetPython(cell);
-                fsm.newState({ mode: 'editing', params: 'incomplete' });
-                renderUI();
+        // just a quick hack since we are not truly recursive yet..,
+        function gatherValidationMessages(validationResult) {
+            var messages = [];
+
+            function harvestErrors(validations) {
+                if (validations instanceof Array) {
+                    validations.forEach(function(result, index) {
+                        if (!result.isValid) {
+                            messages.push(String(index) + ':' + result.errorMessage);
+                        }
+                        if (result.validations) {
+                            harvestErrors(result.validations);
+                        }
+                    });
+                } else {
+                    Object.keys(validations).forEach(function(id) {
+                        var result = validations[id];
+                        if (!result.isValid) {
+                            messages.push(id + ':' + result.errorMessage);
+                        }
+                        if (result.validations) {
+                            harvestErrors(result.validations);
+                        }
+                    });
+                }
             }
+            harvestErrors(validationResult);
+            return messages;
+        }
+
+        function evaluateAppState() {
+            validateModel()
+                .then(function(result) {
+                    // we have a tree of validations, so we need to walk the tree to see if anything 
+                    // does not validate.
+                    var messages = gatherValidationMessages(result);
+
+                    if (messages.length === 0) {
+                        buildPython(cell, utils.getMeta(cell, 'attributes').id, model.getItem('app'), exportParams());
+                        fsm.newState({ mode: 'editing', params: 'complete', code: 'built' });
+                        renderUI();
+                    } else {
+                        resetPython(cell);
+                        fsm.newState({ mode: 'editing', params: 'incomplete' });
+                        renderUI();
+                    }
+                })
+                .catch(function(err) {
+                    alert('internal error'),
+                        console.error('INTERNAL ERROR', err);
+                });
         }
 
         function checkSpec(appSpec) {

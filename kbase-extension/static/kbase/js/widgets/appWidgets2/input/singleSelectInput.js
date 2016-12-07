@@ -3,7 +3,7 @@
 define([
     'bluebird',
     'kb_common/html',
-    '../validation',
+    '../validators/text',
     'common/events',
     'common/ui',
     '../inputUtils',
@@ -28,10 +28,10 @@ define([
     function factory(config) {
         var options = {},
             spec = config.parameterSpec,
+            bus = config.bus,
             parent,
             ui,
             container,
-            bus = config.bus,
             model = {
                 availableValues: null,
                 value: null
@@ -50,22 +50,12 @@ define([
             model.availableValuesMap[item.value] = item;
         });
 
-
-        /*
-         * If the parameter is optional, and is empty, return null.
-         * If it allows multiple values, wrap single results in an array
-         * There is a weird twist where if it ...
-         * well, hmm, the only consumer of this, isValid, expects the values
-         * to mirror the input rows, so we shouldn't really filter out any
-         * values.
-         */
-
-        function getInputValue() {
+        function getControlValue() {
             var control = ui.getElement('input-container.input'),
                 selected = control.selectedOptions;
 
             if (selected.length === 0) {
-                return;
+                return spec.data.nullValue;
             }
 
             // we are modeling a single string value, so we always just get the 
@@ -73,52 +63,51 @@ define([
             return selected.item(0).value;
         }
 
-        /*
-         *
-         * Text fields can occur in multiples.
-         * We have a choice, treat single-text fields as a own widget
-         * or as a special case of multiple-entry -- 
-         * with a min-items of 1 and max-items of 1.
-         * 
-         *
-         */
+        // VALIDATION
 
-        function validate() {
+        function importControlValue() {
             return Promise.try(function() {
-                if (!options.enabled) {
-                    return {
-                        isValid: true,
-                        validated: false,
-                        diagnosis: 'disabled'
-                    };
-                }
-
-                var rawValue = getInputValue(),
-                    validationResult = Validation.validateTextString(rawValue, spec.data.constraints);
-
-                return validationResult;
+                return Validation.importString(getControlValue());
             });
         }
+
+        function validate(value) {
+            return Promise.try(function() {
+                return Validation.validate(value, spec);
+            });
+        }
+
+        function autoValidate() {
+            return validate(model.value)
+                .then(function(result) {
+                    bus.emit('validation', result);
+                });
+        }
+
+        // DOM EVENTS
 
         function handleChanged() {
             return {
                 type: 'change',
                 handler: function() {
-                    validate()
+                    importControlValue()
+                        .then(function(value) {
+                            model.value = value;
+                            bus.emit('changed', {
+                                newValue: value
+                            });
+                            return validate(value);
+                        })
                         .then(function(result) {
                             if (result.isValid) {
-                                bus.emit('changed', {
-                                    newValue: result.value
-                                });
+                                if (config.showOwnMessages) {
+                                    ui.setContent('input-container.message', '');
+                                }
                             } else if (result.diagnosis === 'required-missing') {
-                                // If a field is "made empty", causing a required-missing state,
-                                // we still want to store and propagate the changes.
-                                setModelValue(result.parsedValue);
-                                bus.emit('changed', {
-                                    newValue: result.parsedValue
-                                });
+                                // nothing??
                             } else {
                                 if (config.showOwnMessages) {
+                                    // show error message -- new!
                                     var message = inputUtils.buildMessageAlert({
                                         title: 'ERROR',
                                         type: 'danger',
@@ -129,13 +118,17 @@ define([
                                     message.events.attachEvents();
                                 }
                             }
+                            bus.emit('validation', result);
+                        })
+                        .catch(function(err) {
                             bus.emit('validation', {
-                                errorMessage: result.errorMessage,
-                                diagnosis: result.diagnosis
+                                isValid: false,
+                                diagnosis: 'invalid',
+                                errorMessage: err.message
                             });
                         });
                 }
-            }
+            };
         }
 
         function makeInputControl(events) {
@@ -160,20 +153,7 @@ define([
             }, [option({ value: '' }, '')].concat(selectOptions));
         }
 
-        // function render(input) {
-        //     Promise.try(function () {
-        //         var events = Events.make(),
-        //             inputControl = makeInputControl(events);
-
-        //         dom.setContent('input-container', inputControl);
-        //         events.attachEvents(container);
-        //     })
-        //         .then(function () {
-        //             autoValidate();
-        //         });
-        // }
-
-        function updateDisplay() {
+        function syncModelToControl() {
             // assuming the model has been modified...
             var control = ui.getElement('input-control.input');
             // loop through the options, selecting the one with the value.
@@ -201,89 +181,52 @@ define([
             };
         }
 
-        function autoValidate() {
-            validate()
-                .then(function(result) {
-                    bus.emit('validation', {
-                        errorMessage: result.errorMessage,
-                        diagnosis: result.diagnosis
-                    });
-                });
-        }
-
         function setModelValue(value) {
-            return Promise.try(function() {
-                    if (model.value !== value) {
-                        model.value = value;
-                        return true;
-                    }
-                    return false;
-                })
-                .then(function(changed) {
-                    updateDisplay();
-                    autoValidate();
-                });
-        }
-
-        function unsetModelValue() {
-            return Promise.try(function() {
-                    model.value = undefined;
-                })
-                .then(function(changed) {
-                    updateDisplay();
-                    autoValidate();
-                });
+            if (model.value !== value) {
+                model.value = value;
+            }
         }
 
         function resetModelValue() {
-            if (spec.data.defaultValue) {
-                setModelValue(spec.data.defaultValue);
-            } else {
-                unsetModelValue();
-            }
+            setModelValue(spec.data.defaultValue);
         }
 
 
         // LIFECYCLE API
 
-        function start() {
+        function start(arg) {
             return Promise.try(function() {
-                bus.on('run', function(message) {
-                    parent = message.node;
-                    container = parent.appendChild(document.createElement('div'));
-                    ui = UI.make({ node: container });
+                parent = arg.node;
+                container = parent.appendChild(document.createElement('div'));
+                ui = UI.make({ node: container });
 
-                    var events = Events.make({ node: container }),
-                        theLayout = layout(events);
+                var events = Events.make({ node: container }),
+                    theLayout = layout(events);
 
-                    container.innerHTML = theLayout.content;
-                    events.attachEvents();
+                container.innerHTML = theLayout.content;
+                events.attachEvents();
 
-                    bus.on('reset-to-defaults', function() {
-                        resetModelValue();
-                    });
-                    bus.on('update', function(message) {
-                        setModelValue(message.value);
-                    });
-                    bus.emit('sync');
+                bus.on('reset-to-defaults', function() {
+                    resetModelValue();
                 });
+                bus.on('update', function(message) {
+                    setModelValue(message.value);
+                });
+                // bus.emit('sync');
+
+                setModelValue(config.initialValue);
+                autoValidate();
+                syncModelToControl();
             });
         }
 
         function stop() {
             return Promise.try(function() {
-                // nothing to do. 
+                if (container) {
+                    parent.removeChild(container);
+                }
             });
         }
-
-        //        function run(input) {
-        //            return Promise.try(function () {
-        //                return render(input);
-        //            })
-        //            .then(function () {
-        //                return autoValidate();
-        //            });
-        //        }
 
         return {
             start: start,

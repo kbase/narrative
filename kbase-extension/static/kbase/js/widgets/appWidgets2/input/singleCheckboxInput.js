@@ -2,14 +2,20 @@
 /*jslint white:true,browser:true*/
 define([
     'bluebird',
-    'jquery',
     'base/js/namespace',
     'kb_common/html',
     '../validation',
     'common/events',
+    'common/ui',
     'bootstrap',
     'css!font-awesome'
-], function (Promise, $, Jupyter, html, Validation, Events) {
+], function(
+    Promise,
+    Jupyter,
+    html,
+    Validation,
+    Events,
+    UI) {
     'use strict';
 
     // Constants
@@ -21,160 +27,74 @@ define([
     function factory(config) {
         var options = {},
             spec = config.parameterSpec,
-            container,
-            $container,
             bus = config.bus,
+            parent, container,
+            ui,
             model = {
                 updates: 0,
                 value: undefined
             };
 
-        // Validate configuration.
-        // Nothing to do...
+        // MODEL
 
-        // validate
-        //if (!spec.spec.checkbox_options) {
-        //    throw new Error('Checkbox control does not have checkbox_options configured');
-        //}
-        // checkboxOptions = spec.spec.checkbox_options;
-        // if (spec.trueValue === undefined) {
-        //     throw new Error('Checkbox spec option checked_value is not configured');
-        // }
-        // if (spec.falseValue === undefined) {
-        //     throw new Error('Checkbox spec option unchecked_value is not configured');
-        // }
+        function setModelValue(value) {
+            if (model.value !== value) {
+                model.value = value;
+                bus.emit('changed', {
+                    newValue: model.value
+                });
+            }
+        }
 
-        options.enabled = true;
+        function resetModelValue() {
+            setModelValue(spec.data.defaultValue);
+        }
 
-        // constraints = {
-        //     valueChecked: checkboxOptions.checked_value,
-        //     valueUnchecked: checkboxOptions.unchecked_value
-        // };
+        // CONTROL
 
-        // Is this a valid spec?
-
-        //if (spec.required() && spec.defaultValue() === null) {
-        //    // console.log('CHECK', spec.defaultValue(), spec.nullValue(), spec.dataType());
-        //    throw new Error('This checkbox is required yet has an undefined default value');
-        /// }
-
-
-        /*
-         * If the parameter is optional, and is empty, return null.
-         * If it allows multiple values, wrap single results in an array
-         * There is a weird twist where if it ...
-         * well, hmm, the only consumer of this, isValid, expects the values
-         * to mirror the input rows, so we shouldn't really filter out any
-         * values.
-         */
-
-        function getInputValue() {
-            var checkbox = container.querySelector('[data-element="input-container"] [data-element="input"]');
+        function getControlValue() {
+            var checkbox = ui.getElement('input-container.input');
             if (checkbox.checked) {
                 return 1;
             }
             return 0;
         }
 
-        /*
-         * 
-         * Sets the value in the model and then refreshes the widget.
-         * 
-         */
-        function setModelValue(value) {
-            return Promise.try(function () {
-                    if (model.value !== value) {
-                        model.value = value;
-                        return true;
-                    }
-                    return false;
-                })
-                .then(function (changed) {
-                    render();
-                });
-        }
-
-        function unsetModelValue() {
-            return Promise.try(function () {
-                    model.value = undefined;
-                })
-                .then(function (changed) {
-                    render();
-                });
-        }
-
-        function meansChecked(value) {
-            if (!value) {
-                return false;
-            }
-            switch (value.trim()) {
-            case '1':
-            case 'true':
-                return true;
-            case '0':
-            case 'false':
-            case '':
-                return false;
-            }
-        }
-
-        function resetModelValue() {
-            if (spec.spec.default_values && spec.spec.default_values.length > 0) {
-                if (meansChecked(spec.spec.default_values[0])) {
-                    setModelValue(1);
-                } else {
-                    setModelValue(0);
-                }
+        function syncModelToControl() {
+            var control = ui.getElement('input-control.input');
+            if (model.value === 1) {
+                control.checked = true;
             } else {
-                // NOTE: we set the checkbox explicitly to the "unchecked value" 
-                // if no default value is provided.
-                // unsetModelValue();
-                setModelValue(0);
+                control.checked = false;
             }
         }
 
-        /*
-         *
-         * Text fields can occur in multiples.
-         * We have a choice, treat single-text fields as a own widget
-         * or as a special case of multiple-entry -- 
-         * with a min-items of 1 and max-items of 1.
-         * 
-         *
-         */
+        // VALIDATION
 
         function validate() {
-            return Promise.try(function () {
-                if (!options.enabled) {
-                    return {
-                        isValid: true,
-                        validated: false,
-                        diagnosis: 'disabled'
-                    };
-                }
-
-                var rawValue = getInputValue(),
-                    // TODO should actually create the set of checkbox values and
-                    // make this a validation option, although not specified as 
-                    // such in the spec.
+            return Promise.try(function() {
+                var rawValue = getControlValue(),
                     validationOptions = {
                         required: spec.data.constraints.required,
                         values: [0, 1]
-                    },
-                    validationResult;
-
-                validationResult = Validation.validateSet(rawValue, validationOptions);
-
-                return validationResult;
+                    };
+                return Validation.validateSet(rawValue, validationOptions);
             });
         }
 
-        /*
-         * Creates the markup
-         * Places it into the dom node
-         * Hooks up event listeners
-         */
-        function makeInputControl(currentValue, events, bus) {
+        function autoValidate() {
+            return validate()
+                .then(function(result) {
+                    bus.emit('validation', {
+                        errorMessage: result.errorMessage,
+                        diagnosis: result.diagnosis
+                    });
+                });
+        }
+
+        // RENDERING
+
+        function makeInputControl(events, bus) {
             // CONTROL
             var checked = false;
             if (model.value === 1) {
@@ -185,14 +105,16 @@ define([
                     id: events.addEvents({
                         events: [{
                             type: 'change',
-                            handler: function (e) {
+                            handler: function() {
                                 validate()
-                                    .then(function (result) {
-                                        if (result.isValid) {
-                                            bus.emit('changed', {
-                                                newValue: result.value
-                                            });
-                                            setModelValue(result.value);
+                                    .then(function(result) {
+                                        if (config.showOwnMessages) {
+                                            ui.setContent('input-container.message', '');
+                                        }
+                                        if (result.diagnosis === 'optional-empty') {
+                                            setModelValue(result.parsedValue);
+                                        } else {
+                                            setModelValue(result.parsedValue);
                                         }
                                         bus.emit('validation', {
                                             errorMessage: result.errorMessage,
@@ -210,95 +132,70 @@ define([
             ]);
         }
 
-        function autoValidate() {
-            return validate()
-                .then(function (result) {
-                    bus.emit('validation', {
-                        errorMessage: result.errorMessage,
-                        diagnosis: result.diagnosis
-                    });
-                });
-        }
-
-        function render() {
-            Promise.try(function () {
-                    var events = Events.make(),
-                        inputControl = makeInputControl(model.value, events, bus);
-
-                    $container.find('[data-element="input-container"]').html(inputControl);
-                    events.attachEvents(container);
-                })
-                .then(function () {
-                    return autoValidate();
-                });
-        }
-
-        function layout(events) {
-            var content = div({
+        function render(events) {
+            return div({
                 dataElement: 'main-panel'
             }, [
-                div({ dataElement: 'input-container' })
+                div({ dataElement: 'input-container' },
+                    makeInputControl(events, bus)
+                )
             ]);
-            return {
-                content: content,
-                events: events
-            };
         }
-
 
         // LIFECYCLE API
 
-        function init() {}
+        function start(arg) {
+            return Promise.try(function() {
+                parent = arg.node;
+                container = parent.appendChild(document.createElement('div'));
 
-        function attach(node) {
-            return Promise.try(function () {
-                parent = node;
-                container = node.appendChild(document.createElement('div'));
-                $container = $(container);
+                ui = UI.make({
+                    node: container
+                });
 
-                var events = Events.make(),
-                    theLayout = layout(events);
+                var events = Events.make({
+                    node: container
+                });
 
-                container.innerHTML = theLayout.content;
-                events.attachEvents(container);
-            });
-        }
+                setModelValue(config.initialValue);
+                container.innerHTML = render(events);
+                events.attachEvents();
 
-        function start() {
-            return Promise.try(function () {
-                bus.on('reset-to-defaults', function (message) {
+                autoValidate();
+
+                // Listen for events from the containing environment.
+
+                bus.on('reset-to-defaults', function() {
                     resetModelValue();
                 });
-                // shorthand for a test of the message type.
-                bus.on('update', function (message) {
+
+                bus.on('update', function(message) {
                     setModelValue(message.value);
+                    syncModelToControl();
                 });
 
-                bus.emit('sync');
+
+                // bus.emit('sync');
                 return null;
-                // return resetModelValue();
             });
         }
 
-        function run(params) {
-            return Promise.try(function () {
-                return setModelValue(params.value);
-            });
-            //.then(function () {
-            //    return autoValidate();
-            //});
+        function stop() {
+            if (container) {
+                parent.removeChild(container);
+            }
         }
+
+        // INIT
 
         return {
-            init: init,
-            attach: attach,
             start: start,
-            run: run
+            stop: stop
         };
     }
 
     return {
-        make: function (config) {
+        make: function(config) {
             return factory(config);
         }
     };

@@ -18,6 +18,7 @@ require.config({
         plotly: 'ext_components/plotly.js/dist/plotly.min',
         kb_common: 'ext_components/kbase-common-js/dist/kb/common/',
         kb_service: 'ext_components/kbase-service-clients-js/dist/kb_service/',
+        kb_sdk_clients: 'ext_components/kbase-sdk-clients-js/dist/amd/kb_sdk_clients/',
         numeral: 'ext_components/numeral/numeral',
         text: 'ext_components/requirejs-plugins/lib/text',
         tipsy: 'ext_components/jquery.tipsy/js/jquery.tipsy',

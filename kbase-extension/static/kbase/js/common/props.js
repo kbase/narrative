@@ -1,8 +1,7 @@
 /*global define*/
 /*jslint white:true,browser:true */
 
-define([
-], function () {
+define([], function() {
     'use strict';
 
     // Static methods
@@ -65,10 +64,11 @@ define([
         }
         temp = temp[propKey];
         // Finally set the property.        
-        
+
         if (typeof temp === 'object' && temp.push) {
-            temp.push(value);            
+            temp.push(value);
         }
+        return temp.length - 1;
     }
 
     function getDataItem(data, path, defaultValue) {
@@ -126,7 +126,8 @@ define([
             historyCount = 0,
             updateHandler = config.onUpdate,
             historyEnabled = updateHandler ? true : false,
-            lastValueSaved = false, timer, api;
+            lastValueSaved = false,
+            timer, api;
 
         /*
          * In enabled by setting an update handler via the onUpdate factory 
@@ -143,7 +144,7 @@ define([
                 return;
             }
 
-            timer = window.setTimeout(function () {
+            timer = window.setTimeout(function() {
                 try {
                     timer = null;
                     if (historyEnabled) {
@@ -162,6 +163,7 @@ define([
             }
             return historyCount;
         }
+
         function ensureHistory() {
             if (!historyEnabled) {
                 return;
@@ -173,6 +175,7 @@ define([
             lastObj = JSON.parse(JSON.stringify(obj));
             lastValueSaved = true;
         }
+
         function resetHistory() {
             if (!historyEnabled) {
                 return;
@@ -217,19 +220,20 @@ define([
             setDataItem(obj, path, value);
             run();
         }
-        
+
         function pushItem(path, value) {
             ensureHistory();
-            pushDataItem(obj, path, value);
+            var len = pushDataItem(obj, path, value);
             run();
+            return len;
         }
-        
+
         function popItem(path, defaultValue) {
             ensureHistory();
-            return popDataItem(obj, path, defaultValue);
             run();
+            return popDataItem(obj, path, defaultValue);
         }
-        
+
         function reset() {
             resetHistory();
             obj = {};
@@ -267,36 +271,36 @@ define([
             return temp[propKey];
         }
 
-//        function pushItem(path, value) {
-//            if (typeof path === 'string') {
-//                path = path.split('.');
-//            }
-//            if (path.length === 0) {
-//                return;
-//            }
-//            var propKey = path.pop(),
-//                key, temp = obj;
-//            while (path.length > 0) {
-//                key = path.shift();
-//                if (temp[key] === undefined) {
-//                    temp[key] = {};
-//                }
-//                temp = temp[key];
-//            }
-//            ensureHistory();
-//            if (temp[propKey] === undefined) {
-//                temp[propKey] = [value];
-//            } else {
-//                if (temp[propKey])
-//                    if (isArray(temp[propKey])) {
-//                        temp[propKey].push(value);
-//                    } else {
-//                        throw new Error('Can only push onto an Array');
-//                    }
-//            }
-//            run();
-//            return temp[propKey];
-//        }
+        //        function pushItem(path, value) {
+        //            if (typeof path === 'string') {
+        //                path = path.split('.');
+        //            }
+        //            if (path.length === 0) {
+        //                return;
+        //            }
+        //            var propKey = path.pop(),
+        //                key, temp = obj;
+        //            while (path.length > 0) {
+        //                key = path.shift();
+        //                if (temp[key] === undefined) {
+        //                    temp[key] = {};
+        //                }
+        //                temp = temp[key];
+        //            }
+        //            ensureHistory();
+        //            if (temp[propKey] === undefined) {
+        //                temp[propKey] = [value];
+        //            } else {
+        //                if (temp[propKey])
+        //                    if (isArray(temp[propKey])) {
+        //                        temp[propKey].push(value);
+        //                    } else {
+        //                        throw new Error('Can only push onto an Array');
+        //                    }
+        //            }
+        //            run();
+        //            return temp[propKey];
+        //        }
 
         function deleteItem(path) {
             if (typeof path === 'string') {
@@ -330,10 +334,10 @@ define([
             pushItem: pushItem,
             popItem: popItem,
             reset: reset,
-            getRawObject: function () {
+            getRawObject: function() {
                 return obj;
             },
-            getLastRawObject: function () {
+            getLastRawObject: function() {
                 return lastObj;
             },
             getHistoryCount: getHistoryCount
@@ -342,7 +346,7 @@ define([
     }
 
     return {
-        make: function (config) {
+        make: function(config) {
             return factory(config);
         },
         getDataItem: getDataItem,

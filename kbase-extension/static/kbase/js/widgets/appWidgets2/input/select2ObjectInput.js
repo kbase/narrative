@@ -11,9 +11,10 @@ define([
     'common/validation',
     'common/events',
     'common/runtime',
-    'common/dom',
+    'common/ui',
     'util/timeFormat',
     'select2',
+
     'bootstrap',
     'css!font-awesome'
 ], function(
@@ -27,7 +28,7 @@ define([
     Validation,
     Events,
     Runtime,
-    Dom,
+    UI,
     TimeFormat) {
     'use strict';
 
@@ -40,16 +41,17 @@ define([
         option = t('option');
 
     function factory(config) {
-        var constraints = config.parameterSpec.getConstraints(),
+        var spec = config.parameterSpec,
             workspaceId = config.workspaceId,
             objectRefType = config.referenceType || 'name',
             parent,
             container,
             bus = config.bus,
-            dom,
+            ui,
             model = {
                 blacklistValues: undefined,
                 availableValues: undefined,
+                availableValuesMap: {},
                 value: undefined
             },
             runtime = Runtime.make();
@@ -100,16 +102,10 @@ define([
             return selectElem;
         }
 
-        /*
-         * If the parameter is optional, and is empty, return null.
-         * If it allows multiple values, wrap single results in an array
-         * There is a weird twist where if it ...
-         * well, hmm, the only consumer of this, isValid, expects the values
-         * to mirror the input rows, so we shouldn't really filter out any
-         * values.
-         */
-        function getInputValue() {
-            var control = dom.getElement('input-container.input'),
+        // CONTROL
+
+        function getControlValue() {
+            var control = ui.getElement('input-container.input'),
                 selected = control.selectedOptions;
             if (selected.length === 0) {
                 return;
@@ -119,78 +115,97 @@ define([
             return selected.item(0).value;
         }
 
-        function setModelValue(value) {
-            return Promise.try(function() {
-                    if (model.value !== value) {
-                        model.value = value;
-                        return true;
-                    }
-                    return false;
-                })
-                .then(function(changed) {
-                    return render();
-                })
-                .then(function() {
-                    autoValidate();
-                });
-        }
-
-        function unsetModelValue() {
-            return Promise.try(function() {
-                    model.value = undefined;
-                })
-                .then(function(changed) {
-                    render();
-                })
-                .then(function() {
-                    autoValidate();
-                });
-        }
-
-        function resetModelValue() {
-            if (constraints.defaultValue) {
-                setModelValue(constraints.defaultValue);
+        function setControlValue(value) {
+            var stringValue;
+            if (value === null) {
+                stringValue = '';
             } else {
-                unsetModelValue();
+                stringValue = value;
+            }
+
+            var control = ui.getElement('input-container.input');
+
+            //console.log('setting control value', control, stringValue, JSON.parse(JSON.stringify(model)));
+
+            //$(control).val(stringValue).trigger('change.select2');
+            //return;
+
+            var id = model.availableValuesMap[stringValue];
+
+            console.log('setting control value', stringValue, control, id, model.availableValuesMap);
+
+
+            Array.prototype.slice.call(control.selectedOptions).forEach(function(option) {
+                option.selected = false;
+            });
+
+            var options = Array.prototype.slice.call(control.options);
+            options.forEach(function(option) {
+                console.log('selected?', option, option.value, stringValue);
+                if (option.value === id) {
+                    option.selected = true;
+                }
+            });
+            $(control).trigger('change');
+        }
+
+        // MODEL
+
+        function setModelValue(value) {
+            if (model.value === undefined) {
+                return;
+            }
+            if (model.value !== value) {
+                model.value = value;
             }
         }
 
+        function resetModelValue() {
+            setModelValue(spec.data.defaultValue);
+        }
+
+        function getModelValue() {
+            return model.value;
+        }
+
+        // VALIDATION
+
         function validate() {
             return Promise.try(function() {
-                    var objInfo = model.availableValues[getInputValue()],
-                        processedValue = '',
-                        validationOptions = {
-                            required: constraints.required,
-                            authToken: runtime.authToken(),
-                            workspaceServiceUrl: runtime.config('services.workspace.url')
-                        };
-
-                    if (objInfo && objInfo.dataPaletteRef) {
-                        return Validation.validateWorkspaceDataPaletteRef(objInfo.dataPaletteRef, validationOptions);
-                    }
-
-                    if (objInfo) {
-                        processedValue = objectRefType === 'ref' ? objInfo.ref : objInfo.name;
-                    }
-
-                    switch (objectRefType) {
-                        case 'ref':
-                            return Validation.validateWorkspaceDataPaletteRef(processedValue, validationOptions);
-                        case 'name':
-                        default:
-                            return Validation.validateWorkspaceObjectName(processedValue, validationOptions);
-                    }
-                })
-                .then(function(validationResult) {
-
-                    return {
-                        isValid: validationResult.isValid,
-                        validated: true,
-                        diagnosis: validationResult.diagnosis,
-                        errorMessage: validationResult.errorMessage,
-                        value: validationResult.parsedValue
+                var objInfo = model.availableValues[getControlValue()],
+                    processedValue = '',
+                    validationOptions = {
+                        required: spec.data.constraints.required,
+                        authToken: runtime.authToken(),
+                        workspaceServiceUrl: runtime.config('services.workspace.url')
                     };
-                });
+
+                if (objInfo && objInfo.dataPaletteRef) {
+                    return Validation.validateWorkspaceDataPaletteRef(objInfo.dataPaletteRef, validationOptions);
+                }
+
+                if (objInfo) {
+                    processedValue = objectRefType === 'ref' ? objInfo.ref : objInfo.name;
+                }
+
+                switch (objectRefType) {
+                    case 'ref':
+                        return Validation.validateWorkspaceDataPaletteRef(processedValue, validationOptions);
+                    case 'name':
+                    default:
+                        return Validation.validateWorkspaceObjectName(processedValue, validationOptions);
+                }
+            });
+            // .then(function(validationResult) {
+            //     return {
+            //         isValid: validationResult.isValid,
+            //         validated: true,
+            //         diagnosis: validationResult.diagnosis,
+            //         errorMessage: validationResult.errorMessage,
+            //         value: validationResult.parsedValue
+
+            //     };
+            // });
         }
 
         function getObjectsByType(type) {
@@ -215,7 +230,7 @@ define([
         }
 
         function fetchData() {
-            var types = constraints.types;
+            var types = spec.data.constraints.types;
             return Promise.all(types.map(function(type) {
                     return getObjectsByType(type);
                 }))
@@ -238,6 +253,29 @@ define([
                 });
         }
 
+        function doChange() {
+            validate()
+                .then(function(result) {
+                    console.log('validation: ', result);
+                    if (result.isValid) {
+                        model.value = result.value;
+                        bus.emit('changed', {
+                            newValue: result.value
+                        });
+                    } else if (result.diagnosis === 'required-missing') {
+                        model.value = spec.data.nullValue;
+                        bus.emit('changed', {
+                            newValue: spec.data.nullValue
+                        });
+                    }
+                    bus.emit('validation', {
+                        errorMessage: result.errorMessage,
+                        diagnosis: result.diagnosis
+                    });
+                });
+        }
+
+
         /**
          * Formats the display of an object in the dropdown.
          */
@@ -259,6 +297,34 @@ define([
             ]));
         }
 
+        function getSelect2Data() {
+            return model.availableValues.map(function(objectInfo) {
+                return {
+                    id: objectInfo.name,
+                    text: div([
+                        div([
+                            span({
+                                style: {
+                                    wordWrap: 'break-word',
+                                    fontWeight: 'bold'
+                                }
+                            }, objectInfo.name),
+                            ' (v' + objectInfo.version + ')'
+                        ]),
+                        div({
+                            style: {
+                                marginLeft: '7px'
+                            }
+                        }, [
+                            div({ style: { fontStyle: 'italic' } }, (objectInfo.typeName)),
+                            div(['Narrative id: ', objectInfo.wsid]),
+                            div(['updated ', TimeFormat.getTimeStampStr(objectInfo.save_date), ' by ', objectInfo.saved_by])
+                        ])
+                    ])
+                }
+            });
+        }
+
         /*
          * Creates the markup
          * Places it into the dom node
@@ -270,9 +336,9 @@ define([
                     inputControl = makeInputControl(events, bus),
                     content = div({ class: 'input-group', style: { width: '100%' } }, inputControl);
 
-                dom.setContent('input-container', content);
+                ui.setContent('input-container', content);
 
-                $(dom.getElement('input-container.input')).select2({
+                $(ui.getElement('input-container.input')).select2({
                     templateResult: formatObjectDisplay,
                     templateSelection: function(object) {
                         if (!object.id) {
@@ -281,24 +347,7 @@ define([
                         return model.availableValues[object.id].name;
                     }
                 }).on('change', function() {
-                    validate()
-                        .then(function(result) {
-                            if (result.isValid) {
-                                model.value = result.value;
-                                bus.emit('changed', {
-                                    newValue: result.value
-                                });
-                            } else if (result.diagnosis === 'required-missing') {
-                                model.value = result.value;
-                                bus.emit('changed', {
-                                    newValue: result.value
-                                });
-                            }
-                            bus.emit('validation', {
-                                errorMessage: result.errorMessage,
-                                diagnosis: result.diagnosis
-                            });
-                        });
+                    doChange();
                 });
                 events.attachEvents(container);
 
@@ -333,11 +382,6 @@ define([
         }
 
         function getObjectRef(objectInfo) {
-            // Local objects for now always return the name.
-            console.log('OBJ REF', objectInfo, workspaceId);
-            if (objectInfo.workspaceId === workspaceId) {
-                return objectInfo.name;
-            }
             switch (objectRefType) {
                 case 'name':
                     return objectInfo.name;
@@ -368,60 +412,92 @@ define([
                             }
                             return false;
                         });
-                        if (matching.length === 0) {
-                            model.value = null;
-                        }
-                        render()
+                        // if (matching.length === 0) {
+                        //     model.value = spec.data.nullValue;
+                        // }
+                        model.availableValuesMap = {};
+                        // our map is a little strange.
+                        // we have dataPaletteRefs, which are always ref paths
+                        // we have object ref or names otherwise.
+                        // whether we are using refs or names depends on the 
+                        // config setting. This is because some apps don't yet accept
+                        // names... 
+                        // So our key is either dataPaletteRef or (ref or name)
+                        model.availableValues.forEach(function(objectInfo, index) {
+                            var id;
+                            if (objectInfo.dataPaletteRef) {
+                                id = objectInfo.dataPaletteRef;
+                            } else if (objectRefType === 'ref') {
+                                id = objectInfo.ref;
+                            } else {
+                                id = objectInfo.name;
+                            }
+                            model.availableValuesMap[id] = index;
+                        });
+                        return render()
                             .then(function() {
+                                setControlValue(getModelValue());
                                 autoValidate();
                             });
                     }
                 });
-
         }
 
         // LIFECYCLE API
-        function start() {
+        function start(arg) {
             return Promise.try(function() {
-                bus.on('run', function(message) {
-                    parent = message.node;
-                    if (parent) {
-                        container = parent.appendChild(document.createElement('div'));
-                        dom = Dom.make({ node: container });
+                parent = arg.node;
+                container = parent.appendChild(document.createElement('div'));
+                ui = UI.make({ node: container });
 
-                        var events = Events.make(),
-                            theLayout = layout(events);
+                var events = Events.make(),
+                    theLayout = layout(events);
 
-                        container.innerHTML = theLayout.content;
-                        events.attachEvents(container);
+                container.innerHTML = theLayout.content;
+                events.attachEvents(container);
 
-                        return fetchData()
-                            .then(function(data) {
-                                model.availableValues = data;
-                                render();
-                            })
-                            .then(function() {
-                                bus.on('reset-to-defaults', function(message) {
-                                    resetModelValue();
-                                });
-                                bus.on('update', function(message) {
-                                    setModelValue(message.value);
-                                });
-                                //bus.on('workspace-changed', function (message) {
-                                //    doWorkspaceChanged();
-                                //});
-                                runtime.bus().on('workspace-changed', function(message) {
-                                    doWorkspaceChanged();
-                                });
-                                bus.emit('sync');
-                            });
-                    }
-                });
+                if (config.initialValue !== undefined) {
+                    model.value = config.initialValue;
+                }
+
+                return fetchData()
+                    .then(function(data) {
+                        model.availableValues = data;
+                        return render();
+                    })
+                    .then(function() {
+
+                        bus.on('reset-to-defaults', function() {
+                            resetModelValue();
+                        });
+                        bus.on('update', function(message) {
+                            setModelValue(message.value);
+                        });
+                        runtime.bus().on('workspace-changed', function() {
+                            doWorkspaceChanged();
+                        });
+                        //  bus.emit('sync');
+
+                        setControlValue(getModelValue());
+                        autoValidate();
+                    });
             });
         }
 
+        function stop() {
+            return Promise.try(function() {
+                if (container) {
+                    parent.removeChild(container);
+                }
+            });
+        }
+
+        // INIT
+
+
         return {
-            start: start
+            start: start,
+            stop: stop
         };
     }
 

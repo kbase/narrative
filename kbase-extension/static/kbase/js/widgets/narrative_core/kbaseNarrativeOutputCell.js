@@ -128,7 +128,7 @@ define([
         },
         renderMethodOutputCell: function () {
             var $label = $('<span>').addClass('label label-info').append('Output');
-            this.renderCell('kb-cell-output', 'panel-default', 'kb-out-desc', $label, 'method output');
+            this.renderCell('kb-cell-output', 'panel-default', 'kb-out-desc', $label, 'app output');
             var $cell = this.$elem.closest('.cell');
             $cell.trigger('set-icon.cell', ['<i class="fa fa-2x fa-file-o method-output-icon"></i>']);
         },
@@ -154,7 +154,7 @@ define([
         renderCell: function (baseClass, panelClass, headerClass, $label, titleSuffix) {
             // set up the widget line
             var widget = this.options.widget;
-            var methodName = this.options.title ? this.options.title : 'Unknown method';
+            var methodName = this.options.title ? this.options.title : 'Unknown App';
             var title = methodName;
             if (titleSuffix) {
                 title += ' (' + titleSuffix + ')';
@@ -168,7 +168,17 @@ define([
                 if (!meta.kbase.attributes) {
                     meta.kbase.attributes = {};
                 }
-                meta.kbase.attributes.title = title;
+                /* This is a bit of a hack - if the cell's metadata already has a title,
+                 * then don't change it. It was likely set by the creating App cell.
+                 * BUT this means that if someone manually executes the cell again to show
+                 * a different output, it still won't change, and might be weird.
+                 *
+                 * I suspect that will be a very rare case, and this solves an existing
+                 * problem with App cells, so here it is.
+                 */
+                if (!meta.kbase.attributes.title) {
+                    meta.kbase.attributes.title = title;
+                }
                 this.cell.metadata = meta;
             }
 

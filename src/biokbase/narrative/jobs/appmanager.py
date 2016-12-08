@@ -959,12 +959,12 @@ class AppManager(object):
                 p_value = p['constant_value']
             if 'generated_value' in p and p_value is None:
                 p_value = self._generate_input(p['generated_value'])
-            if 'target_type_transform' in p:
-                spec_param = None
-                if input_param_id:
-                    spec_param = spec_params[input_param_id]
-                p_value = self._transform_input(p['target_type_transform'], p_value,
-                                                spec_param)
+
+            spec_param = None
+            if input_param_id:
+                spec_param = spec_params[input_param_id]
+            p_value = self._transform_input(p.get('target_type_transform'), p_value,
+                                            spec_param)
 
             # get position!
             arg_position = p.get('target_argument_position', 0)

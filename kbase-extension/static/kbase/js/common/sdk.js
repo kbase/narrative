@@ -445,7 +445,7 @@ define([
             case 'struct':
                 break;
             case 'unspecified':
-                // a bunch of field types are untyped, and there are no 
+                // a bunch of field types are untyped, and there are no
                 // options for them...
                 switch (fieldType) {
                     case 'text':
@@ -802,7 +802,7 @@ define([
             groups = sdkAppSpec.parameter_groups;
             sdkAppSpec.parameter_groups.forEach(function(group) {
                 convertGroup(group, parameterSpecs);
-                // don't know how the group is ordered in the spec ... so just append it later.            
+                // don't know how the group is ordered in the spec ... so just append it later.
             });
         }
 

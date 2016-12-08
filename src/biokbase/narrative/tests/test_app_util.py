@@ -190,6 +190,7 @@ class AppUtilTestCase(unittest.TestCase):
     def test_map_outputs_from_state_simple(self):
         os.environ['KB_WORKSPACE_ID'] = self.workspace
         app_spec = {
+            'parameters': [],
             'behavior': {
                 'output_mapping': [
                     {
@@ -207,6 +208,7 @@ class AppUtilTestCase(unittest.TestCase):
                 'input': None,
                 'output': 'testOutputWidget'
             },
+            'parameters': [],
             'behavior': {
                 'kb_service_output_mapping': [
                     {

@@ -9,6 +9,8 @@ define([
     Promise
 ) {
     'use strict';
+    
+    var globalUrlLookupCache = {}; // "<module>:<version>" -> {'cached_url': <url>, 'last_refresh_time': <milliseconds>}
 
     function GenericClient(url, auth, auth_cb, use_url_lookup, timeout, async_job_check_time_ms) {
         this.url = url;
@@ -27,7 +29,8 @@ define([
 
         var _auth = auth ? auth : { 'token': '', 'user_id': '' };
         var _auth_cb = auth_cb;
-
+        
+        var refresh_cycle_ms = 300000;
 
         this.sync_call = function (service_method, param_list, _callback, _errorCallback, service_version) {
             if (Object.prototype.toString.call(param_list) !== '[object Array]') {
@@ -45,29 +48,77 @@ define([
             var _url = lookup_url;
             if (_use_url_lookup) {
                 var deferred = $.Deferred();
+                if (typeof _callback === 'function') {
+                    deferred.done(_callback);
+                }
+                if (typeof _errorCallback === 'function') {
+                    deferred.fail(_errorCallback);
+                }
                 var module_name = service_method.split('.')[0];
-                json_call_ajax(_url, 'ServiceWizard.get_service_status', [{
-                    module_name: module_name,
-                    version: service_version || null
-                }], 1, function (service_status_ret) {
+                get_cached_url(module_name, service_version, function (service_status_ret) {
                     _url = service_status_ret.url;
-                    json_call_ajax(_url, service_method, param_list, 0, _callback, _errorCallback, deferred);
+                    var refreshed = service_status_ret.refreshed;
+                    json_call_ajax(_url, service_method, param_list, 0, function(result) {
+                        deferred.resolve(result);
+                    }, function (err) {
+                        if (refreshed) {
+                            deferred.reject({status: 500, error: err});
+                        } else {
+                            // We need to refresh URL finally because we tried to use cached URL and failed.
+                            refresh_cached_url(module_name, service_version, function (service_status_ret2) {
+                                _url = service_status_ret2.url;
+                                json_call_ajax(_url, service_method, param_list, 0, function(result) {
+                                    deferred.resolve(result);
+                                }, function (err) {
+                                    deferred.reject({status: 500, error: err});
+                                });
+                            }, function (err) {
+                                deferred.reject({status: 500, error: err});
+                            });
+                        }
+                    });
                 }, function (err) {
-                    if (_errorCallback) {
-                        _errorCallback(err);
-                    } else {
-                        deferred.reject({
-                            status: 500,
-                            error: err
-                        });
-                    }
+                    deferred.reject({status: 500, error: err});
                 });
-                return deferred;
+                return Promise.resolve(deferred.promise());
             } else {
                 return json_call_ajax(_url, service_method, param_list, 0, _callback, _errorCallback);
             }
         };
 
+        function get_cached_url(module_name, version, callback, errorCallback) {
+            var current_time_ms = +(new Date());
+            var cached = globalUrlLookupCache[module_name + ':' + (version ? version : '')];
+            if (cached) {
+                var last_refresh_time = cached['last_refresh_time'];
+                if (last_refresh_time && last_refresh_time + refresh_cycle_ms > current_time_ms) {
+                    callback({'url': cached['cached_url'], 'refreshed': false});
+                    return;
+                }
+            }
+            refresh_cached_url(module_name, version, callback, errorCallback);
+        }
+
+        function refresh_cached_url(module_name, version, callback, errorCallback) {
+            var start_time = +(new Date());
+            json_call_ajax(lookup_url, 'ServiceWizard.get_service_status', [{
+                module_name: module_name,
+                version: version || null
+            }], 1, function (service_status_ret) {
+                var _url = service_status_ret.url;
+                var cached = globalUrlLookupCache[module_name + ':' + (version ? version : '')];
+                if (!cached) {
+                    cached = {};
+                    globalUrlLookupCache[module_name + ':' + (version ? version : '')] = cached;
+                }
+                cached['cached_url'] = _url;
+                var end_time = +(new Date());
+                cached['last_refresh_time'] = end_time;
+                console.log("GenericClient: URL lookup for ", {'module': module_name, 
+                    'version': version}, ", time=" + (end_time - start_time) + " ms");
+                callback({'url': cached['cached_url'], 'refreshed': true});
+            }, errorCallback);
+        }
 
         /*
          * JSON call using jQuery method.

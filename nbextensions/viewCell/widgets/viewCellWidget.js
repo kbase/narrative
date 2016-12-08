@@ -1194,17 +1194,8 @@ define([
                     throw new Error('Parameter ' + key + ' is not defined in the parameter map');
                 }
 
-                // TODO: this should be a spec method - export
-                if (paramSpec.data.type === 'textsubdata') {
-                    if (value && value instanceof Array) {
-                        value = value.join(',');
-                    }
-                }
-
                 paramsToExport[key] = value;
             });
-
-            // console.log('EXPORTING', model.getItem('params'), paramsToExport);
 
             return paramsToExport;
         }

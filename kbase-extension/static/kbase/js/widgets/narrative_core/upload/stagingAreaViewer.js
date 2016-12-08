@@ -71,14 +71,15 @@ define([
             .then(function(files) {
                 return Promise.try(function() {
                     files.forEach(function(file) {
-                        if (!file.isFolder) {
-                            file.imported = {
-                                narName: 'narrative',
-                                narUrl: '/narrative/ws.123.obj.456',
-                                objUrl: '/#dataview/123/objectName',
-                                objName: 'myObject',
-                                reportRef: 'reportRef'
-                            }
+                        if (file.isFolder) {
+                            return;
+                        }
+                        file.imported = {
+                            narName: 'narrative',
+                            narUrl: '/narrative/ws.123.obj.456',
+                            objUrl: '/#dataview/123/objectName',
+                            objName: 'myObject',
+                            reportRef: 'reportRef'
                         }
                     });
                     return files;

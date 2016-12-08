@@ -1,5 +1,9 @@
 @import url("//fonts.googleapis.com/css?family=Roboto");
 
+.kb-dropzone div#upload-message {
+    font-family: "OxygenBold", Arial, sans-serif;
+}
+
 .kb-data-staging-table-name {
     white-space: nowrap;
     overflow: hidden;

@@ -25,14 +25,17 @@ define([
         input = t('input');
 
     function factory(config) {
-        var constraints = config.parameterSpec.data.constraints,
-            parent,
+            var parent,
             container,
             bus = config.bus,
             ui,
             model = {
                 value: undefined
             };
+            var constraints = {};
+            if (config.parameterSpec && config.parameterSpec.data) {
+                constraints = config.parameterSpec.data.constraints;
+            }
 
         // CONTROL
 
@@ -73,9 +76,9 @@ define([
          *
          * Text fields can occur in multiples.
          * We have a choice, treat single-text fields as a own widget
-         * or as a special case of multiple-entry -- 
+         * or as a special case of multiple-entry --
          * with a min-items of 1 and max-items of 1.
-         * 
+         *
          *
          */
 
@@ -219,7 +222,7 @@ define([
 
         function stop() {
             return Promise.try(function () {
-                // nothing to do. 
+                // nothing to do.
             });
         }
 

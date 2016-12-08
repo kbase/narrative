@@ -2,6 +2,7 @@
 /*jslint white:true,browser:true*/
 
 define([
+    'require',
     'bluebird',
     'uuid',
     'common/runtime',
@@ -18,11 +19,12 @@ define([
     'common/ui',
     'common/fsm',
     'google-code-prettify/prettify',
-    '../editorCell-fsm',
+    './fsm',
 
     'css!google-code-prettify/prettify.css',
     'css!font-awesome.css'
 ], function(
+    require,
     Promise,
     Uuid,
     Runtime,
@@ -599,6 +601,7 @@ define([
                                 ui.buildCollapsiblePanel({
                                     title: span(['Currently Editing ', span({ dataElement: 'name', style: { textDecoration: 'underline' } })]),
                                     name: 'currently-editing',
+                                    collapsed: true,
                                     hidden: false,
                                     type: 'default',
                                     classes: ['kb-panel-container'],
@@ -626,6 +629,7 @@ define([
                                     title: 'Status',
                                     name: 'editor-status',
                                     hidden: false,
+                                    collapsed: true,
                                     type: 'default',
                                     classes: ['kb-panel-container'],
                                     body: div([
@@ -663,6 +667,9 @@ define([
                                                         height: '10px'
                                                     }
                                                 })
+                                            ]),
+                                            div({ style: { fontFamily: 'monospace' } }, [
+                                                'FSM: ', span({ dataElement: 'fsm' })
                                             ])
                                         ])
                                         // div(['debug: ', span({dataElement: 'debug'}, 'debug here')])
@@ -989,6 +996,8 @@ define([
                     setStatusFlag(flag, flagged);
                 }
             });
+            console.log('FSM', fsm.getCurrentState());
+            ui.setContent('flags.fsm', JSON.stringify(fsm.getCurrentState().state));
 
 
         }
@@ -1271,7 +1280,7 @@ define([
         function loadUpdateEditor() {
             return new Promise(function(resolve, reject) {
                 ui.setContent('editor.widget', html.loading());
-                require(['nbextensions/editorCell/widgets/readsSetUpdateEditor'], function(Widget) {
+                require(['./update'], function(Widget) {
                     // TODO: widget should make own bus.
                     var bus = runtime.bus().makeChannelBus(null, 'Parent comm bus for input widget'),
                         widget = Widget.make({
@@ -1287,6 +1296,7 @@ define([
                         bus: bus,
                         instance: widget
                     };
+
                     bus.on('parameter-sync', function(message) {
                         var value = model.getItem(['params', message.parameter, 'value']);
                         bus.send({
@@ -1393,7 +1403,7 @@ define([
             return new Promise(function(resolve, reject) {
                 ui.setContent('editor.widget', html.loading());
 
-                require(['nbextensions/editorCell/widgets/readsSetCreateEditor'], function(Widget) {
+                require(['./create'], function(Widget) {
                     // TODO: widget should make own bus.
                     var bus = runtime.bus().makeChannelBus(null, 'Parent comm bus for input widget'),
                         widget = Widget.make({
@@ -1547,6 +1557,7 @@ define([
                     return loadUpdateEditor();
                 })
                 .then(function() {
+                    ui.collapsePanel('edit-object-selector');
                     evaluateAppState(true);
                 })
                 .catch(function(err) {
@@ -1618,6 +1629,9 @@ define([
         function doSaveReadsSet() {
             return Promise.try(function() {
                 cell.execute();
+                var state = JSON.parse(JSON.stringify(fsm.getCurrentState.state));
+                state.changed = false;
+                fsm.newState(state);
             });
         }
 
@@ -1638,7 +1652,7 @@ define([
         function loadEditObjectSelector() {
             return new Promise(function(resolve, reject) {
                 require([
-                    'nbextensions/editorCell/widgets/editObjectSelector'
+                    './selector'
                 ], function(Widget) {
                     var widget = Widget.make({
                         workspaceInfo: workspaceInfo,
@@ -1700,10 +1714,12 @@ define([
                 var validationResult = validateModel();
                 if (validationResult.isValid) {
                     buildPython(cell, utils.getCellMeta(cell, 'kbase.attributes.id'), editorState.getItem('app'), modelToParams());
-                    fsm.newState({ mode: 'editing', params: 'complete', data: 'changed' });
+                    fsm.updateState({ params: 'complete' });
+                    // fsm.newState({ mode: 'editing', params: 'complete', data: 'changed' });
                 } else {
                     resetPython(cell);
-                    fsm.newState({ mode: 'editing', params: 'incomplete', data: 'changed' });
+                    // fsm.newState({ mode: 'editing', params: 'incomplete', data: 'changed' });
+                    fsm.updateState({ params: 'incomplete' });
                 }
             }
             renderUI();

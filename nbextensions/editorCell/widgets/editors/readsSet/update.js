@@ -13,7 +13,7 @@ define([
     'widgets/appWidgets2/fieldWidgetCompact',
     'widgets/appWidgets2/inputParamResolver',
     'common/runtime',
-    './readsSetModel'
+    './model'
     // All the input widgets
 
 ], function(

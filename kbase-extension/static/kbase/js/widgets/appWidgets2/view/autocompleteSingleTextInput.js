@@ -172,7 +172,7 @@ define([
                                         start: 0
                                     }]).then(function(d) {
                                         onSuccess(d[0]);
-                                    }).fail(function(e) {
+                                    }).catch(function(e) {
                                         onError(e);
                                     });
                                 }

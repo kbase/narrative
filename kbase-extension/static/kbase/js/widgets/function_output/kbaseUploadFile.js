@@ -2,7 +2,7 @@
  * KBase widget to upload content.
  */
 (function($, undefined) {
-    $.KBWidget({
+    return KBWidget({
         name: 'UploadFileWidget',
         version: '1.0.0',
         options: {

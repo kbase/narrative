@@ -4,17 +4,28 @@
  * @public
  */
 
-define(['jquery',
-        'narrativeConfig',
-        'kbwidget',
-        'kbaseNarrativeParameterInput',
-        'select2',
-        'handlebars'],
-function($, Config) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'narrativeConfig',
+		'handlebars',
+		'kbaseNarrativeParameterInput',
+		'select2'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Config,
+		Handlebars,
+		kbaseNarrativeParameterInput,
+		select2
+	) {
     'use strict';
-    $.KBWidget({
+    return KBWidget({
         name: "kbaseNarrativeParameterTextSubdataInput",
-        parent: "kbaseNarrativeParameterInput",
+        parent : kbaseNarrativeParameterInput,
         version: "1.0.0",
         options: {
             loadingImage: Config.get('loading_gif'),
@@ -270,6 +281,7 @@ function($, Config) {
         processSubdataQueryResult : function(result, path_to_subdata, selection_id, selection_description, includeWsId, text_template) {
             var self = this;
 
+console.log("h7", Handlebars, text_template);
             var hb_template = Handlebars.compile(text_template);
 
             // loop over subdata from every object

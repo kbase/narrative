@@ -1,133 +1,140 @@
- /**
+/**
  * @author Pavel Novichkov <psnovichkov@lbl.gov>
  *
  * This shows a set of dropdowns dynamically defined by the dataModel provided in the options.
  * The dataModel should have getDropdownSpecs method providing an array of spec files.
  *
  */
-define(['jquery', 'kbwidget', 'kbaseNarrativeParameterDropdownInput'],
-    function( $ ) {
-    
-    $.KBWidget({
+define(
+    [
+        'kbwidget',
+        'bootstrap',
+        'jquery',
+        'kbaseNarrativeParameterDropdownInput',
+        'kbaseNarrativeParameterInput',
+    ], function (
+    KBWidget,
+    bootstrap,
+    $,
+    kbaseNarrativeParameterDropdownInput,
+    kbaseNarrativeParameterInput
+    ) {
+
+    return KBWidget({
         name: "kbaseNarrativeParameterCustomDropdownGroupInput",
-        parent: "kbaseNarrativeParameterInput",  
+        parent: kbaseNarrativeParameterInput,
         version: "1.0.0",
         options: {
             loadingImage: "../images/ajax-loader.gif",
             isInSidePanel: false,
             dataModel: null
         },
-        
-        $optionsDiv: null,        
+        $optionsDiv: null,
         enabled: true,
         value: true,
-               
         parameters: [],
-        
-        show: function(loadSpecs){
+        show: function (loadSpecs) {
             var self = this;
             self.reset();
-            
+
             self.$optionsDiv.append($('<div>').append('<hr>'));
             var specs = [];
-            if(loadSpecs){
+            if (loadSpecs) {
                 specs = loadSpecs;
-            } else{
+            } else {
                 specs = self.options.dataModel.getDropdownSpecs();
             }
-            
-            if(specs.length > 0){
-                self.$optionsDiv.append($('<div>').append(self.spec.ui_name + ":"));            
-                for(var i in specs){
+
+            if (specs.length > 0) {
+                self.$optionsDiv.append($('<div>').append(self.spec.ui_name + ":"));
+                for (var i in specs) {
                     self.addParameterDiv(specs[i], "kbaseNarrativeParameterDropdownInput", self.$optionsDiv);
                 }
-            } else{
-                self.$optionsDiv.append($('<div>').append(self.spec.ui_name + ": no elements"));            
+            } else {
+                self.$optionsDiv.append($('<div>').append(self.spec.ui_name + ": no elements"));
             }
-            
+
         },
-        reset: function(){
+        reset: function () {
             this.$optionsDiv.empty();
             this.parameters = [];
-        },               
-        addParameterDiv: function(paramSpec, widgetName, $optionsDiv){
+        },
+        addParameterDiv: function (paramSpec, widgetName, $optionsDiv) {
             var self = this;
             var $stepDiv = $('<div>');
             var $widget = $stepDiv[widgetName](
                 {
-                    loadingImage: self.options.loadingImage, 
-                    parsedParameterSpec: paramSpec, 
+                    loadingImage: self.options.loadingImage,
+                    parsedParameterSpec: paramSpec,
                     isInSidePanel: self.options.isInSidePanel
                 });
-            this.parameters.push({id:paramSpec.id, widget:$widget, name: paramSpec.ui_name, spec: paramSpec});
+            this.parameters.push({id: paramSpec.id, widget: $widget, name: paramSpec.ui_name, spec: paramSpec});
             $optionsDiv.append($stepDiv);
-        },               
-        
-        render: function() {
+        },
+        render: function () {
             var self = this;
-            
+
             self.$optionsDiv = $('<div>');
-            self.$mainPanel.append(self.$optionsDiv );
-        },  
-        
-        getState: function() {
+            self.$mainPanel.append(self.$optionsDiv);
+        },
+        getState: function () {
             var state = {
-                specs : [],
-                value : this.getParameterValue()
+                specs: [],
+                value: this.getParameterValue()
             };
-            
-            for(var i in this.parameters){
+
+            for (var i in this.parameters) {
                 var param = this.parameters[i]
                 state.specs.push(param.spec);
             }
             return state;
         },
-        loadState: function(state) {
+        loadState: function (state) {
             this.show(state.specs);
-            this.setParameterValue(state.value);            
+            this.setParameterValue(state.value);
         },
-        refresh: function() { 
+        refresh: function () {
         },
-        isValid: function() {
-            return { isValid: true, errormssgs:[]};            
+        isValid: function () {
+            return {isValid: true, errormssgs: []};
         },
-        disableParameterEditing: function() { 
-            for(var i in this.parameters){
+        disableParameterEditing: function () {
+            for (var i in this.parameters) {
                 var param = this.parameters[i];
                 param.widget.disableParameterEditing();
             }
         },
-        enableParameterEditing: function() {
-            for(var i in this.parameters){
+        enableParameterEditing: function () {
+            for (var i in this.parameters) {
                 var param = this.parameters[i];
                 param.widget.enableParameterEditing();
             }
         },
-        setParameterValue: function(value) {
-            for(var i in this.parameters){
+        setParameterValue: function (value) {
+            for (var i in this.parameters) {
                 var param = this.parameters[i];
                 var paramValue = value[param.name];
                 param.widget.setParameterValue(paramValue);
             }
         },
-        getParameterValue: function() {
+        getParameterValue: function () {
             var value = {};
-            for(var i in this.parameters){
+            for (var i in this.parameters) {
                 var param = this.parameters[i];
                 value[param.name] = param.widget.getParameterValue();
             }
             return value;
         },
-        prepareValueBeforeRun: function(methodSpec) {
+        prepareValueBeforeRun: function (methodSpec) {
         },
-        lockInputs: function() {
+        lockInputs: function () {
             this.disableParameterEditing();
         },
-        unlockInputs: function() {
+        unlockInputs: function () {
             this.enableParameterEditing();
-        },       
-        addInputListener: function(onChangeFunc) {
-            this.$elem.find("#"+this.spec.id).on("change",onChangeFunc);
-        }        
+        },
+        addInputListener: function (onChangeFunc) {
+            this.$elem.find("#" + this.spec.id).on("change", onChangeFunc);
+        }
     });
-});    
+});

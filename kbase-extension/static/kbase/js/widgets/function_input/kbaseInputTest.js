@@ -1,20 +1,31 @@
 /*global define*/
 /*jslint white: true*/
-define(['jquery',
-        'narrativeConfig',
-        'bluebird',
-        'kbwidget',
-        'kbaseNarrativeMethodInput',
-        'kbaseNarrativeInput',
-        'kbaseNarrativeParameterTextInput',
-        'kbase-client-api'],
-function ($,
-          Config,
-          Promise) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'narrativeConfig',
+		'bluebird',
+		'kbaseNarrativeMethodInput',
+		'kbaseNarrativeInput',
+		'kbaseNarrativeParameterTextInput',
+		'kbase-client-api'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Config,
+		Promise,
+		kbaseNarrativeMethodInput,
+		kbaseNarrativeInput,
+		kbaseNarrativeParameterTextInput,
+		kbase_client_api
+	) {
     'use strict';
-    $.KBWidget({
+    return KBWidget({
         name: 'kbaseInputTest',
-        parent: 'kbaseNarrativeMethodInput',
+        parent : kbaseNarrativeMethodInput,
 
         mediaChooserWidget: null,
         $mediaDisplayPanel: null,
@@ -40,8 +51,7 @@ function ($,
 
             // Creates the media chooser widget, which is just a 'text' input
             // This was originally designed to deal with the parameter spec object.
-            this.mediaChooserWidget = $mediaChooserPanel.kbaseNarrativeParameterTextInput(
-                {
+            this.mediaChooserWidget =  new kbaseNarrativeParameterTextInput($mediaChooserPanel, {
                     loadingImage: Config.get('loading_gif'),
                     parsedParameterSpec: this.options.method.parameters[0],
                     isInSidePanel: false

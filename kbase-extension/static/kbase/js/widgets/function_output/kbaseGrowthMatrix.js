@@ -1,77 +1,140 @@
- 
-
-
-define([
-        'jquery', 
-        'plotly',
-        'kbwidget', 
-        'kbaseGrowthMatrixAbstract', 
-        'kbaseTabs',
-        'jquery-dataTables',
-        'jquery-dataTables-bootstrap' 
-        ], function($,Plotly) {
-    $.KBWidget({
+ define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'plotly',
+		'kbaseGrowthMatrixAbstract',
+		'kbaseTabs',
+		'jquery-dataTables',
+		'jquery-dataTables-bootstrap'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Plotly,
+		kbaseGrowthMatrixAbstract,
+		kbaseTabs,
+		jquery_dataTables,
+		bootstrap
+	) {
+    return KBWidget({
         name: 'kbaseGrowthMatrix',
-        parent: 'kbaseGrowthMatrixAbstract',
+        parent : kbaseGrowthMatrixAbstract,
         version: '1.0.0',
 
-        setTestParameters: function(){
-//            this.options.columnIds = 'C1,C3';
-        },        
-        
         render: function(){
-            var self = this;
             var pref = self.pref;
-            
+
+            // Prepare data for visualization
+            var timePoints = this.getTimePoints(this.matrix);
+            var samples = this.buildSamples(this.matrix, this.matrix.data.col_ids, timePoints);
+            var series = this.groupSamplesIntoSeries(this.matrix, samples, timePoints);
+
+            var timeSeriesSummary = this.getNumericProperyStat(this.matrix.metadata.row_metadata, 'TimeSeries', 'Time');
+            var samplesSummary = this.getSamplesSummary(samples);
+
+            this.loading(false);
             var $container = $("<div/>");
             this.$elem.append( $container );
-    
-            ///////////////////////////////////// Instantiating Tabs ////////////////////////////////////////////
-            $container.empty();
-            var $tabPane = $('<div id="'+pref+'tab-content">');
-            $container.append($tabPane);
-            $tabPane.kbaseTabs({canDelete : true, tabs : []});   
-            
-            ///////////////////////////////////// Overview table ////////////////////////////////////////////           
+
+            // Create a tabPane for all tabs
+            var $tabPane = $('<div>')
+                .attr( 'id', pref+'tab-content')
+                .appendTo($container);
+            var tabWidget = new kbaseTabs($tabPane, {canDelete : true, tabs : []});
+
+            // Build  matrix overview tab
             var $tabOverview = $("<div/>");
-            $tabPane.kbaseTabs('addTab', {tab: 'Overview', content: $tabOverview, canDelete : false, show: true});
-            var $tableOverview = $('<table class="table table-striped table-bordered" '+
-                'style="width: 100%; margin-left: 0px; margin-right: 0px;" id="'+pref+'overview-table"/>');
-            $tabOverview.append($tableOverview);
-            
-                                
-            for(var i in self.growthMatrix.metadata.matrix_metadata){
-                var md = self.growthMatrix.metadata.matrix_metadata[i];
-                
-                var label = md.entity;
-                if( md.property_name != undefined && md.property_name != ''){
-                    label += "." + md.property_name;
-                }
-                
-                $tableOverview .append( self.makeRow( 
-                    label, 
-                    md.property_value + (md.property_unit ? md.property_unit : "" ) ) );                
+            tabWidget.addTab({tab: 'Overview', content: $tabOverview, canDelete : false, show: true});
+            this.buildMatrixOverview( $tabOverview );
+
+
+            // Build  matrix summary tab
+            var $tabSummary = $("<div/>");
+            tabWidget.addTab({tab: 'Summary', content: $tabSummary, canDelete : false, show: false});
+            this.buildMatrixSummary($tabSummary, timeSeriesSummary, samplesSummary, series);
+
+
+            // Build samples tab
+            var $tabSamples = $("<div/>");
+            tabWidget.addTab({tab: 'Samples', content: $tabSamples, canDelete : false, show: false});
+            this.buildSamplesTable($tabSamples, samples);
+
+            // Build  matrix series tab
+            var $tabSeries = $("<div/>");
+            tabWidget.addTab({tab: 'Series', content: $tabSeries, canDelete : false, show: false});
+            this.buildSeriesTable($tabSeries, series);
+        },
+
+        buildMatrixSummary: function($tab, timeSeriesSummary, samplesSummary, series){
+            var pref = this.pref;
+
+            // Conditions summary
+            var $container = $("<div>")
+                .css('margin-top','1em')
+                .appendTo($tab);
+
+
+            $("<div>")
+                .append( "Samples/Series summary")
+                .css('font-style', 'italic')
+                .appendTo($container);
+
+            var $tableConditionsSummary = $('<table>')
+                .attr('id', pref+'conditions-summary-table')
+                .addClass("table table-striped table-bordered")
+                .css('width', '100%')
+                .css('margin-left', '0px' )
+                .css('margin-right', '0px')
+                .appendTo($container);
+
+
+
+            $tableConditionsSummary
+                .append( this.makeRow(
+                    "Number of samples",
+                    samplesSummary.samplesCount ) )
+                .append( this.makeRow(
+                    "Number of series",
+                    series.length ) );
+
+            for(var i in samplesSummary.properties){
+                var propSummary = samplesSummary.properties[i];
+                $tableConditionsSummary
+                    .append( this.makeRow(
+                        propSummary.propName + (propSummary.propertyUnit ? " (" + propSummary.propertyUnit + ")" : "" ),
+                        propSummary.valuesString ) );
             }
-            $tableOverview
-                .append( self.makeRow( 
-                    'Number of conditions', 
-                    self.growthMatrix.data.col_ids.length ) )
-                .append( self.makeRow( 
-                    'Number of time points', 
-                    self.growthMatrix.data.row_ids.length ) );
-            
 
-            ///////////////////////////////////// Domains table ////////////////////////////////////////////          
-            var $tabConditions = $("<div/>");
-            $tabPane.kbaseTabs('addTab', {tab: 'Conditions', content: $tabConditions, canDelete : false, show: false});
-            self.buildConditionsTable($tabConditions);
-            
-//            var $tableConditions = $('<table class="table table-striped table-bordered" '+
-//                'style="width: 100%; margin-left: 0px; margin-right: 0px;" id="'+pref+'conditions-table"/>');
 
-            
-            
+            // Time points summary
+            $("<div>")
+                .append("Time course summary")
+                .css('font-style', 'italic')
+                .css('margin-top', '3em')
+                .appendTo($container);
+
+            var $tableTimeSummary =  $('<table>')
+                .attr('id', pref+'time-summary-table')
+                .addClass("table table-striped table-bordered")
+                .css('width', '100%')
+                .css('margin-left', '0px' )
+                .css('margin-right', '0px')
+                .appendTo($container);
+
+            $tableTimeSummary
+                .append( this.makeRow(
+                    'Number of points',
+                    this.matrix.data.row_ids.length ) )
+                .append( this.makeRow(
+                    'Min time (' + timeSeriesSummary.valueUnit + ')',
+                    timeSeriesSummary.valueMin ) )
+                .append( this.makeRow(
+                    'Max time (' + timeSeriesSummary.valueUnit + ')',
+                    timeSeriesSummary.valueMax ) );
         }
-    });        
-}); 
+
+    });
+});
 

@@ -1,8 +1,21 @@
-define(['jquery', 'kbwidget', 'd3', 'kbaseContigBrowserButtons'], function($) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'd3',
+		'kbaseContigBrowserButtons'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		d3,
+		KBaseContigBrowserButtons
+	) {
     return function() {
         this.data = {
-            name: "ContigBrowserPanel", 
-            parent: "kbaseWidget",
+            name: "ContigBrowserPanel",
+
             version: "1.0.0",
             options: {
                 contig: null,
@@ -53,7 +66,7 @@ define(['jquery', 'kbwidget', 'd3', 'kbaseContigBrowserButtons'], function($) {
 
                 var self = this;
                 if (this.options.showButtons) {
-                    this.$elem.KBaseContigBrowserButtons({ browser: self });
+                    new KBaseContigBrowserButtons(this.$elem, { browser: self });
                 }
 
                 /*this.options.onClickFunction = function(svgElement, feature) {
@@ -64,7 +77,7 @@ define(['jquery', 'kbwidget', 'd3', 'kbaseContigBrowserButtons'], function($) {
 
 
             /**
-             * 
+             *
              */
             render: function() {
                 this.loading(false);
@@ -183,7 +196,7 @@ define(['jquery', 'kbwidget', 'd3', 'kbaseContigBrowserButtons'], function($) {
                             //     return true;
                             // }
                         }
-                        
+
                     }
                     return false;
                 };
@@ -197,9 +210,10 @@ define(['jquery', 'kbwidget', 'd3', 'kbaseContigBrowserButtons'], function($) {
             setContig : function() {
             	var self = this;
                 self.contigLength = self.options.contig.length;
-                self.options.start = 0;
-                if (self.options.length > self.contigLength)
-                	self.options.length = self.contigLength;
+                if(!self.options.start)
+                    self.options.start = 0;
+                if (self.options.length + self.options.start > self.contigLength)
+                	self.options.length = self.contigLength-self.options.start;
 
                 if (this.options.centerFeature) {
                     this.setCenterFeature();
@@ -213,8 +227,9 @@ define(['jquery', 'kbwidget', 'd3', 'kbaseContigBrowserButtons'], function($) {
                 // if we're getting a new center feature, make sure to update the operon features, too.
                 if (centerFeature)
                     this.options.centerFeature = centerFeature;
+                this.update();
 
-                var self = this;
+               /* var self = this;
                 this.proteinInfoClient.fids_to_operons([this.options.centerFeature],
                     // on success
                     function(operonGenes) {
@@ -223,9 +238,10 @@ define(['jquery', 'kbwidget', 'd3', 'kbaseContigBrowserButtons'], function($) {
                     },
                     // on error
                     function(error) {
+                        console.error(error);
                         self.throwError(error);
                     }
-                );
+                );*/
             },
 
             setRange : function(start, length) {
@@ -344,16 +360,16 @@ define(['jquery', 'kbwidget', 'd3', 'kbaseContigBrowserButtons'], function($) {
             		}
             		//console.log('gene: start=' + start + ', stop=' + stop + ', maxStart=' + maxStart + ", minStop=" + minStop);
             		if (start < maxStart && stop > minStop) {
-            			features.push({feature_id : gene.id, feature_location: gene.location, 
+            			features.push({original_data: gene, feature_id : gene.id, feature_location: gene.location,
             				isInOperon: 0, feature_function: gene['function']});
             		}
             	}
             	callback(features);
             },
-            
+
             adjustHeight : function() {
-                var neededHeight = this.numTracks * 
-                                   (this.options.trackThickness + this.options.trackMargin) + 
+                var neededHeight = this.numTracks *
+                                   (this.options.trackThickness + this.options.trackMargin) +
                                    this.options.topMargin + this.options.trackMargin;
 
                 if (neededHeight > this.svg.attr("height")) {
@@ -379,31 +395,33 @@ define(['jquery', 'kbwidget', 'd3', 'kbaseContigBrowserButtons'], function($) {
                              .classed("kbcb-operon", function(d) { return self.isOperonFeature(d); })
                              .classed("kbcb-center", function(d) { return self.isCenterFeature(d); })
                              .attr("id", function(d) { return d.feature_id; })
-                             .on("mouseover", 
-                                    function(d) { 
-                                        d3.select(this).style("fill", d3.rgb(d3.select(this).style("fill")).darker()); 
+                             .on("mouseover",
+                                    function(d) {
+                                        d3.select(this).style("fill", d3.rgb(d3.select(this).style("fill")).darker());
+                                        d3.select(this).style("cursor", "pointer")
                                         self.tooltip = self.tooltip.text(d.feature_id + ": " + d.feature_function);
-                                        return self.tooltip.style("visibility", "visible"); 
+                                        return self.tooltip.style("visibility", "visible");
                                     }
                                 )
-                             .on("mouseout", 
-                                    function() { 
-                                        d3.select(this).style("fill", d3.rgb(d3.select(this).style("fill")).brighter()); 
-                                        return self.tooltip.style("visibility", "hidden"); 
+                             .on("mouseout",
+                                    function() {
+                                        d3.select(this).style("fill", d3.rgb(d3.select(this).style("fill")).brighter());
+                                        d3.select(this).style("cursor", "default")
+                                        return self.tooltip.style("visibility", "hidden");
                                     }
                                 )
-                             .on("mousemove", 
-                                    function() { 
+                             .on("mousemove",
+                                    function() {
                                         return self.tooltip.style("top", (d3.event.pageY+15) + "px").style("left", (d3.event.pageX-10)+"px");
                                     }
                                 )
-                             .on("click", 
-                                    function(d) { 
+                             .on("click",
+                                    function(d) {
                                         if (self.options.onClickFunction) {
                                             self.options.onClickFunction(this, d);
                                         }
                                         else {
-                                            self.highlight(this, d); 
+                                            self.highlight(this, d);
                                         }
                                     }
                                 );
@@ -415,17 +433,16 @@ define(['jquery', 'kbwidget', 'd3', 'kbaseContigBrowserButtons'], function($) {
 
 
 
-                
                 self.xScale = self.xScale
                                   .domain([self.options.start, self.options.start + self.options.length]);
-                
-                
+
+
 
                 self.xAxis = self.xAxis
                                  .scale(self.xScale);
-                
+
                 self.axisSvg.call(self.xAxis);
-                
+
                 self.resize();
                 this.loading(true);
             },
@@ -459,7 +476,7 @@ define(['jquery', 'kbwidget', 'd3', 'kbaseContigBrowserButtons'], function($) {
                         return a[0] - b[0];
                     });
 
-                    var mid = this.calcYCoord(feature.feature_location[0], feature.track) + 
+                    var mid = this.calcYCoord(feature.feature_location[0], feature.track) +
                               this.calcHeight(feature.feature_location[0])/2;
 
                     for (var i=0; i<coords.length-1; i++) {
@@ -521,7 +538,7 @@ define(['jquery', 'kbwidget', 'd3', 'kbaseContigBrowserButtons'], function($) {
                 if (location[2] === "-")
                     x = location[1] - location[3] + 1;
 
-                return (x - this.options.start) / this.options.length * this.options.svgWidth; // + this.options.leftMargin;    
+                return (x - this.options.start) / this.options.length * this.options.svgWidth; // + this.options.leftMargin;
             },
 
             calcYCoord : function(location, track) {
@@ -557,7 +574,7 @@ define(['jquery', 'kbwidget', 'd3', 'kbaseContigBrowserButtons'], function($) {
                 // unhighlight others - only highlight one at a time.
                 // if ours is highlighted, recenter on it.
 
-                
+
                 this.recenter(feature);
                 return; // skip the rest for now.
 
@@ -582,7 +599,7 @@ define(['jquery', 'kbwidget', 'd3', 'kbaseContigBrowserButtons'], function($) {
                     this.options.onClickUrl(feature.feature_id);
                 else
                     this.update(true);
-            },      
+            },
 
             resize : function() {
                 var newWidth = Math.min(this.$elem.parent().width(), this.options.svgWidth);
@@ -619,7 +636,7 @@ define(['jquery', 'kbwidget', 'd3', 'kbaseContigBrowserButtons'], function($) {
             },
 
             /**
-             * Moves the viewport to the right end (furthest downstream) of the contig, maintaining the 
+             * Moves the viewport to the right end (furthest downstream) of the contig, maintaining the
              * current view window size.
              * @method
              */

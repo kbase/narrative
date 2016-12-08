@@ -5,10 +5,23 @@
  * @public
  */
 
-define(['jquery', 'kbwidget', 'kbaseTabs', 'kbaseNarrativeMethodInput'], function( $ ) {
-    $.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'kbaseTabs',
+		'kbaseNarrativeMethodInput'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		kbaseTabs,
+		kbaseNarrativeMethodInput
+	) {
+    return KBWidget({
         name: "kbaseTabbedInput",
-        parent: "kbaseNarrativeMethodInput",
+        parent : kbaseNarrativeMethodInput,
         version: "1.0.0",
         options: {
             isInSidePanel: false
@@ -22,7 +35,7 @@ define(['jquery', 'kbwidget', 'kbaseTabs', 'kbaseNarrativeMethodInput'], functio
         tabNames: null,			// mapping {tabId -> tabName}
         tabParamToSpec: null,	// mapping {tabId -> {paramId -> paramSpec}}
         paramIdToTab: null,		// mapping {paramId -> tabId}
-        
+
         init: function(options) {
             this._super(options);
             // render and refresh are done in super-class.
@@ -64,14 +77,15 @@ define(['jquery', 'kbwidget', 'kbaseTabs', 'kbaseNarrativeMethodInput'], functio
             				self.tabNames[tabId] = tabNamesRaw[tabId];
             		}
             	} else {
-                	self.tabNames = tabNamesRaw;            		
+                	self.tabNames = tabNamesRaw;
             	}
             	self.tabParamId = tabParamSpec.id;
             	self.tabPane = $('<div/>');
+                self.tabPaneWidget;
             	if (self.options.isInSidePanel) {
             		self.buildTabs(self.tabPane);
             	} else {
-            		self.tabPane.kbaseTabs({canDelete : true, tabs : []});
+            		self.tabPaneWidget = new kbaseTabs(self.tabPane, {canDelete : true, tabs : []});
             	}
             	self.tabs = {};
             	self.tabParamToSpec = {};
@@ -83,7 +97,7 @@ define(['jquery', 'kbwidget', 'kbaseTabs', 'kbaseNarrativeMethodInput'], functio
             			continue;
             		tab = $('<div/>');
             		var isShown = tabCount == 0;
-            		self.tabPane.kbaseTabs('addTab', {tab: tabName, content: tab, canDelete : false, show: isShown});
+            		self.tabPaneWidget.addTab({tab: tabName, content: tab, canDelete : false, show: isShown});
             		tabCount++;
             		self.tabs[tabId] = tab;
             		self.tabParamToSpec[tabId] = {};
@@ -91,7 +105,7 @@ define(['jquery', 'kbwidget', 'kbaseTabs', 'kbaseNarrativeMethodInput'], functio
             }
             self._superMethod('render');
         },
-        
+
         buildTabs: function(tabPane) {
             var $header = $('<div>');
             var $body = $('<div>');
@@ -140,7 +154,7 @@ define(['jquery', 'kbwidget', 'kbaseTabs', 'kbaseNarrativeMethodInput'], functio
             	this._superMethod('addParameterDiv', paramPos, paramSpec, $stepDiv, $optionsDiv, $advancedOptionsDiv, isAdvanced);
         	}
         },
-        
+
         putInTab: function(paramSpec, $stepDiv, $optionsDiv, tabId) {
             if ($optionsDiv.children().length == 0)
                 $stepDiv.css({"margin-top":"5px"});
@@ -154,28 +168,28 @@ define(['jquery', 'kbwidget', 'kbaseTabs', 'kbaseNarrativeMethodInput'], functio
             tab.append($stepDiv);
             this.tabParamToSpec[tabId][paramSpec.id] = paramSpec;
         },
-        
+
         getParameters: function() {
         	var ret = [];
             var selectedParameterTab = this.getSelectedTabId();
             for(var i=0; i<this.parameters.length; i++) {
             	var paramId = this.parameters[i].id;
                 var tabId = this.paramIdToTab[paramId];
-            	var value = ((!tabId) || tabId === selectedParameterTab) ? 
+            	var value = ((!tabId) || tabId === selectedParameterTab) ?
             			this.parameters[i].widget.getParameterValue() : "";
             	ret.push(value);
             }
         	ret.splice(this.tabParamPos, 0, this.getSelectedTabId());
         	return ret;
         },
-        
+
         getState: function() {
             var state = this._superMethod('getState');
             var selectedParameterTab = this.getSelectedTabId();
             state['selectedParameterTab'] = selectedParameterTab;
             return state;
         },
-        
+
         getSelectedTabId: function() {
             var ret = null;
             for (var tabId in this.tabs) {
@@ -185,7 +199,7 @@ define(['jquery', 'kbwidget', 'kbaseTabs', 'kbaseNarrativeMethodInput'], functio
             }
             return ret;
         },
-        
+
         loadState: function(state) {
             if (!state)
                 return;
@@ -195,7 +209,7 @@ define(['jquery', 'kbwidget', 'kbaseTabs', 'kbaseNarrativeMethodInput'], functio
             	this.tabPane.kbaseTabs('showTab', this.tabNames[selectedParameterTab]);
             }
         },
-        
+
         isValid: function() {
             var isValidRet = { isValid:true, errormssgs: [] };
             var selectedParameterTab = this.getSelectedTabId();
@@ -214,15 +228,15 @@ define(['jquery', 'kbwidget', 'kbaseTabs', 'kbaseNarrativeMethodInput'], functio
                     }
                 }
             }
-            return isValidRet; 
+            return isValidRet;
         },
-        
+
         getAllParameterValues: function() {
         	var ret = this._superMethod('getAllParameterValues');
         	ret.splice(this.tabParamPos, 0, {id:this.tabParamId, value:this.getSelectedTabId()});
         	return ret;
         },
-        
+
         prepareDataBeforeRun: function() {
             var selectedParameterTab = this.getSelectedTabId();
             if (this.parameters) {

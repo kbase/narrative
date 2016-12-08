@@ -5,373 +5,1005 @@
 #
 ############################################################
 
+from __future__ import print_function
+# the following is a hack to get the baseclient to import whether we're in a
+# package or not. This makes pep8 unhappy hence the annotations.
 try:
-    import json as _json
-except ImportError:
-    import sys
-    sys.path.append('simplejson-2.3.3')
-    import simplejson as _json
-
-import requests as _requests
-import urlparse as _urlparse
-import random as _random
-import base64 as _base64
-from ConfigParser import ConfigParser as _ConfigParser
-import os as _os
-
-_CT = 'content-type'
-_AJ = 'application/json'
-_URL_SCHEME = frozenset(['http', 'https'])
-
-
-def _get_token(user_id, password,
-               auth_svc='https://nexus.api.globusonline.org/goauth/token?' +
-                        'grant_type=client_credentials'):
-    # This is bandaid helper function until we get a full
-    # KBase python auth client released
-    auth = _base64.encodestring(user_id + ':' + password)
-    headers = {'Authorization': 'Basic ' + auth}
-    ret = _requests.get(auth_svc, headers=headers, allow_redirects=True)
-    status = ret.status_code
-    if status >= 200 and status <= 299:
-        tok = _json.loads(ret.text)
-    elif status == 403:
-        raise Exception('Authentication failed: Bad user_id/password ' +
-                        'combination for user %s' % (user_id))
-    else:
-        raise Exception(ret.text)
-    return tok['access_token']
-
-
-def _read_rcfile(file=_os.environ['HOME'] + '/.authrc'):  # @ReservedAssignment
-    # Another bandaid to read in the ~/.authrc file if one is present
-    authdata = None
-    if _os.path.exists(file):
-        try:
-            with open(file) as authrc:
-                rawdata = _json.load(authrc)
-                # strip down whatever we read to only what is legit
-                authdata = {x: rawdata.get(x) for x in (
-                    'user_id', 'token', 'client_secret', 'keyfile',
-                    'keyfile_passphrase', 'password')}
-        except Exception, e:
-            print "Error while reading authrc file %s: %s" % (file, e)
-    return authdata
-
-
-def _read_inifile(file=_os.environ.get(  # @ReservedAssignment
-                  'KB_DEPLOYMENT_CONFIG', _os.environ['HOME'] +
-                  '/.kbase_config')):
-    # Another bandaid to read in the ~/.kbase_config file if one is present
-    authdata = None
-    if _os.path.exists(file):
-        try:
-            config = _ConfigParser()
-            config.read(file)
-            # strip down whatever we read to only what is legit
-            authdata = {x: config.get('authentication', x)
-                        if config.has_option('authentication', x)
-                        else None for x in ('user_id', 'token',
-                                            'client_secret', 'keyfile',
-                                            'keyfile_passphrase', 'password')}
-        except Exception, e:
-            print "Error while reading INI file %s: %s" % (file, e)
-    return authdata
-
-
-class ServerError(Exception):
-
-    def __init__(self, name, code, message, data=None, error=None):
-        self.name = name
-        self.code = code
-        self.message = '' if message is None else message
-        self.data = data or error or ''
-        # data = JSON RPC 2.0, error = 1.1
-
-    def __str__(self):
-        return self.name + ': ' + str(self.code) + '. ' + self.message + \
-            '\n' + self.data
-
-
-class _JSONObjectEncoder(_json.JSONEncoder):
-
-    def default(self, obj):
-        if isinstance(obj, set):
-            return list(obj)
-        if isinstance(obj, frozenset):
-            return list(obj)
-        return _json.JSONEncoder.default(self, obj)
+    # baseclient and this client are in a package
+    from .baseclient import BaseClient as _BaseClient  # @UnusedImport
+except:
+    # no they aren't
+    from baseclient import BaseClient as _BaseClient  # @Reimport
 
 
 class Catalog(object):
 
-    def __init__(self, url=None, timeout=30 * 60, user_id=None,
-                 password=None, token=None, ignore_authrc=False,
-                 trust_all_ssl_certificates=False):
+    def __init__(
+            self, url=None, timeout=30 * 60, user_id=None,
+            password=None, token=None, ignore_authrc=False,
+            trust_all_ssl_certificates=False,
+            auth_svc='https://kbase.us/services/authorization/Sessions/Login'):
         if url is None:
             raise ValueError('A url is required')
-        scheme, _, _, _, _, _ = _urlparse.urlparse(url)
-        if scheme not in _URL_SCHEME:
-            raise ValueError(url + " isn't a valid http url")
-        self.url = url
-        self.timeout = int(timeout)
-        self._headers = dict()
-        self.trust_all_ssl_certificates = trust_all_ssl_certificates
-        # token overrides user_id and password
-        if token is not None:
-            self._headers['AUTHORIZATION'] = token
-        elif user_id is not None and password is not None:
-            self._headers['AUTHORIZATION'] = _get_token(user_id, password)
-        elif 'KB_AUTH_TOKEN' in _os.environ:
-            self._headers['AUTHORIZATION'] = _os.environ.get('KB_AUTH_TOKEN')
-        elif not ignore_authrc:
-            authdata = _read_inifile()
-            if authdata is None:
-                authdata = _read_rcfile()
-            if authdata is not None:
-                if authdata.get('token') is not None:
-                    self._headers['AUTHORIZATION'] = authdata['token']
-                elif(authdata.get('user_id') is not None
-                     and authdata.get('password') is not None):
-                    self._headers['AUTHORIZATION'] = _get_token(
-                        authdata['user_id'], authdata['password'])
-        if self.timeout < 1:
-            raise ValueError('Timeout value must be at least 1 second')
+        self._service_ver = None
+        self._client = _BaseClient(
+            url, timeout=timeout, user_id=user_id, password=password,
+            token=token, ignore_authrc=ignore_authrc,
+            trust_all_ssl_certificates=trust_all_ssl_certificates,
+            auth_svc=auth_svc)
 
-    def _call(self, method, params, json_rpc_context = None):
-        arg_hash = {'method': method,
-                    'params': params,
-                    'version': '1.1',
-                    'id': str(_random.random())[2:]
-                    }
-        if json_rpc_context:
-            arg_hash['context'] = json_rpc_context
+    def version(self, context=None):
+        """
+        Get the version of the deployed catalog service endpoint.
+        :returns: instance of String
+        """
+        return self._client.call_method(
+            'Catalog.version',
+            [], self._service_ver, context)
 
-        body = _json.dumps(arg_hash, cls=_JSONObjectEncoder)
-        ret = _requests.post(self.url, data=body, headers=self._headers,
-                             timeout=self.timeout,
-                             verify=not self.trust_all_ssl_certificates)
-        if ret.status_code == _requests.codes.server_error:
-            json_header = None
-            if _CT in ret.headers:
-                json_header = ret.headers[_CT]
-            if _CT in ret.headers and ret.headers[_CT] == _AJ:
-                err = _json.loads(ret.text)
-                if 'error' in err:
-                    raise ServerError(**err['error'])
-                else:
-                    raise ServerError('Unknown', 0, ret.text)
-            else:
-                raise ServerError('Unknown', 0, ret.text)
-        if ret.status_code != _requests.codes.OK:
-            ret.raise_for_status()
-        ret.encoding = 'utf-8'
-        resp = _json.loads(ret.text)
-        if 'result' not in resp:
-            raise ServerError('Unknown', 0, 'An unknown server error occurred')
-        return resp['result']
- 
-    def version(self, json_rpc_context = None):
-        if json_rpc_context and type(json_rpc_context) is not dict:
-            raise ValueError('Method version: argument json_rpc_context is not type dict as required.')
-        resp = self._call('Catalog.version',
-                          [], json_rpc_context)
-        return resp[0]
-  
-    def is_registered(self, params, json_rpc_context = None):
-        if json_rpc_context and type(json_rpc_context) is not dict:
-            raise ValueError('Method is_registered: argument json_rpc_context is not type dict as required.')
-        resp = self._call('Catalog.is_registered',
-                          [params], json_rpc_context)
-        return resp[0]
-  
-    def register_repo(self, params, json_rpc_context = None):
-        if json_rpc_context and type(json_rpc_context) is not dict:
-            raise ValueError('Method register_repo: argument json_rpc_context is not type dict as required.')
-        resp = self._call('Catalog.register_repo',
-                          [params], json_rpc_context)
-        return resp[0]
-  
-    def push_dev_to_beta(self, params, json_rpc_context = None):
-        if json_rpc_context and type(json_rpc_context) is not dict:
-            raise ValueError('Method push_dev_to_beta: argument json_rpc_context is not type dict as required.')
-        self._call('Catalog.push_dev_to_beta',
-                   [params], json_rpc_context)
-  
-    def request_release(self, params, json_rpc_context = None):
-        if json_rpc_context and type(json_rpc_context) is not dict:
-            raise ValueError('Method request_release: argument json_rpc_context is not type dict as required.')
-        self._call('Catalog.request_release',
-                   [params], json_rpc_context)
-  
-    def list_requested_releases(self, json_rpc_context = None):
-        if json_rpc_context and type(json_rpc_context) is not dict:
-            raise ValueError('Method list_requested_releases: argument json_rpc_context is not type dict as required.')
-        resp = self._call('Catalog.list_requested_releases',
-                          [], json_rpc_context)
-        return resp[0]
-  
-    def review_release_request(self, review, json_rpc_context = None):
-        if json_rpc_context and type(json_rpc_context) is not dict:
-            raise ValueError('Method review_release_request: argument json_rpc_context is not type dict as required.')
-        self._call('Catalog.review_release_request',
-                   [review], json_rpc_context)
-  
-    def list_basic_module_info(self, params, json_rpc_context = None):
-        if json_rpc_context and type(json_rpc_context) is not dict:
-            raise ValueError('Method list_basic_module_info: argument json_rpc_context is not type dict as required.')
-        resp = self._call('Catalog.list_basic_module_info',
-                          [params], json_rpc_context)
-        return resp[0]
-  
-    def add_favorite(self, params, json_rpc_context = None):
-        if json_rpc_context and type(json_rpc_context) is not dict:
-            raise ValueError('Method add_favorite: argument json_rpc_context is not type dict as required.')
-        self._call('Catalog.add_favorite',
-                   [params], json_rpc_context)
-  
-    def remove_favorite(self, params, json_rpc_context = None):
-        if json_rpc_context and type(json_rpc_context) is not dict:
-            raise ValueError('Method remove_favorite: argument json_rpc_context is not type dict as required.')
-        self._call('Catalog.remove_favorite',
-                   [params], json_rpc_context)
-  
-    def list_favorites(self, username, json_rpc_context = None):
-        if json_rpc_context and type(json_rpc_context) is not dict:
-            raise ValueError('Method list_favorites: argument json_rpc_context is not type dict as required.')
-        resp = self._call('Catalog.list_favorites',
-                          [username], json_rpc_context)
-        return resp[0]
-  
-    def list_app_favorites(self, item, json_rpc_context = None):
-        if json_rpc_context and type(json_rpc_context) is not dict:
-            raise ValueError('Method list_app_favorites: argument json_rpc_context is not type dict as required.')
-        resp = self._call('Catalog.list_app_favorites',
-                          [item], json_rpc_context)
-        return resp[0]
-  
-    def list_favorite_counts(self, params, json_rpc_context = None):
-        if json_rpc_context and type(json_rpc_context) is not dict:
-            raise ValueError('Method list_favorite_counts: argument json_rpc_context is not type dict as required.')
-        resp = self._call('Catalog.list_favorite_counts',
-                          [params], json_rpc_context)
-        return resp[0]
-  
-    def get_module_info(self, selection, json_rpc_context = None):
-        if json_rpc_context and type(json_rpc_context) is not dict:
-            raise ValueError('Method get_module_info: argument json_rpc_context is not type dict as required.')
-        resp = self._call('Catalog.get_module_info',
-                          [selection], json_rpc_context)
-        return resp[0]
-  
-    def get_version_info(self, params, json_rpc_context = None):
-        if json_rpc_context and type(json_rpc_context) is not dict:
-            raise ValueError('Method get_version_info: argument json_rpc_context is not type dict as required.')
-        resp = self._call('Catalog.get_version_info',
-                          [params], json_rpc_context)
-        return resp[0]
-  
-    def list_released_module_versions(self, params, json_rpc_context = None):
-        if json_rpc_context and type(json_rpc_context) is not dict:
-            raise ValueError('Method list_released_module_versions: argument json_rpc_context is not type dict as required.')
-        resp = self._call('Catalog.list_released_module_versions',
-                          [params], json_rpc_context)
-        return resp[0]
-  
-    def set_registration_state(self, params, json_rpc_context = None):
-        if json_rpc_context and type(json_rpc_context) is not dict:
-            raise ValueError('Method set_registration_state: argument json_rpc_context is not type dict as required.')
-        self._call('Catalog.set_registration_state',
-                   [params], json_rpc_context)
-  
-    def get_module_state(self, params, json_rpc_context = None):
-        if json_rpc_context and type(json_rpc_context) is not dict:
-            raise ValueError('Method get_module_state: argument json_rpc_context is not type dict as required.')
-        resp = self._call('Catalog.get_module_state',
-                          [params], json_rpc_context)
-        return resp[0]
-  
-    def get_build_log(self, registration_id, json_rpc_context = None):
-        if json_rpc_context and type(json_rpc_context) is not dict:
-            raise ValueError('Method get_build_log: argument json_rpc_context is not type dict as required.')
-        resp = self._call('Catalog.get_build_log',
-                          [registration_id], json_rpc_context)
-        return resp[0]
-  
-    def get_parsed_build_log(self, params, json_rpc_context = None):
-        if json_rpc_context and type(json_rpc_context) is not dict:
-            raise ValueError('Method get_parsed_build_log: argument json_rpc_context is not type dict as required.')
-        resp = self._call('Catalog.get_parsed_build_log',
-                          [params], json_rpc_context)
-        return resp[0]
-  
-    def list_builds(self, params, json_rpc_context = None):
-        if json_rpc_context and type(json_rpc_context) is not dict:
-            raise ValueError('Method list_builds: argument json_rpc_context is not type dict as required.')
-        resp = self._call('Catalog.list_builds',
-                          [params], json_rpc_context)
-        return resp[0]
-  
-    def delete_module(self, params, json_rpc_context = None):
-        if json_rpc_context and type(json_rpc_context) is not dict:
-            raise ValueError('Method delete_module: argument json_rpc_context is not type dict as required.')
-        self._call('Catalog.delete_module',
-                   [params], json_rpc_context)
-  
-    def migrate_module_to_new_git_url(self, params, json_rpc_context = None):
-        if json_rpc_context and type(json_rpc_context) is not dict:
-            raise ValueError('Method migrate_module_to_new_git_url: argument json_rpc_context is not type dict as required.')
-        self._call('Catalog.migrate_module_to_new_git_url',
-                   [params], json_rpc_context)
-  
-    def set_to_active(self, params, json_rpc_context = None):
-        if json_rpc_context and type(json_rpc_context) is not dict:
-            raise ValueError('Method set_to_active: argument json_rpc_context is not type dict as required.')
-        self._call('Catalog.set_to_active',
-                   [params], json_rpc_context)
-  
-    def set_to_inactive(self, params, json_rpc_context = None):
-        if json_rpc_context and type(json_rpc_context) is not dict:
-            raise ValueError('Method set_to_inactive: argument json_rpc_context is not type dict as required.')
-        self._call('Catalog.set_to_inactive',
-                   [params], json_rpc_context)
-  
-    def is_approved_developer(self, usernames, json_rpc_context = None):
-        if json_rpc_context and type(json_rpc_context) is not dict:
-            raise ValueError('Method is_approved_developer: argument json_rpc_context is not type dict as required.')
-        resp = self._call('Catalog.is_approved_developer',
-                          [usernames], json_rpc_context)
-        return resp[0]
-  
-    def list_approved_developers(self, json_rpc_context = None):
-        if json_rpc_context and type(json_rpc_context) is not dict:
-            raise ValueError('Method list_approved_developers: argument json_rpc_context is not type dict as required.')
-        resp = self._call('Catalog.list_approved_developers',
-                          [], json_rpc_context)
-        return resp[0]
-  
-    def approve_developer(self, username, json_rpc_context = None):
-        if json_rpc_context and type(json_rpc_context) is not dict:
-            raise ValueError('Method approve_developer: argument json_rpc_context is not type dict as required.')
-        self._call('Catalog.approve_developer',
-                   [username], json_rpc_context)
-  
-    def revoke_developer(self, username, json_rpc_context = None):
-        if json_rpc_context and type(json_rpc_context) is not dict:
-            raise ValueError('Method revoke_developer: argument json_rpc_context is not type dict as required.')
-        self._call('Catalog.revoke_developer',
-                   [username], json_rpc_context)
-  
-    def log_exec_stats(self, params, json_rpc_context = None):
-        if json_rpc_context and type(json_rpc_context) is not dict:
-            raise ValueError('Method log_exec_stats: argument json_rpc_context is not type dict as required.')
-        self._call('Catalog.log_exec_stats',
-                   [params], json_rpc_context)
-  
-    def get_exec_aggr_stats(self, params, json_rpc_context = None):
-        if json_rpc_context and type(json_rpc_context) is not dict:
-            raise ValueError('Method get_exec_aggr_stats: argument json_rpc_context is not type dict as required.')
-        resp = self._call('Catalog.get_exec_aggr_stats',
-                          [params], json_rpc_context)
-        return resp[0]
- 
+    def is_registered(self, params, context=None):
+        """
+        returns true (1) if the module exists, false (2) otherwise
+        :param params: instance of type "SelectOneModuleParams" (Describes
+           how to find a single module/repository. module_name - name of
+           module defined in kbase.yaml file; git_url - the url used to
+           register the module) -> structure: parameter "module_name" of
+           String, parameter "git_url" of String
+        :returns: instance of type "boolean" (@range [0,1])
+        """
+        return self._client.call_method(
+            'Catalog.is_registered',
+            [params], self._service_ver, context)
+
+    def register_repo(self, params, context=None):
+        """
+        allow/require developer to supply git branch/git commit tag? 
+        if this is a new module, creates the initial registration with the authenticated user as
+        the sole owner, then launches a build to update the dev version of the module.  You can check
+        the state of this build with the 'get_module_state' method passing in the git_url.  If the module
+        already exists, then you must be an owner to reregister.  That will immediately overwrite your
+        dev version of the module (old dev versions are not stored, but you can always reregister an old
+        version from the repo) and start a build.
+        :param params: instance of type "RegisterRepoParams" -> structure:
+           parameter "git_url" of String, parameter "git_commit_hash" of
+           String
+        :returns: instance of String
+        """
+        return self._client.call_method(
+            'Catalog.register_repo',
+            [params], self._service_ver, context)
+
+    def push_dev_to_beta(self, params, context=None):
+        """
+        immediately updates the beta tag to what is currently in dev, whatever is currently in beta
+        is discarded.  Will fail if a release request is active and has not been approved/denied
+        :param params: instance of type "SelectOneModuleParams" (Describes
+           how to find a single module/repository. module_name - name of
+           module defined in kbase.yaml file; git_url - the url used to
+           register the module) -> structure: parameter "module_name" of
+           String, parameter "git_url" of String
+        """
+        return self._client.call_method(
+            'Catalog.push_dev_to_beta',
+            [params], self._service_ver, context)
+
+    def request_release(self, params, context=None):
+        """
+        requests a push from beta to release version; must be approved be a kbase Admin
+        :param params: instance of type "SelectOneModuleParams" (Describes
+           how to find a single module/repository. module_name - name of
+           module defined in kbase.yaml file; git_url - the url used to
+           register the module) -> structure: parameter "module_name" of
+           String, parameter "git_url" of String
+        """
+        return self._client.call_method(
+            'Catalog.request_release',
+            [params], self._service_ver, context)
+
+    def list_requested_releases(self, context=None):
+        """
+        :returns: instance of list of type "RequestedReleaseInfo" ->
+           structure: parameter "module_name" of String, parameter "git_url"
+           of String, parameter "git_commit_hash" of String, parameter
+           "git_commit_message" of String, parameter "timestamp" of Long,
+           parameter "owners" of list of String
+        """
+        return self._client.call_method(
+            'Catalog.list_requested_releases',
+            [], self._service_ver, context)
+
+    def review_release_request(self, review, context=None):
+        """
+        :param review: instance of type "ReleaseReview" (decision - approved
+           | denied review_message -) -> structure: parameter "module_name"
+           of String, parameter "git_url" of String, parameter "decision" of
+           String, parameter "review_message" of String
+        """
+        return self._client.call_method(
+            'Catalog.review_release_request',
+            [review], self._service_ver, context)
+
+    def list_basic_module_info(self, params, context=None):
+        """
+        :param params: instance of type "ListModuleParams" (Describes how to
+           filter repositories. include_released - optional flag indicated
+           modules that are released are included (default:true)
+           include_unreleased - optional flag indicated modules that are not
+           released are included (default:false) with_disabled - optional
+           flag indicating disabled repos should be included (default:false).
+           include_modules_with_no_name_set - default to 0, if set return
+           modules that were never registered successfully (first
+           registration failed, never got a module name, but there is a
+           git_url)) -> structure: parameter "owners" of list of String,
+           parameter "include_released" of type "boolean" (@range [0,1]),
+           parameter "include_unreleased" of type "boolean" (@range [0,1]),
+           parameter "include_disabled" of type "boolean" (@range [0,1]),
+           parameter "include_modules_with_no_name_set" of type "boolean"
+           (@range [0,1])
+        :returns: instance of list of type "BasicModuleInfo" (git_url is
+           always returned.  Every other field may or may not exist depending
+           on what has been registered or if certain registrations have
+           failed) -> structure: parameter "module_name" of String, parameter
+           "git_url" of String, parameter "language" of String, parameter
+           "dynamic_service" of type "boolean" (@range [0,1]), parameter
+           "owners" of list of String, parameter "dev" of type
+           "VersionCommitInfo" -> structure: parameter "git_commit_hash" of
+           String, parameter "beta" of type "VersionCommitInfo" -> structure:
+           parameter "git_commit_hash" of String, parameter "release" of type
+           "VersionCommitInfo" -> structure: parameter "git_commit_hash" of
+           String, parameter "released_version_list" of list of type
+           "VersionCommitInfo" -> structure: parameter "git_commit_hash" of
+           String
+        """
+        return self._client.call_method(
+            'Catalog.list_basic_module_info',
+            [params], self._service_ver, context)
+
+    def add_favorite(self, params, context=None):
+        """
+        :param params: instance of type "FavoriteItem" (FAVORITES!!) ->
+           structure: parameter "module_name" of String, parameter "id" of
+           String
+        """
+        return self._client.call_method(
+            'Catalog.add_favorite',
+            [params], self._service_ver, context)
+
+    def remove_favorite(self, params, context=None):
+        """
+        :param params: instance of type "FavoriteItem" (FAVORITES!!) ->
+           structure: parameter "module_name" of String, parameter "id" of
+           String
+        """
+        return self._client.call_method(
+            'Catalog.remove_favorite',
+            [params], self._service_ver, context)
+
+    def list_favorites(self, username, context=None):
+        """
+        :param username: instance of String
+        :returns: instance of list of type "FavoriteItem" (FAVORITES!!) ->
+           structure: parameter "module_name" of String, parameter "id" of
+           String
+        """
+        return self._client.call_method(
+            'Catalog.list_favorites',
+            [username], self._service_ver, context)
+
+    def list_app_favorites(self, item, context=None):
+        """
+        :param item: instance of type "FavoriteItem" (FAVORITES!!) ->
+           structure: parameter "module_name" of String, parameter "id" of
+           String
+        :returns: instance of list of type "FavoriteUser" -> structure:
+           parameter "username" of String, parameter "timestamp" of String
+        """
+        return self._client.call_method(
+            'Catalog.list_app_favorites',
+            [item], self._service_ver, context)
+
+    def list_favorite_counts(self, params, context=None):
+        """
+        :param params: instance of type "ListFavoriteCounts" (if favorite
+           item is given, will return stars just for that item.  If a module
+           name is given, will return stars for all methods in that module. 
+           If none of those are given, then will return stars for every
+           method that there is info on parameters to add: list<FavoriteItem>
+           items;) -> structure: parameter "modules" of list of String
+        :returns: instance of list of type "FavoriteCount" -> structure:
+           parameter "module_name" of String, parameter "app_id" of String,
+           parameter "count" of Long
+        """
+        return self._client.call_method(
+            'Catalog.list_favorite_counts',
+            [params], self._service_ver, context)
+
+    def get_module_info(self, selection, context=None):
+        """
+        :param selection: instance of type "SelectOneModuleParams" (Describes
+           how to find a single module/repository. module_name - name of
+           module defined in kbase.yaml file; git_url - the url used to
+           register the module) -> structure: parameter "module_name" of
+           String, parameter "git_url" of String
+        :returns: instance of type "ModuleInfo" -> structure: parameter
+           "module_name" of String, parameter "git_url" of String, parameter
+           "description" of String, parameter "language" of String, parameter
+           "owners" of list of String, parameter "release" of type
+           "ModuleVersionInfo" (data_folder - optional field representing
+           unique module name (like <module_name> transformed to lower cases)
+           used for reference data purposes (see description for data_version
+           field). This value will be treated as part of file system path
+           relative to the base that comes from the config (currently base is
+           supposed to be "/kb/data" defined in "ref-data-base" parameter).
+           data_version - optional field, reflects version of data defined in
+           kbase.yml (see "data-version" key). In case this field is set data
+           folder with path "/kb/data/<data_folder>/<data_version>" should be
+           initialized by running docker image with "init" target from
+           catalog. And later when async methods are run it should be mounted
+           on AWE worker machine into "/data" folder inside docker container
+           by execution engine.) -> structure: parameter "timestamp" of Long,
+           parameter "registration_id" of String, parameter "version" of
+           String, parameter "git_commit_hash" of String, parameter
+           "git_commit_message" of String, parameter "dynamic_service" of
+           type "boolean" (@range [0,1]), parameter "narrative_method_ids" of
+           list of String, parameter "local_function_ids" of list of String,
+           parameter "docker_img_name" of String, parameter "data_folder" of
+           String, parameter "data_version" of String, parameter
+           "compilation_report" of type "CompilationReport" -> structure:
+           parameter "module_name" of String, parameter "sdk_version" of
+           String, parameter "sdk_git_commit" of String, parameter
+           "impl_file_path" of String, parameter "function_places" of mapping
+           from String to type "FunctionPlace" -> structure: parameter
+           "start_line" of Long, parameter "end_line" of Long, parameter
+           "functions" of mapping from String to type "Function" ->
+           structure: parameter "name" of String, parameter "comment" of
+           String, parameter "place" of type "FunctionPlace" -> structure:
+           parameter "start_line" of Long, parameter "end_line" of Long,
+           parameter "input" of list of type "Parameter" -> structure:
+           parameter "type" of String, parameter "comment" of String,
+           parameter "output" of list of type "Parameter" -> structure:
+           parameter "type" of String, parameter "comment" of String,
+           parameter "spec_files" of list of type "SpecFile" -> structure:
+           parameter "file_name" of String, parameter "content" of String,
+           parameter "is_main" of type "boolean" (@range [0,1]), parameter
+           "beta" of type "ModuleVersionInfo" (data_folder - optional field
+           representing unique module name (like <module_name> transformed to
+           lower cases) used for reference data purposes (see description for
+           data_version field). This value will be treated as part of file
+           system path relative to the base that comes from the config
+           (currently base is supposed to be "/kb/data" defined in
+           "ref-data-base" parameter). data_version - optional field,
+           reflects version of data defined in kbase.yml (see "data-version"
+           key). In case this field is set data folder with path
+           "/kb/data/<data_folder>/<data_version>" should be initialized by
+           running docker image with "init" target from catalog. And later
+           when async methods are run it should be mounted on AWE worker
+           machine into "/data" folder inside docker container by execution
+           engine.) -> structure: parameter "timestamp" of Long, parameter
+           "registration_id" of String, parameter "version" of String,
+           parameter "git_commit_hash" of String, parameter
+           "git_commit_message" of String, parameter "dynamic_service" of
+           type "boolean" (@range [0,1]), parameter "narrative_method_ids" of
+           list of String, parameter "local_function_ids" of list of String,
+           parameter "docker_img_name" of String, parameter "data_folder" of
+           String, parameter "data_version" of String, parameter
+           "compilation_report" of type "CompilationReport" -> structure:
+           parameter "module_name" of String, parameter "sdk_version" of
+           String, parameter "sdk_git_commit" of String, parameter
+           "impl_file_path" of String, parameter "function_places" of mapping
+           from String to type "FunctionPlace" -> structure: parameter
+           "start_line" of Long, parameter "end_line" of Long, parameter
+           "functions" of mapping from String to type "Function" ->
+           structure: parameter "name" of String, parameter "comment" of
+           String, parameter "place" of type "FunctionPlace" -> structure:
+           parameter "start_line" of Long, parameter "end_line" of Long,
+           parameter "input" of list of type "Parameter" -> structure:
+           parameter "type" of String, parameter "comment" of String,
+           parameter "output" of list of type "Parameter" -> structure:
+           parameter "type" of String, parameter "comment" of String,
+           parameter "spec_files" of list of type "SpecFile" -> structure:
+           parameter "file_name" of String, parameter "content" of String,
+           parameter "is_main" of type "boolean" (@range [0,1]), parameter
+           "dev" of type "ModuleVersionInfo" (data_folder - optional field
+           representing unique module name (like <module_name> transformed to
+           lower cases) used for reference data purposes (see description for
+           data_version field). This value will be treated as part of file
+           system path relative to the base that comes from the config
+           (currently base is supposed to be "/kb/data" defined in
+           "ref-data-base" parameter). data_version - optional field,
+           reflects version of data defined in kbase.yml (see "data-version"
+           key). In case this field is set data folder with path
+           "/kb/data/<data_folder>/<data_version>" should be initialized by
+           running docker image with "init" target from catalog. And later
+           when async methods are run it should be mounted on AWE worker
+           machine into "/data" folder inside docker container by execution
+           engine.) -> structure: parameter "timestamp" of Long, parameter
+           "registration_id" of String, parameter "version" of String,
+           parameter "git_commit_hash" of String, parameter
+           "git_commit_message" of String, parameter "dynamic_service" of
+           type "boolean" (@range [0,1]), parameter "narrative_method_ids" of
+           list of String, parameter "local_function_ids" of list of String,
+           parameter "docker_img_name" of String, parameter "data_folder" of
+           String, parameter "data_version" of String, parameter
+           "compilation_report" of type "CompilationReport" -> structure:
+           parameter "module_name" of String, parameter "sdk_version" of
+           String, parameter "sdk_git_commit" of String, parameter
+           "impl_file_path" of String, parameter "function_places" of mapping
+           from String to type "FunctionPlace" -> structure: parameter
+           "start_line" of Long, parameter "end_line" of Long, parameter
+           "functions" of mapping from String to type "Function" ->
+           structure: parameter "name" of String, parameter "comment" of
+           String, parameter "place" of type "FunctionPlace" -> structure:
+           parameter "start_line" of Long, parameter "end_line" of Long,
+           parameter "input" of list of type "Parameter" -> structure:
+           parameter "type" of String, parameter "comment" of String,
+           parameter "output" of list of type "Parameter" -> structure:
+           parameter "type" of String, parameter "comment" of String,
+           parameter "spec_files" of list of type "SpecFile" -> structure:
+           parameter "file_name" of String, parameter "content" of String,
+           parameter "is_main" of type "boolean" (@range [0,1])
+        """
+        return self._client.call_method(
+            'Catalog.get_module_info',
+            [selection], self._service_ver, context)
+
+    def get_version_info(self, params, context=None):
+        """
+        DEPRECATED!!!  use get_module_version
+        :param params: instance of type "SelectModuleVersionParams" (only
+           required: module_name or git_url, the rest are optional selectors
+           If no selectors given, returns current release version version is
+           one of: release | beta | dev old release versions can only be
+           retrieved individually by timestamp or git_commit_hash Note: this
+           method isn't particularly smart or effecient yet, because it pulls
+           the info for a particular module first, then searches in code for
+           matches to the relevant query.  Instead, this should be performed
+           on the database side through queries.  Will optimize when this
+           becomes an issue. In the future, this will be extended so that you
+           can retrieve version info by only timestamp, git commit, etc, but
+           the necessary indicies have not been setup yet.  In general, we
+           will need to add better search capabilities) -> structure:
+           parameter "module_name" of String, parameter "git_url" of String,
+           parameter "timestamp" of Long, parameter "git_commit_hash" of
+           String, parameter "version" of String
+        :returns: instance of type "ModuleVersionInfo" (data_folder -
+           optional field representing unique module name (like <module_name>
+           transformed to lower cases) used for reference data purposes (see
+           description for data_version field). This value will be treated as
+           part of file system path relative to the base that comes from the
+           config (currently base is supposed to be "/kb/data" defined in
+           "ref-data-base" parameter). data_version - optional field,
+           reflects version of data defined in kbase.yml (see "data-version"
+           key). In case this field is set data folder with path
+           "/kb/data/<data_folder>/<data_version>" should be initialized by
+           running docker image with "init" target from catalog. And later
+           when async methods are run it should be mounted on AWE worker
+           machine into "/data" folder inside docker container by execution
+           engine.) -> structure: parameter "timestamp" of Long, parameter
+           "registration_id" of String, parameter "version" of String,
+           parameter "git_commit_hash" of String, parameter
+           "git_commit_message" of String, parameter "dynamic_service" of
+           type "boolean" (@range [0,1]), parameter "narrative_method_ids" of
+           list of String, parameter "local_function_ids" of list of String,
+           parameter "docker_img_name" of String, parameter "data_folder" of
+           String, parameter "data_version" of String, parameter
+           "compilation_report" of type "CompilationReport" -> structure:
+           parameter "module_name" of String, parameter "sdk_version" of
+           String, parameter "sdk_git_commit" of String, parameter
+           "impl_file_path" of String, parameter "function_places" of mapping
+           from String to type "FunctionPlace" -> structure: parameter
+           "start_line" of Long, parameter "end_line" of Long, parameter
+           "functions" of mapping from String to type "Function" ->
+           structure: parameter "name" of String, parameter "comment" of
+           String, parameter "place" of type "FunctionPlace" -> structure:
+           parameter "start_line" of Long, parameter "end_line" of Long,
+           parameter "input" of list of type "Parameter" -> structure:
+           parameter "type" of String, parameter "comment" of String,
+           parameter "output" of list of type "Parameter" -> structure:
+           parameter "type" of String, parameter "comment" of String,
+           parameter "spec_files" of list of type "SpecFile" -> structure:
+           parameter "file_name" of String, parameter "content" of String,
+           parameter "is_main" of type "boolean" (@range [0,1])
+        """
+        return self._client.call_method(
+            'Catalog.get_version_info',
+            [params], self._service_ver, context)
+
+    def list_released_module_versions(self, params, context=None):
+        """
+        :param params: instance of type "SelectOneModuleParams" (Describes
+           how to find a single module/repository. module_name - name of
+           module defined in kbase.yaml file; git_url - the url used to
+           register the module) -> structure: parameter "module_name" of
+           String, parameter "git_url" of String
+        :returns: instance of list of type "ModuleVersionInfo" (data_folder -
+           optional field representing unique module name (like <module_name>
+           transformed to lower cases) used for reference data purposes (see
+           description for data_version field). This value will be treated as
+           part of file system path relative to the base that comes from the
+           config (currently base is supposed to be "/kb/data" defined in
+           "ref-data-base" parameter). data_version - optional field,
+           reflects version of data defined in kbase.yml (see "data-version"
+           key). In case this field is set data folder with path
+           "/kb/data/<data_folder>/<data_version>" should be initialized by
+           running docker image with "init" target from catalog. And later
+           when async methods are run it should be mounted on AWE worker
+           machine into "/data" folder inside docker container by execution
+           engine.) -> structure: parameter "timestamp" of Long, parameter
+           "registration_id" of String, parameter "version" of String,
+           parameter "git_commit_hash" of String, parameter
+           "git_commit_message" of String, parameter "dynamic_service" of
+           type "boolean" (@range [0,1]), parameter "narrative_method_ids" of
+           list of String, parameter "local_function_ids" of list of String,
+           parameter "docker_img_name" of String, parameter "data_folder" of
+           String, parameter "data_version" of String, parameter
+           "compilation_report" of type "CompilationReport" -> structure:
+           parameter "module_name" of String, parameter "sdk_version" of
+           String, parameter "sdk_git_commit" of String, parameter
+           "impl_file_path" of String, parameter "function_places" of mapping
+           from String to type "FunctionPlace" -> structure: parameter
+           "start_line" of Long, parameter "end_line" of Long, parameter
+           "functions" of mapping from String to type "Function" ->
+           structure: parameter "name" of String, parameter "comment" of
+           String, parameter "place" of type "FunctionPlace" -> structure:
+           parameter "start_line" of Long, parameter "end_line" of Long,
+           parameter "input" of list of type "Parameter" -> structure:
+           parameter "type" of String, parameter "comment" of String,
+           parameter "output" of list of type "Parameter" -> structure:
+           parameter "type" of String, parameter "comment" of String,
+           parameter "spec_files" of list of type "SpecFile" -> structure:
+           parameter "file_name" of String, parameter "content" of String,
+           parameter "is_main" of type "boolean" (@range [0,1])
+        """
+        return self._client.call_method(
+            'Catalog.list_released_module_versions',
+            [params], self._service_ver, context)
+
+    def get_module_version(self, selection, context=None):
+        """
+        :param selection: instance of type "SelectModuleVersion" (Get a
+           specific module version. Requires either a module_name or git_url.
+           If both are provided, they both must match. If no other options
+           are specified, then the latest 'release' version is returned.  If
+           the module has not been released, then the latest 'beta' or 'dev'
+           version is returned. You can check in the returned object if the
+           version has been released (see is_released) and what release tags
+           are pointing to this version (see release_tags). Optionally, a
+           'version' parameter can be provided that can be either: 1) release
+           tag: 'dev' | 'beta' | 'release' 2) specific semantic version of a
+           released version (you cannot pull dev/beta or other unreleased
+           versions by semantic version) - e.g. 2.0.1 3) semantic version
+           requirement specification, see:
+           https://pypi.python.org/pypi/semantic_version/ which will return
+           the latest released version that matches the criteria.  You cannot
+           pull dev/beta or other unreleased versions this way. - e.g.: -
+           '>1.0.0' - '>=2.1.1,<3.3.0' - '!=0.2.4-alpha,<0.3.0' 4) specific
+           full git commit hash include_module_description - set to 1 to
+           include the module description in the YAML file of this version;
+           default is 0 include_compilation_report - set to 1 to include the
+           module compilation report, default is 0) -> structure: parameter
+           "module_name" of String, parameter "git_url" of String, parameter
+           "version" of String, parameter "include_module_description" of
+           type "boolean" (@range [0,1]), parameter
+           "include_compilation_report" of type "boolean" (@range [0,1])
+        :returns: instance of type "ModuleVersion" (module_name            -
+           the name of the module module_description     - (optionally
+           returned) html description in KBase YAML of this module git_url   
+           - the git url of the source for this module released              
+           - 1 if this version has been released, 0 otherwise release_tags   
+           - list of strings of: 'dev', 'beta', or 'release', or empty list
+           this is a list because the same commit version may be the version
+           in multiple release states release_timestamp      - time in ms
+           since epoch when this module was approved and moved to release,
+           null otherwise note that a module was released before v1.0.0, the
+           release timestamp may not have been recorded and will default to
+           the registration timestamp timestamp              - time in ms
+           since epoch when the registration for this version was started
+           registration_id        - id of the last registration for this
+           version, used for fetching registration logs and state version    
+           - validated semantic version number as indicated in the KBase YAML
+           of this version semantic versions are unique among released
+           versions of this module git_commit_hash        - the full git
+           commit hash of the source for this module git_commit_message     -
+           the message attached to this git commit dynamic_service        - 1
+           if this version is available as a web service, 0 otherwise
+           narrative_app_ids      - list of Narrative App ids registered with
+           this module version local_function_ids     - list of Local
+           Function ids registered with this module version docker_img_name  
+           - name of the docker image for this module created on registration
+           data_folder            - name of the data folder used
+           compilation_report     - (optionally returned) summary of the KIDL
+           specification compilation) -> structure: parameter "module_name"
+           of String, parameter "module_description" of String, parameter
+           "git_url" of String, parameter "released" of type "boolean"
+           (@range [0,1]), parameter "release_tags" of list of String,
+           parameter "timestamp" of Long, parameter "registration_id" of
+           String, parameter "version" of String, parameter "git_commit_hash"
+           of String, parameter "git_commit_message" of String, parameter
+           "dynamic_service" of type "boolean" (@range [0,1]), parameter
+           "narrative_app_ids" of list of String, parameter
+           "local_function_ids" of list of String, parameter
+           "docker_img_name" of String, parameter "data_folder" of String,
+           parameter "data_version" of String, parameter "compilation_report"
+           of type "CompilationReport" -> structure: parameter "module_name"
+           of String, parameter "sdk_version" of String, parameter
+           "sdk_git_commit" of String, parameter "impl_file_path" of String,
+           parameter "function_places" of mapping from String to type
+           "FunctionPlace" -> structure: parameter "start_line" of Long,
+           parameter "end_line" of Long, parameter "functions" of mapping
+           from String to type "Function" -> structure: parameter "name" of
+           String, parameter "comment" of String, parameter "place" of type
+           "FunctionPlace" -> structure: parameter "start_line" of Long,
+           parameter "end_line" of Long, parameter "input" of list of type
+           "Parameter" -> structure: parameter "type" of String, parameter
+           "comment" of String, parameter "output" of list of type
+           "Parameter" -> structure: parameter "type" of String, parameter
+           "comment" of String, parameter "spec_files" of list of type
+           "SpecFile" -> structure: parameter "file_name" of String,
+           parameter "content" of String, parameter "is_main" of type
+           "boolean" (@range [0,1])
+        """
+        return self._client.call_method(
+            'Catalog.get_module_version',
+            [selection], self._service_ver, context)
+
+    def list_local_functions(self, params, context=None):
+        """
+        :param params: instance of type "ListLocalFunctionParams" (Allows
+           various ways to filter. Release tag = dev/beta/release, default is
+           release module_names = only include modules in the list; if empty
+           or not provided then include everything) -> structure: parameter
+           "release_tag" of String, parameter "module_names" of list of String
+        :returns: instance of list of type "LocalFunctionInfo" (todo: switch
+           release_tag to release_tags) -> structure: parameter "module_name"
+           of String, parameter "function_id" of String, parameter
+           "git_commit_hash" of String, parameter "version" of String,
+           parameter "release_tag" of list of String, parameter "name" of
+           String, parameter "short_description" of String, parameter "tags"
+           of type "LocalFunctionTags" -> structure: parameter "categories"
+           of list of String, parameter "input" of type "IOTags" (Local
+           Function Listing Support) -> structure: parameter "file_types" of
+           list of String, parameter "kb_types" of list of String, parameter
+           "output" of type "IOTags" (Local Function Listing Support) ->
+           structure: parameter "file_types" of list of String, parameter
+           "kb_types" of list of String
+        """
+        return self._client.call_method(
+            'Catalog.list_local_functions',
+            [params], self._service_ver, context)
+
+    def get_local_function_details(self, params, context=None):
+        """
+        :param params: instance of type "GetLocalFunctionDetails" ->
+           structure: parameter "functions" of list of type
+           "SelectOneLocalFunction" (release_tag = dev | beta | release, if
+           it doesn't exist and git_commit_hash isn't set, we default to
+           release and will not return anything if the function is not
+           released) -> structure: parameter "module_name" of String,
+           parameter "function_id" of String, parameter "release_tag" of
+           String, parameter "git_commit_hash" of String
+        :returns: instance of list of type "LocalFunctionDetails" ->
+           structure: parameter "info" of type "LocalFunctionInfo" (todo:
+           switch release_tag to release_tags) -> structure: parameter
+           "module_name" of String, parameter "function_id" of String,
+           parameter "git_commit_hash" of String, parameter "version" of
+           String, parameter "release_tag" of list of String, parameter
+           "name" of String, parameter "short_description" of String,
+           parameter "tags" of type "LocalFunctionTags" -> structure:
+           parameter "categories" of list of String, parameter "input" of
+           type "IOTags" (Local Function Listing Support) -> structure:
+           parameter "file_types" of list of String, parameter "kb_types" of
+           list of String, parameter "output" of type "IOTags" (Local
+           Function Listing Support) -> structure: parameter "file_types" of
+           list of String, parameter "kb_types" of list of String, parameter
+           "long_description" of String
+        """
+        return self._client.call_method(
+            'Catalog.get_local_function_details',
+            [params], self._service_ver, context)
+
+    def module_version_lookup(self, selection, context=None):
+        """
+        :param selection: instance of type "ModuleVersionLookupParams"
+           (module_name - required for module lookup lookup - a lookup
+           string, if empty will get the latest released module 1) version
+           tag = dev | beta | release 2) semantic version match identifiier
+           not supported yet: 3) exact commit hash not supported yet: 4)
+           exact timestamp only_service_versions - 1/0, default is 1) ->
+           structure: parameter "module_name" of String, parameter "lookup"
+           of String, parameter "only_service_versions" of type "boolean"
+           (@range [0,1])
+        :returns: instance of type "BasicModuleVersionInfo" (DYNAMIC SERVICES
+           SUPPORT Methods) -> structure: parameter "module_name" of String,
+           parameter "version" of String, parameter "git_commit_hash" of
+           String, parameter "docker_img_name" of String
+        """
+        return self._client.call_method(
+            'Catalog.module_version_lookup',
+            [selection], self._service_ver, context)
+
+    def list_service_modules(self, filter, context=None):
+        """
+        :param filter: instance of type "ListServiceModuleParams" (tag = dev
+           | beta | release if tag is not set, all release versions are
+           returned) -> structure: parameter "tag" of String
+        :returns: instance of list of type "BasicModuleVersionInfo" (DYNAMIC
+           SERVICES SUPPORT Methods) -> structure: parameter "module_name" of
+           String, parameter "version" of String, parameter "git_commit_hash"
+           of String, parameter "docker_img_name" of String
+        """
+        return self._client.call_method(
+            'Catalog.list_service_modules',
+            [filter], self._service_ver, context)
+
+    def set_registration_state(self, params, context=None):
+        """
+        :param params: instance of type "SetRegistrationStateParams" (End
+           Dynamic Services Support Methods) -> structure: parameter
+           "module_name" of String, parameter "git_url" of String, parameter
+           "registration_state" of String, parameter "error_message" of String
+        """
+        return self._client.call_method(
+            'Catalog.set_registration_state',
+            [params], self._service_ver, context)
+
+    def get_module_state(self, params, context=None):
+        """
+        :param params: instance of type "SelectOneModuleParams" (Describes
+           how to find a single module/repository. module_name - name of
+           module defined in kbase.yaml file; git_url - the url used to
+           register the module) -> structure: parameter "module_name" of
+           String, parameter "git_url" of String
+        :returns: instance of type "ModuleState" (active: True | False,
+           release_approval: approved | denied | under_review |
+           not_requested, (all releases require approval) review_message:
+           str, (optional) registration: complete | error | (build state
+           status), error_message: str (optional)) -> structure: parameter
+           "active" of type "boolean" (@range [0,1]), parameter "released" of
+           type "boolean" (@range [0,1]), parameter "release_approval" of
+           String, parameter "review_message" of String, parameter
+           "registration" of String, parameter "error_message" of String
+        """
+        return self._client.call_method(
+            'Catalog.get_module_state',
+            [params], self._service_ver, context)
+
+    def get_build_log(self, registration_id, context=None):
+        """
+        :param registration_id: instance of String
+        :returns: instance of String
+        """
+        return self._client.call_method(
+            'Catalog.get_build_log',
+            [registration_id], self._service_ver, context)
+
+    def get_parsed_build_log(self, params, context=None):
+        """
+        given the registration_id returned from the register method, you can check the build log with this method
+        :param params: instance of type "GetBuildLogParams" (must specify
+           skip & limit, or first_n, or last_n.  If none given, this gets
+           last 5000 lines) -> structure: parameter "registration_id" of
+           String, parameter "skip" of Long, parameter "limit" of Long,
+           parameter "first_n" of Long, parameter "last_n" of Long
+        :returns: instance of type "BuildLog" -> structure: parameter
+           "registration_id" of String, parameter "timestamp" of String,
+           parameter "module_name_lc" of String, parameter "git_url" of
+           String, parameter "error" of String, parameter "registration" of
+           String, parameter "log" of list of type "BuildLogLine" ->
+           structure: parameter "content" of String, parameter "error" of
+           type "boolean" (@range [0,1])
+        """
+        return self._client.call_method(
+            'Catalog.get_parsed_build_log',
+            [params], self._service_ver, context)
+
+    def list_builds(self, params, context=None):
+        """
+        :param params: instance of type "ListBuildParams" (Always sorted by
+           time, oldest builds are last. only one of these can be set to
+           true: only_running - if true, only show running builds only_error
+           - if true, only show builds that ended in an error only_complete -
+           if true, only show builds that are complete skip - skip these
+           first n records, default 0 limit - limit result to the most recent
+           n records, default 1000 modules - only include builds from these
+           modules based on names/git_urls) -> structure: parameter
+           "only_runnning" of type "boolean" (@range [0,1]), parameter
+           "only_error" of type "boolean" (@range [0,1]), parameter
+           "only_complete" of type "boolean" (@range [0,1]), parameter "skip"
+           of Long, parameter "limit" of Long, parameter "modules" of list of
+           type "SelectOneModuleParams" (Describes how to find a single
+           module/repository. module_name - name of module defined in
+           kbase.yaml file; git_url - the url used to register the module) ->
+           structure: parameter "module_name" of String, parameter "git_url"
+           of String
+        :returns: instance of list of type "BuildInfo" -> structure:
+           parameter "timestamp" of String, parameter "registration_id" of
+           String, parameter "registration" of String, parameter
+           "error_message" of String, parameter "module_name_lc" of String,
+           parameter "git_url" of String
+        """
+        return self._client.call_method(
+            'Catalog.list_builds',
+            [params], self._service_ver, context)
+
+    def delete_module(self, params, context=None):
+        """
+        admin method to delete a module, will only work if the module has not been released
+        :param params: instance of type "SelectOneModuleParams" (Describes
+           how to find a single module/repository. module_name - name of
+           module defined in kbase.yaml file; git_url - the url used to
+           register the module) -> structure: parameter "module_name" of
+           String, parameter "git_url" of String
+        """
+        return self._client.call_method(
+            'Catalog.delete_module',
+            [params], self._service_ver, context)
+
+    def migrate_module_to_new_git_url(self, params, context=None):
+        """
+        admin method to move the git url for a module, should only be used if the exact same code has migrated to
+        a new URL.  It should not be used as a way to change ownership, get updates from a new source, or get a new
+        module name for an existing git url because old versions are retained and git commits saved will no longer
+        be correct.
+        :param params: instance of type "UpdateGitUrlParams" (all fields are
+           required to make sure you update the right one) -> structure:
+           parameter "module_name" of String, parameter "current_git_url" of
+           String, parameter "new_git_url" of String
+        """
+        return self._client.call_method(
+            'Catalog.migrate_module_to_new_git_url',
+            [params], self._service_ver, context)
+
+    def set_to_active(self, params, context=None):
+        """
+        admin methods to turn on/off modules
+        :param params: instance of type "SelectOneModuleParams" (Describes
+           how to find a single module/repository. module_name - name of
+           module defined in kbase.yaml file; git_url - the url used to
+           register the module) -> structure: parameter "module_name" of
+           String, parameter "git_url" of String
+        """
+        return self._client.call_method(
+            'Catalog.set_to_active',
+            [params], self._service_ver, context)
+
+    def set_to_inactive(self, params, context=None):
+        """
+        :param params: instance of type "SelectOneModuleParams" (Describes
+           how to find a single module/repository. module_name - name of
+           module defined in kbase.yaml file; git_url - the url used to
+           register the module) -> structure: parameter "module_name" of
+           String, parameter "git_url" of String
+        """
+        return self._client.call_method(
+            'Catalog.set_to_inactive',
+            [params], self._service_ver, context)
+
+    def is_approved_developer(self, usernames, context=None):
+        """
+        temporary developer approval, should be moved to more mature user profile service
+        :param usernames: instance of list of String
+        :returns: instance of list of type "boolean" (@range [0,1])
+        """
+        return self._client.call_method(
+            'Catalog.is_approved_developer',
+            [usernames], self._service_ver, context)
+
+    def list_approved_developers(self, context=None):
+        """
+        :returns: instance of list of String
+        """
+        return self._client.call_method(
+            'Catalog.list_approved_developers',
+            [], self._service_ver, context)
+
+    def approve_developer(self, username, context=None):
+        """
+        :param username: instance of String
+        """
+        return self._client.call_method(
+            'Catalog.approve_developer',
+            [username], self._service_ver, context)
+
+    def revoke_developer(self, username, context=None):
+        """
+        :param username: instance of String
+        """
+        return self._client.call_method(
+            'Catalog.revoke_developer',
+            [username], self._service_ver, context)
+
+    def log_exec_stats(self, params, context=None):
+        """
+        Request from Execution Engine for adding statistics about each method run. It could be done
+        using catalog admin credentials only.
+        :param params: instance of type "LogExecStatsParams" (user_id -
+           GlobusOnline login of invoker, app_module_name - optional module
+           name of registered repo (could be absent of null for old fashioned
+           services) where app_id comes from, app_id - optional method-spec
+           id without module_name prefix (could be absent or null in case
+           original execution was started through API call without app ID
+           defined), func_module_name - optional module name of registered
+           repo (could be absent of null for old fashioned services) where
+           func_name comes from, func_name - name of function in KIDL-spec
+           without module_name prefix, git_commit_hash - optional service
+           version (in case of dynamically registered repo), creation_time,
+           exec_start_time and finish_time - defined in seconds since Epoch
+           (POSIX), is_error - indicates whether execution was finished with
+           error or not.) -> structure: parameter "user_id" of String,
+           parameter "app_module_name" of String, parameter "app_id" of
+           String, parameter "func_module_name" of String, parameter
+           "func_name" of String, parameter "git_commit_hash" of String,
+           parameter "creation_time" of Double, parameter "exec_start_time"
+           of Double, parameter "finish_time" of Double, parameter "is_error"
+           of type "boolean" (@range [0,1])
+        """
+        return self._client.call_method(
+            'Catalog.log_exec_stats',
+            [params], self._service_ver, context)
+
+    def get_exec_aggr_stats(self, params, context=None):
+        """
+        :param params: instance of type "GetExecAggrStatsParams"
+           (full_app_ids - list of fully qualified app IDs (including
+           module_name prefix followed by slash in case of dynamically
+           registered repo). per_week - optional flag switching results to
+           weekly data rather than one row per app for all time (default
+           value is false)) -> structure: parameter "full_app_ids" of list of
+           String, parameter "per_week" of type "boolean" (@range [0,1])
+        :returns: instance of list of type "ExecAggrStats" (full_app_id -
+           optional fully qualified method-spec id including module_name
+           prefix followed by slash in case of dynamically registered repo
+           (it could be absent or null in case original execution was started
+           through API call without app ID defined), time_range - one of
+           supported time ranges (currently it could be either '*' for all
+           time or ISO-encoded week like "2016-W01") total_queue_time -
+           summarized time difference between exec_start_time and
+           creation_time moments defined in seconds since Epoch (POSIX),
+           total_exec_time - summarized time difference between finish_time
+           and exec_start_time moments defined in seconds since Epoch
+           (POSIX).) -> structure: parameter "full_app_id" of String,
+           parameter "time_range" of String, parameter "number_of_calls" of
+           Long, parameter "number_of_errors" of Long, parameter
+           "total_queue_time" of Double, parameter "total_exec_time" of Double
+        """
+        return self._client.call_method(
+            'Catalog.get_exec_aggr_stats',
+            [params], self._service_ver, context)
+
+    def get_exec_aggr_table(self, params, context=None):
+        """
+        :param params: instance of type "ExecAggrTableParams" (Get aggregated
+           usage metrics; available only to Admins.) -> structure: parameter
+           "begin" of Long, parameter "end" of Long
+        :returns: instance of unspecified object
+        """
+        return self._client.call_method(
+            'Catalog.get_exec_aggr_table',
+            [params], self._service_ver, context)
+
+    def get_exec_raw_stats(self, params, context=None):
+        """
+        :param params: instance of type "GetExecRawStatsParams" (Get raw
+           usage metrics; available only to Admins.) -> structure: parameter
+           "begin" of Long, parameter "end" of Long
+        :returns: instance of list of unspecified object
+        """
+        return self._client.call_method(
+            'Catalog.get_exec_raw_stats',
+            [params], self._service_ver, context)
+
+    def get_client_groups(self, params, context=None):
+        """
+        @deprecated list_client_group_configs
+        :param params: instance of type "GetClientGroupParams" (if app_ids is
+           empty or null, all client groups are returned) -> structure:
+        :returns: instance of list of type "AppClientGroup" (app_id = full
+           app id; if module name is used it will be case insensitive this
+           will overwrite all existing client groups (it won't just push
+           what's on the list) If client_groups is empty or set to null, then
+           the client_group mapping will be removed.) -> structure: parameter
+           "app_id" of String, parameter "client_groups" of list of String
+        """
+        return self._client.call_method(
+            'Catalog.get_client_groups',
+            [params], self._service_ver, context)
+
+    def set_client_group_config(self, config, context=None):
+        """
+        :param config: instance of type "ClientGroupConfig" -> structure:
+           parameter "module_name" of String, parameter "function_name" of
+           String, parameter "client_groups" of list of String
+        """
+        return self._client.call_method(
+            'Catalog.set_client_group_config',
+            [config], self._service_ver, context)
+
+    def remove_client_group_config(self, config, context=None):
+        """
+        :param config: instance of type "ClientGroupConfig" -> structure:
+           parameter "module_name" of String, parameter "function_name" of
+           String, parameter "client_groups" of list of String
+        """
+        return self._client.call_method(
+            'Catalog.remove_client_group_config',
+            [config], self._service_ver, context)
+
+    def list_client_group_configs(self, filter, context=None):
+        """
+        :param filter: instance of type "ClientGroupFilter" -> structure:
+           parameter "module_name" of String, parameter "function_name" of
+           String
+        :returns: instance of list of type "ClientGroupConfig" -> structure:
+           parameter "module_name" of String, parameter "function_name" of
+           String, parameter "client_groups" of list of String
+        """
+        return self._client.call_method(
+            'Catalog.list_client_group_configs',
+            [filter], self._service_ver, context)
+
+    def set_volume_mount(self, config, context=None):
+        """
+        must specify all properties of the VolumeMountConfig
+        :param config: instance of type "VolumeMountConfig" (for a module,
+           function, and client group, set mount configurations) ->
+           structure: parameter "module_name" of String, parameter
+           "function_name" of String, parameter "client_group" of String,
+           parameter "volume_mounts" of list of type "VolumeMount" ->
+           structure: parameter "host_dir" of String, parameter
+           "container_dir" of String, parameter "read_only" of type "boolean"
+           (@range [0,1])
+        """
+        return self._client.call_method(
+            'Catalog.set_volume_mount',
+            [config], self._service_ver, context)
+
+    def remove_volume_mount(self, config, context=None):
+        """
+        must specify module_name, function_name, client_group and this method will delete any configured mounts
+        :param config: instance of type "VolumeMountConfig" (for a module,
+           function, and client group, set mount configurations) ->
+           structure: parameter "module_name" of String, parameter
+           "function_name" of String, parameter "client_group" of String,
+           parameter "volume_mounts" of list of type "VolumeMount" ->
+           structure: parameter "host_dir" of String, parameter
+           "container_dir" of String, parameter "read_only" of type "boolean"
+           (@range [0,1])
+        """
+        return self._client.call_method(
+            'Catalog.remove_volume_mount',
+            [config], self._service_ver, context)
+
+    def list_volume_mounts(self, filter, context=None):
+        """
+        :param filter: instance of type "VolumeMountFilter" (Parameters for
+           listing VolumeMountConfigs.  If nothing is set, everything is
+           returned.  Otherwise, will return everything that matches all
+           fields set.  For instance, if only module_name is set, will return
+           everything for that module.  If they are all set, will return the
+           specific module/app/client group config.  Returns nothing if no
+           matches are found.) -> structure: parameter "module_name" of
+           String, parameter "function_name" of String, parameter
+           "client_group" of String
+        :returns: instance of list of type "VolumeMountConfig" (for a module,
+           function, and client group, set mount configurations) ->
+           structure: parameter "module_name" of String, parameter
+           "function_name" of String, parameter "client_group" of String,
+           parameter "volume_mounts" of list of type "VolumeMount" ->
+           structure: parameter "host_dir" of String, parameter
+           "container_dir" of String, parameter "read_only" of type "boolean"
+           (@range [0,1])
+        """
+        return self._client.call_method(
+            'Catalog.list_volume_mounts',
+            [filter], self._service_ver, context)
+
+    def is_admin(self, username, context=None):
+        """
+        returns true (1) if the user is an admin, false (0) otherwise
+        :param username: instance of String
+        :returns: instance of type "boolean" (@range [0,1])
+        """
+        return self._client.call_method(
+            'Catalog.is_admin',
+            [username], self._service_ver, context)

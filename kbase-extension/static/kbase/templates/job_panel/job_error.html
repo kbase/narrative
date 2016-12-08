@@ -1,0 +1,23 @@
+<div>
+    <b>An error has been detected in this job!</b>
+    <table class="table table-bordered">
+        <tr>
+            <th>Id:</th>
+            <td>{{jobId}}</td>
+        </tr>
+        <tr>
+            <th>Type:</th>
+            <td>{{errorType}}</td>
+        </tr>
+        <tr>
+            <th>Error:</th>
+            <td>{{errorText}}</td>
+        </tr>
+    </table>
+    {{#if hasTraceback}}
+    <div id="kb-job-err-trace"></div>
+    {{/if}}
+    <div>
+        Deleting this job will remove it from your Narrative. Any generated data will be retained. Continue?
+    </div>
+</div>

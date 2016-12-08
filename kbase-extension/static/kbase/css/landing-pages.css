@@ -138,13 +138,13 @@ table {
     overflow-x: scroll;
 }
 
-div::-webkit-scrollbar {
+/*div::-webkit-scrollbar {
     width: 10px;
     height: 10px;
 }
 
 div::-webkit-scrollbar-track {
-    /*-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);*/
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
     border-radius: 10px;
     background: #ddd;
 }
@@ -152,8 +152,8 @@ div::-webkit-scrollbar-track {
 div::-webkit-scrollbar-thumb {
     border-radius: 10px;
     background: #666;
-    /*-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5);*/
-}
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5);
+}*/
 
 
 /* ws browser */

@@ -11,7 +11,7 @@
  *
  *   Basic Modal:
  *
- *      var modal = $('<div>').kbaseModal({
+ *      var modal =  new kbaseModal($('<div>'), {
  *         title: 'Model Details',
  *         subText: 'some subtext under title'
  *      });
@@ -20,8 +20,17 @@
  *
 */
 
-define(['jquery', 'kbwidget'], function($) {
-    $.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery'
+	], function(
+		KBWidget,
+		bootstrap,
+		$
+	) {
+    return KBWidget({
         name: "kbaseModal",
         version: "1.0.0",
         options: {
@@ -35,11 +44,12 @@ define(['jquery', 'kbwidget'], function($) {
             var right_label = options.rightLabel;
             var body = options.body;
             var buttons = options.buttons;
+            var width = options.width;
 
-            var modal = $('<div class="modal">'
-                                '<div class="modal-dialog">'+
-                                    '<div class="modal-content">'
-                                        '<div class="modal-header">'
+            var modal = $('<div class="modal">'+
+                                '<div class="modal-dialog" ' + (width ? 'style="width: '+width+';"' : '') + '>'+
+                                    '<div class="modal-content">'+
+                                        '<div class="modal-header">'+
                                             '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>'+
                                             '<h3 class="modal-title"></h3>'+
                                             '<span class="modal-subtext"></span>'+

@@ -5,16 +5,26 @@
  * @author Michael Sneddon <mwsneddon@lbl.gov>
  * @public
  */
-define(['jquery',
-        'narrativeConfig',
-        'kbwidget',
-        'kbaseAuthenticatedWidget', 
-        'select2'], 
-function($, Config) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'narrativeConfig',
+		'kbaseAuthenticatedWidget',
+		'select2'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Config,
+		kbaseAuthenticatedWidget,
+		select2
+	) {
     'use strict';
-    $.KBWidget({
+    return KBWidget({
         name: "kbaseNarrativeSharePanel",
-        parent: "kbaseAuthenticatedWidget",
+        parent : kbaseAuthenticatedWidget,
         version: "1.0.0",
         options: {
             ws_url: Config.url('workspace'),
@@ -514,8 +524,8 @@ function($, Config) {
             '#009688', //teal
             '#4CAF50', //green
             '#8BC34A', //lime green
-            '#CDDC39', //lime
-            '#FFEB3B', //yellow
+            // '#CDDC39', //lime
+            // '#FFEB3B', //yellow
             '#FFC107', //amber
             '#FF9800', //orange
             '#FF5722', //deep orange

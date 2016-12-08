@@ -1,11 +1,23 @@
 /**
  * KBase widget to display table and boxplot of BIOM data
  */
-define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbStandaloneTable'],
-    function($) {
-    $.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'kbaseAuthenticatedWidget',
+		'kbStandaloneTable'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		kbaseAuthenticatedWidget,
+		kbStandaloneTable
+	) {
+    return KBWidget({
         name: 'AnnotationSetTable',
-        parent: "kbaseAuthenticatedWidget",
+        parent : kbaseAuthenticatedWidget,
         version: '1.0.0',
         token: null,
         options: {

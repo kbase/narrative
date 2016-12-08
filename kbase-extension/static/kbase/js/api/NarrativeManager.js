@@ -6,7 +6,16 @@
  *      nms_url: ...
  *
  */
-define(['jquery'], function( $ ) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery'
+	], function(
+		KBWidget,
+		bootstrap,
+		$
+	) {
     return function(options, auth, auth_cb) {
 
         // setup URLs and Clients
@@ -264,7 +273,7 @@ define(['jquery'], function( $ ) {
                 cell_type: 'markdown',
                 source: "<div id='" + cellId + "'></div>" +
                         "\n<script>" +
-                        "$('#" + cellId + "').kbaseNarrativeAppCell({'appSpec' : '" + this._safeJSONStringify(spec) + "', 'cellId' : '" + cellId + "'});" +
+                         "new kbaseNarrativeAppCell($('#" + cellId + "'), {'appSpec' : '" + this._safeJSONStringify(spec) + "', 'cellId' : '" + cellId + "'});" +
                         "</script>",
                 metadata: { }
             };
@@ -282,7 +291,7 @@ define(['jquery'], function( $ ) {
                 cell_type: 'markdown',
                 source: "<div id='" + cellId + "'></div>" +
                         "\n<script>" +
-                        "$('#" + cellId + "').kbaseNarrativeMethodCell({'method' : '" + this._safeJSONStringify(spec) + "'});" +
+                         "new kbaseNarrativeMethodCell($('#" + cellId + "'), {'method' : '" + this._safeJSONStringify(spec) + "'});" +
                         "</script>",
                 metadata: { }
             };

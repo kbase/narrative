@@ -1,12 +1,27 @@
 /**
  * KBase widget to display table and boxplot of BIOM data
  */
-define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'RGBColor', 
-        'kbStandaloneTable', 'kbStandaloneGraph'], 
-        function($) {
-    $.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'kbaseAuthenticatedWidget',
+		'RGBColor',
+		'kbStandaloneTable',
+		'kbStandaloneGraph'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		kbaseAuthenticatedWidget,
+		RGBColor,
+		kbStandaloneTable,
+		kbStandaloneGraph
+	) {
+    return KBWidget({
         name: 'AbundanceDataView',
-        parent: "kbaseAuthenticatedWidget",
+        parent : kbaseAuthenticatedWidget,
         version: '1.0.0',
         token: null,
         options: {

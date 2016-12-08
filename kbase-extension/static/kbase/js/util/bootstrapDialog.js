@@ -1,19 +1,26 @@
 /*global define*/
 /*jslint white: true*/
-define(['jquery', 'bootstrap'], 
-function ($) {
+define (
+    [
+        'bootstrap',
+        'jquery'
+    ], function (
+        bootstrap,
+        $
+    ) {
     'use strict';
 
     /**
      * options:
-     * { 
-         title: string,
-     *   body: jquery node
-     *   buttons: array of jquery nodes
-     *   closeButton: boolean, default false
-     *   }
+     * {
+     *     title: string,
+     *     body: jquery node
+     *     buttons: array of jquery nodes
+     *     closeButton: boolean, default false
+     *     enterToTrigger: boolean, default false
+     * }
      */
-    var BootstrapDialog = function(options) {
+    var BootstrapDialog = function (options) {
         this.$modal = $('<div class="modal fade" tabindex="-1", role="dialog">');
         this.$dialog = $('<div class="modal-dialog">');
         this.$dialogContent = $('<div class="modal-content">');
@@ -24,6 +31,11 @@ function ($) {
         this.$footer = $('<div class="modal-footer">');
 
         this.$buttonList = $('<div>');
+
+        this.enterToTrigger = false;
+        if (options.enterToTrigger) {
+            this.enterToTrigger = options.enterToTrigger;
+        }
 
         this.initialize(options);
     };
@@ -66,13 +78,24 @@ function ($) {
         this.$footer.empty();
         for (var i=0; i<buttonList.length; i++) {
             var $btn = buttonList[i];
-            $btn.addClass('btn btn-default btn-sm');
             this.$footer.append($btn);
+        }
+        if (this.enterToTrigger) {
+            this.$modal
+            .off('keypress')
+            .on('keypress', (function(e) {
+                if (e.keyCode === 13) {
+                    e.stopPropagation();
+                    e.preventDefault();
+
+                    this.$footer.find('.btn:last').trigger('click');
+                }
+            }.bind(this)));
         }
     };
 
     BootstrapDialog.prototype.getButtons = function () {
-        console.log("get buttons");
+        return this.$footer.children();
     };
 
     BootstrapDialog.prototype.getTitle = function () {
@@ -93,6 +116,15 @@ function ($) {
 
     BootstrapDialog.prototype.getElement = function() {
         return this.$modal;
+    };
+
+    /**
+     * Removes this modal from the DOM and removes any associated content.
+     */
+    BootstrapDialog.prototype.destroy = function() {
+        this.$modal.remove();
+        this.$modal = null;
+        return null;
     };
 
     return BootstrapDialog;

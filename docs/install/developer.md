@@ -75,7 +75,7 @@ This builds up a venv, installs all requirements into it, and builds the Narrati
 
 Activate your virtualenv, then just run the script with no flags.
 ```
-> source /path/to/my_virtualenv/bin/activate
+> source /path/to/my_virtual_env/bin/activate
 > scripts/install_narrative.sh
 ```
 

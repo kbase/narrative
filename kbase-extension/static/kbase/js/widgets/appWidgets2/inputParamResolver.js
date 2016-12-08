@@ -80,11 +80,11 @@ define([
                 case 'workspaceObjectRef':
                     switch (spec.ui.class) {
                         case 'input':
-                            return 'singleObjectInput';
-                            // return 'select2ObjectInput';
+                            //return 'singleObjectInput';
+                            return 'select2ObjectInput';
                         case 'parameter':
-                            return 'singleObjectInput';
-                            // return 'select2ObjectInput';
+                            // return 'singleObjectInput';
+                            return 'select2ObjectInput';
                         default:
                             return 'undefinedInput';
                     }

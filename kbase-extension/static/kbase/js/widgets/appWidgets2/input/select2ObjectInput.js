@@ -125,21 +125,22 @@ define([
 
             var control = ui.getElement('input-container.input');
 
-            //console.log('setting control value', control, stringValue, JSON.parse(JSON.stringify(model)));
+            // NB id used as String since we are comparing it below to the actual dom
+            // element id
+            var currentSelectionId = String(model.availableValuesMap[stringValue]);
 
-            //$(control).val(stringValue).trigger('change.select2');
-            //return;
-
-            var id = model.availableValuesMap[stringValue];
-
-
+            // Unselect any currently selected item.
             Array.prototype.slice.call(control.selectedOptions).forEach(function(option) {
                 option.selected = false;
             });
 
+            // Select any option which matches our models current selection.
+            // NB matching by id not value.
+            // NB the id is not the index of the option. It is a value assigned to the option,
+            // and used to map the object ref or name to the control.  
             var options = Array.prototype.slice.call(control.options);
             options.forEach(function(option) {
-                if (option.value === id) {
+                if (option.value === currentSelectionId) {
                     option.selected = true;
                 }
             });
@@ -207,10 +208,9 @@ define([
 
         function filterObjectInfoByType(objects, types) {
             return objects.map(function(objectInfo) {
-                    var fixed = serviceUtils.objectInfoToObject(objectInfo)
-                    var type = fixed.typeModule + '.' + fixed.typeName;
+                    var type = objectInfo.typeModule + '.' + objectInfo.typeName;
                     if (types.indexOf(type) >= 0) {
-                        return fixed;
+                        return objectInfo;
                     }
                 })
                 .filter(function(item) {
@@ -225,12 +225,11 @@ define([
                         type: 'workspace-data-updated'
                     },
                     handle: function(message) {
-                        doWorkpaceUpdated(filterObjectInfoByType(message.data, types));
+                        doWorkspaceUpdated(filterObjectInfoByType(message.objectInfo, types));
                     }
                 })
                 .then(function(message) {
-                    console.log('GOT first workspace-data-updated', message);
-                    return filterObjectInfoByType(message.data, types);
+                    return filterObjectInfoByType(message.objectInfo, types);
                 });
         }
 
@@ -299,7 +298,6 @@ define([
         function doChange() {
             validate()
                 .then(function(result) {
-                    console.log('validation: ', result);
                     if (result.isValid) {
                         model.value = result.value;
                         bus.emit('changed', {
@@ -443,7 +441,7 @@ define([
          * available, issue a warning
          */
 
-        function doWorkpaceUpdated(data) {
+        function doWorkspaceUpdated(data) {
             // compare to availableData.
             if (!utils.isEqual(data, model.availableValues)) {
                 model.availableValues = data;
@@ -546,7 +544,8 @@ define([
 
                 return fetchData()
                     .then(function(data) {
-                        model.availableValues = data;
+                        doWorkspaceUpdated(data);
+                        // model.availableValues = data;
                         return render();
                     })
                     .then(function() {

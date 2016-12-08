@@ -57,7 +57,6 @@ define([
                     viewInputArea = this.element.find('[data-subarea-type="app-cell-input"]'),
                     showCode = utils.getCellMeta(cell, 'kbase.appCell.user-settings.showCodeInputArea');
 
-                console.log('minimize', outputArea, viewInputArea);
                 if (showCode) {
                     inputArea.addClass('hidden');
                 }
@@ -174,7 +173,6 @@ define([
             return Promise.try(function() {
                     // Create base app cell
 
-                    // console.log('about to convert appspec', appSpec);
                     // TODO: this should capture the entire app spec, so don't need
                     // to carry appSpec around.
                     spec = Spec.make({
@@ -208,7 +206,6 @@ define([
                     cell.metadata = meta;
 
                     // Add the params
-                    // console.log('SET INITIAL PARAMS', spec.makeDefaultedModel());
                     utils.setCellMeta(cell, 'kbase.appCell.params', spec.makeDefaultedModel());
                     // initializeParams(appSpec);
                     // Complete the cell setup.

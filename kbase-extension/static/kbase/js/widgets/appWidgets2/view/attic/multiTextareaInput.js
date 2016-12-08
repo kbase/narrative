@@ -22,11 +22,11 @@ define([
     function factory(config) {
         var options = {},
             spec = config.parameterSpec,
-            constraints = spec.getConstraints(),
+            constraints = spec.data.constraints,
             container,
             parent,
             bus = config.bus,
-            dom, 
+            dom,
             model = {
                 value: []
             },
@@ -113,9 +113,9 @@ define([
          *
          * Text fields can occur in multiples.
          * We have a choice, treat single-text fields as a own widget
-         * or as a special case of multiple-entry -- 
+         * or as a special case of multiple-entry --
          * with a min-items of 1 and max-items of 1.
-         * 
+         *
          *
          */
 
@@ -153,7 +153,7 @@ define([
          * Places it into the dom node
          * Hooks up event listeners
          */
-        
+
         function makeInputControl(events, bus) {
             
             console.log('making input control 1', model);
@@ -161,7 +161,7 @@ define([
             var items = model.value.map(function (value, index) {
                 return makeSingleInputControl(value, index, events, bus);
             });
-            
+
 
             items = items.concat(makeNewInputControl('', events, bus));
             console.log('making input control 2', model);
@@ -169,7 +169,7 @@ define([
             var content = items.join('\n');
             return content;
         }
-        
+
         function makeSingleInputControl(currentValue, index, events, bus) {
             // CONTROL
             var preButton, postButton,
@@ -197,9 +197,9 @@ define([
                     index: index
                 },
                 placeholder = div({id: widgetId});
-            
+
             widgets.push(widgetWrapper);
-            
+
             // set up listeners for the input
             inputBus.on('sync', function (message) {
                 var value = model.value[index];
@@ -237,7 +237,7 @@ define([
                 style: {width: '4ex'},
                 dataIndex: String(index),
                 id: events.addEvent({type: 'click', handler: function (e) {
-                        // no, we don't need to consult the control, we just remove 
+                        // no, we don't need to consult the control, we just remove
                         // it...
                         model.value.splice(widgetWrapper.index, 1);
                         //var index = e.target.getAttribute('data-index'),
@@ -257,7 +257,7 @@ define([
                 postButton
             ]);
         }
-        
+
         function makeNewInputControl(currentValue, events, bus) {
             // CONTROL
             var preButton, postButton,
@@ -276,7 +276,7 @@ define([
                     showOwnMessages: true
                 }),
                 placeholder = div({id: widgetId});
-            
+
             widgets.push({
                 id: widgetId,
                 instance: inputWidget,
@@ -299,10 +299,10 @@ define([
                 console.log('TO', model);
                 
                 // TODO: and insert a new row ...
-                
+
                 // first attempt, re-render the whole shebang.
                 render();
-                
+
                 // TODO: validate the main control...
                 bus.emit('changed', {
                     newValue: model.value
@@ -318,7 +318,7 @@ define([
                         // alert('add me');
                     }})
             }, '+'));
-            
+
             return div({class: 'input-group'}, [
                 preButton,
                 placeholder,
@@ -327,9 +327,9 @@ define([
         }
 
         function render() {
-            
+
             // if we have input widgets already, tear them down.
-            
+
             widgets.forEach(function (widget) {
                 widget.bus.emit('stop');
                 // TODO figure out how to remove unused channels.
@@ -337,7 +337,7 @@ define([
             });
             widgets = [];
             // we don't have to wait for anything...
-            
+
             var events = Events.make(),
                 control = makeInputControl(events, bus);
             
@@ -373,7 +373,7 @@ define([
                 return validate(rawValue);
             }))
                 .then(function (results) {
-                    // a bit of a hack -- we need to handle the 
+                    // a bit of a hack -- we need to handle the
                     // validation here, and update the individual rows
                     // for now -- just create one mega message.
                     var errorMessages = [],
@@ -394,7 +394,7 @@ define([
                         };
                     }
                     bus.emit('validation', validationMessage);
-                    
+
                 });
         }
 
@@ -414,7 +414,7 @@ define([
 
                     container.innerHTML = theLayout.content;
                     events.attachEvents(container);
-                    
+
                     bus.on('reset-to-defaults', function (message) {
                         resetModelValue();
                     });

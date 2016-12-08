@@ -9,7 +9,7 @@ define([
     'common/dom',
     'bootstrap',
     'css!font-awesome'
-], function (Promise, html, Validation, Events, Runtime, Dom) {
+], function(Promise, html, Validation, Events, Runtime, Dom) {
     'use strict';
 
     // Constants
@@ -50,23 +50,23 @@ define([
         }
 
         function setModelValue(value) {
-            return Promise.try(function () {
+            return Promise.try(function() {
                     if (model.value !== value) {
                         model.value = value;
                         return true;
                     }
                     return false;
                 })
-                .then(function (changed) {
+                .then(function(changed) {
                     render();
                 });
         }
 
         function unsetModelValue() {
-            return Promise.try(function () {
+            return Promise.try(function() {
                     model.value = undefined;
                 })
-                .then(function (changed) {
+                .then(function(changed) {
                     render();
                 });
         }
@@ -90,7 +90,7 @@ define([
          */
 
         function validate() {
-            return Promise.try(function () {
+            return Promise.try(function() {
                     if (!options.enabled) {
                         return {
                             isValid: true,
@@ -111,7 +111,7 @@ define([
 
                     return Validation.validateWorkspaceObjectName(rawValue, validationOptions);
                 })
-                .then(function (validationResult) {
+                .then(function(validationResult) {
                     // TODO: should pass the validation object through untouched...
                     return validationResult;
                     //                    return {
@@ -138,10 +138,10 @@ define([
             var editPauseInterval = interval || 500;
             return {
                 type: 'keyup',
-                handler: function (e) {
+                handler: function(e) {
                     bus.emit('touched');
                     cancelTouched();
-                    autoChangeTimer = window.setTimeout(function () {
+                    autoChangeTimer = window.setTimeout(function() {
                         autoChangeTimer = null;
                         e.target.dispatchEvent(new Event('change'));
                     }, editPauseInterval);
@@ -152,9 +152,9 @@ define([
         function handleChanged() {
             return {
                 type: 'change',
-                handler: function () {
+                handler: function() {
                     validate()
-                        .then(function (result) {
+                        .then(function(result) {
                             if (result.isValid) {
                                 bus.emit('changed', {
                                     newValue: result.parsedValue
@@ -166,7 +166,7 @@ define([
                             }
                             bus.emit('validation', result);
                         })
-                        .catch(function (err) {
+                        .catch(function(err) {
                             bus.emit('validation', {
                                 errorMessage: err.message,
                                 diagnosis: 'error'
@@ -196,14 +196,14 @@ define([
         }
 
         function render() {
-            Promise.try(function () {
+            Promise.try(function() {
                     var events = Events.make(),
                         inputControl = makeInputControl(model.value, events, bus);
 
                     dom.setContent('input-container', inputControl);
                     events.attachEvents(container);
                 })
-                .then(function () {
+                .then(function() {
                     return autoValidate();
                 });
         }
@@ -222,10 +222,10 @@ define([
 
         function autoValidate() {
             return validate()
-                .then(function (result) {
+                .then(function(result) {
                     bus.emit('validation', result);
                 })
-                .catch(function (err) {
+                .catch(function(err) {
                     bus.emit('validation', {
                         errorMessage: err.message,
                         diagnosis: 'error'
@@ -236,8 +236,8 @@ define([
         // LIFECYCLE API
 
         function start() {
-            return Promise.try(function () {
-                bus.on('run', function (message) {
+            return Promise.try(function() {
+                bus.on('run', function(message) {
                     parent = message.node;
                     container = parent.appendChild(document.createElement('div'));
                     dom = Dom.make({ node: container });
@@ -249,18 +249,18 @@ define([
                     events.attachEvents(container);
 
 
-                    bus.on('reset-to-defaults', function (message) {
+                    bus.on('reset-to-defaults', function(message) {
                         resetModelValue();
                     });
-                    bus.on('update', function (message) {
+                    bus.on('update', function(message) {
                         setModelValue(message.value);
                     });
-                    bus.on('refresh', function () {
+                    bus.on('refresh', function() {
 
                     });
-                    bus.on('workspace-changed', function (message) {
-                        console.log('workspace updated!!!');
-                    });
+                    // bus.on('workspace-changed', function (message) {
+                    //     console.log('workspace updated!!!');
+                    // });
 
                     //runtime.bus().receive({
                     //    test: function (message) {
@@ -285,7 +285,7 @@ define([
     }
 
     return {
-        make: function (config) {
+        make: function(config) {
             return factory(config);
         }
     };

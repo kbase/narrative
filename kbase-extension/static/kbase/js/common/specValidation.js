@@ -5,8 +5,7 @@
  * Provides app spec functionality.
  */
 
-define([
-], function () {
+define([], function() {
     'use strict';
 
     function toInteger(value) {
@@ -107,7 +106,8 @@ define([
             diagnosis = 'invalid';
             errorMessage = 'value must be a string (it is of type "' + (typeof value) + '")';
         } else {
-            parsedValue = value.trim();
+            // parsedValue = value.trim();
+            parsedValue = value;
             if (parsedValue.length < c.min) {
                 diagnosis = 'invalid';
                 errorMessage = 'the minimum length for this parameter is ' + c.min;
@@ -140,12 +140,11 @@ define([
 
         // is it empty? what does it mean for it to be empty?
         // each member is empty.
-        console.log('validating struct', spec, value);
 
         // use the spec to validate each member
         var result = {};
-            
-        spec.parameters.layout.forEach(function (id) {
+
+        spec.parameters.layout.forEach(function(id) {
             var fieldValue = value[id];
             var fieldSpec = spec.parameters.specs[id];
             result[id] = {
@@ -156,6 +155,7 @@ define([
 
         return result;
     }
+
     function validateStructList(spec, value) {
         var parsedValue,
             errorMessage, diagnosis = 'valid',
@@ -171,7 +171,7 @@ define([
         if (value === undefined || value === null) {
             empty = true;
         } else if (value.length === 0) {
-            empty= true;
+            empty = true;
         }
         if (empty) {
             if (spec.data.constraints.required) {
@@ -193,10 +193,10 @@ define([
         }
 
         // use the spec to validate each member
-        
+
         // validate eacn item in the value.
-        
-       var results = value.map(function (item) {
+
+        var results = value.map(function(item) {
             // yes, the spec for a struct list is identical (for now) to 
             // a struct. 
             // TODO: we need an ordered set type to wrap the struct!!!!!!
@@ -215,6 +215,7 @@ define([
             parsedValue: value
         };
     }
+
     function resolveValidator(spec) {
         var fun;
         switch (spec.data.type) {
@@ -233,7 +234,7 @@ define([
                 fun = validateTrue;
         }
 
-        return function (value) {
+        return function(value) {
             return fun(spec, value);
         };
     }
@@ -252,7 +253,7 @@ define([
     }
 
     return {
-        make: function (config) {
+        make: function(config) {
             return factory(config);
         }
     };

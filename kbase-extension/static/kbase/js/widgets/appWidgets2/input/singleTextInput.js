@@ -3,19 +3,21 @@
 define([
     'bluebird',
     'kb_common/html',
-    '../validation',
+    '../validators/text',
     'common/events',
     'common/ui',
+    'common/props',
     '../inputUtils',
 
     'bootstrap',
     'css!font-awesome'
-], function (
+], function(
     Promise,
     html,
     Validation,
     Events,
     UI,
+    Props,
     inputUtils
 ) {
     'use strict';
@@ -25,17 +27,12 @@ define([
         input = t('input');
 
     function factory(config) {
-            var parent,
-            container,
+        var spec = config.parameterSpec,
             bus = config.bus,
+            parent,
+            container,
             ui,
-            model = {
-                value: undefined
-            };
-            var constraints = {};
-            if (config.parameterSpec && config.parameterSpec.data) {
-                constraints = config.parameterSpec.data.constraints;
-            }
+            model;
 
         // CONTROL
 
@@ -50,48 +47,49 @@ define([
         // MODEL
 
         function setModelValue(value) {
-            if (model.value === value) {
+            if (value === undefined) {
                 return;
             }
-            model.value = value;
-            setControlValue(value);
-            autoValidate();
-        }
-
-        function unsetModelValue() {
-            model.value = undefined;
-            setControlValue(model.value);
-            autoValidate();
+            if (model.getItem('value') === value) {
+                return;
+            }
+            model.setItem('value', value);
         }
 
         function resetModelValue() {
-            if (constraints.defaultValue) {
-                setModelValue(constraints.defaultValue);
-            } else {
-                unsetModelValue();
-            }
+            setModelValue(spec.data.defaultValue);
         }
 
-        /*
-         *
-         * Text fields can occur in multiples.
-         * We have a choice, treat single-text fields as a own widget
-         * or as a special case of multiple-entry --
-         * with a min-items of 1 and max-items of 1.
-         *
-         *
-         */
+        // sync the dom to the model.
+        function syncModelToControl() {
+            setControlValue(model.getItem('value', null));
+        }
 
-        function validate() {
-            return Promise.try(function () {
-                var rawValue = getControlValue(),
-                    validationResult = Validation.validateTextString(rawValue, constraints);
 
-                return validationResult;
+
+        // VALIDATION
+
+        function importControlValue() {
+            return Promise.try(function() {
+                return Validation.importString(getControlValue());
             });
         }
 
-        // DOM
+        function validate(value) {
+            return Promise.try(function() {
+                return Validation.validate(value, spec);
+            });
+        }
+
+        function autoValidate() {
+            return validate(model.getItem('value'))
+                .then(function(result) {
+                    bus.emit('validation', result);
+                });
+        }
+
+
+        // DOM & RENDERING
 
         var autoChangeTimer;
 
@@ -103,13 +101,13 @@ define([
         }
 
         function handleTouched(interval) {
-            var editPauseInterval = interval || 2000;
+            var editPauseInterval = interval || 100;
             return {
                 type: 'keyup',
-                handler: function (e) {
+                handler: function(e) {
                     bus.emit('touched');
                     cancelTouched();
-                    autoChangeTimer = window.setTimeout(function () {
+                    autoChangeTimer = window.setTimeout(function() {
                         autoChangeTimer = null;
                         e.target.dispatchEvent(new Event('change'));
                     }, editPauseInterval);
@@ -120,24 +118,26 @@ define([
         function handleChanged() {
             return {
                 type: 'change',
-                handler: function (e) {
+                handler: function() {
                     cancelTouched();
-                    validate()
-                        .then(function (result) {
+                    importControlValue()
+                        .then(function(value) {
+                            model.setItem('value', value);
+                            bus.emit('changed', {
+                                newValue: value
+                            });
+                            return validate(value);
+                        })
+                        .then(function(result) {
                             if (result.isValid) {
-                                setModelValue(result.parsedValue);
-                                bus.emit('changed', {
-                                    newValue: result.parsedValue
-                                });
+                                if (config.showOwnMessages) {
+                                    ui.setContent('input-container.message', '');
+                                }
                             } else if (result.diagnosis === 'required-missing') {
-                                // If a field is "made empty", causing a required-missing state,
-                                // we still want to store and propagate the changes.
-                                setModelValue(result.parsedValue);
-                                bus.emit('changed', {
-                                    newValue: result.parsedValue
-                                });
+                                // nothing??
                             } else {
                                 if (config.showOwnMessages) {
+                                    // show error message -- new!
                                     var message = inputUtils.buildMessageAlert({
                                         title: 'ERROR',
                                         type: 'danger',
@@ -148,10 +148,13 @@ define([
                                     message.events.attachEvents();
                                 }
                             }
-
+                            bus.emit('validation', result);
+                        })
+                        .catch(function(err) {
                             bus.emit('validation', {
-                                errorMessage: result.errorMessage,
-                                diagnosis: result.diagnosis
+                                isValid: false,
+                                diagnosis: 'invalid',
+                                errorMessage: err.message
                             });
                         });
                 }
@@ -169,62 +172,78 @@ define([
         }
 
         function render(events) {
-            var content = div({
-                dataElement: 'main-panel'
+            return div({
+                dataElement: 'input-container'
             }, [
-                div({ dataElement: 'input-container' }, [
-                    makeInputControl(events)
-                ])
+                makeInputControl(events)
             ]);
-            return {
-                content: content,
-                events: events
-            };
         }
 
-        function autoValidate() {
-            return validate()
-                .then(function (result) {
-                    bus.emit('validation', {
-                        errorMessage: result.errorMessage,
-                        diagnosis: result.diagnosis
-                    });
-                });
+        // EVENT HANDLERS
+
+        /*
+            Focus the input control.
+        */
+        function doFocus() {
+            var node = ui.getElement('input-container.input');
+            if (node) {
+                node.focus();
+            }
         }
 
 
         // LIFECYCLE API
 
-        function start() {
-            return Promise.try(function () {
-                bus.on('run', function (message) {
+        function start(arg) {
+            return Promise.try(function() {
+                parent = arg.node;
+                container = parent.appendChild(document.createElement('div'));
+                ui = UI.make({ node: container });
 
-                    parent = message.node;
-                    container = parent.appendChild(document.createElement('div'));
-                    ui = UI.make({ node: message.node });
 
-                    var events = Events.make(),
-                        theLayout = render(events);
+                var events = Events.make();
+                container.innerHTML = render(events);
+                events.attachEvents(container);
+                // model.setItem('value', config.initialValue);
+                syncModelToControl();
+                autoValidate();
 
-                    container.innerHTML = theLayout.content;
-                    events.attachEvents(container);
-
-                    bus.on('reset-to-defaults', function () {
-                        resetModelValue();
-                    });
-                    bus.on('update', function (message) {
-                        setModelValue(message.value);
-                    });
-                    bus.emit('sync');
+                bus.on('reset-to-defaults', function() {
+                    resetModelValue();
                 });
+                bus.on('update', function(message) {
+                    setModelValue(message.value);
+                    syncModelToControl();
+                    autoValidate();
+                });
+                bus.on('focus', function() {
+                    doFocus();
+                });
+                // bus.emit('sync');
             });
         }
 
         function stop() {
-            return Promise.try(function () {
-                // nothing to do.
+            return Promise.try(function() {
+                if (container) {
+                    parent.removeChild(container);
+                }
             });
         }
+
+        // INIT
+
+        model = Props.make({
+            data: {
+                value: null
+            },
+            onUpdate: function() {
+                //syncModelToControl();
+                //autoValidate();
+            }
+        });
+
+        setModelValue(config.initialValue);
 
         return {
             start: start,
@@ -233,7 +252,7 @@ define([
     }
 
     return {
-        make: function (config) {
+        make: function(config) {
             return factory(config);
         }
     };

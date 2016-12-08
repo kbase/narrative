@@ -14,114 +14,6 @@ define([
 
     function factory(config) {
 
-        /*
-         * For a given parameter spec, return a more canonical, simpler
-         * representation.
-         * The paramter spec is rather baroque, and undocumented.
-         * We want the input widgets to rely on documented structures, which
-         * assists in documentation and testing, and also in generation of
-         * specs for subwidgets.
-         * Also as this just concerns constraints for the base type,
-         * the
-         */
-        function getParamConstraints(parameterSpec) {
-            var dataType = parameterSpec.data.type,
-                spec = parameterSpec.spec,
-                fieldType = spec.ui.fieldType;
-
-            // NOTE:
-            // field_type is text or dropdown, but does not always correspond to the
-            // type of control to build. E.g. selecting a workspace object is actually
-            // a dropdown even though the field_type is 'text'.
-
-            switch (dataType) {
-                case 'string':
-                case 'text':
-                    switch (fieldType) {
-                        case 'text':
-                            return {};
-                        case 'dropdown':
-                            return {};
-                        default:
-                            throw new Error('Unknown text param field type');
-                    }
-                case 'int':
-                    switch (fieldType) {
-                        case 'text':
-                            return {};
-                        case 'checkbox':
-                            return {};
-                        default:
-                            return {};
-                    }
-                case 'float':
-                    return {};
-                case 'workspaceObjectName':
-                    switch (parameterSpec.ui.class) {
-                        case 'input':
-                            return {
-                                required: spec.data.contraints.required,
-                                types: spec.text_options.valid_ws_types,
-                                defaultValues: spec.default_values
-                            };
-                        case 'output':
-                            return {
-                                required: spec.required(),
-                                types: spec.text_options.valid_ws_types,
-                                defaultValues: spec.default_values
-                            };
-                        case 'parameter':
-                            return {
-                                required: spec.required(),
-                                types: spec.text_options.valid_ws_types,
-                                defaultValues: spec.default_values
-                            };
-                        default:
-                            throw new Error('Unknown workspaceObjectName ui class');
-                    }
-                case '[]string':
-                    switch (fieldType) {
-                        case 'dropdown':
-                            return {};
-                        case 'textarea':
-                            return {};
-                        default:
-                            throw new Error('Unknown []string field type');
-                    }
-                case 'unspecified':
-                    // a bunch of field types are untyped:
-                    switch (fieldType) {
-                        case 'text':
-                            return {};
-                        case 'checkbox':
-                            return {};
-                        case 'textarea':
-                            return {};
-                        case 'dropdown':
-                            return {};
-                        case 'custom_button':
-                            return {};
-                        case 'textsubdata':
-                            return {};
-                        case 'file':
-                            return {};
-                        case 'custom_textsubdata':
-                            return {};
-                        case 'custom_widget':
-                            return {};
-                        case 'tab':
-                            return {};
-                        case 'reads_group_editor':
-                            return {};
-                        default:
-                            throw new Error('Unknown unspecified field type');
-                    }
-                default:
-                    throw new Error('Unknown data type');
-
-            }
-        }
-
         function getInputWidgetModule(spec) {
             var dataType = spec.data.type,
                 controlType = spec.ui.control;
@@ -156,18 +48,20 @@ define([
                             // simple text input.
                             return 'singleTextInput';
                     }
+                case 'sequence':
+                    return 'sequenceInput';
                 case 'int':
                     switch (controlType) {
                         case 'text':
                             if (spec.multipleItems) {
-                                return 'multiIntInput';
+                                return 'arrayInput';
                             }
                             return 'singleIntInput';
                         case 'checkbox':
                             return 'singleCheckboxInput';
                         default:
                             if (spec.multipleItems) {
-                                return 'multiIntInput';
+                                return 'arrayInput';
                             }
                             return 'singleIntInput';
                     }
@@ -177,20 +71,33 @@ define([
                             return 'undefinedInput';
                         case 'text':
                         default:
-                            return 'multiIntInput';
+                            return 'arrayInput';
                     }
                 case 'float':
                     return 'singleFloatInput';
                 case '[]float':
                     return 'multiFloatInput';
-                case 'workspaceObjectName':
+                case 'workspaceObjectRef':
                     switch (spec.ui.class) {
                         case 'input':
-                            return 'singleObjectInput';
+                            //return 'singleObjectInput';
+                            return 'select2ObjectInput';
+                        case 'parameter':
+                            // return 'singleObjectInput';
+                            return 'select2ObjectInput';
+                        default:
+                            return 'undefinedInput';
+                    }
+                case 'workspaceObjectName':
+                    switch (spec.ui.class) {
+                        // case 'input':
+                        //     return 'singleObjectInput';
+                        //     // return 'select2ObjectInput';
                         case 'output':
                             return 'singleNewObjectInput';
                         case 'parameter':
                             return 'singleObjectInput';
+                            // return 'select2ObjectInput';
                         default:
                             return 'undefinedInput';
                     }
@@ -207,42 +114,46 @@ define([
                         default:
                             return 'undefinedInput';
                     }
-                case 'workspaceObjectRef':
-                    switch (spec.ui.class) {
-                        case 'input':
-                            return 'singleObjectRefInput';
-                        case 'output':
-                            return 'undefinedInput';
-                        case 'parameter':
-                            return 'singleObjectRefInput';
-                        default:
-                            return 'undefinedInput';
-                    }
+                    // case 'workspaceObjectRef':
+                    //     switch (spec.ui.class) {
+                    //         case 'input':
+                    //             return 'singleObjectInput';
+                    //             // return 'select2ObjectInput';
+                    //         case 'output':
+                    //             return 'undefinedInput';
+                    //         case 'parameter':
+                    //             return 'singleObjectInput';
+                    //             // return 'select2ObjectInput';
+                    //         default:
+                    //             return 'undefinedInput';
+                    //     }
                 case 'subdata':
                     return 'singleSubdata';
-                case '[]string':
-                    switch (controlType) {
-                        case 'dropdown':
-                            return 'multiSelectInput';
-                        case 'textarea':
-                            return 'multiTextareaInput';
-                        case 'custom_textsubdata':
-                            return 'CustomSubdata';
-                        case 'custom_widget':
-                            if (spec.multipleItems) {
-                                return 'multiCustomSelect';
-                            }
-                            return 'singleCustomSelect';
-                        default:
-                            return 'multiTextInput';
-                    }
+                case 'customSubdata':
+                    return 'customSubdata';
+                    // case '[]string':
+                    //     switch (controlType) {
+                    //         case 'dropdown':
+                    //             return 'multiSelectInput';
+                    //         case 'textarea':
+                    //             return 'multiTextareaInput';
+                    //         case 'custom_textsubdata':
+                    //             return 'CustomSubdata';
+                    //         case 'custom_widget':
+                    //             if (spec.multipleItems) {
+                    //                 return 'multiCustomSelect';
+                    //             }
+                    //             return 'singleCustomSelect';
+                    //         default:
+                    //             return 'multiTextInput';
+                    //     }
                 case 'boolean':
                     if (spec.multipleItems) {
                         return 'undefinedInput';
                     }
                     return 'singleToggleButton';
                 case 'struct':
-                    return 'structInput';
+                    return 'singleStructInput';
                 case '[]struct':
                     return 'multiStructInput';
                 case '{}string':

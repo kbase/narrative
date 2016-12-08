@@ -5,7 +5,7 @@
             <th style="width: 42%; overflow:hidden">Name</th>
             <th style="width: 13%">Size</th>
             <th style="width: 15%">Modified</th>
-            <th style="width: 25%">Imported As</th>
+            <th style="width: 25%">Import As...</th>
         </tr>
     </thead>
     <tbody>
@@ -17,12 +17,15 @@
             <td>{{mtime}}</td>
             <td>
                 {{#if imported}}
-                    {{#with imported}}
-                        {{#if reportRef}}
-                            <button class="btn btn-xs btn-default" data-report="{{reportRef}}"><span><i class="fa fa-bomb"></i></span></button>
-                        {{/if}}
-                        <a href="{{narUrl}}" target="_blank">{{narName}}</a> / <a href="{{objUrl}}" target="_blank">{{objName}}</a>
-                    {{/with}}
+                    <select id="import-type" style="width:80%">
+                        <option></option>
+                        <option value="se_reads">Single-End Reads</option>
+                        <option value="pe_reads">Paired-End Reads</option>
+                        <option value="genbank_genome">Genbank Genome</option>
+                    </select>
+                    <button data-import="{{name}}" class="btn btn-xs btn-primary">
+                        <span><i class="fa fa-upload"></i></span>
+                    </button>
                 {{/if}}
             </td>
         </tr>

@@ -472,17 +472,18 @@ define([
                     appSpec: spec
                 }
             });
+            return cell;
         },
 
 
         /*
         For now we need to keep the "spec grokking" in place.
-        A little bit like duck typing, we inspect the properties of the app 
+        A little bit like duck typing, we inspect the properties of the app
         spec to determine if it is an app, editor, or viewer.
         */
         determineMethodCellType: function(spec) {
 
-            // TODO: remove this switch when merging in grouped paramters and 
+            // TODO: remove this switch when merging in grouped paramters and
             // legacy parameters.
             //if (spec.parameter_groups && spec.parameter_groups.length > 0) {
             //   return 'app2';

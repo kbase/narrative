@@ -2,15 +2,14 @@
 /*jslint white:true,browser:true*/
 define([
     'bluebird',
-    'base/js/namespace',
     'kb_common/html',
-    'common/validation',
+    '../validation',
     'common/events',
     'common/runtime',
     'common/dom',
     'bootstrap',
     'css!font-awesome'
-], function(Promise, Jupyter, html, Validation, Events, Runtime, Dom) {
+], function(Promise, html, Validation, Events, Runtime, Dom) {
     'use strict';
 
     // Constants
@@ -73,8 +72,8 @@ define([
         }
 
         function resetModelValue() {
-            if (spec.spec.default_values && spec.spec.default_values.length > 0) {
-                setModelValue(spec.spec.default_values[0]);
+            if (spec.data.defaultValue) {
+                setModelValue(spec.data.defaultValue);
             } else {
                 unsetModelValue();
             }
@@ -100,14 +99,12 @@ define([
                         };
                     }
 
-                    console.log('VALIDATEing', spec);
-
                     var rawValue = getInputValue(),
                         validationOptions = {
-                            required: spec.required(),
+                            required: spec.data.constraints.required,
                             shouldNotExist: true,
                             workspaceId: workspaceId,
-                            types: spec.spec.text_options.valid_ws_types,
+                            types: spec.data.constraints.types,
                             authToken: runtime.authToken(),
                             workspaceServiceUrl: runtime.config('services.workspace.url')
                         };
@@ -128,49 +125,6 @@ define([
                 });
         }
 
-        function changeOnPause() {
-            var editPauseTimer,
-                editPauseInterval = 2000;
-            return {
-                type: 'keyup',
-                handler: function(e) {
-                    if (editPauseTimer) {
-                        window.clearTimeout(editPauseTimer);
-                    }
-                    editPauseTimer = window.setTimeout(function() {
-                        editPauseTimer = null;
-                        e.target.dispatchEvent(new Event('change'));
-                    }, editPauseInterval);
-                }
-            };
-        }
-
-        function evaluateChange() {
-            return {
-                type: 'change',
-                handler: function() {
-                    validate()
-                        .then(function(result) {
-                            if (result.isValid) {
-                                bus.emit('changed', {
-                                    newValue: result.parsedValue
-                                });
-                            } else if (result.diagnosis === 'required-missing') {
-                                bus.emit('changed', {
-                                    newValue: result.parsedValue
-                                });
-                            }
-                            bus.emit('validation', result);
-                        })
-                        .catch(function(err) {
-                            bus.emit('validation', {
-                                errorMessage: err.message,
-                                diagnosis: 'error'
-                            });
-                        });
-                }
-            };
-        }
 
         /*
          * Creates the markup
@@ -180,14 +134,11 @@ define([
         function makeInputControl(currentValue, events, bus) {
             // CONTROL
             return input({
-                id: events.addEvents({
-                    events: [
-                        evaluateChange(), changeOnPause()
-                    ]
-                }),
                 class: 'form-control',
                 dataElement: 'input',
-                value: currentValue
+                value: currentValue,
+                readonly: true,
+                disabled: true
             });
         }
 

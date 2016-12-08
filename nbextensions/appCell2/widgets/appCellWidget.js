@@ -235,9 +235,15 @@ define([
                     });
 
                     bus.on('parameter-changed', function(message) {
-                        // console.log('PARAM CHANGED', message);
-                        model.setItem(['params', message.parameter], message.newValue);
-                        evaluateAppState();
+                        // TODO: should never get these in the following states....
+
+                        var state = fsm.getCurrentState().state;
+                        if (state.mode === 'editing') {
+                            model.setItem(['params', message.parameter], message.newValue);
+                            evaluateAppState();
+                        } else {
+                            console.warn('parameter-changed event detected when not in editing mode - ignored');
+                        }
                     });
 
                     return widget.start()
@@ -255,6 +261,93 @@ define([
         }
 
         function loadViewParamsWidget(arg) {
+            return new Promise(function(resolve, reject) {
+                require(['./appParamsViewWidget'], function(Widget) {
+                    // TODO: widget should make own bus.
+                    var bus = runtime.bus().makeChannelBus(null, 'Parent comm bus for input widget'),
+                        widget = Widget.make({
+                            bus: bus,
+                            workspaceInfo: workspaceInfo,
+                            initialParams: model.getItem('params')
+                        });
+
+                    bus.emit('run', {
+                        node: arg.node,
+                        appSpec: model.getItem('app.spec'),
+                        parameters: spec.getSpec().parameters
+                    });
+
+                    bus.on('sync-params', function(message) {
+                        message.parameters.forEach(function(paramId) {
+                            bus.send({
+                                parameter: paramId,
+                                value: model.getItem(['params', message.parameter])
+                            }, {
+                                key: {
+                                    type: 'update',
+                                    parameter: message.parameter
+                                }
+                            });
+                        });
+                    });
+
+                    bus.on('parameter-sync', function(message) {
+                        var value = model.getItem(['params', message.parameter]);
+                        bus.send({
+                            //                            parameter: message.parameter,
+                            value: value
+                        }, {
+                            // This points the update back to a listener on this key
+                            key: {
+                                type: 'update',
+                                parameter: message.parameter
+                            }
+                        });
+                    });
+
+                    bus.on('set-param-state', function(message) {
+                        model.setItem('paramState', message.id, message.state);
+                    });
+
+                    bus.respond({
+                        key: {
+                            type: 'get-param-state'
+                        },
+                        handle: function(message) {
+                            return {
+                                state: model.getItem('paramState', message.id)
+                            }
+                        }
+                    });
+
+                    bus.respond({
+                        key: {
+                            type: 'get-parameter'
+                        },
+                        handle: function(message) {
+                            return {
+                                value: model.getItem(['params', message.parameterName])
+                            };
+                        }
+                    });
+
+
+
+                    return widget.start()
+                        .then(function() {
+                            resolve({
+                                bus: bus,
+                                instance: widget
+                            });
+                        });
+                }, function(err) {
+                    console.log('ERROR', err);
+                    reject(err);
+                });
+            });
+        }
+
+        function loadViewParamsWidgetx(arg) {
             return new Promise(function(resolve, reject) {
                 require(['./appParamsViewWidget'], function(Widget) {
                     // TODO: widget should make own bus
@@ -1901,6 +1994,7 @@ define([
         //       to the kernel)
         function doRun() {
             fsm.newState({ mode: 'execute-requested' });
+            renderUI();
 
             // Save this to the exec state change log.
             var execLog = model.getItem('exec.log');

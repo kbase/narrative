@@ -84,31 +84,10 @@ define([
 
             // CONTROL
             return select({
-                id: events.addEvent({
-                    type: 'change',
-                    handler: function(e) {
-                        validate()
-                            .then(function(result) {
-                                if (result.isValid) {
-                                    model.value = result.value;
-                                    bus.emit('changed', {
-                                        newValue: result.value
-                                    });
-                                } else if (result.diagnosis === 'required-missing') {
-                                    model.value = result.value;
-                                    bus.emit('changed', {
-                                        newValue: result.value
-                                    });
-                                }
-                                bus.emit('validation', {
-                                    errorMessage: result.errorMessage,
-                                    diagnosis: result.diagnosis
-                                });
-                            });
-                    }
-                }),
                 class: 'form-control',
-                dataElement: 'input'
+                dataElement: 'input',
+                readonly: true,
+                disabled: true
             }, [option({ value: '' }, '')].concat(selectOptions));
         }
 
@@ -421,7 +400,7 @@ define([
             // compare to availableData.
             if (!utils.isEqual(data, model.availableValues)) {
                 model.availableValues = data;
-                // console.log('DATA', data);
+                console.log('DATA', data);
                 var matching = model.availableValues.filter(function(value) {
                     if (model.value && model.value === getObjectRef(value, model.value)) {
                         return true;
@@ -445,7 +424,7 @@ define([
                     // compare to availableData.
                     if (!utils.isEqual(data, model.availableValues)) {
                         model.availableValues = data;
-                        // console.log('DATA', data);
+                        console.log('DATA', data);
                         var matching = model.availableValues.filter(function(value) {
                             if (model.value && model.value === getObjectRef(value, model.value)) {
                                 return true;

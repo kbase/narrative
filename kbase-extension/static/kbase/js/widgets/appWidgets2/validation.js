@@ -2,7 +2,7 @@ define([
     'bluebird',
     'kb_service/client/workspace',
     'kb_service/utils'
-], function (
+], function(
     Promise,
     Workspace,
     serviceUtils) {
@@ -12,18 +12,18 @@ define([
 
         function toInteger(value) {
             switch (typeof value) {
-            case 'number':
-                if (value !== Math.floor(value)) {
-                    throw new Error('Integer is a non-integer number');
-                }
-                return value;
-            case 'string':
-                if (value.match(/^[-+]?[\d]+$/)) {
-                    return parseInt(value, 10);
-                }
-                throw new Error('Invalid integer format');
-            default:
-                throw new Error('Type ' + (typeof value) + ' cannot be converted to integer');
+                case 'number':
+                    if (value !== Math.floor(value)) {
+                        throw new Error('Integer is a non-integer number');
+                    }
+                    return value;
+                case 'string':
+                    if (value.match(/^[-+]?[\d]+$/)) {
+                        return parseInt(value, 10);
+                    }
+                    throw new Error('Invalid integer format');
+                default:
+                    throw new Error('Type ' + (typeof value) + ' cannot be converted to integer');
             }
         }
 
@@ -50,7 +50,7 @@ define([
                     diagnosis = 'optional-empty';
                 }
             } else {
-                if (!options.values.some(function (setValue) {
+                if (!options.values.some(function(setValue) {
                         return (setValue === value);
                     })) {
                     diagnosis = 'invalid';
@@ -145,7 +145,7 @@ define([
                     objects: [{ wsid: workspaceId, name: objectName }],
                     ignoreErrors: 1
                 })
-                .then(function (data) {
+                .then(function(data) {
                     if (data[0]) {
                         return serviceUtils.objectInfoToObject(data[0]);
                     }
@@ -169,7 +169,7 @@ define([
                     objects: [{ wsid: workspaceId, name: objectName }],
                     ignoreErrors: 1
                 })
-                .then(function (data) {
+                .then(function(data) {
                     if (data[0]) {
                         return true;
                     }
@@ -188,7 +188,7 @@ define([
             var parsedValue,
                 messageId, shortMessage, errorMessage, diagnosis = 'valid';
 
-            return Promise.try(function () {
+            return Promise.try(function() {
                     if (typeof value !== 'string') {
                         diagnosis = 'invalid';
                         errorMessage = 'value must be a string in workspace object name format';
@@ -220,10 +220,10 @@ define([
                             errorMessage = 'an object name may not exceed 255 characters in length';
                         } else if (options.shouldNotExist) {
                             return getObjectInfo(options.workspaceId, parsedValue, options.authToken, options.workspaceServiceUrl)
-                                .then(function (objectInfo) {
+                                .then(function(objectInfo) {
                                     if (objectInfo) {
                                         var type = objectInfo.typeModule + '.' + objectInfo.typeName,
-                                            matchingType = options.types.some(function (typeId) {
+                                            matchingType = options.types.some(function(typeId) {
                                                 if (typeId === type) {
                                                     return true;
                                                 }
@@ -243,7 +243,7 @@ define([
                         }
                     }
                 })
-                .then(function () {
+                .then(function() {
                     return {
                         isValid: errorMessage ? false : true,
                         messageId: messageId,
@@ -260,7 +260,7 @@ define([
             // TODO: validate each item.
             var parsedValue,
                 messageId, shortMessage, errorMessage, diagnosis = 'valid';
-            return Promise.try(function () {
+            return Promise.try(function() {
                     if (!(value instanceof Array)) {
                         diagnosis = 'invalid';
                         errorMessage = 'value must be an array';
@@ -279,7 +279,7 @@ define([
                         }
                     }
                 })
-                .then(function () {
+                .then(function() {
                     return {
                         isValid: errorMessage ? false : true,
                         messageId: messageId,
@@ -470,8 +470,8 @@ define([
 
             if (constraints.type) {
                 switch (constraints.type) {
-                case 'WorkspaceObjectName':
-                    return validateWorkspaceObjectNameString(value, constraints);
+                    case 'WorkspaceObjectName':
+                        return validateWorkspaceObjectNameString(value, constraints);
                 }
             }
 
@@ -487,7 +487,8 @@ define([
                 diagnosis = 'invalid';
                 errorMessage = 'value must be a string (it is of type "' + (typeof value) + '")';
             } else {
-                parsedValue = value.trim();
+                // parsedValue = value.trim();
+                parsedValue = value;
                 if (parsedValue.length < minLength) {
                     diagnosis = 'invalid';
                     errorMessage = 'the minimum length for this parameter is ' + minLength;
@@ -524,7 +525,7 @@ define([
                     diagnosis = 'optional-empty';
                 }
             } else {
-                parsedSet = set.filter(function (setValue) {
+                parsedSet = set.filter(function(setValue) {
                     return !isEmptyString(setValue);
                 });
                 if (parsedSet.length === 0) {
@@ -535,7 +536,7 @@ define([
                         diagnosis = 'optional-empty';
                     }
                 } else if (options.values) {
-                    var matchedSet = parsedSet.filter(function (setValue) {
+                    var matchedSet = parsedSet.filter(function(setValue) {
                         return (options.values.indexOf(setValue) >= 0);
                     });
                     if (matchedSet.length !== parsedSet.length) {
@@ -561,18 +562,18 @@ define([
 
         function stringToBoolean(value) {
             switch (value.toLowerCase(value)) {
-            case 'true':
-            case 't':
-            case 'yes':
-            case 'y':
-                return true;
-            case 'false':
-            case 'f':
-            case 'no':
-            case 'n':
-                return false;
-            default:
-                throw new Error('Invalid format for boolean: ' + value);
+                case 'true':
+                case 't':
+                case 'yes':
+                case 'y':
+                    return true;
+                case 'false':
+                case 'f':
+                case 'no':
+                case 'n':
+                    return false;
+                default:
+                    throw new Error('Invalid format for boolean: ' + value);
             }
         }
 

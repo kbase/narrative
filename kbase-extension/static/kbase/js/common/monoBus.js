@@ -335,8 +335,6 @@ define([
 
         // SENDING
 
-
-
         function setPersistentMessage(message, envelope) {
             var channel = ensureChannel(envelope.channel),
                 key = envelope.key,
@@ -373,12 +371,6 @@ define([
                 envelope: persistentMessage.envelope
             });
             run();
-        }
-
-        function deepCopy(d) {
-            if (d !== undefined) {
-                return JSON.parse(JSON.stringify(d));
-            }
         }
 
         /*
@@ -474,6 +466,7 @@ define([
                 // is run, as well as to invoke the error handler upon
                 // timeout. (TODO)
                 listen({
+                    // channel: address.channel,
                     key: { requestId: requestId },
                     once: true,
                     timeout: address.timeout || 10000,
@@ -490,6 +483,51 @@ define([
                 send(message, address);
             });
         }
+
+        // function get(address) {
+        //     return new Promise(function(resolve, reject) {
+        //         console.log('GOT? request with', address);
+        //         listen({
+        //             channel: address.channel,
+        //             key: address.key,
+        //             // once: true,
+        //             timeout: address.timeout || 10000,
+        //             handle: function(message) {
+        //                 resolve(message);
+        //             }
+        //         });
+        //     });
+        // }
+        function plisten(spec) {
+            var initialized = false;
+            return new Promise(function(resolve, reject) {
+                listen({
+                    channel: spec.channel,
+                    key: spec.key,
+                    handle: function(message, address) {
+                        if (!initialized) {
+                            initialized = true;
+                            resolve(message);
+                        } else {
+                            try {
+                                spec.handle(message, address);
+                            } catch (ex) {
+                                reject(ex);
+                            }
+                        }
+                    }
+                });
+            });
+        }
+
+        /*
+         Get a persistent message.
+         If the message is available already, return it.
+         If not, then issue a listener with the timeout given in
+         address.
+         Essentially, and this is how it is implemented, it is a 
+         listener with a timeout, wrapped in a promise.
+        */
 
         // convenience strategies.
         function on(type, handler, channel) {
@@ -625,6 +663,7 @@ define([
             on: on,
             emit: emit,
             set: set,
+            plisten: plisten,
             makeChannelBus: makeChannelBus,
             makeChannel: makeChannel,
             removeChannel: removeChannel,

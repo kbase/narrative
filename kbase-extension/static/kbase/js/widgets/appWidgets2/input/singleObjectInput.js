@@ -1,61 +1,55 @@
 /*global define*/
 /*jslint white:true,browser:true*/
 define([
-    'bluebird',
     'jquery',
-    'base/js/namespace',
+    'bluebird',
     'kb_common/html',
     'kb_common/utils',
     'kb_service/client/workspace',
     'kb_service/utils',
-    'common/validation',
+    'kb_sdk_clients/genericClient',
+    '../validation',
     'common/events',
     'common/runtime',
-    'common/dom',
-    'util/timeFormat',
-    'select2',
+    'common/ui',
     'bootstrap',
     'css!font-awesome'
 ], function(
-    Promise,
     $,
-    Jupyter,
+    Promise,
     html,
     utils,
     Workspace,
     serviceUtils,
+    GenericClient,
     Validation,
     Events,
     Runtime,
-    Dom,
-    TimeFormat) {
+    UI) {
     'use strict';
 
     // Constants
     var t = html.tag,
         div = t('div'),
-        span = t('span'),
-        b = t('b'),
         select = t('select'),
         option = t('option');
 
     function factory(config) {
-        var constraints = config.parameterSpec.data.constraints,
-            workspaceId = config.workspaceId,
+        var spec = config.parameterSpec,
             objectRefType = config.referenceType || 'name',
+            runtime = Runtime.make(),
+            workspaceId = runtime.getEnv('workspaceId'),
             parent,
             container,
             bus = config.bus,
-            dom,
+            ui,
             model = {
                 blacklistValues: undefined,
                 availableValues: undefined,
                 value: undefined
-            },
-            runtime = Runtime.make();
+            };
 
-        // TODO: getting rid of blacklist temporarily until we work out how to state-ify everything by reference.
-        model.blacklistValues = []; //config.blacklist || [];
+        model.blacklistValues = config.blacklist || [];
 
         // Validate configuration.
         if (!workspaceId) {
@@ -63,25 +57,22 @@ define([
         }
 
         function makeInputControl(events, bus) {
+            // There is an input control, and a dropdown,
+            // TODO select2 after we get a handle on this...
             var selectOptions;
             if (model.availableValues) {
-                var filteredOptions = [];
                 selectOptions = model.availableValues
-                    .filter(function(objectInfo, idx) {
+                    .filter(function(objectInfo) {
                         if (model.blacklistValues) {
                             return !model.blacklistValues.some(function(value) {
-                                if (value === getObjectRef(objectInfo)) {
-                                    filteredOptions.push(idx);
-                                    return true;
-                                }
-                                return false;
+                                return (value === getObjectRef(objectInfo, value));
                             });
                         }
                     })
-                    .map(function(objectInfo, idx) {
+                    .map(function(objectInfo) {
                         var selected = false,
-                            ref = idx; //getObjectRef(objectInfo);
-                        if (getObjectRef(objectInfo) === model.value) {
+                            ref = getObjectRef(objectInfo, model.value);
+                        if (ref === model.value) {
                             selected = true;
                         }
                         return option({
@@ -92,12 +83,33 @@ define([
             }
 
             // CONTROL
-            var selectElem = select({
+            return select({
+                id: events.addEvent({
+                    type: 'change',
+                    handler: function(e) {
+                        validate()
+                            .then(function(result) {
+                                if (result.isValid) {
+                                    model.value = result.value;
+                                    bus.emit('changed', {
+                                        newValue: result.value
+                                    });
+                                } else if (result.diagnosis === 'required-missing') {
+                                    model.value = result.value;
+                                    bus.emit('changed', {
+                                        newValue: result.value
+                                    });
+                                }
+                                bus.emit('validation', {
+                                    errorMessage: result.errorMessage,
+                                    diagnosis: result.diagnosis
+                                });
+                            });
+                    }
+                }),
                 class: 'form-control',
                 dataElement: 'input'
             }, [option({ value: '' }, '')].concat(selectOptions));
-
-            return selectElem;
         }
 
         /*
@@ -109,12 +121,12 @@ define([
          * values.
          */
         function getInputValue() {
-            var control = dom.getElement('input-container.input'),
+            var control = ui.getElement('input-container.input'),
                 selected = control.selectedOptions;
             if (selected.length === 0) {
                 return;
             }
-            // we are modeling a single string value, so we always just get the
+            // we are modeling a single string value, so we always just get the 
             // first selected element, which is all there should be!
             return selected.item(0).value;
         }
@@ -135,54 +147,31 @@ define([
                 });
         }
 
-        function unsetModelValue() {
-            return Promise.try(function() {
-                    model.value = undefined;
-                })
-                .then(function(changed) {
-                    render();
-                })
-                .then(function() {
-                    autoValidate();
-                });
-        }
-
         function resetModelValue() {
-            if (constraints.defaultValue) {
-                setModelValue(constraints.defaultValue);
-            } else {
-                unsetModelValue();
-            }
+            return spec.data.defaultValue;
         }
 
         function validate() {
             return Promise.try(function() {
-                    var objInfo = model.availableValues[getInputValue()],
-                        processedValue = '',
+                    var rawValue = getInputValue(),
                         validationOptions = {
-                            required: constraints.required,
+                            required: spec.data.constraints.required,
                             authToken: runtime.authToken(),
                             workspaceServiceUrl: runtime.config('services.workspace.url')
                         };
 
-                    if (objInfo && objInfo.dataPaletteRef) {
-                        return Validation.validateWorkspaceDataPaletteRef(objInfo.dataPaletteRef, validationOptions);
-                    }
 
-                    if (objInfo) {
-                        processedValue = objectRefType === 'ref' ? objInfo.ref : objInfo.name;
-                    }
 
                     switch (objectRefType) {
                         case 'ref':
-                            return Validation.validateWorkspaceDataPaletteRef(processedValue, validationOptions);
+                            return Validation.validateWorkspaceObjectRef(rawValue, validationOptions);
                         case 'name':
                         default:
-                            return Validation.validateWorkspaceObjectName(processedValue, validationOptions);
+                            return Validation.validateText(rawValue, validationOptions);
+                            // return Validation.validateWorkspaceObjectName(rawValue, validationOptions);
                     }
                 })
                 .then(function(validationResult) {
-
                     return {
                         isValid: validationResult.isValid,
                         validated: true,
@@ -194,36 +183,103 @@ define([
         }
 
         function getObjectsByType(type) {
-            return Promise.try(function() {
-                    return Jupyter.narrative.sidePanel.$dataWidget.getLoadedData(type);
+            var workspace = new Workspace(runtime.config('services.workspace.url'), {
+                token: runtime.authToken()
+            });
+            return workspace.list_objects({
+                    type: type,
+                    ids: [workspaceId]
                 })
                 .then(function(data) {
-                    var objList = [];
-                    Object.keys(data).forEach(function(typeKey) {
-                        objList = objList.concat(data[typeKey]);
-                    });
-                    return objList.map(function(objectInfo) {
-                        var obj = serviceUtils.objectInfoToObject(objectInfo);
-                        // TODO - port this into kb_service/utils...
-                        obj.dataPaletteRef = null;
-                        if (objectInfo.length > 11) {
-                            obj.dataPaletteRef = objectInfo[11];
-                        }
-                        return obj;
+                    return data.map(function(objectInfo) {
+                        return serviceUtils.objectInfoToObject(objectInfo);
                     });
                 });
         }
 
-        function fetchData() {
-            var types = constraints.types;
+        function getObjectsByTypes(types) {
             return Promise.all(types.map(function(type) {
                     return getObjectsByType(type);
                 }))
                 .then(function(objectSets) {
-                    // we could also use [] rather than Array.prototype, but
-                    // this way is both more mysterious and better performing.
                     return Array.prototype.concat.apply([], objectSets);
+                });
+        }
+
+
+        function getPaletteObjectsByTypes(types) {
+            var narrativeClient = new GenericClient({
+                module: 'NarrativeService',
+                url: runtime.config('services.service_wizard.url'),
+                version: 'dev',
+                token: runtime.authToken()
+            });
+            return narrativeClient.callFunc('list_objects_with_sets', [{
+                    ws_id: workspaceId,
+                    types: types,
+                    includeMetadata: 1
+                }])
+                .then(function(result) {
+                    var objects = result[0].data.map(function(obj) {
+                        var info = serviceUtils.objectInfoToObject(obj.object_info);
+                        if (obj.dp_info) {
+                            info.palette = obj.dp_info.ref;
+                        }
+                        return info;
+                    });
+                    return objects;
+                });
+        }
+
+        function filterObjectInfoByType(objects, types) {
+            return objects.map(function(objectInfo) {
+                    var type = objectInfo.typeModule + '.' + objectInfo.typeName;
+                    if (types.indexOf(type) >= 0) {
+                        return objectInfo;
+                    }
                 })
+                .filter(function(item) {
+                    return item !== undefined;
+                });
+        }
+
+        function getObjectsForTypes(types) {
+            return runtime.bus().plisten({
+                    channel: 'data',
+                    key: {
+                        type: 'workspace-data-updated'
+                    },
+                    handle: function(message) {
+                        doWorkspaceChanged(filterObjectInfoByType(message.objectInfo, types));
+                    }
+                })
+                .then(function(message) {
+                    // console.log('GOT first workspace-data-updated', message);
+                    return filterObjectInfoByType(message.objectInfo, types);
+                });
+        }
+
+        function getObjectsByTypeDataPanel(type) {
+            return new Promise(function(resolve) {
+                // wow, creative (ab)use of trigger!
+                $(document).trigger('dataLoadedQuery.Narrative', [
+                    [type], 0,
+                    function(data) {
+                        var items = [];
+                        Object.keys(data).forEach(function(type) {
+                            data[type].forEach(function(objInfo) {
+                                items.push(serviceUtils.objectInfoToObject(objInfo));
+                            });
+                        });
+                        resolve(items);
+                    }
+                ]);
+            });
+        }
+
+        function fetchData() {
+            var types = spec.data.constraints.types;
+            return getObjectsForTypes(types)
                 .then(function(objects) {
                     objects.sort(function(a, b) {
                         if (a.saveDate < b.saveDate) {
@@ -238,25 +294,30 @@ define([
                 });
         }
 
-        /**
-         * Formats the display of an object in the dropdown.
-         */
-        function formatObjectDisplay(object) {
-            if (!object.id) {
-                return $('<div style="display:block; height:20px">').append(object.text);
-            }
-            var objectInfo = model.availableValues[object.id];
-            return $(div([
-                span({ style: 'word-wrap: break-word' }, [
-                    b(objectInfo.name)
-                ]),
-                ' (v' + objectInfo.version + ')<br>',
-                div({ style: 'margin-left: 7px' }, [
-                    '<i>' + objectInfo.typeName + '</i><br>',
-                    'Narrative id: ' + objectInfo.wsid + '<br>',
-                    'updated ' + TimeFormat.getTimeStampStr(objectInfo.save_date) + ' by ' + objectInfo.saved_by
-                ])
-            ]));
+        function fetchData_narrativService() {
+            var types = spec.data.constraints.types;
+            return getPaletteObjectsByTypes(types)
+                // .spread(function(paletteObjects, objects) {
+                //     return paletteObjects.concat(objects);
+                // })
+                //.then(function(objectSets) {
+                // we could also use [] rather than Array.prototype, but
+                // this way is both more mysterious and better performing.
+                // console.log('got objects', objectSets);
+                // return Array.prototype.concat.apply([], objectSets);
+                // })
+                .then(function(objects) {
+                    objects.sort(function(a, b) {
+                        if (a.name < b.name) {
+                            return -1;
+                        }
+                        if (a.name === b.name) {
+                            return 0;
+                        }
+                        return 1;
+                    });
+                    return objects;
+                });
         }
 
         /*
@@ -270,38 +331,8 @@ define([
                     inputControl = makeInputControl(events, bus),
                     content = div({ class: 'input-group', style: { width: '100%' } }, inputControl);
 
-                dom.setContent('input-container', content);
-
-                $(dom.getElement('input-container.input')).select2({
-                    templateResult: formatObjectDisplay,
-                    templateSelection: function(object) {
-                        if (!object.id) {
-                            return object.text;
-                        }
-                        return model.availableValues[object.id].name;
-                    }
-                }).on('change', function() {
-                    validate()
-                        .then(function(result) {
-                            if (result.isValid) {
-                                model.value = result.value;
-                                bus.emit('changed', {
-                                    newValue: result.value
-                                });
-                            } else if (result.diagnosis === 'required-missing') {
-                                model.value = result.value;
-                                bus.emit('changed', {
-                                    newValue: result.value
-                                });
-                            }
-                            bus.emit('validation', {
-                                errorMessage: result.errorMessage,
-                                diagnosis: result.diagnosis
-                            });
-                        });
-                });
+                ui.setContent('input-container', content);
                 events.attachEvents(container);
-
             });
         }
 
@@ -332,17 +363,50 @@ define([
                 });
         }
 
-        function getObjectRef(objectInfo) {
-            switch (objectRefType) {
-                case 'name':
-                    return objectInfo.name;
-                    break;
-                case 'ref':
-                    return objectInfo.ref;
-                    break;
-                default:
-                    throw new Error('Unsupported object reference type ' + objectRefType);
+        function getObjectRef(objectInfo, ref) {
+            if (objectInfo.dp_info) {
+                return objectInfo.dp_info.ref + ';' + objectInfo.ref;
             }
+            var type;
+            if (ref) {
+                type = grokObjectRefType(ref);
+            } else {
+                type = objectRefType
+            }
+
+            if (objectInfo.wsid === workspaceId) {
+                return objectInfo.name;
+            }
+
+            return objectInfo.ref;
+
+            // switch (type) {
+            //     case 'name':
+            //         // to accomodate object by name but in a data palette, we need
+            //         // to include the workspace id or name.
+            //         // If the object is in this Narrative Workspace, only use the name;
+            //         // If elsewhere, use the full reference.
+            //         if (objectInfo.wsid === workspaceId) {
+            //             return objectInfo.name;
+            //         } else {
+            //             return objectInfo.ref;
+            //         }
+            //     case 'ref':
+            //         // By reference, use the absolute ref.
+            //         return objectInfo.ref;
+            //     default:
+            //         throw new Error('Unsupported object reference type ' + objectRefType);
+            // }
+        }
+
+        function grokObjectRefType(ref) {
+            if (ref.match(/\;/)) {
+                return 'paletteRef';
+            }
+            if (ref.match(/\//)) {
+                return 'ref';
+            }
+            return 'name';
         }
 
         /*
@@ -352,15 +416,38 @@ define([
          * rebuild the control. If there is a current value and it is no longer
          * available, issue a warning
          */
-        function doWorkspaceChanged() {
+        function doWorkspaceChanged(data) {
+
+            // compare to availableData.
+            if (!utils.isEqual(data, model.availableValues)) {
+                model.availableValues = data;
+                // console.log('DATA', data);
+                var matching = model.availableValues.filter(function(value) {
+                    if (model.value && model.value === getObjectRef(value, model.value)) {
+                        return true;
+                    }
+                    return false;
+                });
+                if (matching.length === 0) {
+                    model.value = null;
+                }
+                render()
+                    .then(function() {
+                        autoValidate();
+                    });
+            }
+        }
+
+        function doWorkspaceChanged_fetch() {
             // there are a few thin
             fetchData()
                 .then(function(data) {
                     // compare to availableData.
                     if (!utils.isEqual(data, model.availableValues)) {
                         model.availableValues = data;
+                        // console.log('DATA', data);
                         var matching = model.availableValues.filter(function(value) {
-                            if (value.name === getObjectRef(value)) {
+                            if (model.value && model.value === getObjectRef(value, model.value)) {
                                 return true;
                             }
                             return false;
@@ -378,47 +465,49 @@ define([
         }
 
         // LIFECYCLE API
-        function start() {
+        function start(arg) {
             return Promise.try(function() {
-                bus.on('run', function(message) {
-                    parent = message.node;
-                    if (parent) {
-                        container = parent.appendChild(document.createElement('div'));
-                        dom = Dom.make({ node: container });
+                parent = arg.node;
+                container = parent.appendChild(document.createElement('div'));
+                ui = UI.make({ node: container });
 
-                        var events = Events.make(),
-                            theLayout = layout(events);
+                var events = Events.make(),
+                    theLayout = layout(events);
 
-                        container.innerHTML = theLayout.content;
-                        events.attachEvents(container);
+                container.innerHTML = theLayout.content;
+                events.attachEvents(container);
 
-                        return fetchData()
-                            .then(function(data) {
-                                model.availableValues = data;
-                                render();
-                            })
-                            .then(function() {
-                                bus.on('reset-to-defaults', function(message) {
-                                    resetModelValue();
-                                });
-                                bus.on('update', function(message) {
-                                    setModelValue(message.value);
-                                });
-                                //bus.on('workspace-changed', function (message) {
-                                //    doWorkspaceChanged();
-                                //});
-                                runtime.bus().on('workspace-changed', function(message) {
-                                    doWorkspaceChanged();
-                                });
-                                bus.emit('sync');
-                            });
-                    }
-                });
+                return fetchData()
+                    .then(function(data) {
+                        model.availableValues = data;
+                        render();
+                    })
+                    .then(function() {
+                        bus.on('reset-to-defaults', function(message) {
+                            resetModelValue();
+                        });
+                        bus.on('update', function(message) {
+                            setModelValue(message.value);
+                        });
+                        // runtime.bus().on('workspace-changed', function(message) {
+                        //     doWorkspaceChanged();
+                        // });
+                        bus.emit('sync');
+                    });
+            });
+        }
+
+        function stop() {
+            return Promise.try(function() {
+                if (container) {
+                    parent.removeChild(container);
+                }
             });
         }
 
         return {
-            start: start
+            start: start,
+            stop: stop
         };
     }
 

@@ -42,6 +42,7 @@ define([
         var runtime = Runtime.make(),
             parentBus = config.bus,
             workspaceInfo = config.workspaceInfo,
+            initialParams = config.initialParams,
             container,
             ui,
             bus,
@@ -380,6 +381,22 @@ define([
 
         // Maybe
         function validateParameterSpec(spec) {
+            var errorMessages = [];
+
+            console.log('VALIDATING', spec);
+
+            // loop through spec parameters
+
+            // if sequence, validate sequence, then each item
+
+            // if struct, validate each struct item.
+
+            // otherwise, validate each item.
+            // spec.parameters.forEach(function (parameter) {
+
+            // });
+
+
             // ensure that inputs are consistent with inputs
 
             // and outputs with output
@@ -391,11 +408,11 @@ define([
             return spec;
         }
 
-        function validateParameterSpecs(params) {
-            return params.map(function(spec) {
-                return validateParameterSpec(spec);
-            });
-        }
+        //function validateParameterSpecs(params) {
+        //    return params.map(function(spec) {
+        //        return validateParameterSpec(spec);
+        //    });
+        // }
 
         function makeParamsLayout(params) {
             var view = {};
@@ -474,7 +491,7 @@ define([
                             return Promise.all(inputParams.layout.map(function(parameterId) {
                                 var spec = inputParams.paramMap[parameterId];
                                 try {
-                                    return makeFieldWidget(appSpec, spec, model.getItem(['params', spec.id]))
+                                    return makeFieldWidget(appSpec, spec, initialParams[spec.id])
                                         .then(function(widget) {
                                             widgets.push(widget);
 
@@ -500,7 +517,7 @@ define([
                             return Promise.all(outputParams.layout.map(function(parameterId) {
                                 var spec = outputParams.paramMap[parameterId];
                                 try {
-                                    return makeFieldWidget(appSpec, spec, model.getItem(['params', spec.id]))
+                                    return makeFieldWidget(appSpec, spec, initialParams[spec.id])
                                         .then(function(widget) {
                                             widgets.push(widget);
 
@@ -524,10 +541,11 @@ define([
                             places.parameterFields.innerHTML = span({ style: { fontStyle: 'italic' } }, 'No parameters for this app');
                         } else {
                             places.parameterFields.innerHTML = parameterParams.content;
+
                             return Promise.all(parameterParams.layout.map(function(parameterId) {
                                 var spec = parameterParams.paramMap[parameterId];
                                 try {
-                                    return makeFieldWidget(appSpec, spec, model.getItem(['params', spec.id]))
+                                    return makeFieldWidget(appSpec, spec, initialParams[spec.id])
                                         .then(function(widget) {
                                             widgets.push(widget);
 

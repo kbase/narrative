@@ -4,16 +4,17 @@
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
 
-define ([
+define([
     'jquery',
     'bluebird',
-    'kbase/js/widgets/appWidgets/infoPanel'
+    'kbase/js/widgets/appInfoPanel'
 ], function(
     $,
     Promise,
     InfoPanel
 ) {
     'use strict';
+
     function makeDummyPanel() {
         return InfoPanel.make({
             appId: 'MegaHit/run_megahit',
@@ -44,22 +45,22 @@ define ([
         it('Can render with "start" and return a Promise', function(done) {
             var panel = makeDummyPanel();
             var myNode = $('<div>');
-            panel.start({node: myNode})
-            .then(function() {
-                expect(myNode.find('.kb-app-cell-info-desc p:first-child').text()).toEqual('This is a KBase wrapper for MEGAHIT.');
-                done();
-            });
+            panel.start({ node: myNode })
+                .then(function() {
+                    expect(myNode.find('.kb-app-cell-info-desc p:first-child').text()).toEqual('This is a KBase wrapper for MEGAHIT.');
+                    done();
+                });
         });
 
         it('Can unrender with "stop" and return a Promise', function(done) {
             var panel = makeDummyPanel();
             var myNode = $('<div>');
-            panel.start({node: myNode});
+            panel.start({ node: myNode });
             panel.stop()
-            .then(function() {
-                expect(myNode.text()).toEqual('');
-                done();
-            });
+                .then(function() {
+                    expect(myNode.text()).toEqual('');
+                    done();
+                });
         });
     });
 });

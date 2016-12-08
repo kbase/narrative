@@ -54,6 +54,8 @@ define([
                     return null;
                 case 'float':
                     return null;
+                case 'workspaceObjectRef':
+                    return null;
                 case 'workspaceObjectName':
                     return null;
                 case 'struct':
@@ -82,6 +84,8 @@ define([
                 return parseInt(defaultValue);
             case 'float':
                 return parseFloat(defaultValue);
+            case 'workspaceObjectRef':
+                return defaultValue;
             case 'workspaceObjectName':
                 return defaultValue;
             case 'boolean':
@@ -160,22 +164,24 @@ define([
                 return 'int';
             case 'textarea':
             case 'dropdown':
-                if (spec.allow_multiple) {
-                    return '[]string';
-                } else {
-                    return 'string';
-                }
+                return 'string';
+                // if (spec.allow_multiple) {
+                //     return '[]string';
+                // } else {
+                //     return 'string';
+                // }
             case 'textsubdata':
                 return 'subdata';
             case 'custom_textsubdata':
-                if (spec.allow_multiple) {
-                    return '[]string';
-                }
-                return 'string';
+                //if (spec.allow_multiple) {
+                //    return '[]string';
+                //}
+                // return 'string';
                 //var custom = customTextSubdata();
                 //if (custom) {
                 //    return custom;
                 //}
+                return 'customSubdata';
             case 'custom_button':
                 switch (spec.id) {
                     case 'input_check_other_params':
@@ -201,18 +207,12 @@ define([
          */
         if (!spec.text_options) {
             // consider it plain, unconstrained text.
-            if (spec.allow_multiple) {
-                return '[]string';
-            }
             return 'string';
         }
         var validateAs = spec.text_options.validate_as;
         if (validateAs) {
             // For int and float, "validateAs" overrides the type.
             if (validateAs === 'int' || validateAs === 'float') {
-                if (spec.allow_multiple) {
-                    return '[]' + validateAs;
-                }
                 return validateAs;
             }
         }
@@ -220,11 +220,17 @@ define([
         // Some parameter specs have valid_ws_types as an empty set, which
         // does not mean what it could, it means that it is not an option.
         if (spec.text_options.valid_ws_types && spec.text_options.valid_ws_types.length > 0) {
-            // we now have refs, but no way of specifying that the
-            if (spec.allow_multiple) {
-                return '[]workspaceObjectName';
-            } else {
-                return 'workspaceObjectName';
+            // we now have refs, but no way of specifying that the 
+            switch (spec.ui_class) {
+                case 'input':
+                case 'parameter':
+                    // input objects are any valid ws object reference:
+                    // name, traditional ref, ref path.
+                    return 'workspaceObjectRef';
+                case 'output':
+                    return 'workspaceObjectName';
+                default:
+                    throw new Error('Unspecified ui_class, cannot determine object param data type');
             }
         }
 
@@ -234,11 +240,7 @@ define([
 
         switch (spec.field_type) {
             case 'text':
-                if (spec.allow_multiple) {
-                    return '[]string';
-                } else {
-                    return 'string';
-                }
+                return 'string';
         }
 
         return 'unspecified';
@@ -273,6 +275,9 @@ define([
         // a dropdown even though the field_type is 'text'.
 
         switch (dataType) {
+            case 'sequence':
+                constraints = {};
+                break;
             case 'string':
             case 'text':
                 switch (fieldType) {
@@ -299,10 +304,9 @@ define([
                         constraints = {};
                         break;
                     default:
-                        throw new Error('Unknown text param field type');
+                        throw new Error('Unknown text param field type "' + fieldType + '"');
                 }
                 break;
-            case '[]int':
             case 'int':
                 switch (fieldType) {
                     case 'text':
@@ -320,58 +324,17 @@ define([
                         break;
                 }
                 break;
-            case '[]float':
             case 'float':
                 constraints = {
                     min: Props.getDataItem(spec, 'text_options.min_float'),
                     max: Props.getDataItem(spec, 'text_options.max_float')
                 };
                 break;
+            case 'workspaceObjectRef':
             case 'workspaceObjectName':
-                switch (paramClass) {
-                    case 'input':
-                        constraints = {
-                            types: spec.text_options.valid_ws_types
-                        };
-                        break;
-                    case 'output':
-                        constraints = {
-                            types: spec.text_options.valid_ws_types
-                        };
-                        break;
-                    case 'parameter':
-                        constraints = {
-                            types: spec.text_options.valid_ws_types
-                        };
-                        break;
-                    default:
-                        throw new Error('Unknown workspaceObjectName ui class');
-                }
-                break;
-            case '[]workspaceObjectName':
-                switch (paramClass) {
-                    case 'input':
-                        constraints = {
-                            types: spec.text_options.valid_ws_types
-                        };
-                        break;
-                    case 'parameter':
-                        constraints = {
-                            types: spec.text_options.valid_ws_types
-                        };
-                        break;
-                    case 'output':
-                        // TODO: this accomodates a common mistake, to mark an input type
-                        // as output. One cannot specify multiple output objects, so we can
-                        // pretty well safely assume this was a mistake.
-                        console.warn('App spec form []workspaceObjectName indicates output, but that is not possible', spec);
-                        constraints = {
-                            types: spec.text_options.valid_ws_types
-                        };
-                        break;
-                    default:
-                        throw new Error('Unknown []workspaceObjectName ui class: ' + paramClass);
-                }
+                constraints = {
+                    types: spec.text_options.valid_ws_types
+                };
                 break;
             case '[]string':
                 switch (fieldType) {
@@ -382,7 +345,7 @@ define([
                     case 'textarea':
                         break;
                     default:
-                        throw new Error('Unknown []string field type: ' + fieldType);
+                        // throw new Error('Unknown []string field type: ' + fieldType);
                 }
                 break;
             case 'subdata':
@@ -525,9 +488,88 @@ define([
 
     // now with grouped params
 
-    function convertParameter(spec) {
+    function convertSequenceParameter(spec) {
         var dataType = grokDataType(spec);
+
+        var required = (spec.optional ? false : true);
+
+        // This is the spec that applies to each item in the sequence.
+        // It is essentially like the main spec, but is not a sequence
+        // and they don't have a default value.
+        // The sequence, if it has a default value sequence, will 
+        // be responsible for creating a sequence of values using
+        // those default values.
+        var itemSpec = {
+            id: null,
+            ui: {
+                label: spec.ui_name,
+                hint: spec.short_hint,
+                description: spec.description,
+                class: spec.ui_class,
+                type: spec.field_type,
+                control: spec.field_type,
+                advanced: spec.advanced ? true : false
+            },
+            data: {
+                type: dataType,
+                sequence: false,
+                constraints: {
+                    required: false
+                },
+                defaultValue: null
+            }
+        };
+        updateNullValue(itemSpec, spec);
+        updateDefaultValue(itemSpec, spec);
+        updateConstraints(itemSpec, spec);
+        updateUI(itemSpec, spec);
+        updateData(itemSpec, spec);
+
+        var converted = {
+            id: spec.id,
+            // TODO we should be able to remove this.
+            multipleItems: true,
+            ui: {
+                label: spec.ui_name,
+                hint: spec.short_hint,
+                description: spec.description,
+                class: spec.ui_class,
+                type: spec.field_type,
+                control: spec.field_type,
+                advanced: spec.advanced ? true : false
+            },
+            data: {
+                type: 'sequence',
+                constraints: {
+                    required: required
+                },
+                defaultValue: [],
+                nullValue: null
+            },
+            parameters: {
+                layout: ['item'],
+                specs: {
+                    item: itemSpec
+                }
+            }
+        };
+
+        // updateNullValue(converted, spec);
+        // updateDefaultValue(converted, spec);
+        updateConstraints(converted, spec);
+        updateUI(converted, spec);
+        updateData(converted, spec);
+
+        return converted;
+    }
+
+    function convertParameter(spec) {
+        if (spec.allow_multiple) {
+            return convertSequenceParameter(spec);
+        }
         var multiple = (spec.allow_multiple ? true : false);
+        var dataType = grokDataType(spec);
+
         var required = (spec.optional ? false : true);
         var converted = {
             id: spec.id,
@@ -543,6 +585,7 @@ define([
             },
             data: {
                 type: dataType,
+                sequence: multiple,
                 constraints: {
                     required: required
                 }
@@ -602,7 +645,7 @@ define([
         return structSpec;
     }
 
-    function convertGroupToStruct(group, params) {
+    function convertGroupToStruct(group, params, options) {
         // Collect params into group and remove from original params collection.
         var groupParams = {};
         group.parameter_ids.forEach(function(id) {
@@ -622,26 +665,35 @@ define([
         var defaultValue;
         var nullValue;
         var zeroValue;
-        if (required) {
-            // Default value is a struct of default values of the
-            // struct members. Note that this is fundamentally different
-            // from a list of structs/ groups.
-            defaultValue = {};
-            nullValue = {};
-            Object.keys(groupParams).forEach(function(id) {
-                defaultValue[id] = groupParams[id].data.defaultValue;
-                nullValue[id] = groupParams[id].data.nullValue;
-            });
-            zeroValue = defaultValue;
-        } else {
-            defaultValue = null;
-            nullValue = null;
-            zeroValue = {};
-            // TODO: use the initial or "0" value for each paramter as well.
-            Object.keys(groupParams).forEach(function(id) {
-                zeroValue[id] = groupParams[id].data.defaultValue;
-            });
-        }
+        // if (required) {
+        //     // Default value is a struct of default values of the
+        //     // struct members. Note that this is fundamentally different
+        //     // from a list of structs/ groups.
+        //     defaultValue = {};
+        //     nullValue = {};
+        //     Object.keys(groupParams).forEach(function(id) {
+        //         defaultValue[id] = groupParams[id].data.defaultValue;
+        //         nullValue[id] = groupParams[id].data.nullValue;
+        //     });
+        //     zeroValue = defaultValue;
+        // } else {
+        //     defaultValue = null;
+        //     nullValue = null;
+        //     zeroValue = {};
+        //     // TODO: use the initial or "0" value for each paramter as well.
+        //     Object.keys(groupParams).forEach(function(id) {
+        //         zeroValue[id] = groupParams[id].data.defaultValue;
+        //     });
+        // }
+
+
+        nullValue = null;
+        defaultValue = {};
+        Object.keys(groupParams).forEach(function(id) {
+            defaultValue[id] = groupParams[id].data.defaultValue;
+            //  nullValue[id] = groupParams[id].data.nullValue;
+        });
+        zeroValue = defaultValue;
 
         var structSpec = {
             id: group.id,
@@ -672,12 +724,61 @@ define([
         return structSpec;
     }
 
+    // just differs from the makeParameterSequence in that the 
+    // group spec is not as fully populated, so we have to
+    // fill in some gaps.
+    function makeGroupSequence(spec, itemSpec) {
+
+        // in the context of a sequence, a struct is always "required",
+        // no matter what the spec says.
+        itemSpec.data.constraints.required = true;
+
+        var required = (spec.optional ? false : true);
+        var converted = {
+            id: spec.id,
+            // TODO we should be able to remove this.
+            multipleItems: true,
+            ui: {
+                label: spec.ui_name,
+                hint: spec.short_hint,
+                description: spec.description,
+                class: 'parameter',
+                // type: spec.field_type,
+                // control: spec.field_type,
+                advanced: spec.advanced ? true : false
+            },
+            data: {
+                type: 'sequence',
+                constraints: {
+                    required: required
+                },
+                defaultValue: [],
+                nullValue: null
+            },
+            parameters: {
+                layout: ['item'],
+                specs: {
+                    item: itemSpec
+                }
+            }
+        };
+
+        // updateNullValue(converted, spec);
+        // updateDefaultValue(converted, spec);
+        updateConstraints(converted, spec);
+        updateUI(converted, spec);
+        updateData(converted, spec);
+
+        return converted;
+    }
+
     function convertGroup(group, params) {
         if (group.allow_multiple === 1) {
-            return convertGroupList(group, params);
+            var structSpec = convertGroupToStruct(group, params);
+            params[group.id] = makeGroupSequence(group, structSpec);
+        } else {
+            params[group.id] = convertGroupToStruct(group, params);
         }
-        var structSpec = convertGroupToStruct(group, params);
-        params[group.id] = structSpec;
     }
 
     function convertAppSpec(sdkAppSpec) {

@@ -52,7 +52,8 @@ define([
         var ui,
             runtime = Runtime.make(),
             bus = runtime.bus().makeChannelBus(null, 'Field bus'),
-            places, container,
+            places,
+            parent, container,
             inputControlFactory = config.inputControlFactory,
             inputControl,
             options = {},
@@ -61,6 +62,7 @@ define([
             enabled;
 
         try {
+            // console.log('field widget config', config);
             inputControl = inputControlFactory.make({
                 bus: bus,
                 initialValue: config.initialValue,
@@ -390,6 +392,7 @@ define([
                             div({ dataElement: 'info' }, button({
                                 class: 'btn btn-link btn-xs',
                                 type: 'button',
+                                tabindex: "-1",
                                 id: events.addEvent({
                                     type: 'click',
                                     handler: function() {
@@ -436,7 +439,8 @@ define([
         // LIFECYCLE
 
         function attach(node) {
-            container = node;
+            parent = node;
+            container = parent.appendChild(document.createElement('div'));
             ui = UI.make({ node: container });
             var events = Events.make({
                 node: container
@@ -533,6 +537,9 @@ define([
             return Promise.try(function() {
                 return inputControl.stop()
                     .then(function() {
+                        if (parent && container) {
+                            parent.removeChild(container);
+                        }
                         bus.stop();
                         return null;
                     });

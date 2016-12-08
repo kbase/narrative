@@ -70,13 +70,17 @@ define([
                 file.previewElement.querySelector('#status-message').textContent = 'Completed';
                 file.previewElement.querySelector('.progress').style.display = 'none';
                 file.previewElement.querySelector('#status-message').style.display = 'inline';
-                $(file.previewElement.querySelector('.fa-ban')).removeClass('fa-ban').addClass('fa-times');
+                $(file.previewElement.querySelector('.fa-ban')).removeClass('fa-ban').addClass('fa-check');
+                $(file.previewElement.querySelector('.btn-danger')).removeClass('btn-danger').addClass('btn-success');
                 if (this.dropzone.getQueuedFiles().length === 0 &&
                     this.dropzone.getUploadingFiles().length === 0) {
-                    $($dropzoneElem.find('#total-progress')).slideUp(function() {
+                    $($dropzoneElem.find('#total-progress')).fadeOut(1000, function() {
                         $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': '0%'});
                     });
                 }
+                $(file.previewElement).fadeOut(1000, function() {
+                    $(file.previewElement.querySelector('.btn')).trigger('click');
+                });
             }.bind(this))
             .on('sending', function(file) {
                 $dropzoneElem.find('#global-info').css({'display': 'inline'});

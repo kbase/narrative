@@ -4,22 +4,27 @@ define([
     'kbwidget',
     'narrativeConfig',
     'common/runtime',
+    'base/js/namespace',
     'handlebars',
     'util/string',
     'util/timeFormat',
+    'kbase-client-api',
     'text!kbase/templates/data_staging/ftp_file_row.html',
     'text!kbase/templates/data_staging/ftp_file_table.html',
     'text!kbase/templates/data_staging/ftp_file_header.html',
-    'jquery-dataTables'
+    'jquery-dataTables',
+    'select2'
 ], function(
     $,
     Promise,
     KBWidget,
     Config,
     Runtime,
+    Jupyter,
     Handlebars,
     StringUtil,
     TimeFormat,
+    KBaseClients,
     FtpFileRowHtml,
     FtpFileTableHtml,
     FtpFileHeaderHtml
@@ -71,14 +76,15 @@ define([
             .then(function(files) {
                 return Promise.try(function() {
                     files.forEach(function(file) {
-                        if (!file.isFolder) {
-                            file.imported = {
-                                narName: 'narrative',
-                                narUrl: '/narrative/ws.123.obj.456',
-                                objUrl: '/#dataview/123/objectName',
-                                objName: 'myObject',
-                                reportRef: 'reportRef'
-                            }
+                        if (file.isFolder) {
+                            return;
+                        }
+                        file.imported = {
+                            narName: 'narrative',
+                            narUrl: '/narrative/ws.123.obj.456',
+                            objUrl: '/#dataview/123/objectName',
+                            objName: 'myObject',
+                            reportRef: 'reportRef'
                         }
                     });
                     return files;
@@ -120,26 +126,6 @@ define([
                 bAutoWidth: false,
                 aaSorting: [[3, 'desc']],
                 aoColumnDefs: [{
-                    aTargets: [ 2 ],
-                    mRender: function(data, type) {
-                        if (type === 'display') {
-                            return StringUtil.readableBytes(Number(data));
-                        } else {
-                            return Number(data);
-                        }
-                    },
-                    sType: 'numeric'
-                }, {
-                    aTargets: [ 3 ],
-                    mRender: function(data, type) {
-                        if (type === 'display') {
-                            return TimeFormat.getTimeStampStr(Number(data));
-                        } else {
-                            return data;
-                        }
-                    },
-                    sType: 'numeric'
-                }, {
                     aTargets: [ 0 ],
                     mRender: function(data, type, full) {
                         if (type === 'display') {
@@ -163,7 +149,28 @@ define([
                         }
                         return data;
                     }
-                }]
+                }, {
+                    aTargets: [ 2 ],
+                    mRender: function(data, type) {
+                        if (type === 'display') {
+                            return StringUtil.readableBytes(Number(data));
+                        } else {
+                            return Number(data);
+                        }
+                    },
+                    sType: 'numeric'
+                }, {
+                    aTargets: [ 3 ],
+                    mRender: function(data, type) {
+                        if (type === 'display') {
+                            return TimeFormat.getTimeStampStr(Number(data));
+                        } else {
+                            return data;
+                        }
+                    },
+                    sType: 'numeric'
+                }
+            ]
             });
             this.$elem.find('table button[data-name]').on('click', function(e) {
                 this.updatePathFn(this.path += '/' + $(e.currentTarget).data().name);
@@ -171,8 +178,61 @@ define([
             this.$elem.find('table button[data-report]').on('click', function(e) {
                 alert("Show report for reference '" + $(e.currentTarget).data().report + "'");
             });
+            this.$elem.find('table select').select2({
+                placeholder: 'Select a format'
+            });
+            this.$elem.find('table button[data-import]').on('click', function(e) {
+                var importType = $(e.currentTarget).prevAll('#import-type').val();
+                var importFile = $(e.currentTarget).data().import;
+                this.initImportApp(importType, importFile);
+            }.bind(this));
+        },
+
+        initImportApp: function(type, file) {
+            //TODO = move this to configuration.
+            var appIds = {
+                'se_reads': 'genome_transform/reads_to_assembly',
+                'pe_reads': 'genome_transform/reads_to_assembly',
+                'sra_reads': 'genome_transform/sra_reads_to_assembly',
+                'genbank_genome': 'genome_transform/narrative_genbank_to_genome'
+            };
+
+            var appId = appIds[type];
+            if (appId) {
+                var nms = new NarrativeMethodStore(Config.url('narrative_method_store'));
+                Promise.resolve(nms.get_method_spec({tag: 'dev', ids: [appId]}))
+                .then(function(spec) {
+                    spec = spec[0];
+                    var newCell = Jupyter.narrative.narrController.buildAppCodeCell(spec, 'dev');
+                    var meta = newCell.metadata;
+                    switch(type) {
+                        case 'se_reads':
+                            meta.kbase.appCell.params.file_path_list = ['/data/bulk' + this.path + '/' + file];
+                            meta.kbase.appCell.params.reads_type = 'SingleEndLibrary';
+                            meta.kbase.appCell.params.reads_id = file.replace(/\s/g, '_') + '_reads';
+                            break;
+                        case 'pe_reads':
+                            meta.kbase.appCell.params.file_path_list = ['/data/bulk' + this.path + '/' + file];
+                            meta.kbase.appCell.params.reads_type = 'PairedEndLibrary';
+                            meta.kbase.appCell.params.reads_id = file.replace(/\s/g, '_') + '_reads';
+                            break;
+                        case 'sra_reads':
+                            meta.kbase.appCell.params.file_path_list = ['/data/bulk' + this.path + '/' + file];
+                            meta.kbase.appCell.params.reads_id = file.replace(/\s/g, '_') + '_reads';
+                            break;
+                        case 'genbank_genome':
+                        default:
+                            break;
+                    }
+                    newCell.metadata = meta;
+                    Jupyter.narrative.scrollToCell(newCell);
+                    Jupyter.narrative.hideOverlay();
+                }.bind(this))
+                .catch(function(err) {
+                    console.error(err);
+                });
+            }
 
         }
-
     });
 });

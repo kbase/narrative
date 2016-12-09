@@ -155,12 +155,10 @@ define (
                     self.updateFavoritesCounts()
                         .then(function() {
                             self.hideLoading();
-                            if(self.organizeBy) {
-                                self.renderAppList(self.organizeBy);
-                            } else {
-                                self.organizeBy = 'favorites';
-                                self.renderAppList('favorites');
+                            if (!self.organizeBy) {
+                                self.organizeBy = 'category';
                             }
+                            self.renderAppList(self.organizeBy);
                             self.updateRunStats();
                             return self.updateMyFavorites();
 

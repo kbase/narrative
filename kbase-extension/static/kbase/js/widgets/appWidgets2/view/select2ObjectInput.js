@@ -13,8 +13,9 @@ define([
     'common/runtime',
     'common/ui',
     'util/timeFormat',
-    'select2',
+    'kb_sdk_clients/genericClient',
 
+    'select2',
     'bootstrap',
     'css!font-awesome'
 ], function(
@@ -29,7 +30,8 @@ define([
     Events,
     Runtime,
     UI,
-    TimeFormat) {
+    TimeFormat,
+    GenericClient) {
     'use strict';
 
     // Constants
@@ -42,7 +44,6 @@ define([
 
     function factory(config) {
         var spec = config.parameterSpec,
-            workspaceId = runtime.getEnv('workspaceId'),
             objectRefType = config.referenceType || 'name',
             parent,
             container,
@@ -54,14 +55,16 @@ define([
                 availableValuesMap: {},
                 value: undefined
             },
-            runtime = Runtime.make();
+            runtime = Runtime.make(),
+            eventListeners = [],
+            workspaceId = runtime.getEnv('workspaceId');
 
         // TODO: getting rid of blacklist temporarily until we work out how to state-ify everything by reference.
         model.blacklistValues = []; //config.blacklist || [];
 
         // Validate configuration.
         if (!workspaceId) {
-            throw new Error('Workspace id required for the select2 widget');
+            throw new Error('Workspace id required for the select2 object selection widget');
         }
 
         function makeInputControl(events, bus) {
@@ -125,21 +128,22 @@ define([
 
             var control = ui.getElement('input-container.input');
 
-            //console.log('setting control value', control, stringValue, JSON.parse(JSON.stringify(model)));
+            // NB id used as String since we are comparing it below to the actual dom
+            // element id
+            var currentSelectionId = String(model.availableValuesMap[stringValue]);
 
-            //$(control).val(stringValue).trigger('change.select2');
-            //return;
-
-            var id = model.availableValuesMap[stringValue];
-
-
+            // Unselect any currently selected item.
             Array.prototype.slice.call(control.selectedOptions).forEach(function(option) {
                 option.selected = false;
             });
 
+            // Select any option which matches our models current selection.
+            // NB matching by id not value.
+            // NB the id is not the index of the option. It is a value assigned to the option,
+            // and used to map the object ref or name to the control.  
             var options = Array.prototype.slice.call(control.options);
             options.forEach(function(option) {
-                if (option.value === id) {
+                if (option.value === currentSelectionId) {
                     option.selected = true;
                 }
             });
@@ -207,10 +211,9 @@ define([
 
         function filterObjectInfoByType(objects, types) {
             return objects.map(function(objectInfo) {
-                    var fixed = serviceUtils.objectInfoToObject(objectInfo)
-                    var type = fixed.typeModule + '.' + fixed.typeName;
+                    var type = objectInfo.typeModule + '.' + objectInfo.typeName;
                     if (types.indexOf(type) >= 0) {
-                        return fixed;
+                        return objectInfo;
                     }
                 })
                 .filter(function(item) {
@@ -218,19 +221,20 @@ define([
                 });
         }
 
-        function getObjectsByTypes(types) {
-            return runtime.bus().plisten({
-                    channel: 'data',
-                    key: {
-                        type: 'workspace-data-updated'
-                    },
-                    handle: function(message) {
-                        doWorkpaceUpdated(filterObjectInfoByType(message.data, types));
-                    }
-                })
+        function getObjectsByTypes_datalist(types) {
+            var listener = runtime.bus().plisten({
+                channel: 'data',
+                key: {
+                    type: 'workspace-data-updated'
+                },
+                handle: function(message) {
+                    doWorkspaceUpdated(filterObjectInfoByType(message.objectInfo, types));
+                }
+            });
+            eventListeners.push(listener.id);
+            return listener.promise
                 .then(function(message) {
-                    console.log('GOT first workspace-data-updated', message);
-                    return filterObjectInfoByType(message.data, types);
+                    return filterObjectInfoByType(message.objectInfo, types);
                 });
         }
 
@@ -255,9 +259,33 @@ define([
                 });
         }
 
+        function getPaletteObjectsByTypes(types) {
+            var narrativeClient = new GenericClient({
+                module: 'NarrativeService',
+                url: runtime.config('services.service_wizard.url'),
+                version: 'dev',
+                token: runtime.authToken()
+            });
+            return narrativeClient.callFunc('list_objects_with_sets', [{
+                    ws_id: workspaceId,
+                    types: types,
+                    includeMetadata: 1
+                }])
+                .then(function(result) {
+                    var objects = result[0].data.map(function(obj) {
+                        var info = serviceUtils.objectInfoToObject(obj.object_info);
+                        if (obj.dp_info) {
+                            info.paletteRef = obj.dp_info.ref;
+                        }
+                        return info;
+                    });
+                    return objects;
+                });
+        }
+
         function fetchData() {
             var types = spec.data.constraints.types;
-            return getObjectsByTypes(types)
+            return getObjectsByTypes_datalist(types)
                 .then(function(objects) {
                     objects.sort(function(a, b) {
                         if (a.saveDate < b.saveDate) {
@@ -299,7 +327,6 @@ define([
         function doChange() {
             validate()
                 .then(function(result) {
-                    console.log('validation: ', result);
                     if (result.isValid) {
                         model.value = result.value;
                         bus.emit('changed', {
@@ -443,7 +470,7 @@ define([
          * available, issue a warning
          */
 
-        function doWorkpaceUpdated(data) {
+        function doWorkspaceUpdated(data) {
             // compare to availableData.
             if (!utils.isEqual(data, model.availableValues)) {
                 model.availableValues = data;
@@ -487,43 +514,7 @@ define([
             // there are a few thin
             fetchData()
                 .then(function(data) {
-                    // compare to availableData.
-                    if (!utils.isEqual(data, model.availableValues)) {
-                        model.availableValues = data;
-                        var matching = model.availableValues.filter(function(value) {
-                            if (value.name === getObjectRef(value)) {
-                                return true;
-                            }
-                            return false;
-                        });
-                        // if (matching.length === 0) {
-                        //     model.value = spec.data.nullValue;
-                        // }
-                        model.availableValuesMap = {};
-                        // our map is a little strange.
-                        // we have dataPaletteRefs, which are always ref paths
-                        // we have object ref or names otherwise.
-                        // whether we are using refs or names depends on the 
-                        // config setting. This is because some apps don't yet accept
-                        // names... 
-                        // So our key is either dataPaletteRef or (ref or name)
-                        model.availableValues.forEach(function(objectInfo, index) {
-                            var id;
-                            if (objectInfo.dataPaletteRef) {
-                                id = objectInfo.dataPaletteRef;
-                            } else if (objectRefType === 'ref') {
-                                id = objectInfo.ref;
-                            } else {
-                                id = objectInfo.name;
-                            }
-                            model.availableValuesMap[id] = index;
-                        });
-                        return render()
-                            .then(function() {
-                                setControlValue(getModelValue());
-                                autoValidate();
-                            });
-                    }
+                    return doWorkspaceUpdated(data);
                 });
         }
 
@@ -546,7 +537,8 @@ define([
 
                 return fetchData()
                     .then(function(data) {
-                        model.availableValues = data;
+                        doWorkspaceUpdated(data);
+                        // model.availableValues = data;
                         return render();
                     })
                     .then(function() {
@@ -557,10 +549,10 @@ define([
                         bus.on('update', function(message) {
                             setModelValue(message.value);
                         });
-                        // runtime.bus().on('workspace-changed', function() {
-                        //     doWorkspaceChanged();
-                        // });
-                        //  bus.emit('sync');
+                        runtime.bus().on('workspace-changed', function() {
+                            doWorkspaceChanged();
+                        });
+                        bus.emit('sync');
 
                         setControlValue(getModelValue());
                         autoValidate();
@@ -573,6 +565,9 @@ define([
                 if (container) {
                     parent.removeChild(container);
                 }
+                eventListeners.forEach(function(id) {
+                    runtime.bus().removeListener(id);
+                });
             });
         }
 

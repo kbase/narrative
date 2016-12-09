@@ -255,7 +255,6 @@ define([
                     }
                 })
                 .then(function(message) {
-                    // console.log('GOT first workspace-data-updated', message);
                     return filterObjectInfoByType(message.objectInfo, types);
                 });
             eventListeners.push(l.id);
@@ -424,7 +423,6 @@ define([
             // compare to availableData.
             if (!utils.isEqual(data, model.availableValues)) {
                 model.availableValues = data;
-                // console.log('DATA', data);
                 var matching = model.availableValues.filter(function(value) {
                     if (model.value && model.value === getObjectRef(value, model.value)) {
                         return true;
@@ -448,7 +446,6 @@ define([
                     // compare to availableData.
                     if (!utils.isEqual(data, model.availableValues)) {
                         model.availableValues = data;
-                        // console.log('DATA', data);
                         var matching = model.availableValues.filter(function(value) {
                             if (model.value && model.value === getObjectRef(value, model.value)) {
                                 return true;
@@ -506,7 +503,6 @@ define([
                     parent.removeChild(container);
                 }
                 eventListeners.forEach(function(id) {
-                    console.log('removing bus listener', id);
                     runtime.bus().removeListener(id);
                 })
             });

@@ -120,7 +120,7 @@ define([
                             gitCommitHash: appSpec.info.git_commit_hash,
                             version: appSpec.info.ver,
                             tag: appTag,
-                            appSpec: appSpec
+                            spec: appSpec
                         },
                         state: {
                             edit: 'editing',
@@ -186,10 +186,7 @@ define([
             }
         };
         cell.getIcon = function() {
-            return span({ class: 'fa-stack fa-2x', style: { verticalAlign: 'top', textAlign: 'center', color: 'rgb(103,58,183)', lineHeight: '56px' } }, [
-                span({ class: 'fa fa-square fa-stack-2x', style: { color: 'rgb(103,58,183)', lineHeight: '56px' } }),
-                span({ class: 'fa fa-inverse fa-stack-1x fa-pencil-square-o' })
-            ]);
+            return AppUtils.makeToolbarAppIcon(utils.getCellMeta(cell, 'kbase.editorCell.app.spec'));
         };
     }
 
@@ -215,8 +212,8 @@ define([
             require([modulePath], function(Editor) {
                 resolve(Editor);
             }, function(err) {
-                console.error('ERROR loading module', moduleName, err);
-                reject(new Error('Error loading module ' + moduleName));
+                console.error('ERROR loading module', modulePath, err);
+                reject(new Error('Error loading module ' + modulePath));
             });
         });
     }
@@ -244,7 +241,7 @@ define([
 
             // TODO: the code cell input widget should instantiate its state
             // from the cell!!!!            
-            var editorType = utils.getCellMeta(cell, 'kbase.editorCell.app.appSpec.widgets.input');
+            var editorType = utils.getCellMeta(cell, 'kbase.editorCell.app.spec.widgets.input');
 
             return getEditorModule(editorType)
                 .then(function(editorModule) {
@@ -304,7 +301,13 @@ define([
 
     function setupNotebook() {
         return Promise.all(Jupyter.notebook.get_cells().map(function(cell) {
-            return setupCell(cell);
+            return setupCell(cell)
+                .catch(function(err) {
+                    console.error('ERROR creating cell', err);
+                    // delete cell.
+                    $(document).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(data.cell));
+                    alert('Could not process cell due to errors.\n' + err.message);
+                });
         }));
     }
 
@@ -384,6 +387,8 @@ define([
                 // we have a app cell.
                 $([Jupyter.events]).on('inserted.Cell', function(event, data) {
                     if (data.kbase && data.kbase.type === 'editor') {
+                        // NB: the app spec and tag come in as appSpec and appTag, but 
+                        // are rewritten in the "upgraded" cell to app.spec and app.tag
                         upgradeToEditorCell(data.cell, data.kbase.appSpec, data.kbase.appTag)
                             .then(function() {
                                 // console.log('Cell created?');

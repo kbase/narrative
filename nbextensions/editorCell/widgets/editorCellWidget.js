@@ -561,7 +561,12 @@ define([
                                     body: div({ dataElement: 'widget' })
                                 }),
                                 ui.buildCollapsiblePanel({
-                                    title: span(['Currently Editing ', span({ dataElement: 'name', style: { textDecoration: 'underline' } })]),
+                                    title: span(['Currently Editing ', span({
+                                        dataElement: 'name',
+                                        style: {
+                                            fontWeight: 'bold'
+                                        }
+                                    })]),
                                     name: 'currently-editing',
                                     hidden: false,
                                     collapsed: true,

@@ -1,9 +1,8 @@
 /*global define*/
 /*jslint browser:true,white:true*/
 
-define([], function () {
-    var fsm = [
-        {   
+define([], function() {
+    var fsm = [{
             // The 'new' state is the initial entry point for the editor.
             // When the editor is first instantiated and the editor state loaded,
             // it is evaluated and the next state selected.
@@ -20,20 +19,24 @@ define([], function () {
                     hide: ['fatal-error', 'parameters-group']
                 }
             },
-            next: [
-                {
+            next: [{
                     mode: 'fatal-error'
                 },
+                // Self
+                {
+                    mode: 'new'
+                },
+                // main next states
                 {
                     mode: 'editing',
                     params: 'incomplete',
                     data: 'clean'
-                }, 
+                },
                 {
                     mode: 'editing',
                     params: 'complete',
                     data: 'clean'
-                }, 
+                },
                 // remove this!!!
                 {
                     mode: 'editing',
@@ -58,8 +61,7 @@ define([], function () {
                     hide: ['fatal-error']
                 }
             },
-            next: [
-                {
+            next: [{
                     mode: 'editing',
                     params: 'complete',
                     data: 'clean'
@@ -110,8 +112,7 @@ define([], function () {
                     hide: ['fatal-error']
                 }
             },
-            next: [                
-                {
+            next: [{
                     mode: 'editing',
                     params: 'incomplete',
                     data: 'clean'
@@ -124,6 +125,11 @@ define([], function () {
                 {
                     mode: 'editing',
                     params: 'incomplete',
+                    data: 'changed'
+                },
+                {
+                    mode: 'editing',
+                    params: 'complete',
                     data: 'changed'
                 },
                 {
@@ -150,8 +156,7 @@ define([], function () {
                     hide: ['fatal-error']
                 }
             },
-            next: [
-                {
+            next: [{
                     mode: 'editing',
                     params: 'incomplete',
                     data: 'touched'
@@ -165,6 +170,11 @@ define([], function () {
                     mode: 'editing',
                     params: 'complete',
                     data: 'clean'
+                },
+                {
+                    mode: 'editing',
+                    params: 'complete',
+                    data: 'changed'
                 },
                 {
                     mode: 'fatal-error'
@@ -188,8 +198,7 @@ define([], function () {
                     hide: ['fatal-error']
                 }
             },
-            next: [
-                {
+            next: [{
                     mode: 'editing',
                     params: 'incomplete',
                     data: 'changed'
@@ -204,6 +213,17 @@ define([], function () {
                     params: 'complete',
                     data: 'changed'
                 },
+                {
+                    mode: 'editing',
+                    params: 'complete',
+                    data: 'clean'
+                },
+                {
+                    mode: 'editing',
+                    params: 'complete',
+                    data: 'touched'
+                },
+
                 {
                     mode: 'saving'
                 },
@@ -231,8 +251,7 @@ define([], function () {
                     hide: ['fatal-error']
                 }
             },
-            next: [
-                {
+            next: [{
                     mode: 'editing',
                     params: 'complete',
                     data: 'touched'
@@ -277,12 +296,17 @@ define([], function () {
                     data: 'clean'
                 },
                 // continuing edits for a changed editor are still changed
-                 {
+                {
                     mode: 'editing',
                     params: 'complete',
                     data: 'changed'
                 },
-                 {
+                {
+                    mode: 'editing',
+                    params: 'incomplete',
+                    data: 'changed'
+                },
+                {
                     mode: 'editing',
                     params: 'complete',
                     data: 'touched'
@@ -298,7 +322,7 @@ define([], function () {
                 }
             ]
         },
-       
+
         {
             state: {
                 mode: 'error'
@@ -313,8 +337,7 @@ define([], function () {
                     hide: ['parameters-group']
                 }
             },
-            next: [
-                {
+            next: [{
                     mode: 'error'
                 },
                 {
@@ -341,11 +364,9 @@ define([], function () {
                     hide: ['parameters-group', 'edit-object-selector', 'available-actions', 'editor-status']
                 }
             },
-            next: [
-                {
-                    mode: 'fatal-error'
-                }
-            ]
+            next: [{
+                mode: 'fatal-error'
+            }]
 
         }
     ];

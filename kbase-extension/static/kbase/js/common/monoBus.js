@@ -500,8 +500,9 @@ define([
         // }
         function plisten(spec) {
             var initialized = false;
-            return new Promise(function(resolve, reject) {
-                listen({
+            var id;
+            var p = new Promise(function(resolve) {
+                id = listen({
                     channel: spec.channel,
                     key: spec.key,
                     handle: function(message, address) {
@@ -512,12 +513,16 @@ define([
                             try {
                                 spec.handle(message, address);
                             } catch (ex) {
-                                reject(ex);
+                                console.error('ERROR in plisten', ex);
                             }
                         }
                     }
                 });
             });
+            return {
+                promise: p,
+                id: id
+            };
         }
 
         /*

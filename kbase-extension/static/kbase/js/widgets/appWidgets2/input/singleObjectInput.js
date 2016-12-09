@@ -43,6 +43,7 @@ define([
             container,
             bus = config.bus,
             ui,
+            eventListeners = [],
             model = {
                 blacklistValues: undefined,
                 availableValues: undefined,
@@ -53,7 +54,7 @@ define([
 
         // Validate configuration.
         if (!workspaceId) {
-            throw new Error('Workspace id required for the object widget');
+            throw new Error('Workspace id required for the object input widget');
         }
 
         function makeInputControl(events, bus) {
@@ -244,7 +245,7 @@ define([
         }
 
         function getObjectsForTypes(types) {
-            return runtime.bus().plisten({
+            var l = runtime.bus().plisten({
                     channel: 'data',
                     key: {
                         type: 'workspace-data-updated'
@@ -257,6 +258,8 @@ define([
                     // console.log('GOT first workspace-data-updated', message);
                     return filterObjectInfoByType(message.objectInfo, types);
                 });
+            eventListeners.push(l.id);
+            return l.promise;
         }
 
         function getObjectsByTypeDataPanel(type) {
@@ -502,6 +505,10 @@ define([
                 if (container) {
                     parent.removeChild(container);
                 }
+                eventListeners.forEach(function(id) {
+                    console.log('removing bus listener', id);
+                    runtime.bus().removeListener(id);
+                })
             });
         }
 

@@ -18,6 +18,7 @@ define([
     'common/utils',
     'common/ui',
     'common/fsm',
+    'common/spec',
     'google-code-prettify/prettify',
     './fsm',
 
@@ -40,6 +41,7 @@ define([
     utils,
     Ui,
     Fsm,
+    Spec,
     PR,
     editorCellFsm
 ) {
@@ -55,7 +57,6 @@ define([
         td = t('td'),
         pre = t('pre'),
         input = t('input'),
-        places,
         appStates = editorCellFsm.fsm;
 
     function factory(config) {
@@ -122,152 +123,154 @@ define([
 
         }
 
+        function getSpec() {
+            return Spec.make({
+                spec: getParameters()
+            });
+        }
+
         function getParameters() {
             return {
-                name: {
-                    id: 'name',
+                parameters: {
+                    layout: ['name', 'description', 'items'],
+                    specs: {
+                        name: {
+                            id: 'name',
 
-                    multipleItems: false,
+                            multipleItems: false,
 
-                    ui: {
-                        label: 'Reads Set Name',
-                        description: 'Name of the reads set',
-                        hint: 'The name of the set of sequence reads',
-                        class: 'parameter',
-                        control: null
-                    },
-                    data: {
-                        type: 'string',
-                        constraints: {
-                            required: true,
-                            rule: 'WorkspaceObjectName' // ws data_type
-                        },
-                        defaultValue: ''
-                    }
-                },
-                description: {
-                    id: 'description',
-                    multipleItems: false,
-                    ui: {
-                        label: 'Description',
-                        description: 'Description of the Reads Set',
-                        hint: 'The description of the set of sequence reads',
-                        class: 'parameter',
-                        control: 'textarea',
-                        rows: 5
-                    },
-                    data: {
-                        type: 'string',
-                        constraints: {
-                            required: false,
-                            multiLine: true
-                        },
-                        defaultValue: ''
-                    }
-                },
-                items: {
-                    id: 'items',
-                    multipleItems: false,
-                    ui: {
-                        label: 'Items',
-                        description: 'A set of Reads Objects',
-                        hint: 'A set of Reads Objects',
-                        class: 'parameter',
-                        control: '',
-                        layout: ['ref', 'label']
-                    },
-                    data: {
-                        type: '[]struct',
-                        constraints: {
-                            required: true
-                        },
-                        defaultValue: null
-                    },
-                    parameters: {
-                        layout: ['item'],
-                        specs: {
-                            item: {
-                                id: 'reads',
-                                multipleItems: true,
-                                ui: {
-                                    label: 'Reads',
-                                    description: 'Reads objects',
-                                    hint: 'Reads objects',
-                                    class: 'parameter',
-                                    control: '',
-                                    layout: [
-                                        'ref', 'label'
-                                    ],
-                                    advanced: false
+                            ui: {
+                                label: 'Reads Set Name',
+                                description: 'Name of the reads set',
+                                hint: 'The name of the set of sequence reads',
+                                class: 'parameter',
+                                control: null
+                            },
+                            data: {
+                                type: 'string',
+                                constraints: {
+                                    required: true,
+                                    rule: 'WorkspaceObjectName' // ws data_type
                                 },
-                                data: {
-                                    type: 'struct',
-                                    constraints: {
-                                        required: true
-                                    },
-                                    defaultValue: {
-                                        ref: null,
-                                        label: null
-                                    },
-                                    nullValue: {
-                                        ref: null,
-                                        label: null
-                                    }
+                                defaultValue: '',
+                                nullValue: ''
+                            }
+                        },
+                        description: {
+                            id: 'description',
+                            multipleItems: false,
+                            ui: {
+                                label: 'Description',
+                                description: 'Description of the Reads Set',
+                                hint: 'The description of the set of sequence reads',
+                                class: 'parameter',
+                                control: 'textarea',
+                                rows: 5
+                            },
+                            data: {
+                                type: 'string',
+                                constraints: {
+                                    required: false,
+                                    multiLine: true
                                 },
-                                parameters: {
-                                    layout: ['ref', 'label'],
-                                    specs: {
-                                        ref: {
-                                            id: 'ref',
-
-                                            multipleItems: false,
-
-                                            ui: {
-                                                label: 'Reads Object',
-                                                description: 'This is param 1',
-                                                hint: 'Hint 1',
-                                                class: 'parameter'
-                                            },
-                                            data: {
-                                                type: 'workspaceObjectRef',
-                                                constraints: {
-                                                    required: true,
-                                                    types: ['KBaseFile.PairedEndLibrary', 'KBaseFile.SingleEndLibrary']
-                                                },
-                                                defaultValue: null
-                                            }
+                                defaultValue: '',
+                                nullValue: null
+                            }
+                        },
+                        items: {
+                            id: 'items',
+                            ui: {
+                                label: 'Items',
+                                description: 'A set of Reads Objects',
+                                hint: 'A set of Reads Objects',
+                                class: 'parameter',
+                                control: '',
+                                layout: ['item']
+                            },
+                            data: {
+                                type: 'sequence',
+                                constraints: {
+                                    required: false
+                                },
+                                defaultValue: [],
+                                nullValue: null
+                            },
+                            parameters: {
+                                layout: ['item'],
+                                specs: {
+                                    item: {
+                                        id: 'item',
+                                        multipleItems: false,
+                                        ui: {
+                                            label: 'Item',
+                                            description: 'A set of Reads Objects',
+                                            hint: 'A set of Reads Objects',
+                                            class: 'parameter',
+                                            control: '',
+                                            layout: ['ref', 'label']
                                         },
-                                        label: {
-                                            id: 'label',
-
-                                            multipleItems: false,
-
-                                            ui: {
-                                                label: 'Label',
-                                                description: 'This is param 2',
-                                                hint: 'Hint 2',
-                                                class: 'parameter'
+                                        data: {
+                                            type: 'struct',
+                                            constraints: {
+                                                required: true
                                             },
-                                            data: {
-                                                type: 'string',
-                                                constraints: {
-                                                    required: true
+                                            defaultValue: {
+                                                ref: null,
+                                                label: null
+                                            },
+                                            nullValue: null
+                                        },
+                                        parameters: {
+                                            layout: ['ref', 'label'],
+                                            specs: {
+                                                ref: {
+                                                    id: 'ref',
+
+                                                    multipleItems: false,
+
+                                                    ui: {
+                                                        label: 'Reads Object',
+                                                        description: 'This is param 1',
+                                                        hint: 'Hint 1',
+                                                        class: 'parameter'
+                                                    },
+                                                    data: {
+                                                        type: 'workspaceObjectRef',
+                                                        constraints: {
+                                                            required: true,
+                                                            types: ['KBaseFile.PairedEndLibrary', 'KBaseFile.SingleEndLibrary']
+                                                        },
+                                                        defaultValue: null
+                                                    }
                                                 },
-                                                defaultValue: null
+                                                label: {
+                                                    id: 'label',
+
+                                                    multipleItems: false,
+
+                                                    ui: {
+                                                        label: 'Label',
+                                                        description: 'This is param 2',
+                                                        hint: 'Hint 2',
+                                                        class: 'parameter'
+                                                    },
+                                                    data: {
+                                                        type: 'string',
+                                                        constraints: {
+                                                            required: true
+                                                        },
+                                                        defaultValue: null
+                                                    }
+                                                }
                                             }
                                         }
                                     }
                                 }
                             }
                         }
-
                     }
                 }
             };
-        }
-
-        function getLayout() {
-            return ['name', 'description', 'items'];
         }
 
         /*
@@ -599,7 +602,12 @@ define([
                                     body: div({ dataElement: 'widget' })
                                 }),
                                 ui.buildCollapsiblePanel({
-                                    title: span(['Currently Editing ', span({ dataElement: 'name', style: { textDecoration: 'underline' } })]),
+                                    title: span(['Currently Editing ', span({
+                                        dataElement: 'name',
+                                        style: {
+                                            textDecoration: 'underline'
+                                        }
+                                    })]),
                                     name: 'currently-editing',
                                     collapsed: true,
                                     hidden: false,
@@ -608,7 +616,7 @@ define([
                                     body: div({ dataElement: 'widget' })
                                 }),
                                 ui.buildPanel({
-                                    title: 'Editor ' + span({ class: 'fa fa-pencil' }),
+                                    title: span({ class: 'fa fa-pencil', style: { marginLeft: '3px', width: '20px' } }) + 'Editor ',
                                     name: 'editor',
                                     hidden: false,
                                     type: 'default',
@@ -629,7 +637,7 @@ define([
                                     title: 'Status',
                                     name: 'editor-status',
                                     hidden: false,
-                                    collapsed: true,
+                                    collapsed: false,
                                     type: 'default',
                                     classes: ['kb-panel-container'],
                                     body: div([
@@ -640,38 +648,38 @@ define([
                                                 padding: '4px',
                                                 minHeight: '1em'
                                             }
-                                        }),
-                                        div({
-                                            dataElement: 'flags',
-                                            style: { borderTop: '1px silver solid' }
-                                        }, [
-                                            span('param flags: '),
-                                            span({ style: { border: '0px silver solid' } }, [
-                                                'touched:', span({
-                                                    dataElement: 'touched',
-                                                    style: {
-                                                        display: 'inline-block',
-                                                        border: '1px silver solid',
-                                                        width: '10px',
-                                                        height: '10px'
-                                                    }
-                                                })
-                                            ]),
-                                            span({ style: { border: '0px silver solid', marginLeft: '10px' } }, [
-                                                'changed:', span({
-                                                    dataElement: 'changed',
-                                                    style: {
-                                                        display: 'inline-block',
-                                                        border: '1px silver solid',
-                                                        width: '10px',
-                                                        height: '10px'
-                                                    }
-                                                })
-                                            ]),
-                                            div({ style: { fontFamily: 'monospace' } }, [
-                                                'FSM: ', span({ dataElement: 'fsm' })
-                                            ])
-                                        ])
+                                        })
+                                        // div({
+                                        //     dataElement: 'flags',
+                                        //     style: { borderTop: '1px silver solid' }
+                                        // }, [
+                                        //     span('param flags: '),
+                                        //     span({ style: { border: '0px silver solid' } }, [
+                                        //         'touched:', span({
+                                        //             dataElement: 'touched',
+                                        //             style: {
+                                        //                 display: 'inline-block',
+                                        //                 border: '1px silver solid',
+                                        //                 width: '10px',
+                                        //                 height: '10px'
+                                        //             }
+                                        //         })
+                                        //     ]),
+                                        //     span({ style: { border: '0px silver solid', marginLeft: '10px' } }, [
+                                        //         'changed:', span({
+                                        //             dataElement: 'changed',
+                                        //             style: {
+                                        //                 display: 'inline-block',
+                                        //                 border: '1px silver solid',
+                                        //                 width: '10px',
+                                        //                 height: '10px'
+                                        //             }
+                                        //         })
+                                        //     ]),
+                                        //     div({ style: { fontFamily: 'monospace' } }, [
+                                        //         'FSM: ', span({ dataElement: 'fsm' })
+                                        //     ])
+                                        // ])
                                         // div(['debug: ', span({dataElement: 'debug'}, 'debug here')])
                                     ])
                                 })
@@ -686,60 +694,7 @@ define([
         }
 
         function validateModel() {
-
-            // TODO: make this work
-
-            return {
-                isValid: true,
-                errors: []
-            };
-
-            /*
-             * Validation is currently very simple.
-             * Iterate through all parameters in the model specification.
-             * If the model contains a value, validate it.
-             * Record any failure
-             * If the model does not contain a value, and it is optional, use the "null value" for that type.
-             * If the model does not contain a value, and it is required, record that failure
-             * If there are any failures, the validation feails.
-             * And return the set of failures.
-             *
-             * FOR NOW: let us assume that values only get into the model if
-             * they are valid.
-             * All we need to do now then is to ensure that all required fields are present,
-             * and missing fields get their default "nullish" value.
-             *
-             * Also FOR NOW: we don't have a model of what "blank" is for a field, so we use this:
-             * - for strings, empty string or undefined
-             * - for ints, undefined
-             * - for floats, undefined
-             * - for sets, empty array
-             * - for object refs, empty string (we should check if refs are valid here as well, but not yet.)
-             *
-             *
-             */
-            var params = model.getItem('params'),
-                parameters = getParameters(),
-                errors = Object.keys(parameters).map(function(id) {
-                    var parameterSpec = parameters[id];
-                    if (parameterSpec.required()) {
-                        if (parameterSpec.isEmpty(params[id].value)) {
-                            return {
-                                diagnosis: 'required-missing',
-                                errorMessage: 'The ' + parameterSpec.dataType() + ' "' + parameterSpec.id() + '" is required but was not provided'
-                            };
-                        }
-                    }
-                }).filter(function(error) {
-                    if (error) {
-                        return true;
-                    }
-                    return false;
-                });
-            return {
-                isValid: (errors.length === 0),
-                errors: errors
-            };
+            return getSpec().validateModel(model.getItem('params'));
         }
 
         function setStatus(message) {
@@ -791,14 +746,18 @@ define([
             return obj;
         }
 
-        function buildPython(cell, cellId, app, params) {
-            var runId = new Uuid(4).format(),
-                fixedApp = fixApp(app),
-                code = PythonInterop.buildEditorRunner(cellId, runId, fixedApp, params);
+        function buildPython() {
+            var cellId = utils.getCellMeta(cell, 'kbase.attributes.id');
+            var app = editorState.getItem('app');
+            var params = modelToParams();
+            var runId = editorState.getItem('editorState.currentRunId');
+
+            var fixedApp = fixApp(app);
+            var code = PythonInterop.buildEditorRunner(cellId, runId, fixedApp, params);
             // TODO: do something with the runId 
 
-            setStatus('Successfully built code');
-            editorState.setItem('editorState.currentRunId', runId);
+            // setStatus('Successfully built code');
+
             cell.set_text(code);
         }
 
@@ -984,85 +943,92 @@ define([
             });
 
             // Editor state flags
-            ['touched', 'changed'].forEach(function(flag) {
-                var flagged, params = model.getItem('params');
-                if (params) {
-                    Object.keys(params).forEach(function(key) {
-                        var param = params[key];
-                        if (param[flag]) {
-                            flagged = true;
-                        }
-                    });
-                    setStatusFlag(flag, flagged);
-                }
-            });
-            console.log('FSM', fsm.getCurrentState());
+            // *** disabling this vew model style
+            // ['touched', 'changed'].forEach(function(flag) {
+            //     var flagged, params = model.getItem('params');
+            //     if (params) {
+            //         Object.keys(params).forEach(function(key) {
+            //             var param = params[key];
+            //             if (param[flag]) {
+            //                 flagged = true;
+            //             }
+            //         });
+            //         setStatusFlag(flag, flagged);
+            //     }
+            // });
             ui.setContent('flags.fsm', JSON.stringify(fsm.getCurrentState().state));
 
 
         }
 
-        var saveTimer = null;
+        // var saveTimer = null;
 
-        function saveNarrative() {
-            if (saveTimer) {
-                return;
-            }
-            saveTimer = window.setTimeout(function() {
-                saveTimer = null;
-                Jupyter.saveNotebook();
-            }, saveMaxFrequency);
-        }
+        // function saveNarrative() {
+        //     if (saveTimer) {
+        //         return;
+        //     }
+        //     saveTimer = window.setTimeout(function() {
+        //         saveTimer = null;
+        //         Jupyter.saveNotebook();
+        //     }, saveMaxFrequency);
+        // }
 
-        function doDeleteCell() {
-            var content = div([
-                p([
-                    'Deleting this cell will remove the data visualization, ',
-                    'but will not delete the data object, which will still be avaiable ',
-                    'in the data panel.'
-                ]),
-                p('Continue to delete this data cell?')
-            ]);
-            ui.showConfirmDialog({ title: 'Confirm Cell Deletion', body: content })
-                .then(function(confirmed) {
-                    if (!confirmed) {
-                        return;
-                    }
+        // function doDeleteCell() {
+        //     var content = div([
+        //         p([
+        //             'Deleting this cell will remove the data visualization, ',
+        //             'but will not delete the data object, which will still be avaiable ',
+        //             'in the data panel.'
+        //         ]),
+        //         p('Continue to delete this data cell?')
+        //     ]);
+        //     ui.showConfirmDialog({ title: 'Confirm Cell Deletion', body: content })
+        //         .then(function(confirmed) {
+        //             if (!confirmed) {
+        //                 return;
+        //             }
 
-                    bus.emit('stop');
+        //             bus.emit('stop');
 
-                    Jupyter.deleteCell(cell);
-                });
-        }
+        //             Jupyter.deleteCell(cell);
+        //         });
+        // }
 
-        function isModelChanged() {
-            var params = model.getItem('params');
-            if (!params) {
-                return false;
-            }
-            return ['touched', 'changed'].some(function(flag) {
-                return Object.keys(params).some(function(key) {
-                    return params[key];
-                });
-            });
-        }
+        // ***
+        // function isModelChanged() {
+        //     var params = model.getItem('params');
+        //     if (!params) {
+        //         return false;
+        //     }
+        //     return ['touched', 'changed'].some(function(flag) {
+        //         return Object.keys(params).some(function(key) {
+        //             return params[key];
+        //         });
+        //     });
+        // }
 
-        function clearModelFlags() {
-            var params = model.getItem('params');
-            ['touched', 'changed'].forEach(function(flag) {
-                Object.keys(params).forEach(function(key) {
-                    var param = params[key];
-                    param[flag] = false;
-                });
-            });
-        }
+        // ***
+        // function clearModelFlags() {
+        //     var params = model.getItem('params');
+        //     ['touched', 'changed'].forEach(function(flag) {
+        //         Object.keys(params).forEach(function(key) {
+        //             var param = params[key];
+        //             param[flag] = false;
+        //         });
+        //     });
+        // }
 
         function doSave() {
             setStatus(html.loading('Saving...'));
+            // We stamp the run id and rebuild the code to capture the run id.
+            // This is a provides for a sanity check tht the response from the
+            // save originates with this request.
+            editorState.setItem('editorState.currentRunId', new Uuid(4).format());
+            buildPython();
             doSaveReadsSet()
                 .then(function() {
                     // Clear the parameter flags
-                    clearModelFlags();
+                    // clearModelFlags();
                     renderUI();
                 })
                 .catch(function(err) {
@@ -1101,13 +1067,6 @@ define([
                 container.innerHTML = layout.content;
                 layout.events.attachEvents(container);
 
-
-
-                places = {
-                    status: container.querySelector('[data-element="status"]'),
-                    notifications: container.querySelector('[data-element="notifications"]'),
-                    widget: container.querySelector('[data-element="widget"]')
-                };
                 return null;
             });
         }
@@ -1171,28 +1130,37 @@ define([
                     cell: Props.getDataItem(cell.metadata, 'kbase.attributes.id')
                 }, 'A cell channel');
 
-                eventManager.add(cellBus.on('delete-cell', function() {
-                    doDeleteCell();
-                }));
+                // eventManager.add(cellBus.on('delete-cell', function() {
+                //     doDeleteCell();
+                // }));
 
                 eventManager.add(cellBus.on('result', function(message) {
                     // Verify that the run id is the same.
                     if (message.address.run_id !== editorState.getItem('editorState.currentRunId')) {
-                        setStatus('Error! result message is not from the generated code!');
+                        setStatus(div([
+                            p('Error! result message is not from the generated code!'),
+                            p(['Sent ', editorState.getItem('editorState.currentRunId'), ' received ', message.address.run_id])
+                        ]));
                         return;
                     }
                     if (message.message.result) {
                         setStatus('Successfully saved the reads set');
                         editorState.setItem('editorState.touched', false);
                         editorState.setItem('editorState.changed', false);
-                        fsm.newState({ mode: 'editing', params: 'complete', data: 'clean' });
+                        fsm.newState({
+                            mode: 'editing',
+                            params: 'complete',
+                            data: 'clean'
+                        });
                         renderUI();
 
-                        // Now we need to reload the editor with thew new item.
-                        // console.log('RESULT', message);
-                        model.setItem('current.readsSetRef', message.message.result.set_ref);
-                        model.setItem('current.readsSet.object', serviceUtils.objectInfoToObject(message.message.result.set_info));
-                        updateEditor(message.message.result.set_ref);
+                        // Now we need to reload the editor with the NEW item.
+                        editorState.setItem('current.set.ref', message.message.result.set_ref);
+                        editorState.setItem('current.set.info', serviceUtils.objectInfoToObject(message.message.result.set_info));
+                        return unloadEditor()
+                            .then(function() {
+                                updateEditor(message.message.result.set_ref);
+                            });
 
                     } else if (message.message.error) {
                         // cheap as heck error message
@@ -1216,13 +1184,30 @@ define([
          * Convert the model into a set of params suitable for the editor
          * app.
          */
+        // *** 
+        // function modelToParams() {
+        //     return [{
+        //         workspace: workspaceInfo.id,
+        //         output_object_name: model.getItem('params.name.value'),
+        //         data: {
+        //             description: model.getItem('params.description.value'),
+        //             items: model.getItem('params.items.value', []).map(function(item) {
+        //                 return {
+        //                     label: item.label,
+        //                     ref: item.ref
+        //                 };
+        //             })
+        //         }
+        //     }];
+        // }
+
         function modelToParams() {
             return [{
                 workspace: workspaceInfo.id,
-                output_object_name: model.getItem('params.name.value'),
+                output_object_name: model.getItem('params.name'),
                 data: {
-                    description: model.getItem('params.description.value'),
-                    items: model.getItem('params.items.value', []).map(function(item) {
+                    description: model.getItem('params.description'),
+                    items: model.getItem('params.items', []).map(function(item) {
                         return {
                             label: item.label,
                             ref: item.ref
@@ -1279,7 +1264,6 @@ define([
 
         function loadUpdateEditor() {
             return new Promise(function(resolve, reject) {
-                ui.setContent('editor.widget', html.loading());
                 require(['./update'], function(Widget) {
                     // TODO: widget should make own bus.
                     var bus = runtime.bus().makeChannelBus(null, 'Parent comm bus for input widget'),
@@ -1287,11 +1271,12 @@ define([
                             bus: bus,
                             workspaceInfo: workspaceInfo,
                             appId: env.appId,
-                            appTag: env.appTag
+                            appTag: env.appTag,
+                            initialValue: model.getItem('params')
                         });
                     widgets.editor = {
                         path: ['editor', 'widget'],
-                        // module: widgetModule,
+                        // module: widgetModule,                        
                         type: 'update',
                         bus: bus,
                         instance: widget
@@ -1339,20 +1324,25 @@ define([
 
                     bus.on('parameter-changed', function(message) {
                         // We simply store the new value for the parameter.
-                        model.setItem(['params', message.parameter, 'value'], message.newValue);
-                        model.setItem(['params', message.parameter, 'changed'], true);
-                        model.setItem(['params', message.parameter, 'touched'], false);
+                        // ***
+                        // model.setItem(['params', message.parameter, 'value'], message.newValue);
+                        // model.setItem(['params', message.parameter, 'changed'], true);
+                        // model.setItem(['params', message.parameter, 'touched'], false);
+
+                        model.setItem(['params', message.parameter], message.newValue);
+
+
                         // hack this in for now...
-                        var state = fsm.getCurrentState(),
-                            newState = JSON.parse(JSON.stringify(state.state));
-                        newState.data = 'changed';
-                        fsm.newState(newState);
+                        // var state = fsm.getCurrentState(),
+                        //     newState = JSON.parse(JSON.stringify(state.state));
+                        // newState.data = 'changed';
+                        // fsm.newState(newState);
 
                         evaluateAppState();
                     });
 
                     bus.on('parameter-touched', function(message) {
-                        model.setItem(['params', message.parameter, 'touched'], true);
+                        // model.setItem(['params', message.parameter, 'touched'], true);
                         var state = fsm.getCurrentState(),
                             newState = JSON.parse(JSON.stringify(state.state));
                         newState.data = 'touched';
@@ -1399,101 +1389,6 @@ define([
             });
         }
 
-        function loadCreationEditor() {
-            return new Promise(function(resolve, reject) {
-                ui.setContent('editor.widget', html.loading());
-
-                require(['./create'], function(Widget) {
-                    // TODO: widget should make own bus.
-                    var bus = runtime.bus().makeChannelBus(null, 'Parent comm bus for input widget'),
-                        widget = Widget.make({
-                            bus: bus,
-                            workspaceInfo: workspaceInfo
-                        });
-                    widgets.editor = {
-                        path: ['editor', 'widget'],
-                        // module: widgetModule,
-                        type: 'create',
-                        bus: bus,
-                        instance: widget
-                    };
-                    bus.emit('run', {
-                        node: ui.getElement(['editor', 'widget']),
-                        appSpec: env.appSpec,
-                        parameters: getParameters()
-                    });
-                    bus.on('parameter-sync', function(message) {
-                        var value = model.getItem(['params', message.parameter, 'value']);
-                        bus.send({
-                            parameter: message.parameter,
-                            value: value
-                        }, {
-                            // This points the update back to a listener on this key
-                            key: {
-                                type: 'update',
-                                parameter: message.parameter
-                            }
-                        });
-                    });
-
-                    bus.on('sync-params', function(message) {
-                        message.parameters.forEach(function(paramId) {
-                            bus.send({
-                                parameter: paramId,
-                                value: model.getItem(['params', paramId, 'value'])
-                            }, {
-                                key: {
-                                    type: 'parameter-value',
-                                    parameter: paramId
-                                },
-                                channel: message.replyToChannel
-                            });
-                        });
-                    });
-
-                    bus.respond({
-                        key: {
-                            type: 'get-parameter'
-                        },
-                        handle: function(message) {
-                            return {
-                                value: model.getItem(['params', message.parameterName, 'value'])
-                            };
-                        }
-                    });
-
-                    //                    bus.on('get-parameter-value', function (message) {
-                    //                        var value = model.getItem(['params', message.parameter]);
-                    //                        bus.send({
-                    //                            parameter: message.parameter,
-                    //                            value: value
-                    //                        }, {
-                    //                            key: {
-                    //                                type: 'parameter-value',
-                    //                                parameter: message.parameter
-                    //                            }
-                    //                        });
-                    //                    });
-                    bus.on('parameter-changed', function(message) {
-                        // We simply store the new value for the parameter.
-                        model.setItem(['params', message.parameter, 'value'], message.newValue);
-                        evaluateAppState();
-                    });
-                    widget.start()
-                        .then(function() {
-                            resolve();
-                            return null;
-                        })
-                        .catch(function(err) {
-                            reject(err);
-                        });
-
-                }, function(err) {
-                    console.log('ERROR', err);
-                    reject(err);
-                });
-            });
-        }
 
         function renderCurrentlyEditing(info) {
             var content = table({ class: 'table table-striped' }, [
@@ -1539,17 +1434,20 @@ define([
 
                     // TODO: move this into code or config specific to 
                     // the reads set editor.
-                    model.setItem('params.name.value', setObject.info[1]);
-                    model.setItem('params.description.value', setObject.data.description);
-                    model.setItem('params.items.value', setObject.data.items.map(function(item) {
+                    // *** removed the .value
+                    model.setItem('params.name', setObject.info[1]);
+                    model.setItem('params.description', setObject.data.description);
+                    model.setItem('params.items', setObject.data.items.map(function(item) {
                         return {
                             ref: item.ref,
                             label: item.label
                         };
                     }));
 
+
                     var info = serviceUtils.objectInfoToObject(setObject.info);
 
+                    // NOT USED?
                     model.setItem('currentReadsSet', info);
 
                     renderCurrentlyEditing(info);
@@ -1575,9 +1473,9 @@ define([
          */
         function resetEditorModel(objectRef) {
             model.setItem('params', {});
-            model.setItem('params.name.value', '');
-            model.setItem('params.description.value', '');
-            model.setItem('params.items.value', []);
+            model.setItem('params.name', '');
+            model.setItem('params.description', '');
+            model.setItem('params.items', []);
 
             //loadUpdateEditor();
 
@@ -1590,14 +1488,6 @@ define([
                     module: 'SetAPI',
                     version: 'dev'
                 }),
-                //                donorReadsRef = (function (type) {
-                //                    switch (type) {
-                //                        case 'KBaseFile.SingleEndLibrary':
-                //                            return '11733/31/1';
-                //                        case 'KBaseFile.PairedEndLibrary':
-                //                            return '11733/16/4';
-                //                    }
-                //                }(type)),
                 params = {
                     workspace: String(workspaceInfo.id),
                     output_object_name: name,
@@ -1611,14 +1501,15 @@ define([
                 };
             return setApiClient.callFunc('save_reads_set_v1', [params])
                 .spread(function(result) {
-
                     // remove whatever is in the editor panel
 
                     // place the update editor there
 
                     // updatethe update editor with the thing to edit.
-
-                    updateEditor(result.set_ref);
+                    return unloadEditor()
+                        .then(function() {
+                            return updateEditor(result.set_ref);
+                        });
                 })
                 .catch(function(err) {
                     console.error('ERROR!', err);
@@ -1629,16 +1520,17 @@ define([
         function doSaveReadsSet() {
             return Promise.try(function() {
                 cell.execute();
-                var state = JSON.parse(JSON.stringify(fsm.getCurrentState.state));
-                state.changed = false;
+                var state = JSON.parse(JSON.stringify(fsm.getCurrentState().state));
+                state.data = 'clean';
                 fsm.newState(state);
             });
         }
 
         function doLoadNewSetForm() {
-            unloadEditor();
-            resetEditorModel();
-            loadCreationEditor();
+            return unloadEditor()
+                .then(function() {
+                    resetEditorModel();
+                });
         }
 
         function doEditObject(objectInfo) {
@@ -1646,7 +1538,10 @@ define([
             editorState.setItem('current.set.ref', objectInfo.ref);
             editorState.setItem('current.set.info', objectInfo);
 
-            updateEditor(objectInfo.ref);
+            return unloadEditor()
+                .then(function() {
+                    return updateEditor(objectInfo.ref);
+                });
         }
 
         function loadEditObjectSelector() {
@@ -1709,11 +1604,111 @@ define([
             });
         }
 
-        function evaluateAppState(force) {
+        function exportParams() {
+            var params = model.getItem('params'),
+                paramsToExport = {},
+                parameters = getSpec().getSpec().parameters;
+
+
+            Object.keys(params).forEach(function(key) {
+                var value = params[key],
+                    paramSpec = parameters.specs[key];
+
+                if (!paramSpec) {
+                    console.error('Parameter ' + key + ' is not defined in the parameter map', parameters);
+                    throw new Error('Parameter ' + key + ' is not defined in the parameter map');
+                }
+
+                paramsToExport[key] = value;
+            });
+
+            return paramsToExport;
+        }
+
+        function gatherValidationMessages(validationResult) {
+            var messages = [];
+
+            function harvestErrors(validations) {
+                if (validations instanceof Array) {
+                    validations.forEach(function(result, index) {
+                        if (!result.isValid) {
+                            messages.push(String(index) + ':' + result.errorMessage);
+                        }
+                        if (result.validations) {
+                            harvestErrors(result.validations);
+                        }
+                    });
+                } else {
+                    Object.keys(validations).forEach(function(id) {
+                        var result = validations[id];
+                        if (!result.isValid) {
+                            messages.push(id + ':' + result.errorMessage);
+                        }
+                        if (result.validations) {
+                            harvestErrors(result.validations);
+                        }
+                    });
+                }
+            }
+            harvestErrors(validationResult);
+            return messages;
+        }
+
+        function evaluateAppState() {
+            return Promise.try(function() {
+                    var currentEditorSetInfo = editorState.getItem('current.set.info');
+
+                    if (!currentEditorSetInfo) {
+                        // nothing being edited.
+                        fsm.updateState({
+                            mode: 'new'
+                        });
+                        return null;
+                    }
+
+                    return validateModel()
+                        .then(function(result) {
+                            // we have a tree of validations, so we need to walk the tree to see if anything 
+                            // does not validate.
+                            var messages = gatherValidationMessages(result);
+
+
+                            if (messages.length === 0) {
+                                buildPython();
+                                // fsm.updateState({ params: 'complete' });
+                                // dumb, but gotta get it working...
+                                fsm.newState({
+                                    mode: 'editing',
+                                    params: 'complete',
+                                    data: 'changed'
+                                });
+                            } else {
+                                resetPython(cell);
+                                // fsm.newState({ mode: 'editing', params: 'incomplete', data: 'changed' });
+                                //fsm.updateState({ params: 'incomplete' });
+                                fsm.newState({
+                                    mode: 'editing',
+                                    params: 'incomplete',
+                                    data: 'changed'
+                                });
+                            }
+                        });
+
+                })
+                .then(function() {
+                    renderUI();
+                })
+                .catch(function(err) {
+                    alert('internal error'),
+                        console.error('INTERNAL ERROR', err);
+                });
+        }
+
+        function evaluateAppStatex(force) {
             if (force || isModelChanged()) {
                 var validationResult = validateModel();
                 if (validationResult.isValid) {
-                    buildPython(cell, utils.getCellMeta(cell, 'kbase.attributes.id'), editorState.getItem('app'), modelToParams());
+                    buildPython();
                     fsm.updateState({ params: 'complete' });
                     // fsm.newState({ mode: 'editing', params: 'complete', data: 'changed' });
                 } else {
@@ -1741,20 +1736,22 @@ define([
             // with the parameters returned.
             return syncAppSpec(params.appId, params.appTag)
                 .then(function() {
-                    var appRef = [editorState.getItem('app').id, editorState.getItem('app').tag].filter(toBoolean).join('/'),
-                        url = '/#appcatalog/app/' + appRef;
+                    // Should not need to do this each time...
+                    var appRef = [editorState.getItem('app').id, editorState.getItem('app').tag].filter(toBoolean).join('/');
+                    var url = '/#appcatalog/app/' + appRef;
                     utils.setCellMeta(cell, 'kbase.attributes.title', env.appSpec.info.name);
                     utils.setCellMeta(cell, 'kbase.attributes.subtitle', env.appSpec.info.subtitle);
                     utils.setCellMeta(cell, 'kbase.attributes.info.url', url);
                     utils.setCellMeta(cell, 'kbase.attributes.info.label', 'more...');
-                    return Promise.all([
-                        loadEditObjectSelector(),
-                        (function() {
-                            if (editorState.getItem('current.set.info')) {
-                                return doEditObject(editorState.getItem('current.set.info'));
-                            }
-                        }())
-                    ]);
+
+                    return loadEditObjectSelector();
+                })
+                .then(function() {
+                    // only load the editor up if we have an existing set.
+                    // NEW: get the most recent one, not just the most recently selected one.
+                    if (editorState.getItem('current.set.info')) {
+                        return doEditObject(editorState.getItem('current.set.info'));
+                    }
                 })
                 .then(function() {
                     // this will not change, so we can just render it here.

@@ -158,33 +158,11 @@ define([
         }
 
         function updateState(nextState) {
-            var state = findNextState(currentState.next, nextState);
-            if (!state) {
-                console.error('Cannot not find new state', nextState, currentState);
-                throw new Error('Cannot find the new state');
-            }
-            var updatedState = JSON.parse(JSON.stringify(state));
+            var updatedState = JSON.parse(JSON.stringify(currentState.state));
             Object.keys(nextState).forEach(function(key) {
                 updatedState[key] = nextState[key];
             });
-
-            var newState = findState(updatedState);
-            if (!newState) {
-                throw new Error('Next state found, but that state does not exist');
-            }
-
-            if (utils.isEqual(newState.state, currentState.state)) {
-                return;
-            }
-
-            doMessages('exit');
-
-            // make it the current state
-            currentState = newState;
-
-            doMessages('enter');
-
-            run();
+            newState(updatedState);
         }
 
         function getCurrentState() {

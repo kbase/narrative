@@ -42,7 +42,7 @@ define([
 
     function factory(config) {
         var spec = config.parameterSpec,
-            workspaceId = config.workspaceId,
+            workspaceId = runtime.getEnv('workspaceId'),
             objectRefType = config.referenceType || 'name',
             parent,
             container,
@@ -61,7 +61,7 @@ define([
 
         // Validate configuration.
         if (!workspaceId) {
-            throw new Error('Workspace id required for the object widget');
+            throw new Error('Workspace id required for the select2 widget');
         }
 
         function makeInputControl(events, bus) {

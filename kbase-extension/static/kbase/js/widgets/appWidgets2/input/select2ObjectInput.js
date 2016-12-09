@@ -155,7 +155,6 @@ define([
             // and used to map the object ref or name to the control.  
             var options = Array.prototype.slice.call(control.options);
             options.forEach(function(option) {
-                console.log('SELECTED?', spec, (option.value === currentSelectionId), option.value, currentSelectionId);
                 if (option.value === currentSelectionId) {
                     option.selected = true;
                 }

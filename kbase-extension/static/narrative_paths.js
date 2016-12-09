@@ -292,7 +292,7 @@ require.config({
         'kbaseViewLiveRunLog': 'kbase/js/widgets/function_output/kbaseViewLiveRunLog',
         'kbaseReportView': 'kbase/js/widgets/function_output/kbaseReportView',
         'kbaseExpressionVolcanoPlot': 'kbase/js/widgets/function_output/kbaseExpressionVolcanoPlot',
-        'css': 'https://ci.kbase.us/cdn/files/require-css/0.1.8/css', //'ext_components/require-css/css.min',
+
 
 
 

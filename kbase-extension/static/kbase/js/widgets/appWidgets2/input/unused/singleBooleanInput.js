@@ -9,12 +9,14 @@ define([
     'common/events',
     'bootstrap',
     'css!font-awesome'
-], function (Promise, $, Jupyter, html, Validation, Events) {
+], function(Promise, $, Jupyter, html, Validation, Events) {
     'use strict';
 
     // Constants
     var t = html.tag,
-        div = t('div'), input = t('input'), span = t('span'), button = t('button'), select = t('select'), option = t('option');
+        div = t('div'),
+        select = t('select'),
+        option = t('option');
 
     function factory(config) {
         var options = {},
@@ -28,7 +30,7 @@ define([
 
         // Validate configuration.
         // Nothing to do...
-        
+
         options.environment = config.isInSidePanel ? 'sidePanel' : 'standard';
         options.multiple = spec.multipleItems();
         options.required = spec.required();
@@ -61,17 +63,17 @@ define([
          * 
          *
          */
-        
+
         function copyProps(from, props) {
             var newObj = {};
-            props.forEach(function (prop) {
+            props.forEach(function(prop) {
                 newObj[prop] = from[prop];
             });
             return newObj;
         }
 
         function validate() {
-            return Promise.try(function () {
+            return Promise.try(function() {
                 if (!options.enabled) {
                     return {
                         isValid: true,
@@ -109,7 +111,7 @@ define([
          * Places it into the dom node
          * Hooks up event listeners
          */
-        
+
         function makeInputControl(currentValue, data, events, bus) {
             var selectOptions = [
                 option({
@@ -124,9 +126,11 @@ define([
 
             // CONTROL
             return select({
-                id: events.addEvent({type: 'change', handler: function (e) {
+                id: events.addEvent({
+                    type: 'change',
+                    handler: function(e) {
                         validate()
-                            .then(function (result) {
+                            .then(function(result) {
                                 if (result.isValid) {
                                     bus.send({
                                         type: 'changed',
@@ -139,10 +143,11 @@ define([
                                     diagnosis: result.diagnosis
                                 });
                             });
-                    }}),
+                    }
+                }),
                 class: 'form-control',
                 dataElement: 'input'
-            }, [option({value: ''}, '')].concat(selectOptions));
+            }, [option({ value: '' }, '')].concat(selectOptions));
         }
 
         function render(params) {
@@ -157,16 +162,17 @@ define([
             var content = div({
                 dataElement: 'main-panel'
             }, [
-                div({dataElement: 'input-container'})
+                div({ dataElement: 'input-container' })
             ]);
             return {
                 content: content,
                 events: events
             };
         }
+
         function autoValidate() {
             return validate()
-                .then(function (result) {
+                .then(function(result) {
                     bus.send({
                         type: 'validation',
                         errorMessage: result.errorMessage,
@@ -177,11 +183,10 @@ define([
 
         // LIFECYCLE API
 
-        function init() {
-        }
+        function init() {}
 
         function attach(node) {
-            return Promise.try(function () {
+            return Promise.try(function() {
                 parent = node;
                 container = node.appendChild(document.createElement('div'));
                 $container = $(container);
@@ -195,17 +200,16 @@ define([
         }
 
         function start() {
-            return Promise.try(function () {
-            });
+            return Promise.try(function() {});
         }
 
         function run(params) {
-            return Promise.try(function () {
-                return render(params);
-            })
-            .then(function () {
-                return autoValidate();
-            });
+            return Promise.try(function() {
+                    return render(params);
+                })
+                .then(function() {
+                    return autoValidate();
+                });
         }
 
         return {
@@ -217,7 +221,7 @@ define([
     }
 
     return {
-        make: function (config) {
+        make: function(config) {
             return factory(config);
         }
     };

@@ -4,7 +4,6 @@
 define([
     'bluebird',
     'uuid',
-    'common/parameterSpec',
     'common/utils',
     'common/runtime',
     'common/html',
@@ -17,7 +16,6 @@ define([
 ], function(
     Promise,
     Uuid,
-    ParameterSpec,
     utils,
     Runtime,
     html,
@@ -52,28 +50,6 @@ define([
             runtime = Runtime.make(),
             spec;
 
-
-        /*
-         * Create an "empty" data structure based on a param/model specification
-         * Each model field is populated with the default value as provided by the 
-         * spec or empty value for the data type
-         */
-        // TODO: move to spec module
-        // TODO: recursively initialize params.
-        function initializeParams(appSpec) {
-            var defaultParams = {};
-            appSpec.parameters.forEach(function(parameterSpec) {
-                var param = ParameterSpec.make({ parameterSpec: parameterSpec }),
-                    defaultValue = param.defaultValue();
-
-                // A default value may be undefined, e.g. if the parameter is required and there is no default value.
-                if (defaultValue !== undefined) {
-                    defaultParams[param.id()] = defaultValue;
-                }
-            });
-            utils.setCellMeta(cell, 'kbase.appCell.params', defaultParams);
-        }
-
         function specializeCell() {
             cell.minimize = function() {
                 var inputArea = this.input.find('.input_area'),
@@ -81,7 +57,6 @@ define([
                     viewInputArea = this.element.find('[data-subarea-type="app-cell-input"]'),
                     showCode = utils.getCellMeta(cell, 'kbase.appCell.user-settings.showCodeInputArea');
 
-                console.log('minimize', outputArea, viewInputArea);
                 if (showCode) {
                     inputArea.addClass('hidden');
                 }
@@ -198,7 +173,6 @@ define([
             return Promise.try(function() {
                     // Create base app cell
 
-                    // console.log('about to convert appspec', appSpec);
                     // TODO: this should capture the entire app spec, so don't need
                     // to carry appSpec around.
                     spec = Spec.make({
@@ -232,7 +206,6 @@ define([
                     cell.metadata = meta;
 
                     // Add the params
-                    // console.log('SET INITIAL PARAMS', spec.makeDefaultedModel());
                     utils.setCellMeta(cell, 'kbase.appCell.params', spec.makeDefaultedModel());
                     // initializeParams(appSpec);
                     // Complete the cell setup.
@@ -245,7 +218,7 @@ define([
         }
 
         return Object.freeze({
-            initializeParams: initializeParams,
+            // initializeParams: initializeParams,
             setupCell: setupCell,
             upgradeToAppCell: upgradeToAppCell
         });

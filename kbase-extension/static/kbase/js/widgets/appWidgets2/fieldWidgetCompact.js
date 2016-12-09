@@ -16,6 +16,7 @@ define([
     'common/events',
     'common/ui',
     'common/props',
+    'common/runtime',
     './input/errorInput',
     'css!google-code-prettify/prettify.css'
 ], function(
@@ -25,6 +26,7 @@ define([
     Events,
     UI,
     Props,
+    Runtime,
     ErrorControlFactory) {
     'use strict';
 
@@ -48,8 +50,10 @@ define([
 
     function factory(config) {
         var ui,
-            bus = config.bus,
-            places, container,
+            runtime = Runtime.make(),
+            bus = runtime.bus().makeChannelBus(null, 'Field bus'),
+            places,
+            parent, container,
             inputControlFactory = config.inputControlFactory,
             inputControl,
             options = {},
@@ -58,8 +62,9 @@ define([
             enabled;
 
         try {
+            // console.log('field widget config', config);
             inputControl = inputControlFactory.make({
-                bus: config.bus,
+                bus: bus,
                 initialValue: config.initialValue,
                 appSpec: config.appSpec,
                 parameterSpec: config.parameterSpec,
@@ -189,7 +194,7 @@ define([
             places.feedbackIndicator.setAttribute('title', 'required field');
         }
 
-        function feedbackError(row) {
+        function feedbackError() {
             places.feedbackIndicator.className = 'kb-app-parameter-required-glyph fa fa-ban';
         }
 
@@ -387,6 +392,7 @@ define([
                             div({ dataElement: 'info' }, button({
                                 class: 'btn btn-link btn-xs',
                                 type: 'button',
+                                tabindex: "-1",
                                 id: events.addEvent({
                                     type: 'click',
                                     handler: function() {
@@ -433,7 +439,8 @@ define([
         // LIFECYCLE
 
         function attach(node) {
-            container = node;
+            parent = node;
+            container = parent.appendChild(document.createElement('div'));
             ui = UI.make({ node: container });
             var events = Events.make({
                 node: container
@@ -513,8 +520,11 @@ define([
                 });
 
                 if (inputControl.start) {
-                    return inputControl.start()
+                    return inputControl.start({
+                            node: places.inputControl
+                        })
                         .then(function() {
+                            // TODO: get rid of this pattern
                             bus.emit('run', {
                                 node: places.inputControl
                             });
@@ -525,13 +535,21 @@ define([
 
         function stop() {
             return Promise.try(function() {
-                return null;
-            });
+                return inputControl.stop()
+                    .then(function() {
+                        if (parent && container) {
+                            parent.removeChild(container);
+                        }
+                        bus.stop();
+                        return null;
+                    });
+            })
         }
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
+            bus: bus
         };
     }
 

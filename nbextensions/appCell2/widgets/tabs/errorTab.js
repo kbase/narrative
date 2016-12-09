@@ -6,11 +6,13 @@ define([
     'uuid',
     'common/ui',
     'kb_common/html'
-], function (Promise, Uuid, UI, html) {
+], function(Promise, Uuid, UI, html) {
     'use strict';
 
     var t = html.tag,
-        div = t('div'), ul = t('ul'), li = t('li');
+        div = t('div'),
+        ul = t('ul'),
+        li = t('li');
 
     function convertJobError(errorInfo) {
         var errorId = new Uuid(4).format(),
@@ -43,7 +45,7 @@ define([
             location: 'app cell',
             type: errorInfo.title,
             message: errorInfo.message,
-            advice: ul({style: {paddingLeft: '1.2em'}}, errorInfo.advice.map(function (adv) {
+            advice: ul({ style: { paddingLeft: '1.2em' } }, errorInfo.advice.map(function(adv) {
                 return li(adv);
             })),
             detail: errorInfo.detail
@@ -53,46 +55,49 @@ define([
 
     function renderErrorLayout() {
         return div([
-            div({style: {fontWeight: 'bold'}}, [
+            div({ style: { fontWeight: 'bold' } }, [
                 'Type'
             ]),
-            div({dataElement: 'type'}),
-            div({style: {fontWeight: 'bold', marginTop: '1em'}}, [
+            div({ dataElement: 'type' }),
+            div({ style: { fontWeight: 'bold', marginTop: '1em' } }, [
                 'Message'
             ]),
-            div({dataElement: 'message'}),
-            div({style: {fontWeight: 'bold', marginTop: '1em'}}, [
+            div({ dataElement: 'message' }),
+            div({ style: { fontWeight: 'bold', marginTop: '1em' } }, [
                 'Advice'
             ]),
-            div({dataElement: 'advice'}),
-            div({style: {fontWeight: 'bold', marginTop: '1em'}}, [
+            div({ dataElement: 'advice' }),
+            div({ style: { fontWeight: 'bold', marginTop: '1em' } }, [
                 'Detail'
             ]),
-            div({dataElement: 'detail',
+            div({
+                dataElement: 'detail',
                 style: {
                     border: '0px silver solid',
                     padding: '4px',
                     xoverflowY: 'auto',
                     wordBreak: 'break-word'
-                }}),
-            div({style: {fontWeight: 'bold', marginTop: '1em'}}, [
+                }
+            }),
+            div({ style: { fontWeight: 'bold', marginTop: '1em' } }, [
                 'Info'
             ]),
-            div({dataElement: 'info'})
+            div({ dataElement: 'info' })
         ]);
     }
 
     function factory(config) {
         var container, ui, model = config.model;
+
         function start(arg) {
-            return Promise.try(function () {
+            return Promise.try(function() {
                 container = arg.node;
 
                 // Very simple for now, just render the results json in a prettier than normal fashion.
 
                 container.innerHTML = renderErrorLayout();
 
-                ui = UI.make({node: container});
+                ui = UI.make({ node: container });
 
                 var viewModel;
                 if (model.hasItem('exec.jobState.error')) {
@@ -107,14 +112,14 @@ define([
                         detail: ''
                     };
                 }
-                console.log('to err...', viewModel);
+                console.error('errorTab', viewModel);
 
                 ui.updateFromViewModel(viewModel);
             });
         }
 
         function stop() {
-            return Promise.try(function () {
+            return Promise.try(function() {
                 container.innerHTML = 'Bye from error';
             });
         }
@@ -126,7 +131,7 @@ define([
     }
 
     return {
-        make: function (config) {
+        make: function(config) {
             return factory(config);
         }
     };

@@ -10,7 +10,7 @@ define([
     'common/fsm',
     'kb_common/html',
     'css!kbase/css/kbaseJobLog.css'
-], function (
+], function(
     Promise,
     Runtime,
     Props,
@@ -18,14 +18,16 @@ define([
     Events,
     Fsm,
     html
-    ) {
+) {
     'use strict';
 
     var t = html.tag,
-        div = t('div'), button = t('button'), span = t('span'), pre = t('pre'),
+        div = t('div'),
+        button = t('button'),
+        span = t('span'),
+        pre = t('pre'),
         fsm,
-        appStates = [
-            {
+        appStates = [{
                 state: {
                     mode: 'new'
                 },
@@ -38,8 +40,7 @@ define([
                         disabled: ['play', 'stop', 'top', 'back', 'forward', 'bottom']
                     }
                 },
-                next: [
-                    {
+                next: [{
                         mode: 'active',
                         auto: true
                     },
@@ -48,6 +49,9 @@ define([
                     },
                     {
                         mode: 'error'
+                    },
+                    {
+                        mode: 'cancelled'
                     }
                 ]
             },
@@ -65,8 +69,7 @@ define([
                         disabled: ['play']
                     }
                 },
-                next: [
-                    {
+                next: [{
                         mode: 'active',
                         auto: false
                     },
@@ -76,6 +79,9 @@ define([
                     },
                     {
                         mode: 'complete'
+                    },
+                    {
+                        mode: 'cancelled'
                     },
                     {
                         mode: 'error'
@@ -96,8 +102,7 @@ define([
                         disabled: ['stop']
                     }
                 },
-                next: [
-                    {
+                next: [{
                         mode: 'active',
                         auto: true
                     },
@@ -122,6 +127,17 @@ define([
             },
             {
                 state: {
+                    mode: 'cancelled'
+                },
+                ui: {
+                    buttons: {
+                        enabled: ['top', 'back', 'forward', 'bottom'],
+                        disabled: ['play', 'stop']
+                    }
+                }
+            },
+            {
+                state: {
                     mode: 'error'
                 },
                 ui: {
@@ -132,6 +148,7 @@ define([
                 }
             }
         ];
+
     function factory(config) {
         var config = config || {},
             runtime = Runtime.make(),
@@ -151,7 +168,7 @@ define([
             if (!looping) {
                 return;
             }
-            window.setTimeout(function () {
+            window.setTimeout(function() {
                 if (!looping) {
                     return;
                 }
@@ -163,7 +180,7 @@ define([
             var state = fsm.getCurrentState().state;
             if (state.mode === 'active' && state.auto) {
                 looping = false;
-                fsm.newState({mode: 'active', auto: false});
+                fsm.newState({ mode: 'active', auto: false });
             }
         }
 
@@ -171,7 +188,7 @@ define([
             var state = fsm.getCurrentState().state;
             if (state.mode === 'new' || (state.mode === 'active' && !state.auto)) {
                 looping = true;
-                fsm.newState({mode: 'active', auto: true});
+                fsm.newState({ mode: 'active', auto: true });
                 runtime.bus().emit('request-latest-job-log', {
                     jobId: jobId,
                     options: {
@@ -239,6 +256,7 @@ define([
 
             requestJobLog(newFirstLine);
         }
+
         function doFetchNextLogChunk() {
             var currentLine = model.getItem('currentLine'),
                 lastLine = model.getItem('lastLine'),
@@ -277,7 +295,7 @@ define([
         // VIEW
 
         function renderControls(events) {
-            return div({dataElement: 'header', style: {margin: '0 0 10px 0'}}, [
+            return div({ dataElement: 'header', style: { margin: '0 0 10px 0' } }, [
                 button({
                     class: 'btn btn-sm btn-default',
                     dataButton: 'play',
@@ -289,7 +307,7 @@ define([
                         handler: doStartFetchingLogs
                     })
                 }, [
-                    span({class: 'fa fa-play'})
+                    span({ class: 'fa fa-play' })
                 ]),
                 button({
                     class: 'btn btn-sm btn-default',
@@ -302,7 +320,7 @@ define([
                         handler: doStopFetchingLogs
                     })
                 }, [
-                    span({class: 'fa fa-stop'})
+                    span({ class: 'fa fa-stop' })
                 ]),
                 button({
                     class: 'btn btn-sm btn-default',
@@ -315,7 +333,7 @@ define([
                         handler: doFetchFirstLogChunk
                     })
                 }, [
-                    span({class: 'fa fa-fast-backward'})
+                    span({ class: 'fa fa-fast-backward' })
                 ]),
                 button({
                     class: 'btn btn-sm btn-default',
@@ -328,7 +346,7 @@ define([
                         handler: doFetchPreviousLogChunk
                     })
                 }, [
-                    span({class: 'fa fa-backward'})
+                    span({ class: 'fa fa-backward' })
                 ]),
                 button({
                     class: 'btn btn-sm btn-default',
@@ -341,7 +359,7 @@ define([
                         handler: doFetchNextLogChunk
                     })
                 }, [
-                    span({class: 'fa fa-forward'})
+                    span({ class: 'fa fa-forward' })
                 ]),
                 button({
                     class: 'btn btn-sm btn-default',
@@ -355,28 +373,27 @@ define([
                     })
 
                 }, [
-                    span({class: 'fa fa-fast-forward'})
+                    span({ class: 'fa fa-fast-forward' })
                 ]),
                 // div({dataElement: 'fsm-debug'}),
-                div({dataElement: 'spinner', class: 'pull-right'}, [
-                    span({class: 'fa fa-spinner fa-pulse fa-ex fa-fw'})
+                div({ dataElement: 'spinner', class: 'pull-right' }, [
+                    span({ class: 'fa fa-spinner fa-pulse fa-ex fa-fw' })
                 ])
             ]);
         }
 
         function renderLayout() {
             var events = Events.make(),
-                content = div({dataElement: 'kb-log', style: {marginTop: '10px'}}, [
-                    div({class: 'kblog-line'}, [
-                        div({class: 'kblog-num-wrapper'}, [
-                            div({class: 'kblog-line-num'}, [
-                            ])
+                content = div({ dataElement: 'kb-log', style: { marginTop: '10px' } }, [
+                    div({ class: 'kblog-line' }, [
+                        div({ class: 'kblog-num-wrapper' }, [
+                            div({ class: 'kblog-line-num' }, [])
                         ]),
-                        div({class: 'kblog-text'}, [
+                        div({ class: 'kblog-text' }, [
                             renderControls(events)
                         ])
                     ]),
-                    div({dataElement: 'panel'}, [
+                    div({ dataElement: 'panel' }, [
                         pre(['Log viewer initialized, awaiting most recent log messages...'])
                     ])
                 ]);
@@ -386,7 +403,7 @@ define([
                 events: events
             };
         }
-        
+
         function sanitize(text) {
             return text;
         }
@@ -394,20 +411,20 @@ define([
         function renderLine(line) {
             var extraClass = line.isError ? ' kb-error' : '';
 
-            return div({class: 'kblog-line' + extraClass}, [
-                div({class: 'kblog-num-wrapper'}, [
-                    div({class: 'kblog-line-num'}, [
+            return div({ class: 'kblog-line' + extraClass }, [
+                div({ class: 'kblog-num-wrapper' }, [
+                    div({ class: 'kblog-line-num' }, [
                         String(line.lineNumber)
                     ])
                 ]),
-                div({class: 'kblog-text'}, [
-                    div({style: {marginBottom: '6px'}}, sanitize(line.text))
+                div({ class: 'kblog-text' }, [
+                    div({ style: { marginBottom: '6px' } }, sanitize(line.text))
                 ])
             ]);
         }
 
         function renderLines(lines) {
-            return lines.map(function (line) {
+            return lines.map(function(line) {
                 return renderLine(line);
             }).join('\n');
         }
@@ -422,7 +439,7 @@ define([
                     dom.setContent('panel', 'Sorry, no log entries to show');
                     return;
                 }
-                viewLines = lines.map(function (line, index) {
+                viewLines = lines.map(function(line, index) {
                     return {
                         text: line.line,
                         isError: (line.is_error === 1 ? true : false),
@@ -436,6 +453,7 @@ define([
         }
 
         var externalEventListeners = [];
+
         function startEventListeners() {
             var ev;
 
@@ -446,16 +464,16 @@ define([
                 key: {
                     type: 'job-logs'
                 },
-                handle: function (message) {
+                handle: function(message) {
                     dom.hideElement('spinner');
-                    
+
                     if (message.logs.lines.length === 0) {
                         // TODO: add an alert area and show a dismissable alert.
                         if (!looping) {
                             // alert('No log entries returned');
                             console.warn('No log entries returned', message);
                         }
-                    } else {                    
+                    } else {
                         model.setItem('lines', message.logs.lines);
                         model.setItem('currentLine', message.logs.first);
                         model.setItem('latest', true);
@@ -486,7 +504,7 @@ define([
                 key: {
                     type: 'job-status'
                 },
-                handle: function (message) {
+                handle: function(message) {
                     // console.log('LOGS job-status', message)
                     // if the job is finished, we don't want to reflect
                     // this in the ui, and disable play/stop controls.
@@ -517,6 +535,11 @@ define([
                                         mode: 'error'
                                     };
                                     break;
+                                case 'canceled':
+                                    newState = {
+                                        mode: 'cancelled'
+                                    };
+                                    break;
                                 default:
                                     console.error('Unknown job status', jobStatus, message);
                                     throw new Error('Unknown job status ' + jobStatus);
@@ -536,6 +559,11 @@ define([
                                 case 'suspend':
                                     newState = {
                                         mode: 'error'
+                                    };
+                                    break;
+                                case 'canceled':
+                                    newState = {
+                                        mode: 'cancelled'
                                     };
                                     break;
                                 default:
@@ -579,7 +607,7 @@ define([
                 key: {
                     type: 'job-log-deleted'
                 },
-                handle: function (message) {
+                handle: function(message) {
                     stopAutoFetch();
                     console.warn('No job log :( -- it has been deleted');
                 }
@@ -587,8 +615,9 @@ define([
             externalEventListeners.push(ev);
 
         }
+
         function stopEventListeners() {
-            externalEventListeners.forEach(function (ev) {
+            externalEventListeners.forEach(function(ev) {
                 runtime.bus().removeListener(ev);
             });
         }
@@ -601,10 +630,10 @@ define([
 
             // Button state
             if (state.ui.buttons) {
-                state.ui.buttons.enabled.forEach(function (button) {
+                state.ui.buttons.enabled.forEach(function(button) {
                     dom.enableButton(button);
                 });
-                state.ui.buttons.disabled.forEach(function (button) {
+                state.ui.buttons.disabled.forEach(function(button) {
                     dom.disableButton(button);
                 });
             }
@@ -612,17 +641,17 @@ define([
 
             // Element state
             if (state.ui.elements) {
-                state.ui.elements.show.forEach(function (element) {
+                state.ui.elements.show.forEach(function(element) {
                     dom.showElement(element);
                 });
-                state.ui.elements.hide.forEach(function (element) {
+                state.ui.elements.hide.forEach(function(element) {
                     dom.hideElement(element);
                 });
             }
 
             // Emit messages for this state.
             if (state.ui.messages) {
-                state.ui.messages.forEach(function (message) {
+                state.ui.messages.forEach(function(message) {
                     bus.send(message.message, message.address);
                     // widgets[message.widget].bus.send(message.message, message.address);
                 });
@@ -638,7 +667,7 @@ define([
                 initialState: {
                     mode: 'new'
                 },
-                onNewState: function (fsm) {
+                onNewState: function(fsm) {
                     // save the state?
 
                     renderFSM(fsm);
@@ -648,12 +677,12 @@ define([
         }
 
         function start() {
-            return Promise.try(function () {
-                bus.on('run', function (message) {
+            return Promise.try(function() {
+                bus.on('run', function(message) {
                     var root = message.node;
                     container = root.appendChild(document.createElement('div'));
-                    dom = Dom.make({node: container});
-                    
+                    dom = Dom.make({ node: container });
+
                     jobId = message.jobId;
 
                     var layout = renderLayout();
@@ -699,7 +728,7 @@ define([
                 linesPerPage: 10,
                 fetchedAt: null
             },
-            onUpdate: function () {
+            onUpdate: function() {
                 render();
             }
         });
@@ -714,7 +743,7 @@ define([
     }
 
     return {
-        make: function (config) {
+        make: function(config) {
             return factory(config);
         }
     };

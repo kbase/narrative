@@ -1,9 +1,7 @@
-/*global define*/
-/*jslint white:true,browser:true*/
 define([
     'bluebird',
     'kb_common/html',
-    '../validation',
+    '../validators/int',
     'common/events',
     'common/ui',
     'common/props',
@@ -11,7 +9,7 @@ define([
 
     'bootstrap',
     'css!font-awesome'
-], function (
+], function(
     Promise,
     html,
     Validation,
@@ -27,18 +25,56 @@ define([
         input = t('input');
 
     function factory(config) {
-        var enabled,
+        var enabled = config.enabled || true,
             spec = config.parameterSpec,
+            bus = config.bus,
             parent,
             container,
-            bus = config.bus,
             model,
             ui;
 
-        // Validate configuration.
-        // Nothing to do...
+        // CONTROL
 
-        enabled = config.enabled || true;
+        function getControlValue() {
+            return ui.getElement('input-container.input').value;
+        }
+
+        function setControlValue(value) {
+            var stringValue;
+            if (value === null) {
+                stringValue = '';
+            } else {
+                stringValue = String(value);
+            }
+
+            ui.getElement('input-container.input').value = stringValue;
+        }
+
+        // MODEL
+
+        function setModelValue(value) {
+            // If a model value needs resetting, that should be done
+            // by resetModelValue
+            if (value === undefined) {
+                return;
+            }
+            if (model.getItem('value') === value) {
+                return;
+            }
+            model.setItem('value', value);
+        }
+
+        function resetModelValue() {
+            setModelValue(spec.data.constraints.defaultValue);
+        }
+
+        // sync the dom to the model.
+        function syncModelToControl() {
+            setControlValue(model.getItem('value', null));
+        }
+
+
+        // ENABLE / DISABLE
 
         function doEnable() {
             if (enabled === false) {
@@ -64,56 +100,26 @@ define([
             }
         }
 
-        /*
-         * If the parameter is optional, and is empty, return null.
-         * If it allows multiple values, wrap single results in an array
-         * There is a weird twist where if it ...
-         * well, hmm, the only consumer of this, isValid, expects the values
-         * to mirror the input rows, so we shouldn't really filter out any
-         * values.
-         */
+        // VALIDATION
 
-        function getInputValue() {
-            return ui.getElement('input-container.input').value;
-        }
-
-        function resetModelValue() {
-            if (spec.defaultValue) {
-                model.setItem('value', spec.defaultValue);
-            } else {
-                model.setItem('value', undefined);
-            }
-        }
-
-        /*
-         *
-         * Text fields can occur in multiples.
-         * We have a choice, treat single-text fields as a own widget
-         * or as a special case of multiple-entry --
-         * with a min-items of 1 and max-items of 1.
-         *
-         *
-         */
-
-        function validate() {
-            return Promise.try(function () {
-                // if (!enabled) {
-                //     return {
-                //         isValid: true,
-                //         validated: false,
-                //         diagnosis: 'disabled'
-                //     };
-                // }
-
-                return Validation.validateIntString(getInputValue(), spec.data.constraints);
+        function validate(value) {
+            return Promise.try(function() {
+                return Validation.validate(value, spec);
             });
         }
 
-        /*
-         * Creates the markup
-         * Places it into the dom node
-         * Hooks up event listeners
-         */
+        function autoValidate() {
+            return validate(model.getItem('value'))
+                .then(function(result) {
+                    bus.emit('validation', result);
+                });
+        }
+
+        function importControlValue() {
+            return Promise.try(function() {
+                return Validation.importString(getControlValue());
+            });
+        }
 
         var autoChangeTimer;
 
@@ -125,13 +131,13 @@ define([
         }
 
         function handleTouched(interval) {
-            var editPauseInterval = interval || 2000;
+            var editPauseInterval = interval || 100;
             return {
                 type: 'keyup',
-                handler: function (e) {
+                handler: function(e) {
                     bus.emit('touched');
                     cancelTouched();
-                    autoChangeTimer = window.setTimeout(function () {
+                    autoChangeTimer = window.setTimeout(function() {
                         autoChangeTimer = null;
                         e.target.dispatchEvent(new Event('change'));
                     }, editPauseInterval);
@@ -142,20 +148,23 @@ define([
         function handleChanged() {
             return {
                 type: 'change',
-                handler: function () {
+                handler: function() {
                     cancelTouched();
-                    validate()
-                        .then(function (result) {
+                    importControlValue()
+                        .then(function(value) {
+                            model.setItem('value', value);
+                            bus.emit('changed', {
+                                newValue: value
+                            });
+                            return validate(value);
+                        })
+                        .then(function(result) {
                             if (result.isValid) {
-                                model.setItem('value', result.parsedValue);
-                                bus.emit('changed', {
-                                    newValue: result.parsedValue
-                                });
+                                if (config.showOwnMessages) {
+                                    ui.setContent('input-container.message', '');
+                                }
                             } else if (result.diagnosis === 'required-missing') {
-                                model.setItem('value', result.parsedValue);
-                                bus.emit('changed', {
-                                    newValue: result.parsedValue
-                                });
+                                // nothing??
                             } else {
                                 if (config.showOwnMessages) {
                                     // show error message -- new!
@@ -169,9 +178,13 @@ define([
                                     message.events.attachEvents();
                                 }
                             }
+                            bus.emit('validation', result);
+                        })
+                        .catch(function(err) {
                             bus.emit('validation', {
-                                errorMessage: result.errorMessage,
-                                diagnosis: result.diagnosis
+                                isValid: false,
+                                diagnosis: 'invalid',
+                                errorMessage: err.message
                             });
                         });
                 }
@@ -196,7 +209,10 @@ define([
                         class: 'form-control',
                         dataElement: 'input',
                         dataType: 'int',
-                        value: initialControlValue
+                        value: initialControlValue,
+                        style: {
+                            textAlign: 'right'
+                        }
                     }),
                     (typeof max === 'number' ? div({ class: 'input-group-addon', fontFamily: 'monospace' }, ' &#8804; ' + String(max)) : '')
                 ]),
@@ -205,16 +221,13 @@ define([
         }
 
         function render() {
-            Promise.try(function () {
-                    var events = Events.make(),
-                        inputControl = makeInputControl(model.getItem('value'), events, bus);
+            return Promise.try(function() {
+                var events = Events.make(),
+                    inputControl = makeInputControl(model.getItem('value'), events);
 
-                    ui.setContent('input-container', inputControl);
-                    events.attachEvents(container);
-                })
-                .then(function () {
-                    return autoValidate();
-                });
+                ui.setContent('input-container', inputControl);
+                events.attachEvents(container);
+            });
         }
 
         function layout(events) {
@@ -229,70 +242,77 @@ define([
             };
         }
 
-        function autoValidate() {
-            return validate()
-                .then(function (result) {
-                    bus.emit('validation', {
-                        errorMessage: result.errorMessage,
-                        diagnosis: result.diagnosis
-                    });
-                });
-        }
+
 
         // LIFECYCLE API
 
-        function start() {
-            return Promise.try(function () {
-                bus.on('run', function (message) {
-                    parent = message.node;
-                    container = parent.appendChild(document.createElement('div'));
-                    ui = UI.make({ node: container });
+        function start(arg) {
+            return Promise.try(function() {
+                parent = arg.node;
+                container = parent.appendChild(document.createElement('div'));
+                ui = UI.make({ node: container });
 
-                    var events = Events.make(),
-                        theLayout = layout(events);
+                var events = Events.make(),
+                    theLayout = layout(events);
 
-                    container.innerHTML = theLayout.content;
-                    events.attachEvents(container);
+                container.innerHTML = theLayout.content;
+                events.attachEvents(container);
+                // model.setItem('value', message.value);
+
+                bus.on('reset-to-defaults', function() {
+                    resetModelValue();
+                });
+                bus.on('update', function(message) {
                     model.setItem('value', message.value);
-
-                    bus.on('reset-to-defaults', function () {
-                        resetModelValue();
-                    });
-                    bus.on('update', function (message) {
-                        model.setItem('value', message.value);
-                    });
-                    bus.on('stop', function () {
-                        bus.stop();
-                    });
-                    bus.on('enable', function () {
-                        doEnable();
-                    });
-                    bus.on('disable', function () {
-                        doDisable();
-                    });
-
-                    bus.emit('sync');
+                });
+                bus.on('enable', function() {
+                    doEnable();
+                });
+                bus.on('disable', function() {
+                    doDisable();
                 });
 
+                // TODO: since we now rely on initialValue -- perhaps 
+                // we can omit the 'sync' event or at least in cases
+                // in which the initial value is known to be available.
+                // bus.emit('sync');
+
+                return render()
+                    .then(function() {
+                        return autoValidate();
+                    });
             });
         }
 
+        function stop() {
+            return Promise.try(function() {
+                if (container) {
+                    parent.removeChild(container);
+                }
+                return null;
+            });
+        }
+
+        // INIT
+
         model = Props.make({
             data: {
-                value: null
+                value: spec.data.nullValue
             },
-            onUpdate: function (props) {
-                render();
-            }
+            onUpdate: function() {}
         });
 
+        setModelValue(config.initialValue);
+
         return {
-            start: start
+            start: start,
+            stop: stop,
+            bus: bus
         };
     }
 
     return {
-        make: function (config) {
+        make: function(config) {
             return factory(config);
         }
     };

@@ -2,22 +2,24 @@
 /*jslint white:true,browser:true*/
 define([
     'bluebird',
+    'base/js/namespace',
     'kb_common/html',
     '../validation',
     'common/events',
-    'common/ui',
+    'common/dom',
     'common/runtime',
-    './structInput',
+    './singleTextInput',
     'bootstrap',
     'css!font-awesome'
 ], function(
     Promise,
+    Jupyter,
     html,
     Validation,
     Events,
-    UI,
+    Dom,
     Runtime,
-    structInputWidget) {
+    SingleTextInputWidget) {
     'use strict';
 
     // Constants
@@ -27,14 +29,12 @@ define([
 
     function factory(config) {
         var options = {},
-            // The spec for the struct is actally in the parameters now, which is always
-            // the parameter with id 'item'.
             spec = config.parameterSpec,
-            structSpec = spec.parameters.specs.item,
+            constraints = spec.data.constraints,
             container,
             parent,
             bus = config.bus,
-            ui,
+            dom,
             model = {
                 value: []
             },
@@ -58,7 +58,9 @@ define([
                         }
                     } else {
                         if (value) {
-                            model.value = value;
+                            model.value = value.map(function(item) {
+                                return item;
+                            });
                         } else {
                             unsetModelValue();
                         }
@@ -67,6 +69,9 @@ define([
                 })
                 .then(function() {
                     render();
+                })
+                .catch(function(err) {
+                    console.error('Error setting model value', err);
                 });
         }
 
@@ -89,8 +94,8 @@ define([
         }
 
         function resetModelValue() {
-            if (spec.defaultValue) {
-                setModelValue(spec.defaultValue);
+            if (spec.spec.default_values && spec.spec.default_values.length > 0) {
+                setModelValue(spec.spec.default_values);
             } else {
                 unsetModelValue();
             }
@@ -106,7 +111,7 @@ define([
          */
 
         function getInputValue() {
-            return ui.getElement('input-container.input').value;
+            return dom.getElement('input-container.input').value;
         }
 
         /*
@@ -119,14 +124,6 @@ define([
          *
          */
 
-        function copyProps(from, props) {
-            var newObj = {};
-            props.forEach(function(prop) {
-                newObj[prop] = from[prop];
-            });
-            return newObj;
-        }
-
         function validate(rawValue) {
             return Promise.try(function() {
                 if (!options.enabled) {
@@ -137,18 +134,8 @@ define([
                     };
                 }
 
-                // don't validate yet.
-                return Validation.validateTrue(rawValue);
-
-                //var validationOptions = copyProps(spec.spec.text_options, ['regexp_constraint', 'min_length', 'max_length']);
-
-                //validationOptions.required = spec.required();
-                //return Validation.validateTextString(rawValue, validationOptions);
+                return Validation.validateTextString(rawValue, constraints);
             });
-        }
-
-        function updateValue() {
-
         }
 
         /*
@@ -157,19 +144,29 @@ define([
          * Hooks up event listeners
          */
 
+        function makeInputControl(events, bus) {
+            var items = model.value.map(function(value, index) {
+                return makeSingleInputControl(value, index, events, bus);
+            });
 
+
+            items = items.concat(makeNewInputControl('', events, bus));
+
+            var content = items.join('\n');
+            return content;
+        }
 
         function makeSingleInputControl(currentValue, index, events, bus) {
             // CONTROL
             var preButton, postButton,
                 widgetId = html.genId(),
-                inputBus = runtime.bus().makeChannelBus(null, 'Multi int input bus'),
-                inputWidget = structInputWidget.make({
+                inputBus = runtime.bus().makeChannelBus(null, 'Multi text input'),
+                inputWidget = SingleTextInputWidget.make({
                     bus: inputBus,
-                    parameterSpec: structSpec,
-                    spec: spec,
-                    fieldSpec: config.fieldSpec,
-                    showOwnMessages: true
+                    // initialValue: config.initialValue,
+                    // does not make sense to have a text item be required,
+                    // nor multiple
+                    parameterSpec: spec
                 }),
                 widgetWrapper = {
                     id: widgetId,
@@ -177,13 +174,12 @@ define([
                     bus: inputBus,
                     index: index
                 },
-                placeholder = div({ id: widgetId }),
-                errorRow;
+                placeholder = div({ id: widgetId });
 
             widgets.push(widgetWrapper);
 
             // set up listeners for the input
-            inputBus.on('sync', function(message) {
+            inputBus.on('sync', function() {
                 var value = model.value[index];
                 if (value) {
                     inputBus.emit('update', {
@@ -191,26 +187,22 @@ define([
                     });
                 }
             });
-            //            inputBus.on('validation', function (message) {
-            //                if (message.diagnosis === 'optional-empty') {
-            //                    // alert('delete me!');
-            //                    model.value.splice(widgetWrapper.index, 1);
-            //                    bus.emit('changed', {
-            //                        newValue: model.value
-            //                    });
-            //                    render();
-            //                }
-            //            });
+            inputBus.on('validation', function(message) {
+                if (message.diagnosis === 'optional-empty') {
+                    // alert('delete me!');
+                    model.value.splice(widgetWrapper.index, 1);
+                    bus.emit('changed', {
+                        newValue: model.value
+                    });
+                    render();
+                }
+            });
             inputBus.on('changed', function(message) {
                 model.value[index] = message.newValue;
                 // TODO: validate the main control...
                 bus.emit('changed', {
                     newValue: model.value
                 });
-            });
-
-            inputBus.on('touched', function(message) {
-                bus.emit('touched');
             });
 
             preButton = div({ class: 'input-group-addon', style: { width: '5ex', padding: '0' } }, String(index + 1) + '.');
@@ -236,69 +228,72 @@ define([
                     }
                 })
             }, 'x'));
-            return div({ dataElement: 'input-row', dataIndex: String(index), style: { width: '100%' } }, [
-                div({ class: 'input-group' }, [
-                    preButton,
-                    placeholder,
-                    postButton
-                ])
+            return div({ class: 'input-group', dataIndex: String(index) }, [
+                preButton,
+                placeholder,
+                postButton
             ]);
         }
 
-        function handleAddNew() {
-            return {
-                type: 'click',
-                handler: function(e) {
-                    addModelValue(JSON.parse(JSON.stringify(structSpec.data.defaultValue)));
-                    render();
-                }
-            };
-        }
+        function makeNewInputControl(currentValue, events, bus) {
+            // CONTROL
+            var preButton, postButton,
+                widgetId = html.genId(),
+                inputBus = runtime.bus().makeChannelBus(null, 'New input for text input'),
+                inputWidget = SingleTextInputWidget.make({
+                    bus: inputBus,
+                    // initialValue: config.initialValue,
+                    parameterSpec: spec
+                }),
+                placeholder = div({ id: widgetId });
 
-        function makeInputControl(events, bus) {
-            var items = model.value.map(function(value, index) {
-                return makeSingleInputControl(value, index, events, bus);
+            widgets.push({
+                id: widgetId,
+                instance: inputWidget,
+                bus: inputBus
             });
-            var existing;
-            if (items.length > 0) {
-                existing = items;
-            } else {
-                existing = [
-                    div({}, 'No items, please add one below')
-                ];
-            }
+            inputBus.on('sync', function() {
+                // we don't have a default value setting for a new item
+                // in a collection.
+                var value = '';
+                //if (value) {
+                inputBus.emit('update', {
+                    value: value
+                });
+                //}
+            });
+            inputBus.on('changed', function(message) {
+                model.value.push(message.newValue);
 
-            /*
-            Note about the button toolbar at the bottom of the phones list.
-            It would be nice to use a button inside a group inside a toolbar.
-            Semantically tight, extensible, right? Problem is they are implemented
-            as floats, so centering is not possible. So we use our own versions
-            */
-            return existing.concat([
-                div({
-                    class: '',
-                    role: '',
-                    style: {
-                        border: '1px solid #ccc',
-                        //backgroundColor: '#eee',
-                        padding: '6px',
-                        textAlign: 'center'
+                // TODO: and insert a new row ...
+
+                // first attempt, re-render the whole shebang.
+                render();
+
+                // TODO: validate the main control...
+                bus.emit('changed', {
+                    newValue: model.value
+                });
+            });
+
+            preButton = div({ class: 'input-group-addon', style: { width: '5ex', padding: '0' } }, '');
+            postButton = div({ class: 'input-group-addon', style: { padding: '0' } }, button({
+                class: 'btn btn-primary btn-link btn-xs',
+                type: 'button',
+                style: { width: '4ex' },
+                id: events.addEvent({
+                    type: 'click',
+                    handler: function(e) {
+                        // alert('add me');
                     }
-                }, [
-                    div({
-                        style: {
-                            textAlign: 'center',
-                            display: 'inline-block'
-                        }
-                    }, [
-                        button({
-                            type: 'button',
-                            class: 'btn btn-default',
-                            id: events.addEvents({ events: [handleAddNew()] })
-                        }, 'Add New')
-                    ])
-                ])
-            ]).join('\n');
+                })
+            }, '+'));
+
+            return div({ class: 'input-group' }, [
+                preButton,
+                placeholder,
+                postButton
+            ]);
         }
 
         function render() {
@@ -307,7 +302,6 @@ define([
 
             widgets.forEach(function(widget) {
                 widget.bus.emit('stop');
-
                 // TODO figure out how to remove unused channels.
                 // widget.bus.done();
             });
@@ -317,7 +311,7 @@ define([
             var events = Events.make(),
                 control = makeInputControl(events, bus);
 
-            ui.setContent('input-container', control);
+            dom.setContent('input-container', control);
             widgets.forEach(function(widget) {
                 widget.instance.start()
                     .then(function() {
@@ -346,6 +340,7 @@ define([
             return Promise.all(model.value.map(function(value, index) {
                     // could get from DOM, but the model is the same.
                     var rawValue = container.querySelector('[data-index="' + index + '"]').value;
+                    // console.log('VALIDATE', value);
                     return validate(rawValue);
                 }))
                 .then(function(results) {
@@ -374,16 +369,15 @@ define([
                 });
         }
 
+
         // LIFECYCLE API
 
         function start() {
             return Promise.try(function() {
-                // runtime.bus().logMessages(true);
-
                 bus.on('run', function(message) {
                     parent = message.node;
                     container = parent.appendChild(document.createElement('div'));
-                    ui = UI.make({ node: container });
+                    dom = Dom.make({ node: container });
 
                     var events = Events.make(),
                         theLayout = layout(events);

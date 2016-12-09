@@ -18,6 +18,7 @@ require.config({
         plotly: 'ext_components/plotly.js/dist/plotly.min',
         kb_common: 'ext_components/kbase-common-js/dist/kb/common/',
         kb_service: 'ext_components/kbase-service-clients-js/dist/kb_service/',
+        kb_sdk_clients: 'ext_components/kbase-sdk-clients-js/dist/amd/kb_sdk_clients/',
         numeral: 'ext_components/numeral/numeral',
         text: 'ext_components/requirejs-plugins/lib/text',
         tipsy: 'ext_components/jquery.tipsy/js/jquery.tipsy',
@@ -37,8 +38,8 @@ require.config({
         'knhx_excanvas': 'ext_packages/knhxtree/js/excanvas',
         'knhx_canvastext': 'ext_packages/knhxtree/js/canvastext',
         'knhx_easytree': 'ext_packages/knhxtree/js/easytree',
-        'typeahead': 'ext_components/typeahead/typeahead.jquery',
-        'bloodhound': 'ext_components/typeahead/bloodhound',
+        'typeahead': 'ext_components/corejs-typeahead/dist/typeahead.jquery.min',
+        'bloodhound': 'ext_components/corejs-typeahead/dist/bloodhound.min',
 
 
         narrativeTour: 'kbase/js/tour',
@@ -112,6 +113,7 @@ require.config({
         'kbaseNarrativeDownloadPanel': 'kbase/js/widgets/narrative_core/kbaseNarrativeDownloadPanel',
         'kbaseNarrativeSharePanel': 'kbase/js/widgets/narrative_core/kbaseNarrativeSharePanel',
         'kbaseNarrativeExampleDataTab': 'kbase/js/widgets/narrative_core/kbaseNarrativeExampleDataTab',
+        'kbaseNarrativeStagingDataTab': 'kbase/js/widgets/narrative_core/kbaseNarrativeStagingDataTab',
         'kbaseNarrativeSideImportTab': 'kbase/js/widgets/narrative_core/kbaseNarrativeSideImportTab',
         'kbaseNarrativeSidePublicTab': 'kbase/js/widgets/narrative_core/kbaseNarrativeSidePublicTab',
         'kbaseNarrativeCell': 'kbase/js/widgets/narrative_core/kbaseNarrativeCell',

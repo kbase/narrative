@@ -3,10 +3,9 @@
 define([
     'bluebird',
     'kb_common/html',
-    '../validation',
+    '../validators/resolver',
     'common/events',
     'common/ui',
-    'common/runtime',
     'common/lang',
     '../inputParamResolver',
     '../fieldWidgetCompact',
@@ -19,7 +18,6 @@ define([
     Validation,
     Events,
     UI,
-    Runtime,
     lang,
     Resolver,
     FieldWidget) {
@@ -34,18 +32,17 @@ define([
 
     function factory(config) {
         var spec = config.parameterSpec,
+            bus = config.bus,
             container,
             parent,
-            bus = config.bus,
             ui,
             viewModel = {
                 data: {},
-                meta: {
+                state: {
                     enabled: null
                 }
             },
-            runtime = Runtime.make(),
-            structFields = null,
+            structFields = {},
             // model = {
             //     value: {},
             //     enabled: null
@@ -55,16 +52,15 @@ define([
             struct = spec.parameters,
             places = {};
 
-        if (spec.data.constraints.required) {
-            viewModel.meta.enabled = true;
+        if (spec.data.constraints.required || config.initialValue) {
+            viewModel.state.enabled = true;
         } else {
-            viewModel.meta.enabled = false;
+            viewModel.state.enabled = false;
         }
 
         function setModelValue(value) {
             return Promise.try(function() {
                     viewModel.data = value;
-
                 })
                 .then(function() {
                     // render();
@@ -124,47 +120,35 @@ define([
 
         function validate(rawValue) {
             return Promise.try(function() {
-                var validationOptions = {
-                    required: spec.data.constraints.required
-                };
-                return Validation.validateTextString(rawValue, validationOptions);
+                // var validationOptions = {
+                //     required: spec.data.constraints.required
+                // };
+                return Validation.validate(rawValue, spec);
             });
         }
 
-        function updateValue() {
+        function updateValue() {}
 
-        }
-
-        /*
-         * Creates the markup
-         * Places it into the dom node
-         * Hooks up event listeners
-         */
-
-
-        // here is where we left off ... the single input control is now a field, which is a struct
-        // containing a widget, created but not started. We need to create a structure in 
-        // which to embed the widget, link them in (by id), then start them...
-        // we also need to stop them, so we will need to have a structure for the widgets.
-        // either do that here, or in makesingleinputcontrol as it used to do
-
-        function doToggleEnableControl(ev) {
+        function doToggleEnableControl() {
             var label = document.querySelector('#' + places.enableControl + ' [data-element="label"]');
-            if (viewModel.meta.enabled) {
-                viewModel.meta.enabled = false;
+            if (viewModel.state.enabled) {
+                // Disable it
+                viewModel.state.enabled = false;
                 label.innerHTML = 'Enable';
-                Object.keys(structFields).forEach(function(id) {
-                    var field = structFields[id];
-                    field.bus.emit('disable');
-                });
+                viewModel.data = null;
             } else {
-                viewModel.meta.enabled = true;
-                label.innerHTML = 'Enabled';
-                Object.keys(structFields).forEach(function(id) {
-                    var field = structFields[id];
-                    field.bus.emit('enable');
-                });
+                // Enable it
+                viewModel.state.enabled = true;
+                label.innerHTML = 'Disable';
+                viewModel.data = lang.copy(spec.data.defaultValue);
             }
+            bus.emit('set-param-state', {
+                state: viewModel.state
+            });
+            bus.emit('changed', {
+                newValue: lang.copy(viewModel.data)
+            });
+            renderSubcontrols();
         }
 
         function enableControl(events) {
@@ -188,11 +172,13 @@ define([
                 // ]);
             }
 
-            var label;
-            if (viewModel.meta.enabled) {
+            var label, checked;
+            if (viewModel.state.enabled) {
                 label = 'Disable';
+                checked = true;
             } else {
                 label = 'Enable'
+                checked = false;
             }
             return div({
                 id: places.enableControl
@@ -205,7 +191,7 @@ define([
                         }
                     }),
                     type: 'checkbox',
-                    checked: false
+                    checked: checked
                 }),
                 span({
                     dataElement: 'label',
@@ -219,8 +205,9 @@ define([
         function makeInputControl(events, bus) {
             var promiseOfFields = fieldLayout.map(function(fieldName) {
                 var fieldSpec = struct.specs[fieldName];
+                var fieldValue = viewModel.data[fieldName];
 
-                return makeSingleInputControl(fieldSpec, events, bus);
+                return makeSingleInputControl(fieldValue, fieldSpec, events, bus);
             });
 
             // TODO: support different layouts, this is a simple stacked
@@ -229,17 +216,11 @@ define([
 
             return Promise.all(promiseOfFields)
                 .then(function(fields) {
-                    var layout = div({ style: { border: '1px silver solid', padding: '4px' } }, [
-                        div({
-                            class: 'row'
-                        }, [
-                            enableControl(events)
-                        ])
-                    ].concat(
-                        fields.map(function(field) {
-                            return div({ id: field.id, style: { border: '0px orange dashed', padding: '0px' } });
-                        })).join('\n'));
-
+                    var layout = div({
+                        class: 'row'
+                    }, fields.map(function(field) {
+                        return div({ id: field.id, style: { border: '0px orange dashed', padding: '0px' } });
+                    }).join('\n'));
                     return {
                         content: layout,
                         fields: fields
@@ -247,54 +228,64 @@ define([
                 });
         }
 
+        function doChanged(id, newValue) {
+            // Absorb and propagate the new value...
+            viewModel.data[id] = lang.copy(newValue);
+            bus.emit('changed', {
+                newValue: lang.copy(viewModel.data)
+            });
+
+            // Validate and propagate.
+            // Note: the struct control does not display local error messages. Each
+            // input widget will have an error message if applicable, so not reason
+            // (at present) to have yet another one...
+
+            validate(viewModel.data)
+                .then(function(result) {
+                    bus.emit('validation', result);
+                });
+        }
+
         /*
          * The single input control wraps a field widget, which provides the 
          * wrapper around the input widget itself.
          */
-        function makeSingleInputControl(fieldSpec, events) {
+        function makeSingleInputControl(value, fieldSpec, events) {
             return resolver.getInputWidgetFactory(fieldSpec)
                 .then(function(widgetFactory) {
-
-                    var fieldBus = runtime.bus().makeChannelBus(null, 'Control bus'),
-                        id = html.genId(),
+                    var id = html.genId(),
                         fieldWidget = FieldWidget.make({
                             inputControlFactory: widgetFactory,
                             showHint: true,
                             useRowHighight: true,
-                            // initialValue: value,
+                            initialValue: value,
                             // appSpec: appSpec,
                             parameterSpec: fieldSpec,
-                            bus: fieldBus,
                             // workspaceId: workspaceInfo.id,
                             referenceType: 'ref'
                         });
 
                     // set up listeners for the input
-                    fieldBus.on('sync', function(message) {
+                    fieldWidget.bus.on('sync', function() {
                         var value = viewModel.data[fieldSpec.id];
                         if (value) {
-                            fieldBus.emit('update', {
+                            fieldWidget.bus.emit('update', {
                                 value: value
                             });
                         }
                     });
-                    fieldBus.on('validation', function(message) {
-                        // console.log('STRUCT VALIDATION CHANGED', fieldSpec, message, viewModel.data);
+                    fieldWidget.bus.on('validation', function(message) {
                         if (message.diagnosis === 'optional-empty') {
                             bus.emit('changed', {
-                                newValue: viewModel.data
+                                newValue: lang.copy(viewModel.data)
                             });
                         }
                     });
-                    fieldBus.on('changed', function(message) {
-                        console.log('PARAMETER CHANGED', fieldSpec, message, viewModel.data);
-                        viewModel.data[fieldSpec.id] = message.newValue;
-                        bus.emit('changed', {
-                            newValue: viewModel.data
-                        });
+                    fieldWidget.bus.on('changed', function(message) {
+                        doChanged(fieldSpec.id, message.newValue);
                     });
 
-                    fieldBus.on('touched', function(message) {
+                    fieldWidget.bus.on('touched', function() {
                         bus.emit('touched', {
                             parameter: fieldSpec.id
                         });
@@ -302,50 +293,65 @@ define([
 
                     return {
                         id: id,
-                        bus: fieldBus,
                         fieldName: fieldSpec.id,
                         instance: fieldWidget
                     };
                 });
         }
 
-
-
         /*
          * Render the struct input control and place, place it into the dom,
          * attach events, and start up the field widgets.
          */
-        function renderStruct(events) {
-            return makeInputControl(events)
-                .then(function(result) {
-                    ui.setContent('input-container', result.content);
-                    structFields = {};
-                    result.fields.forEach(function(field) {
-                        structFields[field.fieldName] = field;
-                    });
-
-
-                    // Start up all the widgets
-                    return Promise.all(
-                        result.fields.map(function(field) {
-                            return field.instance.start({
-                                node: document.getElementById(field.id)
-                            });
-                        }));
-                })
-                .then(function() {
-                    Object.keys(structFields).forEach(function(id) {
-                        if (viewModel.meta.enabled) {
-                            structFields[id].bus.emit('enable');
-                        } else {
-                            structFields[id].bus.emit('disable');
-                        }
-                    })
-                })
-                .catch(function(err) {
-                    console.error(err);
-                    ui.setContent('input-container', 'ERROR!' + err.message);
+        function renderSubcontrols() {
+            if (viewModel.state.enabled) {
+                var events = Events.make({
+                    node: container
                 });
+                return makeInputControl(events)
+                    .then(function(result) {
+                        ui.setContent('input-container.subcontrols', result.content);
+                        events.attachEvents();
+                        structFields = {};
+                        result.fields.forEach(function(field) {
+                            structFields[field.fieldName] = field;
+                        });
+                        // Start up all the widgets
+
+                        return Promise.all(
+                            result.fields.map(function(field) {
+                                return field.instance.start({
+                                    node: document.getElementById(field.id)
+                                });
+                            }));
+                    });
+            } else {
+                return Promise.all(
+                        Object.keys(structFields).map(function(fieldName) {
+                            return structFields[fieldName].instance.stop();
+                        }))
+                    .then(function() {
+                        ui.setContent('input-container.subcontrols', '');
+                        structFields = {};
+                    });
+            }
+        }
+
+        function renderStruct(events) {
+            var layout = div({
+                style: {
+                    border: '1px silver solid',
+                    padding: '4px'
+                }
+            }, [
+                div({
+                    class: 'row'
+                }, [
+                    enableControl(events)
+                ]),
+                div({ dataElement: 'subcontrols' })
+            ]);
+            ui.setContent('input-container', layout);
         }
 
         function render(events) {
@@ -355,7 +361,8 @@ define([
                 div({ dataElement: 'input-container' })
             ]);
 
-            return renderStruct(events);
+            renderStruct(events);
+
         }
 
         // function autoValidate() {
@@ -394,64 +401,81 @@ define([
 
         // Okay, we need to 
 
-        function start() {
+        function start(arg) {
+            var events;
             return Promise.try(function() {
-                bus.on('run', function(message) {
-                    var events = Events.make();
-                    Promise.try(function() {
-                            parent = message.node;
-                            // console.log('STRUCT PARENT?', parent, message);
-                            container = parent.appendChild(document.createElement('div'));
-                            ui = UI.make({ node: container });
+                    parent = arg.node;
+                    container = parent.appendChild(document.createElement('div'));
+                    ui = UI.make({ node: container });
+                    events = Events.make({ node: container });
 
-                            return render(events);
-                        })
-                        .then(function(theLayout) {
-                            events.attachEvents(container);
+                    viewModel.data = lang.copy(config.initialValue);
 
-                            bus.on('reset-to-defaults', function(message) {
-                                resetModelValue();
-                            });
+                    // return bus.request({}, {
+                    //     key: 'get-param-state'
+                    // });
+                })
+                .then(function() {
+                    return render(events);
+                })
+                .then(function() {
+                    return renderSubcontrols();
+                })
+                .then(function() {
+                    events.attachEvents(container);
 
-                            bus.on('update', function(message) {
-                                // Update the model, and since we have sub widgets,
-                                // we should send the individual data to them.
-                                // setModelValue(message.value);
-                                viewModel.data = message.value;
-                                // console.log('struct update', message);
-                                Object.keys(message.value).forEach(function(id) {
-                                    structFields[id].bus.emit('update', {
-                                        value: message.value[id]
-                                    });
+                    bus.on('reset-to-defaults', function() {
+                        resetModelValue();
+                    });
+
+                    bus.on('update', function(message) {
+                        // Update the model, and since we have sub widgets,
+                        // we should send the individual data to them.
+                        // setModelValue(message.value);
+                        // TODO: container environment should know about enable/disabled state?
+                        // FORNOW: just ignore
+                        if (viewModel.state.enabled) {
+                            viewModel.data = lang.copy(message.value);
+                            Object.keys(message.value).forEach(function(id) {
+                                structFields[id].instance.bus.emit('update', {
+                                    value: message.value[id]
                                 });
+                            });
+                        }
 
-                            });
-                            // A fake submit.
-                            bus.on('submit', function() {
-                                bus.emit('submitted', {
-                                    value: viewModel.data
-                                });
-                            });
-                            // The controller of this widget will be smart enough to 
-                            // know...
-                            bus.emit('sync');
-                        })
-                        .catch(function(err) {
-                            console.error('ERROR', err);
-                            container.innerHTML = err.message;
+                    });
+
+                    // A fake submit.
+                    bus.on('submit', function() {
+                        bus.emit('submitted', {
+                            value: lang.copy(viewModel.data)
                         });
+                    });
+
+                    // bus.on('')
+                    // The controller of this widget will be smart enough to 
+                    // know...
+                    // bus.emit('sync');
+                })
+                .catch(function(err) {
+                    console.error('ERROR', err);
+                    container.innerHTML = err.message;
                 });
-            });
         }
 
         function stop() {
             return Promise.try(function() {
-                if (structFields) {
-                    structFields.forEach(function(field) {
-                        field.stop();
-                    });
-                }
-            });
+                    if (structFields) {
+                        return Promise.all(Object.keys(structFields).map(function(id) {
+                            return structFields[id].instance.stop();
+                        }));
+                    }
+                })
+                .then(function() {
+                    if (parent && container) {
+                        parent.removeChild(container);
+                    }
+                });
         }
 
         return {

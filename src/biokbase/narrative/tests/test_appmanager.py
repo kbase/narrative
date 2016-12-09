@@ -348,6 +348,33 @@ class AppManagerTestCase(unittest.TestCase):
                 'type': 'future-default',
                 'spec': {'is_output': 0, 'allowed_types': ["Some.KnownType"]},
                 'expected': '11635/9/1'
+            },
+            {
+                'value': [123, 456],
+                'type': None,
+                'expected': [123, 456]
+            },
+            {
+                'value': 123,
+                'type': 'string',
+                'expected': '123'
+            },
+            {
+                'value': ['one', 'two'],
+                'type': None,
+                'spec': {'type': 'textsubdata'},
+                'expected': "one,two"
+            },
+            {
+                'value': ['one', 'two'],
+                'type': "list<string>",
+                'spec': {'type': 'textsubdata'},
+                'expected': ['one', 'two']
+            },
+            {
+                'value': {'one': 1},
+                'type': 'string',
+                'expected': "one=1"
             }
         ]
         for test in test_data:

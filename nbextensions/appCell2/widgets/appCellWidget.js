@@ -171,7 +171,8 @@ define([
                     var bus = runtime.bus().makeChannelBus(null, 'Parent comm bus for input widget'),
                         widget = Widget.make({
                             bus: bus,
-                            workspaceInfo: workspaceInfo
+                            workspaceInfo: workspaceInfo,
+                            initialParams: model.getItem('params')
                         });
                     bus.emit('run', {
                         node: arg.node,
@@ -207,6 +208,21 @@ define([
                         });
                     });
 
+                    bus.on('set-param-state', function(message) {
+                        model.setItem('paramState', message.id, message.state);
+                    });
+
+                    bus.respond({
+                        key: {
+                            type: 'get-param-state'
+                        },
+                        handle: function(message) {
+                            return {
+                                state: model.getItem('paramState', message.id)
+                            }
+                        }
+                    });
+
                     bus.respond({
                         key: {
                             type: 'get-parameter'
@@ -219,9 +235,15 @@ define([
                     });
 
                     bus.on('parameter-changed', function(message) {
-                        // console.log('PARAM CHANGED', message);
-                        model.setItem(['params', message.parameter], message.newValue);
-                        evaluateAppState();
+                        // TODO: should never get these in the following states....
+
+                        var state = fsm.getCurrentState().state;
+                        if (state.mode === 'editing') {
+                            model.setItem(['params', message.parameter], message.newValue);
+                            evaluateAppState();
+                        } else {
+                            console.warn('parameter-changed event detected when not in editing mode - ignored');
+                        }
                     });
 
                     return widget.start()
@@ -239,6 +261,93 @@ define([
         }
 
         function loadViewParamsWidget(arg) {
+            return new Promise(function(resolve, reject) {
+                require(['./appParamsViewWidget'], function(Widget) {
+                    // TODO: widget should make own bus.
+                    var bus = runtime.bus().makeChannelBus(null, 'Parent comm bus for input widget'),
+                        widget = Widget.make({
+                            bus: bus,
+                            workspaceInfo: workspaceInfo,
+                            initialParams: model.getItem('params')
+                        });
+
+                    bus.emit('run', {
+                        node: arg.node,
+                        appSpec: model.getItem('app.spec'),
+                        parameters: spec.getSpec().parameters
+                    });
+
+                    bus.on('sync-params', function(message) {
+                        message.parameters.forEach(function(paramId) {
+                            bus.send({
+                                parameter: paramId,
+                                value: model.getItem(['params', message.parameter])
+                            }, {
+                                key: {
+                                    type: 'update',
+                                    parameter: message.parameter
+                                }
+                            });
+                        });
+                    });
+
+                    bus.on('parameter-sync', function(message) {
+                        var value = model.getItem(['params', message.parameter]);
+                        bus.send({
+                            //                            parameter: message.parameter,
+                            value: value
+                        }, {
+                            // This points the update back to a listener on this key
+                            key: {
+                                type: 'update',
+                                parameter: message.parameter
+                            }
+                        });
+                    });
+
+                    bus.on('set-param-state', function(message) {
+                        model.setItem('paramState', message.id, message.state);
+                    });
+
+                    bus.respond({
+                        key: {
+                            type: 'get-param-state'
+                        },
+                        handle: function(message) {
+                            return {
+                                state: model.getItem('paramState', message.id)
+                            }
+                        }
+                    });
+
+                    bus.respond({
+                        key: {
+                            type: 'get-parameter'
+                        },
+                        handle: function(message) {
+                            return {
+                                value: model.getItem(['params', message.parameterName])
+                            };
+                        }
+                    });
+
+
+
+                    return widget.start()
+                        .then(function() {
+                            resolve({
+                                bus: bus,
+                                instance: widget
+                            });
+                        });
+                }, function(err) {
+                    console.log('ERROR', err);
+                    reject(err);
+                });
+            });
+        }
+
+        function loadViewParamsWidgetx(arg) {
             return new Promise(function(resolve, reject) {
                 require(['./appParamsViewWidget'], function(Widget) {
                     // TODO: widget should make own bus
@@ -1241,13 +1350,14 @@ define([
              *
              */
 
-            // TODO: ENABLE THIS
-            //var validation = spec.validateModel(model.getItem('params'));
 
-            return {
-                isValid: true,
-                errors: []
-            };
+            // TODO: ENABLE THIS
+            return spec.validateModel(model.getItem('params'));
+
+            // return {
+            //     isValid: true,
+            //     errors: []
+            // };
 
 
             //            var params = model.getItem('params'),
@@ -1884,6 +1994,7 @@ define([
         //       to the kernel)
         function doRun() {
             fsm.newState({ mode: 'execute-requested' });
+            renderUI();
 
             // Save this to the exec state change log.
             var execLog = model.getItem('exec.log');
@@ -2748,17 +2859,57 @@ define([
             ]);
         }
 
-        function evaluateAppState() {
-            var validationResult = validateModel();
-            if (validationResult.isValid) {
-                buildPython(cell, utils.getMeta(cell, 'attributes').id, model.getItem('app'), exportParams());
-                fsm.newState({ mode: 'editing', params: 'complete', code: 'built' });
-                renderUI();
-            } else {
-                resetPython(cell);
-                fsm.newState({ mode: 'editing', params: 'incomplete' });
-                renderUI();
+        // just a quick hack since we are not truly recursive yet..,
+        function gatherValidationMessages(validationResult) {
+            var messages = [];
+
+            function harvestErrors(validations) {
+                if (validations instanceof Array) {
+                    validations.forEach(function(result, index) {
+                        if (!result.isValid) {
+                            messages.push(String(index) + ':' + result.errorMessage);
+                        }
+                        if (result.validations) {
+                            harvestErrors(result.validations);
+                        }
+                    });
+                } else {
+                    Object.keys(validations).forEach(function(id) {
+                        var result = validations[id];
+                        if (!result.isValid) {
+                            messages.push(id + ':' + result.errorMessage);
+                        }
+                        if (result.validations) {
+                            harvestErrors(result.validations);
+                        }
+                    });
+                }
             }
+            harvestErrors(validationResult);
+            return messages;
+        }
+
+        function evaluateAppState() {
+            validateModel()
+                .then(function(result) {
+                    // we have a tree of validations, so we need to walk the tree to see if anything 
+                    // does not validate.
+                    var messages = gatherValidationMessages(result);
+
+                    if (messages.length === 0) {
+                        buildPython(cell, utils.getMeta(cell, 'attributes').id, model.getItem('app'), exportParams());
+                        fsm.newState({ mode: 'editing', params: 'complete', code: 'built' });
+                        renderUI();
+                    } else {
+                        resetPython(cell);
+                        fsm.newState({ mode: 'editing', params: 'incomplete' });
+                        renderUI();
+                    }
+                })
+                .catch(function(err) {
+                    alert('internal error'),
+                        console.error('INTERNAL ERROR', err);
+                });
         }
 
         function checkSpec(appSpec) {

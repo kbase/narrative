@@ -20,9 +20,10 @@ define([
     'uuid',
     'bluebird',
     './unodep'
-], function (Uuid, Promise, utils) {
+], function(Uuid, Promise, utils) {
     'use strict';
     var instanceId = 0;
+
     function newInstance() {
         instanceId += 1;
         return instanceId;
@@ -73,7 +74,7 @@ define([
                 if (strictMode) {
                     throw new Error('Channel description is required');
                 } else {
-                    
+
                 }
                 warn('Channel created without description');
             }
@@ -93,7 +94,7 @@ define([
         function ensureChannel(name) {
             if (!channels[name]) {
                 warn('Channel implicitly created', name);
-                makeChannel({name: name});
+                makeChannel({ name: name });
             }
             return channels[name];
         }
@@ -128,7 +129,7 @@ define([
             if (!listeners) {
                 return;
             }
-            listeners.forEach(function (listener) {
+            listeners.forEach(function(listener) {
                 handled = true;
                 log('PROCESSING KEY LISTENER', channel, item);
                 letListenerHandle(item, listener.handle);
@@ -226,7 +227,7 @@ define([
             listenerRegistry[id] = listener;
             return id;
         }
-        
+
         function removeListener(id) {
             var listenerToRemove = listenerRegistry[id],
                 channel, listeners, newListeners;
@@ -242,7 +243,7 @@ define([
                 if (!listeners) {
                     return;
                 }
-                channel.keyListeners[listenerToRemove.key] = listeners.filter(function (listener) {
+                channel.keyListeners[listenerToRemove.key] = listeners.filter(function(listener) {
                     return (listener.id !== listenerToRemove.id);
                 });
             } else if (listenerToRemove.test) {
@@ -250,14 +251,14 @@ define([
                 if (!listeners) {
                     return;
                 }
-                channel.testListeners = listeners.filter(function (listener) {
+                channel.testListeners = listeners.filter(function(listener) {
                     return (listener.id !== listenerToRemove.id);
                 });
             }
         }
-        
+
         function removeListeners(ids) {
-            ids.forEach(function (id) {
+            ids.forEach(function(id) {
                 removeListener(id);
             });
         }
@@ -268,7 +269,7 @@ define([
 
         function processTestListeners(channel, item) {
             var handled = false;
-            channel.testListeners.forEach(function (listener) {
+            channel.testListeners.forEach(function(listener) {
                 log('PROCESSING TEST LISTENER?', channel, item);
                 if (testListener(item, listener.test)) {
                     handled = true;
@@ -283,7 +284,7 @@ define([
         function processQueueItem(item) {
             var channel = getChannel(item.envelope.channel),
                 handled;
-            
+
             if (!channel) {
                 return;
             }
@@ -305,7 +306,7 @@ define([
             var processingQueue = transientMessages;
             transientMessages = [];
 
-            processingQueue.forEach(function (item) {
+            processingQueue.forEach(function(item) {
                 try {
                     processQueueItem(item);
                 } catch (ex) {
@@ -322,7 +323,7 @@ define([
             if (timer) {
                 return;
             }
-            timer = window.setTimeout(function () {
+            timer = window.setTimeout(function() {
                 timer = null;
                 try {
                     processQueues();
@@ -333,8 +334,6 @@ define([
         }
 
         // SENDING
-
-        
 
         function setPersistentMessage(message, envelope) {
             var channel = ensureChannel(envelope.channel),
@@ -437,11 +436,12 @@ define([
          */
         function respond(spec) {
             var originalHandle = spec.handle;
+
             function newHandle(message, envelope) {
                 try {
                     var responseMessage = originalHandle(message);
                     send(responseMessage, {
-                        key: {requestId: envelope.address.requestId}
+                        key: { requestId: envelope.address.requestId }
                     });
                 } catch (ex) {
                     console.error('Error handling in respond', ex);
@@ -457,7 +457,7 @@ define([
          * pending requests - which is a map of all request messages.
          */
         function request(message, address) {
-            return new Promise(function (resolve, reject) {
+            return new Promise(function(resolve, reject) {
                 var requestId = new Uuid(4).format();
 
                 // when this listener with a key set to the request id
@@ -466,10 +466,11 @@ define([
                 // is run, as well as to invoke the error handler upon
                 // timeout. (TODO)
                 listen({
-                    key: {requestId: requestId},
+                    // channel: address.channel,
+                    key: { requestId: requestId },
                     once: true,
                     timeout: address.timeout || 10000,
-                    handle: function (responseMessage) {
+                    handle: function(responseMessage) {
                         resolve(responseMessage);
                     }
                 });
@@ -483,6 +484,51 @@ define([
             });
         }
 
+        // function get(address) {
+        //     return new Promise(function(resolve, reject) {
+        //         console.log('GOT? request with', address);
+        //         listen({
+        //             channel: address.channel,
+        //             key: address.key,
+        //             // once: true,
+        //             timeout: address.timeout || 10000,
+        //             handle: function(message) {
+        //                 resolve(message);
+        //             }
+        //         });
+        //     });
+        // }
+        function plisten(spec) {
+            var initialized = false;
+            return new Promise(function(resolve, reject) {
+                listen({
+                    channel: spec.channel,
+                    key: spec.key,
+                    handle: function(message, address) {
+                        if (!initialized) {
+                            initialized = true;
+                            resolve(message);
+                        } else {
+                            try {
+                                spec.handle(message, address);
+                            } catch (ex) {
+                                reject(ex);
+                            }
+                        }
+                    }
+                });
+            });
+        }
+
+        /*
+         Get a persistent message.
+         If the message is available already, return it.
+         If not, then issue a listener with the timeout given in
+         address.
+         Essentially, and this is how it is implemented, it is a 
+         listener with a timeout, wrapped in a promise.
+        */
+
         // convenience strategies.
         function on(type, handler, channel) {
             // listen({
@@ -493,7 +539,7 @@ define([
             // });
             return listen({
                 channel: channel,
-                key: JSON.stringify({type: type}),
+                key: JSON.stringify({ type: type }),
                 handle: handler
             });
         }
@@ -503,7 +549,7 @@ define([
                 message = {};
             }
             send(message, {
-                key: {type: type}
+                key: { type: type }
             });
         }
 
@@ -536,7 +582,7 @@ define([
             function on(type, handler) {
                 return listen({
                     channel: channelName,
-                    key: {type: type},
+                    key: { type: type },
                     handle: handler
                 });
             }
@@ -547,7 +593,7 @@ define([
                 }
                 return send(message, {
                     channel: channelName,
-                    key: {type: type}
+                    key: { type: type }
                 });
             }
 
@@ -606,7 +652,7 @@ define([
 
 
         // MAIN
-        makeChannel({name: 'default', description: 'The Default Channel'});
+        makeChannel({ name: 'default', description: 'The Default Channel' });
 
         // API
         api = {
@@ -617,6 +663,7 @@ define([
             on: on,
             emit: emit,
             set: set,
+            plisten: plisten,
             makeChannelBus: makeChannelBus,
             makeChannel: makeChannel,
             removeChannel: removeChannel,
@@ -629,7 +676,7 @@ define([
     }
 
     return {
-        make: function (config) {
+        make: function(config) {
             return factory(config);
         }
     };

@@ -218,7 +218,11 @@ define([
                                                 ref: null,
                                                 label: null
                                             },
-                                            nullValue: null
+                                            nullValue: null,
+                                            zeroValue: {
+                                                ref: null,
+                                                label: null
+                                            }
                                         },
                                         parameters: {
                                             layout: ['ref', 'label'],
@@ -973,26 +977,26 @@ define([
         //     }, saveMaxFrequency);
         // }
 
-        // function doDeleteCell() {
-        //     var content = div([
-        //         p([
-        //             'Deleting this cell will remove the data visualization, ',
-        //             'but will not delete the data object, which will still be avaiable ',
-        //             'in the data panel.'
-        //         ]),
-        //         p('Continue to delete this data cell?')
-        //     ]);
-        //     ui.showConfirmDialog({ title: 'Confirm Cell Deletion', body: content })
-        //         .then(function(confirmed) {
-        //             if (!confirmed) {
-        //                 return;
-        //             }
+        function doDeleteCell() {
+            var content = div([
+                p([
+                    'Deleting this cell will remove the data visualization, ',
+                    'but will not delete the data object, which will still be avaiable ',
+                    'in the data panel.'
+                ]),
+                p('Continue to delete this data cell?')
+            ]);
+            ui.showConfirmDialog({ title: 'Confirm Cell Deletion', body: content })
+                .then(function(confirmed) {
+                    if (!confirmed) {
+                        return;
+                    }
 
-        //             bus.emit('stop');
+                    bus.emit('stop');
 
-        //             Jupyter.deleteCell(cell);
-        //         });
-        // }
+                    Jupyter.deleteCell(cell);
+                });
+        }
 
         // ***
         // function isModelChanged() {
@@ -1130,9 +1134,9 @@ define([
                     cell: Props.getDataItem(cell.metadata, 'kbase.attributes.id')
                 }, 'A cell channel');
 
-                // eventManager.add(cellBus.on('delete-cell', function() {
-                //     doDeleteCell();
-                // }));
+                eventManager.add(cellBus.on('delete-cell', function() {
+                    doDeleteCell();
+                }));
 
                 eventManager.add(cellBus.on('result', function(message) {
                     // Verify that the run id is the same.
@@ -1444,13 +1448,16 @@ define([
                         };
                     }));
 
+                    var objectInfo = serviceUtils.objectInfoToObject(setObject.info);
 
-                    var info = serviceUtils.objectInfoToObject(setObject.info);
+                    // Might as well set here.
+                    editorState.setItem('current.set.ref', objectInfo.ref);
+                    editorState.setItem('current.set.info', objectInfo);
 
                     // NOT USED?
-                    model.setItem('currentReadsSet', info);
+                    model.setItem('currentReadsSet', objectInfo);
 
-                    renderCurrentlyEditing(info);
+                    renderCurrentlyEditing(objectInfo);
 
                     return loadUpdateEditor();
                 })
@@ -1501,11 +1508,6 @@ define([
                 };
             return setApiClient.callFunc('save_reads_set_v1', [params])
                 .spread(function(result) {
-                    // remove whatever is in the editor panel
-
-                    // place the update editor there
-
-                    // updatethe update editor with the thing to edit.
                     return unloadEditor()
                         .then(function() {
                             return updateEditor(result.set_ref);

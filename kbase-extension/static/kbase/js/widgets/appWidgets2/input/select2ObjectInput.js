@@ -67,6 +67,16 @@ define([
             throw new Error('Workspace id required for the select2 object selection widget');
         }
 
+        function objectInfoHasRef(objectInfo, ref) {
+            if (objectInfo.dataPaletteRef) {
+                return objectInfo.dataPaletteRef === ref;
+            }
+            if (/\//.test(ref)) {
+                return objectInfo.ref;
+            }
+            return objectInfo.name;
+        }
+
         function makeInputControl(events, bus) {
             var selectOptions;
             if (model.availableValues) {
@@ -75,7 +85,8 @@ define([
                     .filter(function(objectInfo, idx) {
                         if (model.blacklistValues) {
                             return !model.blacklistValues.some(function(value) {
-                                if (value === getObjectRef(objectInfo)) {
+                                if (objectInfoHasRef(objectInfo, value)) {
+                                    // if (value === getObjectRef(objectInfo)) {
                                     filteredOptions.push(idx);
                                     return true;
                                 }
@@ -86,7 +97,8 @@ define([
                     .map(function(objectInfo, idx) {
                         var selected = false,
                             ref = idx; //getObjectRef(objectInfo);
-                        if (getObjectRef(objectInfo) === model.value) {
+                        if (objectInfoHasRef(objectInfo, model.value)) {
+                            // if (getObjectRef(objectInfo) === model.value) {
                             selected = true;
                         }
                         return option({
@@ -143,11 +155,12 @@ define([
             // and used to map the object ref or name to the control.  
             var options = Array.prototype.slice.call(control.options);
             options.forEach(function(option) {
+                console.log('SELECTED?', spec, (option.value === currentSelectionId), option.value, currentSelectionId);
                 if (option.value === currentSelectionId) {
                     option.selected = true;
                 }
             });
-            $(control).trigger('change');
+            //$(control).trigger('change');
         }
 
         // MODEL
@@ -451,16 +464,16 @@ define([
                 });
         }
 
-        function getObjectRef(objectInfo) {
-            switch (objectRefType) {
-                case 'name':
-                    return objectInfo.name;
-                case 'ref':
-                    return objectInfo.ref;
-                default:
-                    throw new Error('Unsupported object reference type ' + objectRefType);
-            }
-        }
+        // function getObjectRef(objectInfo) {
+        //     switch (objectRefType) {
+        //         case 'name':
+        //             return objectInfo.name;
+        //         case 'ref':
+        //             return objectInfo.ref;
+        //         default:
+        //             throw new Error('Unsupported object reference type ' + objectRefType);
+        //     }
+        // }
 
         /*
          * Handle the workspace being updated and reflecting that correctly
@@ -474,12 +487,12 @@ define([
             // compare to availableData.
             if (!utils.isEqual(data, model.availableValues)) {
                 model.availableValues = data;
-                var matching = model.availableValues.filter(function(value) {
-                    if (value.name === getObjectRef(value)) {
-                        return true;
-                    }
-                    return false;
-                });
+                // var matching = model.availableValues.filter(function(value) {
+                //     if (value.name === getObjectRef(value)) {
+                //         return true;
+                //     }
+                //     return false;
+                // });
                 // if (matching.length === 0) {
                 //     model.value = spec.data.nullValue;
                 // }
@@ -552,7 +565,7 @@ define([
                         runtime.bus().on('workspace-changed', function() {
                             doWorkspaceChanged();
                         });
-                        bus.emit('sync');
+                        // bus.emit('sync');
 
                         setControlValue(getModelValue());
                         autoValidate();

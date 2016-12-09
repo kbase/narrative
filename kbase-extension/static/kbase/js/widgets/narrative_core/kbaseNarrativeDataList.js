@@ -644,7 +644,7 @@ define([
             }
         },
 
-        addDataControls: function(object_info, $alertContainer, fromPalette) {
+        addDataControls: function(object_info, $alertContainer, fromPalette, ref_path) {
             var self = this;
             var $btnToolbar = $('<span>')
                 .addClass('btn-group');
@@ -825,13 +825,14 @@ define([
                     var type = object_info[2].split('-')[0];
                     var wsId = object_info[7];
                     var objId = object_info[1];
+                    var objRef = fromPalette ? ref_path : (wsId + '/' + objId);
                     var downloadPanel = $('<div>');
                     $alertContainer.append(downloadPanel);
                     new kbaseNarrativeDownloadPanel(downloadPanel, {
                         token: self._attributes.auth.token,
                         type: type,
-                        wsId: wsId,
                         objId: objId,
+                        ref: objRef,
                         downloadSpecCache: self.downloadSpecCache
                     });
                 });
@@ -992,6 +993,7 @@ define([
             var self = this;
             var objData = this.dataObjects[objId];
             var object_info = objData.info;
+            var ref_path = objData.refPath;
             var object_key = objData.key;
             if (!indent) {
                 indent = 0;
@@ -1102,7 +1104,7 @@ define([
                 '<a href="/#spec/type/' + object_info[2] + '" target="_blank">' + (type_tokens[1].replace('-', '&#8209;')) + '.' + type_tokens[2] + '</a>';
             var $moreRow = $('<div>').addClass("kb-data-list-more-div").hide()
                 .append($('<div>').css({ 'text-align': 'center', 'margin': '5pt' })
-                    .append(self.addDataControls(object_info, $alertDiv, objData.fromPalette)).append($alertDiv))
+                    .append(self.addDataControls(object_info, $alertDiv, objData.fromPalette, ref_path)).append($alertDiv))
                 .append(
                     $('<table style="width:100%;">')
                     .append("<tr><th>Permament Id</th><td>" + object_info[6] + "/" + object_info[0] + "/" + object_info[4] + '</td></tr>')

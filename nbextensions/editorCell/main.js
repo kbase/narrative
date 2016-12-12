@@ -23,7 +23,6 @@ define([
     'bluebird',
     'uuid',
     'kb_common/html',
-    './widgets/editors/readsSetEditor',
     'common/runtime',
     'common/parameterSpec',
     'common/utils',
@@ -43,7 +42,6 @@ define([
     Promise,
     Uuid,
     html,
-    ReadsSetEditor,
     Runtime,
     ParameterSpec,
     utils,
@@ -57,15 +55,9 @@ define([
     'use strict';
     var t = html.tag,
         div = t('div'),
-        span = t('span'),
         workspaceInfo,
         env,
         runtime = Runtime.make();
-
-    /*
-     * Dealing with metadata
-     */
-
 
     // This is copied out of jupyter code.
     function activateToolbar() {
@@ -74,28 +66,6 @@ define([
         Jupyter.CellToolbar.activate_preset(toolbarName, Jupyter.events);
         Jupyter.notebook.metadata.celltoolbar = toolbarName;
     }
-
-
-
-    // TODO: move into app cell widget and invoke with an event 'reset-to-default-values'
-    function setupParams(cell, appSpec) {
-        var defaultParams = {};
-        appSpec.parameters.forEach(function(parameterSpec) {
-            var param = ParameterSpec.make({ parameterSpec: parameterSpec }),
-                defaultValue = param.defaultValue();
-
-            // A default value may be undefined, e.g. if the parameter is required and there is no default value.
-            if (defaultValue !== undefined) {
-                defaultParams[param.id()] = defaultValue;
-            }
-        });
-        utils.setMeta(cell, 'editorCell', 'params', defaultParams);
-    }
-
-    /*
-     *
-     *
-     */
 
     /*
      * Should only be called when a cell is first inserted into a narrative.
@@ -122,7 +92,10 @@ define([
                             gitCommitHash: appSpec.info.git_commit_hash,
                             version: appSpec.info.ver,
                             tag: appTag,
-                            appSpec: appSpec
+                            spec: appSpec
+                        },
+                        editor: {
+                            type: appSpec.widgets.input
                         },
                         state: {
                             edit: 'editing',
@@ -136,18 +109,10 @@ define([
                 };
                 cell.metadata = meta;
             })
-            //.then(function () {
-            // Add the params
-            //return setupParams(cell, appSpec);
-            //})
             .then(function() {
                 // Complete the cell setup.
                 return setupCell(cell);
             });
-        //.then(function (cellStuff) {
-        //    // Initialize the cell to its default state.
-        //    cellStuff.bus.emit('reset-to-defaults');
-        //});
     }
 
     function specializeCell(cell) {
@@ -188,39 +153,67 @@ define([
             }
         };
         cell.getIcon = function() {
-            return span({ class: 'fa-stack fa-2x', style: { verticalAlign: 'top', textAlign: 'center', color: 'rgb(103,58,183)', lineHeight: '56px' } }, [
-                span({ class: 'fa fa-square fa-stack-2x', style: { color: 'rgb(103,58,183)', lineHeight: '56px' } }),
-                span({ class: 'fa fa-inverse fa-stack-1x fa-pencil-square-o' })
-            ]);
+            return AppUtils.makeToolbarAppIcon(utils.getCellMeta(cell, 'kbase.editorCell.app.spec'));
         };
     }
 
-
     function getEditorModule(type) {
         return new Promise(function(resolve, reject) {
-            var moduleName;
+            var editorDir;
 
             // Dispatch on the editor type.
             // Type is passed in the widgets.input spec property
             // Editors are located in ./widgets/editors            
             switch (type) {
                 case 'reads_set_editor':
-                    moduleName = 'readsSetEditor';
+                    editorDir = 'readsSet';
                     break;
                 default:
                     reject(new Error('Unknown editor type: ' + type));
                     return;
             }
-            var modulePath = './widgets/editors/' + moduleName;
+            var modulePath = './widgets/editors/' + editorDir + '/editor';
 
             // Wrap the module require in a promise.
             require([modulePath], function(Editor) {
                 resolve(Editor);
             }, function(err) {
-                console.error('ERROR loading module', moduleName, err);
-                reject(new Error('Error loading module ' + moduleName));
+                console.error('ERROR loading module', modulePath, err);
+                reject(new Error('Error loading module ' + modulePath));
             });
         });
+    }
+
+    /*
+        Responsible for checking the vailidity of this editor cell, and fixing up if possible.
+    */
+    function checkAndRepairCell(cell) {
+
+        // Has proper structure?
+        // TODO:
+
+        // Has proper app spec?
+        var spec = utils.getCellMeta(cell, 'kbase.editorCell.app.spec');
+        if (!spec) {
+            spec = utils.getCellMeta(cell, 'kbase.editorCell.app.appSpec');
+            if (!spec) {
+                throw new Error('App Spec not set on this editor.');
+            }
+            utils.setCellMeta(cell, 'kbase.editorCell.app.spec', spec);
+            console.warn('Editor cell repaired -- the app spec was set on the old property');
+            delete utils.getCellMeta(cell, 'kbase.editorCell.app').appSpec;
+        }
+
+        // Has proper editor spec?
+        var editorType = utils.getCellMeta(cell, 'kbase.editorCell.editor.type');
+        if (!editorType) {
+            editorType = utils.getCellMeta(cell, 'kbase.editorCell.app.spec.widgets.input');
+            if (!editorType) {
+                throw new Error('App Spec does not provide an editor type on the widgets.input property');
+            }
+            console.warn('Editor cell repaired -- the editor type was not set');
+            utils.setCellMeta(cell, 'kbase.editorCell.editor.type', editorType);
+        }
     }
 
     function setupCell(cell) {
@@ -235,6 +228,8 @@ define([
                 return;
             }
 
+            checkAndRepairCell(cell);
+
             specializeCell(cell);
 
             // The kbase property is only used for managing runtime state of the cell
@@ -246,7 +241,7 @@ define([
 
             // TODO: the code cell input widget should instantiate its state
             // from the cell!!!!            
-            var editorType = utils.getCellMeta(cell, 'kbase.editorCell.app.appSpec.widgets.input');
+            var editorType = utils.getCellMeta(cell, 'kbase.editorCell.app.spec.widgets.input');
 
             return getEditorModule(editorType)
                 .then(function(editorModule) {
@@ -296,17 +291,20 @@ define([
                                 bus: cellBus
                             };
                         })
-                        .catch(function(err) {
-                            console.error('ERROR starting app cell', err);
-                            alert('Error starting app cell');
-                        });
                 });
         });
     }
 
     function setupNotebook() {
         return Promise.all(Jupyter.notebook.get_cells().map(function(cell) {
-            return setupCell(cell);
+            return setupCell(cell)
+                .catch(function(err) {
+                    console.error('ERROR creating cell', err, Jupyter.notebook.find_cell_index(cell));
+                    // delete cell.
+                    Jupyter.notebook.delete_cell(Jupyter.notebook.find_cell_index(cell));
+                    //  $(document).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(cell));
+                    alert('Could not load cell due to errors.\nThis cell will be deleted from your Narrative. It will not be permanently deleted until you save your Narrative.\n\nThe error is: ' + err.message);
+                });
         }));
     }
 
@@ -386,6 +384,8 @@ define([
                 // we have a app cell.
                 $([Jupyter.events]).on('inserted.Cell', function(event, data) {
                     if (data.kbase && data.kbase.type === 'editor') {
+                        // NB: the app spec and tag come in as appSpec and appTag, but 
+                        // are rewritten in the "upgraded" cell to app.spec and app.tag
                         upgradeToEditorCell(data.cell, data.kbase.appSpec, data.kbase.appTag)
                             .then(function() {
                                 // console.log('Cell created?');
@@ -393,8 +393,9 @@ define([
                             .catch(function(err) {
                                 console.error('ERROR creating cell', err);
                                 // delete cell.
-                                $(document).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(data.cell));
-                                alert('Could not insert cell due to errors.\n' + err.message);
+                                // $(document).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(data.cell));
+                                Jupyter.notebook.delete_cell(Jupyter.notebook.find_cell_index(data.cell));
+                                alert('Could not insert cell due to errors.\n\n' + err.message);
                             });
                     }
                 });
@@ -409,9 +410,6 @@ define([
 
     // MAIN
     // module state instantiation
-
-    function init() {}
-    init();
 
     var clock = Clock.make({
         bus: runtime.bus(),

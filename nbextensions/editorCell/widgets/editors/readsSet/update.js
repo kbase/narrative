@@ -13,7 +13,7 @@ define([
     'widgets/appWidgets2/fieldWidgetCompact',
     'widgets/appWidgets2/paramResolver',
     'common/runtime',
-    './readsSetModel'
+    './model'
     // All the input widgets
 
 ], function(
@@ -43,12 +43,12 @@ define([
             workspaceInfo = config.workspaceInfo,
             appId = config.appId,
             appTag = config.appTag,
-            container,
+            hostNode, container,
             ui,
             bus,
             places,
             model = Props.make(),
-            inputBusses = [],
+            fieldWidgets = [],
             paramResolver = ParamResolver.make(),
             settings = {
                 showAdvanced: null
@@ -100,19 +100,28 @@ define([
             return paramResolver.loadInputControl(parameterSpec)
                 .then(function(inputWidget) {
 
-                    var fieldBus = runtime.bus().makeChannelBus({ description: 'A field widget' });
+                    var fieldWidget = FieldWidget.make({
+                        inputControlFactory: inputWidget,
+                        showHint: true,
+                        useRowHighight: true,
+                        initialValue: value,
+                        appSpec: appSpec,
+                        parameterSpec: parameterSpec,
+                        workspaceId: workspaceInfo.id,
+                        referenceType: 'ref'
+                    });
 
-                    inputBusses.push(fieldBus);
+                    fieldWidgets.push(fieldWidget);
 
                     // Forward all changed parameters to the controller. That is our main job!
-                    fieldBus.on('changed', function(message) {
+                    fieldWidget.bus.on('changed', function(message) {
                         parentBus.emit('parameter-changed', {
                             parameter: parameterSpec.id,
                             newValue: message.newValue
                         });
                     });
 
-                    fieldBus.on('touched', function() {
+                    fieldWidget.bus.on('touched', function() {
                         parentBus.emit('parameter-touched', {
                             parameter: parameterSpec.id
                         });
@@ -120,17 +129,16 @@ define([
 
 
                     // An input widget may ask for the current model value at any time.
-                    fieldBus.on('sync', function() {
+                    fieldWidget.bus.on('sync', function() {
                         parentBus.emit('parameter-sync', {
                             parameter: parameterSpec.id
                         });
                     });
 
-                    fieldBus.on('sync-params', function(message) {
-                        console.log('request sync params', message);
+                    fieldWidget.bus.on('sync-params', function(message) {
                         parentBus.emit('sync-params', {
                             parameters: message.parameters,
-                            replyToChannel: fieldBus.channelName
+                            replyToChannel: fieldWidget.bus.channelName
                         });
                     });
 
@@ -138,7 +146,7 @@ define([
                     /*
                      * Or in fact any parameter value at any time...
                      */
-                    fieldBus.on('get-parameter-value', function(message) {
+                    fieldWidget.bus.on('get-parameter-value', function(message) {
                         parentBus.request({
                                 parameter: message.parameter
                             }, {
@@ -155,7 +163,7 @@ define([
                     //    bus.emit('parameter-value', message);
                     //});
 
-                    fieldBus.respond({
+                    fieldWidget.bus.respond({
                         key: {
                             type: 'get-parameter'
                         },
@@ -179,7 +187,7 @@ define([
                             parameter: parameterSpec.id
                         },
                         handle: function(message) {
-                            fieldBus.emit('update', {
+                            fieldWidget.bus.emit('update', {
                                 value: message.value
                             });
                         }
@@ -192,17 +200,7 @@ define([
                     //});
                     return {
                         bus: bus,
-                        widget: FieldWidget.make({
-                            inputControlFactory: inputWidget,
-                            showHint: true,
-                            useRowHighight: true,
-                            initialValue: value,
-                            appSpec: appSpec,
-                            parameterSpec: parameterSpec,
-                            bus: fieldBus,
-                            workspaceId: workspaceInfo.id,
-                            referenceType: 'ref'
-                        })
+                        widget: fieldWidget
                     };
                 });
         }
@@ -241,7 +239,8 @@ define([
         // MESSAGE HANDLERS
 
         function doAttach(node) {
-            container = node;
+            hostNode = node;
+            container = hostNode.appendChild(document.createElement('div'));
             ui = UI.make({
                 node: container,
                 bus: bus
@@ -258,16 +257,16 @@ define([
 
         function attachEvents() {
             bus.on('reset-to-defaults', function() {
-                inputBusses.forEach(function(inputBus) {
-                    inputBus.emit('reset-to-defaults');
+                fieldWidgets.forEach(function(fieldWidget) {
+                    fieldWidget.bus.emit('reset-to-defaults');
                 });
             });
-            runtime.bus().on('workspace-changed', function() {
-                // tell each input widget about this amazing event!
-                widgets.forEach(function(widget) {
-                    widget.bus.emit('workspace-changed');
-                });
-            });
+            //runtime.bus().on('workspace-changed', function() {
+            // tell each input widget about this amazing event!
+            //widgets.forEach(function(widget) {
+            //    widget.bus.emit('workspace-changed');
+            //});
+            // });
         }
 
         // Maybe
@@ -294,7 +293,7 @@ define([
         // Just a simple row layout.
         function renderEditorLayout() {
             var view = {};
-            var parameterLayout = model.getItem('layout');
+            var parameterLayout = model.getItem('parameters.parameters.layout');
             var layout = parameterLayout.map(function(parameterId) {
                 var id = html.genId();
                 view[parameterId] = {
@@ -316,13 +315,12 @@ define([
         function renderParameters() {
             var appSpec = model.getItem('appSpec');
             var parameterSpecs = model.getItem('parameters');
-            var parameterLayout = model.getItem('layout');
             var layout = renderEditorLayout();
 
             places.fields.innerHTML = layout.content;
 
-            return Promise.all(parameterLayout.map(function(parameterId) {
-                var spec = parameterSpecs[parameterId];
+            return Promise.all(parameterSpecs.parameters.layout.map(function(parameterId) {
+                var spec = parameterSpecs.parameters.specs[parameterId];
                 try {
                     return makeFieldWidget(appSpec, spec, model.getItem(['params', spec.id]))
                         .then(function(result) {
@@ -342,7 +340,7 @@ define([
             }));
         }
 
-        function start() {
+        function start(arg) {
             readsSetModel = ReadsSetModel.make({
                 runtime: runtime,
                 appId: appId,
@@ -358,6 +356,7 @@ define([
                         model.setItem('appSpec', message.appSpec);
                         model.setItem('parameters', message.parameters);
                         model.setItem('layout', message.layout);
+                        model.setItem('params', config.initialValue);
 
                         // we then create our widgets
                         renderParameters()
@@ -375,8 +374,8 @@ define([
                         // Also, tell each of our inputs that a param has changed.
                         // TODO: use the new key address and subscription
                         // mechanism to make this more efficient.
-                        inputBusses.forEach(function(bus) {
-                            bus.send(message, {
+                        fieldWidgets.forEach(function(fieldWidget) {
+                            fieldWidget.bus.send(message, {
                                 key: {
                                     type: 'parameter-changed',
                                     parameter: message.parameter
@@ -387,13 +386,28 @@ define([
                     });
 
                     // send parent the ready message
-                    console.log('sending ready...');
                     bus.emit('ready');
                 });
         }
 
         function stop() {
-            return Promise.resolve();
+            return Promise.try(function() {
+                    // stop our comm bus
+                    bus.stop();
+
+                    // Stop all of the param field widgets.
+                    return Promise.all(fieldWidgets.map(function(fieldWidget) {
+                        return fieldWidget.stop();
+                    }));
+
+                })
+                .then(function() {
+                    fieldWidgets = {};
+
+                    if (hostNode && container) {
+                        hostNode.removeChild(container);
+                    }
+                })
         }
 
         // CONSTRUCTION

@@ -10,7 +10,7 @@
 
 define([
     './unodep'
-], function (utils) {
+], function(utils) {
     'use strict';
 
 
@@ -39,7 +39,7 @@ define([
             if (timer) {
                 return;
             }
-            timer = window.setTimeout(function () {
+            timer = window.setTimeout(function() {
                 try {
                     timer = null;
                     newStateHandler(api);
@@ -50,7 +50,7 @@ define([
         }
 
         function findState(stateToFind) {
-            var foundStates = allStates.filter(function (stateDef) {
+            var foundStates = allStates.filter(function(stateDef) {
                 if (utils.isEqual(stateToFind, stateDef.state)) {
                     return true;
                 }
@@ -64,11 +64,12 @@ define([
             }
 
         }
+
         function doMessages(changeType) {
             var state = currentState;
-            if (state.on && state.on[changeType] ) {
+            if (state.on && state.on[changeType]) {
                 if (state.on[changeType].messages) {
-                    state.on[changeType].messages.forEach(function (msg) {
+                    state.on[changeType].messages.forEach(function(msg) {
                         if (msg.emit) {
                             bus.emit(msg.emit, msg.message);
                         } else if (msg.send) {
@@ -100,12 +101,12 @@ define([
             var state = findState(startingState);
             if (!state) {
                 //if (fallbackState) {
-                    //console.warn('Initial state not found, trying fallback', startingState, fallbackState);
-                    //state = findState(fallbackState);
-                    //if (!state) {
-                        console.error('FSM: initial state could not be found', startingState);
-                        throw new Error('Cannot find initial state');
-                    //}
+                //console.warn('Initial state not found, trying fallback', startingState, fallbackState);
+                //state = findState(fallbackState);
+                //if (!state) {
+                console.error('FSM: initial state could not be found', startingState);
+                throw new Error('Cannot find initial state');
+                //}
                 //}
             }
 
@@ -116,7 +117,7 @@ define([
         }
 
         function findNextState(stateList, stateToFind) {
-            var foundStates = stateList.filter(function (state) {
+            var foundStates = stateList.filter(function(state) {
                 if (utils.isEqual(state, stateToFind)) {
                     return true;
                 }
@@ -156,6 +157,14 @@ define([
             run();
         }
 
+        function updateState(nextState) {
+            var updatedState = JSON.parse(JSON.stringify(currentState.state));
+            Object.keys(nextState).forEach(function(key) {
+                updatedState[key] = nextState[key];
+            });
+            newState(updatedState);
+        }
+
         function getCurrentState() {
             return currentState;
         }
@@ -163,6 +172,7 @@ define([
         api = {
             start: start,
             newState: newState,
+            updateState: updateState,
             getCurrentState: getCurrentState,
             findState: findState
         };
@@ -172,7 +182,7 @@ define([
 
 
     return {
-        make: function (config) {
+        make: function(config) {
             return factory(config);
         }
     };

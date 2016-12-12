@@ -472,6 +472,7 @@ define([
         }
 
         function renderLayout() {
+            console.log('rendering layou...');
             var events = Events.make(),
                 content = div({ class: 'kbase-extension kb-editor-cell', style: { display: 'flex', alignItems: 'stretch' } }, [
                     div({ class: 'prompt', dataElement: 'prompt', style: { display: 'flex', alignItems: 'stretch', flexDirection: 'column' } }, [
@@ -560,9 +561,15 @@ define([
                                     body: div({ dataElement: 'widget' })
                                 }),
                                 ui.buildCollapsiblePanel({
-                                    title: span(['Currently Editing ', span({ dataElement: 'name', style: { textDecoration: 'underline' } })]),
+                                    title: span(['Currently Editing ', span({
+                                        dataElement: 'name',
+                                        style: {
+                                            textDecoration: 'underline'
+                                        }
+                                    })]),
                                     name: 'currently-editing',
                                     hidden: false,
+                                    collapsed: true,
                                     type: 'default',
                                     classes: ['kb-panel-container'],
                                     body: div({ dataElement: 'widget' })
@@ -589,6 +596,7 @@ define([
                                     title: 'Status',
                                     name: 'editor-status',
                                     hidden: false,
+                                    collapsed: true,
                                     type: 'default',
                                     classes: ['kb-panel-container'],
                                     body: div([
@@ -1566,6 +1574,8 @@ define([
                 };
             return setApiClient.callFunc('save_reads_set_v1', [params])
                 .spread(function(result) {
+                    ui.collapsePanel('edit-object-selector');
+                    ui.collapsePanel('currently-editing');
 
                     // remove whatever is in the editor panel
 
@@ -1597,6 +1607,10 @@ define([
             // Update editor state (is also persistent in the metadata)
             editorState.setItem('current.set.ref', objectInfo.ref);
             editorState.setItem('current.set.info', objectInfo);
+
+            // Twiddle the sections.
+            ui.collapsePanel('edit-object-selector');
+            ui.collapsePanel('currently-editing');
 
             updateEditor(objectInfo.ref);
         }

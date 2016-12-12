@@ -70,7 +70,7 @@ define([
 
         // Validate configuration.
         if (!workspaceId) {
-            throw new Error('Workspace id required for the object widget');
+            throw new Error('Workspace id required for the custom subdata widget');
         }
 
         options.enabled = true;

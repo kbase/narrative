@@ -2377,10 +2377,10 @@ define([
                 params: model.copyItem('params')
             });
 
-            widgets.outputWidget.instance.bus().emit('update', {
-                jobState: model.getItem('exec.jobState'),
-                output: model.getItem('output')
-            });
+            // widgets.outputWidget.instance.bus().emit('update', {
+            //     jobState: model.getItem('exec.jobState'),
+            //     output: model.getItem('output')
+            // });
             // bus.emit('output-created', )
         }
 

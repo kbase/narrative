@@ -227,7 +227,6 @@ define([
             } else {
                 controlValue = model.value;
             }
-            console.log('setting control to', controlValue, model);
             ui.getElement('autocomplete-container.input').value = controlValue;
         }
 

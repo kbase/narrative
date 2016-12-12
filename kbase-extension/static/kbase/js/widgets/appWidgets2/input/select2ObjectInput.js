@@ -3,7 +3,6 @@
 define([
     'bluebird',
     'jquery',
-    'base/js/namespace',
     'kb_common/html',
     'kb_common/utils',
     'kb_service/client/workspace',
@@ -21,7 +20,6 @@ define([
 ], function(
     Promise,
     $,
-    Jupyter,
     html,
     utils,
     Workspace,
@@ -47,7 +45,10 @@ define([
             objectRefType = config.referenceType || 'name',
             parent,
             container,
+            runtime = Runtime.make(),
             bus = config.bus,
+            //busConnection = runtime.bus().connect(),
+            // channel = busConnection.channel(config.channelName),
             ui,
             model = {
                 blacklistValues: undefined,
@@ -55,17 +56,11 @@ define([
                 availableValuesMap: {},
                 value: undefined
             },
-            runtime = Runtime.make(),
             eventListeners = [],
             workspaceId = runtime.getEnv('workspaceId');
 
         // TODO: getting rid of blacklist temporarily until we work out how to state-ify everything by reference.
         model.blacklistValues = []; //config.blacklist || [];
-
-        // Validate configuration.
-        if (!workspaceId) {
-            throw new Error('Workspace id required for the select2 object selection widget');
-        }
 
         function objectInfoHasRef(objectInfo, ref) {
             if (objectInfo.dataPaletteRef) {
@@ -77,7 +72,7 @@ define([
             return objectInfo.name;
         }
 
-        function makeInputControl(events, bus) {
+        function makeInputControl() {
             var selectOptions;
             if (model.availableValues) {
                 var filteredOptions = [];
@@ -144,22 +139,9 @@ define([
             // element id
             var currentSelectionId = String(model.availableValuesMap[stringValue]);
 
-            // Unselect any currently selected item.
-            Array.prototype.slice.call(control.selectedOptions).forEach(function(option) {
-                option.selected = false;
-            });
+            // console.log('SELECT!', currentSelectionId, 
 
-            // Select any option which matches our models current selection.
-            // NB matching by id not value.
-            // NB the id is not the index of the option. It is a value assigned to the option,
-            // and used to map the object ref or name to the control.  
-            var options = Array.prototype.slice.call(control.options);
-            options.forEach(function(option) {
-                if (option.value === currentSelectionId) {
-                    option.selected = true;
-                }
-            });
-            //$(control).trigger('change');
+            $(control).val(currentSelectionId).trigger('change');
         }
 
         // MODEL
@@ -247,27 +229,6 @@ define([
             return listener.promise
                 .then(function(message) {
                     return filterObjectInfoByType(message.objectInfo, types);
-                });
-        }
-
-        function getObjectsByType_old(type) {
-            return Promise.try(function() {
-                    return Jupyter.narrative.sidePanel.$dataWidget.getLoadedData(type);
-                })
-                .then(function(data) {
-                    var objList = [];
-                    Object.keys(data).forEach(function(typeKey) {
-                        objList = objList.concat(data[typeKey]);
-                    });
-                    return objList.map(function(objectInfo) {
-                        var obj = serviceUtils.objectInfoToObject(objectInfo);
-                        // TODO - port this into kb_service/utils...
-                        obj.dataPaletteRef = null;
-                        if (objectInfo.length > 11) {
-                            obj.dataPaletteRef = objectInfo[11];
-                        }
-                        return obj;
-                    });
                 });
         }
 
@@ -415,7 +376,7 @@ define([
         function render() {
             return Promise.try(function() {
                 var events = Events.make(),
-                    inputControl = makeInputControl(events, bus),
+                    inputControl = makeInputControl(events),
                     content = div({ class: 'input-group', style: { width: '100%' } }, inputControl);
 
                 ui.setContent('input-container', content);
@@ -561,7 +522,7 @@ define([
                         bus.on('update', function(message) {
                             setModelValue(message.value);
                         });
-                        runtime.bus().on('workspace-changed', function() {
+                        bus.bus().on('workspace-changed', function() {
                             doWorkspaceChanged();
                         });
                         // bus.emit('sync');
@@ -577,6 +538,7 @@ define([
                 if (container) {
                     parent.removeChild(container);
                 }
+                busConnection.stop();
                 eventListeners.forEach(function(id) {
                     runtime.bus().removeListener(id);
                 });

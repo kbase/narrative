@@ -244,7 +244,8 @@ define([
                                                             required: true,
                                                             types: ['KBaseFile.PairedEndLibrary', 'KBaseFile.SingleEndLibrary']
                                                         },
-                                                        defaultValue: null
+                                                        defaultValue: null,
+                                                        nullValue: null
                                                     }
                                                 },
                                                 label: {
@@ -263,7 +264,8 @@ define([
                                                         constraints: {
                                                             required: true
                                                         },
-                                                        defaultValue: null
+                                                        defaultValue: null,
+                                                        nullValue: null
                                                     }
                                                 }
                                             }

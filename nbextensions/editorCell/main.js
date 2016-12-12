@@ -55,15 +55,9 @@ define([
     'use strict';
     var t = html.tag,
         div = t('div'),
-        span = t('span'),
         workspaceInfo,
         env,
         runtime = Runtime.make();
-
-    /*
-     * Dealing with metadata
-     */
-
 
     // This is copied out of jupyter code.
     function activateToolbar() {
@@ -72,28 +66,6 @@ define([
         Jupyter.CellToolbar.activate_preset(toolbarName, Jupyter.events);
         Jupyter.notebook.metadata.celltoolbar = toolbarName;
     }
-
-
-
-    // TODO: move into app cell widget and invoke with an event 'reset-to-default-values'
-    function setupParams(cell, appSpec) {
-        var defaultParams = {};
-        appSpec.parameters.forEach(function(parameterSpec) {
-            var param = ParameterSpec.make({ parameterSpec: parameterSpec }),
-                defaultValue = param.defaultValue();
-
-            // A default value may be undefined, e.g. if the parameter is required and there is no default value.
-            if (defaultValue !== undefined) {
-                defaultParams[param.id()] = defaultValue;
-            }
-        });
-        utils.setMeta(cell, 'editorCell', 'params', defaultParams);
-    }
-
-    /*
-     *
-     *
-     */
 
     /*
      * Should only be called when a cell is first inserted into a narrative.
@@ -122,6 +94,9 @@ define([
                             tag: appTag,
                             spec: appSpec
                         },
+                        editor: {
+                            type: appSpec.widgets.input
+                        },
                         state: {
                             edit: 'editing',
                             params: null,
@@ -134,18 +109,10 @@ define([
                 };
                 cell.metadata = meta;
             })
-            //.then(function () {
-            // Add the params
-            //return setupParams(cell, appSpec);
-            //})
             .then(function() {
                 // Complete the cell setup.
                 return setupCell(cell);
             });
-        //.then(function (cellStuff) {
-        //    // Initialize the cell to its default state.
-        //    cellStuff.bus.emit('reset-to-defaults');
-        //});
     }
 
     function specializeCell(cell) {
@@ -190,7 +157,6 @@ define([
         };
     }
 
-
     function getEditorModule(type) {
         return new Promise(function(resolve, reject) {
             var editorDir;
@@ -218,6 +184,38 @@ define([
         });
     }
 
+    /*
+        Responsible for checking the vailidity of this editor cell, and fixing up if possible.
+    */
+    function checkAndRepairCell(cell) {
+
+        // Has proper structure?
+        // TODO:
+
+        // Has proper app spec?
+        var spec = utils.getCellMeta(cell, 'kbase.editorCell.app.spec');
+        if (!spec) {
+            spec = utils.getCellMeta(cell, 'kbase.editorCell.app.appSpec');
+            if (!spec) {
+                throw new Error('App Spec not set on this editor.');
+            }
+            utils.setCellMeta(cell, 'kbase.editorCell.app.spec', spec);
+            console.warn('Editor cell repaired -- the app spec was set on the old property');
+            delete utils.getCellMeta(cell, 'kbase.editorCell.app').appSpec;
+        }
+
+        // Has proper editor spec?
+        var editorType = utils.getCellMeta(cell, 'kbase.editorCell.editor.type');
+        if (!editorType) {
+            editorType = utils.getCellMeta(cell, 'kbase.editorCell.app.spec.widgets.input');
+            if (!editorType) {
+                throw new Error('App Spec does not provide an editor type on the widgets.input property');
+            }
+            console.warn('Editor cell repaired -- the editor type was not set');
+            utils.setCellMeta(cell, 'kbase.editorCell.editor.type', editorType);
+        }
+    }
+
     function setupCell(cell) {
         return Promise.try(function() {
             if (cell.cell_type !== 'code') {
@@ -229,6 +227,8 @@ define([
             if (cell.metadata.kbase.type !== 'editor') {
                 return;
             }
+
+            checkAndRepairCell(cell);
 
             specializeCell(cell);
 
@@ -291,10 +291,10 @@ define([
                                 bus: cellBus
                             };
                         })
-                        .catch(function(err) {
-                            console.error('ERROR starting app cell', err);
-                            alert('Error starting app cell');
-                        });
+                        // .catch(function(err) {
+                        //     console.error('ERROR starting app cell', err);
+                        //     alert('Error starting app cell: ' + err.message);
+                        // });
                 });
         });
     }
@@ -303,10 +303,11 @@ define([
         return Promise.all(Jupyter.notebook.get_cells().map(function(cell) {
             return setupCell(cell)
                 .catch(function(err) {
-                    console.error('ERROR creating cell', err);
+                    console.error('ERROR creating cell', err, Jupyter.notebook.find_cell_index(cell));
                     // delete cell.
-                    $(document).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(data.cell));
-                    alert('Could not process cell due to errors.\n' + err.message);
+                    Jupyter.notebook.delete_cell(Jupyter.notebook.find_cell_index(cell));
+                    //  $(document).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(cell));
+                    alert('Could not load cell due to errors.\nThis cell will be deleted from your Narrative. It will not be permanently deleted until you save your Narrative.\n\nThe error is: ' + err.message);
                 });
         }));
     }
@@ -396,8 +397,9 @@ define([
                             .catch(function(err) {
                                 console.error('ERROR creating cell', err);
                                 // delete cell.
-                                $(document).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(data.cell));
-                                alert('Could not insert cell due to errors.\n' + err.message);
+                                // $(document).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(data.cell));
+                                Jupyter.notebook.delete_cell(Jupyter.notebook.find_cell_index(data.cell));
+                                alert('Could not insert cell due to errors.\n\n' + err.message);
                             });
                     }
                 });
@@ -412,9 +414,6 @@ define([
 
     // MAIN
     // module state instantiation
-
-    function init() {}
-    init();
 
     var clock = Clock.make({
         bus: runtime.bus(),

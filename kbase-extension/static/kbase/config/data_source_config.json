@@ -31,12 +31,6 @@
                 "ws": "KBaseMedia",
                 "search": false
             },
-            "plant_gnms": {
-                "name": "Plant Genomes",
-                "type": "KBaseGenomes.Genome",
-                "ws": "PlantCSGenomes",
-                "search": false
-            },
             "se_reads": {
                 "name": "RNA-seq Reads (single-end)",
                 "type": "KBaseAssembly.SingleEndLibrary",
@@ -145,10 +139,10 @@
                 "ws": "KBaseMedia",
                 "search": false
             },
-            "plant_gnms": {
-                "name": "Plant Genomes",
+            "phytozome_genomes": {
+                "name": "Phytozome Genomes",
                 "type": "KBaseGenomes.Genome",
-                "ws": "PlantCSGenomes",
+                "ws": "Phytozome_Genomes",
                 "search": false
             },
             "se_reads": {
@@ -247,10 +241,10 @@
                 "ws": "KBaseMedia",
                 "search": false
             },
-            "plant_gnms": {
-                "name": "Plant Genomes",
+            "phytozome_genomes": {
+                "name": "Phytozome Genomes",
                 "type": "KBaseGenomes.Genome",
-                "ws": "PlantCSGenomes",
+                "ws": "Phytozome_Genomes",
                 "search": false
             },
             "se_reads": {

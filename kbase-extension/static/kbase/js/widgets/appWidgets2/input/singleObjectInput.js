@@ -43,6 +43,7 @@ define([
             container,
             bus = config.bus,
             ui,
+            eventListeners = [],
             model = {
                 blacklistValues: undefined,
                 availableValues: undefined,
@@ -53,7 +54,7 @@ define([
 
         // Validate configuration.
         if (!workspaceId) {
-            throw new Error('Workspace id required for the object widget');
+            throw new Error('Workspace id required for the object input widget');
         }
 
         function makeInputControl(events, bus) {
@@ -244,7 +245,7 @@ define([
         }
 
         function getObjectsForTypes(types) {
-            return runtime.bus().plisten({
+            var l = runtime.bus().plisten({
                     channel: 'data',
                     key: {
                         type: 'workspace-data-updated'
@@ -254,9 +255,10 @@ define([
                     }
                 })
                 .then(function(message) {
-                    // console.log('GOT first workspace-data-updated', message);
                     return filterObjectInfoByType(message.objectInfo, types);
                 });
+            eventListeners.push(l.id);
+            return l.promise;
         }
 
         function getObjectsByTypeDataPanel(type) {
@@ -421,7 +423,6 @@ define([
             // compare to availableData.
             if (!utils.isEqual(data, model.availableValues)) {
                 model.availableValues = data;
-                // console.log('DATA', data);
                 var matching = model.availableValues.filter(function(value) {
                     if (model.value && model.value === getObjectRef(value, model.value)) {
                         return true;
@@ -445,7 +446,6 @@ define([
                     // compare to availableData.
                     if (!utils.isEqual(data, model.availableValues)) {
                         model.availableValues = data;
-                        // console.log('DATA', data);
                         var matching = model.availableValues.filter(function(value) {
                             if (model.value && model.value === getObjectRef(value, model.value)) {
                                 return true;
@@ -502,6 +502,9 @@ define([
                 if (container) {
                     parent.removeChild(container);
                 }
+                eventListeners.forEach(function(id) {
+                    runtime.bus().removeListener(id);
+                })
             });
         }
 

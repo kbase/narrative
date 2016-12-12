@@ -14,10 +14,10 @@
 define([
     'kb_common/props',
     'kb_service/client/narrativeMethodStore'
-], function (
+], function(
     Props,
     NarrativeMethodStore
-    ) {
+) {
     'use strict';
 
     function factory(config) {
@@ -31,15 +31,15 @@ define([
 
         function fetchAppSpec(appId, appTag) {
             var appRef = {
-                ids: [appId],
-                tag: appTag
-            },
+                    ids: [appId],
+                    tag: appTag
+                },
                 nms = new NarrativeMethodStore(runtime.config('services.narrative_method_store.url'), {
                     token: runtime.authToken()
                 });
 
             return nms.get_method_spec(appRef)
-                .then(function (data) {
+                .then(function(data) {
                     if (!data[0]) {
                         throw new Error('App not found');
                     }
@@ -53,27 +53,26 @@ define([
                     // Get an input field widget per parameter
 
 
-//                    var parameterMap = {},
-//                        parameters = getParameters().map(function (parameterSpec) {
-//                            // tee hee
-//                            var param = ParameterSpec.make({parameterSpec: parameterSpec});
-//                            parameterMap[param.id()] = param;
-//                            return param;
-//                        });
-//                    env.parameters = parameters;
-//                    env.parameterMap = parameterMap;
-//                    
-//                    
-//                   
-//                    return parameters;
+                    //                    var parameterMap = {},
+                    //                        parameters = getParameters().map(function (parameterSpec) {
+                    //                            // tee hee
+                    //                            var param = ParameterSpec.make({parameterSpec: parameterSpec});
+                    //                            parameterMap[param.id()] = param;
+                    //                            return param;
+                    //                        });
+                    //                    env.parameters = parameters;
+                    //                    env.parameterMap = parameterMap;
+                    //                    
+                    //                    
+                    //                   
+                    //                    return parameters;
                 });
         }
 
         function fetchAppSpec_fake(appId, appTag) {
 
             var appSpec = {
-                parameters: [
-                    {
+                parameters: [{
                         id: 'name',
                         description: 'Name of the reads set',
                         short_hint: 'The name of the set of sequence reads',
@@ -134,10 +133,10 @@ define([
             };
         }
 
-        
+
         function createModelForApp(appId, appTag) {
             fetchAppSpec(appId, appTag)
-                .then(function () {
+                .then(function() {
                     // For each parameter, we build up our model.
 
                     // Now we layer on relationships
@@ -182,17 +181,13 @@ define([
          * Service model
          */
         function start() {
-            console.log('starting model...');
-
             return fetchAppSpec(appId, appTag)
                 .then(function(appSpec) {
-                    console.log('GOT IT!', appSpec);
                     return true;
                 });
         }
 
-        function stop() {
-        }
+        function stop() {}
 
 
 
@@ -204,7 +199,7 @@ define([
 
 
     return {
-        make: function (config) {
+        make: function(config) {
             return factory(config);
         }
     };

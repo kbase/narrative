@@ -22,7 +22,7 @@ define([
 
     'css!google-code-prettify/prettify.css',
     'css!font-awesome.css'
-], function (
+], function(
     Promise,
     Uuid,
     Runtime,
@@ -40,12 +40,19 @@ define([
     Fsm,
     PR,
     editorCellFsm
-    ) {
+) {
     'use strict';
     var t = html.tag,
-        div = t('div'), span = t('span'), a = t('a'), p = t('p'),
-        table = t('table'), tr = t('tr'), th = t('th'), td = t('td'),
-        pre = t('pre'), input = t('input'),
+        div = t('div'),
+        span = t('span'),
+        a = t('a'),
+        p = t('p'),
+        table = t('table'),
+        tr = t('tr'),
+        th = t('th'),
+        td = t('td'),
+        pre = t('pre'),
+        input = t('input'),
         places,
         appStates = editorCellFsm.fsm;
 
@@ -107,9 +114,8 @@ define([
          * They more or less match what we need for editing and to persiste
          * through the setApi
          */
-        function getLayout() {
-        }
-        
+        function getLayout() {}
+
         function getRelations() {
 
         }
@@ -175,7 +181,7 @@ define([
                         },
                         defaultValue: null
                     },
-                    parameters: {                        
+                    parameters: {
                         ref: {
                             id: 'ref',
 
@@ -237,15 +243,15 @@ define([
             env.appId = appId;
             env.appTag = appTag;
             var appRef = {
-                ids: [appId],
-                tag: appTag
-            },
+                    ids: [appId],
+                    tag: appTag
+                },
                 nms = new NarrativeMethodStore(runtime.config('services.narrative_method_store.url'), {
                     token: runtime.authToken()
                 });
 
             return nms.get_method_spec(appRef)
-                .then(function (data) {
+                .then(function(data) {
                     if (!data[0]) {
                         throw new Error('App not found');
                     }
@@ -254,19 +260,19 @@ define([
                     // Get an input field widget per parameter
 
 
-//                    var parameterMap = {},
-//                        parameters = getParameters().map(function (parameterSpec) {
-//                            // tee hee
-//                            var param = ParameterSpec.make({parameterSpec: parameterSpec});
-//                            parameterMap[param.id()] = param;
-//                            return param;
-//                        });
-//                    env.parameters = parameters;
-//                    env.parameterMap = parameterMap;
-//                    
-//                    
-//                   
-//                    return parameters;
+                    //                    var parameterMap = {},
+                    //                        parameters = getParameters().map(function (parameterSpec) {
+                    //                            // tee hee
+                    //                            var param = ParameterSpec.make({parameterSpec: parameterSpec});
+                    //                            parameterMap[param.id()] = param;
+                    //                            return param;
+                    //                        });
+                    //                    env.parameters = parameters;
+                    //                    env.parameterMap = parameterMap;
+                    //                    
+                    //                    
+                    //                   
+                    //                    return parameters;
                 });
         }
 
@@ -286,13 +292,13 @@ define([
 
         function showFsmBar() {
             var currentState = fsm.getCurrentState(),
-                content = Object.keys(currentState.state).map(function (key) {
-                return span([
-                    span({style: {fontStyle: 'italic'}}, key),
-                    ' : ',
-                    span({style: {padding: '4px', fontWeight: 'noramal', border: '1px silver solid', backgroundColor: 'gray', color: 'white'}}, currentState.state[key])
-                ]);
-            }).join('  ');
+                content = Object.keys(currentState.state).map(function(key) {
+                    return span([
+                        span({ style: { fontStyle: 'italic' } }, key),
+                        ' : ',
+                        span({ style: { padding: '4px', fontWeight: 'noramal', border: '1px silver solid', backgroundColor: 'gray', color: 'white' } }, currentState.state[key])
+                    ]);
+                }).join('  ');
 
             ui.setContent('fsm-display.content', content);
         }
@@ -307,60 +313,59 @@ define([
             return pre({
                 dataElement: 'spec',
                 class: 'prettyprint lang-json',
-                style: {fontSize: '80%'}
+                style: { fontSize: '80%' }
             });
         }
 
         function renderAppSummary() {
-            return table({class: 'table table-striped'}, [
+            return table({ class: 'table table-striped' }, [
                 tr([
                     th('Name'),
-                    td({dataElement: 'name'})
+                    td({ dataElement: 'name' })
                 ]),
-                ui.ifAdvanced(function () {
+                ui.ifAdvanced(function() {
                     return tr([
                         th('Module'),
-                        td({dataElement: 'module'})
+                        td({ dataElement: 'module' })
                     ]);
                 }),
                 tr([
                     th('Id'),
-                    td({dataElement: 'id'})
+                    td({ dataElement: 'id' })
                 ]),
                 tr([
                     th('Version'),
-                    td({dataElement: 'version'})
+                    td({ dataElement: 'version' })
                 ]),
                 tr([
                     th('Summary'),
-                    td({dataElement: 'summary'})
+                    td({ dataElement: 'summary' })
                 ]),
                 tr([
                     th('Authors'),
-                    td({dataElement: 'authors'})
+                    td({ dataElement: 'authors' })
                 ]),
-                ui.ifAdvanced(function () {
+                ui.ifAdvanced(function() {
                     return tr([
                         th('Git commit hash'),
-                        td({dataElement: 'git-commit-hash'})
+                        td({ dataElement: 'git-commit-hash' })
                     ]);
                 }),
                 tr([
                     th('More info'),
-                    td({dataElement: 'catalog-link'})
+                    td({ dataElement: 'catalog-link' })
                 ])
             ]);
         }
 
         function renderAboutApp() {
             return html.makeTabs({
-                tabs: [
-                    {
+                tabs: [{
                         label: 'Summary',
                         name: 'summary',
                         content: renderAppSummary()
                     },
-                    ui.ifAdvanced(function () {
+                    ui.ifAdvanced(function() {
                         return {
                             label: 'Spec',
                             name: 'spec',
@@ -401,31 +406,31 @@ define([
         }
 
         function renderSettings() {
-            var events = Events.make({node: container}),
-                content = Object.keys(settings).map(function (key) {
-                var setting = settings[key],
-                    settingsValue = editorState.getItem(['user-settings', key], setting.defaultValue);
-                return div({}, [
-                    input({
-                        type: 'checkbox',
-                        checked: (settingsValue ? true : false),
-                        dataSetting: key,
-                        value: key,
-                        id: events.addEvent({
-                            type: 'change',
-                            handler: function (e) {
-                                doChangeSetting(e);
-                            }
-                        })
-                    }),
-                    span({style: {marginLeft: '4px', fontStyle: 'italic'}}, setting.label)
-                ]);
-            }).join('\n');
+            var events = Events.make({ node: container }),
+                content = Object.keys(settings).map(function(key) {
+                    var setting = settings[key],
+                        settingsValue = editorState.getItem(['user-settings', key], setting.defaultValue);
+                    return div({}, [
+                        input({
+                            type: 'checkbox',
+                            checked: (settingsValue ? true : false),
+                            dataSetting: key,
+                            value: key,
+                            id: events.addEvent({
+                                type: 'change',
+                                handler: function(e) {
+                                    doChangeSetting(e);
+                                }
+                            })
+                        }),
+                        span({ style: { marginLeft: '4px', fontStyle: 'italic' } }, setting.label)
+                    ]);
+                }).join('\n');
             ui.setContent('settings.content', content);
             events.attachEvents();
 
             //Ensure that the settings are reflected in the UI.
-            Object.keys(settings).forEach(function (key) {
+            Object.keys(settings).forEach(function(key) {
                 renderSetting(key);
             });
         }
@@ -445,14 +450,14 @@ define([
             ui.setContent('about-app.summary', appSpec.info.subtitle);
             ui.setContent('about-app.version', appSpec.info.ver);
             ui.setContent('about-app.git-commit-hash', appSpec.info.git_commit_hash || ui.na());
-            ui.setContent('about-app.authors', (function () {
+            ui.setContent('about-app.authors', (function() {
                 if (appSpec.info.authors && appSpec.info.authors.length > 0) {
                     return appSpec.info.authors.join('<br>');
                 }
                 return ui.na();
             }()));
             var appRef = [appSpec.info.namespace || 'l.m', appSpec.info.id].filter(toBoolean).join('/'),
-                link = a({href: '/#appcatalog/app/' + appRef, target: '_blank'}, 'Catalog Page');
+                link = a({ href: '/#appcatalog/app/' + appRef, target: '_blank' }, 'Catalog Page');
             ui.setContent('about-app.catalog-link', link);
         }
 
@@ -462,23 +467,24 @@ define([
             }
             var specText = JSON.stringify(env.appSpec, false, 3),
                 fixedText = specText.replace(/</g, '&lt;').replace(/>/g, '&gt;'),
-                content = pre({class: 'prettyprint lang-json', style: {fontSize: '80%'}}, fixedText);
+                content = pre({ class: 'prettyprint lang-json', style: { fontSize: '80%' } }, fixedText);
             ui.setContent('about-app.spec', content);
         }
 
         function renderLayout() {
+            console.log('rendering layou...');
             var events = Events.make(),
-                content = div({class: 'kbase-extension kb-editor-cell', style: {display: 'flex', alignItems: 'stretch'}}, [
-                    div({class: 'prompt', dataElement: 'prompt', style: {display: 'flex', alignItems: 'stretch', flexDirection: 'column'}}, [
-                        div({dataElement: 'status'})
+                content = div({ class: 'kbase-extension kb-editor-cell', style: { display: 'flex', alignItems: 'stretch' } }, [
+                    div({ class: 'prompt', dataElement: 'prompt', style: { display: 'flex', alignItems: 'stretch', flexDirection: 'column' } }, [
+                        div({ dataElement: 'status' })
                     ]),
                     div({
                         class: 'body',
                         dataElement: 'body',
-                        style: {display: 'flex', alignItems: 'stretch', flexDirection: 'column', flex: '1'}
+                        style: { display: 'flex', alignItems: 'stretch', flexDirection: 'column', flex: '1' }
                     }, [
-                        div({dataElement: 'widget', style: {display: 'block', width: '100%'}}, [
-                            div({class: 'container-fluid'}, [
+                        div({ dataElement: 'widget', style: { display: 'block', width: '100%' } }, [
+                            div({ class: 'container-fluid' }, [
                                 ui.buildPanel({
                                     title: 'Error',
                                     name: 'fatal-error',
@@ -486,15 +492,15 @@ define([
                                     type: 'danger',
                                     classes: ['kb-panel-container'],
                                     body: div([
-                                        table({class: 'table table-striped'}, [
+                                        table({ class: 'table table-striped' }, [
                                             tr([
-                                                th('Title'), td({dataElement: 'title'})
+                                                th('Title'), td({ dataElement: 'title' })
                                             ]),
                                             tr([
-                                                th('Message'), td({dataElement: 'message'})
+                                                th('Message'), td({ dataElement: 'message' })
                                             ]),
                                             tr([
-                                                th('Details'), td({dataElement: 'details'})
+                                                th('Details'), td({ dataElement: 'details' })
                                             ])
                                         ])
                                     ])
@@ -505,7 +511,7 @@ define([
                                     hidden: true,
                                     type: 'default',
                                     classes: ['kb-panel-container'],
-                                    body: div({dataElement: 'content'})
+                                    body: div({ dataElement: 'content' })
                                 }),
                                 ui.buildCollapsiblePanel({
                                     title: 'Notifications',
@@ -514,7 +520,7 @@ define([
                                     type: 'default',
                                     classes: ['kb-panel-container'],
                                     body: [
-                                        div({dataElement: 'content'})
+                                        div({ dataElement: 'content' })
                                     ]
                                 }),
                                 ui.buildCollapsiblePanel({
@@ -525,7 +531,7 @@ define([
                                     type: 'default',
                                     classes: ['kb-panel-container'],
                                     body: [
-                                        div({dataElement: 'about-app'}, renderAboutApp())
+                                        div({ dataElement: 'about-app' }, renderAboutApp())
                                     ]
                                 }),
                                 ui.buildCollapsiblePanel({
@@ -535,14 +541,14 @@ define([
                                     type: 'default',
                                     classes: ['kb-panel-container'],
                                     body: [
-                                        div({dataElement: 'fsm-display', style: {marginBottom: '4px'}}, [
-                                            span({style: {marginRight: '4px'}}, 'FSM'),
-                                            span({dataElement: 'content'})
+                                        div({ dataElement: 'fsm-display', style: { marginBottom: '4px' } }, [
+                                            span({ style: { marginRight: '4px' } }, 'FSM'),
+                                            span({ dataElement: 'content' })
                                         ]),
                                         div([
-                                            ui.makeButton('Show Code', 'toggle-code-view', {events: events}),
-                                            ui.makeButton('Edit Metadata', 'edit-cell-metadata', {events: events}),
-                                            ui.makeButton('Edit Notebook Metadata', 'edit-notebook-metadata', {events: events})
+                                            ui.makeButton('Show Code', 'toggle-code-view', { events: events }),
+                                            ui.makeButton('Edit Metadata', 'edit-cell-metadata', { events: events }),
+                                            ui.makeButton('Edit Notebook Metadata', 'edit-notebook-metadata', { events: events })
                                         ])
                                     ]
                                 }),
@@ -552,30 +558,36 @@ define([
                                     hidden: false,
                                     type: 'default',
                                     classes: ['kb-panel-container'],
-                                    body: div({dataElement: 'widget'})
+                                    body: div({ dataElement: 'widget' })
                                 }),
                                 ui.buildCollapsiblePanel({
-                                    title: span(['Currently Editing ', span({dataElement: 'name', style: {textDecoration: 'underline'}})]),
+                                    title: span(['Currently Editing ', span({
+                                        dataElement: 'name',
+                                        style: {
+                                            fontWeight: 'bold'
+                                        }
+                                    })]),
                                     name: 'currently-editing',
                                     hidden: false,
+                                    collapsed: true,
                                     type: 'default',
                                     classes: ['kb-panel-container'],
-                                    body: div({dataElement: 'widget'})
+                                    body: div({ dataElement: 'widget' })
                                 }),
                                 ui.buildPanel({
-                                    title: 'Editor ' + span({class: 'fa fa-pencil'}),
+                                    title: 'Editor ' + span({ class: 'fa fa-pencil' }),
                                     name: 'editor',
                                     hidden: false,
                                     type: 'default',
                                     classes: ['kb-panel-container'],
-                                    body: div({dataElement: 'widget'})
+                                    body: div({ dataElement: 'widget' })
                                 }),
                                 div({
                                     dataElement: 'available-actions'
                                 }, [
-                                    div({class: 'btn-toolbar kb-btn-toolbar-cell-widget'}, [
-                                        div({class: 'btn-group'}, [
-                                            ui.makeButton('Save', 'save', {events: events, type: 'primary'})
+                                    div({ class: 'btn-toolbar kb-btn-toolbar-cell-widget' }, [
+                                        div({ class: 'btn-group' }, [
+                                            ui.makeButton('Save', 'save', { events: events, type: 'primary' })
                                         ])
                                     ])
                                 ]),
@@ -584,6 +596,7 @@ define([
                                     title: 'Status',
                                     name: 'editor-status',
                                     hidden: false,
+                                    collapsed: true,
                                     type: 'default',
                                     classes: ['kb-panel-container'],
                                     body: div([
@@ -597,26 +610,28 @@ define([
                                         }),
                                         div({
                                             dataElement: 'flags',
-                                            style: {borderTop: '1px silver solid'}
+                                            style: { borderTop: '1px silver solid' }
                                         }, [
                                             span('param flags: '),
-                                            span({style: {border: '0px silver solid'}}, [
+                                            span({ style: { border: '0px silver solid' } }, [
                                                 'touched:', span({
                                                     dataElement: 'touched',
                                                     style: {
                                                         display: 'inline-block',
                                                         border: '1px silver solid',
-                                                        width: '10px', height: '10px'
+                                                        width: '10px',
+                                                        height: '10px'
                                                     }
                                                 })
                                             ]),
-                                            span({style: {border: '0px silver solid', marginLeft: '10px'}}, [
+                                            span({ style: { border: '0px silver solid', marginLeft: '10px' } }, [
                                                 'changed:', span({
                                                     dataElement: 'changed',
                                                     style: {
                                                         display: 'inline-block',
                                                         border: '1px silver solid',
-                                                        width: '10px', height: '10px'
+                                                        width: '10px',
+                                                        height: '10px'
                                                     }
                                                 })
                                             ])
@@ -669,22 +684,22 @@ define([
              */
             var params = model.getItem('params'),
                 parameters = getParameters(),
-                errors = Object.keys(parameters).map(function (id) {
-                var parameterSpec = parameters[id];
-                if (parameterSpec.required()) {
-                    if (parameterSpec.isEmpty(params[id].value)) {
-                        return {
-                            diagnosis: 'required-missing',
-                            errorMessage: 'The ' + parameterSpec.dataType() + ' "' + parameterSpec.id() + '" is required but was not provided'
-                        };
+                errors = Object.keys(parameters).map(function(id) {
+                    var parameterSpec = parameters[id];
+                    if (parameterSpec.required()) {
+                        if (parameterSpec.isEmpty(params[id].value)) {
+                            return {
+                                diagnosis: 'required-missing',
+                                errorMessage: 'The ' + parameterSpec.dataType() + ' "' + parameterSpec.id() + '" is required but was not provided'
+                            };
+                        }
                     }
-                }
-            }).filter(function (error) {
-                if (error) {
-                    return true;
-                }
-                return false;
-            });
+                }).filter(function(error) {
+                    if (error) {
+                        return true;
+                    }
+                    return false;
+                });
             return {
                 isValid: (errors.length === 0),
                 errors: errors
@@ -703,13 +718,13 @@ define([
         function fixApp(app) {
             switch (app.tag) {
                 case 'release':
-                {
-                    return {
-                        id: app.id,
-                        tag: app.tag,
-                        version: app.version
-                    };
-                }
+                    {
+                        return {
+                            id: app.id,
+                            tag: app.tag,
+                            version: app.version
+                        };
+                    }
                 case 'beta':
                 case 'dev':
                     return {
@@ -729,7 +744,7 @@ define([
             var obj = {
                 output_object: params.name,
                 description: params.description,
-                reads_tuple: params.items.map(function (item) {
+                reads_tuple: params.items.map(function(item) {
                     return {
                         input_reads_label: null,
                         input_reads_obj: item,
@@ -745,7 +760,7 @@ define([
                 fixedApp = fixApp(app),
                 code = PythonInterop.buildEditorRunner(cellId, runId, fixedApp, params);
             // TODO: do something with the runId 
-            
+
             setStatus('Successfully built code');
             editorState.setItem('editorState.currentRunId', runId);
             cell.set_text(code);
@@ -761,7 +776,7 @@ define([
                 // TODO: evaluate the state of things to try to guess the state?
                 // Or is this just an error unless it is a new cell?
                 // currentState = {mode: 'editing', params: 'incomplete'};
-                currentState = {mode: 'new'};
+                currentState = { mode: 'new' };
             }
             fsm = Fsm.make({
                 states: appStates,
@@ -771,7 +786,7 @@ define([
                 //xinitialState: {
                 //    mode: 'editing', params: 'incomplete'
                 //},
-                onNewState: function (fsm) {
+                onNewState: function(fsm) {
                     editorState.setItem('fsm.currentState', fsm.getCurrentState().state);
                     // save the narrative!
 
@@ -854,15 +869,15 @@ define([
         function renderNotifications() {
             var events = Events.make(),
                 notifications = editorState.getItem('notifications') || [],
-                content = notifications.map(function (notification, index) {
-                    return div({class: 'row'}, [
-                        div({class: 'col-md-10'}, notification),
-                        div({class: 'col-md-2', style: {textAlign: 'right'}}, span({}, [
+                content = notifications.map(function(notification, index) {
+                    return div({ class: 'row' }, [
+                        div({ class: 'col-md-10' }, notification),
+                        div({ class: 'col-md-2', style: { textAlign: 'right' } }, span({}, [
                             a({
                                 class: 'btn btn-default',
                                 id: events.addEvent({
                                     type: 'click',
-                                    handler: function () {
+                                    handler: function() {
                                         doRemoveNotification(index);
                                     }
                                 })
@@ -916,27 +931,27 @@ define([
             showDebug(JSON.stringify(state.state));
 
             // Button state
-            state.ui.buttons.enabled.forEach(function (button) {
+            state.ui.buttons.enabled.forEach(function(button) {
                 ui.enableButton(button);
             });
-            state.ui.buttons.disabled.forEach(function (button) {
+            state.ui.buttons.disabled.forEach(function(button) {
                 ui.disableButton(button);
             });
 
 
             // Element state
-            state.ui.elements.show.forEach(function (element) {
+            state.ui.elements.show.forEach(function(element) {
                 ui.showElement(element);
             });
-            state.ui.elements.hide.forEach(function (element) {
+            state.ui.elements.hide.forEach(function(element) {
                 ui.hideElement(element);
             });
 
             // Editor state flags
-            ['touched', 'changed'].forEach(function (flag) {
+            ['touched', 'changed'].forEach(function(flag) {
                 var flagged, params = model.getItem('params');
                 if (params) {
-                    Object.keys(params).forEach(function (key) {
+                    Object.keys(params).forEach(function(key) {
                         var param = params[key];
                         if (param[flag]) {
                             flagged = true;
@@ -950,11 +965,12 @@ define([
         }
 
         var saveTimer = null;
+
         function saveNarrative() {
             if (saveTimer) {
                 return;
             }
-            saveTimer = window.setTimeout(function () {
+            saveTimer = window.setTimeout(function() {
                 saveTimer = null;
                 Jupyter.saveNotebook();
             }, saveMaxFrequency);
@@ -969,8 +985,8 @@ define([
                 ]),
                 p('Continue to delete this data cell?')
             ]);
-            ui.showConfirmDialog({title: 'Confirm Cell Deletion', body: content})
-                .then(function (confirmed) {
+            ui.showConfirmDialog({ title: 'Confirm Cell Deletion', body: content })
+                .then(function(confirmed) {
                     if (!confirmed) {
                         return;
                     }
@@ -986,8 +1002,8 @@ define([
             if (!params) {
                 return false;
             }
-            return ['touched', 'changed'].some(function (flag) {
-                return Object.keys(params).some(function (key) {
+            return ['touched', 'changed'].some(function(flag) {
+                return Object.keys(params).some(function(key) {
                     return params[key];
                 });
             });
@@ -995,8 +1011,8 @@ define([
 
         function clearModelFlags() {
             var params = model.getItem('params');
-            ['touched', 'changed'].forEach(function (flag) {
-                Object.keys(params).forEach(function (key) {
+            ['touched', 'changed'].forEach(function(flag) {
+                Object.keys(params).forEach(function(key) {
                     var param = params[key];
                     param[flag] = false;
                 });
@@ -1006,12 +1022,12 @@ define([
         function doSave() {
             setStatus(html.loading('Saving...'));
             doSaveReadsSet()
-                .then(function () {
+                .then(function() {
                     // Clear the parameter flags
                     clearModelFlags();
                     renderUI();
                 })
-                .catch(function (err) {
+                .catch(function(err) {
                     console.error('ERROR!', err);
                 });
         }
@@ -1019,7 +1035,7 @@ define([
         // LIFECYCLE API
 
         function init() {
-            return Promise.try(function () {
+            return Promise.try(function() {
                 initializeFSM();
                 initCodeInputArea();
                 return null;
@@ -1027,7 +1043,7 @@ define([
         }
 
         function attach(node) {
-            return Promise.try(function () {
+            return Promise.try(function() {
                 container = node;
                 ui = Ui.make({
                     node: container,
@@ -1059,31 +1075,31 @@ define([
         }
 
         function start() {
-            return Promise.try(function () {
+            return Promise.try(function() {
                 /*
                  * listeners for the local input cell message bus
                  */
 
-                bus.on('toggle-code-view', function () {
+                bus.on('toggle-code-view', function() {
                     var showing = toggleCodeInputArea(),
                         label = showing ? 'Hide Code' : 'Show Code';
                     ui.setButtonLabel('toggle-code-view', label);
                 });
-                bus.on('show-notifications', function () {
+                bus.on('show-notifications', function() {
                     doShowNotifications();
                 });
-                bus.on('edit-cell-metadata', function () {
+                bus.on('edit-cell-metadata', function() {
                     doEditCellMetadata();
                 });
-                bus.on('edit-notebook-metadata', function () {
+                bus.on('edit-notebook-metadata', function() {
                     doEditNotebookMetadata();
                 });
-                cell.element.on('toggleCellSettings.cell', function () {
+                cell.element.on('toggleCellSettings.cell', function() {
                     toggleSettings(cell);
                 });
-                bus.on('toggle-settings', function () {
+                bus.on('toggle-settings', function() {
                     var showing = toggleSettings(cell),
-                        label = span({class: 'fa fa-cog '}),
+                        label = span({ class: 'fa fa-cog ' }),
                         buttonNode = ui.getButton('toggle-settings');
                     buttonNode.innerHTML = label;
                     if (showing) {
@@ -1092,24 +1108,24 @@ define([
                         buttonNode.classList.remove('active');
                     }
                 });
-                bus.on('save', function () {
+                bus.on('save', function() {
                     doSave();
                 });
-//                bus.on('remove', function () {
-//                    doRemove();
-//                });
+                //                bus.on('remove', function () {
+                //                    doRemove();
+                //                });
 
-                bus.on('on-success', function () {
+                bus.on('on-success', function() {
                     doOnSuccess();
                 });
 
                 // Events from widgets...
 
-                parentBus.on('newstate', function (message) {
+                parentBus.on('newstate', function(message) {
                     console.log('GOT NEWSTATE', message);
                 });
 
-                parentBus.on('reset-to-defaults', function () {
+                parentBus.on('reset-to-defaults', function() {
                     bus.emit('reset-to-defaults');
                 });
 
@@ -1117,11 +1133,11 @@ define([
                     cell: Props.getDataItem(cell.metadata, 'kbase.attributes.id')
                 }, 'A cell channel');
 
-                eventManager.add(cellBus.on('delete-cell', function () {
+                eventManager.add(cellBus.on('delete-cell', function() {
                     doDeleteCell();
                 }));
 
-                eventManager.add(cellBus.on('result', function (message) {
+                eventManager.add(cellBus.on('result', function(message) {
                     // Verify that the run id is the same.
                     if (message.address.run_id !== editorState.getItem('editorState.currentRunId')) {
                         setStatus('Error! result message is not from the generated code!');
@@ -1131,17 +1147,17 @@ define([
                         setStatus('Successfully saved the reads set');
                         editorState.setItem('editorState.touched', false);
                         editorState.setItem('editorState.changed', false);
-                        fsm.newState({mode: 'editing', params: 'complete', data: 'clean'});
+                        fsm.newState({ mode: 'editing', params: 'complete', data: 'clean' });
                         renderUI();
-                        
+
                         // Now we need to reload the editor with thew new item.
                         model.setItem('current.readsSetRef', message.message.result.set_ref);
                         model.setItem('current.readsSet.object', serviceUtils.objectInfoToObject(message.message.result.set_info));
                         updateEditor(message.message.result.set_ref);
-                        
+
                     } else if (message.message.error) {
                         // cheap as heck error message
-                        var errorMessage = div({class: 'alert alert-danger'}, [
+                        var errorMessage = div({ class: 'alert alert-danger' }, [
                             'Error saving reads set: ',
                             message.message.error.message
                         ]);
@@ -1163,18 +1179,18 @@ define([
          */
         function modelToParams() {
             return [{
-                    workspace: workspaceInfo.id,
-                    output_object_name: model.getItem('params.name.value'),
-                    data: {
-                        description: model.getItem('params.description.value'),
-                        items: model.getItem('params.items.value', []).map(function (item) {
-                            return {
-                                label:item.label,
-                                ref: item.ref
-                            };
-                        })
-                    }
-                }];
+                workspace: workspaceInfo.id,
+                output_object_name: model.getItem('params.name.value'),
+                data: {
+                    description: model.getItem('params.description.value'),
+                    items: model.getItem('params.items.value', []).map(function(item) {
+                        return {
+                            label: item.label,
+                            ref: item.ref
+                        };
+                    })
+                }
+            }];
         }
 
         // TODO: this should be a the error area -- and we should switch the 
@@ -1190,9 +1206,9 @@ define([
             }
 
             var content = div({
-                style: {border: '1px red solid'}
+                style: { border: '1px red solid' }
             }, [
-                div({style: {color: 'red'}}, 'Error'),
+                div({ style: { color: 'red' } }, 'Error'),
                 table({
                     class: 'table table-bordered'
                 }, [
@@ -1223,9 +1239,9 @@ define([
         }
 
         function loadUpdateEditor() {
-            return new Promise(function (resolve, reject) {
+            return new Promise(function(resolve, reject) {
                 ui.setContent('editor.widget', html.loading());
-                require(['nbextensions/editorCell/widgets/readsSetUpdateEditor'], function (Widget) {
+                require(['nbextensions/editorCell/widgets/readsSetUpdateEditor'], function(Widget) {
                     // TODO: widget should make own bus.
                     var bus = runtime.bus().makeChannelBus(null, 'Parent comm bus for input widget'),
                         widget = Widget.make({
@@ -1241,7 +1257,7 @@ define([
                         bus: bus,
                         instance: widget
                     };
-                    bus.on('parameter-sync', function (message) {
+                    bus.on('parameter-sync', function(message) {
                         var value = model.getItem(['params', message.parameter, 'value']);
                         bus.send({
                             parameter: message.parameter,
@@ -1255,19 +1271,18 @@ define([
                         });
                     });
 
-                    bus.on('sync-params', function (message) {
-                        message.parameters.forEach(function (paramId) {
+                    bus.on('sync-params', function(message) {
+                        message.parameters.forEach(function(paramId) {
                             bus.send({
                                 parameter: paramId,
                                 value: model.getItem(['params', message.parameter, 'value'])
-                            },
-                                {
-                                    key: {
-                                        type: 'parameter-value',
-                                        parameter: paramId
-                                    },
-                                    channel: message.replyToChannel
-                                });
+                            }, {
+                                key: {
+                                    type: 'parameter-value',
+                                    parameter: paramId
+                                },
+                                channel: message.replyToChannel
+                            });
                         });
                     });
 
@@ -1275,14 +1290,14 @@ define([
                         key: {
                             type: 'get-parameter'
                         },
-                        handle: function (message) {
+                        handle: function(message) {
                             return {
                                 value: model.getItem(['params', message.parameterName, 'value'])
                             };
                         }
                     });
 
-                    bus.on('parameter-changed', function (message) {
+                    bus.on('parameter-changed', function(message) {
                         // We simply store the new value for the parameter.
                         model.setItem(['params', message.parameter, 'value'], message.newValue);
                         model.setItem(['params', message.parameter, 'changed'], true);
@@ -1296,7 +1311,7 @@ define([
                         evaluateAppState();
                     });
 
-                    bus.on('parameter-touched', function (message) {
+                    bus.on('parameter-touched', function(message) {
                         model.setItem(['params', message.parameter, 'touched'], true);
                         var state = fsm.getCurrentState(),
                             newState = JSON.parse(JSON.stringify(state.state));
@@ -1306,23 +1321,23 @@ define([
                     });
 
                     return widget.start()
-                        .then(function () {
+                        .then(function() {
                             resolve();
                             widget.bus.emit('run', {
                                 node: ui.getElement(['editor', 'widget']),
                                 appSpec: env.appSpec,
                                 parameters: getParameters(),
-                                layout: getLayout()  // LEFT OFF HERE - need layout + parameters in the update widget...
+                                layout: getLayout() // LEFT OFF HERE - need layout + parameters in the update widget...
                             });
 
                             return null;
                         })
-                        .catch(function (err) {
+                        .catch(function(err) {
                             console.error('ERROR starting editor widget', err);
                             reject(err);
                         });
 
-                }, function (err) {
+                }, function(err) {
                     console.error('ERROR', err);
                     reject(err);
                 });
@@ -1330,10 +1345,10 @@ define([
         }
 
         function unloadEditor() {
-            return Promise.try(function () {
+            return Promise.try(function() {
                 if (widgets.editor) {
                     return widgets.editor.instance.stop()
-                        .then(function (stopped) {
+                        .then(function(stopped) {
                             if (stopped) {
                                 widgets.editor = null;
                             }
@@ -1345,10 +1360,10 @@ define([
         }
 
         function loadCreationEditor() {
-            return new Promise(function (resolve, reject) {
+            return new Promise(function(resolve, reject) {
                 ui.setContent('editor.widget', html.loading());
 
-                require(['nbextensions/editorCell/widgets/readsSetCreateEditor'], function (Widget) {
+                require(['nbextensions/editorCell/widgets/readsSetCreateEditor'], function(Widget) {
                     // TODO: widget should make own bus.
                     var bus = runtime.bus().makeChannelBus(null, 'Parent comm bus for input widget'),
                         widget = Widget.make({
@@ -1367,7 +1382,7 @@ define([
                         appSpec: env.appSpec,
                         parameters: getParameters()
                     });
-                    bus.on('parameter-sync', function (message) {
+                    bus.on('parameter-sync', function(message) {
                         var value = model.getItem(['params', message.parameter, 'value']);
                         bus.send({
                             parameter: message.parameter,
@@ -1381,19 +1396,18 @@ define([
                         });
                     });
 
-                    bus.on('sync-params', function (message) {
-                        message.parameters.forEach(function (paramId) {
+                    bus.on('sync-params', function(message) {
+                        message.parameters.forEach(function(paramId) {
                             bus.send({
                                 parameter: paramId,
                                 value: model.getItem(['params', paramId, 'value'])
-                            },
-                                {
-                                    key: {
-                                        type: 'parameter-value',
-                                        parameter: paramId
-                                    },
-                                    channel: message.replyToChannel
-                                });
+                            }, {
+                                key: {
+                                    type: 'parameter-value',
+                                    parameter: paramId
+                                },
+                                channel: message.replyToChannel
+                            });
                         });
                     });
 
@@ -1401,60 +1415,60 @@ define([
                         key: {
                             type: 'get-parameter'
                         },
-                        handle: function (message) {
+                        handle: function(message) {
                             return {
                                 value: model.getItem(['params', message.parameterName, 'value'])
                             };
                         }
                     });
 
-//                    bus.on('get-parameter-value', function (message) {
-//                        var value = model.getItem(['params', message.parameter]);
-//                        bus.send({
-//                            parameter: message.parameter,
-//                            value: value
-//                        }, {
-//                            key: {
-//                                type: 'parameter-value',
-//                                parameter: message.parameter
-//                            }
-//                        });
-//                    });
-                    bus.on('parameter-changed', function (message) {
+                    //                    bus.on('get-parameter-value', function (message) {
+                    //                        var value = model.getItem(['params', message.parameter]);
+                    //                        bus.send({
+                    //                            parameter: message.parameter,
+                    //                            value: value
+                    //                        }, {
+                    //                            key: {
+                    //                                type: 'parameter-value',
+                    //                                parameter: message.parameter
+                    //                            }
+                    //                        });
+                    //                    });
+                    bus.on('parameter-changed', function(message) {
                         // We simply store the new value for the parameter.
                         model.setItem(['params', message.parameter, 'value'], message.newValue);
                         evaluateAppState();
                     });
                     widget.start()
-                        .then(function () {
+                        .then(function() {
                             resolve();
                             return null;
                         })
-                        .catch(function (err) {
+                        .catch(function(err) {
                             reject(err);
                         });
 
-                }, function (err) {
+                }, function(err) {
                     console.error('ERROR', err);
                     reject(err);
                 });
             });
         }
-        
-        
+
+
         function renderCurrentlyEditing(info) {
-            var content = table({class: 'table table-striped'}, [
-                tr([th('Name'), td({style: {fontWeight: 'bold'}}, info.name)]),
+            var content = table({ class: 'table table-striped' }, [
+                tr([th('Name'), td({ style: { fontWeight: 'bold' } }, info.name)]),
                 tr([th('Ref'), td(info.ref)]),
                 tr([th('Last saved'), td(info.saveDate.toLocaleDateString() + ' at ' + info.saveDate.toLocaleTimeString())]),
                 tr([th('By'), td(info.saved_by)])
             ]);
-            
+
             ui.setContent('currently-editing.widget', content);
-            
+
             ui.setContent('currently-editing.name', info.name);
         }
-        
+
 
         /*
          * Given an object ref, fetch the set object via the setApi, 
@@ -1466,47 +1480,47 @@ define([
             // show an error message if so, and refuse to switch.
 
             var setApiClient = new GenericClient({
-                url: runtime.config('services.service_wizard.url'),
-                token: runtime.authToken(),
-                module: 'SetAPI',
-                version: 'dev'
-            }),
+                    url: runtime.config('services.service_wizard.url'),
+                    token: runtime.authToken(),
+                    module: 'SetAPI',
+                    version: 'dev'
+                }),
                 params = {
                     ref: objectRef,
                     include_item_info: 1
                 };
-                
+
             return setApiClient.callFunc('get_reads_set_v1', [params])
-                .spread(function (setObject) {
+                .spread(function(setObject) {
                     // After getting the reads set object, we populate our 
                     // view model (data model-ish) with the results.
                     // The editor will sync up with the model, and pick up the
                     // values.                    
                     model.setItem('params', {});
-                    
+
                     // TODO: move this into code or config specific to 
                     // the reads set editor.
                     model.setItem('params.name.value', setObject.info[1]);
                     model.setItem('params.description.value', setObject.data.description);
-                    model.setItem('params.items.value', setObject.data.items.map(function (item) {
+                    model.setItem('params.items.value', setObject.data.items.map(function(item) {
                         return {
                             ref: item.ref,
                             label: item.label
                         };
                     }));
-                    
+
                     var info = serviceUtils.objectInfoToObject(setObject.info);
-                    
+
                     model.setItem('currentReadsSet', info);
-                    
+
                     renderCurrentlyEditing(info);
-                    
+
                     return loadUpdateEditor();
                 })
-                .then(function () {
+                .then(function() {
                     evaluateAppState(true);
                 })
-                .catch(function (err) {
+                .catch(function(err) {
                     console.error('ERROR getting reads set ', err);
                     console.error(err.detail ? err.detail.replace('\n', '<br>') : '');
                     loadErrorWidget(err);
@@ -1528,22 +1542,22 @@ define([
             //loadUpdateEditor();
 
         }
-        
+
         function doCreateNewSet(name) {
             var setApiClient = new GenericClient({
-                url: runtime.config('services.service_wizard.url'),
-                token: runtime.authToken(),
-                module: 'SetAPI',
-                version: 'dev'
-            }),
-//                donorReadsRef = (function (type) {
-//                    switch (type) {
-//                        case 'KBaseFile.SingleEndLibrary':
-//                            return '11733/31/1';
-//                        case 'KBaseFile.PairedEndLibrary':
-//                            return '11733/16/4';
-//                    }
-//                }(type)),
+                    url: runtime.config('services.service_wizard.url'),
+                    token: runtime.authToken(),
+                    module: 'SetAPI',
+                    version: 'dev'
+                }),
+                //                donorReadsRef = (function (type) {
+                //                    switch (type) {
+                //                        case 'KBaseFile.SingleEndLibrary':
+                //                            return '11733/31/1';
+                //                        case 'KBaseFile.PairedEndLibrary':
+                //                            return '11733/16/4';
+                //                    }
+                //                }(type)),
                 params = {
                     workspace: String(workspaceInfo.id),
                     output_object_name: name,
@@ -1552,12 +1566,15 @@ define([
                         // set api has bug -- will throw exception if fetch a 
                         // set with no items.
                         // stuff a sample item in here to start with.
-                        items: [
-                        ]
+                        items: []
                     }
                 };
             return setApiClient.callFunc('save_reads_set_v1', [params])
-                .spread(function (result) {
+                .spread(function(result) {
+                    console.log('collapsing panel...');
+                    ui.collapsePanel('edit-object-selector');
+                    ui.collapsePanel('currently-editing');
+
 
                     // remove whatever is in the editor panel
 
@@ -1567,14 +1584,14 @@ define([
 
                     updateEditor(result.set_ref);
                 })
-                .catch(function (err) {
+                .catch(function(err) {
                     console.error('ERROR!', err);
                 });
 
         }
 
         function doSaveReadsSet() {
-            return Promise.try(function () {
+            return Promise.try(function() {
                 cell.execute();
             });
         }
@@ -1584,20 +1601,25 @@ define([
             resetEditorModel();
             loadCreationEditor();
         }
-        
-        function doEditObject(objectInfo) {            
+
+        function doEditObject(objectInfo) {
             // Update editor state (is also persistent in the metadata)
             editorState.setItem('current.set.ref', objectInfo.ref);
             editorState.setItem('current.set.info', objectInfo);
-            
+
+            // Twiddle the sections.
+            console.log('collapsing panel...');
+            ui.collapsePanel('edit-object-selector');
+            ui.collapsePanel('currently-editing');
+
             updateEditor(objectInfo.ref);
         }
 
         function loadEditObjectSelector() {
-            return new Promise(function (resolve, reject) {
+            return new Promise(function(resolve, reject) {
                 require([
                     'nbextensions/editorCell/widgets/editObjectSelector'
-                ], function (Widget) {
+                ], function(Widget) {
                     var widget = Widget.make({
                         workspaceInfo: workspaceInfo,
                         objectType: 'KBaseSets.ReadsSet'
@@ -1606,7 +1628,7 @@ define([
                         path: ['edit-object-selector', 'widget'],
                         instance: widget
                     };
-                    widget.bus.on('ready', function () {
+                    widget.bus.on('ready', function() {
                         widget.bus.emit('run', {
                             node: ui.getElement(['edit-object-selector', 'widget']),
                             appSpec: env.appSpec,
@@ -1615,21 +1637,21 @@ define([
                         });
                     });
                     // When the user selects a reads set to edit.
-                    widget.bus.on('changed', function (message) {
+                    widget.bus.on('changed', function(message) {
                         // Call this when we have a new object to edit. It will 
                         // take care of updating the cell state as well as
                         // rendering the object.
-                        doEditObject(message.value);                        
+                        doEditObject(message.value);
                     });
-                    widget.bus.on('create-new-set', function (message) {
+                    widget.bus.on('create-new-set', function(message) {
                         doCreateNewSet(message.name);
                     });
-                    widget.bus.on('new-set-form', function () {
+                    widget.bus.on('new-set-form', function() {
                         // TODO: ask user if they want to save the editor if it is dirty.
                         doLoadNewSetForm();
                         // swap out the update editor with the creation editor.
                     });
-                    widget.bus.on('fatal-error', function (message) {
+                    widget.bus.on('fatal-error', function(message) {
                         setFatalError({
                             title: 'Fatal error from ' + message.location,
                             message: message.error.message,
@@ -1639,14 +1661,14 @@ define([
                         renderUI();
                     });
                     widget.start()
-                        .then(function () {
+                        .then(function() {
                             resolve();
                             return null;
                         })
-                        .catch(function (err) {
+                        .catch(function(err) {
                             reject(err);
                         });
-                }, function (err) {
+                }, function(err) {
                     console.error('ERROR', err);
                     reject(err);
                 });
@@ -1658,10 +1680,10 @@ define([
                 var validationResult = validateModel();
                 if (validationResult.isValid) {
                     buildPython(cell, utils.getCellMeta(cell, 'kbase.attributes.id'), editorState.getItem('app'), modelToParams());
-                    fsm.newState({mode: 'editing', params: 'complete', data: 'changed'});
+                    fsm.newState({ mode: 'editing', params: 'complete', data: 'changed' });
                 } else {
                     resetPython(cell);
-                    fsm.newState({mode: 'editing', params: 'incomplete', data: 'changed'});
+                    fsm.newState({ mode: 'editing', params: 'incomplete', data: 'changed' });
                 }
             }
             renderUI();
@@ -1675,14 +1697,14 @@ define([
                 advice: arg.advice
             });
             syncFatalError();
-            fsm.newState({mode: 'fatal-error'});
+            fsm.newState({ mode: 'fatal-error' });
         }
 
         function run(params) {
             // First get the app specs, which is stashed in the model,
             // with the parameters returned.
             return syncAppSpec(params.appId, params.appTag)
-                .then(function () {
+                .then(function() {
                     var appRef = [editorState.getItem('app').id, editorState.getItem('app').tag].filter(toBoolean).join('/'),
                         url = '/#appcatalog/app/' + appRef;
                     utils.setCellMeta(cell, 'kbase.attributes.title', env.appSpec.info.name);
@@ -1691,20 +1713,20 @@ define([
                     utils.setCellMeta(cell, 'kbase.attributes.info.label', 'more...');
                     return Promise.all([
                         loadEditObjectSelector(),
-                        (function () {
+                        (function() {
                             if (editorState.getItem('current.set.info')) {
                                 return doEditObject(editorState.getItem('current.set.info'));
                             }
                         }())
                     ]);
                 })
-                .then(function () {
+                .then(function() {
                     // this will not change, so we can just render it here.
                     showAboutApp();
                     showAppSpec();
                     PR.prettyPrint(null, container);
                 })
-                .then(function () {
+                .then(function() {
                     // if we start out in 'new' state, then we need to promote to
                     // editing...
                     if (fsm.getCurrentState().state.mode === 'new') {
@@ -1713,7 +1735,7 @@ define([
                     }
                     renderUI();
                 })
-                .catch(function (err) {
+                .catch(function(err) {
                     console.error('ERROR loading main widgets', err);
                     addNotification('Error loading main widgets: ' + err.message);
                     setFatalError({
@@ -1730,14 +1752,14 @@ define([
 
         model = Props.make({
             data: {},
-            onUpdate: function (props) {
+            onUpdate: function(props) {
                 renderUI();
             }
         });
-        
+
         editorState = Props.make({
             data: utils.getCellMeta(cell, 'kbase.editorCell'),
-            onUpdate: function (props) {
+            onUpdate: function(props) {
                 utils.setCellMeta(cell, 'kbase.editorCell', props.getRawObject());
                 renderUI();
             }
@@ -1752,10 +1774,10 @@ define([
     }
 
     return {
-        make: function (config) {
+        make: function(config) {
             return factory(config);
         }
     };
-}, function (err) {
+}, function(err) {
     console.error('ERROR loading editorCell editorCellWidget', err);
 });

@@ -406,8 +406,11 @@ define([
                         return this.dataObjects[objId].info;
                     }.bind(this));
                     var objectInfoPlus = Object.keys(this.dataObjects).map(function(objId) {
-                        var info = serviceUtils.objectInfoToObject(this.dataObjects[objId].info);
-                        info.dp_info = this.dataObjects[objId].dp_info
+                        // see code below this function for the format of
+                        // items in the dataObjects collection
+                        var dataObject = this.dataObjects[objId];
+                        var info = serviceUtils.objectInfoToObject(dataObject.info);
+                        info.dataPaletteRef = dataObject.refPath;
                         return info;
                     }.bind(this));
                     var data = JSON.parse(JSON.stringify(justInfo));

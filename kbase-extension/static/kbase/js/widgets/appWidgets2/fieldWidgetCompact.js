@@ -503,12 +503,12 @@ define([
                             break;
                     }
                 });
-                bus.on('touched', function(message) {
-                    places.feedback.style.backgroundColor = 'yellow';
-                });
-                bus.on('changed', function() {
-                    places.feedback.style.backgroundColor = '';
-                });
+                // bus.on('touched', function (message) {
+                //     places.feedback.style.backgroundColor = 'yellow';
+                // });
+                // bus.on('changed', function () {
+                //     places.feedback.style.backgroundColor = '';
+                // });
                 bus.on('saved', function(message) {
                     console.log('FIELD detected saved');
                 });

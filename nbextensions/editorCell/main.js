@@ -36,7 +36,7 @@ define([
     'css!kbase/css/appCell.css',
     'css!./styles/main.css',
     'bootstrap'
-], function (
+], function(
     $,
     require,
     Jupyter,
@@ -53,10 +53,11 @@ define([
     jupyter,
     serviceUtils,
     Workspace
-    ) {
+) {
     'use strict';
     var t = html.tag,
-        div = t('div'), span = t('span'),
+        div = t('div'),
+        span = t('span'),
         workspaceInfo,
         env,
         runtime = Runtime.make();
@@ -79,8 +80,8 @@ define([
     // TODO: move into app cell widget and invoke with an event 'reset-to-default-values'
     function setupParams(cell, appSpec) {
         var defaultParams = {};
-        appSpec.parameters.forEach(function (parameterSpec) {
-            var param = ParameterSpec.make({parameterSpec: parameterSpec}),
+        appSpec.parameters.forEach(function(parameterSpec) {
+            var param = ParameterSpec.make({ parameterSpec: parameterSpec }),
                 defaultValue = param.defaultValue();
 
             // A default value may be undefined, e.g. if the parameter is required and there is no default value.
@@ -102,44 +103,44 @@ define([
      *
      */
     function upgradeToEditorCell(cell, appSpec, appTag) {
-        return Promise.try(function () {
-            var meta = cell.metadata;
-            meta.kbase = {
-                type: 'editor',
-                attributes: {
-                    id: new Uuid(4).format(),
-                    status: 'new',
-                    created: (new Date()).toUTCString(),
-                    icon: 'bar-chart'
-                },
-                cellState: {
-                    icon: 'bar-chart'
-                },
-                editorCell: {
-                    app: {
-                        id: appSpec.info.id,
-                        gitCommitHash: appSpec.info.git_commit_hash,
-                        version: appSpec.info.ver,
-                        tag: appTag,
-                        appSpec: appSpec
+        return Promise.try(function() {
+                var meta = cell.metadata;
+                meta.kbase = {
+                    type: 'editor',
+                    attributes: {
+                        id: new Uuid(4).format(),
+                        status: 'new',
+                        created: (new Date()).toUTCString(),
+                        icon: 'bar-chart'
                     },
-                    state: {
-                        edit: 'editing',
-                        params: null,
-                        code: null,
-                        request: null,
-                        result: null
+                    cellState: {
+                        icon: 'bar-chart'
                     },
-                    params: null
-                }
-            };
-            cell.metadata = meta;
-        })
+                    editorCell: {
+                        app: {
+                            id: appSpec.info.id,
+                            gitCommitHash: appSpec.info.git_commit_hash,
+                            version: appSpec.info.ver,
+                            tag: appTag,
+                            appSpec: appSpec
+                        },
+                        state: {
+                            edit: 'editing',
+                            params: null,
+                            code: null,
+                            request: null,
+                            result: null
+                        },
+                        params: null
+                    }
+                };
+                cell.metadata = meta;
+            })
             //.then(function () {
             // Add the params
             //return setupParams(cell, appSpec);
             //})
-            .then(function () {
+            .then(function() {
                 // Complete the cell setup.
                 return setupCell(cell);
             });
@@ -150,7 +151,7 @@ define([
     }
 
     function specializeCell(cell) {
-        cell.minimize = function () {
+        cell.minimize = function() {
             var inputArea = this.input.find('.input_area'),
                 outputArea = this.element.find('.output_wrapper'),
                 editorInputArea = this.element.find('[data-subarea-type="editor-cell-input"]'),
@@ -163,7 +164,7 @@ define([
             editorInputArea.addClass('hidden');
         };
 
-        cell.maximize = function () {
+        cell.maximize = function() {
             var inputArea = this.input.find('.input_area'),
                 outputArea = this.element.find('.output_wrapper'),
                 editorInputArea = this.element.find('[data-subarea-type="editor-cell-input"]'),
@@ -175,30 +176,30 @@ define([
             outputArea.removeClass('hidden');
             editorInputArea.removeClass('hidden');
         };
-        cell.renderIcon = function () {
+        cell.renderIcon = function() {
             var inputPrompt = this.element[0].querySelector('[data-element="prompt"]');
 
             if (inputPrompt) {
                 inputPrompt.innerHTML = div({
-                    style: {textAlign: 'center'}
+                    style: { textAlign: 'center' }
                 }, [
                     AppUtils.makeAppIcon(utils.getCellMeta(cell, 'kbase.editorCell.app.spec'))
                 ]);
             }
         };
-        cell.getIcon = function () {
-            return span({class: 'fa-stack fa-2x', style: {verticalAlign: 'top', textAlign: 'center', color: 'rgb(103,58,183)', lineHeight: '56px'}}, [
-                span({class: 'fa fa-square fa-stack-2x', style: {color: 'rgb(103,58,183)', lineHeight: '56px'}}),
-                span({class: 'fa fa-inverse fa-stack-1x fa-pencil-square-o'})
+        cell.getIcon = function() {
+            return span({ class: 'fa-stack fa-2x', style: { verticalAlign: 'top', textAlign: 'center', color: 'rgb(103,58,183)', lineHeight: '56px' } }, [
+                span({ class: 'fa fa-square fa-stack-2x', style: { color: 'rgb(103,58,183)', lineHeight: '56px' } }),
+                span({ class: 'fa fa-inverse fa-stack-1x fa-pencil-square-o' })
             ]);
         };
     }
 
 
     function getEditorModule(type) {
-        return new Promise(function (resolve, reject) {
+        return new Promise(function(resolve, reject) {
             var moduleName;
-            
+
             // Dispatch on the editor type.
             // Type is passed in the widgets.input spec property
             // Editors are located in ./widgets/editors            
@@ -213,9 +214,9 @@ define([
             var modulePath = './widgets/editors/' + moduleName;
 
             // Wrap the module require in a promise.
-            require([modulePath], function (Editor) {
+            require([modulePath], function(Editor) {
                 resolve(Editor);
-            }, function (err) {
+            }, function(err) {
                 console.error('ERROR loading module', moduleName, err);
                 reject(new Error('Error loading module ' + moduleName));
             });
@@ -223,7 +224,7 @@ define([
     }
 
     function setupCell(cell) {
-        return Promise.try(function () {
+        return Promise.try(function() {
             if (cell.cell_type !== 'code') {
                 return;
             }
@@ -238,8 +239,7 @@ define([
 
             // The kbase property is only used for managing runtime state of the cell
             // for kbase. Anything to be persistent should be on the metadata.
-            cell.kbase = {
-            };
+            cell.kbase = {};
 
             // Update metadata.
             utils.setMeta(cell, 'attributes', 'lastLoaded', (new Date()).toUTCString());
@@ -249,20 +249,20 @@ define([
             var editorType = utils.getCellMeta(cell, 'kbase.editorCell.app.appSpec.widgets.input');
 
             return getEditorModule(editorType)
-                .then(function (editorModule) {
+                .then(function(editorModule) {
 
-                    var cellBus = runtime.bus().makeChannelBus(null, 'Parent comm for The Cell Bus'),
+                    var cellBus = runtime.bus().makeChannelBus({ description: 'Parent comm for The Cell Bus' }),
                         appId = utils.getCellMeta(cell, 'kbase.editorCell.app.id'),
                         appTag = utils.getCellMeta(cell, 'kbase.editorCell.app.tag');
 
                     //  determine the editor type based on the 
                     var editor = editorModule.make({
-                        bus: cellBus,
-                        cell: cell,
-                        runtime: runtime,
-                        workspaceInfo: workspaceInfo
-                    }),
-                        dom = Dom.make({node: cell.input[0]}),
+                            bus: cellBus,
+                            cell: cell,
+                            runtime: runtime,
+                            workspaceInfo: workspaceInfo
+                        }),
+                        dom = Dom.make({ node: cell.input[0] }),
                         kbaseNode = dom.createNode(div({
                             dataSubareaType: 'editor-cell-input'
                         }));
@@ -275,20 +275,20 @@ define([
                     jupyter.disableKeyListenersForCell(cell);
 
                     return editor.init()
-                        .then(function () {
+                        .then(function() {
                             return editor.attach(kbaseNode);
                         })
-                        .then(function () {
+                        .then(function() {
                             return editor.start();
                         })
-                        .then(function () {
+                        .then(function() {
                             return editor.run({
                                 appId: appId,
                                 appTag: appTag,
                                 authToken: runtime.authToken()
                             });
                         })
-                        .then(function () {
+                        .then(function() {
                             // AppCellController.start();
                             cell.renderMinMax();
                             return {
@@ -296,16 +296,16 @@ define([
                                 bus: cellBus
                             };
                         })
-                        .catch(function (err) {
+                        .catch(function(err) {
                             console.error('ERROR starting app cell', err);
                             alert('Error starting app cell');
                         });
                 });
-            });
+        });
     }
 
     function setupNotebook() {
-        return Promise.all(Jupyter.notebook.get_cells().map(function (cell) {
+        return Promise.all(Jupyter.notebook.get_cells().map(function(cell) {
             return setupCell(cell);
         }));
     }
@@ -316,12 +316,12 @@ define([
             workspaceId;
 
         if (workspaceName) {
-            return {workspace: workspaceName};
+            return { workspace: workspaceName };
         }
 
         workspaceId = Jupyter.notebook.metadata.ws_id; // Jupyter.notebook.metadata.kbase.ws_id;
         if (workspaceId) {
-            return {id: workspaceId};
+            return { id: workspaceId };
         }
 
         throw new Error('workspace name or id is missing from this narrative');
@@ -354,7 +354,7 @@ define([
 
         // TODO: complete the work for narrative startup and migrate this (and all such instances)
         //       into the core startup function.
-        $(document).on('dataUpdated.Narrative', function () {
+        $(document).on('dataUpdated.Narrative', function() {
             runtime.bus().emit('workspace-changed');
         });
 
@@ -371,26 +371,26 @@ define([
         // the workspace name, ...
 
         setupWorkspace(runtime.config('services.workspace.url'))
-            .then(function (wsInfo) {
+            .then(function(wsInfo) {
                 workspaceInfo = serviceUtils.workspaceInfoToObject(wsInfo);
                 return workspaceInfo;
             })
-            .then(function () {
+            .then(function() {
                 return setupNotebook();
             })
-            .then(function () {
+            .then(function() {
                 // set up event hooks
 
                 // Primary hook for new cell creation.
                 // If the cell has been set with the metadata key kbase.type === 'app'
                 // we have a app cell.
-                $([Jupyter.events]).on('inserted.Cell', function (event, data) {
+                $([Jupyter.events]).on('inserted.Cell', function(event, data) {
                     if (data.kbase && data.kbase.type === 'editor') {
                         upgradeToEditorCell(data.cell, data.kbase.appSpec, data.kbase.appTag)
-                            .then(function () {
+                            .then(function() {
                                 // console.log('Cell created?');
                             })
-                            .catch(function (err) {
+                            .catch(function(err) {
                                 console.error('ERROR creating cell', err);
                                 // delete cell.
                                 $(document).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(data.cell));
@@ -401,7 +401,7 @@ define([
                 // also delete.Cell, edit_mode.Cell, select.Cell, command_mocd.Cell, output_appended.OutputArea ...
                 // preset_activated.CellToolbar, preset_added.CellToolbar
             })
-            .catch(function (err) {
+            .catch(function(err) {
                 console.error('ERROR setting up notebook', err);
                 alert('Error loading editor cell extension');
             });
@@ -410,8 +410,7 @@ define([
     // MAIN
     // module state instantiation
 
-    function init() {
-    }
+    function init() {}
     init();
 
     var clock = Clock.make({
@@ -423,15 +422,15 @@ define([
     // there is not a service/component lifecycle for the narrative is there?
     // so the clock starts, and is never stopped.
 
-//    runtime.bus().on('clock-tick', function (message) {
-//       console.log('TICK', message);
-//    });
+    //    runtime.bus().on('clock-tick', function (message) {
+    //       console.log('TICK', message);
+    //    });
 
     return {
         // This is the sole ipython/jupyter api call
         load_ipython_extension: load
             // These are kbase api calls
     };
-}, function (err) {
+}, function(err) {
     console.log('ERROR loading editorCell main', err);
 });

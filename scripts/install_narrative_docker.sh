@@ -94,9 +94,6 @@ jupyter nbextension enable viewCell/main --sys-prefix
 jupyter nbextension install $(pwd)/outputCell --symlink --sys-prefix
 jupyter nbextension enable outputCell/main --sys-prefix
 
-jupyter nbextension install $(pwd)/widgetCell --symlink --sys-prefix
-jupyter nbextension enable widgetCell/main --sys-prefix
-
 jupyter nbextension install $(pwd)/dataCell --symlink --sys-prefix
 jupyter nbextension enable dataCell/main --sys-prefix
 

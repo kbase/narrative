@@ -65,7 +65,7 @@ define([
             // TODO: the cell bus should be created and managed through main.js,
             // that is, the extension.
             cellBus,
-            bus = runtime.bus().makeChannelBus(null, 'An editor cell widget'),
+            bus = runtime.bus().makeChannelBus({ description: 'An editor cell widget' }),
             env = {},
             editorState,
             model,
@@ -932,7 +932,7 @@ define([
         // WIDGETS
 
         function showWidget(name, widgetModule, path) {
-            var bus = runtime.bus().makeChannelBus(null, 'Bus for showWidget'),
+            var bus = runtime.bus().makeChannelBus({ description: 'Bus for showWidget' }),
                 widget = widgetModule.make({
                     bus: bus,
                     workspaceInfo: workspaceInfo
@@ -1159,8 +1159,11 @@ define([
                 });
 
                 cellBus = runtime.bus().makeChannelBus({
-                    cell: Props.getDataItem(cell.metadata, 'kbase.attributes.id')
-                }, 'A cell channel');
+                    name: {
+                        cell: Props.getDataItem(cell.metadata, 'kbase.attributes.id')
+                    },
+                    description: 'A cell channel'
+                });
 
                 eventManager.add(cellBus.on('delete-cell', function() {
                     doDeleteCell();
@@ -1273,7 +1276,7 @@ define([
                 ui.setContent('editor.widget', html.loading());
                 require(['nbextensions/editorCell/widgets/readsSetUpdateEditor'], function(Widget) {
                     // TODO: widget should make own bus.
-                    var bus = runtime.bus().makeChannelBus(null, 'Parent comm bus for input widget'),
+                    var bus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for input widget' }),
                         widget = Widget.make({
                             bus: bus,
                             workspaceInfo: workspaceInfo,
@@ -1395,7 +1398,7 @@ define([
 
                 require(['nbextensions/editorCell/widgets/readsSetCreateEditor'], function(Widget) {
                     // TODO: widget should make own bus.
-                    var bus = runtime.bus().makeChannelBus(null, 'Parent comm bus for input widget'),
+                    var bus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for input widget' }),
                         widget = Widget.make({
                             bus: bus,
                             workspaceInfo: workspaceInfo

@@ -243,7 +243,7 @@ define([
             // TODO: the cell bus should be created and managed through main.js,
             // that is, the extension.
             cellBus,
-            bus = runtime.bus().makeChannelBus(null, 'A view cell widget'),
+            bus = runtime.bus().makeChannelBus({ description: 'A view cell widget' }),
             env = {},
             model,
 
@@ -854,7 +854,7 @@ define([
         // WIDGETS
 
         function showWidget(name, widgetModule, path) {
-            var bus = runtime.bus().makeChannelBus(null, 'Bus for showWidget'),
+            var bus = runtime.bus().makeChannelBus({ description: 'Bus for showWidget' }),
                 widget = widgetModule.make({
                     bus: bus,
                     workspaceInfo: workspaceInfo
@@ -1111,8 +1111,11 @@ define([
                 });
 
                 cellBus = runtime.bus().makeChannelBus({
-                    cell: Props.getDataItem(cell.metadata, 'kbase.attributes.id')
-                }, 'A cell channel');
+                    name: {
+                        cell: Props.getDataItem(cell.metadata, 'kbase.attributes.id')
+                    },
+                    description: 'A cell channel'
+                });
 
                 eventManager.add(cellBus.on('delete-cell', function() {
                     doDeleteCell();
@@ -1211,7 +1214,7 @@ define([
 
                 require([selectedWidget], function(Widget) {
                     // TODO: widget should make own bus.
-                    var bus = runtime.bus().makeChannelBus(null, 'Parent comm bus for input widget'),
+                    var bus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for input widget' }),
                         widget = Widget.make({
                             bus: bus,
                             workspaceInfo: workspaceInfo
@@ -1299,7 +1302,7 @@ define([
                     'nbextensions/viewCell/widgets/appParamsViewWidget'
                 ], function(Widget) {
                     // TODO: widget should make own bus
-                    var bus = runtime.bus().makeChannelBus(null, 'Parent comm bus for load input view widget'),
+                    var bus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for load input view widget' }),
                         widget = Widget.make({
                             bus: bus,
                             workspaceInfo: workspaceInfo

@@ -67,6 +67,9 @@ define([
          */
 
         function makeChannel(spec) {
+            if (!spec.name) {
+                spec.name = new Uuid(4).format();
+            }
             if (channels[spec.name]) {
                 throw new Error('A channel with name "' + spec.name + '" already exists');
             }
@@ -74,9 +77,8 @@ define([
                 if (strictMode) {
                     throw new Error('Channel description is required');
                 } else {
-
+                    warn('Channel created without description');
                 }
-                warn('Channel created without description');
             }
             channels[spec.name] = {
                 name: spec.name,
@@ -88,7 +90,7 @@ define([
                 testListeners: [],
                 persistentMessages: {}
             };
-            return channels[spec.name];
+            return spec.name;
         }
 
         function ensureChannel(name) {
@@ -432,6 +434,7 @@ define([
          * Respond sets up a special listener, which when it matches,
          * will put a return value into the bus as a new message targeted
          * at the requestId
+         * 
          *
          */
         function respond(spec) {
@@ -441,6 +444,7 @@ define([
                 try {
                     var responseMessage = originalHandle(message);
                     send(responseMessage, {
+                        channel: envelope.channel,
                         key: { requestId: envelope.address.requestId }
                     });
                 } catch (ex) {
@@ -448,7 +452,7 @@ define([
                 }
             }
             spec.handle = newHandle;
-            listen(spec);
+            return listen(spec);
         }
 
         /*
@@ -466,7 +470,7 @@ define([
                 // is run, as well as to invoke the error handler upon
                 // timeout. (TODO)
                 listen({
-                    // channel: address.channel,
+                    channel: address.channel,
                     key: { requestId: requestId },
                     once: true,
                     timeout: address.timeout || 10000,
@@ -500,8 +504,9 @@ define([
         // }
         function plisten(spec) {
             var initialized = false;
-            return new Promise(function(resolve, reject) {
-                listen({
+            var id;
+            var p = new Promise(function(resolve) {
+                id = listen({
                     channel: spec.channel,
                     key: spec.key,
                     handle: function(message, address) {
@@ -512,12 +517,16 @@ define([
                             try {
                                 spec.handle(message, address);
                             } catch (ex) {
-                                reject(ex);
+                                console.error('ERROR in plisten', ex);
                             }
                         }
                     }
                 });
             });
+            return {
+                promise: p,
+                id: id
+            };
         }
 
         /*
@@ -531,12 +540,6 @@ define([
 
         // convenience strategies.
         function on(type, handler, channel) {
-            // listen({
-            //     test: function (message) {
-            //         return (message.type === type);
-            //     },
-            //     handle: handler
-            // });
             return listen({
                 channel: channel,
                 key: JSON.stringify({ type: type }),
@@ -561,23 +564,25 @@ define([
             }
         }
 
-
-
         // CHANNEL BUS
 
         /*
-         * Creates and returns a mini bus wrapper around a single channel.
-         * Allows usage of the main bus but within a scope limited to the
-         * specific channel. The main bus is available through a method.
+            Creates a bus api wrapped around a single bus. 
+            Makes it easy to communicate over a single channel without
+            having to name the channel each time.
+            if no channel supplied, will create a channel with a uuid.
          */
-        function makeChannelBus(name, description) {
-            var channelName = canonicalizeChannelName(name, new Uuid(4).format()),
-                channelSpec = {
+        function makeChannelBus(arg) {
+            arg = arg || {};
+            var channelName = canonicalizeChannelName(arg.name, new Uuid(4).format());
+            if (arg.description) {
+                makeChannel({
                     name: channelName,
-                    description: description
-                };
-
-            makeChannel(channelSpec);
+                    description: arg.description
+                });
+            } else {
+                ensureChannel(channelName);
+            }
 
             function on(type, handler) {
                 return listen({
@@ -636,7 +641,7 @@ define([
             return {
                 on: on,
                 emit: emit,
-                set: set,
+                set: channelSet,
                 bus: bus,
                 listen: channelListen,
                 send: channelSend,
@@ -649,6 +654,84 @@ define([
 
         // MANAGEMENT
 
+        // CONNECT
+        /*
+            A connection is essentially a bus api which remembers all 
+            listeners, which allows the connection owner to clean up 
+            upon closing.
+        */
+
+        function connect() {
+
+            var listeners = [];
+
+            function channel(channelName) {
+
+                // Without a channel name, we use the main bus.
+                channelName = channelName || 'default';
+
+                var localChannel = makeChannelBus({
+                    name: channelName
+                });
+
+                function on() {
+                    var l = localChannel.on.apply(null, arguments);
+                    listeners.push(l);
+                }
+
+                function emit() {
+                    localChannel.emit.apply(null, arguments);
+                }
+
+                function listen() {
+                    var l = localChannel.listen.apply(null, arguments);
+                    listeners.push(l);
+                }
+
+                function send() {
+                    localChannel.emit.apply(null, arguments);
+                }
+
+                function respond() {
+                    var l = localChannel.respond.apply(null, arguments);
+                    listeners.push(l);
+                }
+
+                function request() {
+                    return localChannel.request.apply(null, arguments);
+                }
+
+                return {
+                    on: on,
+                    emit: emit,
+                    listen: listen,
+                    send: send,
+                    respond: respond,
+                    request: request
+                };
+            }
+
+            function stop() {
+                listeners.forEach(function(l) {
+                    removeListener(l);
+                });
+                listeners = [];
+            }
+
+            function stats() {
+                return {
+                    listeners: {
+                        active: listeners.length
+                    }
+                }
+            }
+
+            return {
+                channel: channel,
+                stats: stats,
+                stop: stop
+            };
+        }
 
 
         // MAIN
@@ -669,7 +752,8 @@ define([
             removeChannel: removeChannel,
             logMessages: logMessages,
             removeListener: removeListener,
-            removeListeners: removeListeners
+            removeListeners: removeListeners,
+            connect: connect
         };
 
         return api;

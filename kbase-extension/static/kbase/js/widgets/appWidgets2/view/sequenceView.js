@@ -2,13 +2,13 @@ define([
     'require',
     'bluebird',
     'kb_common/html',
+    '../validators/sequence',
     'common/events',
     'common/ui',
     'common/runtime',
     'common/lang',
     'common/props',
     '../paramResolver',
-    '../validators/sequence',
 
     'bootstrap',
     'css!font-awesome'
@@ -16,14 +16,13 @@ define([
     require,
     Promise,
     html,
+    Validation,
     Events,
     UI,
     Runtime,
     lang,
     Props,
-    Resolver,
-    Validation
-) {
+    Resolver) {
     'use strict';
 
     // Constants
@@ -37,9 +36,7 @@ define([
             itemSpec = spec.parameters.specs.item,
             container,
             parent,
-            runtime = Runtime.make(),
-            busConnection = runtime.bus().connect(),
-            channel = busConnection.channel(config.channelName),
+            bus = config.bus,
             ui,
             model = {
                 value: []
@@ -52,6 +49,7 @@ define([
                     doModelUpdated();
                 }
             }),
+            runtime = Runtime.make(),
             resolver = Resolver.make();
 
         function normalizeModel() {
@@ -62,7 +60,7 @@ define([
         }
 
         function doModelUpdated() {
-            channel.emit('changed', {
+            bus.emit('changed', {
                 newValue: exportModel()
             });
             // autoValidate();
@@ -94,7 +92,7 @@ define([
             return Promise.try(function() {
                     model.value = [];
                 })
-                .then(function() {
+                .then(function(changed) {
                     return render();
                 });
         }
@@ -153,14 +151,12 @@ define([
             viewModel.setItem(['items', index, 'value'], value);
             return validate(exportModel())
                 .then(function(result) {
-                    channel.emit('validation', result);
+                    bus.emit('validation', result);
                 });
         }
 
-        // TODO: wrap this in a new type of field control -- 
-        //   specialized to be very lightweight for the sequence control.
         function makeSingleInputControl(control, events) {
-            return resolver.loadInputControl(itemSpec)
+            return resolver.loadViewControl(itemSpec)
                 .then(function(InputWidget) {
                     // CONTROL
                     var preButton, postButton,
@@ -172,11 +168,12 @@ define([
                         // at least to create and manage the channel.
                         inputWidget = InputWidget.make({
                             bus: inputBus,
-                            channelName: inputBus.channelName,
                             parameterSpec: itemSpec,
                             showOwnMessages: true,
                             initialValue: control.value
                         });
+
+                    // console.log('INITIAL VALUE?', control.initialValue);
 
                     // set up listeners for the input
                     inputBus.on('sync', function() {
@@ -192,7 +189,7 @@ define([
                     });
 
                     inputBus.on('touched', function() {
-                        channel.emit('touched');
+                        bus.emit('touched');
                     });
 
                     preButton = div({
@@ -377,9 +374,12 @@ define([
         function autoValidate() {
             return validate(exportModel())
                 .then(function(result) {
-                    channel.emit('validation', result);
+                    bus.emit('validation', result);
                 });
         }
+
+
+
 
         // LIFECYCLE API
 
@@ -391,13 +391,14 @@ define([
 
                 return render(config.initialValue)
                     .then(function() {
-                        channel.on('reset-to-defaults', function(message) {
+
+                        bus.on('reset-to-defaults', function(message) {
                             resetModelValue();
                         });
-                        channel.on('update', function(message) {
+                        bus.on('update', function(message) {
                             setModelValue(message.value);
                         });
-                        channel.on('refresh', function() {});
+                        bus.on('refresh', function() {});
 
                         return autoValidate();
                         // bus.emit('sync');
@@ -407,17 +408,7 @@ define([
         }
 
         function stop() {
-            return Promise.try(function() {
-                return Promise.all(model.getItem('items').map(function(item) {
-                        return item.inputControl.stop()
-                            .then(function() {
-                                item.inputBus.stop();
-                            });
-                    }))
-                    .then(function() {
-                        busConnection.stop();
-                    });
-            })
+            return Promise.resolve();
         }
 
         return {

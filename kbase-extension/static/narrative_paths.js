@@ -8,6 +8,7 @@ require.config({
         'bootstrap-slider': 'ext_components/bootstrap-slider/bootstrap-slider',
         'jquery-dataTables': 'ext_components/datatables/media/js/jquery.dataTables.min',
         'jquery-dataTables-bootstrap': 'ext_components/datatables/media/js/dataTables.bootstrap.min',
+        bloodhound: 'ext_components/corejs-typeahead/dist/bloodhound.min',
         css: 'ext_components/require-css/css',
         d3: 'ext_components/d3/d3.min',
         domReady: 'ext_components/requirejs/domReady',
@@ -22,6 +23,7 @@ require.config({
         numeral: 'ext_components/numeral/numeral',
         text: 'ext_components/requirejs-plugins/lib/text',
         tipsy: 'ext_components/jquery.tipsy/js/jquery.tipsy',
+        typeahead: 'ext_components/corejs-typeahead/dist/typeahead.jquery.min',
         underscore: 'ext_components/underscore/underscore-min',
         select2: 'ext_components/select2/dist/js/select2.full.min', //kbase/js/patched-components/select2/select2',
         uuid: 'ext_components/pure-uuid/uuid',
@@ -38,8 +40,6 @@ require.config({
         'knhx_excanvas': 'ext_packages/knhxtree/js/excanvas',
         'knhx_canvastext': 'ext_packages/knhxtree/js/canvastext',
         'knhx_easytree': 'ext_packages/knhxtree/js/easytree',
-        'typeahead': 'ext_components/corejs-typeahead/dist/typeahead.jquery.min',
-        'bloodhound': 'ext_components/corejs-typeahead/dist/bloodhound.min',
 
 
         narrativeTour: 'kbase/js/tour',
@@ -93,7 +93,7 @@ require.config({
 
 
         common: 'kbase/js/common/',
-        kb_sdk_clients: 'kbase/js/kb_sdk_clients',
+        // kb_sdk_clients: 'kbase/js/kb_sdk_clients',
         widgets: 'kbase/js/widgets',
 
 

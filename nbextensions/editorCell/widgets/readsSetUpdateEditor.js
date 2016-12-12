@@ -11,7 +11,7 @@ define([
     'common/props',
     // Wrapper for inputs
     'widgets/appWidgets2/fieldWidgetCompact',
-    'widgets/appWidgets2/inputParamResolver',
+    'widgets/appWidgets2/paramResolver',
     'common/runtime',
     './readsSetModel'
     // All the input widgets
@@ -97,10 +97,10 @@ define([
 
         function makeFieldWidget(appSpec, parameterSpec, value) {
 
-            return paramResolver.getInputWidgetFactory(parameterSpec)
+            return paramResolver.loadInputControl(parameterSpec)
                 .then(function(inputWidget) {
 
-                    var fieldBus = runtime.bus().makeChannelBus(null, 'A field widget');
+                    var fieldBus = runtime.bus().makeChannelBus({ description: 'A field widget' });
 
                     inputBusses.push(fieldBus);
 
@@ -398,7 +398,7 @@ define([
 
         // CONSTRUCTION
 
-        bus = runtime.bus().makeChannelBus(null, 'A app params widget');
+        bus = runtime.bus().makeChannelBus({ description: 'A app params widget' });
 
 
         return {

@@ -152,7 +152,7 @@ define([
     function factory(config) {
         var config = config || {},
             runtime = Runtime.make(),
-            bus = runtime.bus().makeChannelBus(null, 'Log Viewer Bus'),
+            bus = runtime.bus().makeChannelBus({ description: 'Log Viewer Bus' }),
             container,
             jobId,
             model,

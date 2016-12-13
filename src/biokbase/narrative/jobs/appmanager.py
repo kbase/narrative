@@ -1,8 +1,3 @@
-"""
-A module for managing apps, specs, requirements, and for starting jobs.
-"""
-__author__ = "Bill Riehl <wjriehl@lbl.gov>"
-
 from .job import Job
 import biokbase.narrative.clients as clients
 from biokbase.narrative.widgetmanager import WidgetManager
@@ -27,6 +22,12 @@ from biokbase.narrative.common import kblogging
 import logging
 import datetime
 import traceback
+import random
+
+"""
+A module for managing apps, specs, requirements, and for starting jobs.
+"""
+__author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
 
 class AppManager(object):
@@ -601,7 +602,7 @@ class AppManager(object):
             if 'constant_value' in p and p_value is None:
                 p_value = p['constant_value']
             if 'generated_value' in p and p_value is None:
-                p_value = self._generate_input(generated_value)
+                p_value = self._generate_input(p['generated_value'])
             if 'target_type_transform' in p:
                 p_value = self._transform_input(p['target_type_transform'], p_value)
 
@@ -659,7 +660,7 @@ class AppManager(object):
 
         elif transform_type == "ref":
             # make a workspace ref
-            if value is not None:
+            if value is not None and '/' not in value:
                 value = system_variable('workspace') + '/' + value
             return value
 
@@ -680,9 +681,18 @@ class AppManager(object):
             else:
                 return [self._transform_input(list_type, value)]
 
+        elif transform_type == "string":
+            if value is None:
+                return value
+            elif isinstance(value, list):
+                return ",".join(value)
+            elif isinstance(value, dict):
+                return ",".join([key + "=" + str(value[key]) for key in value])
+            else:
+                return str(value)
+
         else:
             raise ValueError("Unsupported Transformation type: " + transform_type)
-
 
     def _generate_input(self, generator):
         """
@@ -696,7 +706,17 @@ class AppManager(object):
         """
         symbols = 8
         if 'symbols' in generator:
-            symbols = int(generator['symbols'])
+            try:
+                symbols = int(generator['symbols'])
+            except:
+                raise ValueError(
+                    'The "symbols" input to the generated value must be an ' +
+                    'integer > 0!'
+                )
+        if symbols < 1:
+            raise ValueError(
+                'Must have at least 1 symbol to randomly generate!'
+            )
         ret = ''.join([chr(random.randrange(0, 26) + ord('A')) for _ in xrange(symbols)])
         if 'prefix' in generator:
             ret = str(generator['prefix']) + ret
@@ -822,7 +842,7 @@ class AppManager(object):
 
         # Last, regex. not being used in any extant specs, but cover it anyway.
         if 'regex_constraint' in param:
-            for regex in regex_constraint:
+            for regex in param['regex_constraint']:
                 if not re.match(regex_constraint, value):
                     return (ws_ref, 'Value {} does not match required regex {}'.format(value, regex))
 

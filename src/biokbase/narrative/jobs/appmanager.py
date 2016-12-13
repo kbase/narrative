@@ -28,6 +28,9 @@ import datetime
 import traceback
 import random
 
+"""
+A module for managing apps, specs, requirements, and for starting jobs.
+"""
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
 

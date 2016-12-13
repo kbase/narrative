@@ -2,8 +2,12 @@
 /*jslint white:true,browser:true*/
 
 define([
+    'bluebird',
     'jquery',
+    'underscore',
     'kbwidget',
+    'narrativeConfig',
+    'kbase-client-api',
     'base/js/namespace',
     'util/timeFormat',
     'handlebars',
@@ -15,11 +19,16 @@ define([
     'text!kbase/templates/job_status/header.html',
     'text!kbase/templates/job_status/log_panel.html',
     'text!kbase/templates/job_status/log_line.html',
+    'text!kbase/templates/job_status/new_objects.html',
     'css!kbase/css/kbaseJobLog.css',
     'bootstrap'
 ], function (
+    Promise,
     $,
+    _,
     KBWidget,
+    Config,
+    KBaseClientApi,
     Jupyter,
     TimeFormat,
     Handlebars,
@@ -30,7 +39,8 @@ define([
     JobStatusTableTemplate,
     HeaderTemplate,
     LogPanelTemplate,
-    LogLineTemplate
+    LogLineTemplate,
+    NewObjectsTemplate
 ) {
     'use strict';
     return new KBWidget({
@@ -54,6 +64,7 @@ define([
             this._super(options);
             this.jobId = this.options.jobId;
             this.state = this.options.state;
+            this.outputWidgetInfo = this.options.outputWidgetInfo;
             // expects:
             // name, id, version for appInfo
             this.appInfo = this.options.info;
@@ -106,7 +117,6 @@ define([
                     type: 'job-status'
                 },
                 handle: function (message) {
-                    // console.log('Have job status', message);
                     this.handleJobStatus(message);
                 }.bind(this)
             });
@@ -136,29 +146,6 @@ define([
                 }.bind(this)
             });
 
-
-
-//            this.runtime.bus().on('job-status', function (message) {
-//                this.handleJobStatus(message);
-//            }.bind(this));
-//
-//            this.runtime.bus().on('job-logs', function (message) {
-//                this.handleJobLogs(message);
-//            }.bind(this));
-//
-//            this.runtime.bus().on('job-log-deleted', function (message) {
-//                this.handleJobLogDeleted(message);
-//            }.bind(this));
-
-//            this.runtime.bus().listen({
-//                test: function(msg) {
-//                    return (msg.data && msg.data.jobId === this.jobId);
-//                }.bind(this),
-//                handle: function(msg) {
-//                    this.handleJobStatus(msg);
-//                }.bind(this)
-//            });
-//
             // render up the panel's view layer.
             this.initializeView();
             this.updateView();
@@ -186,7 +173,7 @@ define([
             this.reportView = this.makeReportPanel();
             this.newDataView = this.makeNewDataView();
             var $tabDiv = $('<div>');
-            var tabs = new KBaseTabs($tabDiv, {
+            this.tabController = new KBaseTabs($tabDiv, {
                 tabs: [
                     {
                         tab: 'Status',
@@ -196,28 +183,186 @@ define([
                         tab: 'Logs',
                         content: this.logsView
                     },
-                    {
-                        tab: 'Report',
-                        content: this.reportView
-                    },
-                    {
-                        tab: 'New Data Objects',
-                        content: this.newDataView
-                    }
+                    // {
+                    //     tab: 'Report',
+                    //     content: this.reportView
+                    // },
+                    // {
+                    //     tab: 'New Data Objects',
+                    //     content: this.newDataView
+                    // }
                 ]
             });
             this.$elem.append($tabDiv);
         },
 
         updateView: function() {
-            // console.log('updating view...');
+            // Update status panel (always)
             this.view.statusPanel.remove();
             this.view.statusPanel = this.updateJobStatusPanel();
             this.view.body.append($(this.view.statusPanel));
+
+            if (this.state.job_state === 'completed') {
+                // If job's complete, and we have a report, show that.
+                if (this.outputWidgetInfo && this.outputWidgetInfo.params &&
+                    this.outputWidgetInfo.params.report_ref && !this.showingReport) {
+                    this.showReport();
+                }
+
+                // If job's complete, and we have newly generated objects, show them.
+                if (this.state.result && !this.showingNewObjects) {
+                    this.showNewObjects();
+                }
+            }
+
+        },
+
+        showNewObjects: function() {
+            if (!this.showingNewObjects) {
+                // If we have a report ref, show that widget.
+                if (this.outputWidgetInfo && this.outputWidgetInfo.params &&
+                    this.outputWidgetInfo.params.report_ref) {
+                    this.tabController.addTab({tab: 'New Data Objects', showContentCallback: function() {
+                        var params = this.outputWidgetInfo.params;
+                        params.showReportText = false;
+                        params.showCreatedObjects = true;
+                        var $newObjDiv = $('<div>');
+                        new KBaseReportView($newObjDiv, params);
+                        return $newObjDiv;
+                    }.bind(this)});
+                }
+                // If not, try to guess what we've got?
+                else {
+                    var results = this.state.result;
+                    var refs = this.guessReferences(results);
+                    if (refs && refs.length > 0) {
+                        var objRefs = [];
+                        refs.forEach(function(ref) {
+                            objRefs.push({ref: ref});
+                        });
+                        var newObjTmpl = Handlebars.compile(NewObjectsTemplate);
+                        var wsClient = new Workspace(Config.url('workspace'), {token: this.runtime.authToken()});
+                        Promise.resolve(wsClient.get_object_info_new({objects: objRefs}))
+                        .then(function(objInfo) {
+                            this.tabController.addTab({tab: 'New Data Objects', showContentCallback: function() {
+                                var renderedInfo = [];
+                                var $div = $('<div>');
+                                objInfo.forEach(function(obj) {
+                                    renderedInfo.push({
+                                        'name': obj[1],
+                                        'type': obj[2].split('-')[0].split('.')[1],
+                                        'fullType': obj[2]
+                                        // 'description': objsCreated[k].description ? objsCreated[k].description : '',
+                                        // 'ws_info': objI[k]
+                                    });
+                                });
+                                var $objTable = $(newObjTmpl(renderedInfo));
+                                for (var i=0; i<objInfo.length; i++) {
+                                    var info = objInfo[0];
+                                    $objTable.find('#' + objInfo[i][1]).click(function() {
+                                        this.openViewerCell(this.createInfoObject(info));
+                                    }.bind(this));
+                                }
+                                $div.append($objTable);
+                                return $div;
+                            }.bind(this)});
+                        }.bind(this))
+                        .catch(function(error) {
+                            //die silently.
+                        });
+                    }
+                }
+                this.showingNewObjects = true;
+            }
+        },
+
+        openViewerCell: function (info) {
+            var cell = Jupyter.notebook.get_selected_cell();
+            var near_idx = 0;
+            if (cell) {
+                near_idx = Jupyter.notebook.find_cell_index(cell);
+                $(cell.element).off('dblclick');
+                $(cell.element).off('keydown');
+            }
+            this.trigger('createViewerCell.Narrative', {
+                'nearCellIdx': near_idx,
+                'widget': 'kbaseNarrativeDataCell',
+                'info': info
+            });
+        },
+
+        createInfoObject: function (info) {
+            return _.object(['id', 'name', 'type', 'save_date', 'version',
+                'saved_by', 'ws_id', 'ws_name', 'chsum', 'size',
+                'meta'], info);
+        },
+
+        /**
+         * Given any object, if there are references in it, those get returned as an Array.
+         * Does not search keys for Objects, just values.
+         * Handles whether it's a string, array, or object.
+         * Scans recursively, too. Fun!
+         */
+        guessReferences: function(obj) {
+            /* 3 cases.
+             * 1. obj == string
+             * - test for xxx/yyy/zzz format. if so == ref
+             * 2. obj == object
+             * - scan all values with guessReferences
+             * 3. obj == Array
+             * - scan all elements with guessReferences
+             */
+            var type = Object.prototype.toString.call(obj);
+            switch(type) {
+                case '[object String]':
+                    if (obj.match(/^[^\/]+\/[^\/]+(\/[^\/]+)?$/)) {
+                        return [obj];
+                    }
+                    else {
+                        return null;
+                    }
+
+                case '[object Array]':
+                    var ret = [];
+                    obj.forEach(function (elem) {
+                        var refs = this.guessReferences(elem);
+                        if (refs) {
+                            ret = ret.concat(refs);
+                        }
+                    }.bind(this));
+                    return ret;
+
+                case '[object Object]':
+                    var ret = [];
+                    Object.keys(obj).forEach(function(key) {
+                        var refs = this.guessReferences(obj[key]);
+                        if (refs) {
+                            ret = ret.concat(refs);
+                        }
+                    }.bind(this));
+                    return ret;
+
+                default:
+                    return null;
+            }
         },
 
         makeNewDataView: function() {
             return $('<div>');
+        },
+
+        showReport: function() {
+            if (!this.showingReport) {
+                this.tabController.addTab({tab: 'Report', showContentCallback: function() {
+                    var params = this.outputWidgetInfo.params;
+                    params.showReportText = true;
+                    params.showCreatedObjects = false;
+                    var $reportDiv = $('<div>');
+                    new KBaseReportView($reportDiv, params);
+                    return $reportDiv;
+                }.bind(this)});
+                this.showingReport = true;
+            }
         },
 
         makeReportPanel: function() {
@@ -256,39 +401,23 @@ define([
         handleJobStatus: function (message) {
             // console.log('HANDLE JOB STATUS', message);
             this.state = message.jobState;
+            this.outputWidgetInfo = message.outputWidgetInfo;
             this.setCellState();
             this.updateView();
         },
 
         handleJobLogs: function (message) {
-            if (this.pendingLogRequest && (this.pendingLogLine === message.logs.first || this.pendingLogLine === 'latest' && message.logs.latest)) {
+            if (this.pendingLogRequest &&
+                (this.pendingLogLine === message.logs.first ||
+                    this.pendingLogLine === 'latest' &&
+                    message.logs.latest)) {
                 this.updateLogs(message.logs);
             }
         },
 
         handleJobLogDeleted: function (message) {
-            window.alert('Job has been deleted. No log available.');
+            this.showLogMessage('Job has been deleted. No log available.');
         },
-
-//        handleJobStatus: function(message) {
-//            switch (message.type) {
-//                case 'job-status':
-//                    this.state = message.data.jobState.state;
-//                    this.setCellState();
-//                    this.updateView();
-//                    break;
-//                case 'job-logs':
-//                    if (this.pendingLogRequest && (this.pendingLogLine === message.data.logs.first || this.pendingLogLine === 'latest' && message.data.logs.latest)) {
-//                        this.updateLogs(message.data.logs);
-//                    }
-//                    break;
-//                case 'job-log-deleted':
-//                    window.alert('Job has been deleted. No log available.');
-//                    break;
-//                default:
-//                    break;
-//            }
-//        },
 
         showError: function(message) {
             this.$elem.append(message);
@@ -365,7 +494,6 @@ define([
         },
 
         sendLogRequest: function(firstLine) {
-            console.log('sending ' + firstLine + ' request');
             this.logsView.find('#kblog-spinner').show();
             this.pendingLogRequest = true;
             this.pendingLogLine = firstLine;

@@ -13081,6 +13081,67 @@ function ShockClient(params) {
     };
 
     self.loadNext = function (file, url, promise, currentChunk, chunks, incompleteId, chunkSize, ret, errorCallback, cancelCallback) {
+    	if (cancelCallback && cancelCallback())
+	{
+	    if (errorCallback)
+		errorCallback("cancelled");
+    	    return;
+	}
+	
+	var start = currentChunk * chunkSize;
+	var blob;
+	if (start < file.size) {
+	    var end = (start + chunkSize >= file.size) ? file.size : start + chunkSize;
+	    var blobSlice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice;
+	    blob = blobSlice.call(file, start, end);
+	} else {
+	    ret({file_size: file.size, uploaded_size: file.size, node_id: incompleteId});
+	    return;
+	}
+	var fd = new FormData();
+	fd.append(currentChunk+1, blob);
+	var lastChunk = (currentChunk + 1) * chunkSize >= file.size;
+	var incomplete_attr = { 
+	    "incomplete": (lastChunk ? "0" : "1"), 
+	    "file_size": "" + file.size, 
+	    "file_name": file.name,
+	    "file_time": String(self.getFileLastModificationTime(file)),
+	    "chunks": "" + (currentChunk+1),
+	    "chunk_size": "" + chunkSize};
+	var aFileParts = [ JSON.stringify(incomplete_attr) ];
+	var oMyBlob2 = new Blob(aFileParts, { "type" : "text\/json" });
+	fd.append('attributes', oMyBlob2);
+	console.log(Date.now() + " chunk " + currentChunk);
+	jQuery.ajax(url, {
+	    contentType: false,
+	    processData: false,
+	    data: fd,
+	    success: function(data) {
+    		if (cancelCallback && cancelCallback())
+		{
+		    if (errorCallback)
+			errorCallback("cancelled");
+    		    return;
+		}
+		currentChunk++;
+		var uploaded_size = Math.min(file.size, currentChunk * chunkSize);
+		ret({file_size: file.size, uploaded_size: uploaded_size, node_id: incompleteId});
+		if ((currentChunk * chunkSize) >= file.size) {
+		    promise.resolve();
+		} else {
+		    self.loadNext(file, url, promise, currentChunk, chunks, incompleteId, chunkSize, ret, errorCallback, cancelCallback);
+		}
+	    },
+	    error: function(jqXHR, error) {
+		if (errorCallback)
+		    errorCallback(error);
+		promise.resolve();
+	    },
+	    headers: self.auth_header,
+	    type: "PUT"
+	});
+    };
+    self.loadNextOrig = function (file, url, promise, currentChunk, chunks, incompleteId, chunkSize, ret, errorCallback, cancelCallback) {
 		if (cancelCallback && cancelCallback())
 			return;
 	    var fileReader = new FileReader();
@@ -13168,70 +13229,79 @@ function ShockClient(params) {
     	}
 
     	function processNode(incomplete) {
-    		if (incomplete != null) {
-    			var incompleteId = incomplete["id"];
-    			url += "/" + incomplete["id"];
-    			var currentChunk = 0;
-    			if (incomplete["attributes"]["incomplete_chunks"]) {
-    				currentChunk = parseInt(incomplete["attributes"]["incomplete_chunks"]);
-    			} else if (incomplete["attributes"]["chunks"]) {
-    				currentChunk = parseInt(incomplete["attributes"]["chunks"]);
-    			}
-    			var chunkSize = self.chunkSize;
-    			if (incomplete["attributes"]["chunk_size"])
-    				chunkSize = parseInt(incomplete["attributes"]["chunk_size"]);
-    			var uploadedSize = Math.min(file.size, currentChunk * chunkSize);
-    			ret({file_size: file.size, uploaded_size: uploadedSize, node_id: incompleteId});
-    			self.loadNext(file, url, promise, currentChunk, chunks, incompleteId, chunkSize, ret, errorCallback, cancelCallback);
-    		} else {
-    			var chunkSize = self.chunkSize;
-    			var chunks = Math.ceil(file.size / chunkSize);
-    			var incomplete_attr = { "incomplete": "1", "file_size": "" + file.size, "file_name": file.name,
-    					"file_time": String(self.getFileLastModificationTime(file)), "chunk_size": "" + chunkSize};
-    			var aFileParts = [ JSON.stringify(incomplete_attr) ];
-    			var oMyBlob = new Blob(aFileParts, { "type" : "text\/json" });
-    			var fd = new FormData();
-    			fd.append('attributes', oMyBlob);
-    			fd.append('parts', chunks);
-    			jQuery.ajax(url, {
-    				contentType: false,
-    				processData: false,
-    				data: fd,
-    				success: function(data) {
-    		    		if (cancelCallback && cancelCallback())
-    		    			return;
-    					var incompleteId = data.data.id;
-    					var uploaded_size = 0;
-    					ret({file_size: file.size, uploaded_size: uploaded_size, node_id: incompleteId});
-    					url += "/" + data.data.id;
-    					self.loadNext(file, url, promise, 0, chunks, incompleteId, chunkSize, ret, errorCallback, cancelCallback);
-    				},
-    				error: function(jqXHR, error){
-    					if (errorCallback)
-    						errorCallback(error);
-    					promise.resolve();
-    				},
-    				headers: self.auth_header,
-    				type: "POST"
-    			});
+    	    if (incomplete != null) {
+    		var incompleteId = incomplete["id"];
+    		url += "/" + incomplete["id"];
+    		var currentChunk = 0;
+    		if (incomplete["attributes"]["incomplete_chunks"]) {
+    		    currentChunk = parseInt(incomplete["attributes"]["incomplete_chunks"]);
+    		} else if (incomplete["attributes"]["chunks"]) {
+    		    currentChunk = parseInt(incomplete["attributes"]["chunks"]);
     		}
+    		var chunkSize = self.chunkSize;
+    		if (incomplete["attributes"]["chunk_size"])
+    		    chunkSize = parseInt(incomplete["attributes"]["chunk_size"]);
+    		var uploadedSize = Math.min(file.size, currentChunk * chunkSize);
+    		ret({file_size: file.size, uploaded_size: uploadedSize, node_id: incompleteId});
+    		self.loadNext(file, url, promise, currentChunk, chunks, incompleteId, chunkSize, ret, errorCallback, cancelCallback);
+    	    } else {
+    		var chunkSize = self.chunkSize;
+    		var chunks = Math.ceil(file.size / chunkSize);
+    		var incomplete_attr = { "incomplete": "1", "file_size": "" + file.size, "file_name": file.name,
+    					"file_time": String(self.getFileLastModificationTime(file)), "chunk_size": "" + chunkSize};
+    		var aFileParts = [ JSON.stringify(incomplete_attr) ];
+    		var oMyBlob = new Blob(aFileParts, { "type" : "text\/json" });
+    		var fd = new FormData();
+    		fd.append('attributes', oMyBlob);
+    		fd.append('parts', chunks);
+    		jQuery.ajax(url, {
+    		    contentType: false,
+    		    processData: false,
+    		    data: fd,
+    		    success: function(data) {
+    		    	if (cancelCallback && cancelCallback())
+			{
+			    if (errorCallback)
+				errorCallback("cancelled");
+    		    	    return;
+			}
+    			var incompleteId = data.data.id;
+    			var uploaded_size = 0;
+    			ret({file_size: file.size, uploaded_size: uploaded_size, node_id: incompleteId});
+    			url += "/" + data.data.id;
+    			self.loadNext(file, url, promise, 0, chunks, incompleteId, chunkSize, ret, errorCallback, cancelCallback);
+    		    },
+    		    error: function(jqXHR, error){
+    			if (errorCallback)
+    			    errorCallback(error);
+    			promise.resolve();
+    		    },
+    		    headers: self.auth_header,
+    		    type: "POST"
+    		});
+    	    }
     	}
 
     	if (shockNodeId) {
-    		self.get_node(shockNodeId, function(data) {
-				if (cancelCallback && cancelCallback())
-					return;
-				if (data &&
-						data["attributes"]["file_size"] === ("" + file.size) &&
-						data["attributes"]["file_name"] === file.name &&
-    					data["attributes"]["file_time"] === (String(self.getFileLastModificationTime(file)))) {
-					processNode(data);
-				} else {
-					searchForIncomplete();
-				}
-    		}, function(error) {
-				searchForIncomplete();
-    		});
+    	    self.get_node(shockNodeId, function(data) {
+    		if (cancelCallback && cancelCallback())
+		{
+		    if (errorCallback)
+			errorCallback("cancelled");
+    		    return;
+		}
+		console.log(data);
+		if (data &&  data["attributes"] && 
+		    data["attributes"]["file_size"] === ("" + file.size) && 
+		    data["attributes"]["file_name"] === file.name &&
+    		    data["attributes"]["file_time"] === String(self.getFileLastModificationTime(file))) {
+		    processNode(data);
+		} else {
+		    searchForIncomplete();
+		}
+    	    }, function(error) {
+		searchForIncomplete();
+    	    });
     	} else {
     		searchForIncomplete();
     	}

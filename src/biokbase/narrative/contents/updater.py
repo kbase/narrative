@@ -15,10 +15,12 @@ import datetime
 import biokbase.narrative.clients as clients
 from biokbase.narrative.jobs.specmanager import SpecManager
 
+
 def update_needed(narrative):
     # simple enough - if there's a "kbase" block
     # in the metadata, it's been updated.
     return 'kbase' not in narrative['metadata']
+
 
 def update_narrative(narrative):
     """
@@ -30,16 +32,16 @@ def update_narrative(narrative):
 
     updated_cells = list()
 
+    format_ver = narrative.get('nbformat', 4)
+
     if 'worksheets' in narrative:
         cells = narrative['worksheets'][0]['cells']
+        format_ver = 3 # just to double-check
     else:
         cells = narrative['cells']
 
     for idx, cell in enumerate(cells):
-        updated_cells.append(update_cell(cell))
-        # cell = update_cell(cell)
-        # if cell.get('metadata', {}).get('kbase', {}).get('updated', False):
-        #     updated_cells.add(idx)
+        updated_cells.append(update_cell(cell, format_ver))
 
     updated_metadata = update_metadata(narrative['metadata'])
     if 'worksheets' in narrative:
@@ -52,12 +54,13 @@ def update_narrative(narrative):
         narrative['metadata'] = updated_metadata
     return narrative
 
-def update_cell(cell):
+
+def update_cell(cell, format_ver):
     """
     Look for what kind of cell it is.
-    if code cell, do nothing.
+    if code cell, do nothing, it's already up-to-date.
     if Markdown cell, and it has kb-cell in its metadata, do something.
-    if kb-cell.type == kb_app, go to update_app_cell
+    if kb-cell.type == kb_app, go to update_legacy_app_cell
     if kb-cell.type == function_input , go to update_method_cell
     if kb-cell.type == function_output , go to update_output_cell
     """
@@ -67,15 +70,16 @@ def update_cell(cell):
 
     kb_cell_type = meta.get('kb-cell', {}).get('type', None)
     if kb_cell_type == 'kb_app':
-        cell = update_app_cell(cell)
+        cell = update_legacy_app_cell(cell)
     elif kb_cell_type == 'function_input':
-        cell = update_method_cell(cell)
+        cell = update_method_cell(cell, format_ver)
     elif kb_cell_type == 'function_output':
-        cell = update_output_cell(cell)
+        cell = update_output_cell(cell, format_ver)
 
     return cell
 
-def update_method_cell(cell):
+
+def update_method_cell(cell, format_ver):
     """
     Updates a single method cell to fill these two constraints:
     1. Become a code cell, NOT a markdown cell.
@@ -201,7 +205,8 @@ def update_method_cell(cell):
                 'id': method_info.get('id', 'unknown'),
                 'gitCommitHash': git_hash,
                 'version': method_info.get('ver', None),
-                'tag': tag
+                'tag': tag,
+                'spec': meta['method']
             },
             'state': {
                 'edit': 'editing',
@@ -222,15 +227,23 @@ def update_method_cell(cell):
     }
 
     # Finally, turn it into a code cell.
+    source_key = 'input' if format_ver == 3 else 'source'
+    exec_count_key = 'prompt_number' if format_ver == 3 else 'execution_count'
+
     cell['cell_type'] = u'code'
-    cell['execution_count'] = None
+    cell[exec_count_key] = None
     cell['outputs'] = []
     cell['metadata']['kbase'] = new_meta
     del cell['metadata']['kb-cell']
-    cell['source'] = u''
+    cell[source_key] = u''
     return cell
 
+
 def obsolete_method_cell(cell, app_id, app_name, app_spec, params):
+    """
+    Sets the cell to be a Markdown cell with information about how it's obsolete
+    and how to update it.
+    """
     cell['cell_type'] = 'markdown'
     base_source = """<div style="border:1px solid #CECECE; padding: 5px">
     <div style="font-size: 120%; font-family: 'OxygenBold', Arial, sans-serif; color:#2e618d;">{}</div>
@@ -269,9 +282,10 @@ def obsolete_method_cell(cell, app_id, app_name, app_spec, params):
     del cell['metadata']['kb-cell']
     return cell
 
-def update_app_cell(cell):
+
+def update_legacy_app_cell(cell):
     """
-    Updates an app cell to the new style (which is deprecated...)
+    Updates a legacy app cell to the new show a message about deprecation/obsoletion.
     """
     meta = cell['metadata']['kb-cell']
     app_name = meta.get('app', {}).get('info', {}).get('name', 'Unknown app') + " (multi-step app)"
@@ -287,7 +301,13 @@ def update_app_cell(cell):
     cell['metadata']['kbase'] = {'old_app': True, 'info': meta}
     return cell
 
+
 def obsolete_app_cell(cell, app_id, app_name, app_spec, params):
+    """
+    Generates a Markdown cell with some information about the old-style app
+    being obsolete, and how to update it.
+    """
+
     cell['cell_type'] = 'markdown'
     base_source = """<div style="border:1px solid #CECECE; padding: 5px">
     <div style="font-size: 120%; font-family: 'OxygenBold', Arial, sans-serif; color:#2e618d;">{}</div>
@@ -340,7 +360,7 @@ def obsolete_app_cell(cell, app_id, app_name, app_spec, params):
     return cell
 
 
-def update_output_cell(cell):
+def update_output_cell(cell, format_ver):
     """
     Updates an output viewer cell to the right new format.
     """
@@ -367,11 +387,13 @@ def update_output_cell(cell):
             u'metadata': {},
             u'output_type': u'execute_result'
         }
-        # js_output['data'][u'application/javascript'] = elem_output
+
+        source_key = 'input' if format_ver == 3 else 'source'
+        exec_count_key = 'prompt_number' if format_ver == 3 else 'execution_count'
         cell['outputs'] = [js_output]
-        cell['source'] = new_source
+        cell[source_key] = new_source
         cell['cell_type'] = 'code'
-        cell['execution_count'] = 1
+        cell[exec_count_key] = 1
         meta = cell['metadata']
         meta['kbase'] = {
             'attributes': {
@@ -381,7 +403,10 @@ def update_output_cell(cell):
             'type': 'output'
         }
         cell['metadata'] = meta
+        if (format_ver == 3):
+            del cell['source']
     return cell
+
 
 def update_metadata(metadata):
     """
@@ -400,12 +425,14 @@ def update_metadata(metadata):
         # of the system supports that.
     return metadata
 
+
 def find_app_info(app_id):
     sm = SpecManager()
     for tag in ['release', 'beta', 'dev']:
         if app_id in sm.app_specs[tag]:
             return {'tag': tag, 'spec': sm.app_specs[tag][app_id]}
     return None
+
 
 def suggest_apps(obsolete_id):
     suggest = obsolete_apps.get(obsolete_id, None)

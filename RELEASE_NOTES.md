@@ -3,6 +3,11 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v4.2.1 (more notes will follow).
 
+### Version 3.0.2
+__Changes__
+- Fixed bug preventing the "Annotate Microbial Genome" app (and others that make use of randomized input strings) from launching.
+- Fixed another bug with CSS files.
+
 ### Version 3.0.1
 __Changes__
 - Fixed bug with path to some CSS files.

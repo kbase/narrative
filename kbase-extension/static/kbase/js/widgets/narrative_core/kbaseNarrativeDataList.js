@@ -417,6 +417,7 @@ define([
                     var runtime = Runtime.make();
                     runtime.bus().set({
                         data: data,
+                        timestamp: new Date().getTime(),
                         objectInfo: objectInfoPlus
                     }, {
                         channel: 'data',

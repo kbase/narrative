@@ -121,7 +121,7 @@ class AppManager(object):
         """
         return self.spec_manager.available_apps(tag)
 
-    def run_app(self, app_id, params, tag="release", version=None,
+    def run_app_old(self, app_id, params, tag="release", version=None,
                 cell_id=None, run_id=None, **kwargs):
         """
         Attempts to run the app, returns a Job with the running app info.
@@ -182,7 +182,7 @@ class AppManager(object):
                   str(e))
             return
 
-    def _run_app_internal(self, app_id, params, tag, version,
+    def _run_app_internal_old(self, app_id, params, tag, version,
                           cell_id, run_id, **kwargs):
         """
         Attemps to run the app, returns a Job with the running app info.
@@ -326,7 +326,8 @@ class AppManager(object):
         else:
             return new_job
 
-    def run_app2(self, app_id, params, tag="release", version=None,
+
+    def run_app(self, app_id, params, tag="release", version=None,
                 cell_id=None, run_id=None, **kwargs):
         """
         Attempts to run the app, returns a Job with the running app info.
@@ -362,7 +363,7 @@ class AppManager(object):
         try:
             if params is None:
                 params = dict()
-            return self._run_app2_internal(app_id, params, tag, version,
+            return self._run_app_internal(app_id, params, tag, version,
                                           cell_id, run_id, **kwargs)
         except Exception as e:
             e_type = type(e).__name__
@@ -384,10 +385,14 @@ class AppManager(object):
             })
             print("Error while trying to start your app (run_app)!\n" +
                   "-----------------------------------------------\n" +
-                  str(e))
+                  str(e) + "\n" +
+                  "-----------------------------------------------\n" +
+                  e_trace)
             return
 
-    def _run_app2_internal(self, app_id, params, tag, version,
+    run_app2 = run_app
+
+    def _run_app_internal(self, app_id, params, tag, version,
                           cell_id, run_id, **kwargs):
         """
         Attemps to run the app, returns a Job with the running app info.
@@ -801,6 +806,8 @@ class AppManager(object):
         if isinstance(value, list):
             return [self._map_group_inputs(v, spec_param, spec_params)
                     for v in value]
+        elif value is None:
+            return None
         else:
             mapped_value = dict()
             id_map = spec_param.get('id_mapping', {})

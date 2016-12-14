@@ -23,7 +23,8 @@ define([
     'common/runtime',
     'common/events',
     'common/props',
-    'common/error'
+    'common/error',
+    'common/data'
 
 ], function(
     Promise,
@@ -36,7 +37,8 @@ define([
     Runtime,
     Events,
     Props,
-    kbError
+    kbError,
+    Data
 ) {
     'use strict';
 
@@ -52,9 +54,12 @@ define([
     function factory(config) {
         var runtime = Runtime.make(),
             workspaceInfo = config.workspaceInfo,
-            container,
-            dom, ui,
-            bus = runtime.bus().makeChannelBus({ description: 'object selector bus' }),
+            parent, container,
+            ui,
+            // bus = runtime.bus().makeChannelBus({ description: 'object selector bus' }),
+            bus = runtime.bus().connect(),
+            channelName = bus.genName(),
+            channel = bus.channel(channelName),
             model = Props.make(),
             availableReadsSets, availableReadsSetsMap;
 
@@ -63,7 +68,7 @@ define([
             e.stopPropagation();
             var name = ui.getElement('new-object-name').value;
             // value = ui.getElement('new-object-type').value;
-            bus.emit('create-new-set', {
+            channel.emit('create-new-set', {
                 name: name
                     // type: value
             });
@@ -73,7 +78,7 @@ define([
         function doNew(e) {
             e.preventDefault();
             e.stopPropagation();
-            bus.emit('new-set-form');
+            channel.emit('new-set-form');
         }
 
         function renderLayout() {
@@ -97,11 +102,6 @@ define([
                             id: events.addEvent({ type: 'click', handler: doCreate })
                         }, 'Create')
                     ])
-                    //                        button({
-                    //                            class: 'btn btn-default',
-                    //                            type: 'button',
-                    //                            id: events.addEvent({type: 'click', handler: doNew})
-                    //                        }, 'New')])
                 ]);
 
             return {
@@ -113,44 +113,70 @@ define([
         // MESSAGE HANDLERS
 
         function doAttach(node) {
-            container = node;
-            dom = Dom.make({
-                node: container,
-                bus: bus
-            });
+            parent = node;
+            container = parent.appendChild(document.createElement('div'));
             ui = UI.make({ node: container });
             var layout = renderLayout();
             container.innerHTML = layout.content;
             layout.events.attachEvents(container);
         }
 
-        //        function selectItem(ref) {
-        //            // this is (currently) a select, so we need to 
-        //            // unselect any selected item and
-        //            // find the matching option and select it
-        //            //console.log('autoselect', ref);
-        //            var control = ui.getElement('object-selector').querySelector('select');
-        //            var selected = control.querySelectorAll('[selected]');
-        //            //console.log('autoselect', control, selected);
-        //            if (selected.length > 1) {
-        //                for (var i = 0; i < selected.length; i += 1) {
-        //                    selected.item(i).removeAttribute('selected');
-        //                }
-        //            }
-        //            var newlySelected = control.querySelector('option[value="' + ref + '"]');
-        //            
-        //            //console.log('autoselect', newlySelected);
-        //            if (newlySelected) {
-        //                newlySelected.setAttribute('selected', '');
-        //            }
-        //            
-        //            // And we need to force the change for this
-        //            emitChanged();
-        //        }
+        function selectItem(ref) {
+            // this is (currently) a select, so we need to 
+            // unselect any selected item and
+            // find the matching option and select it
+            //console.log('autoselect', ref);
+            var control = ui.getElement('object-selector').querySelector('select');
+
+            var selected = Array.prototype.slice.call(control.selectedOptions);
+            selected.forEach(function(option) {
+                option.selected = false;
+            })
+
+            // var selected = control.querySelectorAll('[selected]');
+            // //console.log('autoselect', control, selected);
+            // if (selected.length > 1) {
+            //     for (var i = 0; i < selected.length; i += 1) {
+            //         selected.item(i).removeAttribute('selected');
+            //     }
+            // }
+
+            for (var i = 0; i < control.options.length; i += 1) {
+                if (control.options.item(i).value === ref) {
+                    control.options.item(i).selected = true;
+                    break;
+                }
+            }
+            // var options = Array.prototype.slice.call(control.options);
+            // options.forEach(function (option) {
+            //     if (option.value === ref) {
+            //         option.selected = true;
+            //     }
+            // })
+
+
+            // var newlySelected = control.querySelector('option[value="' + ref + '"]');
+
+            // //console.log('autoselect', newlySelected);
+            // if (newlySelected) {
+            //     newlySelected.setAttribute('selected', '');
+            // }
+
+            // And we need to force the change for this
+            emitChanged();
+        }
+
+        function selectCurrentItem() {
+            var ref = model.getItem('objectRef');
+            if (!ref) {
+                return;
+            }
+            selectItem(ref);
+        }
 
         function emitChanged() {
-            bus.emit('changed', {
-                value: availableReadsSetsMap[model.getItem('objectRef')]
+            channel.emit('changed', {
+                objectInfo: availableReadsSetsMap[model.getItem('objectRef')]
             });
         }
 
@@ -159,9 +185,28 @@ define([
             emitChanged();
         }
 
-        function renderAvailableObjects() {
-            var events = Events.make(),
-                setApiClient = new GenericClient({
+        function doDataUpdated(newData) {
+
+        }
+
+        function fetchData() {
+            var types = ['KBaseSets.ReadsSet'];
+            return Data.getObjectsByTypes(types, bus, function(newData) {
+                    doDataUpdated(newData.data);
+                })
+                .then(function(result) {
+                    availableReadsSetsMap = {};
+                    availableReadsSets = result.data;
+                    result.data.forEach(function(resultItem) {
+                        // var info = serviceUtils.objectInfoToObject(resultItem);
+                        availableReadsSetsMap[resultItem.ref] = resultItem;
+                    });
+                    return result.data;
+                });
+        }
+
+        function fetchDatax() {
+            var setApiClient = new GenericClient({
                     url: runtime.config('services.service_wizard.url'),
                     token: runtime.authToken(),
                     module: 'SetAPI',
@@ -170,11 +215,7 @@ define([
                 params = {
                     workspace: String(workspaceInfo.name),
                     include_set_item_info: 1
-                },
-                controlNode = container.querySelector('[data-element="object-selector"]'),
-                selectedItem = model.getItem('objectRef');
-
-            controlNode.innerHTML = html.loading();
+                };
 
             return setApiClient.callFunc('list_sets', [params])
                 .then(function(result) {
@@ -184,6 +225,20 @@ define([
                         availableReadsSetsMap[info.ref] = info;
                         return info;
                     });
+                });
+        }
+
+        function renderAvailableObjects() {
+            var events = Events.make({
+                    node: container
+                }),
+                controlNode = ui.getElement('object-selector'),
+                selectedItem = model.getItem('objectRef');
+
+            controlNode.innerHTML = html.loading();
+
+            return fetchData()
+                .then(function() {
                     var content = (function() {
                         if (availableReadsSets.length === 0) {
                             return span({ style: { fontWeight: 'bold', fontStyle: 'italic', color: '#CCC' } }, [
@@ -193,7 +248,7 @@ define([
                         return select({
                                 class: 'form-control',
                                 id: events.addEvent({ type: 'change', handler: doItemSelected })
-                            }, [option({ value: '' }, '-- select a reads set --')]
+                            }, [option({ value: '' }, '-- No reads set selected --')]
                             .concat(availableReadsSets.map(function(objectInfo) {
                                 var selected = false;
                                 if (selectedItem === objectInfo.ref) {
@@ -204,10 +259,10 @@ define([
                     }());
 
                     controlNode.innerHTML = content;
-                    events.attachEvents(container);
+                    events.attachEvents();
                     return availableReadsSets.length;
                 })
-                .catch(sdkClientExceptions.RequestException, function(err) {
+                .catch(sdkClientExceptions.RequestError, function(err) {
                     throw new kbError.KBError({
                         type: 'GeneralError',
                         original: err,
@@ -258,33 +313,33 @@ define([
         /*
          * Now 
          */
-        function start() {
+        function start(arg) {
             return Promise.try(function() {
-                bus.on('run', function(message) {
-                    doAttach(message.node);
-                    model.setItem('objectRef', message.selectedSet);
-                    renderAvailableObjects()
-                        .catch(function(err) {
-                            console.log('ERROR', err);
-                            bus.emit('fatal-error', {
-                                location: 'render-available-objects',
-                                error: err
-                            });
+                doAttach(arg.node);
+                model.setItem('objectRef', arg.selectedSet);
+                renderAvailableObjects()
+                    .then(function() {
+                        selectCurrentItem();
+                    })
+                    .catch(function(err) {
+                        console.log('ERROR', err);
+                        channel.emit('fatal-error', {
+                            location: 'render-available-objects',
+                            error: err
                         });
-                    runtime.bus().on('workspace-changed', function() {
-                        renderAvailableObjects();
                     });
-                    // do more stuff
-                });
-                // send parent the ready message
-                bus.emit('ready');
             });
         }
 
         function stop() {
             return Promise.try(function() {
                 // TODO: stop the bus!
-                return null;
+                bus.stop()
+                    .then(function() {
+                        if (parent && container) {
+                            parent.removeChild(container);
+                        }
+                    });
             });
         }
 
@@ -295,7 +350,7 @@ define([
         return {
             start: start,
             stop: stop,
-            bus: bus
+            channel: channel
         };
     }
 

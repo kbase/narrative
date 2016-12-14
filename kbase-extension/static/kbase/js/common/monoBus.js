@@ -19,8 +19,9 @@
 define([
     'uuid',
     'bluebird',
+    './lang',
     './unodep'
-], function(Uuid, Promise, utils) {
+], function(Uuid, Promise, lang, utils) {
     'use strict';
     var instanceId = 0;
 
@@ -85,7 +86,7 @@ define([
                 description: spec.description,
                 created: new Date(),
                 messageCount: 0,
-                listeners: [],
+                listeners: {},
                 keyListeners: {},
                 testListeners: [],
                 persistentMessages: {}
@@ -123,6 +124,16 @@ define([
                 console.error('Bus handle failure', ex);
                 console.error(ex.message);
             }
+        }
+
+        function processListener(channel, item) {
+            var listener = channel.listeners[item.envelope.listenerId],
+                handled = false;
+            if (!listener) {
+                return;
+            }
+            letListenerHandle(item, listener.handle);
+            return handled;
         }
 
         function processKeyListeners(channel, item) {
@@ -210,10 +221,12 @@ define([
                 listener.key = key;
 
                 channel.keyListeners[key].push(listener);
+                channel.listeners[id] = listener;
 
                 // If it matches a persistent message, we need to trigger the 
-                // persistent message to emit a message.
-                maybeSendPersistentMessages(channel, key);
+                // persistent message to emit a message immediately.
+
+                maybeSendPersistentMessages(channel, key, id);
 
                 // Just trigger a queue run in case there are any persistent
                 // messages.
@@ -291,7 +304,10 @@ define([
                 return;
             }
 
-            if (item.envelope.key) {
+            if (item.envelope.listenerId) {
+                log('PROCESSING BY LISTENER ID', channel, item);
+                handled = processListener(channel, item);
+            } else if (item.envelope.key) {
                 log('PROCESSING KEY', channel, item);
                 handled = processKeyListeners(channel, item);
             } else {
@@ -363,14 +379,16 @@ define([
             run();
         }
 
-        function maybeSendPersistentMessages(channel, key) {
+        function maybeSendPersistentMessages(channel, key, id) {
             var persistentMessage = channel.persistentMessages[key];
             if (!persistentMessage) {
                 return;
             }
+            var envelope = lang.copy(persistentMessage.envelope);
+            envelope.listenerId = id;
             transientMessages.push({
                 message: persistentMessage.message,
-                envelope: persistentMessage.envelope
+                envelope: envelope
             });
             run();
         }
@@ -427,6 +445,33 @@ define([
 
             // Persistent messages are stored on a map by 'key' per channel.
             setPersistentMessage(message, envelope);
+        }
+
+        function get(spec, defaultValue) {
+            var key,
+                channelName = canonicalizeChannelName(spec.channel),
+                channel = ensureChannel(channelName);
+
+            if (spec.key) {
+                key = encodeKey(spec.key);
+
+                var persistentMessage = channel.persistentMessages[key];
+                if (!persistentMessage) {
+                    return defaultValue;
+                }
+
+                return persistentMessage.message;
+            } else if (spec.test) {
+                // TODO
+                // listener.test = spec.test;
+                // listener.handle = spec.handle;
+                // channel.testListeners.push(listener);
+                warn('Not current support for test filtering on get');
+                return defaultValue;
+            } else {
+                warn('listen: nothing to listen on (test or key)');
+                return defaultValue;
+            }
         }
 
         /*
@@ -529,6 +574,20 @@ define([
             };
         }
 
+        function when(spec) {
+
+            return new Promise(function(resolve) {
+                listen({
+                    channel: spec.channel,
+                    key: spec.key,
+                    once: true,
+                    handle: function(message) {
+                        resolve(message);
+                    }
+                });
+            });
+        }
+
         /*
          Get a persistent message.
          If the message is available already, return it.
@@ -614,6 +673,28 @@ define([
                 return set(message, address);
             }
 
+            function channelSet2(type, message) {
+                var address = {
+                    channel: channelName,
+                    key: {
+                        type: type
+                    }
+                };
+                return set(message, address);
+            }
+
+            function channelGet(spec, defaultValue) {
+                if (typeof spec === 'string') {
+                    spec = {
+                        key: {
+                            type: spec
+                        }
+                    };
+                }
+                spec.channel = channelName;
+                return get(spec, defaultValue);
+            }
+
             function channelListen(spec) {
                 spec.channel = channelName;
                 return listen(spec);
@@ -630,6 +711,18 @@ define([
                 return respond(spec);
             }
 
+            function channelWhen(type) {
+                return when({
+                    channel: channelName,
+                    key: { type: type }
+                });
+            }
+
+            function channelPlisten(spec) {
+                spec.channel = channelName;
+                return plisten(spec);
+            }
+
             function bus() {
                 return api;
             }
@@ -638,17 +731,33 @@ define([
                 removeChannel(channelName);
             }
 
+            function stats() {
+                var channel = ensureChannel(channelName);
+                return {
+                    listeners: {
+                        persistent: Object.keys(channel.persistentMessages).length,
+                        key: Object.keys(channel.keyListeners).length,
+                        test: channel.testListeners.length
+                    }
+                };
+            }
+
             return {
                 on: on,
                 emit: emit,
                 set: channelSet,
+                set2: channelSet2,
+                get: channelGet,
                 bus: bus,
                 listen: channelListen,
                 send: channelSend,
                 respond: channelRespond,
                 request: channelRequest,
+                when: channelWhen,
+                plisten: channelPlisten,
                 stop: stop,
-                channelName: channelName
+                channelName: channelName,
+                stats: stats
             };
         }
 
@@ -701,13 +810,40 @@ define([
                     return localChannel.request.apply(null, arguments);
                 }
 
+                function plisten() {
+                    var result = localChannel.plisten.apply(null, arguments);
+                    listeners.push(result.id);
+                    return result;
+                }
+
+                function set() {
+                    return localChannel.set2.apply(null, arguments);
+                }
+
+                function get() {
+                    return localChannel.get.apply(null, arguments);
+                }
+
+                function when() {
+                    return localChannel.when.apply(null, arguments);
+                }
+
+                function stats() {
+                    return localChannel.stats();
+                }
+
                 return {
                     on: on,
                     emit: emit,
                     listen: listen,
                     send: send,
                     respond: respond,
-                    request: request
+                    request: request,
+                    plisten: plisten,
+                    set: set,
+                    get: get,
+                    when: when,
+                    stats: stats
                 };
             }
 
@@ -726,8 +862,14 @@ define([
                 }
             }
 
+            function genName() {
+                return new Uuid(4).format();
+            }
+
+
             return {
                 channel: channel,
+                genName: genName,
                 stats: stats,
                 stop: stop
             };
@@ -747,6 +889,7 @@ define([
             emit: emit,
             set: set,
             plisten: plisten,
+            when: when,
             makeChannelBus: makeChannelBus,
             makeChannel: makeChannel,
             removeChannel: removeChannel,

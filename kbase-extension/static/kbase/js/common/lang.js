@@ -1,6 +1,8 @@
-define([], function () {
+define([], function() {
     function copyValue(obj) {
-        return JSON.parse(JSON.stringify(obj));
+        if (obj !== undefined) {
+            return JSON.parse(JSON.stringify(obj));
+        }
     }
 
     return Object.freeze({

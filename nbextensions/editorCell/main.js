@@ -32,6 +32,7 @@ define([
     'common/jupyter',
     'kb_service/utils',
     'kb_service/client/workspace',
+
     'css!kbase/css/appCell.css',
     'css!./styles/main.css',
     'bootstrap'
@@ -269,19 +270,11 @@ define([
 
                     jupyter.disableKeyListenersForCell(cell);
 
-                    return editor.init()
-                        .then(function() {
-                            return editor.attach(kbaseNode);
-                        })
-                        .then(function() {
-                            return editor.start();
-                        })
-                        .then(function() {
-                            return editor.run({
-                                appId: appId,
-                                appTag: appTag,
-                                authToken: runtime.authToken()
-                            });
+                    return editor.start({
+                            node: kbaseNode,
+                            appId: appId,
+                            appTag: appTag,
+                            authToken: runtime.authToken()
                         })
                         .then(function() {
                             // AppCellController.start();

@@ -9,7 +9,7 @@ define([
     // per async test which falls outside of this reasonable setting for "normal"
     // async code. When we simulate async failures, or chained async calls, we 
     // need to controle the timing expectations within the test itself.
-    jasmine.DEFAULT_TIMEOUT_INTERVAL = 100;
+    jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
     describe('Bus core functions', function() {
         it('Is alive', function() {
             var alive;
@@ -423,5 +423,172 @@ define([
         });
 
     });
+
+    it('Send and receive an async message over a named channel using a connection', function(done) {
+        var bus = Bus.make(),
+            connection = bus.connect();
+
+        connection.channel('test').when('my-message')
+            .then(function(message) {
+                expect(message.msg).toEqual('greetings');
+                done();
+            });
+
+        connection.channel('test').set('my-message', {
+            msg: 'greetings'
+        });
+    });
+
+    it('Send and receive an async message over a named channel using a connection, then another', function(done) {
+        var bus = Bus.make(),
+            connection = bus.connect();
+
+        connection.channel('test').when('my-message')
+            .then(function(message) {
+                expect(message.msg).toEqual('greetings');
+                connection.channel('test').on('my-message', function(message) {
+                    expect(message.msg).toEqual('goodbye');
+                    connection.stop();
+                    done();
+                })
+            });
+
+        connection.channel('test').set('my-message', {
+            msg: 'greetings'
+        });
+        connection.channel('test').set('my-message', {
+            msg: 'goodbye'
+        });
+    });
+
+    it('Set a persistent message and get it syncronously', function(done) {
+        var bus = Bus.make(),
+            connection = bus.connect();
+
+        connection.channel('test').set('my-message', {
+            msg: 'greetings'
+        });
+
+        var message = connection.channel('test').get('my-message');
+
+        expect(message.msg).toEqual('greetings');
+        done();
+        connection.stop();
+    });
+
+    it('Set a persistent message and get it syncronously, failed', function(done) {
+        var bus = Bus.make(),
+            connection = bus.connect();
+
+        connection.channel('test').set('my-message', {
+            msg: 'greetings'
+        });
+
+        var message = connection.channel('test').get('my-messagex', { msg: 'goodbye' });
+
+        expect(message.msg).toEqual('goodbye');
+        done();
+        connection.stop();
+    });
+
+    it('Set a persistent message and get it syncronously, set after get, should get default value', function(done) {
+        var bus = Bus.make(),
+            connection = bus.connect();
+
+
+        var message = connection.channel('test').get('my-messagex', { msg: 'goodbye' });
+
+        connection.channel('test').set('my-message', {
+            msg: 'greetings'
+        });
+
+        expect(message.msg).toEqual('goodbye');
+        done();
+        connection.stop();
+    });
+
+    it('Send and receive an async message over a named channel using a connection, then another', function(done) {
+        var bus = Bus.make(),
+            connection = bus.connect();
+
+        var started = new Date().getTime();
+
+        // var test2Called = 0;
+
+        var test2 = connection.channel('test').plisten({
+            key: {
+                type: 'my-message'
+            },
+            handle: function(message) {
+                done.fail();
+            }
+        });
+
+
+        // var test3 = connection.channel('test').plisten({
+        //     key: {
+        //         type: 'my-message'
+        //     },
+        //     handle: function(message) {
+        //         done.fail();
+        //     }
+        // });
+        // test3.promise.then(function() {
+        //     done.fail();
+        // });
+
+        // var test4 = connection.channel('test').plisten({
+        //     key: {
+        //         type: 'my-message'
+        //     },
+        //     handle: function(message) {
+        //         done.fail();
+        //     }
+        // });
+        // test4.promise.then(function() {
+        //     done.fail();
+        // });
+
+        var result = connection.channel('test').plisten({
+            key: {
+                type: 'my-message'
+            },
+            handle: function(message) {
+                var elapsed = new Date().getTime() - started;
+                expect(elapsed > 1000).toBeTruthy();
+                expect(message.msg).toEqual('goodbye');
+                done();
+            }
+        });
+
+        // test2.promise
+        //     .then(function(message) {
+        //         expect(message.msg).toEqual('hello');
+        //     });
+
+        // connection.channel('test2').set('my-message', {
+        //     msg: 'hello'
+        // });
+        // connection.channel('test2').set('my-message', {
+        //     msg: 'hi!'
+        // });
+
+        result.promise
+            .then(function(message) {
+                expect(message.msg).toEqual('greetings');
+                done();
+            });
+
+        connection.channel('test').set('my-message', {
+            msg: 'greetings'
+        });
+        // window.setTimeout(function() {
+        //     connection.channel('test').set('my-message', {
+        //         msg: 'goodbye'
+        //     });
+        // }, 2000);
+    });
+
+
 
 });

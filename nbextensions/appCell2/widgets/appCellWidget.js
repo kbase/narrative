@@ -1417,7 +1417,7 @@ define([
         function buildPython(cell, cellId, app, params) {
             var runId = new Uuid(4).format(),
                 fixedApp = fixApp(app),
-                code = PythonInterop.buildAppRunner2(cellId, runId, fixedApp, params);
+                code = PythonInterop.buildAppRunner(cellId, runId, fixedApp, params);
             // TODO: do something with the runId
             cell.set_text(code);
         }

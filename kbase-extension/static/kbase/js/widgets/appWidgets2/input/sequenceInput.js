@@ -408,11 +408,8 @@ define([
 
         function stop() {
             return Promise.try(function() {
-                return Promise.all(model.getItem('items').map(function(item) {
-                        return item.inputControl.stop()
-                            .then(function() {
-                                item.inputBus.stop();
-                            });
+                return Promise.all(viewModel.getItem('items').map(function(item) {
+                        return item.inputControl.instance.stop();
                     }))
                     .then(function() {
                         busConnection.stop();

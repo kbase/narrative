@@ -31,8 +31,11 @@ define([
 
             this.data = this.options.data;
             this.options.type = this.options.type.toLowerCase();
-            this.cell = Jupyter.narrative.getCellByKbaseId(this.options.cellId);
-            if (this.cell) {
+            if (this.options.cellId) {
+                this.cell = Jupyter.narrative.getCellByKbaseId(this.options.cellId);
+                if (!this.cell) {
+                    this.cell = $('#' + this.options.cellId).parents('.cell').data().cell;
+                }
                 this.cell.element.trigger('hideCodeArea.cell');
             }
             if (this.options.widget.toLowerCase() === "null") {
@@ -89,13 +92,11 @@ define([
                 //self.cellDebug('do not render cell. not visible');
                 return;
             }
-            //self.cellDebug('visible: true');
             return self.render();
         },
         // Render cell (unconditionally)
         render: function () {
             // render the cell
-            this.cellDebug('begin: render cell');
             var icon;
             switch (this.options.type) {
                 case 'method':
@@ -116,7 +117,6 @@ define([
             }
             // remember; don't render again
             this.is_rendered = true;
-            this.cellDebug('end: render cell');
         },
         renderViewerCell: function () {
             require(['kbaseNarrativeDataCell'], $.proxy(function () {
@@ -128,7 +128,7 @@ define([
         },
         renderMethodOutputCell: function () {
             var $label = $('<span>').addClass('label label-info').append('Output');
-            this.renderCell('kb-cell-output', 'panel-default', 'kb-out-desc', $label, 'method output');
+            this.renderCell('kb-cell-output', 'panel-default', 'kb-out-desc', $label, 'app output');
             var $cell = this.$elem.closest('.cell');
             $cell.trigger('set-icon.cell', ['<i class="fa fa-2x fa-file-o method-output-icon"></i>']);
         },
@@ -154,36 +154,33 @@ define([
         renderCell: function (baseClass, panelClass, headerClass, $label, titleSuffix) {
             // set up the widget line
             var widget = this.options.widget;
-            var methodName = this.options.title ? this.options.title : 'Unknown method';
+            var methodName = this.options.title ? this.options.title : 'Unknown App';
             var title = methodName;
             if (titleSuffix) {
                 title += ' (' + titleSuffix + ')';
             }
 
-// TODO: a label which can appear above or instaead of the icon in the prmopt area.
-//            this.$elem
-//                .closest('.cell')
-//                .trigger('set-label', [$label.html()]);
-
-            // this.$elem
-            //     .closest('.cell')
-            //     .trigger('set-title', [title]);
-
-            // TODO: omit this? v
-//            if (!(this.cell.metadata.kbase)) {
-//                this.cell.metadata.kbase = {
-//                    'attributes': {
-//                    },
-//                    'type': 'output'
-//                };
-//            }
-//            var meta = this.cell.metadata;
-//            if (meta.kbase.type && meta.kbase.type === 'output') {
-//                meta.kbase.attributes.title = title;
-//            }
-//
-//            this.cell.metadata = meta;
-            // TODO: omit? ^
+            if (this.cell) {
+                var meta = this.cell.metadata;
+                if (!meta.kbase) {
+                    meta.kbase = {};
+                }
+                if (!meta.kbase.attributes) {
+                    meta.kbase.attributes = {};
+                }
+                /* This is a bit of a hack - if the cell's metadata already has a title,
+                 * then don't change it. It was likely set by the creating App cell.
+                 * BUT this means that if someone manually executes the cell again to show
+                 * a different output, it still won't change, and might be weird.
+                 *
+                 * I suspect that will be a very rare case, and this solves an existing
+                 * problem with App cells, so here it is.
+                 */
+                if (!meta.kbase.attributes.title) {
+                    meta.kbase.attributes.title = title;
+                }
+                this.cell.metadata = meta;
+            }
 
 
             var widgetData = this.options.data;

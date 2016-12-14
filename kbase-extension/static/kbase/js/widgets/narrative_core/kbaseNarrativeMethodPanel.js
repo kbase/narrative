@@ -376,10 +376,10 @@ define ([
                         this.appCatalog = new KBaseCatalogBrowser(
                             this.$appCatalogBody,
                             {
-                                ignoreCategories:this.ignoreCategories,
+                                ignoreCategories: this.ignoreCategories,
                                 tag: this.currentTag
                             }
-                        );
+                        )
                     }
 
                     this.$slideoutBtn.tooltip('hide');

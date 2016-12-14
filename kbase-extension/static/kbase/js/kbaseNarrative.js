@@ -534,7 +534,9 @@ define(
                 var url = Config.url(val).toString();
                 // if url looks like a url (starts with http), include it.
                 // ignore job proxy and submit ticket
-                if (val === 'narrative_job_proxy' || val === 'submit_jira_ticket') {
+                if (val === 'narrative_job_proxy' ||
+                    val === 'submit_jira_ticket' ||
+                    val === 'narrative_method_store_types') {
                     return;
                 }
                 if (url && url.toLowerCase().indexOf('http') === 0) {

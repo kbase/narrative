@@ -42,6 +42,7 @@ define (
         loadingImage: Config.get('loading_gif'),
         wsUrl: Config.url('workspace'),
         methodStoreURL: Config.url('narrative_method_store'),
+        methodStoreTypesURL: Config.url('narrative_method_store_types'),
         methClient: null,
         uploaderURL: Config.url('transform'),
         ujsURL: Config.url('user_and_job_state'),
@@ -172,7 +173,11 @@ define (
             this.$mainPanel.append(this.infoPanel);
 
             this.methClient = new NarrativeMethodStore(this.methodStoreURL);
-            this.methClient.list_categories({'load_methods': 0, 'load_apps' : 0, 'load_types' : 1},
+            if (!this.methodStoreTypesURL) {
+                this.methodStoreTypesURL = this.methodStoreURL;
+            }
+            var typesClient = new NarrativeMethodStore(this.methodStoreTypesURL);
+            typesClient.list_categories({'load_methods': 0, 'load_apps' : 0, 'load_types' : 1},
                 $.proxy(function(data) {
                     var aTypes = data[3];
                     self.methodIds = [];
@@ -292,7 +297,7 @@ define (
                 this.widgetPanelCard2.append($header).append($body);
             }
 
-            for (methodPos in importMethodIds) {
+            for (var methodPos in importMethodIds) {
                 self.showTab(importMethodIds, methodPos, $header, $body,
                         numberOfTabs, methodFullInfo, methods);
             }
@@ -497,6 +502,7 @@ define (
         createImportStatusCell: function(methodName, jobId) {
             var cellIndex = Jupyter.notebook.get_selected_index();
             var cell = Jupyter.notebook.insert_cell_below('code', cellIndex);
+            $(cell.element).trigger('toggleCodeArea.cell');
             var title = 'Import job status for ' + methodName;
             var cellText = ['from biokbase.narrative.jobs.jobmanager import JobManager',
                             'JobManager().get_job(' + jobId + ')'].join('\n');

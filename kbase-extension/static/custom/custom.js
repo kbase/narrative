@@ -985,9 +985,21 @@ define([
                 that.notebook_name = json.name;
                 that.notebook_path = json.path;
                 that.last_modified = new Date(json.last_modified);
-                that.session.rename_notebook(json.path);
+                // that.session.rename_notebook(json.path);
                 that.events.trigger('notebook_renamed.Notebook', json);
             }
+        );
+    };
+
+    // Patch the save widget to skip the 'notebooks' part of the URL when updating
+    // after a notebook rename.
+    saveWidget.SaveWidget.prototype.update_address_bar = function () {
+        var base_url = this.notebook.base_url;
+        var path = this.notebook.notebook_path;
+        var state = {path : path};
+        window.history.replaceState(state, "", nbUtils.url_path_join(
+            base_url,
+            nbUtils.encode_uri_components(path))
         );
     };
 
@@ -1021,7 +1033,7 @@ define([
                                 d.modal('hide');
                                 that.notebook.metadata.name = new_name;
                                 that.element.find('span.filename').text(new_name);
-                                Jupyter.narrative.saveNarrative();
+                                // Jupyter.narrative.saveNarrative();
                             }, function (error) {
                             d.find('.rename-message').text(error.message || 'Unknown error');
                             d.find('input[type="text"]').prop('disabled', false).focus().select();

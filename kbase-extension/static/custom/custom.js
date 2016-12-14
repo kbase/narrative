@@ -596,7 +596,7 @@ define([
 //                icon
 //            ]);
         };
-        
+
         p.getIcon = function () {
             var iconColor = 'silver';
 
@@ -720,8 +720,19 @@ define([
                 }
 
                 if (title) {
+                    // trim down to max 50 characters
                     if (title.length > 50) {
                         title = title.substr(0, 50) + '...';
+                    }
+                    // trim down to the 'paragraph' char - signifies the end of a header element
+                    var paraIdx = title.indexOf('¶');
+                    if (paraIdx !== -1) {
+                        title = title.substr(0, paraIdx);
+                    }
+                    // trim down to the end of the first newline - a linebreak should be a title
+                    var newLineIdx = title.indexOf('\n');
+                    if (newLineIdx !== -1) {
+                        title = title.substr(0, newLineIdx);
                     }
                 } else {
                     title = '<i>empty markdown cell - add a title with # </i>';
@@ -730,7 +741,7 @@ define([
                 // if (title) {
                 // cell.setCellState('title', title);
                 utils.setCellMeta(cell, 'kbase.attributes.title', title, true);
-                
+
                 // this.renderPrompt();
 
                 // Extract title from h1, if any. otheriwse, first 50 characters
@@ -854,7 +865,7 @@ define([
 
             prompt.innerHTML = 'prompt here';
         };
-        
+
         p.getIcon = function () {
             var iconColor = 'silver';
 
@@ -897,7 +908,7 @@ define([
             $cellNode.on('hideCodeArea.cell', function () {
                 thisCell.hideCodeInputArea();
             });
-            
+
             if (this.code_mirror) {
                 this.code_mirror.on("change", function(cm, change) {
                     // alert(' Rendering code cell ', cm, change);
@@ -923,7 +934,7 @@ define([
                 codeInputArea.classList.add('hidden');
             }
         };
-        
+
         p.isCodeShowing = function () {
             var codeInputArea = this.input.find('.input_area')[0];
             if (codeInputArea) {

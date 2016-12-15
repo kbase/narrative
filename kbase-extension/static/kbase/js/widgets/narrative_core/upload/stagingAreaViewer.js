@@ -9,6 +9,7 @@ define([
     'util/string',
     'util/timeFormat',
     'kbase-client-api',
+    './uploadTour',
     'text!kbase/templates/data_staging/ftp_file_row.html',
     'text!kbase/templates/data_staging/ftp_file_table.html',
     'text!kbase/templates/data_staging/ftp_file_header.html',
@@ -25,6 +26,7 @@ define([
     StringUtil,
     TimeFormat,
     KBaseClients,
+    UploadTour,
     FtpFileRowHtml,
     FtpFileTableHtml,
     FtpFileHeaderHtml
@@ -115,6 +117,9 @@ define([
             }.bind(this));
             this.$elem.find('button#refresh').click(function() {
                 this.updateView();
+            }.bind(this));
+            this.$elem.find('button#help').click(function() {
+                this.startTour();
             }.bind(this));
         },
 
@@ -232,7 +237,13 @@ define([
                     console.error(err);
                 });
             }
+        },
 
+        startTour: function() {
+            if (!this.tour) {
+                this.tour = new UploadTour.Tour(this);
+            }
+            this.tour.start();
         }
     });
 });

@@ -1,6 +1,6 @@
-// Copyright (c) Jupyter Development Team.
-// Distributed under the terms of the Modified BSD License.
-
+/**
+ * Based on code developed by the Jupyter development team.
+ */
 define([
     'jquery',
     'bootstraptour',
@@ -210,10 +210,6 @@ define([
             reflex: true, // click on element to continue tour
             animation: false,
             duration: this.step_duration,
-            onStart: function() { console.log('tour started'); },
-            // TODO: remove the onPause/onResume logic once pi's patch has been
-            // merged upstream to make this work via data-resume-class and
-            // data-resume-text attributes.
             onPause: this.toggle_pause_play,
             onResume: this.toggle_pause_play,
             steps: this.tour_steps,

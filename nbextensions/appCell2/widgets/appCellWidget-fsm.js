@@ -379,6 +379,9 @@ define([], function() {
                     mode: 'success'
                 },
                 {
+                    mode: 'error'
+                },
+                {
                     mode: 'error',
                     stage: 'launching'
                 },
@@ -573,6 +576,9 @@ define([], function() {
                 },
                 {
                     mode: 'success'
+                },
+                {
+                    mode: 'error'
                 },
                 {
                     mode: 'error',

@@ -1413,7 +1413,6 @@ define([
                 } else {
                     Object.keys(validations).forEach(function(id) {
                         var result = validations[id];
-                        console.log('validation obj', id, result);
                         if (!result.isValid) {
                             messages.push(id + ':' + result.errorMessage);
                         }
@@ -1433,7 +1432,6 @@ define([
                     // we have a tree of validations, so we need to walk the tree to see if anything 
                     // does not validate.
                     var messages = gatherValidationMessages(result);
-                    console.log('VALIDATION MESSAGES?', result, messages);
 
                     if (messages.length === 0) {
                         buildPython(cell, utils.getMeta(cell, 'attributes').id, model.getItem('app'), exportParams());
@@ -1521,12 +1519,9 @@ define([
             }
         });
 
-        console.log('model created', model.getRawObject());
-
         spec = Spec.make({
             appSpec: model.getItem('app.spec')
         });
-
 
         return {
             init: init,

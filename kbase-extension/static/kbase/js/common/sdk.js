@@ -85,6 +85,9 @@ define([
             case 'float':
                 return parseFloat(defaultValue);
             case 'workspaceObjectRef':
+                if (defaultValue === '') {
+                    return null;
+                }
                 return defaultValue;
             case 'workspaceObjectName':
                 return defaultValue;
@@ -135,6 +138,7 @@ define([
         if (defaultValues.length === 0) {
             return converted.data.nullValue;
         }
+
         // also weird case of a default value of the empty string, which is really
         // the same as null...
         if (defaultValues[0] === '') {

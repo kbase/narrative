@@ -192,87 +192,110 @@ define([
             }
         };
         cell.getIcon = function() {
-            var icon = AppUtils.makeToolbarAppIcon(utils.getCellMeta(cell, 'kbase.appCell.app.spec'));
+            var icon = AppUtils.makeToolbarAppIcon(utils.getCellMeta(cell, 'kbase.viewCell.app.spec'));
             return icon;
         };
     }
 
+    function checkAndRepairCell(cell) {
+
+        // Has proper structure?
+        // TODO:
+
+        // Has proper app spec?
+        var spec = utils.getCellMeta(cell, 'kbase.viewCell.app.spec');
+        if (!spec) {
+            spec = utils.getCellMeta(cell, 'kbase.viewCell.app.appSpec');
+            if (!spec) {
+                throw new Error('App Spec not set on this editor.');
+            }
+            utils.setCellMeta(cell, 'kbase.viewCell.app.spec', spec);
+            console.warn('Editor cell repaired -- the app spec was set on the old property');
+            delete utils.getCellMeta(cell, 'kbase.viewCell.app').appSpec;
+        }
+
+    }
+
+
     function setupCell(cell) {
         return Promise.try(function() {
-            // Only handle kbase cells.
+                // Only handle kbase cells.
 
-            if (cell.cell_type !== 'code') {
-                // console.log('not a code cell!');
-                return;
-            }
-            if (!cell.metadata.kbase) {
-                // console.log('not a kbase code cell');
-                return;
-            }
-            if (cell.metadata.kbase.type !== 'view') {
-                // console.log('not a kbase app cell, ignoring');
-                return;
-            }
+                if (cell.cell_type !== 'code') {
+                    // console.log('not a code cell!');
+                    return;
+                }
+                if (!cell.metadata.kbase) {
+                    // console.log('not a kbase code cell');
+                    return;
+                }
+                if (cell.metadata.kbase.type !== 'view') {
+                    // console.log('not a kbase app cell, ignoring');
+                    return;
+                }
 
-            specializeCell(cell);
+                checkAndRepairCell(cell);
 
-            // The kbase property is only used for managing runtime state of the cell
-            // for kbase. Anything to be persistent should be on the metadata.
-            cell.kbase = {};
+                specializeCell(cell);
 
-            // Update metadata.
-            utils.setMeta(cell, 'attributes', 'lastLoaded', (new Date()).toUTCString());
+                // The kbase property is only used for managing runtime state of the cell
+                // for kbase. Anything to be persistent should be on the metadata.
+                cell.kbase = {};
 
-            // TODO: the code cell input widget should instantiate its state
-            // from the cell!!!!
-            var cellBus = runtime.bus().makeChannelBus({ description: 'Parent comm for The Cell Bus' }),
-                appId = utils.getMeta(cell, 'viewCell', 'app').id,
-                appTag = utils.getMeta(cell, 'viewCell', 'app').tag,
-                viewCellWidget = ViewCellWidget.make({
-                    bus: cellBus,
-                    cell: cell,
-                    runtime: runtime,
-                    workspaceInfo: workspaceInfo
-                }),
-                dom = Dom.make({ node: cell.input[0] }),
-                kbaseNode = dom.createNode(div({
-                    dataSubareaType: 'view-cell-input'
-                }));
+                // Update metadata.
+                utils.setMeta(cell, 'attributes', 'lastLoaded', (new Date()).toUTCString());
 
-            // Create (above) and place the main container for the input cell.
-            cell.input.after($(kbaseNode));
-            cell.kbase.node = kbaseNode;
-            cell.kbase.$node = $(kbaseNode);
+                // TODO: the code cell input widget should instantiate its state
+                // from the cell!!!!
+                var cellBus = runtime.bus().makeChannelBus({ description: 'Parent comm for The Cell Bus' }),
+                    appId = utils.getMeta(cell, 'viewCell', 'app').id,
+                    appTag = utils.getMeta(cell, 'viewCell', 'app').tag,
+                    viewCellWidget = ViewCellWidget.make({
+                        bus: cellBus,
+                        cell: cell,
+                        runtime: runtime,
+                        workspaceInfo: workspaceInfo
+                    }),
+                    dom = Dom.make({ node: cell.input[0] }),
+                    kbaseNode = dom.createNode(div({
+                        dataSubareaType: 'view-cell-input'
+                    }));
 
-            jupyter.disableKeyListenersForCell(cell);
+                // Create (above) and place the main container for the input cell.
+                cell.input.after($(kbaseNode));
+                cell.kbase.node = kbaseNode;
+                cell.kbase.$node = $(kbaseNode);
 
-            return viewCellWidget.init()
-                .then(function() {
-                    return viewCellWidget.attach(kbaseNode);
-                })
-                .then(function() {
-                    return viewCellWidget.start();
-                })
-                .then(function() {
-                    return viewCellWidget.run({
-                        appId: appId,
-                        appTag: appTag,
-                        authToken: runtime.authToken()
+                jupyter.disableKeyListenersForCell(cell);
+
+                return viewCellWidget.init()
+                    .then(function() {
+                        return viewCellWidget.attach(kbaseNode);
+                    })
+                    .then(function() {
+                        return viewCellWidget.start();
+                    })
+                    .then(function() {
+                        return viewCellWidget.run({
+                            appId: appId,
+                            appTag: appTag,
+                            authToken: runtime.authToken()
+                        });
+                    })
+                    .then(function() {
+                        // AppCellController.start();
+                        cell.renderMinMax();
+                        return {
+                            widget: viewCellWidget,
+                            bus: cellBus
+                        };
                     });
-                })
-                .then(function() {
-                    // AppCellController.start();
-                    cell.renderMinMax();
-                    return {
-                        widget: viewCellWidget,
-                        bus: cellBus
-                    };
-                })
-                .catch(function(err) {
-                    console.error('ERROR starting app cell', err);
-                    alert('Error starting app cell');
-                });
-        });
+            })
+            .catch(function(err) {
+                console.error('ERROR starting app cell', err);
+                alert('Error starting app cell');
+            });
+
     }
 
     function setupNotebook() {

@@ -472,7 +472,7 @@ define([
                 break;
             default:
                 console.error('Unknown data type', dataType);
-                throw new Error('Unknown data type');
+                throw new Error('Unknown data type: ' + dataType);
         }
         if (constraints) {
             Object.keys(constraints).forEach(function(key) {

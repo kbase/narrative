@@ -17,7 +17,7 @@ define([
     'common/ui',
     'common/props',
     'common/runtime',
-    './input/errorInput',
+    './errorControl',
     'css!google-code-prettify/prettify.css'
 ], function(
     Promise,
@@ -51,7 +51,9 @@ define([
     function factory(config) {
         var ui,
             runtime = Runtime.make(),
-            bus = runtime.bus().makeChannelBus(null, 'Field bus'),
+            bus = runtime.bus().makeChannelBus({
+                description: 'Field bus'
+            }),
             places,
             parent, container,
             inputControlFactory = config.inputControlFactory,
@@ -65,6 +67,7 @@ define([
             // console.log('field widget config', config);
             inputControl = inputControlFactory.make({
                 bus: bus,
+                channelName: bus.channelName,
                 initialValue: config.initialValue,
                 appSpec: config.appSpec,
                 parameterSpec: config.parameterSpec,
@@ -503,12 +506,12 @@ define([
                             break;
                     }
                 });
-                bus.on('touched', function(message) {
-                    places.feedback.style.backgroundColor = 'yellow';
-                });
-                bus.on('changed', function() {
-                    places.feedback.style.backgroundColor = '';
-                });
+                // bus.on('touched', function (message) {
+                //     places.feedback.style.backgroundColor = 'yellow';
+                // });
+                // bus.on('changed', function () {
+                //     places.feedback.style.backgroundColor = '';
+                // });
                 bus.on('saved', function(message) {
                     console.log('FIELD detected saved');
                 });

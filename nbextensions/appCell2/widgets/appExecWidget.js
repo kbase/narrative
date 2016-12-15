@@ -14,20 +14,25 @@ define([
     'kb_common/html',
     'kb_service/client/workspace',
     './jobLogViewer'
-], function (Uuid, $, Props, utils, Jobs, UI, Runtime, Events, format, html, Workspace, LogViewer) {
+], function(Uuid, $, Props, utils, Jobs, UI, Runtime, Events, format, html, Workspace, LogViewer) {
     'use strict';
 
     var t = html.tag,
         tabsId,
-        div = t('div'), span = t('span'), form = t('form'),
-        table = t('table'), tr = t('tr'), td = t('td'), th = t('th'),
+        div = t('div'),
+        span = t('span'),
+        table = t('table'),
+        tr = t('tr'),
+        td = t('td'),
+        th = t('th'),
         textarea = t('textarea'),
-        ul = t('ul'), li = t('li');
+        ul = t('ul'),
+        li = t('li');
 
     function factory(config) {
         var api,
             runtime = Runtime.make(),
-            bus = runtime.bus().makeChannelBus(null, 'Bus for exec widget'),
+            bus = runtime.bus().makeChannelBus({ description: 'Bus for exec widget' }),
             cellBus = config.bus,
             container,
             listeners = [],
@@ -53,10 +58,10 @@ define([
                 hidden: false,
                 type: 'primary',
                 classes: 'kb-panel-light',
-                body: table({class: 'table table-striped'}, [
-                    tr([th('Objects Created'), td({dataElement: 'objects-created'})]),
-                    tr([th('Message'), td({dataElement: 'message'})]),
-                    tr([th('Warnings'), td({dataElement: 'warnings'})])
+                body: table({ class: 'table table-striped' }, [
+                    tr([th('Objects Created'), td({ dataElement: 'objects-created' })]),
+                    tr([th('Message'), td({ dataElement: 'message' })]),
+                    tr([th('Warnings'), td({ dataElement: 'warnings' })])
                 ])
             });
         }
@@ -68,7 +73,7 @@ define([
                 hidden: false,
                 type: 'primary',
                 classes: 'kb-panel-light',
-                body: div({style: {fontFamily: 'monospace', whiteSpace: 'pre'}, dataElement: 'content'})
+                body: div({ style: { fontFamily: 'monospace', whiteSpace: 'pre' }, dataElement: 'content' })
             });
         }
 
@@ -99,9 +104,9 @@ define([
                 type: 'primary',
                 classes: 'kb-panel-light',
                 xbody: [
-                    textarea({class: 'form-control', dataElement: 'logs'})
+                    textarea({ class: 'form-control', dataElement: 'logs' })
                 ],
-                body: div({dataElement: 'mount'})
+                body: div({ dataElement: 'mount' })
             });
         }
 
@@ -117,49 +122,49 @@ define([
          */
         function renderExecStats() {
             var labelStyle = {
-                textAlign: 'right',
-                border: '1px transparent solid',
-                padding: '4px'
-            },
-            dataStyle = {
-                border: '1px silver solid',
-                padding: '4px',
-                display: 'inline-block',
-                minWidth: '20px',
-                backgroundColor: '#EEE',
-                color: '#000'
-            };
+                    textAlign: 'right',
+                    border: '1px transparent solid',
+                    padding: '4px'
+                },
+                dataStyle = {
+                    border: '1px silver solid',
+                    padding: '4px',
+                    display: 'inline-block',
+                    minWidth: '20px',
+                    backgroundColor: '#EEE',
+                    color: '#000'
+                };
             return ui.buildPanel({
                 // title: 'Execution Status',
                 name: 'execStatus',
                 hidden: false,
                 type: 'primary',
                 classes: ['kb-panel-light'],
-                body: div({style: {paddingTop: '6px'}}, [
-                    div({class: 'row', dataElement: 'last-updated'}, [
-                        div({class: 'col-md-2', style: labelStyle}, span({dataElement: 'label'}, 'Last updated')),
-                        div({class: 'col-md-2', style: dataStyle}, span({dataElement: 'elapsed', class: 'kb-elapsed-time'})),
-                        div({class: 'col-md-2', style: dataStyle}, span({dataElement: 'time'}))
+                body: div({ style: { paddingTop: '6px' } }, [
+                    div({ class: 'row', dataElement: 'last-updated' }, [
+                        div({ class: 'col-md-2', style: labelStyle }, span({ dataElement: 'label' }, 'Last updated')),
+                        div({ class: 'col-md-2', style: dataStyle }, span({ dataElement: 'elapsed', class: 'kb-elapsed-time' })),
+                        div({ class: 'col-md-2', style: dataStyle }, span({ dataElement: 'time' }))
                     ]),
-//                    div({class: 'row', dataElement: 'launch'}, [
-//                        div({class: 'col-md-2', style: labelStyle}, span({dataElement: 'label'}, 'Launch')),
-//                        div({class: 'col-md-2', style: dataStyle}, span({dataElement: 'elapsed', class: 'kb-elapsed-time'}))
-//                    ]),
-                    div({class: 'row', dataElement: 'queue'}, [
-                        div({class: 'col-md-2', style: labelStyle}, span({dataElement: 'label'}, 'Queue')),
-                        div({class: 'col-md-2', style: dataStyle}, span({dataElement: 'elapsed', class: 'kb-elapsed-time'})),
-                        div({class: 'col-md-2', style: labelStyle}, 'Position'),
-                        div({class: 'col-md-2', style: dataStyle}, span({dataElement: 'position'}))
+                    //                    div({class: 'row', dataElement: 'launch'}, [
+                    //                        div({class: 'col-md-2', style: labelStyle}, span({dataElement: 'label'}, 'Launch')),
+                    //                        div({class: 'col-md-2', style: dataStyle}, span({dataElement: 'elapsed', class: 'kb-elapsed-time'}))
+                    //                    ]),
+                    div({ class: 'row', dataElement: 'queue' }, [
+                        div({ class: 'col-md-2', style: labelStyle }, span({ dataElement: 'label' }, 'Queue')),
+                        div({ class: 'col-md-2', style: dataStyle }, span({ dataElement: 'elapsed', class: 'kb-elapsed-time' })),
+                        div({ class: 'col-md-2', style: labelStyle }, 'Position'),
+                        div({ class: 'col-md-2', style: dataStyle }, span({ dataElement: 'position' }))
                     ]),
-                    div({class: 'row', dataElement: 'run'}, [
-                        div({class: 'col-md-2', style: labelStyle}, span({dataElement: 'label'}, 'Run')),
-                        div({class: 'col-md-2', style: dataStyle}, span({dataElement: 'elapsed', class: 'kb-elapsed-time'}))
+                    div({ class: 'row', dataElement: 'run' }, [
+                        div({ class: 'col-md-2', style: labelStyle }, span({ dataElement: 'label' }, 'Run')),
+                        div({ class: 'col-md-2', style: dataStyle }, span({ dataElement: 'elapsed', class: 'kb-elapsed-time' }))
                     ]),
-                    div({class: 'row', dataElement: 'finish'}, [
-                        div({class: 'col-md-2', style: labelStyle}, 'Finish'),
-                        div({class: 'col-md-2', style: dataStyle}, span({dataElement: 'state'})),
-                        div({class: 'col-md-2', style: labelStyle}, 'When'),
-                        div({class: 'col-md-2', style: dataStyle}, span({dataElement: 'finishedAt'}))
+                    div({ class: 'row', dataElement: 'finish' }, [
+                        div({ class: 'col-md-2', style: labelStyle }, 'Finish'),
+                        div({ class: 'col-md-2', style: dataStyle }, span({ dataElement: 'state' })),
+                        div({ class: 'col-md-2', style: labelStyle }, 'When'),
+                        div({ class: 'col-md-2', style: dataStyle }, span({ dataElement: 'finishedAt' }))
                     ])
                 ])
             });
@@ -174,7 +179,7 @@ define([
 
             // UPDATED
             if (model.getItem('runStateLastUpdatedTime')) {
-                (function () {
+                (function() {
                     var now = new Date().getTime(),
                         then = model.getItem('runStateLastUpdatedTime', now);
                     ui.setContent(['execStatus', 'last-updated', 'elapsed'], format.elapsedTime(now - then));
@@ -183,26 +188,26 @@ define([
             }
 
             // LAUNCH
-//            if (state.elapsedLaunchTime) {
-//                (function () {
-//                    var label;
-//                    if (state.temporalState === 'launching') {
-//                        label = 'Launching';
-//                        ui.addClass(['execStatus', 'launch', 'elapsed'], '-active');
-//                    } else {
-//                        label = 'Launched in';
-//                        ui.removeClass(['execStatus', 'launch', 'elapsed'], '-active');
-//                    }
-//                    ui.setContent(['execStatus', 'launch', 'label'], label);
-//                    ui.setContent(['execStatus', 'launch', 'elapsed'], format.elapsedTime(state.elapsedLaunchTime) || '');
-//                }());
-//            } else {
-//                ui.setContent(['execStatus', 'launch', 'elapsed'], '-');
-//            }
+            //            if (state.elapsedLaunchTime) {
+            //                (function () {
+            //                    var label;
+            //                    if (state.temporalState === 'launching') {
+            //                        label = 'Launching';
+            //                        ui.addClass(['execStatus', 'launch', 'elapsed'], '-active');
+            //                    } else {
+            //                        label = 'Launched in';
+            //                        ui.removeClass(['execStatus', 'launch', 'elapsed'], '-active');
+            //                    }
+            //                    ui.setContent(['execStatus', 'launch', 'label'], label);
+            //                    ui.setContent(['execStatus', 'launch', 'elapsed'], format.elapsedTime(state.elapsedLaunchTime) || '');
+            //                }());
+            //            } else {
+            //                ui.setContent(['execStatus', 'launch', 'elapsed'], '-');
+            //            }
 
             // QUEUE
             if (state.elapsedQueueTime) {
-                (function () {
+                (function() {
                     var label;
                     if (state.elapsedRunTime) {
                         ui.removeClass(['execStatus', 'queue', 'elapsed'], '-active');
@@ -226,7 +231,7 @@ define([
 
             // RUN
             if (state.elapsedRunTime) {
-                (function () {
+                (function() {
                     var label;
                     if (state.completedTime) {
                         ui.removeClass(['execStatus', 'run', 'elapsed'], '-active');
@@ -291,12 +296,12 @@ define([
                 type: 'primary',
                 classes: ['kb-panel-light'],
                 body: [
-                    table({class: 'table table-striped'}, [
-                        tr([th('Job Id'), td({dataElement: 'id'})]),
-                        tr([th('Status'), td({dataElement: 'status'})]),
-                        tr([th('Submitted'), td({dataElement: 'submitted'})]),
-                        tr([th('Started'), td({dataElement: 'started'})]),
-                        tr([th('Completed'), td({dataElement: 'completed'})])
+                    table({ class: 'table table-striped' }, [
+                        tr([th('Job Id'), td({ dataElement: 'id' })]),
+                        tr([th('Status'), td({ dataElement: 'status' })]),
+                        tr([th('Submitted'), td({ dataElement: 'submitted' })]),
+                        tr([th('Started'), td({ dataElement: 'started' })]),
+                        tr([th('Completed'), td({ dataElement: 'completed' })])
                     ])
                 ]
             });
@@ -319,7 +324,7 @@ define([
             updateJobDetails();
             var details = model.getItem('jobDetails');
             if (details) {
-                Object.keys(details).forEach(function (key) {
+                Object.keys(details).forEach(function(key) {
                     var value = details[key],
                         el = ui.getElement(['job-details', key]);
                     if (el) {
@@ -336,7 +341,7 @@ define([
                 hidden: false,
                 type: 'primary',
                 classes: ['kb-panel-light'],
-                body: div({dataElement: 'content', style: {whiteSpace: 'pre', fontFamily: 'monospace'}})
+                body: div({ dataElement: 'content', style: { whiteSpace: 'pre', fontFamily: 'monospace' } })
             });
         }
 
@@ -358,7 +363,7 @@ define([
             if (report.objects_created.length === 0) {
                 objectsCreated = 'no objects created';
             } else {
-                objectsCreated = ul(report.objects_created.map(function (object) {
+                objectsCreated = ul(report.objects_created.map(function(object) {
                     return li(object);
                 }).join('\n'));
             }
@@ -369,7 +374,7 @@ define([
             if (report.warnings.length === 0) {
                 warnings = 'no warnings';
             } else {
-                warnings = ul(report.warnings.map(function (object) {
+                warnings = ul(report.warnings.map(function(object) {
                     return li(object);
                 }).join('\n'));
             }
@@ -385,7 +390,7 @@ define([
             args.node.innerHTML = ui.buildPanel({
                 title: 'Result Value',
                 classes: ['kb-panel-light'],
-                body: div({dataElement: 'content'})
+                body: div({ dataElement: 'content' })
             });
 
             return ui.jsonBlockWidget.make().start({
@@ -407,11 +412,11 @@ define([
                 title: 'Error',
                 type: 'danger',
                 classes: ['kb-panel-light'],
-                body: table({class: 'table table-striped', style: {tableLayout: 'fixed'}}, [
-                    tr([th({style: {width: '15%'}}, 'Error in'), td({style: {width: '85%'}}, error.location)]),
+                body: table({ class: 'table table-striped', style: { tableLayout: 'fixed' } }, [
+                    tr([th({ style: { width: '15%' } }, 'Error in'), td({ style: { width: '85%' } }, error.location)]),
                     tr([th('Type'), td(error.type)]),
                     tr([th('Message'), td(error.message)]),
-                    tr([th('Detail'), td([div({style: {overflowX: 'scroll', whiteSpace: 'pre'}}, error.detail)])])
+                    tr([th('Detail'), td([div({ style: { overflowX: 'scroll', whiteSpace: 'pre' } }, error.detail)])])
                 ])
             });
 
@@ -447,7 +452,7 @@ define([
             var logViewer = LogViewer.make();
             widgets.logViewer = logViewer;
             logViewer.start()
-                .then(function () {
+                .then(function() {
                     logViewer.bus.emit('run', {
                         node: args.node,
                         jobId: model.getItem('runState.jobId')
@@ -483,71 +488,67 @@ define([
 
         function render() {
             tabsId = html.genId();
-            var events = Events.make({node: container}),
+            var events = Events.make({ node: container }),
                 tabs = ui.buildTabs({
                     id: tabsId,
                     fade: true,
                     style: {
                         padding: '10px 0 0 0'
                     },
-                    tabs: [
-                        {
+                    tabs: [{
                             name: 'stats',
                             label: 'Stats',
                             content: renderExecStats(),
                             icon: 'clock-o',
-                            events: [
-                                {
+                            events: [{
                                     type: 'shown',
-                                    handler: function (e) {
+                                    handler: function(e) {
                                         execStateListeners.stats = showExecStats;
                                         showExecState();
                                     }
                                 },
                                 {
                                     type: 'hidden',
-                                    handler: function (e) {
+                                    handler: function(e) {
                                         delete execStateListeners.stats;
                                     }
                                 }
                             ]
                         },
-                        ui.ifAdvanced(function () {
+                        ui.ifAdvanced(function() {
                             return {
                                 label: 'Details',
                                 content: renderJobDetails(),
-                                events: [
-                                    {
+                                events: [{
                                         type: 'shown',
-                                        handler: function (e) {
+                                        handler: function(e) {
                                             execStateListeners.detail = showJobDetails;
                                             showExecState();
                                         }
                                     },
                                     {
                                         type: 'hidden',
-                                        handler: function (e) {
+                                        handler: function(e) {
                                             delete execStateListeners.detail;
                                         }
                                     }
                                 ]
                             };
                         }),
-                        ui.ifAdvanced(function () {
+                        ui.ifAdvanced(function() {
                             return {
                                 label: 'Raw',
                                 content: renderRawJobState(),
-                                events: [
-                                    {
+                                events: [{
                                         type: 'shown',
-                                        handler: function (e) {
+                                        handler: function(e) {
                                             execStateListeners.detail = showRawJobState;
                                             showExecState();
                                         }
                                     },
                                     {
                                         type: 'hidden',
-                                        handler: function (e) {
+                                        handler: function(e) {
                                             delete execStateListeners.detail;
                                         }
                                     }
@@ -558,23 +559,22 @@ define([
                             label: 'Log',
                             content: renderJobLog(),
                             icon: 'list',
-                            events: [
-                                {
+                            events: [{
                                     type: 'shown',
-                                    handler: function (e) {
+                                    handler: function(e) {
                                         var panelId = e.target.getAttribute('data-panel-id'),
                                             panel = document.getElementById(panelId);
-                                        showJobLog({node: panel});
+                                        showJobLog({ node: panel });
                                         // execStateListeners.log = showJobLog;
                                         // showExecState();
                                     }
                                 },
                                 {
                                     type: 'hidden',
-                                    handler: function (e) {
+                                    handler: function(e) {
                                         var panelId = e.target.getAttribute('data-panel-id'),
                                             panel = document.getElementById(panelId);
-                                        hideJobLog({node: panel});
+                                        hideJobLog({ node: panel });
                                         // delete execStateListeners.log;
                                     }
                                 }
@@ -586,21 +586,20 @@ define([
                             content: renderJobResult(),
                             // icon: renderJobResultIcon(),
                             icon: 'question',
-                            events: [
-                                {
+                            events: [{
                                     type: 'shown',
-                                    handler: function (e) {
+                                    handler: function(e) {
                                         var panelId = e.target.getAttribute('data-panel-id'),
                                             panel = document.getElementById(panelId);
-                                        execStateListeners.result = function () {
-                                            showJobResult({node: panel});
+                                        execStateListeners.result = function() {
+                                            showJobResult({ node: panel });
                                         };
-                                        showJobResult({node: panel});
+                                        showJobResult({ node: panel });
                                     }
                                 },
                                 {
                                     type: 'hidden',
-                                    handler: function (e) {
+                                    handler: function(e) {
                                         var panelId = e.target.getAttribute('data-panel-id'),
                                             panel = document.getElementById(panelId);
                                         panel.innerHTML = '';
@@ -618,7 +617,7 @@ define([
                 //]),
                 tabs.content
             ]);
-            tabs.events.forEach(function (event) {
+            tabs.events.forEach(function(event) {
                 events.addEvent(event);
             });
             events.attachEvents();
@@ -631,7 +630,7 @@ define([
         // that's for sure.
         function updateJobLog(data) {
             Jobs.getLogData(data.jobId, 0)
-                .catch(function (err) {
+                .catch(function(err) {
                     console.error('Error getting log lines', err);
                     ui.getElement(['job-log', 'logs']).innerHTML = 'ERROR:\n' +
                         err.remoteStacktrace.join('\n');
@@ -655,38 +654,38 @@ define([
          * final project ... the report_ref, which we can use to get the report!
          *
          */
-//        function updateJobReport(job) {
-//            /*
-//             * If the job has not completed, there will be not outputs, so we
-//             * can just bail.
-//             */
-//            if (!job.state.step_outputs || Object.keys(job.state.step_outputs).length === 0) {
-//                return;
-//            }
-//
-//            var stepJobIds = job.state.step_job_ids,
-//                stepKey = Object.keys(stepJobIds)[0],
-//                stepOutput = JSON.parse(job.state.step_outputs[stepKey]),
-//                reportRef = stepOutput[0].report_ref,
-//                workspace = new Workspace(runtime.config('services.workspace.url'), {
-//                    token: runtime.authToken()
-//                });
-//
-//            return workspace.get_objects([{
-//                    ref: reportRef
-//                }])
-//                .then(function (result) {
-//                    if (!result[0]) {
-//                        return;
-//                    }
-//                    var report = result[0].data;
-//                    // Store it in the metadata.
-//                    model.setItem('jobReport', JSON.parse(JSON.stringify(report)));
-//                })
-//                .catch(function (err) {
-//                    console.error('Error getting report', err);
-//                });
-//        }
+        //        function updateJobReport(job) {
+        //            /*
+        //             * If the job has not completed, there will be not outputs, so we
+        //             * can just bail.
+        //             */
+        //            if (!job.state.step_outputs || Object.keys(job.state.step_outputs).length === 0) {
+        //                return;
+        //            }
+        //
+        //            var stepJobIds = job.state.step_job_ids,
+        //                stepKey = Object.keys(stepJobIds)[0],
+        //                stepOutput = JSON.parse(job.state.step_outputs[stepKey]),
+        //                reportRef = stepOutput[0].report_ref,
+        //                workspace = new Workspace(runtime.config('services.workspace.url'), {
+        //                    token: runtime.authToken()
+        //                });
+        //
+        //            return workspace.get_objects([{
+        //                    ref: reportRef
+        //                }])
+        //                .then(function (result) {
+        //                    if (!result[0]) {
+        //                        return;
+        //                    }
+        //                    var report = result[0].data;
+        //                    // Store it in the metadata.
+        //                    model.setItem('jobReport', JSON.parse(JSON.stringify(report)));
+        //                })
+        //                .catch(function (err) {
+        //                    console.error('Error getting report', err);
+        //                });
+        //        }
 
         function getJobReport(reportRef) {
             var workspace = new Workspace(runtime.config('services.workspace.url'), {
@@ -696,7 +695,7 @@ define([
             return workspace.get_objects([{
                     ref: reportRef
                 }])
-                .then(function (result) {
+                .then(function(result) {
                     if (!result[0]) {
                         return;
                     }
@@ -704,7 +703,7 @@ define([
                     // Store it in the metadata.
                     return JSON.parse(JSON.stringify(report));
                 })
-                .catch(function (err) {
+                .catch(function(err) {
                     console.error('Error getting report', err);
                 });
         }
@@ -728,7 +727,8 @@ define([
             var temporalState, executionState,
                 error, now = new Date().getTime(),
                 launchStartTime = launchState.startTime,
-                elapsed = now - launchStartTime, newRunState,
+                elapsed = now - launchStartTime,
+                newRunState,
                 oldRunState = model.getItem('runState', {});
 
             switch (launchState.event) {
@@ -860,7 +860,7 @@ define([
                 //    runState.elapsedLaunchTime = submitTime - launchState.startTime;
                 //} else {
                 //    console.warn('STRANGE - no launchState', launchState);
-               // }
+                // }
 
                 position = jobState.position;
                 if (jobState.exec_start_time) {
@@ -998,7 +998,7 @@ define([
          * When finished the Result tab will be selected
          */
         function showExecState() {
-            Object.keys(execStateListeners).forEach(function (listenerKey) {
+            Object.keys(execStateListeners).forEach(function(listenerKey) {
                 var listener = execStateListeners[listenerKey];
                 try {
                     listener();
@@ -1072,7 +1072,7 @@ define([
                         break;
                     case 'canceled':
                         // update the result tab
-                         ui.updateTab(tabsId, 'result', {
+                        ui.updateTab(tabsId, 'result', {
                             label: 'Canceled',
                             icon: 'exclamation',
                             color: 'orange',
@@ -1129,9 +1129,9 @@ define([
 
             // INTERNAL EVENTS
 
-            ev = bus.on('show-job-report', function (message) {
+            ev = bus.on('show-job-report', function(message) {
                 getJobReport(message.reportRef)
-                    .then(function (jobReport) {
+                    .then(function(jobReport) {
                         model.setItem('jobReport', jobReport);
                         showJobReport();
                     });
@@ -1148,7 +1148,7 @@ define([
              * Alternatively, we could pass these events through the exec
              * bus itself...
              */
-            ev = cellBus.on('launch-status', function (message) {
+            ev = cellBus.on('launch-status', function(message) {
                 processNewLaunchState(message.launchState);
             });
             listeners.push(ev);
@@ -1159,20 +1159,20 @@ define([
              * changes on type: job-state.
              * This was done, rather thanhave
              */
-            ev = cellBus.on('job-state', function (message) {
+            ev = cellBus.on('job-state', function(message) {
                 processNewJobState(message.jobState);
             });
             listeners.push(ev);
             // not sure if this is the wisest thing to do...
 
-            ev = cellBus.on('job-state-updated', function (message) {
+            ev = cellBus.on('job-state-updated', function(message) {
                 model.setItem('runStateLastUpdatedTime', new Date().getTime());
             });
             listeners.push(ev);
 
             // GLOBAL EVENTS
 
-            ev = runtime.bus().on('clock-tick', function () {
+            ev = runtime.bus().on('clock-tick', function() {
                 // only update the ui on clock tick if we are currently running
                 // a job. TODO: the clock should be disconnected.
                 // disable for now ... need to find a better way of processing clock ticks...
@@ -1189,13 +1189,13 @@ define([
         }
 
         function teardown() {
-            listeners.forEach(function (listener) {
+            listeners.forEach(function(listener) {
                 runtime.bus().removeListener(listener);
             });
         }
 
         function start() {
-            bus.on('run', function (message) {
+            bus.on('run', function(message) {
                 container = message.node;
                 ui = UI.make({
                     node: container,
@@ -1215,24 +1215,24 @@ define([
                 // renderRunState();
                 showExecState();
             });
-            bus.on('stop', function (message) {
+            bus.on('stop', function(message) {
                 teardown();
             });
-            bus.on('reset', function (message) {
+            bus.on('reset', function(message) {
                 // console.log('I should reset right about now.');
 
             });
         }
 
         function stop() {
-            listeners.forEach(function (listener) {
+            listeners.forEach(function(listener) {
                 // TODO: make this work
                 runtime.bus().removeListener(listener);
             });
             listeners = [];
             // reset job state...
             model = Props.make({
-                onUpdate: function () {
+                onUpdate: function() {
                     // render();
                 }
             });
@@ -1251,7 +1251,7 @@ define([
         // MAIN
 
         model = Props.make({
-            onUpdate: function () {
+            onUpdate: function() {
                 // render();
             }
         });
@@ -1260,7 +1260,7 @@ define([
     }
 
     return {
-        make: function (config) {
+        make: function(config) {
             return factory(config);
         }
     };

@@ -30,13 +30,12 @@ define (
         options: {
         	token: null,
         	type: null,
-        	wsId: null,
         	objId: null,
+        	ref: null,
         	downloadSpecCache: null  // {'lastUpdateTime': <millisec.>, 'types': {<type>: <spec>}}
         },
         token: null,
         type: null,  // Type of workspace object to show downloaders for
-        wsId: null,
         objId: null,
         loadingImage: Config.get('loading_gif'),
         wsUrl: Config.url('workspace'),
@@ -45,6 +44,7 @@ define (
         exportURL: Config.url('data_import_export'),
         useDynamicDownloadSupport: false,
         nmsURL: Config.url('narrative_method_store'),
+        nmsTypesURL: Config.url('narrative_method_store_types'),
         eeURL: Config.url('job_service'),
         srvWizURL: Config.url('service_wizard'),
         timer: null,
@@ -55,14 +55,21 @@ define (
             var self = this;
             this.token = this.options.token;
             this.type = this.options.type;
-            this.wsId = this.options.wsId;
             this.objId = this.options.objId;
+            this.ref = this.options.ref;
+            if (!this.objId) {
+                var refPathItems = this.ref.split(';');
+                this.objId = refPathItems[refPathItems.length - 1].trim().split('/')[1];
+            }
             this.downloadSpecCache = options['downloadSpecCache'];
             var lastUpdateTime = this.downloadSpecCache['lastUpdateTime'];
             if (lastUpdateTime) {
                 this.render();
             } else {
-                var nms = new NarrativeMethodStore(this.nmsURL, { token: this.token });
+                if (!this.nmsTypesURL) {
+                    this.nmsTypesURL = this.nmsURL;
+                }
+                var nms = new NarrativeMethodStore(this.nmsTypesURL, { token: this.token });
                 nms.list_categories({'load_methods': 0, 'load_apps' : 0, 'load_types' : 1},
                         $.proxy(function(data) {
                             var aTypes = data[3];
@@ -108,11 +115,11 @@ define (
     		            .append(descr.name)
     		            .click(function() {
     		                $btnTd.find('.kb-data-list-btn').prop('disabled', true);
-    		                self.runDownloader(self.type, self.wsId, self.objId, descr);
+    		                self.runDownloader(self.type, self.ref, self.objId, descr);
     		            }));
     		};
     		
-    		var downloaders = self.prepareDownloaders(self.type, self.wsId, self.objId);
+    		var downloaders = self.prepareDownloaders(self.type, self.ref, self.objId);
     		for (var downloadPos in downloaders)
     			addDownloader(downloaders[downloadPos]);
 		
@@ -120,8 +127,7 @@ define (
                     .append('JSON')
                     .click(function() {
                     	var urlSuffix = '/download?' + 
-                    	    'ws='+encodeURIComponent(self.wsId)+
-                    	    '&id='+encodeURIComponent(self.objId)+
+                    	    'ref='+encodeURIComponent(self.ref)+
                     		'&url='+encodeURIComponent(self.wsUrl) + '&wszip=1'+
                     		'&name=' + encodeURIComponent(self.objId + '.JSON.zip');
                     	self.downloadFile(urlSuffix);
@@ -139,7 +145,7 @@ define (
     		downloadPanel.append(self.$statusDiv.hide());
         },
         
-        prepareDownloaders: function(type, wsId, objId) {
+        prepareDownloaders: function(type, ref, objId) {
             var ret = [];
             var typeSpec = this.downloadSpecCache['types'] ? 
                     this.downloadSpecCache['types'][type] : null;
@@ -163,7 +169,7 @@ define (
             return tag;
         },
         
-        runDownloader: function(type, wsId, objId, descr) {
+        runDownloader: function(type, ref, objId, descr) {
             // descr is {name: ..., local_function: ...}
             var self = this;
             self.showMessage('<img src="'+self.loadingImage+'" /> Export status: Preparing data');
@@ -174,7 +180,7 @@ define (
             var genericClient = new GenericClient(this.eeURL, {token: this.token}, null, 
                     false);
             genericClient.sync_call("NarrativeJobService.run_job",
-                    [{method: method, params: [{input_ref: wsId + "/" + objId}],
+                    [{method: method, params: [{input_ref: ref}],
                         service_ver: tag}], function(data){
                 var jobId = data[0];
                 console.log("Running " + descr.local_function + " (tag=\"" + tag + "\"), " +

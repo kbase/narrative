@@ -33,6 +33,22 @@ __Changes__
 __Changes__
 - Bugfixes, cleanup, and minor reorganization of App Cell UI.
 
+### Version 3.0.2
+__Changes__
+- Fixed bug preventing the "Annotate Microbial Genome" app (and others that make use of randomized input strings) from launching.
+- Fixed another bug with CSS files.
+
+### Version 3.0.1
+__Changes__
+- Fixed bug with path to some CSS files.
+- Fixed error where an update to old viewer cells would just produce code that would crash.
+- Fixed error where updated app cells containing Apps made with the KBase SDK weren't updated properly.
+
+### Version 3.0.0
+__Changes__
+- Final 3.0.0 release!
+- Adjust data import user experience.
+
 ### Version 3.0.0-alpha-23
 __Changes__
 - Major updates to the App Cell UI

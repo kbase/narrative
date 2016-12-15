@@ -114,7 +114,9 @@ define([
 
                 // TODO: the code cell input widget should instantiate its state
                 // from the cell!!!!
-                var cellBus = runtime.bus().makeChannelBus(null, 'Parent comm for The Cell Bus'),
+                var cellBus = runtime.bus().makeChannelBus({
+                        description: 'Parent comm for The Cell Bus'
+                    }),
                     appCellWidget = AppCellWidget.make({
                         bus: cellBus,
                         cell: cell,

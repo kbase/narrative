@@ -28,6 +28,9 @@ import datetime
 import traceback
 import random
 
+"""
+A module for managing apps, specs, requirements, and for starting jobs.
+"""
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
 
@@ -121,7 +124,7 @@ class AppManager(object):
         """
         return self.spec_manager.available_apps(tag)
 
-    def run_app(self, app_id, params, tag="release", version=None,
+    def run_app_old(self, app_id, params, tag="release", version=None,
                 cell_id=None, run_id=None, **kwargs):
         """
         Attempts to run the app, returns a Job with the running app info.
@@ -182,7 +185,7 @@ class AppManager(object):
                   str(e))
             return
 
-    def _run_app_internal(self, app_id, params, tag, version,
+    def _run_app_internal_old(self, app_id, params, tag, version,
                           cell_id, run_id, **kwargs):
         """
         Attemps to run the app, returns a Job with the running app info.
@@ -326,7 +329,8 @@ class AppManager(object):
         else:
             return new_job
 
-    def run_app2(self, app_id, params, tag="release", version=None,
+
+    def run_app(self, app_id, params, tag="release", version=None,
                 cell_id=None, run_id=None, **kwargs):
         """
         Attempts to run the app, returns a Job with the running app info.
@@ -362,7 +366,7 @@ class AppManager(object):
         try:
             if params is None:
                 params = dict()
-            return self._run_app2_internal(app_id, params, tag, version,
+            return self._run_app_internal(app_id, params, tag, version,
                                           cell_id, run_id, **kwargs)
         except Exception as e:
             e_type = type(e).__name__
@@ -384,10 +388,14 @@ class AppManager(object):
             })
             print("Error while trying to start your app (run_app)!\n" +
                   "-----------------------------------------------\n" +
-                  str(e))
+                  str(e) + "\n" +
+                  "-----------------------------------------------\n" +
+                  e_trace)
             return
 
-    def _run_app2_internal(self, app_id, params, tag, version,
+    run_app2 = run_app
+
+    def _run_app_internal(self, app_id, params, tag, version,
                           cell_id, run_id, **kwargs):
         """
         Attemps to run the app, returns a Job with the running app info.
@@ -770,110 +778,6 @@ class AppManager(object):
             'message': message
         })
 
-
-    def run_widget_app(self, app_id, tag="release",
-                       version=None, cell_id=None, run_id=None):
-        """
-        Attempts to run a local app. These do not return a Job object, but
-        just the result of the app. In most cases, this will be a Javascript
-        display of the result, but could be anything.
-
-        If the app_spec looks like it makes a service call, then this raises a
-        ValueError. Otherwise, it validates each parameter in **kwargs against
-        the app spec, executes it, and returns the result.
-
-        Parameters:
-        -----------
-        app_id - should be from the app spec, e.g. 'view_expression_profile'
-        tag - optional, one of [release|beta|dev] (default=release)
-        version - optional, a semantic version string. Only released modules
-                  have versions, so if the tag is not 'release', and a version
-                  is given, a ValueError will be raised.
-        **kwargs - these are the set of parameters to be used with the app.
-                   They can be found by using the app_usage function. If any
-                   non-optional apps are missing, a ValueError will be raised.
-
-        Example:
-        run_local_app('NarrativeViewers/view_expression_profile',
-                      version='0.0.1',
-                      input_expression_matrix="MyMatrix",
-                      input_gene_ids="1234")
-        """
-        try:
-            return self._run_widget_app_internal(app_id, tag, version,
-                                                 cell_id, run_id)
-        except Exception as e:
-            e_type = type(e).__name__
-            e_message = str(e).replace('<', '&lt;').replace('>', '&gt;')
-            e_trace = traceback.format_exc()
-            e_trace = e_trace.replace('<', '&lt;').replace('>', '&gt;')
-            self._send_comm_message('run_status', {
-                'event': 'error',
-                'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
-                'cell_id': cell_id,
-                'run_id': run_id,
-                'error_message': e_message,
-                'error_type': e_type,
-                'error_stacktrace': e_trace
-            })
-            # raise
-            print("Error while trying to start your app (run_widget_app)!\n" +
-                  "-------------------------------------\n" + str(e))
-
-    def _run_widget_app_internal(self, app_id, tag, version, cell_id, run_id):
-        self._send_comm_message('run_status', {
-            'event': 'validating_app',
-            'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
-            'cell_id': cell_id,
-            'run_id': run_id
-        })
-
-        # Intro tests:
-        self.spec_manager.check_app(app_id, tag, raise_exception=True)
-
-        if version is not None and tag != "release":
-            raise ValueError("App versions only apply to released modules!")
-
-        # Get the spec & params
-        spec = self.spec_manager.get_spec(app_id, tag)
-
-        if 'behavior' not in spec:
-            raise ValueError("This app appears invalid - " +
-                             "it has no defined behavior")
-
-        behavior = spec['behavior']
-
-        if 'kb_service_input_mapping' in behavior:
-            # it's a service! Should run this with run_app!
-            raise ValueError('This app appears to be a long-running job! ' +
-                             'Please start it using the run_app function ' +
-                             'instead.')
-
-        if 'script_module' in behavior or 'script_name' in behavior:
-            # It's an old NJS script. These don't work anymore.
-            raise ValueError('This app relies on a service that is now ' +
-                             'obsolete. Please contact the administrator.')
-
-        log_info = {
-            'app_id': app_id,
-            'tag': tag,
-            'username': system_variable('user_id'),
-            'ws': system_variable('workspace')
-        }
-        kblogging.log_event(self._log, "run_widget_app", log_info)
-
-        self._send_comm_message('run_status', {
-            'event': 'success',
-            'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
-            'cell_id': cell_id,
-            'run_id': run_id
-        })
-
-        # now just map onto outputs.
-        custom_widget = spec.get('widgets', {}).get('input', None)
-        return WidgetManager().show_custom_widget(custom_widget, app_id,
-                                                  version, tag, spec, cell_id)
-
     def _validate_parameters(self, app_id, tag, spec_params, params):
         """
         Validates the dict of params against the spec_params. If all is good,
@@ -905,6 +809,8 @@ class AppManager(object):
         if isinstance(value, list):
             return [self._map_group_inputs(v, spec_param, spec_params)
                     for v in value]
+        elif value is None:
+            return None
         else:
             mapped_value = dict()
             id_map = spec_param.get('id_mapping', {})

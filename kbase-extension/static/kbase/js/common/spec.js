@@ -37,7 +37,6 @@ define([
          */
         function makeEmptyModel() {
             var model = {};
-            console.log('making empty model from ', spec);
             spec.parameters.layout.forEach(function(id) {
                 model[id] = spec.parameters.specs[id].data.defaultValue || spec.parameters.specs[id].data.nullValue;
             });
@@ -101,7 +100,6 @@ define([
 
         function validateModel(model) {
             // TODO: spec at the top level should be a struct...
-            // console.log('VALIDATING', model, spec);
             // return;
             var validationMap = {};
             spec.parameters.layout.forEach(function(id) {

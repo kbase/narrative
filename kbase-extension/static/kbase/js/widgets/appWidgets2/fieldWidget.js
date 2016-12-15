@@ -17,9 +17,9 @@ define([
     'common/events',
     'common/ui',
     'common/props',
-    './input/errorInput',
+    './errorControl',
     'css!google-code-prettify/prettify.css'
-], function (
+], function(
     Promise,
     $,
     PR,
@@ -107,7 +107,7 @@ define([
                         class: 'btn btn-link alert-link',
                         id: events.addEvent({
                             type: 'click',
-                            handler: function () {
+                            handler: function() {
                                 showMessageDialog(messageDef.id);
                             }
                         })
@@ -213,23 +213,23 @@ define([
 
         function parameterInfoTypeRules(spec) {
             switch (spec.dataType()) {
-            case 'float':
-                return [
-                    tr([th('Min'), td(spec.spec.text_options.min_float)]),
-                    tr([th('Max'), td(spec.spec.text_options.max_float)])
-                ];
-            case 'int':
-                // just for now ...
-                if (spec.spec.field_type === 'checkbox') {
+                case 'float':
                     return [
-                        tr([th('Value when checked'), td(Props.getDataItem(spec.spec, 'checkbox_options.checked_value', UI.na()))]),
-                        tr([th('Value when un-checked'), td(Props.getDataItem(spec.spec, 'checkbox_options.unchecked_value', UI.na()))])
+                        tr([th('Min'), td(spec.spec.text_options.min_float)]),
+                        tr([th('Max'), td(spec.spec.text_options.max_float)])
                     ];
-                }
-                return [
-                    tr([th('Min'), td(spec.spec.text_options.min_int)]),
-                    tr([th('Max'), td(spec.spec.text_options.max_int)])
-                ];
+                case 'int':
+                    // just for now ...
+                    if (spec.spec.field_type === 'checkbox') {
+                        return [
+                            tr([th('Value when checked'), td(Props.getDataItem(spec.spec, 'checkbox_options.checked_value', UI.na()))]),
+                            tr([th('Value when un-checked'), td(Props.getDataItem(spec.spec, 'checkbox_options.unchecked_value', UI.na()))])
+                        ];
+                    }
+                    return [
+                        tr([th('Min'), td(spec.spec.text_options.min_int)]),
+                        tr([th('Max'), td(spec.spec.text_options.max_int)])
+                    ];
             }
         }
 
@@ -239,7 +239,7 @@ define([
                 tr([th('Data type'), td(spec.dataType())]),
                 tr([th('Field type'), td(spec.spec.field_type)]),
                 tr([th('Multiple values?'), td(spec.multipleItems() ? 'yes' : 'no')]),
-                (function () {
+                (function() {
                     if (!spec.spec.default_values) {
                         return;
                     }
@@ -252,7 +252,7 @@ define([
                     }
                     return tr([th('Default value'), td(defaultValues)]);
                 }()),
-                (function () {
+                (function() {
                     if (spec.spec.text_options && spec.spec.text_options.valid_ws_types && spec.spec.text_options.valid_ws_types.length > 0) {
                         return tr([th('Valid types'), td(spec.spec.text_options.valid_ws_types.join('<br>'))]);
                     }
@@ -356,7 +356,7 @@ define([
                                     type: 'button',
                                     id: events.addEvent({
                                         type: 'click',
-                                        handler: function () {
+                                        handler: function() {
                                             var bigTip = container.querySelector('[data-element="big-tip"]');
                                             bigTip.classList.toggle('hidden');
                                         }
@@ -388,7 +388,7 @@ define([
         // LIFECYCLE
 
         function attach(node) {
-            return Promise.try(function () {
+            return Promise.try(function() {
                 var events = Events.make(),
                     $container;
                 container = node;
@@ -419,53 +419,53 @@ define([
         }
 
         function start() {
-            return Promise.try(function () {
-                bus.on('validation', function (message) {
+            return Promise.try(function() {
+                bus.on('validation', function(message) {
                     switch (message.diagnosis) {
-                    case 'valid':
-                        feedbackOk();
-                        clearError();
-                        break;
-                    case 'required-missing':
-                        feedbackRequired();
-                        clearError();
-                        break;
-                    case 'suspect':
-                        feedbackOk();
-                        clearError();
-                        setWarning({
-                            message: message.shortMessage,
-                            id: message.messageId
-                        });
-                        break;
-                    case 'invalid':
-                        feedbackError();
-                        clearError();
-                        setError({
-                            id: message.messageId,
-                            message: message.errorMessage
-                        });
-                        break;
-                    case 'optional-empty':
-                        feedbackNone();
-                        clearError();
-                        break;
+                        case 'valid':
+                            feedbackOk();
+                            clearError();
+                            break;
+                        case 'required-missing':
+                            feedbackRequired();
+                            clearError();
+                            break;
+                        case 'suspect':
+                            feedbackOk();
+                            clearError();
+                            setWarning({
+                                message: message.shortMessage,
+                                id: message.messageId
+                            });
+                            break;
+                        case 'invalid':
+                            feedbackError();
+                            clearError();
+                            setError({
+                                id: message.messageId,
+                                message: message.errorMessage
+                            });
+                            break;
+                        case 'optional-empty':
+                            feedbackNone();
+                            clearError();
+                            break;
                     }
                 });
-                bus.on('touched', function (message) {
+                bus.on('touched', function(message) {
                     places.$feedback.css('background-color', 'yellow');
                     // console.log('FIELD detected touched');
                 });
-                bus.on('changed', function () {
+                bus.on('changed', function() {
                     places.$feedback.css('background-color', '');
                 })
-                bus.on('saved', function (message) {
+                bus.on('saved', function(message) {
                     console.log('FIELD detected saved');
 
                 });
                 if (inputControl.start) {
                     return inputControl.start()
-                        .then(function () {
+                        .then(function() {
                             bus.emit('run', {
                                 node: ui.getElement('input-control')
                             });
@@ -475,7 +475,7 @@ define([
         }
 
         function run(params) {
-            return Promise.try(function () {
+            return Promise.try(function() {
                 if (inputControl.run) {
                     return inputControl.run(params);
                 }
@@ -491,7 +491,7 @@ define([
     }
 
     return {
-        make: function (config) {
+        make: function(config) {
             return factory(config);
         }
     };

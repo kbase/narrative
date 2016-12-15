@@ -12,20 +12,19 @@ define (
         $,
         Dialog
     ) {
-    var $simpleBody = $('<div>').append('This is a body text');
-    var simpleTitle = 'Title';
-    var simpleButtons = [
-        $('<button>').append('b1')
-                     .click(function(event) {
+    var $simpleBody = $('<div>').append('This is a body text'),
+        simpleTitle = 'Title',
+        simpleButtons = [
+            $('<button>').append('b1')
+                         .click(function() {
 
-                     }),
-        $('<button>').append('b2')
-                     .click(function(event) {
+                         }),
+            $('<button>').append('b2')
+                         .click(function() {
 
-                     })
-    ];
-
-    var simpleDialog;
+                         })
+        ],
+        simpleDialog;
 
     beforeEach(function() {
         simpleDialog = new Dialog({

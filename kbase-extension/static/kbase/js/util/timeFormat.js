@@ -236,6 +236,9 @@ define([], function() {
     function getTimeStampStr (objInfoTimeStamp, alwaysExact) {
         var date = new Date(objInfoTimeStamp);
         var seconds = Math.floor((new Date() - date) / 1000);
+        if (seconds < 0) {
+            seconds = 0;
+        }
 
         var exactDate = function(date) {
             return monthLookup[date.getMonth()] + " " + date.getDate() + ", " + date.getFullYear();
@@ -254,6 +257,14 @@ define([], function() {
             }
         }
 
+        var pluralizeTimeStr = function(num, timeSpan) {
+            var suffix = '';
+            if (num > 1 || num === 0) {
+                suffix = 's';
+            }
+            return num + ' ' + timeSpan + suffix + ' ago';
+        };
+
         if (alwaysExact) {
             return exactDate(date);
         }
@@ -265,24 +276,24 @@ define([], function() {
         interval = Math.floor(seconds / 2592000);
         if (interval > 1) {
             if (interval < 4) {
-                return interval + " months ago";
+                return pluralizeTimeStr(interval, 'month');
             } else {
                 return exactDate(date);
             }
         }
         interval = Math.floor(seconds / 86400);
         if (interval > 1) {
-            return interval + " days ago";
+            return pluralizeTimeStr(interval, 'day');
         }
         interval = Math.floor(seconds / 3600);
         if (interval > 1) {
-            return interval + " hours ago";
+            return pluralizeTimeStr(interval, 'hour');
         }
         interval = Math.floor(seconds / 60);
         if (interval > 1) {
-            return interval + " minutes ago";
+            return pluralizeTimeStr(interval, 'minute');
         }
-        return Math.floor(seconds) + " seconds ago";
+        return pluralizeTimeStr(Math.floor(seconds), 'second');
     }
 
     /**

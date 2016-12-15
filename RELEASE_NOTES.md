@@ -3,6 +3,13 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v4.2.1 (more notes will follow).
 
+### Version 3.1.0
+__Changes__
+- Release of ReadsSet viewer and Reads viewer.
+- Release of support for data palettes (currently disabled in the service)
+- Data now gets fetched from a Narrative Service to support data palettes.
+- Support for an FTP-based data file staging area (currently disabled until import apps catch up).
+
 ### Version 3.1.0-alpha-4
 __Changes__
 - Adjust visuals in Reads viewer.
@@ -28,10 +35,6 @@ __Changes__
 - Sets objects should be able to expand and contract, showing sub objects.
 - Adds Apps that can manipulate data sets (currently only Reads Sets).
 - Rewires all data manipulation code to use a different service.
-
-### Version 3.0.0
-__Changes__
-- Bugfixes, cleanup, and minor reorganization of App Cell UI.
 
 ### Version 3.0.2
 __Changes__

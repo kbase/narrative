@@ -221,11 +221,15 @@ define([
                         this.exampleTab.getExampleDataAndRender();
                     }.bind(this),
                     function () {
-                    }.bind(this),
-                    function () {
-                        this.stagingTab.updateView();
                     }.bind(this)
                 ];
+                if (Config.get('features').stagingDataViewer) {
+                    this.renderFn.push(
+                        function () {
+                            this.stagingTab.updateView();
+                        }.bind(this)
+                    );
+                }
             } else {
                 //console.error("ws_name is not defined");
             }
@@ -454,15 +458,20 @@ define([
                 examplePanel = $('<div class="kb-import-content">'),
                 stagingPanel = $('<div class="kb-import-content">');
 
-            // add tabs
-            var $tabs = this.buildTabs([
+            var tabList = [
                 {tabName: '<small>My Data</small>', content: minePanel},
                 {tabName: '<small>Shared With Me</small>', content: sharedPanel},
                 {tabName: '<small>Public</small>', content: publicPanel},
                 {tabName: '<small>Example</small>', content: examplePanel},
                 {tabName: '<small>Import</small>', content: importPanel},
-                {tabName: '<small>Staging<small>', content: stagingPanel}
-            ]);
+            ];
+
+            if (Config.get('features').stagingDataViewer) {
+                tabList.push({tabName: '<small>Staging<small>', content: stagingPanel});
+            }
+
+            // add tabs
+            var $tabs = this.buildTabs(tabList);
 
 
             // (Bill - 1/29/2016)
@@ -565,7 +574,9 @@ define([
             this.publicTab = new kbaseNarrativeSidePublicTab(publicPanel, {$importStatus: importStatus, ws_name: this.ws_name});
             this.importTab = new kbaseNarrativeSideImportTab(importPanel, {ws_name: this.ws_name});
             this.exampleTab = new kbaseNarrativeExampleDataTab(examplePanel, {$importStatus: importStatus, ws_name: this.ws_name});
-            this.stagingTab = new kbaseNarrativeStagingDataTab(stagingPanel);
+            if (Config.get('features').stagingDataViewer) {
+                this.stagingTab = new kbaseNarrativeStagingDataTab(stagingPanel);
+            }
 
             // It is silly to invoke a new object for each widget
             var auth = {token: this.$login.session('token')};

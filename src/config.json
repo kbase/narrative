@@ -5,10 +5,6 @@
     "dev_mode": true,
     "git_commit_hash": "60e2219",
     "git_commit_time": "Thu Mar 3 15:44:21 2016 -0800",
-    "features": {
-        "advanced": false,
-        "developer": false
-    },
     "release_notes": "https://github.com/kbase/narrative/blob/staging/RELEASE_NOTES.md",
     "tooltip": {
         "hideDelay": 0,

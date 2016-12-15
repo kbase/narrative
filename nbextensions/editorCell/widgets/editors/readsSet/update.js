@@ -11,7 +11,7 @@ define([
     'common/props',
     // Wrapper for inputs
     'widgets/appWidgets2/fieldWidgetCompact',
-    'widgets/appWidgets2/inputParamResolver',
+    'widgets/appWidgets2/paramResolver',
     'common/runtime',
     './model'
     // All the input widgets
@@ -34,8 +34,8 @@ define([
 
     var t = html.tag,
         form = t('form'),
-        span = t('span'),
         div = t('div');
+    // bus = runtime.bus().makeChannelBus({ description: 'A app params widget' });
 
     function factory(config) {
         var runtime = Runtime.make(),
@@ -45,59 +45,20 @@ define([
             appTag = config.appTag,
             hostNode, container,
             ui,
-            bus,
-            places,
+            busConnection = runtime.bus().connect(),
+
+            channel = busConnection.channel(busConnection.genName()),
             model = Props.make(),
             fieldWidgets = [],
             paramResolver = ParamResolver.make(),
-            settings = {
-                showAdvanced: null
-            },
             widgets = [],
             readsSetModel;
-
-
-        // DATA
-        function updateEditor(objectRef) {
-            var setApiClient = new GenericClient({
-                    url: runtime.config('services.service_wizard.url'),
-                    token: runtime.authToken(),
-                    module: 'SetAPI',
-                    version: 'dev'
-                }),
-                params = {
-                    ref: objectRef,
-                    include_item_info: 1
-                };
-            return setApiClient.callFunc('get_reads_set_v1', [params])
-                .spread(function(setObject) {
-                    // Set the params.
-                    model.setItem('params', {});
-                    model.setItem('params.name', setObject.info[1]);
-                    model.setItem('params.description', setObject.data.description);
-                    model.setItem('params.items', setObject.data.items.map(function(item) {
-                        item.objectInfo = apiUtils.objectInfoToObject(item.info);
-                        return item.ref;
-                    }));
-
-                    loadUpdateEditor();
-
-                })
-                .catch(function(err) {
-                    console.error('ERROR getting reads set ', err);
-                    console.error(err.detail.replace('\n', '<br>'));
-                    loadErrorWidget(err);
-                });
-
-        }
-
-
 
         // RENDERING
 
         function makeFieldWidget(appSpec, parameterSpec, value) {
 
-            return paramResolver.getInputWidgetFactory(parameterSpec)
+            return paramResolver.loadInputControl(parameterSpec)
                 .then(function(inputWidget) {
 
                     var fieldWidget = FieldWidget.make({
@@ -110,7 +71,6 @@ define([
                         workspaceId: workspaceInfo.id,
                         referenceType: 'ref'
                     });
-
 
                     fieldWidgets.push(fieldWidget);
 
@@ -154,7 +114,7 @@ define([
                                 key: 'get-parameter-value'
                             })
                             .then(function(message) {
-                                bus.emit('parameter-value', {
+                                channel.emit('parameter-value', {
                                     parameter: message.parameter
                                 });
                             });
@@ -200,64 +160,28 @@ define([
                     //    inputWidgetBus.send(message);
                     //});
                     return {
-                        bus: bus,
+                        bus: channel,
                         widget: fieldWidget
                     };
                 });
         }
 
-        function renderLayout() {
-            var events = Events.make(),
-                content = form({ dataElement: 'input-widget-form' }, [
-                    // Toolbar area
-                    //                    ui.buildPanel({
-                    //                        type: 'default',
-                    //                        classes: ['kb-panel-light'],
-                    //                        body: [
-                    //                            div('Update Editor')
-                    //                            // ui.makeButton('Show Advanced', 'toggle-advanced', {events: events}),
-                    //                            // ui.makeButton('Reset to Defaults', 'reset-to-defaults', {events: events})
-                    //                        ]
-                    //                    }),
-                    // Main editor panel
-                    div({ dataElement: 'field-area' }, [
-                        div({ dataElement: 'fields' })
-                    ])
-                    //                    ui.buildPanel({
-                    //                        title: span(['EDITOR', span({dataElement: 'advanced-hidden-message', style: {marginLeft: '6px', fontStyle: 'italic'}})]), 
-                    //                        name: 'field-area',
-                    //                        body: div({dataElement: 'fields'}),
-                    //                        classes: ['kb-panel-light']
-                    //                    })
-                ]);
-
-            return {
-                content: content,
-                events: events
-            };
+        function buildLayout(events) {
+            return form({ dataElement: 'input-widget-form' }, [
+                div({ dataElement: 'field-area' }, [
+                    div({ dataElement: 'fields' })
+                ])
+            ]);
         }
 
         // MESSAGE HANDLERS
 
-        function doAttach(node) {
-            hostNode = node;
-            container = hostNode.appendChild(document.createElement('div'));
-            ui = UI.make({
-                node: container,
-                bus: bus
-            });
-            var layout = renderLayout();
-            container.innerHTML = layout.content;
-            layout.events.attachEvents(container);
-            places = {
-                fields: ui.getElement('fields')
-            };
-        }
+
 
         // EVENTS
 
         function attachEvents() {
-            bus.on('reset-to-defaults', function() {
+            channel.on('reset-to-defaults', function() {
                 fieldWidgets.forEach(function(fieldWidget) {
                     fieldWidget.bus.emit('reset-to-defaults');
                 });
@@ -318,7 +242,7 @@ define([
             var parameterSpecs = model.getItem('parameters');
             var layout = renderEditorLayout();
 
-            places.fields.innerHTML = layout.content;
+            ui.setContent('fields', layout.content);
 
             return Promise.all(parameterSpecs.parameters.layout.map(function(parameterId) {
                 var spec = parameterSpecs.parameters.specs[parameterId];
@@ -341,6 +265,20 @@ define([
             }));
         }
 
+        function doAttach(node) {
+            hostNode = node;
+            container = hostNode.appendChild(document.createElement('div'));
+            ui = UI.make({
+                node: container,
+                bus: channel
+            });
+            var events = Events.make({
+                node: container
+            });
+            container.innerHTML = buildLayout(events);
+            events.attachEvents(container);
+        }
+
         function start(arg) {
             readsSetModel = ReadsSetModel.make({
                 runtime: runtime,
@@ -350,28 +288,26 @@ define([
             return readsSetModel.start()
                 .then(function() {
 
-                    // parent will send us our initial parameters
-                    bus.on('run', function(message) {
-                        doAttach(message.node);
+                    doAttach(arg.node);
 
-                        model.setItem('appSpec', message.appSpec);
-                        model.setItem('parameters', message.parameters);
-                        model.setItem('layout', message.layout);
-                        model.setItem('params', config.initialValue);
+                    model.setItem('appSpec', arg.appSpec);
+                    model.setItem('parameters', arg.parameters);
+                    model.setItem('params', config.initialValue);
 
-                        // we then create our widgets
-                        renderParameters()
-                            .then(function() {
-                                // do something after success
-                                attachEvents();
-                            })
-                            .catch(function(err) {
-                                // do somethig with the error.
-                                console.error('ERROR in start', err);
-                            });
-                    });
+                    // we then create our widgets
+                    renderParameters()
+                        .then(function() {
+                            // do something after success
+                            attachEvents();
+                        })
+                        .catch(function(err) {
+                            // do somethig with the error.
+                            console.error('ERROR in start', err);
+                        });
 
-                    bus.on('parameter-changed', function(message) {
+                    // TODO: probably unused, unnecessary.
+                    // Used to communicate changes to a parameter from outside,
+                    channel.on('parameter-changed', function(message) {
                         // Also, tell each of our inputs that a param has changed.
                         // TODO: use the new key address and subscription
                         // mechanism to make this more efficient.
@@ -385,41 +321,40 @@ define([
                             // bus.emit('parameter-changed', message);
                         });
                     });
-
-                    // send parent the ready message
-                    bus.emit('ready');
                 });
         }
 
         function stop() {
             return Promise.try(function() {
                     // stop our comm bus
-                    bus.stop();
+                    busConnection.stop();
 
                     // Stop all of the param field widgets.
                     return Promise.all(fieldWidgets.map(function(fieldWidget) {
-                        return fieldWidget.stop();
-                    }));
+                            return fieldWidget.stop();
+                        }))
+                        .then(function() {
+                            fieldWidgets = [];
+                        });
 
                 })
                 .then(function() {
-                    fieldWidgets = {};
-
                     if (hostNode && container) {
-                        hostNode.removeChild(container);
+                        try {
+                            hostNode.removeChild(container);
+                        } catch (ex) {
+                            console.warn('Error removing container from update editor widget', ex);
+                        }
                     }
                 })
         }
 
         // CONSTRUCTION
 
-        bus = runtime.bus().makeChannelBus(null, 'A app params widget');
-
-
         return {
             start: start,
             stop: stop,
-            bus: bus
+            bus: channel
         };
     }
 

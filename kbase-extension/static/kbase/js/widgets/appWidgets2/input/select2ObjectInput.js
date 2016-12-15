@@ -11,6 +11,7 @@ define([
     'common/events',
     'common/runtime',
     'common/ui',
+    'common/data',
     'util/timeFormat',
     'kb_sdk_clients/genericClient',
 
@@ -28,6 +29,7 @@ define([
     Events,
     Runtime,
     UI,
+    Data,
     TimeFormat,
     GenericClient) {
     'use strict';
@@ -46,9 +48,8 @@ define([
             parent,
             container,
             runtime = Runtime.make(),
-            bus = config.bus,
-            //busConnection = runtime.bus().connect(),
-            // channel = busConnection.channel(config.channelName),
+            bus = runtime.bus().connect(),
+            channel = bus.channel(config.channelName),
             ui,
             model = {
                 blacklistValues: undefined,
@@ -216,6 +217,15 @@ define([
         }
 
         function getObjectsByTypes_datalist(types) {
+            return Data.getObjectsByTypes(types, bus, function(result) {
+                    doWorkspaceUpdated(result.data);
+                })
+                .then(function(result) {
+                    return result.data;
+                });
+        }
+
+        function getObjectsByTypes_datalistx(types) {
             var listener = runtime.bus().plisten({
                 channel: 'data',
                 key: {
@@ -302,16 +312,16 @@ define([
                 .then(function(result) {
                     if (result.isValid) {
                         model.value = result.value;
-                        bus.emit('changed', {
+                        channel.emit('changed', {
                             newValue: result.value
                         });
                     } else if (result.diagnosis === 'required-missing') {
                         model.value = spec.data.nullValue;
-                        bus.emit('changed', {
+                        channel.emit('changed', {
                             newValue: spec.data.nullValue
                         });
                     }
-                    bus.emit('validation', {
+                    channel.emit('validation', {
                         errorMessage: result.errorMessage,
                         diagnosis: result.diagnosis
                     });
@@ -417,7 +427,7 @@ define([
         function autoValidate() {
             return validate()
                 .then(function(result) {
-                    bus.emit('validation', {
+                    channel.emit('validation', {
                         errorMessage: result.errorMessage,
                         diagnosis: result.diagnosis
                     });
@@ -473,6 +483,7 @@ define([
                     } else {
                         id = objectInfo.name;
                     }
+                    // console.log('available values', objectInfo, id, index);
                     model.availableValuesMap[id] = index;
                 });
                 return render()
@@ -516,15 +527,15 @@ define([
                     })
                     .then(function() {
 
-                        bus.on('reset-to-defaults', function() {
+                        channel.on('reset-to-defaults', function() {
                             resetModelValue();
                         });
-                        bus.on('update', function(message) {
+                        channel.on('update', function(message) {
                             setModelValue(message.value);
                         });
-                        bus.bus().on('workspace-changed', function() {
-                            doWorkspaceChanged();
-                        });
+                        // bus.channel().on('workspace-changed', function() {
+                        //     doWorkspaceChanged();
+                        // });
                         // bus.emit('sync');
 
                         setControlValue(getModelValue());
@@ -538,7 +549,7 @@ define([
                 if (container) {
                     parent.removeChild(container);
                 }
-                busConnection.stop();
+                bus.stop();
                 eventListeners.forEach(function(id) {
                     runtime.bus().removeListener(id);
                 });

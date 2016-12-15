@@ -27,11 +27,6 @@ jupyter nbextension enable outputCell/main --sys-prefix
 jupyter nbextension install ${dir}/dataCell --symlink --sys-prefix
 jupyter nbextension enable dataCell/main --sys-prefix
 
-#jupyter nbextension disable widgetCell/main --sys-prefix
-#jupyter nbextension uninstall ${dir}/widgetCell --sys-prefix
-#jupyter nbextension install ${dir}/widgetCell --symlink --sys-prefix
-#jupyter nbextension enable widgetCell/main --sys-prefix
-
 jupyter nbextension install ${dir}/editorCell --symlink --sys-prefix
 jupyter nbextension enable editorCell/main --sys-prefix
 

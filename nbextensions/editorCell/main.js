@@ -32,6 +32,7 @@ define([
     'common/jupyter',
     'kb_service/utils',
     'kb_service/client/workspace',
+
     'css!kbase/css/appCell.css',
     'css!./styles/main.css',
     'bootstrap'
@@ -246,7 +247,7 @@ define([
             return getEditorModule(editorType)
                 .then(function(editorModule) {
 
-                    var cellBus = runtime.bus().makeChannelBus(null, 'Parent comm for The Cell Bus'),
+                    var cellBus = runtime.bus().makeChannelBus({ description: 'Parent comm for The Cell Bus' }),
                         appId = utils.getCellMeta(cell, 'kbase.editorCell.app.id'),
                         appTag = utils.getCellMeta(cell, 'kbase.editorCell.app.tag');
 
@@ -269,19 +270,11 @@ define([
 
                     jupyter.disableKeyListenersForCell(cell);
 
-                    return editor.init()
-                        .then(function() {
-                            return editor.attach(kbaseNode);
-                        })
-                        .then(function() {
-                            return editor.start();
-                        })
-                        .then(function() {
-                            return editor.run({
-                                appId: appId,
-                                appTag: appTag,
-                                authToken: runtime.authToken()
-                            });
+                    return editor.start({
+                            node: kbaseNode,
+                            appId: appId,
+                            appTag: appTag,
+                            authToken: runtime.authToken()
                         })
                         .then(function() {
                             // AppCellController.start();
@@ -291,10 +284,6 @@ define([
                                 bus: cellBus
                             };
                         })
-                        // .catch(function(err) {
-                        //     console.error('ERROR starting app cell', err);
-                        //     alert('Error starting app cell: ' + err.message);
-                        // });
                 });
         });
     }

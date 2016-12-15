@@ -12,7 +12,7 @@ define([
     // Wrapper for inputs
     './inputWrapperWidget',
     'widgets/appWidgets2/fieldWidgetCompact',
-    'widgets/appWidgets2/inputParamResolver',
+    'widgets/appWidgets2/paramResolver',
 
     'common/runtime'
     // All the input widgets
@@ -94,7 +94,7 @@ define([
         */
 
         function makeFieldWidget(appSpec, parameterSpec, value) {
-            return paramResolver.getInputWidgetFactory(parameterSpec)
+            return paramResolver.loadInputControl(parameterSpec)
                 .then(function(inputWidget) {
                     var fieldWidget = FieldWidget.make({
                         inputControlFactory: inputWidget,
@@ -636,7 +636,7 @@ define([
 
         // CONSTRUCTION
 
-        bus = runtime.bus().makeChannelBus(null, 'A app params widget');
+        bus = runtime.bus().makeChannelBus({ description: 'A app params widget' });
 
 
         return {

@@ -8,7 +8,7 @@ define([
     'common/ui',
     'common/html',
     'common/jupyter'
-], function (
+], function(
     Runtime,
     BusEventManager,
     Props,
@@ -28,7 +28,7 @@ define([
             eventManager = BusEventManager.make({
                 bus: runtime.bus()
             }),
-            bus = runtime.bus().makeChannelBus(null, 'output cell bus'),
+            bus = runtime.bus().makeChannelBus({ description: 'output cell bus' }),
 
             // To be instantiated at attach()
             container, ui,
@@ -48,7 +48,7 @@ define([
                 p('Continue to delete this data cell?')
             ]);
             ui.showConfirmDialog({ title: 'Confirm Cell Deletion', body: content })
-                .then(function (confirmed) {
+                .then(function(confirmed) {
                     if (!confirmed) {
                         return;
                     }
@@ -74,12 +74,12 @@ define([
 
         // Widget API
 
-        eventManager.add(bus.on('run', function (message) {
+        eventManager.add(bus.on('run', function(message) {
             // container = message.node;
             ui = UI.make({ node: message.node });
 
             // Events for comm from the parent.
-            eventManager.add(bus.on('stop', function () {
+            eventManager.add(bus.on('stop', function() {
                 eventManager.removeAll();
             }));
 
@@ -89,10 +89,13 @@ define([
             // without a physical handle on the widget object.
 
             cellBus = runtime.bus().makeChannelBus({
-                cell: Props.getDataItem(cell.metadata, 'kbase.attributes.id')
-            }, 'A cell channel');
+                name: {
+                    cell: Props.getDataItem(cell.metadata, 'kbase.attributes.id')
+                },
+                description: 'A cell channel'
+            });
 
-            eventManager.add(cellBus.on('delete-cell', function () {
+            eventManager.add(cellBus.on('delete-cell', function() {
                 doDeleteCell();
             }));
 
@@ -104,7 +107,7 @@ define([
     }
 
     return {
-        make: function (config) {
+        make: function(config) {
             return factory(config);
         }
     };

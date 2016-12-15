@@ -87,13 +87,17 @@ define([
             // TODO: the cell bus should be created and managed through main.js,
             // that is, the extension.
             cellBus = runtime.bus().makeChannelBus({
-                cell: utils.getMeta(cell, 'attributes', 'id')
-            }, 'A cell channel'),
-            bus = runtime.bus().makeChannelBus(null, 'A app cell widget'),
+                name: {
+                    cell: utils.getMeta(cell, 'attributes', 'id')
+                },
+                description: 'A cell channel'
+            }),
+            bus = runtime.bus().makeChannelBus({
+                description: 'A app cell widget'
+            }),
             busEventManager = BusEventManager.make({
                 bus: runtime.bus()
             }),
-            env = {},
             model,
             spec,
             // HMM. Sync with metadata, or just keep everything there?
@@ -168,7 +172,7 @@ define([
             return new Promise(function(resolve, reject) {
                 require(['./appParamsWidget'], function(Widget) {
                     // TODO: widget should make own bus.
-                    var bus = runtime.bus().makeChannelBus(null, 'Parent comm bus for input widget'),
+                    var bus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for input widget' }),
                         widget = Widget.make({
                             bus: bus,
                             workspaceInfo: workspaceInfo,
@@ -264,7 +268,7 @@ define([
             return new Promise(function(resolve, reject) {
                 require(['./appParamsViewWidget'], function(Widget) {
                     // TODO: widget should make own bus.
-                    var bus = runtime.bus().makeChannelBus(null, 'Parent comm bus for input widget'),
+                    var bus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for input widget' }),
                         widget = Widget.make({
                             bus: bus,
                             workspaceInfo: workspaceInfo,
@@ -351,7 +355,7 @@ define([
             return new Promise(function(resolve, reject) {
                 require(['./appParamsViewWidget'], function(Widget) {
                     // TODO: widget should make own bus
-                    var bus = runtime.bus().makeChannelBus(null, 'Parent comm bus for load input view widget'),
+                    var bus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for load input view widget' }),
                         widget = Widget.make({
                             bus: bus,
                             workspaceInfo: workspaceInfo
@@ -1413,7 +1417,7 @@ define([
         function buildPython(cell, cellId, app, params) {
             var runId = new Uuid(4).format(),
                 fixedApp = fixApp(app),
-                code = PythonInterop.buildAppRunner2(cellId, runId, fixedApp, params);
+                code = PythonInterop.buildAppRunner(cellId, runId, fixedApp, params);
             // TODO: do something with the runId
             cell.set_text(code);
         }
@@ -1615,7 +1619,7 @@ define([
         // WIDGETS
 
         function showWidget(name, widgetModule, path) {
-            var bus = runtime.bus().makeChannelBus(null, 'Bus for showWidget'),
+            var bus = runtime.bus().makeChannelBus({ description: 'Bus for showWidget' }),
                 widget = widgetModule.make({
                     bus: bus,
                     workspaceInfo: workspaceInfo
@@ -2198,7 +2202,7 @@ define([
         function makeRunClock(config) {
             var listeners = [],
                 container,
-                channel = runtime.bus().makeChannelBus(null, 'Clock channel'),
+                channel = runtime.bus().makeChannelBus({ description: 'Clock channel' }),
                 clockId = html.genId(),
                 startTime;
 

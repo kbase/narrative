@@ -7,33 +7,39 @@ define([
     'common/ui',
     'kb_common/html',
     'base/js/namespace'
-], function (
+], function(
     Runtime,
     Events,
     UI,
     html,
     Jupyter
-    ) {
+) {
     'use strict';
 
     var t = html.tag,
-        div = t('div'), button = t('button'),
-        table = t('table'), tr = t('tr'), th = t('td'), td = t('td'), p = t('p'),
-        ul = t('ul'), li = t('li');
+        div = t('div'),
+        button = t('button'),
+        table = t('table'),
+        tr = t('tr'),
+        th = t('td'),
+        td = t('td'),
+        p = t('p'),
+        ul = t('ul'),
+        li = t('li');
 
     function factory(config) {
         var runtime = Runtime.make(),
-            bus = runtime.bus().makeChannelBus(null, 'Output Widget Bus'),
+            bus = runtime.bus().makeChannelBus({ description: 'Output Widget Bus' }),
             cellId = config.cellId,
             root, container, ui,
             model = {
                 currentJobState: null,
                 outputs: null
             },
-        api;
+            api;
 
         function findCellForId(id) {
-            var matchingCells = Jupyter.notebook.get_cells().filter(function (cell) {
+            var matchingCells = Jupyter.notebook.get_cells().filter(function(cell) {
                 // console.log('REMOVING', JSON.parse(JSON.stringify(cell.metadata)));
                 if (cell.metadata && cell.metadata.kbase && cell.metadata.kbase.attributes) {
                     return (cell.metadata.kbase.attributes.id === id);
@@ -83,8 +89,8 @@ define([
                     p('Are you sure you want to remove the output cell?')
                 ]);
             }
-            ui.showConfirmDialog({title: 'Confirm Deletion of Cell Output', body: content})
-                .then(function (answer) {
+            ui.showConfirmDialog({ title: 'Confirm Deletion of Cell Output', body: content })
+                .then(function(answer) {
                     if (!answer) {
                         return;
                     }
@@ -121,7 +127,7 @@ define([
                 content = 'No output yet!';
             } else {
                 content = model.outputs
-                    .sort(function (b, a) {
+                    .sort(function(b, a) {
                         if (a.createdTime < b.createdTime) {
                             return -1;
                         }
@@ -130,19 +136,20 @@ define([
                         }
                         return 0;
                     })
-                    .map(function (output, index) {
+                    .map(function(output, index) {
                         var rowStyle = {
-                            border: '1px silver solid',
-                            padding: '3px'
-                        }, message = '';
+                                border: '1px silver solid',
+                                padding: '3px'
+                            },
+                            message = '';
                         // console.log('JOB MATCH?', output.jobId, model.currentJobState);
                         if (model.currentJobState && output.jobId === model.currentJobState.job_id) {
                             rowStyle.border = '2px blue solid';
                             message = 'This is the most recent output for this app.';
                         }
-                        return div({class: 'row', style: rowStyle}, [
-                            div({class: 'col-md-8'}, [
-                                table({class: 'table table-striped'}, [
+                        return div({ class: 'row', style: rowStyle }, [
+                            div({ class: 'col-md-8' }, [
+                                table({ class: 'table table-striped' }, [
                                     tr([
                                         th('Job Id'), td(output.jobId)
                                     ]),
@@ -154,17 +161,18 @@ define([
                                     ])
                                 ])
                             ]),
-                            div({class: 'col-md-4', style: {textAlign: 'right'}}, [
+                            div({ class: 'col-md-4', style: { textAlign: 'right' } }, [
                                 button({
                                     class: 'btn btn-sm btn-standard',
                                     type: 'button',
                                     id: events.addEvent({
                                         type: 'click',
-                                        handler: function () {
+                                        handler: function() {
                                             doRemoveOutputCell(index);
                                         }
-                                    })}, '&times;'),
-                                div({style: {marginTop: '20px'}, dataElement: 'message'}, message)
+                                    })
+                                }, '&times;'),
+                                div({ style: { marginTop: '20px' }, dataElement: 'message' }, message)
 
                             ])
                         ]);
@@ -180,7 +188,7 @@ define([
         function importModel(outputs) {
             var output;
             if (outputs.byJob) {
-                model.outputs = Object.keys(outputs.byJob).map(function (jobId) {
+                model.outputs = Object.keys(outputs.byJob).map(function(jobId) {
                     output = outputs.byJob[jobId];
                     // console.log(output);
                     return {
@@ -193,11 +201,11 @@ define([
         }
 
         function start() {
-            bus.on('run', function (message) {
+            bus.on('run', function(message) {
                 root = message.node;
                 if (root) {
                     container = root.appendChild(document.createElement('div'));
-                    ui = UI.make({node: container});
+                    ui = UI.make({ node: container });
                     model.currentJobState = message.jobState;
                     if (message.output) {
                         importModel(message.output);
@@ -205,7 +213,7 @@ define([
                     render();
                 }
 
-                bus.on('update', function (message) {
+                bus.on('update', function(message) {
                     model.currentJobState = message.jobState;
                     importModel(message.output);
                     render();
@@ -219,8 +227,7 @@ define([
         function toggleReadOnly(readOnly) {
             if (readOnly) {
                 container.querySelector('.col-md-4 button.btn.btn-sm.btn-standard').classList.add('hidden');
-            }
-            else {
+            } else {
                 container.querySelector('.col-md-4 button.btn.btn-sm.btn-standard').classList.remove('hidden');
             }
         }
@@ -237,7 +244,7 @@ define([
     }
 
     return {
-        make: function (config) {
+        make: function(config) {
             return factory(config);
         }
     };

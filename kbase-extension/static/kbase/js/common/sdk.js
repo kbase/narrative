@@ -243,7 +243,9 @@ define([
                 return 'string';
         }
 
-        return 'unspecified';
+        console.error('ERROR could not determine type from spec', spec);
+
+        throw new Error('Type could not be determined from the spec.');
     }
 
     function updateUI(converted, spec) {

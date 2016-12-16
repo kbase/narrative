@@ -55,10 +55,22 @@ define([
     // }
 
     function validateInt(value, min, max) {
+        if (typeof value !== 'number') {
+            return {
+                id: 'non-numeric',
+                message: 'value must be numeric'
+            };
+        }
         if (isNaN(value)) {
             return {
                 id: 'non-numeric',
                 message: 'value must be numeric'
+            };
+        }
+        if (value - Math.floor(value) !== 0) {
+            return {
+                id: 'non-integer',
+                message: 'value is a number but not an integer'
             };
         }
         if (max && max < value) {

@@ -568,30 +568,27 @@ define([
             });
         }
 
-        function start() {
+        function start(arg) {
             return Promise.try(function() {
-                // send parent the ready message
-                parentBus.emit('ready');
 
                 // parent will send us our initial parameters
-                parentBus.on('run', function(message) {
-                    doAttach(message.node);
+                doAttach(arg.node);
 
-                    model.setItem('appSpec', message.appSpec);
-                    model.setItem('parameters', message.parameters);
-                    model.setItem('converted', message.converted);
+                model.setItem('appSpec', arg.appSpec);
+                model.setItem('parameters', arg.parameters);
+                model.setItem('converted', arg.converted);
+                model.setItem('params', arg.params);
 
-                    // we then create our widgets
-                    renderParameters()
-                        .then(function() {
-                            // do something after success
-                            attachEvents();
-                        })
-                        .catch(function(err) {
-                            // do somethig with the error.
-                            console.error('ERROR in start', err);
-                        });
-                });
+                // we then create our widgets
+                renderParameters()
+                    .then(function() {
+                        // do something after success
+                        attachEvents();
+                    })
+                    .catch(function(err) {
+                        // do somethig with the error.
+                        console.error('ERROR in start', err);
+                    });
 
                 parentBus.on('parameter-changed', function(message) {
                     // Also, tell each of our inputs that a param has changed.

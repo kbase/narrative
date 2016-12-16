@@ -1225,11 +1225,6 @@ define([
                         bus: bus,
                         instance: widget
                     };
-                    bus.emit('run', {
-                        node: ui.getElement(['parameters-group', 'widget']),
-                        appSpec: env.appSpec,
-                        parameters: spec.getSpec().parameters
-                    });
                     bus.on('parameter-sync', function(message) {
                         var value = model.getItem(['params', message.parameter]);
                         bus.send({
@@ -1287,8 +1282,15 @@ define([
                         model.setItem(['params', message.parameter], message.newValue);
                         evaluateAppState();
                     });
-                    widget.start();
-                    resolve();
+                    widget.start({
+                            node: ui.getElement(['parameters-group', 'widget']),
+                            appSpec: model.getItem('app.spec'),
+                            parameters: spec.getSpec().parameters,
+                            params: model.getItem('params')
+                        })
+                        .then(function() {
+                            resolve();
+                        });
                 }, function(err) {
                     console.log('ERROR', err);
                     reject(err);
@@ -1413,7 +1415,6 @@ define([
                 } else {
                     Object.keys(validations).forEach(function(id) {
                         var result = validations[id];
-                        console.log('validation obj', id, result);
                         if (!result.isValid) {
                             messages.push(id + ':' + result.errorMessage);
                         }
@@ -1433,7 +1434,6 @@ define([
                     // we have a tree of validations, so we need to walk the tree to see if anything 
                     // does not validate.
                     var messages = gatherValidationMessages(result);
-                    console.log('VALIDATION MESSAGES?', result, messages);
 
                     if (messages.length === 0) {
                         buildPython(cell, utils.getMeta(cell, 'attributes').id, model.getItem('app'), exportParams());
@@ -1521,12 +1521,9 @@ define([
             }
         });
 
-        console.log('model created', model.getRawObject());
-
         spec = Spec.make({
             appSpec: model.getItem('app.spec')
         });
-
 
         return {
             init: init,

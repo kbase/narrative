@@ -14,7 +14,8 @@ define([
         struct: 'struct',
         workspaceObjectName: 'workspaceObjectName',
         workspaceObjectRef: 'workspaceObjectRef',
-        subdata: 'subdata'
+        subdata: 'subdata',
+        customSubdata: 'customSubdata'
     }
 
     function getValidatorModule(fieldSpec) {
@@ -27,7 +28,12 @@ define([
 
     function validate(fieldValue, fieldSpec) {
         return new Promise(function(resolve, reject) {
-            require(['./' + getValidatorModule(fieldSpec)], function(validator) {
+            try {
+                var validatorModule = getValidatorModule(fieldSpec);
+            } catch (ex) {
+                reject(ex);
+            }
+            require(['./' + validatorModule], function(validator) {
                 resolve(validator.validate(fieldValue, fieldSpec));
             }, function(err) {
                 reject(err);

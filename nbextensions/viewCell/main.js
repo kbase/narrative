@@ -100,9 +100,6 @@ define([
      *
      */
     function upgradeToViewCell(cell, appSpec, appTag) {
-        var spec = Spec.make({
-            appSpec: appSpec
-        });
         return Promise.try(function() {
                 // Create base app cell
                 var meta = cell.metadata;
@@ -142,6 +139,9 @@ define([
             })
             .then(function() {
                 // Add the params
+                var spec = Spec.make({
+                    appSpec: appSpec
+                });
                 utils.setCellMeta(cell, 'kbase.viewCell.params', spec.makeDefaultedModel());
             })
             .then(function() {
@@ -192,10 +192,30 @@ define([
             }
         };
         cell.getIcon = function() {
-            var icon = AppUtils.makeToolbarAppIcon(utils.getCellMeta(cell, 'kbase.appCell.app.spec'));
+            var icon = AppUtils.makeToolbarAppIcon(utils.getCellMeta(cell, 'kbase.viewCell.app.spec'));
             return icon;
         };
     }
+
+    function checkAndRepairCell(cell) {
+
+        // Has proper structure?
+        // TODO:
+
+        // Has proper app spec?
+        var spec = utils.getCellMeta(cell, 'kbase.viewCell.app.spec');
+        if (!spec) {
+            spec = utils.getCellMeta(cell, 'kbase.viewCell.app.appSpec');
+            if (!spec) {
+                throw new Error('App Spec not set on this editor.');
+            }
+            utils.setCellMeta(cell, 'kbase.viewCell.app.spec', spec);
+            console.warn('Editor cell repaired -- the app spec was set on the old property');
+            delete utils.getCellMeta(cell, 'kbase.viewCell.app').appSpec;
+        }
+
+    }
+
 
     function setupCell(cell) {
         return Promise.try(function() {
@@ -213,6 +233,8 @@ define([
                 // console.log('not a kbase app cell, ignoring');
                 return;
             }
+
+            checkAndRepairCell(cell);
 
             specializeCell(cell);
 
@@ -267,10 +289,6 @@ define([
                         widget: viewCellWidget,
                         bus: cellBus
                     };
-                })
-                .catch(function(err) {
-                    console.error('ERROR starting app cell', err);
-                    alert('Error starting app cell');
                 });
         });
     }
@@ -361,7 +379,7 @@ define([
                             .catch(function(err) {
                                 console.error('ERROR creating cell', err);
                                 // delete cell.
-                                $(document).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(data.cell));
+                                Jupyter.notebook.delete_cell(Jupyter.notebook.find_cell_index(data.cell));
                                 alert('Could not insert cell due to errors.\n' + err.message);
                             });
                     }

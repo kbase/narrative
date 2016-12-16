@@ -508,7 +508,12 @@ def validate_param_value(param, value, workspace):
                  isinstance(value, list)):
         return (ws_ref, "input value not supported for 'textsubdata' type - "
                         "only str or list is supported")
-    elif param['type'] not in ['group', 'mapping', 'textsubdata'] and \
+    elif param['type'] == 'custom_textsubdata' and \
+            not (isinstance(value, basestring) or
+                 isinstance(value, list)):
+        return (ws_ref, "input value not supported for 'custom_textsubdata' type - "
+                        "only str or list is supported")
+    elif param['type'] not in ['group', 'mapping', 'textsubdata', 'custom_textsubdata'] and \
             not (isinstance(value, basestring) or
                  isinstance(value, int) or
                  isinstance(value, float)):

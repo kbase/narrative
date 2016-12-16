@@ -947,7 +947,7 @@ define([
                     }
                 })
                 .then(function(message) {
-                    console.log('Now i got it again', message);
+                    // console.log('Now i got it again', message);
                 });
 
 

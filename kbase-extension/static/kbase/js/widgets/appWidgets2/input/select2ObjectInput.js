@@ -140,8 +140,6 @@ define([
             // element id
             var currentSelectionId = String(model.availableValuesMap[stringValue]);
 
-            // console.log('SELECT!', currentSelectionId, 
-
             $(control).val(currentSelectionId).trigger('change');
         }
 
@@ -186,7 +184,7 @@ define([
 
                 switch (objectRefType) {
                     case 'ref':
-                        return Validation.validateWorkspaceDataPaletteRef(processedValue, validationOptions);
+                        return Validation.validateWorkspaceObjectRef(processedValue, validationOptions);
                     case 'name':
                     default:
                         return Validation.validateWorkspaceObjectName(processedValue, validationOptions);
@@ -311,9 +309,9 @@ define([
             validate()
                 .then(function(result) {
                     if (result.isValid) {
-                        model.value = result.value;
+                        model.value = result.parsedValue;
                         channel.emit('changed', {
-                            newValue: result.value
+                            newValue: result.parsedValue
                         });
                     } else if (result.diagnosis === 'required-missing') {
                         model.value = spec.data.nullValue;
@@ -483,7 +481,6 @@ define([
                     } else {
                         id = objectInfo.name;
                     }
-                    // console.log('available values', objectInfo, id, index);
                     model.availableValuesMap[id] = index;
                 });
                 return render()

@@ -85,6 +85,9 @@ define([
             case 'float':
                 return parseFloat(defaultValue);
             case 'workspaceObjectRef':
+                if (defaultValue === '') {
+                    return null;
+                }
                 return defaultValue;
             case 'workspaceObjectName':
                 return defaultValue;
@@ -135,6 +138,7 @@ define([
         if (defaultValues.length === 0) {
             return converted.data.nullValue;
         }
+
         // also weird case of a default value of the empty string, which is really
         // the same as null...
         if (defaultValues[0] === '') {
@@ -258,6 +262,10 @@ define([
                 converted.ui.multiSelection = spec.textsubdata_options.multiselection ? true : false;
                 converted.ui.showSourceObject = spec.textsubdata_options.show_src_obj ? true : false;
                 break;
+            case 'customSubdata':
+                converted.ui.multiSelection = spec.textsubdata_options.multiselection ? true : false;
+                // converted.ui.showSourceObject = spec.textsubdata_options.show_src_obj ? true : false;
+                break;
         }
 
     }
@@ -375,6 +383,11 @@ define([
                     // }
                 };
                 break;
+            case 'customSubdata':
+                constraints = {
+                    multiple: false
+                };
+                break;
                 //                case 'xxinput_property_x':
                 //                    return {
                 //                        defaultValue: defaultValue(),
@@ -468,7 +481,7 @@ define([
                 break;
             default:
                 console.error('Unknown data type', dataType);
-                throw new Error('Unknown data type');
+                throw new Error('Unknown data type: ' + dataType);
         }
         if (constraints) {
             Object.keys(constraints).forEach(function(key) {
@@ -567,7 +580,15 @@ define([
 
     function convertParameter(spec) {
         if (spec.allow_multiple) {
-            return convertSequenceParameter(spec);
+            // except, ahem, for the custom_subdata, at least for now...
+            if (spec.field_type === 'custom_textsubdata') {
+                spec.allow_multiple === 0;
+                spec.textsubdata_options = {
+                    multiselection: 1
+                };
+            } else {
+                return convertSequenceParameter(spec);
+            }
         }
         var multiple = (spec.allow_multiple ? true : false);
         var dataType = grokDataType(spec);

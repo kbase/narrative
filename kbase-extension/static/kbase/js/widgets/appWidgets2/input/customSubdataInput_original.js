@@ -10,7 +10,7 @@ define([
     'common/ui',
     'common/props',
     'base/js/namespace',
-    '../subdataMethods/manager',
+    './subdataMethods/manager',
     'bootstrap',
     'css!font-awesome'
 ], function(
@@ -23,7 +23,7 @@ define([
     UI,
     Props,
     Jupyter,
-    SubdataMethods
+    SubdataMethodsManager
 ) {
     'use strict';
 
@@ -45,32 +45,39 @@ define([
     // Constants
     var t = html.tag,
         div = t('div'),
-        p = t('p'),
         span = t('span'),
         input = t('input'),
         option = t('option'),
         button = t('button');
 
     function factory(config) {
-        var spec = config.parameterSpec,
+        var options = {},
+            // TODO: 
             appSpec = config.appSpec,
-            runtime = Runtime.make(),
-            workspaceId = runtime.getEnv('workspaceId'),
-            busConnection = runtime.bus().connect(),
-            channel = busConnection.channel(config.channelName),
+            spec = config.parameterSpec,
             parent,
             container,
+            workspaceId = config.workspaceId,
+            bus = config.bus,
             model,
-            subdataMethods,
+            subdataMethodsManager,
             options = {
                 objectSelectionPageSize: 20
             },
+            runtime = Runtime.make(),
             ui;
 
-        subdataMethods = SubdataMethods.make();
+        // Validate configuration.
+        if (!workspaceId) {
+            throw new Error('Workspace id required for the object widget');
+        }
+
+        options.enabled = true;
+
+        subdataMethodsManager = SubdataMethodsManager.make();
 
         function buildOptions() {
-            var availableValues = model.getItem('availableValues'),
+            var availableValues = model.getItem('values.available.all'),
                 value = model.getItem('value') || [],
                 selectOptions = [option({ value: '' }, '')];
             if (!availableValues) {
@@ -92,7 +99,7 @@ define([
         }
 
         function buildCount() {
-            var availableValues = model.getItem('availableValues') || [],
+            var availableValues = model.getItem('values.available.all') || [],
                 value = model.getItem('value') || [];
 
             return String(value.length) + ' / ' + String(availableValues.length) + ' items';
@@ -102,9 +109,9 @@ define([
             if (!filter) {
                 return items;
             }
-            var re = new RegExp(filter);
+            var re = new RegExp(filter, 'i');
             return items.filter(function(item) {
-                if (item.text && item.text.match(re, 'i')) {
+                if (item.text && item.text.match(re)) {
                     return true;
                 }
                 return false;
@@ -112,12 +119,12 @@ define([
         }
 
         function doFilterItems() {
-            var items = model.getItem('availableValues', []),
+            var items = model.getItem('values.available.all', []),
                 filteredItems = filterItems(items, model.getItem('filter'));
 
 
             // for now we just reset the from/to range to the beginning.
-            model.setItem('filteredAvailableItems', filteredItems);
+            model.setItem('values.available.filtered', filteredItems);
 
             doFirstPage();
         }
@@ -125,20 +132,24 @@ define([
         function didChange() {
             validate()
                 .then(function(result) {
+                    // NOTE that as part of this control trying to be both single and 
+                    // multiple, we use the value for the model - this is always an array -
+                    // and the parsed value to sent off in the changed message, because
+                    // that must match the "type" in the param spec
                     if (result.isValid) {
                         model.setItem('value', result.value);
                         updateInputControl('value');
-                        channel.emit('changed', {
-                            newValue: result.value
+                        bus.emit('changed', {
+                            newValue: result.parsedValue
                         });
                     } else if (result.diagnosis === 'required-missing') {
                         model.setItem('value', result.value);
                         updateInputControl('value');
-                        channel.emit('changed', {
-                            newValue: result.value
+                        bus.emit('changed', {
+                            newValue: result.parsedValue
                         });
                     }
-                    channel.emit('validation', {
+                    bus.emit('validation', {
                         errorMessage: result.errorMessage,
                         diagnosis: result.diagnosis
                     });
@@ -146,18 +157,18 @@ define([
         }
 
         function doAddItem(itemId) {
-            var selectedItems = model.getItem('selectedItems', []);
+            var selectedItems = model.getItem('value') || [];
             selectedItems.push(itemId);
-            model.setItem('selectedItems', selectedItems);
+            model.setItem('value', selectedItems);
             didChange();
         }
 
         function doRemoveSelectedItem(indexOfitemToRemove) {
-            var selectedItems = model.getItem('selectedItems', []),
-                prevAllowSelection = spec.ui.multiSelection || selectedItems.length === 0;
+            var selectedItems = model.getItem('value') || [],
+                prevAllowSelection = spec.allow_multiple || selectedItems.length === 0;
             selectedItems.splice(indexOfitemToRemove, 1);
 
-            var newAllowSelection = spec.ui.multiSelection || selectedItems.length === 0;
+            var newAllowSelection = spec.spec.allow_multiple || selectedItems.length === 0;
             if (newAllowSelection && !prevAllowSelection) {
                 // update text areas to have md-col-7 (from md-col-10)
                 $(ui.getElement('input-container')).find('.row > .col-md-10').switchClass('col-md-10', 'col-md-7');
@@ -165,14 +176,14 @@ define([
 
                 // update button areas to remove hidden class
             }
-            model.setItem('selectedItems', selectedItems);
+            model.setItem('value', selectedItems);
             didChange();
         }
 
         function doRemoveSelectedAvailableItem(idToRemove) {
-            var selectedItems = model.getItem('selectedItems', []);
+            var selectedItems = model.getItem('value', []);
 
-            model.setItem('selectedItems', selectedItems.filter(function(id) {
+            model.setItem('value', selectedItems.filter(function(id) {
                 if (idToRemove === id) {
                     return false;
                 }
@@ -182,9 +193,9 @@ define([
         }
 
         function renderAvailableItems() {
-            var selected = model.getItem('selectedItems', []),
-                allowSelection = (spec.ui.multiSelection || selected.length === 0),
-                items = model.getItem('filteredAvailableItems', []),
+            var selected = model.getItem('value', []),
+                allowSelection = (spec.spec.allow_multiple || selected.length === 0),
+                items = model.getItem('values.available.filtered', []),
                 from = model.getItem('showFrom'),
                 to = model.getItem('showTo'),
                 itemsToShow = items.slice(from, to),
@@ -199,6 +210,7 @@ define([
                                 return (item.id === id);
                             }),
                             disabled = isSelected;
+
                         return div({ class: 'row', style: { border: '1px #CCC solid' } }, [
                             div({
                                 class: 'col-md-2',
@@ -292,8 +304,8 @@ define([
         }
 
         function renderSelectedItems() {
-            var selectedItems = model.getItem('selectedItems', []),
-                valuesMap = model.getItem('availableValuesMap', {}),
+            var selectedItems = model.getItem('value') || [],
+                valuesMap = model.getItem('values.available.map', {}),
                 events = Events.make({ node: container }),
                 content;
 
@@ -366,13 +378,10 @@ define([
         }
 
         function renderSearchBox() {
-            var items = model.getItem('availableValues', []),
+            var items = model.getItem('values.available.all', []),
                 events = Events.make({ node: container }),
                 content;
 
-            //if (items.length === 0) {
-            //    content = '';
-            //} else {
             content = input({
                 class: 'form-contol',
                 style: { xwidth: '100%' },
@@ -380,42 +389,21 @@ define([
                 value: model.getItem('filter') || '',
                 id: events.addEvents({
                     events: [{
-                            type: 'keyup',
-                            handler: function(e) {
-                                doSearchKeyUp(e);
-                            }
-                        },
-                        {
-                            type: 'focus',
-                            handler: function() {
-                                Jupyter.narrative.disableKeyboardManager();
-                            }
-                        },
-                        {
-                            type: 'blur',
-                            handler: function() {
-                                console.log('SingleSubData Search BLUR');
-                                // Jupyter.narrative.enableKeyboardManager();
-                            }
-                        },
-                        {
-                            type: 'click',
-                            handler: function() {
-                                Jupyter.narrative.disableKeyboardManager();
-                            }
+                        type: 'keyup',
+                        handler: function(e) {
+                            doSearchKeyUp(e);
                         }
-                    ]
+                    }]
                 })
             });
-            //}
 
             ui.setContent('search-box', content);
             events.attachEvents();
         }
 
         function renderStats() {
-            var availableItems = model.getItem('availableValues', []),
-                filteredItems = model.getItem('filteredAvailableItems', []),
+            var availableItems = model.getItem('values.available.all', []),
+                filteredItems = model.getItem('values.available.filtered', []),
                 content;
 
             if (availableItems.length === 0) {
@@ -424,7 +412,7 @@ define([
                 ]);
             } else {
                 content = span({ style: { fontStyle: 'italic' } }, [
-                    ' - filtering ',
+                    ' - showing ',
                     span([
                         String(filteredItems.length),
                         ' of ',
@@ -437,7 +425,7 @@ define([
         }
 
         function renderToolbar() {
-            var items = model.getItem('filteredAvailableItems', []),
+            var items = model.getItem('values.available.filtered', []),
                 events = Events.make({ node: container }),
                 content;
 
@@ -500,7 +488,7 @@ define([
             var from = model.getItem('showFrom'),
                 to = model.getItem('to'),
                 newTo,
-                total = model.getItem('filteredAvailableItems', []).length,
+                total = model.getItem('values.available.filtered', []).length,
                 pageSize = 5;
 
             if (newFrom <= 0) {
@@ -542,7 +530,7 @@ define([
         }
 
         function doLastPage() {
-            setPageStart(model.getItem('filteredAvailableItems').length);
+            setPageStart(model.getItem('values.available.filtered').length);
         }
 
         function doSearchKeyUp(e) {
@@ -557,22 +545,21 @@ define([
             }
         }
 
-        function makeInputControl(events) {
+        function makeInputControl(events, bus) {
             // There is an input control, and a dropdown,
             // TODO select2 after we get a handle on this...
-            var availableValues = model.getItem('availableValues');
+            var selectOptions,
+                size = 10,
+                multiple = false,
+                availableValues = model.getItem('values.available.all'),
+                value = model.getItem('value') || [];
 
-            if (!availableValues) {
-                return p({
-                    class: 'form-control-static',
-                    style: {
-                        fontStyle: 'italic',
-                        whiteSpace: 'normal',
-                        padding: '3px',
-                        border: '1px silver solid'
-                    }
-                }, 'Items will be available after selecting a value for ' + spec.data.constraints.subdataSelection.parameter_id);
+            if (spec.spec.allow_multiple) {
+                size = 10;
+                multiple = true;
             }
+
+            selectOptions = buildOptions();
 
             return div([
                 ui.buildCollapsiblePanel({
@@ -612,6 +599,7 @@ define([
                         dataElement: 'selected-items'
                     })
                 })
+
             ]);
         }
 
@@ -637,7 +625,8 @@ define([
                 case 'availableValues':
                     // rebuild the options
                     // re-apply the selections from the value
-                    var options = buildOptions();
+                    var options = buildOptions(),
+                        count = buildCount();
                     ui.setContent('input-control.input', options);
                     ui.setContent('input-control.count', count);
 
@@ -661,37 +650,70 @@ define([
          * values.
          */
         function getInputValue() {
-            //            var control = ui.getElement('input-container.input');
-            //            if (!control) {
-            //                return null;
-            //            }
-            //            var input = control.selectedOptions,
-            //                i, values = [];
-            //            for (i = 0; i < input.length; i += 1) {
-            //                values.push(input.item(i).value);
-            //            }
-            //            // cute ... allows selecting multiple values but does not expect a sequence...
-            //            return values;
-            return model.getItem('selectedItems');
+            return model.getItem('value');
         }
 
         function resetModelValue() {
-            model.reset();
-            model.setItem('value', spec.defaultValue);
+            // model.reset();
+            if (spec.spec.default_values && spec.spec.default_values.length > 0) {
+                // nb i'm assuming here that this set of strings is actually comma
+                // separated string on the other side.
+                var defaultValues = spec.spec.default_values.filter(function(value) {
+                    return (value && value.length > 0);
+                });
+                model.setItem('value', defaultValues);
+            } else {
+                model.setItem('value', []);
+            }
         }
 
         function validate() {
             return Promise.try(function() {
-                var rawValue = getInputValue(),
-                    validationOptions = {
-                        required: spec.data.constraints.required
-                    };
+                    if (!options.enabled) {
+                        return {
+                            isValid: true,
+                            validated: false,
+                            diagnosis: 'disabled'
+                        };
+                    }
 
-                return Validation.validateStringSet(rawValue, validationOptions);
-            })
+                    var rawValue = getInputValue(),
+                        validationOptions = {
+                            required: spec.required()
+                        };
+
+                    return Validation.validateStringSet(rawValue, validationOptions);
+                })
+                .then(function(validationResult) {
+                    if (!spec.multipleItems()) {
+                        // Convert to the singule-string result if this is not a 
+                        // multiple item control.
+                        // TODO: a more graceful way of doing this!
+                        // IDEAS? This probably should be a separate control.
+                        // the single input is much different -- it does not need to
+                        // support a set of values, just select a single one.
+                        if (validationResult.parsedValue.length > 0) {
+                            validationResult.parsedValue = validationResult.parsedValue[0];
+                        } else {
+                            validationResult.parsedeValue = '';
+                        }
+                    }
+                    return validationResult;
+                });
         }
 
-        var subdataInfo = subdataMethods.getSubdataInfo(appSpec, spec);
+        // unsafe, but pretty.
+        function getProp(obj, props) {
+            props.forEach(function(prop) {
+                obj = obj[prop];
+            });
+            return obj;
+        }
+
+        // safe, but ugly.
+
+
+        var subdataInfo = subdataMethodsManager.getSubdataInfo(appSpec, spec.spec);
 
         function fetchData() {
             var referenceObjectName = model.getItem('referenceObjectName'),
@@ -702,29 +724,12 @@ define([
                 return;
             }
 
-            return subdataMethods.customFetchData({
+            return subdataMethodsManager.customFetchData({
                 referenceObjectRef: referenceObjectRef,
                 params: params,
                 getRef: subdataInfo.getRef,
                 included: subdataInfo.included,
                 extractItems: subdataInfo.extractItems
-            });
-        }
-
-        function fetchDatax() {
-            var referenceObjectName = model.getItem('referenceObjectName'),
-                referenceObjectRef = spec.data.constraints.subdataSelection.constant_ref;
-
-            if (!referenceObjectRef) {
-                if (!referenceObjectName) {
-                    return [];
-                }
-                referenceObjectRef = workspaceId + '/' + referenceObjectName;
-            }
-
-            return subdataMethods.fetchData({
-                referenceObjectRef: referenceObjectRef,
-                spec: spec
             });
         }
 
@@ -734,26 +739,9 @@ define([
                 })
                 .then(function(data) {
                     if (!data) {
-                        return " no data? ";
+                        data = [];
                     }
-
-                    // If default values have been provided, prepend them to the data.
-
-                    // We use the raw default values here since we are not really using
-                    // it as the default value, but as a set of additional items
-                    // to select.
-                    var defaultValues = spec.defaultValue;
-                    if (defaultValues && (defaultValues instanceof Array) && (defaultValues.length > 0)) {
-                        defaultValues.forEach(function(itemId) {
-                            if (itemId && itemId.trim().length > 0) {
-                                data.unshift({
-                                    id: itemId,
-                                    text: itemId
-                                });
-                            }
-                        });
-                    }
-
+                    // 
                     // The data represents the total available subdata, with all
                     // necessary fields for display. We build from that three
                     // additional structures
@@ -761,7 +749,7 @@ define([
                     // - a set of available ids
                     // - a set of selected ids
                     // - a set of filtered ids
-                    model.setItem('availableValues', data);
+                    model.setItem('values.available.all', data);
 
                     // TODO: generate all of this in the fetchData -- it will be a bit faster.
                     var map = {};
@@ -769,11 +757,7 @@ define([
                         map[datum.id] = datum;
                     });
 
-                    //var availableIds = data.map(function (datum) {
-                    //    return datum.id;
-                    //});
-
-                    model.setItem('availableValuesMap', map);
+                    model.setItem('values.available.map', map);
 
                     doFilterItems();
                 });
@@ -782,13 +766,12 @@ define([
         function autoValidate() {
             return validate()
                 .then(function(result) {
-                    channel.emit('validation', {
+                    bus.emit('validation', {
                         errorMessage: result.errorMessage,
                         diagnosis: result.diagnosis
                     });
                 });
         }
-
 
         /*
          * Creates the markup
@@ -799,7 +782,7 @@ define([
             return Promise.try(function() {
                     // check to see if we have to render inputControl.
                     var events = Events.make({ node: container }),
-                        inputControl = makeInputControl(events),
+                        inputControl = makeInputControl(events, bus),
                         content = div({
                             class: 'input-group',
                             style: {
@@ -844,7 +827,6 @@ define([
         }
 
         function updateParam(paramId, value) {
-            console.log('update param?', paramId, value);
             var newValue;
             if (value === '') {
                 newValue = null;
@@ -880,7 +862,7 @@ define([
              * Issued when thre is a need to have all params reset to their
              * default value.
              */
-            channel.on('reset-to-defaults', function(message) {
+            bus.on('reset-to-defaults', function(message) {
                 resetModelValue();
                 // model.reset();
                 // TODO: this should really be set when the linked field is reset...
@@ -894,50 +876,26 @@ define([
                 renderAvailableItems();
                 renderSelectedItems();
 
-                // updateInputControl('availableValues');
-                // updateInputControl('value');
             });
 
             /*
              * Issued when there is an update for this param.
              */
-            channel.on('update', function(message) {
-                model.setItem('value', message.value);
+            bus.on('update', function(message) {
+                // a little hack since this handles both single and multi
+                // and single will default to an empty string or null
+                // for defaulting.
+                var newValue = message.value;
+                if (!newValue || ((typeof newValue === 'string') && newValue.length === 0)) {
+                    newValue = [];
+                }
+                model.setItem('value', newValue);
                 updateInputControl('value');
             });
 
-            /*
-             * Called when for an update to any param. This is necessary for
-             * any parameter which has a dependency upon any other.
-             *
-             */
-
-            // channel.listen({
-            //     key: {
-            //         type: 'parameter-changed',
-            //         parameter: spec.data.constraints.subdataSelection.constant_ref
-            //     },
-            //     handle: function(message) {
-            //         var newValue = message.newValue;
-            //         if (message.newValue === '') {
-            //             newValue = null;
-            //         }
-            //         // reset the entire model.
-            //         model.reset();
-            //         model.setItem('referenceObjectName', newValue);
-            //         syncAvailableValues()
-            //             .then(function() {
-            //                 updateInputControl('availableValues');
-            //             })
-            //             .catch(function(err) {
-            //                 console.error('ERROR syncing available values', err);
-            //             });
-            //     }
-            // });
-
             if (subdataInfo.params.dependencies) {
                 subdataInfo.params.dependencies.forEach(function(paramId) {
-                    channel.listen({
+                    bus.listen({
                         key: {
                             type: 'parameter-changed',
                             parameter: paramId
@@ -947,7 +905,7 @@ define([
                         }
                     });
 
-                    channel.listen({
+                    bus.listen({
                         key: {
                             type: 'parameter-value',
                             parameter: paramId
@@ -956,7 +914,7 @@ define([
                             updateParam(paramId, message.newValue);
                         }
                     });
-                    channel.request({
+                    bus.request({
                             parameterName: paramId
                         }, {
                             key: {
@@ -972,73 +930,19 @@ define([
                 });
             }
 
-            // channel.listen({
-            //     key: {
-            //         type: 'parameter-changed',
-            //         parameter: spec.data.constraints.subdataSelection.parameter_id
-            //     },
-            //     handle: function(message) {
-            //         var newValue = message.newValue;
-            //         if (message.newValue === '') {
-            //             newValue = null;
-            //         }
-            //         // reset the entire model.
-            //         model.reset();
-            //         model.setItem('referenceObjectName', newValue);
-            //         syncAvailableValues()
-            //             .then(function() {
-            //                 updateInputControl('availableValues');
-            //             })
-            //             .catch(function(err) {
-            //                 console.error('ERROR syncing available values', err);
-            //             });
-            //     }
-            // });
 
-            // channel.listen({
-            //     key: {
-            //         type: 'parameter-value',
-            //         parameter: spec.data.constraints.subdataSelection.parameter_id
-            //     },
-            //     handle: function(message) {
-            //         var newValue = message.newValue;
-            //         if (message.newValue === '') {
-            //             newValue = null;
-            //         }
-            //         model.reset();
-            //         model.setItem('referenceObjectName', newValue);
-            //         syncAvailableValues()
-            //             .then(function() {
-            //                 updateInputControl('availableValues');
-            //             })
-            //             .catch(function(err) {
-            //                 console.error('ERROR syncing available values', err);
-            //             });
-            //     }
-            // });
+            bus.emit('sync');
 
-            // This control has a dependency relationship in that its
-            // selection of available values is dependent upon a sub-property
-            // of an object referenced by another parameter.
-            // Rather than explicitly refer to that parameter, we have a
-            // generic capability to receive updates for that value, after
-            // which we re-fetch the values, and re-render the control.
-            //            bus.on('update-reference-object', function (message) {
-            //                model.setItem('referenceObjectName', value)
-            //                setReferenceValue(message.objectRef);
-            //            });
-            // channel.emit('sync');
-
-            channel.request({
-                    parameterName: spec.id
-                }, {
-                    key: {
-                        type: 'get-parameter'
-                    }
-                })
-                .then(function(message) {
-                    // console.log('Now i got it again', message);
-                });
+            //bus.request({
+            //    parameterName: spec.id()
+            //}, {
+            //    key: {
+            //        type: 'get-parameter'
+            //    }
+            //})
+            //    .then(function (message) {
+            //        console.log('Now i got it again', message);
+            //    });
 
 
 
@@ -1063,48 +967,44 @@ define([
          */
 
 
-
-
         // LIFECYCLE API
 
-        function start(arg) {
+        function start() {
             return Promise.try(function() {
-                parent = arg.node;
-                container = parent.appendChild(document.createElement('div'));
-                ui = UI.make({
-                    node: container
-                });
+                bus.on('run', function(message) {
+                    parent = message.node;
+                    container = parent.appendChild(document.createElement('div'));
+                    ui = UI.make({
+                        node: container
+                    });
 
-                var events = Events.make(),
-                    theLayout = layout(events);
+                    var events = Events.make(),
+                        theLayout = layout(events);
 
-                container.innerHTML = theLayout.content;
+                    container.innerHTML = theLayout.content;
 
-                console.log('setting initial value...', config, spec, arg);
-                if (config.initialValue) {
-                    model.setItem('selectedItems', config.initialValue);
-                }
+                    render();
 
-                render();
+                    events.attachEvents(container);
 
-                events.attachEvents(container);
+                    registerEvents();
 
-                registerEvents();
-
-                channel.emit('sync-params', {
-                    parameters: subdataInfo.params.dependencies
+                    bus.emit('sync-params', {
+                        parameters: subdataInfo.params.dependencies
+                    });
                 });
             });
         }
 
         function stop() {
             return Promise.try(function() {
-                if (parent && container) {
+                if (container) {
                     parent.removeChild(container);
                 }
-                busConnection.stop();
             });
         }
+
+
 
         // MAIN
 
@@ -1132,6 +1032,8 @@ define([
     }
 
     return {
+        id: 'custom-subdata',
+        version: '0.0.1',
         make: function(config) {
             return factory(config);
         }

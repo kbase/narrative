@@ -1225,11 +1225,6 @@ define([
                         bus: bus,
                         instance: widget
                     };
-                    bus.emit('run', {
-                        node: ui.getElement(['parameters-group', 'widget']),
-                        appSpec: env.appSpec,
-                        parameters: spec.getSpec().parameters
-                    });
                     bus.on('parameter-sync', function(message) {
                         var value = model.getItem(['params', message.parameter]);
                         bus.send({
@@ -1287,8 +1282,15 @@ define([
                         model.setItem(['params', message.parameter], message.newValue);
                         evaluateAppState();
                     });
-                    widget.start();
-                    resolve();
+                    widget.start({
+                            node: ui.getElement(['parameters-group', 'widget']),
+                            appSpec: model.getItem('app.spec'),
+                            parameters: spec.getSpec().parameters,
+                            params: model.getItem('params')
+                        })
+                        .then(function() {
+                            resolve();
+                        });
                 }, function(err) {
                     console.log('ERROR', err);
                     reject(err);

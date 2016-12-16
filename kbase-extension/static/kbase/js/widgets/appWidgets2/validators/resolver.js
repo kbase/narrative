@@ -14,7 +14,8 @@ define([
         struct: 'struct',
         workspaceObjectName: 'workspaceObjectName',
         workspaceObjectRef: 'workspaceObjectRef',
-        subdata: 'subdata'
+        subdata: 'subdata',
+        customSubdata: 'customSubdata'
     }
 
     function getValidatorModule(fieldSpec) {

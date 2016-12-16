@@ -262,6 +262,10 @@ define([
                 converted.ui.multiSelection = spec.textsubdata_options.multiselection ? true : false;
                 converted.ui.showSourceObject = spec.textsubdata_options.show_src_obj ? true : false;
                 break;
+            case 'customSubdata':
+                converted.ui.multiSelection = spec.textsubdata_options.multiselection ? true : false;
+                // converted.ui.showSourceObject = spec.textsubdata_options.show_src_obj ? true : false;
+                break;
         }
 
     }
@@ -377,6 +381,11 @@ define([
                     //     // Used to generate a description for each item. Becomes the "desc".
                     //     displayTemplate: spec.textsubdata_options.subdata_selection.description_template
                     // }
+                };
+                break;
+            case 'customSubdata':
+                constraints = {
+                    multiple: false
                 };
                 break;
                 //                case 'xxinput_property_x':
@@ -571,7 +580,15 @@ define([
 
     function convertParameter(spec) {
         if (spec.allow_multiple) {
-            return convertSequenceParameter(spec);
+            // except, ahem, for the custom_subdata, at least for now...
+            if (spec.field_type === 'custom_textsubdata') {
+                spec.allow_multiple === 0;
+                spec.textsubdata_options = {
+                    multiselection: 1
+                };
+            } else {
+                return convertSequenceParameter(spec);
+            }
         }
         var multiple = (spec.allow_multiple ? true : false);
         var dataType = grokDataType(spec);

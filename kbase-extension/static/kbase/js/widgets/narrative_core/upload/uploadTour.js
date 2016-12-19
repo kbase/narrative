@@ -10,10 +10,10 @@ define([
 ], function($, Tour, Handlebars, TourTmpl) {
     "use strict";
 
-    var UploadTour = function (narrative, notebook, events) {
+    var UploadTour = function ($elem, notebook, events) {
         var that = this;
+        this.$elem = $elem;
         this.notebook = notebook;
-        this.narrative = narrative;
         this.step_duration = 0;
         this.events = events;
         this.template = Handlebars.compile(TourTmpl);
@@ -24,6 +24,12 @@ define([
                 orphan: true,
                 content: 'This tour will show how to use the Staging panel to upload and manage data files, as well as how to import those into your Narrative as KBase data objects.',
                 backdrop: true
+            },
+            {
+                title: "Upload area",
+                placement: "bottom",
+                element: that.$elem.find('.kb-dropzone'),
+                content: 'Upload area!'
             },
             // {
             //     element: "#notebook_name",

@@ -1,7 +1,8 @@
 import biokbase.narrative.clients as clients
 from biokbase.narrative.app_util import (
     app_version_tags,
-    check_tag
+    check_tag,
+    app_param
 )
 import json
 from jinja2 import Template
@@ -11,6 +12,7 @@ class SpecManager(object):
     __instance = None
 
     app_specs = dict()
+    type_specs = dict()
 
     def __new__(cls):
         if SpecManager.__instance is None:
@@ -23,17 +25,26 @@ class SpecManager(object):
 
         return self.app_specs[tag][app_id]
 
+    def get_type_spec(self, type_id, raise_exception=True):
+        if (type_id not in self.type_specs) and raise_exception:
+            raise ValueError('Unknown type id "{}"'.format(type_id))
+        return self.type_specs.get(type_id)
+
     def reload(self):
         """
         Reloads all app specs into memory from the latest update.
         """
+        client = clients.get('narrative_method_store')
         for tag in app_version_tags:
-            specs = clients.get('narrative_method_store').list_methods_spec({'tag': tag})
+            specs = client.list_methods_spec({'tag': tag})
 
             spec_dict = dict()
             for spec in specs:
                 spec_dict[spec['info']['id']] = spec
             self.app_specs[tag] = spec_dict
+        
+        # And let's load all types from the beginning and cache them
+        self.type_specs = client.list_categories({'load_types': 1})[3]
 
     def app_description(self, app_id, tag='release'):
         """
@@ -153,60 +164,22 @@ class SpecManager(object):
         """
         params = list()
         for p in spec['parameters']:
-            p_info = {'id': p['id']}
+            p_info = app_param(p)
+            params.append(p_info)
 
-            if p['optional']==0:
-                p_info['optional'] = False
-            else:
-                p_info['optional'] = True
-
-            p_info['short_hint'] = p['short_hint']
-            p_info['description'] = p['description']
-            p_info['type'] = p['field_type']
-            p_info['is_output'] = False
-
-            p_info['allow_multiple'] = False
-            if p['allow_multiple'] == 1:
-                p_info['allow_multiple'] = True
-
-            if p_info['type'].lower() == 'dropdown':
-                p_info['allowed_values'] = [ opt['value'] for opt in p['dropdown_options']['options'] ]
-            if p_info['type'] == 'checkbox':
-                p_info['allowed_values'] = [True, False]
-
-            defaults = p['default_values']
-            # remove any empty strings, because that's silly
-            defaults = [x for x in defaults if x]
-            if p_info['allow_multiple']:
-                p_info['default'] = defaults
-            else:
-                p_info['default'] = defaults[0] if len(defaults) > 0 else None
-
-            if 'checkbox_options' in p and len(p['checkbox_options'].keys()) == 2:
-                p_info['checkbox_map'] = [p['checkbox_options']['checked_value'], p['checkbox_options']['unchecked_value']]
-
-            if 'text_options' in p:
-                opts = p['text_options']
-                if 'is_output_name' in opts:
-                    p_info['is_output'] = opts['is_output_name']
-                if 'valid_ws_types' in opts and len(opts['valid_ws_types']) > 0:
-                    p_info['allowed_types'] = opts['valid_ws_types']
-                if 'validate_as' in opts and p_info['type'] != 'checkbox':
-                    p_info['type'] = opts['validate_as']
-                if 'min_float' in opts:
-                    p_info['min_val'] = opts['min_float']
-                if 'min_int' in opts:
-                    p_info['min_val'] = opts['min_int']
-                if 'max_float' in opts:
-                    p_info['max_val'] = opts['max_float']
-                if 'max_int' in opts:
-                    p_info['max_val'] = opts['max_int']
-                if 'regex_constraint' in opts and len(opts['regex_constraint']):
-                    p_info['regex_constraint'] = opts['regex_constraint']
+        for p in spec.get('parameter_groups', []):
+            p_info = {'id': p.get('id', ''), 'is_group': True}
+            p_info['optional'] = p.get('optional', 0) == 1
+            p_info['short_hint'] = p.get('short_hint', '')
+            p_info['description'] = p.get('ui_name', '')
+            p_info['parameter_ids'] = p.get('parameter_ids', [])
+            p_info['id_mapping'] = p.get('id_mapping', {})
+            p_info['allow_multiple'] = p.get('allow_multiple', 0)
+            p_info['type'] = 'group'
 
             params.append(p_info)
 
-        return sorted(params, key=lambda p: (p['optional'], p['is_output']))
+        return sorted(params, key=lambda p: (p.get('optional', False), p.get('is_output', False)))
 
 
 

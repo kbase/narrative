@@ -36,8 +36,24 @@ define([], function() {
         });
     }
 
+    /**
+     * Given a number in bytes, converts to most relevant
+     * order - KB, MB, GB, etc., up to TB
+     * Lots of dividing by 1024.
+     */
+    function readableBytes (value) {
+        var unitList = ["B", "KB", "MB", "GB", "TB", "PB"];
+        var unit = 0;
+        while (value >= 1024 && unit < 5) {
+            value /= 1024;
+            unit++;
+        }
+        return String(value.toFixed(2)) + " " + unitList[unit];
+    }
+
     return {
         uuid: uuid,
-        safeJSONStringify: safeJSONStringify
+        safeJSONStringify: safeJSONStringify,
+        readableBytes: readableBytes
     };
 });

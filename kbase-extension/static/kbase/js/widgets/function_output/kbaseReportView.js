@@ -11,7 +11,10 @@ define(
         'kbaseAuthenticatedWidget',
         'narrativeConfig',
         'util/string',
-        
+        'common/ui',
+        'kb_common/html',
+        'kbase-generic-client-api',
+
         'jquery-dataTables',
         'jquery-dataTables-bootstrap',
         'kbase-client-api'
@@ -21,8 +24,11 @@ define(
     $,
     kbaseAuthenticatedWidget,
     Config,
-    StringUtil
-        
+    StringUtil,
+    UI,
+    html,
+    GenericClient
+
     ) {
     return KBWidget({
         name: 'kbaseReportView',
@@ -34,6 +40,8 @@ define(
             report_window_line_height: 10,
             showReportText: true,
             showCreatedObjects: false,
+            showFiles : true,
+            showHTML : true,
             inNarrative: true, // todo: toggles whether data links show in narrative or new page
 
             wsURL: Config.url('workspace'),
@@ -66,13 +74,59 @@ define(
             return this;
         },
         reportData: null,
+
+        //this is an ugly hack. It'd be prettier to hand in just the shock node ID, but I don't have one of those yet.
+        //Also, this is embedding the token into the html and the URL, both of which are potentially security concerns.
+        importExportLink : function(shock_url, name) {
+          var m;
+          if (m = shock_url.match(/\/node\/(.+)$/)) {
+            var shock_id = m[1];
+            var url = "https://ci.kbase.us/services/data_import_export/download?&id=" + shock_id + "&token=" + this.authToken() + "&wszip=0&name=" + name;
+
+            return url;
+          }
+        },
+
+        preauthMagicClick : function (url, link_id) {
+          var self = this;
+          $.ajax({
+              url : url,
+              type : 'GET',
+              //processData : false,
+              //dataType : 'binary',
+              headers:{'Authorization' : 'Oauth ' + self.authToken()},
+              //processData : false
+              }
+          ).then(function(d) {
+
+            $('#' + link_id).on('click', function(e) {
+
+              e.stopPropagation();
+              self.preauthMagicClick(url, link_id);
+              window.location.href = self.properPreauthURL(d.data.url);
+            });
+          }).fail(function(d) {
+            //console.log("FAILED ", d);
+          });
+        },
+
+
+        properPreauthURL : function(url) {
+          var m;
+          if (m = url.match(new RegExp('^http://ci.kbase.us/preauth/(.+)$'))) {
+            url = 'https://ci.kbase.us/services/shock-api/preauth/' + m[1];
+          }
+          return url;
+        },
+
         loadAndRender: function () {
             var self = this;
             self.loading(true);
 
-            // var objIdentity = self.buildObjectIdentity(this.options.workspace_name, this.options.report_name, null, null);
-            var objIdentity = {ref: this.options.report_ref};
-            self.ws.get_objects([objIdentity],
+            self.objIdentity = self.buildObjectIdentity(this.options.workspace_name, this.options.report_name, null, this.options.report_ref);
+
+            //self.objIdentity = {ref : "11699/2/77"};
+            self.ws.get_objects([self.objIdentity],
                 function (data) {
                     self.reportData = data[0].data;
                     self.render();
@@ -82,6 +136,10 @@ define(
         },
         render: function () {
             var self = this;
+
+            var div = html.tag('div');
+
+            ui = UI.make({node: self.$mainPanel.get(0)});
 
             // Handle warnings?
             if (self.reportData.warnings) {
@@ -101,14 +159,9 @@ define(
                 }
             }
 
-            if (self.options.showReportText) {
-                var $report_window = $('<textarea style="width:100%;font-family:Monaco,monospace;font-size:9pt;color:#555;resize:vertical;" rows="' +
-                    self.options.report_window_line_height + '" readonly>')
-                    .append(self.reportData.text_message);
-                self.$mainPanel.append($report_window);
-            }
-
             if (self.options.showCreatedObjects) {
+                var someDiv = div({dataElement : 'created-objects'});
+                self.$mainPanel.append(someDiv);
                 if (self.reportData.objects_created) {
                     if (self.reportData.objects_created.length > 0) {
 
@@ -159,7 +212,23 @@ define(
                                 var iDisplayLength = 5;
                                 var sDom = "ft<ip>";
                                 var $tblDiv = $('<div>').css('margin-top', '10px');
-                                self.$mainPanel.append($tblDiv);
+                                //self.$mainPanel.append($tblDiv);
+
+                                var objTableId = self.uuid();
+
+                                ui.setContent('created-objects',
+                                    ui.buildCollapsiblePanel({
+                                        title: 'Objects',
+                                        name: 'created-objects-toggle',
+                                        hidden: false,
+                                        type: 'default',
+                                        classes: ['kb-panel-container'],
+                                        body: "<div id = '" + objTableId + "' style = 'margin-top : 10px'></div>",
+                                    })
+                                );
+
+                                var $tblDiv = $('#' + objTableId);
+
                                 if (displayData.length <= iDisplayLength) {
                                     var $objTable = $('<table class="table table-striped table-bordered" style="margin-left: auto; margin-right: auto;">');
 
@@ -234,6 +303,206 @@ define(
                         });
                     }
                 }
+            }
+
+            if (self.options.showReportText) {
+
+                var $report_iframe = '';
+                if (self.reportData.html_links) {
+                  var iframe_id = self.uuid();
+
+                  $report_iframe = $.jqElem('iframe')
+                    .css({width : '100%', height : '500px'})
+                    .attr('frameborder', 0)
+                    .attr('id', iframe_id)
+                    //.attr('src', self.importExportLink(self.reportData.html_links[0].URL, 'report.html') )
+                    .attr('src', 'data:text/html;charset=utf-8,' + encodeURIComponent( self.reportData.direct_html) )
+                  ;
+
+                }
+
+
+                var $report_window = $('<textarea style="width:100%;font-family:Monaco,monospace;font-size:9pt;color:#555;resize:vertical;" rows="' +
+                    self.options.report_window_line_height + '" readonly>')
+                    .append(self.reportData.text_message);
+                var reportHTML = $.jqElem('div').append($report_iframe).html();
+
+                var someDiv = div({dataElement : 'report-section'});
+                self.$mainPanel.append(someDiv);
+
+                var download_link_id = StringUtil.uuid();
+
+                var sectionTitle = $.jqElem('div')
+                  .append('Report &nbsp;&nbsp;')
+                  .append(
+                    $.jqElem('a').append("Download").attr('id', download_link_id)
+                  )
+                  .html();
+                ;
+
+                setTimeout(function() {
+                  if (self.reportData.direct_html_link_index) {
+                    $('#' + download_link_id).on('click', function(e) {
+                      e.stopPropagation();
+                      window.location.href = self.importExportLink(self.reportData.html_links[self.reportData.direct_html_link_index].URL, 'report.html');
+                    })
+                  } else {
+                    $('#' + download_link_id).remove();
+                  }
+                  }, 1);
+
+                ui.setContent('report-section',
+                    ui.buildCollapsiblePanel({
+                        title: sectionTitle,
+                        name: 'report-section-toggle',
+                        hidden: false,
+                        type: 'default',
+                        classes: ['kb-panel-container'],
+                        body: reportHTML
+                    })
+                );
+
+                var sumDiv = div({dataElement : 'summary-section'});
+                self.$mainPanel.append(sumDiv);
+
+                var sumTitle = $.jqElem('div')
+                  .append('Summary')
+                  .html();
+                ;
+
+                ui.setContent('summary-section',
+                    ui.buildCollapsiblePanel({
+                        title: sumTitle,
+                        name: 'summary-section-toggle',
+                        hidden: false,
+                        type: 'default',
+                        classes: ['kb-panel-container'],
+                        body: $.jqElem('div').append($report_window).html()
+                    })
+                );
+            }
+
+            if (self.options.showHTML) {
+
+              var genericClient = new GenericClient(Config.url('service_wizard'), this.authToken(), null, false);
+
+              genericClient.sync_call("ServiceWizard.get_service_status", [{module_name : "HTMLFileSetServ", "version": "dev"}]).then(function(data) {
+
+                var htmlServiceURL = data[0].url;
+
+                var someDiv = div({dataElement : 'downloadable-html'});
+                self.$mainPanel.append(someDiv);
+
+                var body = 'No files to download';
+
+                if (self.reportData.html_links && self.reportData.html_links.length) {
+                  var $ul = $.jqElem('ul');
+                  $.each(
+                    self.reportData.html_links,
+                    function (i, v) {
+
+                      var link_id = StringUtil.uuid();
+
+                      //self.preauthMagicClick(v.URL + '?download_url', link_id);
+
+                      var linkURL = [htmlServiceURL, 'api', 'v1', self.objIdentity.ref, '$', i, v.name].join("/");
+
+                      $ul.append(
+                        $.jqElem('li')
+                          .append(
+                            $.jqElem('a')
+                              .attr('href', linkURL )
+                              .attr('target', '_blank')
+                              /*.on('click', function(e) {
+                                e.preventDefault();
+                                window.location.href = self.importExportLink(v.URL, v.name || 'download-' + i);
+                              })*/
+                              .attr('id', link_id)
+                              .append(v.name || v.URL)
+                          )
+                      );
+
+                      /*setTimeout(function() {
+                        $('#' + link_id).on('click', function(e) {
+                          e.stopPropagation();
+                          window.location.href = self.importExportLink(v.URL, v.name || 'download');
+                        })}, 1);*/
+                    }
+                  );
+
+                  body = $.jqElem('div').append($ul).html();
+                }
+                ui.setContent('downloadable-html',
+                    ui.buildCollapsiblePanel({
+                        title: 'Links',
+                        name: 'downloadable-html-toggle',
+                        hidden: false,
+                        type: 'default',
+                        classes: ['kb-panel-container'],
+                        body: body
+                    })
+                );
+
+              });
+
+            }
+
+            if (self.options.showFiles) {
+              var someDiv = div({dataElement : 'downloadable-files'});
+              self.$mainPanel.append(someDiv);
+
+              var body = 'No files to download';
+              var iframe_id = StringUtil.uuid();
+
+              if (self.reportData.file_links && self.reportData.file_links.length) {
+                var $ul = $.jqElem('ul');
+                $.each(
+                  self.reportData.file_links,
+                  function (i, v) {
+
+                    var link_id = StringUtil.uuid();
+
+                    //self.preauthMagicClick(v.URL + '?download_url', link_id);
+
+
+                    $ul.append(
+                      $.jqElem('li')
+                        .append(
+                          $.jqElem('a')
+                            //.attr('href', self.importExportLink(v.URL, v.name || 'download-' + i) )
+                            .attr('id', link_id)
+                            .append(v.name || v.URL)
+                            .prop('download', true)
+                            .attr('download', 'download')
+                        )
+                    );
+
+                    setTimeout(function() {
+                      $('#' + link_id).on('click', function(e) {
+                        e.preventDefault(); e.stopPropagation();
+                        $('#' + iframe_id).attr('src', self.importExportLink(v.URL, v.name || 'download-' + i));
+                      })}, 1);
+                  }
+                );
+
+                var $iframe = $.jqElem('iframe')
+                  .attr('id', iframe_id)
+                  .css('display', 'none');
+
+                body = $.jqElem('div').append($ul).append($iframe).html();
+              }
+
+              ui.setContent('downloadable-files',
+                  ui.buildCollapsiblePanel({
+                      title: 'Files',
+                      name: 'downloadable-files-toggle',
+                      hidden: false,
+                      type: 'default',
+                      classes: ['kb-panel-container'],
+                      body: body
+                  })
+              );
+
             }
 
             this.loading(false);

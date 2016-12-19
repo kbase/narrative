@@ -9,13 +9,15 @@ define (
 		'bootstrap',
 		'jquery',
 		'narrativeConfig',
-		'kbaseNarrativeParameterInput'
+		'kbaseNarrativeParameterInput',
+        'kb_service/client/shock'
 	], function(
 		KBWidget,
 		bootstrap,
 		$,
 		Config,
-		kbaseNarrativeParameterInput
+		kbaseNarrativeParameterInput,
+        Shock
 	) {
     'use strict';
     return KBWidget({
@@ -190,50 +192,50 @@ define (
         fileSelected: function (nameText, prcText, realButton) {
             if (realButton.files.length != 1)
                 return;
-            var self = this;
-            var prevShockNodeId = self.shockNodeId;
-            self.shockNodeId = null;
-            self.uploadIsReady = false;
-            self.uploadWasStarted = true;
-            self.isValid();
+            var prevShockNodeId = this.shockNodeId;
+            this.shockNodeId = null;
+            this.uploadIsReady = false;
+            this.uploadWasStarted = true;
+            this.isValid();
             // get the selected file
             var file = realButton.files[0];
-            self.fileName.val(file.name);
+            this.fileName.val(file.name);
             prcText.val("?..%");
-            self.onChange();
-            console.log("kbaseNarrativeParameterFileInput.fileSelected: after self.onChange()");
-            var curTime = new Date().getTime();
-            var ujsKey = "File:"+file.size+":"+String(this.getFileLastModificationTime(file))+":"+file.name+":"+self.getUser();
-            var ujsClient = new UserAndJobState(self.options.ujsUrl, {'token': self.token});
-            var shockClient = new ShockClient({url: self.options.shockUrl, token: self.token});
-            ujsClient.get_has_state(self.options.serviceNameInUJS, ujsKey, 0, function(data) {
-                console.log("kbaseNarrativeParameterFileInput.fileSelected, in ujsClient.get_has_state: ", data);
+            this.onChange();
+            //console.log("kbaseNarrativeParameterFileInput.fileSelected: after this.onChange()");
+            var curTime = new Date().getTime();            
+            var ujsKey = ["File", file.size, String(this.getFileLastModificationTime(file)), file.name, this.getUser()].join(':');
+            var ujsClient = new UserAndJobState(this.options.ujsUrl, {'token': this.token});
+            var shockClient = new Shock({url: this.options.shockUrl, token: this.token});
+            ujsClient.get_has_state(this.options.serviceNameInUJS, ujsKey, 0, function(data) {
+                //console.log("kbaseNarrativeParameterFileInput.fileSelected, in ujsClient.get_has_state: ", data);
                 var value = data[1];
                 if (value != null)
                     value = value.split(" ")[0];
-                processAfterNodeCheck(value != null ? value : prevShockNodeId);
+                processAfterNodeCheck(value !== null ? value : prevShockNodeId);
             }, function(error) {
                 console.error("kbaseNarrativeParameterFileInput.fileSelected, in ujsClient.get_has_state: ", error);
                 processAfterNodeCheck(prevShockNodeId);
             });
             
+            var self = this;
             function processAfterNodeCheck(storedShockNodeId) {
-                console.log("kbaseNarrativeParameterFileInput.fileSelected, in processAfterNodeCheck: storedShockNodeId=", storedShockNodeId);
+                // console.log("kbaseNarrativeParameterFileInput.fileSelected, in processAfterNodeCheck: storedShockNodeId=", storedShockNodeId);
                 self.selectFileMode(false);
                 self.cancelUpload = false;
                 shockClient.upload_node(file, storedShockNodeId, self.options.fullShockSearchToResume, function(info) {
-                    console.log("kbaseNarrativeParameterFileInput.fileSelected, in shockClient.upload_node: self.shockNodeId=", self.shockNodeId, info);
+                    // console.log("kbaseNarrativeParameterFileInput.fileSelected, in shockClient.upload_node: self.shockNodeId=", self.shockNodeId, info);
                     if (info.uploaded_size) {
                         var shockNodeWasntDefined = self.shockNodeId == null || self.shockNodeId !== info['node_id'];
                         if (shockNodeWasntDefined) {
                             self.shockNodeId = info['node_id'];
                             var fileState = self.shockNodeId + " " + curTime;
                             ujsClient.set_state(self.options.serviceNameInUJS, ujsKey, fileState, function(data) {
-                                console.log("kbaseNarrativeParameterFileInput.fileSelected, in ujsClient.set_state: ", data);
-                                console.log("UJS file state saved: " + fileState);
+                                //console.log("kbaseNarrativeParameterFileInput.fileSelected, in ujsClient.set_state: ", data);
+                                //console.log("UJS file state saved: " + fileState);
                             }, function(error) {
-                                console.log("Error saving shock node " + self.shockNodeId + " into UJS:");
-                                console.log(error);
+                                console.error("Error saving shock node " + self.shockNodeId + " into UJS:");
+                                console.error(error);
                             });
                         }
                         if (info.uploaded_size >= info.file_size) {
@@ -243,16 +245,17 @@ define (
                             self.uploadWasStarted = false;
                             self.onChange();
                             shockClient.change_node_file_name(self.shockNodeId, file.name, function(info) {
-                                console.log("kbaseNarrativeParameterFileInput.fileSelected, in shockClient.change_node_file_name: ", info);
+                                // console.log("kbaseNarrativeParameterFileInput.fileSelected, in shockClient.change_node_file_name: ", info);
                                 //showShockInfo(self.shockNodeId);
                             }, function(error) {
-                                console.log("Error changing file name for shock node " + self.shockNodeId);
-                                console.log(error);
+                                console.error("Error changing file name for shock node " + self.shockNodeId);
+                                console.error(error);
                             });
                         }
                         var percent = "" + (Math.floor(info.uploaded_size * 1000 / info.file_size) / 10);
-                        if (percent.indexOf('.') < 0)
+                        if (percent.indexOf('.') < 0) {
                             percent += ".0";
+                        }
                         prcText.val(percent + "%");
                         self.isValid();
                         self.onChange();
@@ -352,7 +355,7 @@ define (
             this.uploadIsReady = state[0][2];
             this.percentText.val(state[0][3]);
             if (this.shockNodeId) {
-            	var shockClient = new ShockClient({url: self.options.shockUrl, token: self.token});
+            	var shockClient = new Shock({url: self.options.shockUrl, token: self.token});
             	shockClient.get_node(self.shockNodeId, function(info) {
             		if (!info)
                 		self.shockNodeId = null;

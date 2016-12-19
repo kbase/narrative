@@ -162,7 +162,7 @@ define (
             		var func = functions[i];
     				func.subsystem = func.subsystem.replace(/_/g, ' ');
     				var funcdata = {
-    					"id": '<a class="show-function'+self.pref+'" data-id="'+func.id+'">'+func.id+'</a>',
+    					"id": '<a class="show-function'+self.pref+'" data-pos="'+i+'">'+func.id+'</a>',
     					"subsystem": func.subsystem,
     					"primclass": func.primclass,
     					"subclass": func.subclass,
@@ -310,7 +310,7 @@ define (
             			} else {
 							famdata.funcgenes += count+": "+famindecies[sortedfuncs[j]]+"("+Math.round(100*famindecies[sortedfuncs[j]]/functions[sortedfuncs[j]].numgenes)+"%)";
 							famdata.funcgenomes += count+": "+famgenomes[sortedfuncs[j]]+"("+Math.round(100*famgenomes[sortedfuncs[j]]/functions[sortedfuncs[j]].number_genomes)+"%)";
-							famdata.functions += count+": "+'<a class="show-function'+self.pref+'" data-id="'+functions[sortedfuncs[j]].id+'">'+functions[sortedfuncs[j]].id+'</a>';
+							famdata.functions += count+": "+'<a class="show-function'+self.pref+'" data-pos="'+sortedfuncs[j]+'">'+functions[sortedfuncs[j]].id+'</a>';
 							famdata.subsystem += count+": "+functions[sortedfuncs[j]].subsystem;
 							famdata.primclass += count+": "+functions[sortedfuncs[j]].primclass;
 							famdata.subclass += count+": "+functions[sortedfuncs[j]].subclass;
@@ -394,17 +394,13 @@ define (
         			});
         			$('.show-function'+self.pref).unbind('click');
         			$('.show-function'+self.pref).click(function() {
-        				var id = $(this).data('id');
+        				var pos = $(this).data('pos');
+                        var func = functions[pos];
+        				var id = func.id;
             			if (tabObj.hasTab(id)) {
             				tabObj.showTab(id);
             				return;
             			}
-            			var func;
-        				for (var i in functions) {
-        					if (functions[i].id == id) {
-        						func = functions[i];
-        					}
-        				}
             			var tabContent = $("<div/>");
         				var tableFuncGen = $('<table class="table table-striped table-bordered" '+
 								'style="margin-left: auto; margin-right: auto;" id="'+self.pref+id+'-table"/>');
@@ -417,10 +413,7 @@ define (
 							var genome = genomes[i];
 							var genes = "";
 							var scores = "";
-							var functions = "";
-							var sss = "";
-							var primclass = "";
-							var subclass = "";
+							var fams = "";
 							if (func.genome_features[genome.genome_ref] === undefined) {
 								genes = "none";
 								scores = "none";
@@ -433,13 +426,13 @@ define (
 										scores += "<br>";
 										fams += "<br>";
 									}
-									genes += genearray[0];
-									scores += genearray[2];
-									fams += families[genearray[1]].id;
+									genes += genearray[k][0];
+									scores += genearray[k][2];
+									fams += families[genearray[k][1]].id;
 								}
 							}
 							var row = [
-								genome.name,genes,fams,scores
+								genome.name,genes,scores,fams
 							];
 							tableFuncGen.append('<tr><td>'+row.join('</td><td>')+'</td></tr>');
 						}

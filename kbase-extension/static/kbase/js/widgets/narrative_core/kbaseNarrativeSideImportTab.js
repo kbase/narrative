@@ -1,5 +1,6 @@
-/*global define*/
-/*jslint white: true*/
+/*global define,console*/
+/*jslint white: true;*/
+/*eslint-env browser*/
 /**
  * "Import" tab on data side panel.
  * @author Roman Sutormin <rsutormin@lbl.gov>
@@ -15,7 +16,8 @@ define (
 		'select2',
 		'util/string',
         'base/js/namespace',
-        'common/pythonInterop'
+        'common/pythonInterop',
+        'kbase-client-api'
 	], function(
         KBWidget,
         bootstrap,
@@ -96,12 +98,10 @@ define (
             var confirmButton = $('<button type="button" data-dismiss="modal">')
                                 .addClass("btn")
                                 .append("Confirm")
-                                .click(
-                                    $.proxy(function(event) {
-                                       self.stopTimer();
-                                       self.back();
-                                    }, this)
-                                );
+                                .click(function() {
+                                    self.stopTimer();
+                                    self.back();
+								}.bind(this));
 
             self.$warningModal.append(
                 $('<div>').addClass('modal-dialog').append(
@@ -197,7 +197,7 @@ define (
                         }
                     }
                     var keys = [];
-                    for (var key in self.types) {
+                    for (key in self.types) {
                         keys.push(key);
                     }
                     keys.sort(function(a,b) {return self.types[a]["name"].localeCompare(self.types[b]["name"])});
@@ -206,7 +206,7 @@ define (
                     }
                     $dropdown.select2({
                         minimumResultsForSearch: -1,
-                        formatSelection: function(object, container) {
+                        formatSelection: function(object) {
                             var display = '<span class="kb-parameter-data-selection">'+object.text+'</span>';
                             return display;
                         }
@@ -239,7 +239,7 @@ define (
                 callback(self.methodFullInfo[tag], self.methods[tag], tag);
                 return;
             }
-            self.methClient.list_method_ids_and_names({'tag': tag}, function(methodIdToName) {
+            self.methClient.list_method_ids_and_names({tag: tag}, function(methodIdToName) {
                 self.allMethodIds[tag] = methodIdToName;
                 var methodIds = [];
                 for (var i in self.methodIds) {
@@ -261,14 +261,16 @@ define (
                         self.methodFullInfo[tag][fullInfoList[i].id] = fullInfoList[i];
                     }
                     self.methods[tag] = {};
-                    for (var i in specs) {
+                    for (i in specs) {
                         self.methods[tag][specs[i].info.id] = specs[i];
                     }
                     callback(self.methodFullInfo[tag], self.methods[tag], tag);
                 }).fail(function(error) {
+                    alert(error);
                     errorCallback(error);
                 });
             }, function(error) {
+                alert(error);
                 errorCallback(error);
             });
         },
@@ -290,8 +292,8 @@ define (
             }
             var numberOfTabs = importMethodIds.length;
             if (numberOfTabs > 1) {
-                var $header = $('<div>');
-                var $body = $('<div>');
+                $header = $('<div>');
+                $body = $('<div>');
                 this.widgetPanelCard2.append($header).append($body);
             }
 
@@ -374,7 +376,7 @@ define (
             var $inputDiv = $('<div>');
 
             var methodUuid = 'import-method-details-'+StringUtil.uuid();
-            var buttonLabel = 'details';
+            // var buttonLabel = 'details';
             var methodTitle = methodSpec.info.tooltip.trim();
             var methodDescr = methodFullInfo[methodId].description.trim();
             var $overviewSwitch = $("<a/>").html('more...');
@@ -547,7 +549,7 @@ define (
                             var data = ret.content.data;
                             if (!data)
                                 return;
-                            var session = ret.header.session;
+                            // var session = ret.header.session;
                             var jobId = data['text/plain'];
                             var methodName = methodSpec.info.name;
                             self.createImportStatusCell(methodName, jobId);
@@ -612,7 +614,7 @@ define (
             return this;
         },
 
-        loggedOutCallback: function(event, auth) {
+        loggedOutCallback: function(event) {
             this.token = null;
             this.render();
             return this;

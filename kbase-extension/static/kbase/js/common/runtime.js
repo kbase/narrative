@@ -5,22 +5,21 @@ define([
     'narrativeConfig',
     'common/props',
     './monoBus'
-], function (
+], function(
     Jupyter,
     Config,
     Props,
     Bus) {
     'use strict';
-    var narrativeConfig = Props.make({data: Config.getConfig()});
+    var narrativeConfig = Props.make({ data: Config.getConfig() });
 
     function factory(config) {
-
-
         function createRuntime() {
             var bus = Bus.make();
             return {
                 created: new Date(),
-                bus: bus
+                bus: bus,
+                env: Props.make({})
             };
         }
 
@@ -47,26 +46,26 @@ define([
         function getConfig(key, defaultValue) {
             return narrativeConfig.getItem(key, defaultValue);
 
-//            var path = key.split('.'),
-//                root = path[0],
-//                rest = path.slice(1),
-//                configRoot = Config.get(root);
-//            if (!configRoot) {
-//                return defaultValue;
-//            }
-//            rest.forEach(function (pathElement) {
-//                configRoot = configRoot[pathElement];
-//                if (!configRoot) {
-//                    return;
-//                }
-//            });
-//            if (!configRoot) {
-//                return defaultValue;
-//            }
-//            return configRoot;
+            //            var path = key.split('.'),
+            //                root = path[0],
+            //                rest = path.slice(1),
+            //                configRoot = Config.get(root);
+            //            if (!configRoot) {
+            //                return defaultValue;
+            //            }
+            //            rest.forEach(function (pathElement) {
+            //                configRoot = configRoot[pathElement];
+            //                if (!configRoot) {
+            //                    return;
+            //                }
+            //            });
+            //            if (!configRoot) {
+            //                return defaultValue;
+            //            }
+            //            return configRoot;
         }
-        
-         function getUserSetting(settingKey, defaultValue) {
+
+        function getUserSetting(settingKey, defaultValue) {
             var settings = Jupyter.notebook.metadata.kbase.userSettings,
                 setting;
             if (!settings) {
@@ -79,16 +78,47 @@ define([
             return setting;
         }
 
+
+
+        function setEnv(key, value) {
+            window.kbaseRuntime.env.setItem(key, value);
+        }
+
+        function getEnv(key, defaultValue) {
+            return window.kbaseRuntime.env.getItem(key, defaultValue);
+        }
+
+        /*
+         * This is how the narrative core object does this.
+         * We should really hook into a single method which gets this 
+         * source of truth, validates it against the workspace to get a workspace
+         * info, and makes that info available in the runtime at load time.
+         * But for now, it is very helpful to have a single runtime object/module
+         * available instead of needing to thread global state through everything.
+         * The kbaseNarrative object does this, but it also does a lot more...
+         */
+        function workspaceId() {
+            var wsInfo = window.location.href.match(/ws\.(\d+)\.obj\.(\d+)/);
+            if (wsInfo && wsInfo.length === 3) {
+                return wsInfo[1];
+            }
+        }
+
+        // This is how the 
+
         return {
             authToken: authToken,
             config: getConfig,
             bus: bus,
-            getUserSetting: getUserSetting
+            getUserSetting: getUserSetting,
+            setEnv: setEnv,
+            getEnv: getEnv,
+            workspaceId: workspaceId
         };
     }
 
     return {
-        make: function (config) {
+        make: function(config) {
             return factory(config);
         }
     };

@@ -7,14 +7,18 @@ define([
     'base/js/namespace',
     'common/utils',
     'util/bootstrapDialog',
-    'kbase/js/widgets/appWidgets/infoPanel'
-], function ($, html, Events, Jupyter, utils, BootstrapDialog, AppInfoPanel) {
+    'kbase/js/widgets/appInfoPanel'
+], function($, html, Events, Jupyter, utils, BootstrapDialog, AppInfoPanel) {
     'use strict';
 
     var t = html.tag,
-        div = t('div'), a = t('a'),
-        button = t('button'), p = t('p'),
-        span = t('span'), ul = t('ul'), li = t('li');
+        div = t('div'),
+        a = t('a'),
+        button = t('button'),
+        p = t('p'),
+        span = t('span'),
+        ul = t('ul'),
+        li = t('li');
 
     function getMeta(cell, group, name) {
         if (!cell.metadata.kbase) {
@@ -28,6 +32,7 @@ define([
         }
         return cell.metadata.kbase[group][name];
     }
+
     function factory(config) {
         var container,
             cell;
@@ -71,13 +76,13 @@ define([
 
             if (url) {
                 return a({
-                    href: url,
-                    target: '_blank',
-                    id: events.addEvent({
-                        type: 'click',
-                        handler: doShowInfoModal
-                    })
-                },
+                        href: url,
+                        target: '_blank',
+                        id: events.addEvent({
+                            type: 'click',
+                            handler: doShowInfoModal
+                        })
+                    },
                     label || 'ref');
             }
             return '';
@@ -97,6 +102,7 @@ define([
             }
             return null;
         }
+
         function doShowInfoModal(e) {
             e.preventDefault();
             var version = utils.getCellMeta(cell, 'kbase.appCell.app.version'),
@@ -110,7 +116,7 @@ define([
                 body: $('<div class="container"></div>'),
                 buttons: [
                     $('<a href="' + appStoreUrl + '" target="_blank" type="button" class="btn btn-default">View on App Store</a>'),
-                    $('<button type="button" class="btn btn-primary">Close</button>').click(function () {
+                    $('<button type="button" class="btn btn-primary">Close</button>').click(function() {
                         dialog.hide();
                     })
                 ],
@@ -125,9 +131,9 @@ define([
                 appModule: module,
                 tag: tag
             });
-            infoPanel.start({node: dialog.getBody()});
+            infoPanel.start({ node: dialog.getBody() });
 
-            dialog.getElement().on('hidden.bs.modal', function () {
+            dialog.getElement().on('hidden.bs.modal', function() {
                 dialog.destroy();
             });
             dialog.show();
@@ -150,16 +156,16 @@ define([
                 dataPlacement: 'left',
                 title: true,
                 dataOriginalTitle: 'Cell Settings',
-                id: events.addEvent({type: 'click', handler: doToggleCellSettings})
+                id: events.addEvent({ type: 'click', handler: doToggleCellSettings })
             }, [
-                span({class: 'fa fa-cog', style: 'font-size: 14pt'})
+                span({ class: 'fa fa-cog', style: 'font-size: 14pt' })
             ]);
         }
 
         function renderIcon(icon) {
             return span({
                 class: 'fa fa-' + icon.type + ' fa-sm',
-                style: {color: icon.color || '#000'}
+                style: { color: icon.color || '#000' }
             });
         }
 
@@ -180,15 +186,15 @@ define([
                 dropdownId = html.genId(),
                 menuItems = [
                     // we can always dream.
-//                    {
-//                        name: 'help',
-//                        label: 'Help',
-//                        icon: {
-//                            type: 'question',
-//                            color: 'black'
-//                        },
-//                        id: events.addEvent({type: 'click', handler: doHelp})
-//                    },
+                    //                    {
+                    //                        name: 'help',
+                    //                        label: 'Help',
+                    //                        icon: {
+                    //                            type: 'question',
+                    //                            color: 'black'
+                    //                        },
+                    //                        id: events.addEvent({type: 'click', handler: doHelp})
+                    //                    },
                     {
                         name: 'toggle-collapse',
                         label: toggleMinMax === 'maximized' ? 'Collapse' : 'Expand',
@@ -196,21 +202,21 @@ define([
                             type: toggleIcon + '-square-o',
                             color: 'orange'
                         },
-                        id: events.addEvent({type: 'click', handler: doToggleMinMaxCell})
+                        id: events.addEvent({ type: 'click', handler: doToggleMinMaxCell })
                     }
                 ];
 
-// we can always dream
-//            if (isKBaseCell(cell)) {
-//                menuItems.push({
-//                    name: 'settings',
-//                    label: 'Settings',
-//                    icon: {
-//                        type: 'gear',
-//                        color: 'black'
-//                    }
-//                });
-//            }
+            // we can always dream
+            //            if (isKBaseCell(cell)) {
+            //                menuItems.push({
+            //                    name: 'settings',
+            //                    label: 'Settings',
+            //                    icon: {
+            //                        type: 'gear',
+            //                        color: 'black'
+            //                    }
+            //                });
+            //            }
 
             if (cell.cell_type === 'code') {
                 menuItems.push({
@@ -220,10 +226,10 @@ define([
                         type: 'terminal',
                         color: 'black'
                     },
-                    id: events.addEvent({type: 'click', handler: doToggleCodeView})
+                    id: events.addEvent({ type: 'click', handler: doToggleCodeView })
                 });
             }
-            
+
             if (cell.showInfo) {
                 menuItems.push({
                     name: 'info',
@@ -232,9 +238,12 @@ define([
                         type: 'info',
                         color: 'orange'
                     },
-                    id: events.addEvent({type: 'click', handler: function () {
-                        cell.showInfo();
-                    }})
+                    id: events.addEvent({
+                        type: 'click',
+                        handler: function() {
+                            cell.showInfo();
+                        }
+                    })
                 });
             }
 
@@ -248,11 +257,11 @@ define([
                     type: 'times',
                     color: 'red'
                 },
-                id: events.addEvent({type: 'click', handler: doDeleteCell})
+                id: events.addEvent({ type: 'click', handler: doDeleteCell })
             });
 
 
-            return span({class: 'dropdown'}, [
+            return span({ class: 'dropdown' }, [
                 button({
                     class: 'btn btn-xs btn-default dropdown-toggle',
                     type: 'button',
@@ -260,9 +269,9 @@ define([
                     dataToggle: 'dropdown',
                     ariaHaspopup: 'true',
                     ariaExpanded: 'true'
-                }, [span({class: 'fa fa-ellipsis-h fa-lg'})]),
-                ul({class: 'dropdown-menu dropdown-menu-right', ariaLabelledby: dropdownId}, [
-                    menuItems.map(function (item) {
+                }, [span({ class: 'fa fa-ellipsis-h fa-lg' })]),
+                ul({ class: 'dropdown-menu dropdown-menu-right', ariaLabelledby: dropdownId }, [
+                    menuItems.map(function(item) {
                         switch (item.type) {
                             case 'separator':
                                 return li({
@@ -279,12 +288,15 @@ define([
                                     },
                                     id: item.id
                                 }, [
-                                    span({style: {
+                                    span({
+                                        style: {
                                             display: 'inline-block',
                                             width: '25px',
                                             marginRight: '4px'
-                                        }}, renderIcon(item.icon)),
-                                    span(item.label)]));
+                                        }
+                                    }, renderIcon(item.icon)),
+                                    span(item.label)
+                                ]));
                         }
                     }).join('')
                 ])
@@ -295,7 +307,9 @@ define([
             if (cell && cell.getIcon) {
                 return cell.getIcon();
             }
-            return span({class: 'fa fa-file fa-2x', style: {
+            return span({
+                class: 'fa fa-file fa-2x',
+                style: {
                     verticalAlign: 'top',
                     xlineHeight: '56px'
                 }
@@ -303,86 +317,88 @@ define([
         }
 
         function render(cell) {
-            var events = Events.make({node: container}),
+            var events = Events.make({ node: container }),
                 buttons = Jupyter.narrative.readonly ? [] : [
-                div({class: 'buttons pull-right'}, [
-                    span({class: 'kb-func-timestamp'}),
-                    span({class: 'fa fa-circle-o-notch fa-spin', style: {color: 'rgb(42, 121, 191)', display: 'none'}}),
-                    span({class: 'fa fa-exclamation-triangle', style: {color: 'rgb(255, 0, 0)', display: 'none'}}),
-                    button({
-                        type: 'button',
-                        class: 'btn btn-default btn-xs',
-                        dataToggle: 'tooltip',
-                        dataPlacement: 'left',
-                        title: true,
-                        dataOriginalTitle: 'Move Cell Up',
-                        id: events.addEvent({type: 'click', handler: doMoveCellUp})
-                    }, [
-                        span({class: 'fa fa-arrow-up fa-lg'})
-                    ]),
-                    button({
-                        type: 'button',
-                        class: 'btn btn-default btn-xs',
-                        dataToggle: 'tooltip',
-                        dataPlacement: 'left',
-                        title: true,
-                        dataOriginalTitle: 'Move Cell Down',
-                        id: events.addEvent({type: 'click', handler: doMoveCellDown})
-                    }, [
-                        span({class: 'fa fa-arrow-down fa-lg', style: 'xfont-size: 18px'})
-                    ]),
-                    renderOptions(cell, events)
-//                    button({
-//                        type: 'button',
-//                        class: 'btn btn-default btn-xs',
-//                        dataToggle: 'tooltip',
-//                        dataPlacement: 'left',
-//                        title: true,
-//                        dataOriginalTitle: 'Delete Cell',
-//                        id: events.addEvent({type: 'click', handler: doDeleteCell})
-//                    }, [
-//                        span({class: 'fa fa-times-circle', style: {fontSize: '14pt', color: 'red'}})
-//                    ]),
-//                    button({
-//                        type: 'button',
-//                        class: 'btn btn-default btn-xs',
-//                        dataToggle: 'tooltip',
-//                        dataPlacement: 'left',
-//                        title: true,
-//                        dataOriginalTitle: toggleMinMax === 'maximized' ? 'Collapse Cell' : 'Expand Cell',
-//                        id: events.addEvent({type: 'click', handler: doToggleMinMaxCell})
-//                    }, [
-//                        span({class: 'fa fa-' + toggleIcon + '-square-o', style: {fontSize: '14pt', color: 'orange'}})
-//                    ])
+                    div({ class: 'buttons pull-right' }, [
+                        span({ class: 'kb-func-timestamp' }),
+                        span({ class: 'fa fa-circle-o-notch fa-spin', style: { color: 'rgb(42, 121, 191)', display: 'none' } }),
+                        span({ class: 'fa fa-exclamation-triangle', style: { color: 'rgb(255, 0, 0)', display: 'none' } }),
+                        button({
+                            type: 'button',
+                            class: 'btn btn-default btn-xs',
+                            dataToggle: 'tooltip',
+                            dataPlacement: 'left',
+                            title: true,
+                            dataOriginalTitle: 'Move Cell Up',
+                            id: events.addEvent({ type: 'click', handler: doMoveCellUp })
+                        }, [
+                            span({ class: 'fa fa-arrow-up fa-lg' })
+                        ]),
+                        button({
+                            type: 'button',
+                            class: 'btn btn-default btn-xs',
+                            dataToggle: 'tooltip',
+                            dataPlacement: 'left',
+                            title: true,
+                            dataOriginalTitle: 'Move Cell Down',
+                            id: events.addEvent({ type: 'click', handler: doMoveCellDown })
+                        }, [
+                            span({ class: 'fa fa-arrow-down fa-lg', style: 'xfont-size: 18px' })
+                        ]),
+                        renderOptions(cell, events)
+                        //                    button({
+                        //                        type: 'button',
+                        //                        class: 'btn btn-default btn-xs',
+                        //                        dataToggle: 'tooltip',
+                        //                        dataPlacement: 'left',
+                        //                        title: true,
+                        //                        dataOriginalTitle: 'Delete Cell',
+                        //                        id: events.addEvent({type: 'click', handler: doDeleteCell})
+                        //                    }, [
+                        //                        span({class: 'fa fa-times-circle', style: {fontSize: '14pt', color: 'red'}})
+                        //                    ]),
+                        //                    button({
+                        //                        type: 'button',
+                        //                        class: 'btn btn-default btn-xs',
+                        //                        dataToggle: 'tooltip',
+                        //                        dataPlacement: 'left',
+                        //                        title: true,
+                        //                        dataOriginalTitle: toggleMinMax === 'maximized' ? 'Collapse Cell' : 'Expand Cell',
+                        //                        id: events.addEvent({type: 'click', handler: doToggleMinMaxCell})
+                        //                    }, [
+                        //                        span({class: 'fa fa-' + toggleIcon + '-square-o', style: {fontSize: '14pt', color: 'orange'}})
+                        //                    ])
 
-                ])
-            ],
-                content = div({class: 'kb-cell-toolbar container-fluid'}, [
-                    div({class: 'row', style: {height: '56px'}}, [
-                        div({class: 'col-sm-9 title-container'}, [
-                            div({class: 'title', style: {display: 'flex', height: '56px'}}, [
-                                div({dataElement: 'icon', 
-                                    class: 'icon', 
+                    ])
+                ],
+                content = div({ class: 'kb-cell-toolbar container-fluid' }, [
+                    div({ class: 'row', style: { height: '56px' } }, [
+                        div({ class: 'col-sm-9 title-container' }, [
+                            div({ class: 'title', style: { display: 'flex', height: '56px' } }, [
+                                div({
+                                    dataElement: 'icon',
+                                    class: 'icon',
                                     style: {
-                                        xposition: 'relative', 
-                                        xtop: '0', 
-                                        xleft: '0', 
-                                        xdisplay: 'inline-block', 
+                                        xposition: 'relative',
+                                        xtop: '0',
+                                        xleft: '0',
+                                        xdisplay: 'inline-block',
                                         flexShrink: "0",
                                         width: '56px',
-                                        height: '56px', 
+                                        height: '56px',
                                         lineHeight: '56px'
-                                    }}, [
+                                    }
+                                }, [
                                     buildIcon(cell)
                                 ]),
-                                div({style: {flexGrow: "1"}}, [
-                                    div({dataElement: 'title', class: 'title', style: {lineHeight: '20px', height: '20px', marginTop: '8px', overflow: 'hidden'}}, [getCellTitle(cell)]),
-                                    div({dataElement: 'subtitle', class: 'subtitle', style: {lineHeight: '20px', height: '20px', overflow: 'hidden'}}, [getCellSubtitle(cell)])
+                                div({ style: { flexGrow: "1" } }, [
+                                    div({ dataElement: 'title', class: 'title', style: { lineHeight: '20px', height: '20px', marginTop: '8px', overflow: 'hidden' } }, [getCellTitle(cell)]),
+                                    div({ dataElement: 'subtitle', class: 'subtitle', style: { lineHeight: '20px', height: '20px', overflow: 'hidden' } }, [getCellSubtitle(cell)])
                                     // div({dataElement: 'info-link', class: 'info-link'}, [getCellInfoLink(cell, events)])
                                 ])
                             ])
                         ]),
-                        div({class: 'col-sm-3 buttons-container'}, buttons)
+                        div({ class: 'col-sm-3 buttons-container' }, buttons)
                     ])
                 ]);
             if (Jupyter.narrative.readonly) {
@@ -414,7 +430,7 @@ define([
     }
 
     return {
-        make: function (config) {
+        make: function(config) {
             return factory(config);
         }
     };

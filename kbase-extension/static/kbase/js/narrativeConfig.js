@@ -1,4 +1,4 @@
-/*global define*/
+/*global define,window,console,require*/
 /*jslint white:true,browser:true*/
 /**
  * Loads the required narrative configuration files.
@@ -18,14 +18,16 @@ define([
     'json!kbase/config/config.json',
     'json!kbase/config/icons.json',
     'json!kbase/config/cdn-service-config.json',
+    'json!kbase/config/feature-config.json',
     'require'
 ], function (
     paths,
     $,
     Promise,
-    configSet,
-    iconsSet,
-    serviceSet,
+    ConfigSet,
+    IconsSet,
+    ServiceSet,
+    FeatureSet,
     localRequire
 ) {
     'use strict';
@@ -41,21 +43,22 @@ define([
 
     // Build the config up from the configSet (from config.json)
     config = {
-        environment: configSet.config,
-        urls: configSet[configSet.config],
-        version: configSet.version,
-        name: configSet.name,
-        git_commit_hash: configSet.git_commit_hash,
-        git_commit_time: configSet.git_commit_time,
-        release_notes: configSet.release_notes,
-        mode: configSet.mode,
-        dev_mode: configSet.dev_mode,
-        tooltip: configSet.tooltip,
-        icons: iconsSet,
+        environment: ConfigSet.config,
+        urls: ConfigSet[ConfigSet.config],
+        version: ConfigSet.version,
+        name: ConfigSet.name,
+        git_commit_hash: ConfigSet.git_commit_hash,
+        git_commit_time: ConfigSet.git_commit_time,
+        release_notes: ConfigSet.release_notes,
+        mode: ConfigSet.mode,
+        dev_mode: ConfigSet.dev_mode,
+        tooltip: ConfigSet.tooltip,
+        icons: IconsSet,
         workspaceId: workspaceId,
-        loading_gif: configSet.loading_gif,
-        use_local_widgets: configSet.use_local_widgets,
-        features: configSet.features
+        loading_gif: ConfigSet.loading_gif,
+        use_local_widgets: ConfigSet.use_local_widgets,
+        features: FeatureSet
+
     };
 
     debug = config.mode === "debug";
@@ -69,15 +72,14 @@ define([
     });
 
     window.kbconfig = config;
-    Object.keys(serviceSet).forEach(function (key) {
-        config[key] = serviceSet[key];
+    Object.keys(ServiceSet).forEach(function (key) {
+        config[key] = ServiceSet[key];
     });
 
     config['services'] = {};
     Object.keys(config.urls).forEach(function (key) {
         config.services[key] = { 'url': config.urls[key], 'name': key };
     });
-
 
     function assertConfig() {
         if (config === undefined) {
@@ -187,5 +189,5 @@ define([
         url: url,
         get: get,
         debug: debug
-    }
+    };
 });

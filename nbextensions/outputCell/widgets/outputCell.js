@@ -8,18 +8,19 @@ define([
     'common/ui',
     'common/html',
     'common/jupyter'
-], function (
+], function(
     Runtime,
     BusEventManager,
     Props,
     UI,
     html,
-    Jupyter
-    ) {
+    JupyterInterop
+) {
     'use strict';
 
     var t = html.tag,
-        div = t('div'), p = t('p');
+        div = t('div'),
+        p = t('p');
 
     function factory(config) {
         var cell = config.cell,
@@ -27,7 +28,7 @@ define([
             eventManager = BusEventManager.make({
                 bus: runtime.bus()
             }),
-            bus = runtime.bus().makeChannelBus(null, 'output cell bus'),
+            bus = runtime.bus().makeChannelBus({ description: 'output cell bus' }),
 
             // To be instantiated at attach()
             container, ui,
@@ -37,7 +38,6 @@ define([
 
         function doDeleteCell() {
             var parentCellId = Props.getDataItem(cell.metadata, 'kbase.outputCell.parentCellId');
-            console.log('META', cell.metadata);
             var content = div([
                 p([
                     'Deleting this cell will remove the data visualization, ',
@@ -47,28 +47,26 @@ define([
                 p(['Parent cell id is ', parentCellId]),
                 p('Continue to delete this data cell?')
             ]);
-            ui.showConfirmDialog({title: 'Confirm Cell Deletion', body: content})
-                .then(function (confirmed) {
+            ui.showConfirmDialog({ title: 'Confirm Cell Deletion', body: content })
+                .then(function(confirmed) {
                     if (!confirmed) {
                         return;
                     }
-
-                    console.log('sending', Props.getDataItem(cell.metadata, 'kbase.outputCell.jobId'), Props.getDataItem(cell.metadata, 'kbase.attributes.id'));
                     runtime.bus().send({
-                      jobId: Props.getDataItem(cell.metadata, 'kbase.outputCell.jobId'),
-                      outputCellId: Props.getDataItem(cell.metadata, 'kbase.attributes.id')
+                        jobId: Props.getDataItem(cell.metadata, 'kbase.outputCell.jobId'),
+                        outputCellId: Props.getDataItem(cell.metadata, 'kbase.attributes.id')
                     }, {
                         channel: {
-                          cell: parentCellId
+                            cell: parentCellId
                         },
                         key: {
-                          type: 'output-cell-removed'
+                            type: 'output-cell-removed'
                         }
                     });
 
                     bus.emit('stop');
 
-                    Jupyter.deleteCell(cell);
+                    JupyterInterop.deleteCell(cell);
                 });
         }
 
@@ -76,12 +74,12 @@ define([
 
         // Widget API
 
-        eventManager.add(bus.on('run', function (message) {
+        eventManager.add(bus.on('run', function(message) {
             // container = message.node;
-            ui = UI.make({node: message.node});
+            ui = UI.make({ node: message.node });
 
             // Events for comm from the parent.
-            eventManager.add(bus.on('stop', function () {
+            eventManager.add(bus.on('stop', function() {
                 eventManager.removeAll();
             }));
 
@@ -91,10 +89,13 @@ define([
             // without a physical handle on the widget object.
 
             cellBus = runtime.bus().makeChannelBus({
-                cell: Props.getDataItem(cell.metadata, 'kbase.attributes.id')
-            }, 'A cell channel');
+                name: {
+                    cell: Props.getDataItem(cell.metadata, 'kbase.attributes.id')
+                },
+                description: 'A cell channel'
+            });
 
-            eventManager.add(cellBus.on('delete-cell', function () {
+            eventManager.add(cellBus.on('delete-cell', function() {
                 doDeleteCell();
             }));
 
@@ -106,7 +107,7 @@ define([
     }
 
     return {
-        make: function (config) {
+        make: function(config) {
             return factory(config);
         }
     };

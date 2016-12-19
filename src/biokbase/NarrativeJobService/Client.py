@@ -171,41 +171,6 @@ class NarrativeJobService(object):
             raise ServerError('Unknown', 0, 'An unknown server error occurred')
         return resp['result']
  
-    def run_app(self, app, json_rpc_context = None):
-        if json_rpc_context and type(json_rpc_context) is not dict:
-            raise ValueError('Method run_app: argument json_rpc_context is not type dict as required.')
-        resp = self._call('NarrativeJobService.run_app',
-                          [app], json_rpc_context)
-        return resp[0]
-  
-    def check_app_state(self, job_id, json_rpc_context = None):
-        if json_rpc_context and type(json_rpc_context) is not dict:
-            raise ValueError('Method check_app_state: argument json_rpc_context is not type dict as required.')
-        resp = self._call('NarrativeJobService.check_app_state',
-                          [job_id], json_rpc_context)
-        return resp[0]
-  
-    def suspend_app(self, job_id, json_rpc_context = None):
-        if json_rpc_context and type(json_rpc_context) is not dict:
-            raise ValueError('Method suspend_app: argument json_rpc_context is not type dict as required.')
-        resp = self._call('NarrativeJobService.suspend_app',
-                          [job_id], json_rpc_context)
-        return resp[0]
-  
-    def resume_app(self, job_id, json_rpc_context = None):
-        if json_rpc_context and type(json_rpc_context) is not dict:
-            raise ValueError('Method resume_app: argument json_rpc_context is not type dict as required.')
-        resp = self._call('NarrativeJobService.resume_app',
-                          [job_id], json_rpc_context)
-        return resp[0]
-  
-    def delete_app(self, job_id, json_rpc_context = None):
-        if json_rpc_context and type(json_rpc_context) is not dict:
-            raise ValueError('Method delete_app: argument json_rpc_context is not type dict as required.')
-        resp = self._call('NarrativeJobService.delete_app',
-                          [job_id], json_rpc_context)
-        return resp[0]
-  
     def list_config(self, json_rpc_context = None):
         if json_rpc_context and type(json_rpc_context) is not dict:
             raise ValueError('Method list_config: argument json_rpc_context is not type dict as required.')
@@ -224,13 +189,6 @@ class NarrativeJobService(object):
         if json_rpc_context and type(json_rpc_context) is not dict:
             raise ValueError('Method status: argument json_rpc_context is not type dict as required.')
         resp = self._call('NarrativeJobService.status',
-                          [], json_rpc_context)
-        return resp[0]
-  
-    def list_running_apps(self, json_rpc_context = None):
-        if json_rpc_context and type(json_rpc_context) is not dict:
-            raise ValueError('Method list_running_apps: argument json_rpc_context is not type dict as required.')
-        resp = self._call('NarrativeJobService.list_running_apps',
                           [], json_rpc_context)
         return resp[0]
   

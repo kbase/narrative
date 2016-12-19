@@ -1,7 +1,7 @@
 // Karma configuration
 // Generated on Sun May 15 2016 17:06:05 GMT-0700 (PDT)
 
-module.exports = function (config) {
+module.exports = function(config) {
     'use strict';
     config.set({
 
@@ -26,8 +26,15 @@ module.exports = function (config) {
             {
                 pattern: 'test2/specs/active/*Spec.js',
                 included: false
-            }, {
+            },
+            { pattern: 'test2/specs/active/*-Data.js', included: false },
+
+            {
                 pattern: 'kbase-extension/static/kbase/js/common/*.js',
+                included: false
+            },
+            {
+                pattern: 'kbase-extension/static/kbase/js/widgets/**/*.js',
                 included: false
             },
             // {pattern: '../../kbase-extension/static/js/common/*.js', included: false}

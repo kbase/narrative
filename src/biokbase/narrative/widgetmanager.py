@@ -24,6 +24,10 @@ import uuid
 import time
 from pprint import pprint
 from biokbase.narrative.jobs.specmanager import SpecManager
+import biokbase.narrative.clients as clients
+from biokbase.narrative.app_util import map_outputs_from_state
+from biokbase.narrative.app_util import validate_parameters
+
 
 class WidgetManager(object):
     """
@@ -276,7 +280,7 @@ class WidgetManager(object):
                     constants[p] = params[p]["allowed_values"][0]
         return constants
 
-    def show_output_widget(self, widget_name, params, tag="release", title="", type="method", cell_id=None, check_widget=True, **kwargs):
+    def show_output_widget(self, widget_name, params, tag="release", title="", type="method", cell_id=None, check_widget=False, **kwargs):
         """
         Renders a widget using the generic kbaseNarrativeOutputWidget container.
 
@@ -333,20 +337,54 @@ class WidgetManager(object):
                                              timestamp=int(round(time.time()*1000)))
         return Javascript(data=js, lib=None, css=None)
 
-    def show_data_widget(self, widget_name, object_info, title="", cell_id=None):
+    def show_data_widget(self, ref, title="", cell_id=None, tag="release"):
         """
         Renders a widget using the generic kbaseNarrativeOutputWidget container.
 
         Parameters
         ----------
-        widget_name : string
-            The name of the widget to print the widgets for.
-        params : dict
-            The dictionary of parameters that gets fed into the widget.
+        ref : string
+            Reference to object turning into parameters that get fed into the widget.
+            This reference may include ref-path.
         """
 
+        widget_name = "kbaseNarrativeDataCell"
         input_data = dict()
-        input_data.update(object_info)
+        info_tuple = clients.get('workspace').get_object_info_new({'objects': [{'ref': ref}],
+                                                                   'includeMetadata': 1})[0]
+        input_data['info_tuple'] = info_tuple
+
+        bare_type = info_tuple[2].split('-')[0]
+
+        type_spec = self._sm.get_type_spec(bare_type, raise_exception=False)
+        if type_spec is None:
+            input_data['error_message'] = "Type-spec wasn't found for '" + bare_type + "'"
+        elif 'view_method_ids' not in type_spec or len(type_spec['view_method_ids']) != 1:
+            input_data['error_message'] = ("Type-spec for '" + bare_type + "' should " +
+                                           "have exactly one ID in 'view_method_ids' field")
+        else:
+            input_data['type_spec'] = type_spec
+            method_id = type_spec['view_method_ids'][0]
+            spec = self._sm.get_spec(method_id, tag=tag)
+            input_data['app_spec'] = spec
+
+            # Let's build output according to mappings in method-spec
+            spec_params = self._sm.app_params(spec)
+            input_params = {}
+            is_ref_path = ';' in ref
+            is_external = info_tuple[7] != os.environ['KB_WORKSPACE_ID']
+            # it's not safe to use reference yet (until we switch to them all over the Apps)
+            # But in case we deal with ref-path we have to do it anyway:
+            obj_param_value = ref if (is_ref_path or is_external) else info_tuple[1]
+            for param in spec_params:
+                if any(t == bare_type for t in param['allowed_types']):
+                    input_params[param['id']] = obj_param_value
+
+            (input_params, ws_refs) = validate_parameters(method_id, tag,
+                                                          spec_params, input_params)
+            (output_widget, output) = map_outputs_from_state([], input_params, spec)
+            input_data['output'] = output
+
         input_template = """
         element.html("<div id='{{input_id}}' class='kb-vis-area'></div>");
 
@@ -363,98 +401,12 @@ class WidgetManager(object):
         """
 
         js = Template(input_template).render(input_id=self._cell_id_prefix + str(uuid.uuid4()),
-                                             output_type=type,
                                              widget_name=widget_name,
                                              input_data=json.dumps(input_data),
                                              cell_title=title,
                                              cell_id=cell_id,
                                              timestamp=int(round(time.time()*1000)))
         return Javascript(data=js, lib=None, css=None)
-
-
-
-    def show_custom_widget(self, widget_id, app_id, app_version, app_tag, spec, cell_id):
-        input_template = """
-        element.html('<div id="{{widget_root_id}}" class="kb-custom-widget">');
-
-        require([
-            'widgets/appWidgets/customWidgetWrapper'
-        ], function (CustomWidgetWrapper) {
-            'use strict';
-            var widgetArg = JSON.parse('{{widget_arg}}'),
-                widgetParentNode = document.getElementById(widgetArg.env.rootId),
-                widget = CustomWidgetWrapper.make({
-                    widget: widgetArg.widget,
-                    app: widgetArg.app,
-                    cellId: widgetArg.env.cellId
-                });
-
-            widget.start({root: widgetParentNode})
-                .then(function () {
-                    console.log('FINISHED');
-                })
-                .catch(function (err) {
-                    console.error('ERROR', err);
-                    widgetParentNode.innerHTML = 'ERROR! ' + err.message;
-                    // dataWidget.showErrorMessage(err.message);
-                });
-        });
-        """
-
-        # Prepare data for export into the Javascript.
-
-        #if type(widget) is list:
-        #    widget_package = widget[0]
-        #    widget_package_version = widget[1]
-        #    widget_name = widget[2]
-        #else:
-        #    widget_package = None
-        #    widget_package_version = None
-        #    widget_name = widget
-
-        # Note: All Python->Javascript data flow is serialized as JSON strings.
-
-        widget_root_id = self._cell_id_prefix + str(uuid.uuid4())
-
-        widget_arg = {
-            'app': {
-                'id': app_id,
-                'version': app_version,
-                'tag': app_tag,
-                'spec': spec
-            },
-            'widget': {
-                'id': widget_id
-            },
-            'env': {
-                'rootId': widget_root_id,
-                'cellId': cell_id
-            }
-        }
-
-        #widget_def = {
-        #    'id': self._cell_id_prefix + str(uuid.uuid4()),
-        #    'package': widget_package,
-        #    'package_version': widget_package_version,
-        #    'name': widget_name,
-        #    'title': widget_title
-        #}
-
-        ##config = {
-        #    'auth_required': auth_required
-        #}
-
-        # context - Data for building the Javascript prior to insertion is provided
-        # input_data - raw widget input data as provided by the caller
-
-        js = Template(input_template).render(widget_root_id=widget_root_id,
-                                             widget_arg=json.dumps(widget_arg).replace('\\', '\\\\'))
-
-        # print(repr(js))
-
-        return Javascript(data=js, lib=None, css=None)
-
-
 
     def show_external_widget(self, widget, widget_title, objects, options, auth_required=True):
         """

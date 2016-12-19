@@ -1,4 +1,4 @@
-/*global define,KBError,KBFatal,window*/
+/*global define,KBError,KBFatal,window,console,document*/
 /*jslint white:true,browser:true*/
 
 /**
@@ -172,7 +172,7 @@ define(
             try {
                 Jupyter.notebook.keyboard_manager.edit_shortcuts.remove_shortcut(shortcut);
             } catch (ex) {
-                console.warn('Error removing shortcut "'  + shortcut +'"', ex);
+                // console.warn('Error removing shortcut "'  + shortcut +'"', ex);
             }
         });
 
@@ -278,10 +278,6 @@ define(
                     }
                     this.disableKeyboardManager();
                 }
-
-                //!! arg!! I have to refresh to get reattach the events, which are lost when
-                //the popover is hidden!!!  makes it a little slower because we refetch permissions from ws each time
-                shareWidget.refresh();
                 return sharePanel;
             }.bind(this)
         });
@@ -374,7 +370,7 @@ define(
         var existingSettings = Jupyter.notebook.metadata.kbase.userSettings;
         Object.keys(settings).forEach(function (key) {
             existingSettings[key] = settings[key];
-        })
+        });
         Jupyter.notebook.metadata.kbase.userSettings = existingSettings;
         Jupyter.notebook.save_checkpoint();
     }
@@ -419,7 +415,7 @@ define(
             return;
         }
 
-        settingsButtonNode.addEventListener('click', function (e) {
+        settingsButtonNode.addEventListener('click', function () {
             showSettingsDialog();
         });
 
@@ -440,7 +436,7 @@ define(
         var $upgradeBtn = $('<button type="button" data-dismiss="modal">')
             .addClass('btn btn-success')
             .append('Update and Reload')
-            .click(function (e) {
+            .click(function () {
                 this.updateVersion();
             }.bind(this));
 
@@ -553,7 +549,7 @@ define(
         var $verAccordionDiv = $('<div style="margin-top:15px">');
         $versionDiv.append($verAccordionDiv);
 
-        var verAccordion = new KBaseAccordion($verAccordionDiv, {
+        new KBaseAccordion($verAccordionDiv, {
             elements: [{
                     title: 'KBase Service URLs',
                     body: $versionTable

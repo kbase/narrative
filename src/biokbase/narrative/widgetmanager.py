@@ -280,7 +280,7 @@ class WidgetManager(object):
                     constants[p] = params[p]["allowed_values"][0]
         return constants
 
-    def show_output_widget(self, widget_name, params, tag="release", title="", type="method", cell_id=None, check_widget=True, **kwargs):
+    def show_output_widget(self, widget_name, params, tag="release", title="", type="method", cell_id=None, check_widget=False, **kwargs):
         """
         Renders a widget using the generic kbaseNarrativeOutputWidget container.
 
@@ -355,7 +355,7 @@ class WidgetManager(object):
         input_data['info_tuple'] = info_tuple
 
         bare_type = info_tuple[2].split('-')[0]
-        
+
         type_spec = self._sm.get_type_spec(bare_type, raise_exception=False)
         if type_spec is None:
             input_data['error_message'] = "Type-spec wasn't found for '" + bare_type + "'"
@@ -367,7 +367,7 @@ class WidgetManager(object):
             method_id = type_spec['view_method_ids'][0]
             spec = self._sm.get_spec(method_id, tag=tag)
             input_data['app_spec'] = spec
-            
+
             # Let's build output according to mappings in method-spec
             spec_params = self._sm.app_params(spec)
             input_params = {}
@@ -379,12 +379,12 @@ class WidgetManager(object):
             for param in spec_params:
                 if any(t == bare_type for t in param['allowed_types']):
                     input_params[param['id']] = obj_param_value
-    
+
             (input_params, ws_refs) = validate_parameters(method_id, tag,
                                                           spec_params, input_params)
             (output_widget, output) = map_outputs_from_state([], input_params, spec)
             input_data['output'] = output
-        
+
         input_template = """
         element.html("<div id='{{input_id}}' class='kb-vis-area'></div>");
 

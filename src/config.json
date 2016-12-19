@@ -75,7 +75,7 @@
         "profile_page": "/#people/",
         "protein_info": "",
         "reset_password": "https://gologin.kbase.us/ResetPassword",
-        "search": "https://kbase.us/services/search/getResults",
+        "search": "https://ci.kbase.us/services/search/getResults",
         "service_wizard": "https://ci.kbase.us/services/service_wizard",
         "shock": "https://ci.kbase.us/services/shock-api",
         "status_page": "http://kbase.us/internal/status/",

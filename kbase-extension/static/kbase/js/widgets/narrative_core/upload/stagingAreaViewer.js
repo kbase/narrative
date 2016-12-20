@@ -241,7 +241,7 @@ define([
 
         startTour: function() {
             if (!this.tour) {
-                this.tour = new UploadTour.Tour(this.$elem);
+                this.tour = new UploadTour.Tour(this.$elem.parent());
             }
             this.tour.start();
         }

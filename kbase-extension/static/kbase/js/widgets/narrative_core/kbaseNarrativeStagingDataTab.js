@@ -37,7 +37,8 @@ define([
             var $mainElem = $('<div>')
                 .css({
                     'height': '604px',
-                    'padding': '5px'
+                    'padding': '5px',
+                    'overflow': 'auto'
                 });
             var $dropzoneElem = $('<div>');
             this.$elem

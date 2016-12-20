@@ -8,6 +8,7 @@ define([
     'handlebars',
     'text!kbase/templates/data_staging/dropzone_area.html',
     'text!kbase/templates/data_staging/dropped_file.html',
+    'text!kbase/templates/data_staging/globus_link.html',
     'css!ext_components/dropzone/dist/dropzone.css',
 ], function(
     $,
@@ -18,7 +19,8 @@ define([
     Dropzone,
     Handlebars,
     DropzoneAreaHtml,
-    DropFileHtml
+    DropFileHtml,
+    GlobusLinkHtml
 ) {
     return new KBWidget({
         name: 'fileUploadWidget',
@@ -27,6 +29,7 @@ define([
             this._super(options);
             this.dropzoneTmpl = Handlebars.compile(DropzoneAreaHtml);
             this.dropFileTmpl = Handlebars.compile(DropFileHtml);
+            this.globusLinkTmpl = Handlebars.compile(GlobusLinkHtml);
             this.path = options.path;
             this.ftpUrl = Config.url('ftp_api_url');
             this.userId = options.userId;
@@ -91,6 +94,8 @@ define([
                 $dropzoneElem.find('#global-info').css({'display': 'none'});
                 $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': '0%'});
             });
+
+            this.$elem.append(this.globusLinkTmpl());
         },
 
         makeUploadMessage: function() {

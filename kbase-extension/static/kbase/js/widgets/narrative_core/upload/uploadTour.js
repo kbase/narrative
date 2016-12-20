@@ -20,7 +20,7 @@ define([
         this.template = Handlebars.compile(TourTmpl);
         this.tour_steps = [
             {
-                title: "Welcome to the Data Staging Tour",
+                title: "Data Staging Tour",
                 placement: 'bottom',
                 orphan: true,
                 content: 'This tour will show how to use the Staging panel to upload and manage data files, as well as how to import those into your Narrative as KBase data objects.',

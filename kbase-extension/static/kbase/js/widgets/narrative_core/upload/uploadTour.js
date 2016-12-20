@@ -35,7 +35,7 @@ define([
             {
                 title: "Staging Path",
                 placement: "right",
-                element: that.$elem.find('div.pull-left'),
+                element: that.$elem.find('div.file-path'),
                 content: 'If you are viewing the contents of a folder, you can click on links prior to that folder to navigate and show other files. Click the button on the left to manually refresh'
             },
             {

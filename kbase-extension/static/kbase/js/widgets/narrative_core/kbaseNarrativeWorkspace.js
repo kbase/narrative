@@ -499,7 +499,7 @@ define([
                     case 'editor':
                         return 'editor';
                     default:
-                        throw new Error('This app does not specify spec.info.app_type');
+                        throw new Error('This app does not specify a valid spec.info.app_type: ' + spec.info.app_type);
                 }
             }
 

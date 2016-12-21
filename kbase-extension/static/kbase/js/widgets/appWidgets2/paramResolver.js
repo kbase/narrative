@@ -38,17 +38,10 @@ define([
                             };
                         case 'autocomplete':
                             // TODO: refactor this from the sdk on up.
-                            if (spec.data.defaultValue === 'Klebsiella oxytoca janaka') {
-                                return {
-                                    input: 'taxonomyRefWithParentInput',
-                                    view: 'autocompleteView'
-                                };
-                            } else {
-                                return {
-                                    input: 'taxonomyRefInput',
-                                    view: 'autocompleteView'
-                                };
-                            }
+                            return {
+                                input: 'taxonomyRefInput',
+                                view: 'taxonomyRefView'
+                            };
                         case 'text':
                         default:
                             // A string type is normally entered as a 

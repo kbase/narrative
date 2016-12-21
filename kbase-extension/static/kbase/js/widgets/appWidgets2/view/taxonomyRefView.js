@@ -243,7 +243,7 @@ define([
                         id: taxonObject,
                         label: result[0]
                     }];
-                });
+                })
         }
 
         function render() {

@@ -182,11 +182,14 @@ define([
         }
 
         function stop() {
-            if (container) {
-                parent.removeChild(container);
-            }
-            busConnection.stop();
+            return Promise.try(function() {
+                if (container) {
+                    parent.removeChild(container);
+                }
+                busConnection.stop();
+            });
         }
+
 
         // INIT
 

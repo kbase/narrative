@@ -1,9 +1,10 @@
 <div class="row" style="margin-bottom: 5px">
     <div class="pull-left">
-        <button id="refresh" class="btn btn-xs btn-default">
-            <span><i class="fa fa-refresh fa-lg"></i></span>
-        </button>
-        {{#each path}}/ {{#if @last}}{{term}}{{else}}<a style="cursor:pointer" data-element="{{subpath}}">{{term}}</a>{{/if}} {{/each}}
+        Or upload to this staging area by using
+        <a href="https://www.globus.org/app/transfer?destination_id=3aca022a-5e5b-11e6-8309-22000b97daec&destination_path=%2F"
+           target="_blank">
+            <i class="fa fa-cloud-upload"></i> Globus Online
+        </a>
     </div>
     <div class="pull-right">
         <button id="help" class="btn btn-xs btn-default">

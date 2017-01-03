@@ -171,6 +171,7 @@ define(['jquery',
 
                     pv = $("#" + pref + "pvalue").val();
                     fc = $("#" + pref + "fc").val();
+
                     svg.selectAll("circle")
                       .attr("fill", function(d) { return colorx(d.log2fc_fa, d.p_value_f); });
                   });
@@ -272,9 +273,9 @@ define(['jquery',
                   $("#" + pref + "pv1").text((ymin).toFixed(2));
                   $("#" + pref + "pv2").text((ymax).toFixed(2));
 
-                  $("#" + pref + "fc").slider({tooltip_position:'bottom', step: 0.01, min :0.0, precision: 2,max:fcmax}).on('slide', function() {
-                    console.log("fc changed");
+                  $("#" + pref + "fc").slider({tooltip_position:'bottom', step: 0.01, min :0.0, precision: 2,max:fcmax.toFixed(2)}).on('slide', function() {
                     fc = $("#" + pref + "fc").val();
+                    console.log("fc changed", fc);
                     $('#' + pref + 'selfc').text(parseFloat(fc).toFixed(2));
                     svg.selectAll("circle")
                       .attr("fill", function(d) {
@@ -294,7 +295,7 @@ define(['jquery',
                     cnt = 0;
                   }
 
-                  $("#" + pref + "pvalue").slider({tooltip_position:'bottom', step:0.01, precision: 2, min :ymin, max:ymax}).on('slide',function(){
+                  $("#" + pref + "pvalue").slider({tooltip_position:'bottom', step:0.01, precision: 2, min :ymin, max:ymax.toFixed(2)}).on('slide',function(){
                     console.log("pvalue changed");
                     pv = $("#" + pref + "pvalue").val();
                     $('#' + pref + 'selpval').text(parseFloat(pv).toFixed(2));
@@ -308,8 +309,8 @@ define(['jquery',
                       }).call(updateCnt);
                   });
 
-                  $("#" + pref + "fc").val(fcmax);
-                  $("#" + pref + "pvalue").val(ymax);
+                  $("#" + pref + "fc").slider('setValue', fcmax.toFixed(2));
+                  $("#" + pref + "pvalue").slider('setValue', ymax.toFixed(2));
                   $('#' + pref + 'selpval').text(ymax.toFixed(2));
                   $('#' + pref + 'selfc').text(fcmax.toFixed(2));
 

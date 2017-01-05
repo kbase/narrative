@@ -128,12 +128,14 @@ class AppManagerTestCase(unittest.TestCase):
                                           tag=self.good_tag,
                                           version=">0.0.1"))
 
+    # Running an app with missing inputs is now allowed. The app can
+    # crash if it wants to, it can leave its process behind.
     @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')
     def test_run_app_missing_inputs(self, m):
         m.return_value._send_comm_message.return_value = None
-        self.assertIsNone(self.am.run_app(self.good_app_id,
-                                          None,
-                                          tag=self.good_tag))
+        self.assertIsNotNone(self.am.run_app(self.good_app_id,
+                                             None,
+                                             tag=self.good_tag))
 
     @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')
     def test_run_app_bad_version(self, m):
@@ -250,7 +252,7 @@ class AppManagerTestCase(unittest.TestCase):
             u'workspace': ws_name
         }]
         self.assertDictEqual(expected[0], mapped_inputs[0])
-        ref_path = ws_name + '/MyReadsSet; ' + ws_name + "/rhodobacterium.art.q10.PE.reads" 
+        ref_path = ws_name + '/MyReadsSet; ' + ws_name + "/rhodobacterium.art.q10.PE.reads"
         ret = self.am._transform_input("resolved-ref", ref_path, None)
         self.assertEqual(ret, "wjriehl:1475006266615/MyReadsSet;11635/10/1")
         if prev_ws_id is None:

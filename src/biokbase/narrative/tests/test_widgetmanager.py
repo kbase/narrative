@@ -54,7 +54,7 @@ class WidgetManagerTestCase(unittest.TestCase):
 
     def test_show_output_widget_bad(self):
         with self.assertRaises(ValueError) as err:
-            self.wm.show_output_widget(self.bad_widget, {'bad': 'inputs'})
+            self.wm.show_output_widget(self.bad_widget, {'bad': 'inputs'}, check_widget=True)
 
     def test_show_external_widget(self):
         widget = self.wm.show_external_widget('contigSet', 'My ContigSet View', {'objectRef': '6402/3/8'}, {})

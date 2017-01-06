@@ -66,7 +66,7 @@ define([
                     },
                     handle: function (message) {
                         if (!$.contains(document, self.$elem[0])) {
-                            console.warn('widget no longer in dom, detaching event');
+                            // console.warn('widget no longer in dom, detaching event');
                             runtime.bus().removeListener(ev);
                         } else {
                             self.updateDataList(message.data);
@@ -197,7 +197,7 @@ define([
             }
 
             var form_id = spec.id;
-            var $input = $('<select id="' + form_id + '" placeholder="' + placeholder + '"' +
+            var $input = $('<input id="' + form_id + '" placeholder="' + placeholder + '"' +
                 ' value="' + defaultValue + '" type="text" style="width:100%"/>').addClass("form-control")
                 .on("input", function () {
                     self.isValid();

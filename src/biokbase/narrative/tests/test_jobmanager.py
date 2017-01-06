@@ -1,10 +1,12 @@
 import unittest
 import mock
 import biokbase.narrative.jobs.jobmanager
+from biokbase.narrative.jobs.job import Job
 import ConfigParser
 import os
 from util import read_json_file
 import datetime
+from IPython.display import HTML
 """
 Tests for job management
 """
@@ -44,14 +46,13 @@ class MockAllClients(object):
         return "bar"
 
     def cancel_job(self, job_id):
-        pass
+        return "done"
 
     def get_job_params(self, job_id):
         return [job_info.get('job_param_info', {}).get(job_id, None)]
 
     def check_job(self, job_id):
-        print(datetime.datetime.now())
-        print("Looking up job info - " + job_id)
+        print("{} Looking up job info - {}".format(datetime.datetime.now(), job_id))
         return job_info.get('job_status_info', {}).get(job_id, None)
 
     def list_methods_spec(self, params):
@@ -63,6 +64,24 @@ class MockAllClients(object):
 
 def get_mock_client(client_name):
     return MockAllClients()
+
+
+@mock.patch('biokbase.narrative.jobs.job.clients.get', get_mock_client)
+def phony_job():
+    return Job.from_state('phony_job',
+                          {'params': [], 'service_ver': '0.0.0'},
+                          'kbasetest',
+                          'Test/test')
+
+
+def create_jm_message(r_type, job_id=None, data={}):
+    data['request_type'] = r_type
+    data['job_id'] = job_id
+    return {
+        "content": {
+            "data": data
+        }
+    }
 
 
 class JobManagerTest(unittest.TestCase):
@@ -88,6 +107,34 @@ class JobManagerTest(unittest.TestCase):
     def test_get_job_bad(self):
         with self.assertRaises(ValueError):
             self.jm.get_job('not_a_job_id')
+
+    def test_get_jobs_list(self):
+        running_jobs = self.jm.get_jobs_list()
+        self.assertIsInstance(running_jobs, list)
+
+    def test_list_jobs_html(self):
+        jobs_html = self.jm.list_jobs()
+        self.assertIsInstance(jobs_html, HTML)
+
+    @mock.patch('biokbase.narrative.jobs.jobmanager.clients.get', get_mock_client)
+    def test_cancel_job_good(self):
+        new_job = phony_job()
+        job_id = new_job.job_id
+        self.jm.register_new_job(new_job)
+        self.jm.cancel_job(job_id)
+
+    def test_cancel_job_bad(self):
+        with self.assertRaises(ValueError):
+            self.jm.cancel_job(None)
+
+    def test_job_status_threading(self):
+        self.jm._handle_comm_message(create_jm_message("start_update_loop"))
+        self.jm._handle_comm_message(create_jm_message("stop_update_loop"))
+
+    # Should "fail" silently.
+    # TODO: make a test listener for the other half of the comm channel, and test against that.
+    def test_job_message_bad_id(self):
+        self.jm._handle_comm_message(create_jm_message("foo", job_id="not_a_real_job"))
 
 if __name__ == "__main__":
     unittest.main()

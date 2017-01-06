@@ -415,8 +415,7 @@ class JobManager(object):
                     self._lookup_job_status(job_id)
 
             elif r_type == 'stop_update_loop':
-                if self._lookup_timer is not None:
-                    self._lookup_timer.cancel()
+                self.cancel_job_lookup_loop()
 
             elif r_type == 'start_update_loop':
                 self._lookup_job_status_loop()
@@ -565,7 +564,6 @@ class JobManager(object):
         Sends a ipykernel.Comm message to the KBaseJobs channel with the given msg_type
         and content. These just get encoded into the message itself.
         """
-
         msg = {
             'msg_type': msg_type,
             'content': content

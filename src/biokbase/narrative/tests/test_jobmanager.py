@@ -20,10 +20,12 @@ job_info = read_json_file(config.get('jobs', 'job_info_file'))
 class MockComm(object):
     """
     Mock class for ipython.kernel.Comm
+    This keeps the last message that was sent, so it can be retrieved and
+    analyzed during the test.
     """
     def __init__(self, *args, **kwargs):
         """Mock the init"""
-        pass
+        self.last_message = None
 
     def on_msg(self, *args, **kwargs):
         """Mock the msg router"""
@@ -31,14 +33,14 @@ class MockComm(object):
 
     def send(self, data=None, content=None):
         """Mock sending a msg"""
-        pass
+        self.last_message = {"data": data, "content": content}
 
 
 class MockAllClients(object):
     """
-    Mock KBase service clients as needed for JobManager tests.
+    Mock KBase service clients as needed for JobManager tests. This covers all of them,
+    just need to add more methods as needed.
     """
-
     def list_jobs2(self, params):
         return job_info.get('job_info')
 
@@ -52,7 +54,6 @@ class MockAllClients(object):
         return [job_info.get('job_param_info', {}).get(job_id, None)]
 
     def check_job(self, job_id):
-        print("{} Looking up job info - {}".format(datetime.datetime.now(), job_id))
         return job_info.get('job_status_info', {}).get(job_id, None)
 
     def list_methods_spec(self, params):
@@ -96,6 +97,15 @@ class JobManagerTest(unittest.TestCase):
 
         self.jm.initialize_jobs(start_lookup_thread=False)
 
+    def validate_status_message(self, msg):
+        core_keys = set(['widget_info', 'owner', 'state', 'spec'])
+        state_keys = set(['app_id', 'canceled', 'cell_id', 'creation_time', 'exec_start_time', 'finished', 'job_id', 'job_state', 'owner', 'run_id', 'run_time', 'status'])
+        if not core_keys.issubset(set(msg.keys())):
+            return False
+        if not state_keys.issubset(set(msg['state'].keys())):
+            return False
+        return True
+
     def test_send_comm_msg(self):
         self.jm._send_comm_message('foo', 'bar')
 
@@ -127,9 +137,24 @@ class JobManagerTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.jm.cancel_job(None)
 
-    def test_job_status_threading(self):
+    def test_job_status_control(self):
         self.jm._handle_comm_message(create_jm_message("start_update_loop"))
         self.jm._handle_comm_message(create_jm_message("stop_update_loop"))
+
+    def test_job_status_fetching(self):
+        self.jm._handle_comm_message(create_jm_message("all_status"))
+        msg = self.jm._comm.last_message
+        job_data = msg.get('data', {}).get('content', {})
+        job_ids = job_data.keys()
+        # assert that each job info that's flagged for lookup gets returned
+        jobs_to_lookup = [j for j in self.jm._running_jobs.keys() if self.jm._running_jobs[j]['refresh']]
+        self.assertItemsEqual(job_ids, jobs_to_lookup)
+
+    def test_single_job_status_fetch(self):
+        self.jm._handle_comm_message(create_jm_message("job_status", "phony_job"))
+        msg = self.jm._comm.last_message
+        self.assertEquals(msg['data']['msg_type'], "job_status")
+        self.assertTrue(self.validate_status_message(msg['data']['content']))
 
     # Should "fail" silently.
     # TODO: make a test listener for the other half of the comm channel, and test against that.

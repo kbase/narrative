@@ -1,3 +1,16 @@
+import biokbase.narrative.clients as clients
+from .job import Job
+from ipykernel.comm import Comm
+import threading
+from biokbase.narrative.common import kblogging
+from IPython.display import HTML
+from jinja2 import Template
+import datetime
+from biokbase.narrative.app_util import system_variable
+from biokbase.narrative.exception_util import (
+    transform_job_exception
+)
+import traceback
 """
 KBase Job Manager
 
@@ -11,25 +24,6 @@ to fetch it.
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 __version__ = "0.0.1"
 
-import biokbase.narrative.clients as clients
-from .job import Job
-from ipykernel.comm import Comm
-import threading
-import json
-import logging
-from biokbase.narrative.common import kblogging
-from biokbase.narrative.common.log_common import EVENT_MSG_SEP
-from IPython.display import HTML
-from jinja2 import Template
-import dateutil.parser
-import datetime
-from biokbase.narrative.app_util import system_variable
-from biokbase.narrative.exception_util import (
-    NarrativeException,
-    transform_job_exception
-)
-import traceback
-import sys
 
 class JobManager(object):
     """
@@ -53,7 +47,7 @@ class JobManager(object):
             JobManager.__instance = object.__new__(cls)
         return JobManager.__instance
 
-    def initialize_jobs(self):
+    def initialize_jobs(self, start_lookup_thread=True):
         """
         Initializes this JobManager.
         This is expected to be run by a running Narrative, and naturally linked to a workspace.
@@ -101,7 +95,7 @@ class JobManager(object):
                                           cell_id=job_meta.get('cell_id', None),
                                           run_id=job_meta.get('run_id', None))
                 }
-                
+
             except Exception as e:
                 kblogging.log_event(self._log, 'init_error', {'err': str(e)})
                 new_e = transform_job_exception(e)
@@ -117,7 +111,7 @@ class JobManager(object):
                 self._send_comm_message('job_init_lookup_err', error)
                 raise new_e # should crash and burn on any of these.
 
-        if not self._running_lookup_loop:
+        if not self._running_lookup_loop and start_lookup_thread:
             # only keep one loop at a time in cause this gets called again!
             if self._lookup_timer is not None:
                 self._lookup_timer.cancel()
@@ -311,7 +305,6 @@ class JobManager(object):
                 'widget_info': widget_info,
                 'owner': job.owner}
 
-
     def _lookup_job_status(self, job_id):
         """
         Will raise a ValueError if job_id doesn't exist.
@@ -401,7 +394,7 @@ class JobManager(object):
             remove the flag that gets set by stop_job_update (needs an accompanying 'job_id'
             field)
         """
-        
+
         if 'request_type' in msg['content']['data']:
             r_type = msg['content']['data']['request_type']
             job_id = msg['content']['data'].get('job_id', None)

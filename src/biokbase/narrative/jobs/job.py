@@ -182,7 +182,6 @@ class Job(object):
             return (num_available_lines, list())
         return (num_available_lines, self._job_logs[first_line:first_line+num_lines])
 
-
     def _update_log(self):
         log_update = self._njs.get_job_logs({'job_id': self.job_id,
                                              'skip_lines': len(self._job_logs)})

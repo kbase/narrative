@@ -1,6 +1,3 @@
-"""
-Tests for the app manager.
-"""
 from biokbase.narrative.jobs.appmanager import AppManager
 from biokbase.narrative.jobs.specmanager import SpecManager
 from biokbase.narrative.jobs.job import Job
@@ -8,6 +5,9 @@ from IPython.display import HTML
 import unittest
 import mock
 import os
+"""
+Tests for the app manager.
+"""
 
 
 class AppManagerTestCase(unittest.TestCase):

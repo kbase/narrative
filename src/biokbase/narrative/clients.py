@@ -8,12 +8,14 @@ from biokbase.service.Client import Client as ServiceClient
 from biokbase.narrative.common.url_config import URLS
 __clients = dict()
 
+
 def get(client_name):
     if client_name in __clients:
         return __clients[client_name]
 
     else:
         return __init_client(client_name)
+
 
 def __init_client(client_name):
     if client_name == 'workspace':

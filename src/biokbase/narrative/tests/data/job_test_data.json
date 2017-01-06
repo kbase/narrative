@@ -1,0 +1,235 @@
+{
+    "job_info":[
+        [
+            "57eb062ae4b0b05cf8996b70",
+            ["wjriehl", null],
+            "wjriehl",
+            "complete",
+            "done",
+            ["2016-09-27T23:52:17+0000", "2016-09-27T23:53:28+0000", null],
+            [null, null, "none"],
+            1,
+            0,
+            ["kbaseworkspace", "11635"],
+            {
+                "cell_id": "9329ac6c-604c-42a9-aca2-a15dba6278ce",
+                "tag": "dev",
+                "run_id": "6546971e-757a-4a26-8439-325497c6d842"
+            },
+            "Execution engine job for NarrativeTest.test_editor",
+            {}
+        ],
+        [
+            "57ec50c2e4b0b05cf8996ba8",
+            ["wjriehl", null],
+            "wjriehl",
+            "complete",
+            "done",
+            ["2016-09-28T23:22:47+0000", "2016-09-28T23:23:17+0000", null],
+            [null, null, "none"],
+            1,
+            0,
+            ["kbaseworkspace", "11635"],
+            {
+                "cell_id": "ffe30121-9457-48e5-9d99-ad8f2df2aa39",
+                "tag": "dev",
+                "run_id": "7c37087b-f73b-4829-bb03-a32c2a4bde3a"
+            },
+            "Execution engine job for NarrativeTest.test_editor",
+            {}
+        ],
+        [
+            "57ec59cee4b0b05cf8996bab",
+            ["wjriehl", null],
+            "wjriehl",
+            "complete",
+            "done",
+            ["2016-09-29T00:01:23+0000", "2016-09-29T00:01:57+0000", null],
+            [null, null, "none"],
+            1,
+            0,
+            ["kbaseworkspace", "11635"],
+            {
+                "cell_id": "010766f6-50f1-4364-bf76-4fe14a435d17",
+                "tag": "dev",
+                "run_id": "ad5858c9-272c-429b-880c-a2260c8be093"
+            },
+            "Execution engine job for NarrativeTest.test_editor",
+            {}
+        ],
+        [
+            "580e9863e4b01e8946ce3804",
+            ["wjriehl", null],
+            "wjriehl",
+            "error",
+            "There are no contigs in this file",
+            ["2016-10-24T23:25:35+0000", "2016-10-24T23:26:45+0000", null],
+            [null, null, "none"],
+            1,
+            1,
+            ["kbaseworkspace", "11635"],
+            {
+                "cell_id": "8a1d8cbb-f2c7-42c1-8cef-b2b04aaf4047",
+                "tag": "dev",
+                "run_id": "c0fdea77-dd34-4563-9da5-8afaaeb82eac"
+            },
+            "Execution engine job for AssemblyRAST.run_arast", null
+        ]
+    ],
+    "job_param_info": {
+        "57eb062ae4b0b05cf8996b70": {
+            "wsid": 11635,
+            "app_id": "NarrativeTest/test_editor",
+            "service_ver": "04a6fbf889a4e82a84a227e2d4770fae3fdd9f74",
+            "meta": {
+                "cell_id": "9329ac6c-604c-42a9-aca2-a15dba6278ce",
+                "tag": "dev",
+                "run_id": "6546971e-757a-4a26-8439-325497c6d842"
+            },
+            "params": [
+                "asdfasfasdf",
+                "wjriehl:1475006266615"
+            ],
+            "requested_release": null,
+            "method": "NarrativeTest.test_editor"
+        },
+        "57ec50c2e4b0b05cf8996ba8": {
+            "wsid": 11635,
+            "app_id": "NarrativeTest/test_editor",
+            "service_ver": "5ce59ec20e1357fc850ce9edd984959f39a3b485",
+            "meta": {
+                "cell_id": "ffe30121-9457-48e5-9d99-ad8f2df2aa39",
+                "tag": "dev",
+                "run_id": "7c37087b-f73b-4829-bb03-a32c2a4bde3a"
+            },
+            "params": [
+                "name:qwer, desc:erty",
+                "wjriehl:1475006266615"
+            ],
+            "requested_release": null,
+            "method": "NarrativeTest.test_editor"
+        },
+        "57ec59cee4b0b05cf8996bab": {
+            "wsid": 11635,
+            "app_id": "NarrativeTest/test_editor",
+            "service_ver": "5ce59ec20e1357fc850ce9edd984959f39a3b485",
+            "meta": {
+                "cell_id": "010766f6-50f1-4364-bf76-4fe14a435d17",
+                "tag": "dev",
+                "run_id": "ad5858c9-272c-429b-880c-a2260c8be093"
+            },
+            "params": [
+                "name:asdf, desc:asdf",
+                "wjriehl:1475006266615"
+            ],
+            "requested_release": null,
+            "method": "NarrativeTest.test_editor"
+        },
+        "580e9863e4b01e8946ce3804": {
+            "wsid": 11635,
+            "source_ws_objects": ["11635/19/4"],
+            "app_id": "AssemblyRAST/run_arast",
+            "service_ver": "bb0df81a863e66b328d726f0976077369bb876c1",
+            "meta": {
+                "cell_id": "8a1d8cbb-f2c7-42c1-8cef-b2b04aaf4047",
+                "tag": "dev",
+                "run_id": "c0fdea77-dd34-4563-9da5-8afaaeb82eac"
+            },
+            "params": [
+                {
+                    "output_contigset_name": "rhodo_contigs",
+                    "pipeline": null,
+                    "min_contig_len": null,
+                    "assembler": null,
+                    "recipe": "auto",
+                    "read_library_names": ["rhodo.art.jgi.reads"],
+                    "workspace_name": "wjriehl:1475006266615"
+                }
+            ],
+            "requested_release": null,
+            "method": "AssemblyRAST.run_arast"
+        }
+    },
+    "job_status_info": {
+        "57eb062ae4b0b05cf8996b70": {
+            "status": ["2016-09-27T23:53:28+0000", "complete", "done", null, null, 1, 0],
+            "job_id": "57eb062ae4b0b05cf8996b70",
+            "canceled": 0,
+            "finish_time": 1475020408663,
+            "job_state": "completed",
+            "creation_time": 1475020331136,
+            "ujs_url": "https://ci.kbase.us/services/userandjobstate/",
+            "finished": 1,
+            "result": [
+                {
+                    "report_ref": "11635/2/1",
+                    "value": "I got a string - asdfasfasdf",
+                    "report_name": "test_editor_report_0x242ac1100faL"
+                }
+            ],
+            "cancelled": 0,
+            "awe_job_id": "fd3ae4db-5608-400a-9b2a-35ccc9607e02",
+            "exec_start_time": 1475020337827
+        },
+        "57ec50c2e4b0b05cf8996ba8": {
+            "status": ["2016-09-28T23:23:17+0000", "complete", "done", null, null, 1, 0],
+            "job_id": "57ec50c2e4b0b05cf8996ba8",
+            "canceled": 0,
+            "finish_time": 1475104997543,
+            "job_state": "completed",
+            "creation_time": 1475104963071,
+            "ujs_url": "https://ci.kbase.us/services/userandjobstate/",
+            "finished": 1,
+            "result": [
+                {
+                    "report_ref": "11635/3/1",
+                    "value": "I got a string - name:qwer, desc:erty",
+                    "report_name": "test_editor_report_0x242ac110110L"
+                }
+            ],
+            "cancelled": 0,
+            "awe_job_id": "8f6c5ae4-6fcd-4e59-9b61-c3e930ce4356",
+            "exec_start_time": 1475104967403
+        },
+        "57ec59cee4b0b05cf8996bab": {
+            "status": ["2016-09-29T00:01:57+0000", "complete", "done", null, null, 1, 0],
+            "job_id": "57ec59cee4b0b05cf8996bab",
+            "canceled": 0,
+            "finish_time": 1475107317712,
+            "job_state": "completed",
+            "creation_time": 1475107279183,
+            "ujs_url": "https://ci.kbase.us/services/userandjobstate/",
+            "finished": 1,
+            "result": [
+                {
+                    "report_ref": "11635/4/1",
+                    "value": "I got a string - name:asdf, desc:asdf",
+                    "report_name": "test_editor_report_0x242ac1100fcL"
+                }
+            ],
+            "cancelled": 0,
+            "awe_job_id": "1f049618-3475-4dff-87e3-b8ba68856008",
+            "exec_start_time": 1475107283588
+        },
+        "580e9863e4b01e8946ce3804": {
+            "status": ["2016-10-24T23:26:45+0000", "error", "There are no contigs in this file", null, null, 1, 1],
+            "job_id": "580e9863e4b01e8946ce3804",
+            "canceled": 0,
+            "finish_time": 1477351605049,
+            "job_state": "suspend",
+            "creation_time": 1477351524113,
+            "ujs_url": "https://ci.kbase.us/services/userandjobstate/",
+            "finished": 1,
+            "error": {
+                "message": "There are no contigs in this file",
+                "code": -32000,
+                "name": "Server error",
+                "error": "Exception: There are no contigs in this file"
+            },
+            "cancelled": 0,
+            "awe_job_id": "db5e6ac3-1c28-4560-b199-559b63e34903",
+            "exec_start_time": 1477351535999
+        }
+    }
+
+}

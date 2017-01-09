@@ -483,26 +483,22 @@ define([
         */
         determineMethodCellType: function(spec) {
 
-            // TODO: remove this switch when merging in grouped paramters and
-            // legacy parameters.
-            //if (spec.parameter_groups && spec.parameter_groups.length > 0) {
-            //   return 'app2';
-            //}
-
             // An app will execute via the method described in the behavior. If
             // such a method is not described, it is by definition not an
             // executing app.
             if (spec.behavior.kb_service_name && spec.behavior.kb_service_method) {
                 switch (spec.info.app_type) {
-                    case 'app':
-                        return 'app';
                     case 'editor':
                         return 'editor';
+                    case 'app':
+                        return 'app';
                     default:
-                        throw new Error('This app does not specify a valid spec.info.app_type: ' + spec.info.app_type);
+                        console.warn('The app ' + spec.info.id + ' does not specifcy a valid spec.info.app_type - defaulting to "app"');
+                        return 'app';
                 }
             }
 
+            // No specified execution behavior = a viewer.
             return 'view';
         },
 

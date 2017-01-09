@@ -5,7 +5,6 @@ from biokbase.narrative.jobs.job import Job
 import ConfigParser
 import os
 from util import read_json_file
-import datetime
 from IPython.display import HTML
 """
 Tests for job management
@@ -72,7 +71,7 @@ def phony_job():
     return Job.from_state('phony_job',
                           {'params': [], 'service_ver': '0.0.0'},
                           'kbasetest',
-                          'Test/test')
+                          'NarrativeTest/test_editor')
 
 
 def create_jm_message(r_type, job_id=None, data={}):
@@ -99,7 +98,9 @@ class JobManagerTest(unittest.TestCase):
 
     def validate_status_message(self, msg):
         core_keys = set(['widget_info', 'owner', 'state', 'spec'])
-        state_keys = set(['app_id', 'canceled', 'cell_id', 'creation_time', 'exec_start_time', 'finished', 'job_id', 'job_state', 'owner', 'run_id', 'run_time', 'status'])
+        state_keys = set(['app_id', 'canceled', 'cell_id', 'creation_time', 'exec_start_time',
+                          'finished', 'job_id', 'job_state', 'owner', 'run_id', 'run_time',
+                          'status'])
         if not core_keys.issubset(set(msg.keys())):
             return False
         if not state_keys.issubset(set(msg['state'].keys())):
@@ -108,6 +109,8 @@ class JobManagerTest(unittest.TestCase):
 
     def test_send_comm_msg(self):
         self.jm._send_comm_message('foo', 'bar')
+        msg = self.jm._comm.last_message
+        self.assertDictEqual(msg, {'content': None, 'data': {'content': 'bar', 'msg_type': 'foo'}})
 
     def test_get_job_good(self):
         job_id = self.job_ids[0]
@@ -132,6 +135,7 @@ class JobManagerTest(unittest.TestCase):
         job_id = new_job.job_id
         self.jm.register_new_job(new_job)
         self.jm.cancel_job(job_id)
+        self.jm.delete_job(job_id)
 
     def test_cancel_job_bad(self):
         with self.assertRaises(ValueError):
@@ -151,15 +155,22 @@ class JobManagerTest(unittest.TestCase):
         self.assertItemsEqual(job_ids, jobs_to_lookup)
 
     def test_single_job_status_fetch(self):
+        new_job = phony_job()
+        self.jm.register_new_job(new_job)
         self.jm._handle_comm_message(create_jm_message("job_status", "phony_job"))
         msg = self.jm._comm.last_message
         self.assertEquals(msg['data']['msg_type'], "job_status")
+        print(msg['data']['content'])
         self.assertTrue(self.validate_status_message(msg['data']['content']))
 
-    # Should "fail" silently.
-    # TODO: make a test listener for the other half of the comm channel, and test against that.
+    # Should "fail" based on sent message.
     def test_job_message_bad_id(self):
         self.jm._handle_comm_message(create_jm_message("foo", job_id="not_a_real_job"))
+        msg = self.jm._comm.last_message
+        self.assertEquals(msg['data']['msg_type'], 'job_does_not_exist')
+
+    def test_cancel_job_lookup(self):
+        pass
 
 if __name__ == "__main__":
     unittest.main()

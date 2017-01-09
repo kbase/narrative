@@ -79,11 +79,12 @@
     "job_param_info": {
         "phony_job": {
             "wsid": 11635,
-            "app_id": "Test/test",
-            "service_ver": "0.0.0",
+            "app_id": "NarrativeTest/test_editor",
+            "service_ver": "04a6fbf889a4e82a84a227e2d4770fae3fdd9f74",
             "meta": {},
             "params": [],
-            "method": "Test.test"
+            "requested_release": null,
+            "method": "NarrativeTest.test_editor"
         },
         "57eb062ae4b0b05cf8996b70": {
             "wsid": 11635,

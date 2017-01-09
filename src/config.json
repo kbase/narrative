@@ -1,5 +1,5 @@
 {
-    "config": "ci",
+    "config": "appdev",
     "name": "KBase Narrative",
     "version": "3.1.0",
     "dev_mode": true,

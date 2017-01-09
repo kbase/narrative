@@ -99,11 +99,12 @@ class JobManagerTest(unittest.TestCase):
     def validate_status_message(self, msg):
         core_keys = set(['widget_info', 'owner', 'state', 'spec'])
         state_keys = set(['app_id', 'canceled', 'cell_id', 'creation_time', 'exec_start_time',
-                          'finished', 'job_id', 'job_state', 'owner', 'run_id', 'run_time',
-                          'status'])
+                          'finished', 'job_id', 'job_state', 'owner', 'run_id', 'status'])
         if not core_keys.issubset(set(msg.keys())):
+            print("Missing core key(s) - [{}]".format(', '.join(core_keys.difference(set(msg.keys())))))
             return False
         if not state_keys.issubset(set(msg['state'].keys())):
+            print("Missing status key(s) - [{}]".format(', '.join(state_keys.difference(set(msg['state'].keys())))))
             return False
         return True
 

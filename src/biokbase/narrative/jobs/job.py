@@ -105,6 +105,7 @@ class Job(object):
         """
         try:
             state = self._njs.check_job(self.job_id)
+            from pprint import pprint
             if 'cancelled' in state:
                 state[u'canceled'] = state.get('cancelled', 0)
                 del state['cancelled']

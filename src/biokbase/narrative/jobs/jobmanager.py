@@ -189,26 +189,6 @@ class JobManager(object):
         """
         return [j['job'] for j in self._running_jobs.values()]
 
-    # def _get_existing_job(self, job_tuple):
-    #     """
-    #     creates a Job object from a job_id that already exists.
-    #     If no job exists, raises an Exception.
-
-    #     Parameters:
-    #     -----------
-    #     job_tuple : The expected 5-tuple representing a Job. The format is:
-    #         (job_id, set of job inputs (as JSON), version tag, cell id that started the job, run id of the job)
-    #     """
-
-    #     # remove the prefix (if present) and take the last element in the split
-    #     job_id = job_tuple[0].split(':')[-1]
-    #     try:
-    #         job_info = clients.get('job_service').get_job_params(job_id)[0]
-    #         return Job.from_state(job_id, job_info, app_id=job_tuple[1], tag=job_tuple[2], cell_id=job_tuple[3], run_id=job_tuple[4])
-    #     except Exception as e:
-    #         kblogging.log_event(self._log, "get_existing_job.error", {'job_id': job_id, 'err': str(e)})
-    #         raise
-
     def _construct_job_status(self, job_id):
         """
         Always creates a Job Status.
@@ -235,7 +215,7 @@ class JobManager(object):
                     }
                 },
                 'cell_id': None,
-                'run_id': None
+                'run_id': None,
             }
             return {
                 'state': state,
@@ -278,7 +258,7 @@ class JobManager(object):
                 'creation_time': 0,
                 'cell_id': job.cell_id,
                 'run_id': job.run_id,
-                'job_id': job_id
+                'job_id': job_id,
             }
 
         if state.get('finished', 0) == 1:

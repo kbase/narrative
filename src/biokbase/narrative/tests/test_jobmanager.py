@@ -6,6 +6,7 @@ import ConfigParser
 import os
 from util import read_json_file
 from IPython.display import HTML
+from pprint import pprint
 """
 Tests for job management
 """
@@ -71,7 +72,8 @@ def phony_job():
     return Job.from_state('phony_job',
                           {'params': [], 'service_ver': '0.0.0'},
                           'kbasetest',
-                          'NarrativeTest/test_editor')
+                          'NarrativeTest/test_editor',
+                          tag='dev')
 
 
 def create_jm_message(r_type, job_id=None, data={}):
@@ -98,8 +100,8 @@ class JobManagerTest(unittest.TestCase):
 
     def validate_status_message(self, msg):
         core_keys = set(['widget_info', 'owner', 'state', 'spec'])
-        state_keys = set(['app_id', 'canceled', 'cell_id', 'creation_time', 'exec_start_time',
-                          'finished', 'job_id', 'job_state', 'owner', 'run_id', 'status'])
+        state_keys = set(['canceled', 'cell_id', 'creation_time', 'exec_start_time',
+                          'finished', 'job_id', 'job_state', 'run_id', 'status'])
         if not core_keys.issubset(set(msg.keys())):
             print("Missing core key(s) - [{}]".format(', '.join(core_keys.difference(set(msg.keys())))))
             return False
@@ -155,14 +157,15 @@ class JobManagerTest(unittest.TestCase):
         jobs_to_lookup = [j for j in self.jm._running_jobs.keys() if self.jm._running_jobs[j]['refresh']]
         self.assertItemsEqual(job_ids, jobs_to_lookup)
 
+    @mock.patch('biokbase.narrative.jobs.jobmanager.clients.get', get_mock_client)
     def test_single_job_status_fetch(self):
         new_job = phony_job()
         self.jm.register_new_job(new_job)
-        self.jm._handle_comm_message(create_jm_message("job_status", "phony_job"))
+        self.jm._handle_comm_message(create_jm_message("job_status", new_job.job_id))
         msg = self.jm._comm.last_message
         self.assertEquals(msg['data']['msg_type'], "job_status")
-        print(msg['data']['content'])
         self.assertTrue(self.validate_status_message(msg['data']['content']))
+        self.jm.delete_job(new_job.job_id)
 
     # Should "fail" based on sent message.
     def test_job_message_bad_id(self):
@@ -172,6 +175,21 @@ class JobManagerTest(unittest.TestCase):
 
     def test_cancel_job_lookup(self):
         pass
+
+    @mock.patch('biokbase.narrative.jobs.jobmanager.clients.get', get_mock_client)
+    def test_stop_single_job_lookup(self):
+        # Set up and make sure the job gets returned correctly.
+        new_job = phony_job()
+        phony_id = new_job.job_id
+        self.jm.register_new_job(new_job)
+        self.jm._handle_comm_message(create_jm_message("all_status"))
+        msg = self.jm._comm.last_message
+        self.assertTrue(phony_id in msg['data']['content'])
+        self.jm._handle_comm_message(create_jm_message("stop_job_update", job_id=phony_id))
+        self.jm._lookup_all_job_status()
+        msg = self.jm._comm.last_message
+        self.assertTrue(phony_id not in msg['data']['content'])
+
 
 if __name__ == "__main__":
     unittest.main()

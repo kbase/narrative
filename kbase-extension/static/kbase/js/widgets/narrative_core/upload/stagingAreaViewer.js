@@ -10,9 +10,9 @@ define([
     'util/timeFormat',
     'kbase-client-api',
     './uploadTour',
-    'text!kbase/templates/data_staging/ftp_file_row.html',
     'text!kbase/templates/data_staging/ftp_file_table.html',
     'text!kbase/templates/data_staging/ftp_file_header.html',
+    'text!kbase/templates/data_staging/file_path.html',
     'jquery-dataTables',
     'select2'
 ], function(
@@ -27,18 +27,18 @@ define([
     TimeFormat,
     KBaseClients,
     UploadTour,
-    FtpFileRowHtml,
     FtpFileTableHtml,
-    FtpFileHeaderHtml
+    FtpFileHeaderHtml,
+    FilePathHtml
 ) {
     return new KBWidget({
         name: 'StagingAreaViewer',
 
         init: function(options) {
             this._super(options);
-            this.ftpFileRowTmpl = Handlebars.compile(FtpFileRowHtml);
             this.ftpFileTableTmpl = Handlebars.compile(FtpFileTableHtml);
             this.ftpFileHeaderTmpl = Handlebars.compile(FtpFileHeaderHtml);
+            this.filePathTmpl = Handlebars.compile(FilePathHtml);
             this.ftpUrl = Config.url('ftp_api_url');
             this.updatePathFn = options.updatePathFn || this.setPath;
             this.path = options.path;
@@ -95,6 +95,13 @@ define([
         },
 
         renderFileHeader: function() {
+            this.$elem.append(this.ftpFileHeaderTmpl());
+            this.$elem.find('button#help').click(function() {
+                this.startTour();
+            }.bind(this));
+        },
+
+        renderPath: function() {
             var splitPath = this.path;
             if (splitPath.startsWith('/')) {
                 splitPath = splitPath.substring(1);
@@ -111,15 +118,12 @@ define([
                     subpath: prevPath + '/' + splitPath[i]
                 };
             }
-            this.$elem.append(this.ftpFileHeaderTmpl({path: pathTerms}));
-            this.$elem.find('a').click(function(e) {
+            this.$elem.find('div.file-path').append(this.filePathTmpl({path: pathTerms}));
+            this.$elem.find('div.file-path a').click(function(e) {
                 this.updatePathFn($(e.currentTarget).data().element);
             }.bind(this));
             this.$elem.find('button#refresh').click(function() {
                 this.updateView();
-            }.bind(this));
-            this.$elem.find('button#help').click(function() {
-                this.startTour();
             }.bind(this));
         },
 
@@ -127,7 +131,7 @@ define([
             var $fileTable = $(this.ftpFileTableTmpl({files: files}));
             this.$elem.append($fileTable)
             this.$elem.find('table').dataTable({
-                bLengthChange: false,
+                dom: '<"file-path pull-left">frtip',
                 bAutoWidth: false,
                 aaSorting: [[3, 'desc']],
                 aoColumnDefs: [{
@@ -191,6 +195,7 @@ define([
                 var importFile = $(e.currentTarget).data().import;
                 this.initImportApp(importType, importFile);
             }.bind(this));
+            this.renderPath();
         },
 
         initImportApp: function(type, file) {
@@ -241,7 +246,7 @@ define([
 
         startTour: function() {
             if (!this.tour) {
-                this.tour = new UploadTour.Tour(this.$elem);
+                this.tour = new UploadTour.Tour(this.$elem.parent());
             }
             this.tour.start();
         }

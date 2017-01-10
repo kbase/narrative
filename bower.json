@@ -16,7 +16,7 @@
         "jquery.tipsy": "*",
         "kbase-common-js": "1.9.0",
         "kbase-service-clients-js": "3.0.0",
-        "kbase-sdk-clients-js": "0.4.1",
+        "kbase-sdk-clients-js": "0.5.0",
         "numeral": "~1.5.0",
         "plotly.js": "git://github.com/plotly/plotly.js/#1.5.1",
         "pure-uuid": "1.4.2",

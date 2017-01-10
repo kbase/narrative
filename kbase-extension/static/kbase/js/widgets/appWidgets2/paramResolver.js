@@ -37,9 +37,10 @@ define([
                                 view: 'customSubdataView'
                             };
                         case 'autocomplete':
+                            // TODO: refactor this from the sdk on up.
                             return {
-                                input: 'autocompleteInput',
-                                view: 'autocompleteView'
+                                input: 'taxonomyRefInput',
+                                view: 'taxonomyRefView'
                             };
                         case 'text':
                         default:

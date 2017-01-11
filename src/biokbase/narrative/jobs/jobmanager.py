@@ -256,14 +256,7 @@ class JobManager(object):
             kblogging.log_event(self._log, "lookup_job_status.error", {'err': str(e)})
 
         if state is None:
-            kblogging.log_event(self._log, "lookup_job_status.error", {'err': str(e)})
-
-            new_e = transform_job_exception(e)
-            e_type = type(e).__name__
-            e_message = str(new_e).replace('<', '&lt;').replace('>', '&gt;')
-            e_trace = traceback.format_exc().replace('<', '&lt;').replace('>', '&gt;')
-            e_code = getattr(new_e, "code", -2)
-            e_source = getattr(new_e, "source", "JobManager")
+            kblogging.log_event(self._log, "lookup_job_status.error", {'err': 'Unable to get job state for job {}'.format(job.job_id)})
 
             state = {
                 'job_state': 'error',
@@ -271,12 +264,12 @@ class JobManager(object):
                     'error': 'Unable to find current job state. Please try again later, or contact KBase.',
                     'message': 'Unable to return job state',
                     'name': 'Job Error',
-                    'code': e_code,
-                    'source': e_source,
+                    'code': -1,
+                    'source': 'JobManager._construct_job_status',
                     'exception': {
-                        'error_message': e_message,
-                        'error_type': e_type,
-                        'error_stacktrace': e_trace,
+                        'error_message': 'No state provided during lookup',
+                        'error_type': 'null-state',
+                        'error_stacktrace': '',
                     }
                 },
                 'creation_time': 0,

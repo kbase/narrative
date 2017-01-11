@@ -9,6 +9,7 @@ __Changes__
 - Release of support for data palettes (currently disabled in the service)
 - Data now gets fetched from a Narrative Service to support data palettes.
 - Support for an FTP-based data file staging area (currently disabled until import apps catch up).
+- Fixed issue where an undefined app_type field would cause a crash while instantiating an app cell.
 
 ### Version 3.1.0-alpha-4
 __Changes__

@@ -1326,7 +1326,7 @@ define([
 
         }
 
-        // this should be elevated to the collection of parameters. 
+        // this should be elevated to the collection of parameters.
         // Perhaps the top level parameter should be a special field wrapping a struct?
         function validateModel() {
             /*
@@ -2164,9 +2164,14 @@ define([
                 runtime.bus().removeListener(listener);
             });
             jobListeners = [];
+
+            var jobId = model.getItem('exec.jobState.job_id');
+            if (jobId) {
+                runtime.bus().emit('request-job-completion', {
+                    jobId: jobId
+                });
+            }
         }
-
-
 
         function createOutputCell(jobId) {
             var cellId = utils.getMeta(cell, 'attributes', 'id'),
@@ -2896,7 +2901,7 @@ define([
         function evaluateAppState() {
             validateModel()
                 .then(function(result) {
-                    // we have a tree of validations, so we need to walk the tree to see if anything 
+                    // we have a tree of validations, so we need to walk the tree to see if anything
                     // does not validate.
                     var messages = gatherValidationMessages(result);
 

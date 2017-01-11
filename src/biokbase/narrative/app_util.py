@@ -1,15 +1,16 @@
-"""
-Some utility functions for running KBase Apps or Methods or whatever they are this week.
-"""
-__author__ = "Bill Riehl <wjriehl@lbl.gov>, Roman Sutormin <rsutormin@lbl.gov>"
-
 import os
 import re
 import json
 import biokbase.narrative.clients as clients
 
+"""
+Some utility functions for running KBase Apps or Methods or whatever they are this week.
+"""
+__author__ = "Bill Riehl <wjriehl@lbl.gov>, Roman Sutormin <rsutormin@lbl.gov>"
+
 app_version_tags = ['release', 'beta', 'dev']
 _ws_client = clients.get('workspace')
+
 
 def check_tag(tag, raise_exception=False):
     """
@@ -22,6 +23,7 @@ def check_tag(tag, raise_exception=False):
         raise ValueError("Can't find tag %s - allowed tags are %s" % (tag, ", ".join(app_version_tags)))
     else:
         return tag_exists
+
 
 def system_variable(var):
     """
@@ -63,6 +65,7 @@ def system_variable(var):
     else:
         return None
 
+
 def map_inputs_from_job(job_inputs, app_spec):
     """
     Unmaps the actual list of job inputs back to the
@@ -101,7 +104,7 @@ def map_inputs_from_job(job_inputs, app_spec):
     # right things (either dict, list, singleton)
     for param in spec_inputs:
         if 'input_parameter' not in param:
-            continue;
+            continue
         input_param = param.get('input_parameter', None)
         position = param.get('target_position', 0)
         prop = param.get('target_property', None)
@@ -122,6 +125,7 @@ def map_inputs_from_job(job_inputs, app_spec):
         input_dict[input_param] = value
     return input_dict
 
+
 def _untransform(transform_type, value):
     if transform_type == 'ref' and isinstance(value, basestring):
         # shear off everything before the first '/' - there should just be one.
@@ -137,7 +141,7 @@ def _untransform(transform_type, value):
 def app_param(p):
     p_info = {'id': p['id'], 'is_group': False}
 
-    if p['optional']==0:
+    if p['optional'] == 0:
         p_info['optional'] = False
     else:
         p_info['optional'] = True
@@ -152,7 +156,7 @@ def app_param(p):
         p_info['allow_multiple'] = True
 
     if p_info['type'] == 'dropdown':
-        p_info['allowed_values'] = [ opt['value'] for opt in p['dropdown_options']['options'] ]
+        p_info['allowed_values'] = [opt['value'] for opt in p['dropdown_options']['options']]
     if p_info['type'] == 'checkbox':
         p_info['allowed_values'] = [True, False]
 
@@ -198,7 +202,8 @@ def map_outputs_from_state(state, params, app_spec):
     widget_params = dict()
     out_mapping_key = 'kb_service_output_mapping'
     if out_mapping_key not in app_spec['behavior']:
-        out_mapping_key = 'output_mapping' # for viewers or short-running things, but the inner keys are the same.
+        # for viewers or short-running things, but the inner keys are the same.
+        out_mapping_key = 'output_mapping'
 
     spec_params = dict((app_spec_param['id'], app_param(app_spec_param))
                        for app_spec_param in app_spec['parameters'])
@@ -215,7 +220,7 @@ def map_outputs_from_state(state, params, app_spec):
             value = params.get(input_param_id, None)
         elif 'service_method_output_path' in out_param:
             value = get_result_sub_path(state['result'], out_param['service_method_output_path'])
-        
+
         spec_param = None
         if input_param_id:
             spec_param = spec_params.get(input_param_id)
@@ -233,6 +238,7 @@ def map_outputs_from_state(state, params, app_spec):
         output_widget = 'kbaseDefaultNarrativeOutput'
 
     return (output_widget, widget_params)
+
 
 def get_result_sub_path(result, path):
     """
@@ -288,6 +294,32 @@ def get_result_sub_path(result, path):
         else:
             return get_result_sub_path(result[elem], path_tail)
     return get_result_sub_path(result.get(path_head), path_tail)
+
+
+def extract_ws_refs(app_id, tag, spec_params, params):
+    """
+    Returns a list of workspace refs (xxx/yyy/zzz) from the given parameters,
+    if they are actual workspace objects.
+    """
+    # Cheater way for making a dict of params with param[id] => param
+    params_dict = dict((spec_params[i]['id'], spec_params[i])
+                       for i in range(len(spec_params)))
+    workspace = system_variable('workspace')
+    ws_input_refs = list()
+    for p in spec_params:
+        if p['id'] in params:
+            (wsref, err) = check_parameter(p,
+                                           params[p['id']],
+                                           workspace,
+                                           all_params=params_dict)
+            if wsref is not None:
+                if isinstance(wsref, list):
+                    for ref in wsref:
+                        if ref is not None:
+                            ws_input_refs.append(ref)
+                else:
+                    ws_input_refs.append(wsref)
+    return ws_input_refs
 
 
 def validate_parameters(app_id, tag, spec_params, params):
@@ -384,6 +416,7 @@ def validate_parameters(app_id, tag, spec_params, params):
 
     return (params, ws_input_refs)
 
+
 def check_parameter(param, value, workspace, all_params=dict()):
     """
     Checks if the given value matches the rules provided in the param dict.
@@ -413,9 +446,9 @@ def check_parameter(param, value, workspace, all_params=dict()):
             if param['type'] == 'group':
                 # returns ref and err as a list
                 (ref, err) = validate_group_values(param,
-                                                         v,
-                                                         workspace,
-                                                         all_params)
+                                                   v,
+                                                   workspace,
+                                                   all_params)
                 if err:
                     error_list += err
                 if ref:
@@ -423,8 +456,8 @@ def check_parameter(param, value, workspace, all_params=dict()):
             else:
                 # returns a single ref / err pair
                 (ref, err) = validate_param_value(param,
-                                                        v,
-                                                        workspace)
+                                                  v,
+                                                  workspace)
                 if err:
                     error_list.append(err)
                 if ref:
@@ -434,6 +467,7 @@ def check_parameter(param, value, workspace, all_params=dict()):
         else:
             return (ws_refs, None)
     return validate_param_value(param, value, workspace)
+
 
 def validate_group_values(param, value, workspace, spec_params):
     ref = list()
@@ -465,6 +499,7 @@ def validate_group_values(param, value, workspace, spec_params):
         if param_err:
             err.append(param_err)
     return (ref, err)
+
 
 def validate_param_value(param, value, workspace):
     """
@@ -660,7 +695,7 @@ def transform_param_value(transform_type, value, spec_param):
     """
     if transform_type is None and spec_param is not None and spec_param['type'] == 'textsubdata':
         transform_type = "string"
-    
+
     if transform_type is None or transform_type == "none" or transform_type == "object-name":
         return value
 

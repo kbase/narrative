@@ -164,9 +164,9 @@ define([
 
             this.showMessage('Initializing...', true);
             this.handleBusMessages();
-            
+
             this.showCanceledJobs = false;
-            
+
             return this;
         },
         sendJobMessage: function (msgType, jobId, message) {
@@ -195,20 +195,29 @@ define([
         handleBusMessages: function () {
             var bus = this.runtime.bus();
 
+            // Cancels the job.
             bus.on('request-job-cancellation', function (message) {
                 this.sendCommMessage(this.CANCEL_JOB, message.jobId);
             }.bind(this));
 
+            // Fetches job status from kernel.
             bus.on('request-job-status', function (message) {
                 this.sendCommMessage(this.JOB_STATUS, message.jobId);
             }.bind(this));
 
+            // Fetches job logs from kernel.
             bus.on('request-job-log', function (message) {
                 this.sendCommMessage(this.JOB_LOGS, message.jobId, message.options);
             }.bind(this));
 
+            // Fetches most recent job logs from kernel.
             bus.on('request-latest-job-log', function (message) {
                 this.sendCommMessage(this.JOB_LOGS_LATEST, message.jobId, message.options);
+            }.bind(this));
+
+            // Tells kernel to stop including a job in the lookup loop.
+            bus.on('request-job-completion', function (message) {
+                this.sendCommMessage(this.STOP_JOB_UPDATE, message.jobId);
             }.bind(this));
         },
         /**
@@ -309,7 +318,7 @@ define([
                      */
                 case 'job_status_all':
                     var incomingJobs = msg.content.data.content;
-                   
+
                     /*
                      * Ensure there is a locally cached copy of each job.
                      *
@@ -325,7 +334,7 @@ define([
                             widgetParameters: jobStateMessage.widget_info,
                             owner: jobStateMessage.owner
                         };
-                        
+
                         // console.log('job-status (all)', jobId, jobStateMessage.state);
 
                         this.sendJobMessage('job-status', jobId, {
@@ -487,7 +496,7 @@ define([
                                     '<tr><th>source:</th><td>' + content.source + '</td></tr></table>')
                             }]
                     });
-                    
+
 
                     $modalBody.find('button#kb-job-err-report').click(function (e) {
                         alert('reporting error!');
@@ -500,7 +509,7 @@ define([
                 case 'result':
                     var message = msg.content.data.content;
                     this.sendCellMessage('result', message.address.cell_id, message);
-                    break;                    
+                    break;
                 default:
                     console.warn("Unhandled KBaseJobs message from kernel (type='" + msgType + "'):");
                     console.warn(msg);
@@ -558,9 +567,9 @@ define([
                 }.bind(this));
             }.bind(this));
         },
-        
-        
-        
+
+
+
         getJobInitCode: function () {
             return ["from biokbase.narrative.jobs.jobmanager import JobManager",
                 "JobManager().initialize_jobs()"].join('\n');

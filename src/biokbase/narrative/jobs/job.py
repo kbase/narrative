@@ -22,6 +22,7 @@ class Job(object):
     run_id = None
     inputs = None
     _job_logs = list()
+    _last_state = None
 
     def __init__(self, job_id, app_id, inputs, owner, tag='release', app_version=None,
                  cell_id=None, run_id=None):
@@ -90,7 +91,7 @@ class Job(object):
         return SpecManager().get_spec(self.app_id, self.tag)
 
     def status(self):
-        return self._njs.check_job(self.job_id)['job_state']
+        return self.state().get('job_state', 'unknown')
 
     def parameters(self):
         try:
@@ -103,9 +104,10 @@ class Job(object):
         Queries the job service to see the status of the current job.
         Returns a <something> stating its status. (string? enum type? different traitlet?)
         """
+        if self._last_state is not None and self._last_state.get('finished', 0) == 1:
+            return self._last_state
         try:
             state = self._njs.check_job(self.job_id)
-            from pprint import pprint
             if 'cancelled' in state:
                 state[u'canceled'] = state.get('cancelled', 0)
                 del state['cancelled']
@@ -113,6 +115,7 @@ class Job(object):
                 state[u'job_state'] = 'canceled'
             state[u'cell_id'] = self.cell_id
             state[u'run_id'] = self.run_id
+            self._last_state = state
             return state
         except Exception as e:
             raise Exception("Unable to fetch info for job {} - {}".format(self.job_id, e))

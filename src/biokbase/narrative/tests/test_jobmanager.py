@@ -56,6 +56,14 @@ class MockAllClients(object):
     def check_job(self, job_id):
         return job_info.get('job_status_info', {}).get(job_id, None)
 
+    def check_jobs(self, params):
+        states = dict()
+        for job_id in params['job_ids']:
+            states[job_id] = job_info.get('job_status_info', {}).get(job_id, {})
+        return {
+            'job_states': states
+        }
+
     def list_methods_spec(self, params):
         return read_json_file(config.get('specs', 'app_specs_file'))
 
@@ -144,10 +152,12 @@ class JobManagerTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.jm.cancel_job(None)
 
+    @mock.patch('biokbase.narrative.jobs.jobmanager.clients.get', get_mock_client)
     def test_job_status_control(self):
         self.jm._handle_comm_message(create_jm_message("start_update_loop"))
         self.jm._handle_comm_message(create_jm_message("stop_update_loop"))
 
+    @mock.patch('biokbase.narrative.jobs.jobmanager.clients.get', get_mock_client)
     def test_job_status_fetching(self):
         self.jm._handle_comm_message(create_jm_message("all_status"))
         msg = self.jm._comm.last_message
@@ -156,6 +166,8 @@ class JobManagerTest(unittest.TestCase):
         # assert that each job info that's flagged for lookup gets returned
         jobs_to_lookup = [j for j in self.jm._running_jobs.keys() if self.jm._running_jobs[j]['refresh']]
         self.assertItemsEqual(job_ids, jobs_to_lookup)
+        for job_id in job_ids:
+            self.assertTrue(self.validate_status_message(job_data[job_id]))
 
     @mock.patch('biokbase.narrative.jobs.jobmanager.clients.get', get_mock_client)
     def test_single_job_status_fetch(self):

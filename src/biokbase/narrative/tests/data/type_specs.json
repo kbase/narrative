@@ -1,0 +1,780 @@
+[{
+    "active": {
+        "ver": "1.0.0",
+        "description": "",
+        "tooltip": "Methods that work",
+        "parent_ids": [],
+        "id": "active",
+        "name": "Active Methods"
+    },
+    "inactive": {
+        "ver": "1.0.0",
+        "description": "",
+        "tooltip": "Methods that are out of date",
+        "parent_ids": [],
+        "id": "inactive",
+        "name": "Inactive Methods"
+    },
+    "importers": {
+        "ver": "1.0.0",
+        "description": "",
+        "tooltip": "Methods that import objects",
+        "parent_ids": [],
+        "id": "importers",
+        "name": "Importing Methods"
+    },
+    "error": {
+        "ver": "1.0.0",
+        "description": "",
+        "tooltip": "Methods with critical errors",
+        "parent_ids": [],
+        "id": "error",
+        "name": "Errors"
+    },
+    "featured_apps": {
+        "ver": "1.0.0",
+        "description": "",
+        "tooltip": "",
+        "parent_ids": [],
+        "id": "featured_apps",
+        "name": "Featured Apps"
+    },
+    "viewers": {
+        "ver": "1.0.0",
+        "description": "",
+        "tooltip": "Methods that show objects",
+        "parent_ids": [],
+        "id": "viewers",
+        "name": "Viewing Methods"
+    }
+}, {}, {}, {
+    "KBasePhenotypes.PhenotypeSimulationSet": {
+        "import_method_ids": [],
+        "subtitle": "Phenotype simulation set object",
+        "name": "Phenotype simulation set",
+        "export_functions": {
+            "TSV": "FBAFileUtil/export_phenotype_simulation_set_as_tsv_file",
+            "EXCEL": "FBAFileUtil/export_phenotype_simulation_set_as_excel_file"
+        },
+        "view_method_ids": ["NarrativeViewers/view_phenotype_simulation_results"],
+        "description": "<p>This type describes phenotype simulation set.</p>\\n",
+        "type_name": "KBasePhenotypes.PhenotypeSimulationSet",
+        "tooltip": "Phenotype simulation set object",
+        "landing_page_url_prefix": "",
+        "icon": {
+            "url": "img?type_name=KBasePhenotypes.PhenotypeSimulationSet&image_name=none"
+        }
+    },
+    "KBaseRNASeq.RNASeqSampleSet": {
+        "import_method_ids": [],
+        "subtitle": "Stores the reads information associated with a particular RNASeq SampleSet",
+        "name": "Details of a RNASeq SampleSet",
+        "export_functions": {},
+        "view_method_ids": ["NarrativeViewers/view_rnaseq_sampleset"],
+        "description": "<p>Stores the reads information associated with a particular RNASeq SampleSet</p>\\n",
+        "type_name": "KBaseRNASeq.RNASeqSampleSet",
+        "tooltip": "Stores the reads information associated with a particular RNASeq SampleSet",
+        "icon": {
+            "url": "img?type_name=KBaseRNASeq.RNASeqSampleSet&image_name=none"
+        }
+    },
+    "KBaseFeatureValues.ExpressionMatrix": {
+        "import_method_ids": ["KBaseFeatureValues/import_expression_tsv_file"],
+        "subtitle": "Expression Matrix object",
+        "name": "Expression Matrix",
+        "export_functions": {
+            "TSV": "KBaseFeatureValues/export_matrix"
+        },
+        "view_method_ids": ["NarrativeViewers/view_expression_matrix"],
+        "description": "<p>This type describes expression matrix.</p>\\n",
+        "type_name": "KBaseFeatureValues.ExpressionMatrix",
+        "tooltip": "Expression Matrix object",
+        "landing_page_url_prefix": "",
+        "icon": {
+            "url": "img?type_name=KBaseFeatureValues.ExpressionMatrix&image_name=none"
+        }
+    },
+    "KBaseOntology.OntologyDictionary": {
+        "import_method_ids": [],
+        "subtitle": "OntologyDictionary object",
+        "name": "OntologyDictionary",
+        "export_functions": {},
+        "view_method_ids": ["NarrativeViewers/view_ontology_dictionary"],
+        "description": "<p>This type describes ontology dictionaries.</p>\\n",
+        "type_name": "KBaseOntology.OntologyDictionary",
+        "tooltip": "OntologyDictionary",
+        "landing_page_url_prefix": "",
+        "icon": {
+            "url": "img?type_name=KBaseOntology.OntologyDictionary&image_name=none"
+        }
+    },
+    "KBaseFile.SingleEndLibrary": {
+        "import_method_ids": [],
+        "subtitle": "Short reads object",
+        "name": "Short reads",
+        "export_functions": {
+            "FASTQ": "ReadsUtils.export_reads"
+        },
+        "view_method_ids": ["NarrativeViewers/view_reads"],
+        "description": "<p>This type describes short reads.</p>\\n",
+        "type_name": "KBaseFile.SingleEndLibrary",
+        "tooltip": "Short reads object",
+        "landing_page_url_prefix": "",
+        "icon": {
+            "url": "img?type_name=KBaseFile.SingleEndLibrary&image_name=none"
+        }
+    },
+    "KBaseRNASeq.RNASeqExpressionSet": {
+        "import_method_ids": [],
+        "subtitle": "Expression Sample object",
+        "name": "Expression Sample",
+        "export_functions": {},
+        "view_method_ids": ["NarrativeViewers/view_rnaseq_sample_expression"],
+        "description": "<p>This type describes expression sample.</p>\\n",
+        "type_name": "KBaseRNASeq.RNASeqExpressionSet",
+        "tooltip": "Expression Sample object",
+        "landing_page_url_prefix": "",
+        "icon": {
+            "url": "img?type_name=KBaseRNASeq.RNASeqExpressionSet&image_name=none"
+        }
+    },
+    "KBaseOntology.OntologyTranslation": {
+        "import_method_ids": [],
+        "subtitle": "OntologyTranslation object",
+        "name": "OntologyTranslation",
+        "export_functions": {},
+        "view_method_ids": ["NarrativeViewers/view_ontology_translation"],
+        "description": "<p>This type describes ontology translations.</p>\\n",
+        "type_name": "KBaseOntology.OntologyTranslation",
+        "tooltip": "OntologyTranslation",
+        "landing_page_url_prefix": "",
+        "icon": {
+            "url": "img?type_name=KBaseOntology.OntologyTranslation&image_name=none"
+        }
+    },
+    "GenomeUtil.BlastOutput": {
+        "import_method_ids": [],
+        "subtitle": "Stores the output of a BLAST query",
+        "name": "BLAST Output",
+        "export_functions": {},
+        "view_method_ids": ["NarrativeViewers/view_blast_output"],
+        "description": "<p>Stores the output of a BLAST query.</p>\\n",
+        "type_name": "GenomeUtil.BlastOutput",
+        "tooltip": "Stores the output of a BLAST query",
+        "icon": {
+            "url": "img?type_name=GenomeUtil.BlastOutput&image_name=none"
+        }
+    },
+    "KBasePhenotypes.PhenotypeSet": {
+        "import_method_ids": ["FBAFileUtil/import_phenotypeset_tsv_file"],
+        "subtitle": "Phenotype set object",
+        "name": "Phenotype set",
+        "export_functions": {
+            "TSV": "FBAFileUtil/export_phenotype_set_as_tsv_file"
+        },
+        "view_method_ids": ["NarrativeViewers/view_phenotype_set"],
+        "description": "<p>This type describes phenotype set.</p>\\n",
+        "type_name": "KBasePhenotypes.PhenotypeSet",
+        "tooltip": "Phenotype set object",
+        "landing_page_url_prefix": "ws/phenotype",
+        "icon": {
+            "url": "img?type_name=KBasePhenotypes.PhenotypeSet&image_name=none"
+        }
+    },
+    "KBaseFBA.FBAModel": {
+        "import_method_ids": ["FBAFileUtil/import_fbamodel_tsv_file", "FBAFileUtil/import_fbamodel_sbml_file", "FBAFileUtil/import_fbamodel_excel_file"],
+        "subtitle": "FBA model object",
+        "name": "FBA model",
+        "export_functions": {
+            "TSV": "FBAFileUtil/export_model_as_tsv_file",
+            "EXCEL": "FBAFileUtil/export_model_as_excel_file",
+            "SBML": "FBAFileUtil/export_model_as_sbml_file"
+        },
+        "view_method_ids": ["NarrativeViewers/view_metabolic_model_details"],
+        "description": "<p>This type describes FBA model.</p>\\n",
+        "type_name": "KBaseFBA.FBAModel",
+        "tooltip": "FBA model object",
+        "landing_page_url_prefix": "ws/models",
+        "icon": {
+            "url": "img?type_name=KBaseFBA.FBAModel&image_name=none"
+        }
+    },
+    "KBaseRNASeq.RNASeqAlignment": {
+        "import_method_ids": [],
+        "subtitle": "Stores the statistics information associated with a single RNASeq Alignment",
+        "name": "Details of a RNASeq Alignment",
+        "export_functions": {},
+        "view_method_ids": ["NarrativeViewers/view_rnaseq_alignment"],
+        "description": "<p>Stores the metadata information associated with a single RNASeq Alignment</p>\\n",
+        "type_name": "KBaseRNASeq.RNASeqAlignment",
+        "tooltip": "Stores the metadata information associated with a single RNASeq Alignment",
+        "icon": {
+            "url": "img?type_name=KBaseRNASeq.RNASeqAlignment&image_name=none"
+        }
+    },
+    "KBaseFBA.FBAComparison": {
+        "import_method_ids": [],
+        "subtitle": "FBA Comparison",
+        "name": "FBA Comparison",
+        "export_functions": {},
+        "view_method_ids": ["NarrativeViewers/view_fba_comparison"],
+        "description": "<p>This type contains data from a comparison of multiple FBA solutions.</p>\\n",
+        "type_name": "KBaseFBA.FBAComparison",
+        "tooltip": "FBA Comparison",
+        "landing_page_url_prefix": "ws/fbacomparison",
+        "icon": {
+            "url": "img?type_name=KBaseFBA.FBAComparison&image_name=none"
+        }
+    },
+    "KBaseSets.ReadsSet": {
+        "import_method_ids": [],
+        "subtitle": "ReadsSet object",
+        "name": "ReadsSet",
+        "export_functions": {},
+        "view_method_ids": ["NarrativeViewers/view_reads_set"],
+        "description": "<p>This type describes a set of Reads.</p>\\n",
+        "type_name": "KBaseSets.ReadsSet",
+        "tooltip": "ReadsSet object",
+        "landing_page_url_prefix": "reads_set",
+        "icon": {
+            "url": "img?type_name=KBaseSets.ReadsSet&image_name=none"
+        }
+    },
+    "KBaseRNASeq.cummerbund_output": {
+        "import_method_ids": [],
+        "subtitle": "Stores the output of RNASeq differential expression plots",
+        "name": "RNASeq differential expression Cummerbund plots",
+        "export_functions": {},
+        "view_method_ids": ["NarrativeViewers/view_cummerbund_out"],
+        "description": "<p>Stores the output of RNASeq differential expression plots created by R package Cummerbund</p>\\n",
+        "type_name": "KBaseRNASeq.cummerbund_output",
+        "tooltip": "Stores the output of differential expression  plots",
+        "icon": {
+            "url": "img?type_name=KBaseRNASeq.cummerbund_output&image_name=none"
+        }
+    },
+    "KBaseEnigmaMetals.GrowthParameters": {
+        "import_method_ids": [],
+        "subtitle": "Growth Parameters object",
+        "name": "Growth Parameters",
+        "export_functions": {},
+        "view_method_ids": ["NarrativeViewers/view_growth_parameters"],
+        "description": "<p>This type describes growth parameters.</p>\\n",
+        "type_name": "KBaseEnigmaMetals.GrowthParameters",
+        "tooltip": "Growth Parameters object",
+        "landing_page_url_prefix": "",
+        "icon": {
+            "url": "img?type_name=KBaseEnigmaMetals.GrowthParameters&image_name=none"
+        }
+    },
+    "KBaseGenomeAnnotations.Assembly": {
+        "import_method_ids": ["AssemblyUtil/import_assembly_fasta_file", "AssemblyUtil/import_assembly_fasta_ftp"],
+        "subtitle": "Assembly object",
+        "name": "Assembly",
+        "export_functions": {
+            "FASTA": "AssemblyUtil/export_assembly_as_fasta"
+        },
+        "view_method_ids": ["NarrativeViewers/view_assembly"],
+        "description": "<p>This type describes a genome assembly.</p>\\n",
+        "type_name": "KBaseGenomeAnnotations.Assembly",
+        "tooltip": "Assemblyt object",
+        "landing_page_url_prefix": "",
+        "icon": {
+            "url": "img?type_name=KBaseGenomeAnnotations.Assembly&image_name=assembly.jpg"
+        }
+    },
+    "KBaseGenomes.GenomeComparison": {
+        "import_method_ids": [],
+        "subtitle": "Genome comparison object",
+        "name": "Genome comparison",
+        "export_functions": {},
+        "view_method_ids": ["NarrativeViewers/view_genome_comparison"],
+        "description": "<p>This type describes genome comparison.</p>\\n",
+        "type_name": "KBaseGenomes.GenomeComparison",
+        "tooltip": "Genome comparison object",
+        "landing_page_url_prefix": "genome_comparison",
+        "icon": {
+            "url": "img?type_name=KBaseGenomes.GenomeComparison&image_name=none"
+        }
+    },
+    "KBaseTrees.Tree": {
+        "import_method_ids": [],
+        "subtitle": "Tree object",
+        "name": "Tree",
+        "export_functions": {},
+        "view_method_ids": ["NarrativeViewers/view_tree"],
+        "description": "<p>This type describes tree.</p>\\n",
+        "type_name": "KBaseTrees.Tree",
+        "tooltip": "Tree object",
+        "landing_page_url_prefix": "tree",
+        "icon": {
+            "url": "img?type_name=KBaseTrees.Tree&image_name=none"
+        }
+    },
+    "KBaseGenomes.Genome": {
+        "import_method_ids": ["GenomeFileUtil/import_genome_gbk_file", "GenomeFileUtil/import_genome_gbk_ftp"],
+        "subtitle": "Genome object",
+        "name": "Genome",
+        "export_functions": {
+            "GENBANK": "GenomeFileUtil/export_genome_as_genbank"
+        },
+        "view_method_ids": ["NarrativeViewers/view_genome"],
+        "description": "<p>This type describes genome.</p>\\n",
+        "type_name": "KBaseGenomes.Genome",
+        "tooltip": "Genome object",
+        "landing_page_url_prefix": "genomes",
+        "icon": {
+            "url": "img?type_name=KBaseGenomes.Genome&image_name=genome.png"
+        }
+    },
+    "KBaseEnigmaMetals.ChromatographyMatrix": {
+        "import_method_ids": [],
+        "subtitle": "ChromatographyMatrix object",
+        "name": "Chromatography data",
+        "export_functions": {},
+        "view_method_ids": ["NarrativeViewers/view_chromatography_matrix"],
+        "description": "<p>This type describes growth data.</p>\\n",
+        "type_name": "KBaseEnigmaMetals.ChromatographyMatrix",
+        "tooltip": "ChromatographyMatrix object",
+        "landing_page_url_prefix": "",
+        "icon": {
+            "url": "img?type_name=KBaseEnigmaMetals.ChromatographyMatrix&image_name=none"
+        }
+    },
+    "KBaseFBA.ModelComparison": {
+        "import_method_ids": [],
+        "subtitle": "FBA model comparison object",
+        "name": "FBA model comparison",
+        "export_functions": {},
+        "view_method_ids": ["NarrativeViewers/view_fba_model_comparison"],
+        "description": "<p>This type describes the FBA model comparison object.</p>\\n",
+        "type_name": "KBaseFBA.ModelComparison",
+        "tooltip": "FBA model comparison object",
+        "landing_page_url_prefix": "",
+        "icon": {
+            "url": "img?type_name=KBaseFBA.ModelComparison&image_name=none"
+        }
+    },
+    "GenomeComparison.ProteomeComparison": {
+        "import_method_ids": [],
+        "subtitle": "Proteome comparison object",
+        "name": "Proteome comparison",
+        "export_functions": {},
+        "view_method_ids": ["NarrativeViewers/view_proteome_comparison"],
+        "description": "<p>This type describes proteome comparison.</p>\\n",
+        "type_name": "GenomeComparison.ProteomeComparison",
+        "tooltip": "Proteome comparison object",
+        "landing_page_url_prefix": "",
+        "icon": {
+            "url": "img?type_name=GenomeComparison.ProteomeComparison&image_name=none"
+        }
+    },
+    "KBaseRNASeq.RNASeqSample": {
+        "import_method_ids": [],
+        "subtitle": "Stores the metadata information associated with a single RNASeq Sample",
+        "name": "Details of a RNASeq Sample",
+        "export_functions": {},
+        "view_method_ids": ["NarrativeViewers/view_rnaseq_sample"],
+        "description": "<p>Stores the metadata information associated with a single RNASeq Sample</p>\\n",
+        "type_name": "KBaseRNASeq.RNASeqSample",
+        "tooltip": "Stores the metadata information associated with a single RNASeq Sample",
+        "icon": {
+            "url": "img?type_name=KBaseRNASeq.RNASeqSample&image_name=none"
+        }
+    },
+    "KBaseFBA.FBAModelSet": {
+        "import_method_ids": [],
+        "subtitle": "FBA Model set object",
+        "name": "FBA Model set",
+        "export_functions": {},
+        "view_method_ids": ["NarrativeViewers/view_fba_model_set"],
+        "description": "<p>This type describes FBA model set.</p>\\n",
+        "type_name": "KBaseFBA.FBAModelSet",
+        "tooltip": "FBA Model set object",
+        "landing_page_url_prefix": "fba_model_set",
+        "icon": {
+            "url": "img?type_name=KBaseFBA.FBAModelSet&image_name=none"
+        }
+    },
+    "KBaseFeatureValues.EstimateKResult": {
+        "import_method_ids": [],
+        "subtitle": "Expression Estimate K Result object",
+        "name": "Expression Estimate K Result",
+        "export_functions": {},
+        "view_method_ids": ["NarrativeViewers/view_expression_estimate_k"],
+        "description": "<p>This type describes expression estimate K result.</p>\\n",
+        "type_name": "KBaseFeatureValues.EstimateKResult",
+        "tooltip": "Expression Estimate K Result object",
+        "landing_page_url_prefix": "",
+        "icon": {
+            "url": "img?type_name=KBaseFeatureValues.EstimateKResult&image_name=none"
+        }
+    },
+    "KBase.ShortReads": {
+        "import_method_ids": ["ReadsUtils/import_pe_reads", "ReadsUtils/import_se_reads"],
+        "subtitle": "Short reads object",
+        "name": "Short reads",
+        "export_functions": {},
+        "view_method_ids": [],
+        "description": "<p>This type describes short reads.</p>\\n",
+        "type_name": "KBase.ShortReads",
+        "tooltip": "Short reads object",
+        "landing_page_url_prefix": "",
+        "icon": {
+            "url": "img?type_name=KBase.ShortReads&image_name=none"
+        }
+    },
+    "KBaseRNASeq.RNASeqAnalysis": {
+        "import_method_ids": [],
+        "subtitle": "Stores the metadata information associated with a particular RNASeq Analysis",
+        "name": "Details of a RNASeq Analysis",
+        "export_functions": {},
+        "view_method_ids": ["NarrativeViewers/view_rnaseq_analysis"],
+        "description": "<p>Stores the metadata information associated with a particular RNASeq Analysis</p>\\n",
+        "type_name": "KBaseRNASeq.RNASeqAnalysis",
+        "tooltip": "Stores the metadata information associated with a particular RNASeq Analysis",
+        "icon": {
+            "url": "img?type_name=KBaseRNASeq.RNASeqAnalysis&image_name=none"
+        }
+    },
+    "Transcript": {
+        "import_method_ids": [],
+        "subtitle": "Transcript object",
+        "name": "Transcript",
+        "export_functions": {},
+        "view_method_ids": [],
+        "description": "<p>This type describes genome transcripts.</p>\\n",
+        "type_name": "Transcript",
+        "tooltip": "Transcript object",
+        "landing_page_url_prefix": "",
+        "icon": {
+            "url": "img?type_name=Transcript&image_name=none"
+        }
+    },
+    "KBaseRNASeq.RNASeqAlignmentSet": {
+        "import_method_ids": [],
+        "subtitle": "Stores the statistics information associated with a single RNASeq Alignment",
+        "name": "Details of a RNASeq Alignment",
+        "export_functions": {},
+        "view_method_ids": ["NarrativeViewers/view_rnaseq_alignment"],
+        "description": "<p>Stores the metadata information associated with a single RNASeq Alignment</p>\\n",
+        "type_name": "KBaseRNASeq.RNASeqAlignmentSet",
+        "tooltip": "Stores the metadata information associated with a single RNASeq Alignment",
+        "icon": {
+            "url": "img?type_name=KBaseRNASeq.RNASeqAlignmentSet&image_name=none"
+        }
+    },
+    "KBaseTrees.MSA": {
+        "import_method_ids": [],
+        "subtitle": "Multiple sequence alignment object",
+        "name": "Multiple sequence alignment",
+        "export_functions": {},
+        "view_method_ids": [],
+        "description": "<p>This type describes multiple sequence alignment.</p>\\n",
+        "type_name": "KBaseTrees.MSA",
+        "tooltip": "Multiple sequence alignment object",
+        "landing_page_url_prefix": "msa",
+        "icon": {
+            "url": "img?type_name=KBaseTrees.MSA&image_name=none"
+        }
+    },
+    "KBaseEnigmaMetals.SamplePropertyMatrix": {
+        "import_method_ids": [],
+        "subtitle": "SamplePropertyMatrix object",
+        "name": "Sample properties data",
+        "export_functions": {},
+        "view_method_ids": ["NarrativeViewers/view_sample_property_matrix"],
+        "description": "<p>This type describes various properties (chemical etc.) of samples.</p>\\n",
+        "type_name": "KBaseEnigmaMetals.SamplePropertyMatrix",
+        "tooltip": "SamplePropertyMatrix object",
+        "landing_page_url_prefix": "",
+        "icon": {
+            "url": "img?type_name=KBaseEnigmaMetals.SamplePropertyMatrix&image_name=none"
+        }
+    },
+    "KBaseAssembly.PairedEndLibrary": {
+        "import_method_ids": [],
+        "subtitle": "Short reads object",
+        "name": "Short reads",
+        "export_functions": {
+            "FASTQ": "ReadsUtils.export_reads"
+        },
+        "view_method_ids": [],
+        "description": "<p>This type describes short reads.</p>\\n",
+        "type_name": "KBaseAssembly.PairedEndLibrary",
+        "tooltip": "Short reads object",
+        "landing_page_url_prefix": "",
+        "icon": {
+            "url": "img?type_name=KBaseAssembly.PairedEndLibrary&image_name=none"
+        }
+    },
+    "KBaseRNASeq.RNASeqExpression": {
+        "import_method_ids": [],
+        "subtitle": "Expression Sample object",
+        "name": "Expression Sample",
+        "export_functions": {},
+        "view_method_ids": ["NarrativeViewers/view_rnaseq_sample_expression"],
+        "description": "<p>This type describes expression sample.</p>\\n",
+        "type_name": "KBaseRNASeq.RNASeqExpression",
+        "tooltip": "Expression Sample object",
+        "landing_page_url_prefix": "",
+        "icon": {
+            "url": "img?type_name=KBaseRNASeq.RNASeqExpression&image_name=none"
+        }
+    },
+    "KBaseGenomes.ContigSet": {
+        "import_method_ids": [],
+        "subtitle": "ContigSet object",
+        "name": "Contigs",
+        "export_functions": {
+            "FASTA": "AssemblyUtil/export_assembly_as_fasta"
+        },
+        "view_method_ids": ["NarrativeViewers/view_assembly"],
+        "description": "<p>This type describes contig set.</p>\\n",
+        "type_name": "KBaseGenomes.ContigSet",
+        "tooltip": "ContigSet object",
+        "landing_page_url_prefix": "",
+        "icon": {
+            "url": "img?type_name=KBaseGenomes.ContigSet&image_name=contigset.jpg"
+        }
+    },
+    "GenomeUtil.BLAST_output": {
+        "import_method_ids": [],
+        "subtitle": "Stores the output of a BLAST query",
+        "name": "BLAST Output",
+        "export_functions": {},
+        "view_method_ids": ["NarrativeViewers/view_blast_output"],
+        "description": "<p>Stores the output of a BLAST query.</p>\\n",
+        "type_name": "GenomeUtil.BLAST_output",
+        "tooltip": "Stores the output of a BLAST query",
+        "icon": {
+            "url": "img?type_name=GenomeUtil.BLAST_output&image_name=none"
+        }
+    },
+    "KBaseEnigmaMetals.GrowthMatrix": {
+        "import_method_ids": [],
+        "subtitle": "GrowthMatrix object",
+        "name": "Growth data",
+        "export_functions": {},
+        "view_method_ids": ["NarrativeViewers/view_growth_matrix"],
+        "description": "<p>This type describes growth data.</p>\\n",
+        "type_name": "KBaseEnigmaMetals.GrowthMatrix",
+        "tooltip": "GrowthMatrix object",
+        "landing_page_url_prefix": "",
+        "icon": {
+            "url": "img?type_name=KBaseEnigmaMetals.GrowthMatrix&image_name=none"
+        }
+    },
+    "KBaseGenomeAnnotations.GenomeAnnotation": {
+        "import_method_ids": [],
+        "subtitle": "GenomeAnnotation object",
+        "name": "GenomeAnnotation",
+        "export_functions": {
+            "GENBANK": "GenomeAnnotationFileUtil/export_genome_annotation_as_genbank"
+        },
+        "view_method_ids": ["NarrativeViewers/view_genome_annotation"],
+        "description": "<p>This type describes a genome annotation.</p>\\n",
+        "type_name": "KBaseGenomeAnnotations.GenomeAnnotation",
+        "tooltip": "GenomeAnnotation object",
+        "landing_page_url_prefix": "genomeannotations",
+        "icon": {
+            "url": "img?type_name=KBaseGenomeAnnotations.GenomeAnnotation&image_name=genomeannotation.png"
+        }
+    },
+    "KBaseFeatureValues.FeatureClusters": {
+        "import_method_ids": [],
+        "subtitle": "Expression Feature Clusters",
+        "name": "Expression Feature Clusters",
+        "export_functions": {
+            "TSV": "KBaseFeatureValues/export_clusters_tsv",
+            "SIF": "KBaseFeatureValues/export_clusters_sif"
+        },
+        "view_method_ids": ["NarrativeViewers/view_expression_feature_clusters"],
+        "description": "<p>This type describes expression cluster set.</p>\\n",
+        "type_name": "KBaseFeatureValues.FeatureClusters",
+        "tooltip": "Expression Feature Clusters",
+        "landing_page_url_prefix": "",
+        "icon": {
+            "url": "img?type_name=KBaseFeatureValues.FeatureClusters&image_name=none"
+        }
+    },
+    "KBaseSearch.GenomeSet": {
+        "import_method_ids": [],
+        "subtitle": "GenomeSet object",
+        "name": "GenomeSet",
+        "export_functions": {},
+        "view_method_ids": ["NarrativeViewers/view_genomeset"],
+        "description": "<p>This type describes a genome set.</p>\\n",
+        "type_name": "KBaseSearch.GenomeSet",
+        "tooltip": "GenomeSet object",
+        "landing_page_url_prefix": "KBaseSearch.GenomeSet",
+        "icon": {
+            "url": "img?type_name=KBaseSearch.GenomeSet&image_name=genome.png"
+        }
+    },
+    "KBaseRBTnSeq.BarSeqExperimentResults": {
+        "import_method_ids": [],
+        "subtitle": "BarSeqExperimentResults object",
+        "name": "View BarSeq Results",
+        "export_functions": {},
+        "view_method_ids": ["NarrativeViewers/view_barseq_results"],
+        "description": "<p>This type describes a set of results from BarSeq experiments performed on single species.</p>\\n",
+        "type_name": "KBaseRBTnSeq.BarSeqExperimentResults",
+        "tooltip": "BarSeqExperimentResults object",
+        "landing_page_url_prefix": "",
+        "icon": {
+            "url": "img?type_name=KBaseRBTnSeq.BarSeqExperimentResults&image_name=none"
+        }
+    },
+    "KBaseAssembly.SingleEndLibrary": {
+        "import_method_ids": [],
+        "subtitle": "Short reads object",
+        "name": "Short reads",
+        "export_functions": {
+            "FASTQ": "ReadsUtils.export_reads"
+        },
+        "view_method_ids": [],
+        "description": "<p>This type describes short reads.</p>\\n",
+        "type_name": "KBaseAssembly.SingleEndLibrary",
+        "tooltip": "Short reads object",
+        "landing_page_url_prefix": "",
+        "icon": {
+            "url": "img?type_name=KBaseAssembly.SingleEndLibrary&image_name=none"
+        }
+    },
+    "KBaseBiochem.Media": {
+        "import_method_ids": ["FBAFileUtil/import_media_tsv_file", "FBAFileUtil/import_media_excel_file"],
+        "subtitle": "Media object",
+        "name": "Media",
+        "export_functions": {
+            "TSV": "FBAFileUtil/export_media_as_tsv_file",
+            "EXCEL": "FBAFileUtil/export_media_as_excel_file"
+        },
+        "view_method_ids": ["NarrativeViewers/view_media"],
+        "description": "<p>This type describes Media object.</p>\\n",
+        "type_name": "KBaseBiochem.Media",
+        "tooltip": "Media object",
+        "landing_page_url_prefix": "",
+        "icon": {
+            "url": "img?type_name=KBaseBiochem.Media&image_name=none"
+        }
+    },
+    "KBaseCollections.FeatureSet": {
+        "import_method_ids": [],
+        "subtitle": "FeatureSet object",
+        "name": "FeatureSet",
+        "export_functions": {},
+        "view_method_ids": ["NarrativeViewers/view_featureset"],
+        "description": "<p>a featureset.</p>\\n",
+        "type_name": "KBaseCollections.FeatureSet",
+        "tooltip": "FeatureSet object",
+        "icon": {
+            "url": "img?type_name=KBaseCollections.FeatureSet&image_name=none"
+        }
+    },
+    "KBaseRNASeq.RNASeqDifferentialExpression": {
+        "import_method_ids": [],
+        "subtitle": "Stores the metadata information associated with a particular RNASeq DifferentialExpression",
+        "name": "Details of a RNASeq DifferentialExpression",
+        "export_functions": {},
+        "view_method_ids": ["NarrativeViewers/view_rnaseq_differential_expression"],
+        "description": "<p>Stores the metadata information associated with a particular RNASeq DifferentialExpression</p>\\n",
+        "type_name": "KBaseRNASeq.RNASeqDifferentialExpression",
+        "tooltip": "Stores the metadata information associated with a particular RNASeq DifferentialExpression",
+        "icon": {
+            "url": "img?type_name=KBaseRNASeq.RNASeqDifferentialExpression&image_name=none"
+        }
+    },
+    "KBaseAssembly.AssemblyReport": {
+        "import_method_ids": [],
+        "subtitle": "AssemblyReport object",
+        "name": "AssemblyReport",
+        "export_functions": {},
+        "view_method_ids": ["NarrativeViewers/view_assemblyreport"],
+        "description": "<p>This type describes assembly report.</p>\\n",
+        "type_name": "KBaseAssembly.AssemblyReport",
+        "tooltip": "AssemblyReport object",
+        "landing_page_url_prefix": "",
+        "icon": {
+            "url": "img?type_name=KBaseAssembly.AssemblyReport&image_name=contigset.jpg"
+        }
+    },
+    "KBaseGeneFamilies.DomainAnnotation": {
+        "import_method_ids": [],
+        "subtitle": "Domain Annotation object",
+        "name": "Domain Annotation",
+        "export_functions": {},
+        "view_method_ids": ["NarrativeViewers/view_domain_annotation"],
+        "description": "<p>This type describes a set of domains annotated in a genome.</p>\\n",
+        "type_name": "KBaseGeneFamilies.DomainAnnotation",
+        "tooltip": "Domain Annotation object",
+        "landing_page_url_prefix": "",
+        "icon": {
+            "url": "img?type_name=KBaseGeneFamilies.DomainAnnotation&image_name=none"
+        }
+    },
+    "KBaseGenomes.Pangenome": {
+        "import_method_ids": [],
+        "subtitle": "Pan-genome object",
+        "name": "Pan-genome",
+        "export_functions": {
+            "TSV": "PangenomeFileUtil/export_pangenome_as_tsv_file",
+            "EXCEL": "PangenomeFileUtil/export_pangenome_as_excel_file"
+        },
+        "view_method_ids": ["NarrativeViewers/view_pangenome"],
+        "description": "<p>This type describes pan-genome.</p>\\n",
+        "type_name": "KBaseGenomes.Pangenome",
+        "tooltip": "Pan-genome object",
+        "landing_page_url_prefix": "pangenome",
+        "icon": {
+            "url": "img?type_name=KBaseGenomes.Pangenome&image_name=none"
+        }
+    },
+    "KBaseFile.PairedEndLibrary": {
+        "import_method_ids": [],
+        "subtitle": "Short reads object",
+        "name": "Short reads",
+        "export_functions": {
+            "FASTQ": "ReadsUtils.export_reads"
+        },
+        "view_method_ids": ["NarrativeViewers/view_reads"],
+        "description": "<p>This type describes short reads.</p>\\n",
+        "type_name": "KBaseFile.PairedEndLibrary",
+        "tooltip": "Short reads object",
+        "landing_page_url_prefix": "",
+        "icon": {
+            "url": "img?type_name=KBaseFile.PairedEndLibrary&image_name=none"
+        }
+    },
+    "KBaseExpression.ExpressionSample": {
+        "import_method_ids": [],
+        "subtitle": "Expression Sample object",
+        "name": "Expression Sample",
+        "export_functions": {},
+        "view_method_ids": ["NarrativeViewers/view_rnaseq_sample_expression"],
+        "description": "<p>This type describes expression sample.</p>\\n",
+        "type_name": "KBaseExpression.ExpressionSample",
+        "tooltip": "Expression Sample object",
+        "landing_page_url_prefix": "",
+        "icon": {
+            "url": "img?type_name=KBaseExpression.ExpressionSample&image_name=none"
+        }
+    },
+    "KBaseFBA.FBA": {
+        "import_method_ids": [],
+        "subtitle": "FBA object",
+        "name": "FBA",
+        "export_functions": {
+            "TSV": "FBAFileUtil/export_fba_as_tsv_file",
+            "EXCEL": "FBAFileUtil/export_fba_as_excel_file"
+        },
+        "view_method_ids": ["NarrativeViewers/view_fba_result_details"],
+        "description": "<p>This type describes flux balance analysis.</p>\\n",
+        "type_name": "KBaseFBA.FBA",
+        "tooltip": "FBA object",
+        "landing_page_url_prefix": "ws/fbas",
+        "icon": {
+            "url": "img?type_name=KBaseFBA.FBA&image_name=none"
+        }
+    }
+}]

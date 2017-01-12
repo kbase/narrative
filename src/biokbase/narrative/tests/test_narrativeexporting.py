@@ -1,10 +1,4 @@
 from __future__ import print_function
-
-"""
-Some tests for narrative exporting.
-"""
-__author__ = "Bill Riehl <wjriehl@lbl.gov>"
-
 from biokbase.narrative.contents.narrativeio import PermissionsError
 from biokbase.narrative.exporter.exporter import NarrativeExporter
 from biokbase.narrative.tests.util import read_json_file
@@ -14,10 +8,15 @@ import ConfigParser
 import mock
 import sys
 import json
+"""
+Some tests for narrative exporting.
+"""
+__author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
 output_file = "test.html"
 config = ConfigParser.ConfigParser()
 config.read('test.cfg')
+
 
 def mock_read_narrative(style):
     """

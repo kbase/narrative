@@ -3,6 +3,10 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v4.2.1 (more notes will follow).
 
+### Version 3.1.1
+__Changes__
+- Optimized how job status polling works.
+
 ### Version 3.1.0
 __Changes__
 - Release of ReadsSet viewer and Reads viewer.

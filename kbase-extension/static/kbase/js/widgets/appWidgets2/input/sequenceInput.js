@@ -383,7 +383,6 @@ define([
         function autoValidate() {
             return validate(exportModel())
                 .then(function(result) {
-                    console.log('validation result?', result);
                     channel.emit('validation', result);
                 });
         }

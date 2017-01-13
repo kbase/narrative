@@ -328,7 +328,9 @@ define(
                 var reportHTML = $.jqElem('div').append($report_iframe).html();
 
                 var someDiv = div({dataElement : 'report-section'});
-                self.$mainPanel.append(someDiv);
+                if (reportHTML) {
+                  self.$mainPanel.append(someDiv);
+                }
 
                 var download_link_id = StringUtil.uuid();
 
@@ -363,7 +365,9 @@ define(
                 );
 
                 var sumDiv = div({dataElement : 'summary-section'});
-                self.$mainPanel.append(sumDiv);
+                if (self.reportData.text_message) {
+                  self.$mainPanel.append(sumDiv);
+                }
 
                 var sumTitle = $.jqElem('div')
                   .append('Summary')
@@ -393,7 +397,7 @@ define(
                 var someDiv = div({dataElement : 'downloadable-html'});
                 self.$mainPanel.append(someDiv);
 
-                var body = 'No files to download';
+                var body = 'No links to follow';
 
                 if (self.reportData.html_links && self.reportData.html_links.length) {
                   var $ul = $.jqElem('ul');

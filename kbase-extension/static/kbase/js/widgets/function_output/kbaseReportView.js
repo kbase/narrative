@@ -308,7 +308,8 @@ define(
             if (self.options.showReportText) {
 
                 var $report_iframe = '';
-                if (self.reportData.html_links) {
+
+                if (self.reportData.direct_html) {
                   var iframe_id = self.uuid();
 
                   $report_iframe = $.jqElem('iframe')
@@ -326,7 +327,7 @@ define(
                     self.options.report_window_line_height + '" readonly>')
                     .append(self.reportData.text_message);
                 var reportHTML = $.jqElem('div').append($report_iframe).html();
-
+console.log("RH ", reportHTML);
                 var someDiv = div({dataElement : 'report-section'});
                 if (reportHTML) {
                   self.$mainPanel.append(someDiv);
@@ -365,6 +366,7 @@ define(
                 );
 
                 var sumDiv = div({dataElement : 'summary-section'});
+
                 if (self.reportData.text_message) {
                   self.$mainPanel.append(sumDiv);
                 }
@@ -384,6 +386,10 @@ define(
                         body: $.jqElem('div').append($report_window).html()
                     })
                 );
+
+                if (! self.reportData.text_message && ! reportHTML) {
+                  self.$mainPanel.append("<i>No report summary available</i>");
+                }
             }
 
             if (self.options.showHTML) {
@@ -398,7 +404,7 @@ define(
                 self.$mainPanel.append(someDiv);
 
                 var body = 'No links to follow';
-
+console.log("HT L", self.reportData.html_links, self.reportData.html_links.length);
                 if (self.reportData.html_links && self.reportData.html_links.length) {
                   var $ul = $.jqElem('ul');
                   $.each(
@@ -435,17 +441,18 @@ define(
                   );
 
                   body = $.jqElem('div').append($ul).html();
+
+                  ui.setContent('downloadable-html',
+                      ui.buildCollapsiblePanel({
+                          title: 'Links',
+                          name: 'downloadable-html-toggle',
+                          hidden: false,
+                          type: 'default',
+                          classes: ['kb-panel-container'],
+                          body: body
+                      })
+                  );
                 }
-                ui.setContent('downloadable-html',
-                    ui.buildCollapsiblePanel({
-                        title: 'Links',
-                        name: 'downloadable-html-toggle',
-                        hidden: false,
-                        type: 'default',
-                        classes: ['kb-panel-container'],
-                        body: body
-                    })
-                );
 
               });
 
@@ -494,18 +501,19 @@ define(
                   .css('display', 'none');
 
                 body = $.jqElem('div').append($ul).append($iframe).html();
-              }
 
-              ui.setContent('downloadable-files',
-                  ui.buildCollapsiblePanel({
-                      title: 'Files',
-                      name: 'downloadable-files-toggle',
-                      hidden: false,
-                      type: 'default',
-                      classes: ['kb-panel-container'],
-                      body: body
-                  })
-              );
+
+                ui.setContent('downloadable-files',
+                    ui.buildCollapsiblePanel({
+                        title: 'Files',
+                        name: 'downloadable-files-toggle',
+                        hidden: false,
+                        type: 'default',
+                        classes: ['kb-panel-container'],
+                        body: body
+                    })
+                );
+              }
 
             }
 

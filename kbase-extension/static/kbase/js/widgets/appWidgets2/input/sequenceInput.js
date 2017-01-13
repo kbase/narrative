@@ -261,7 +261,10 @@ define([
             return {
                 type: 'click',
                 handler: function() {
-                    addNewControl();
+                    addNewControl()
+                    .then(function() {
+                        autoValidate();
+                    });
                 }
             };
         }
@@ -357,7 +360,10 @@ define([
                 }
                 return Promise.all(initialValue.map(function(value) {
                     return addNewControl(value);
-                }));
+                }))
+                .then(function () {
+                    autoValidate();
+                });
             });
         }
 
@@ -377,6 +383,7 @@ define([
         function autoValidate() {
             return validate(exportModel())
                 .then(function(result) {
+                    console.log('validation result?', result);
                     channel.emit('validation', result);
                 });
         }

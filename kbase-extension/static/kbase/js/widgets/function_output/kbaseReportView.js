@@ -327,7 +327,7 @@ define(
                     self.options.report_window_line_height + '" readonly>')
                     .append(self.reportData.text_message);
                 var reportHTML = $.jqElem('div').append($report_iframe).html();
-console.log("RH ", reportHTML);
+
                 var someDiv = div({dataElement : 'report-section'});
                 if (reportHTML) {
                   self.$mainPanel.append(someDiv);
@@ -404,7 +404,7 @@ console.log("RH ", reportHTML);
                 self.$mainPanel.append(someDiv);
 
                 var body = 'No links to follow';
-console.log("HT L", self.reportData.html_links, self.reportData.html_links.length);
+
                 if (self.reportData.html_links && self.reportData.html_links.length) {
                   var $ul = $.jqElem('ul');
                   $.each(

@@ -136,6 +136,11 @@ define (
         /**
          * Higher-level interface to relevant workspace functions for 
          * a given single object.
+         *
+         * @param wsclient Workspace client
+         * @param obj_spec Mapping with two keys:
+         *     - objid: numeric object ID
+         *     - wsid: numeric workspace ID
          */
         WorkspaceObject: function(wsclient, obj_spec) {
             var ws = wsclient, spec = obj_spec, self = this, i=0;
@@ -175,6 +180,11 @@ define (
                 
                 /**
                  * References from/to the object.
+                 *
+                 * @return Mapping with two keys:
+                 *   to: list of (ref, object_info) pairs
+                 *   from: list of (ref, object_info) 
+                  *  In both cases, object_info is the standard WS tuple.
                  */
                 references: function(ver) {
                     var result = {from: [], to: []};
@@ -184,7 +194,20 @@ define (
                                            included: ['/refs'], 'ver': ver};
                         return ws.get_object_subset([subset_spec]).then(function(objects) {
                             console.debug('@@ references-to, got objects:', objects);
-                            result.to = objects[0].refs;
+                            var refs = objects[0].refs;
+                            if (refs.length === 0) {
+                                result.to = [];
+                            }
+                            else {
+                                result.to = _.map(refs, function(r) {
+                                    console.debug('@@ object ref', r);
+                                    return ['1/2/3', []]; // XXX
+                                    //var objspec = {objid: o.info[0], wsid: o.info[6]};
+                                    //ws.get_object_info_new([{'objects': [objspec], 'includeMetadata': 0}])
+                                    //.then(function(obj_info_result) {
+                                    //    return obj_info_result[0];
+                                });
+                            }
                             return result;
                         });
                     },
@@ -193,7 +216,7 @@ define (
                         return ws.list_referencing_objects([spec]).then(function(rfrom) {
                             console.debug('@@ references-from, got data:', rfrom);
                             result.from = _.map(_.flatten(rfrom, true), function(obj) {
-                                return obj[6] + '/' + obj[0] + '/' + obj[4];
+                                return [obj[6] + '/' + obj[0] + '/' + obj[4], obj];
                             });
                             return result;
                         });
@@ -321,17 +344,29 @@ define (
                 // Graph subpanel
                 // - - - - - - - -
                 var $graph = $elem.find('.kb-data-obj-panel-graph');
-                var $g_rfrom = $("<div class='kb-data-obj-graph-ref-from'>")
-                    .append('<table><thead><tr><th>Referencing Objects</th></tr></thead><tbody>');
-                var $g_rto = $("<div class='kb-data-obj-graph-ref-to'>")
-                    .append('<table><thead><tr><th>Objects Referenced</th></tr></thead><tbody>');
-                // fetch refs
+                // fetch refs 
                 this.wsobj.references().then(function(refs) { 
+                    var no_from = (refs.from.length == 0) ? 'No ' : ''; // modify header if no values
+                    var no_to = (refs.to.length == 0) ? 'No ' : '';     // modify header if no values
+                    var $g_rfrom = $("<div class='kb-data-obj-graph-ref-from'>")
+                        .append('<table><thead><tr><th colspan=2>' + no_from + 'Referencing Objects</th></tr></thead><tbody>');
+                    var $g_rto = $("<div class='kb-data-obj-graph-ref-to'>")
+                    .append('<table><thead><tr><th colspan=2>' + no_to + 'Objects Referenced</th></tr></thead><tbody>');
                     _.each(refs.from, function(r) {
-                        $g_rfrom.find('tbody').append($('<tr>').append($('<td>').text(r)));
+                        console.debug('@@ from-row:', r);
+                        var name = r[1][1];
+                        $g_rfrom.find('tbody').append($('<tr>')
+                            .append($('<td>').text(r[0]))
+                            .append($('<td>').text(name))
+                        );
                     });
                     _.each(refs.to, function(r) {
-                        $g_rto.find('tbody').append($('<tr>').append($('<td>').text(r)));
+                        console.debug('@@ to-row:', r);
+                        var name = r[1][1];
+                        $g_rto.find('tbody').append($('<tr>')
+                            .append($('<td>').text(r[0]))
+                            .append($('<td>').text(name))
+                        );
                     });
                     $g_rfrom.append('</tbody></table>');
                     $g_rto.append('</tbody></table>');

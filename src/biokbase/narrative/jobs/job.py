@@ -94,10 +94,21 @@ class Job(object):
         return self.state().get('job_state', 'unknown')
 
     def parameters(self):
-        try:
-            return self._njs.get_job_params(self.job_id)
-        except Exception as e:
-            raise Exception("Unable to fetch parameters for job {} - {}".format(self.job_id, e))
+        """
+        Returns the parameters used to start the job. Job tries to use its inputs field, but
+        if that's None, then it makes a call to njs.
+
+        If no exception is raised, this only returns the list of parameters, NOT the whole
+        object fetched from NJS.get_job_params
+        """
+        if self.inputs is not None:
+            return self.inputs
+        else:
+            try:
+                self.inputs = self._njs.get_job_params(self.job_id)[0]['params']
+                return self.inputs
+            except Exception as e:
+                raise Exception("Unable to fetch parameters for job {} - {}".format(self.job_id, e))
 
     def state(self):
         """
@@ -146,7 +157,7 @@ class Job(object):
 
     def _get_output_info(self, state):
         spec = self.app_spec()
-        return map_outputs_from_state(state, map_inputs_from_job(self.parameters()[0]['params'], spec), spec)
+        return map_outputs_from_state(state, map_inputs_from_job(self.parameters(), spec), spec)
 
     def log(self, first_line=0, num_lines=None):
         """

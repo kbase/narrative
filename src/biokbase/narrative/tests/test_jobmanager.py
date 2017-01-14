@@ -58,11 +58,18 @@ class MockAllClients(object):
 
     def check_jobs(self, params):
         states = dict()
+        job_params = dict()
         for job_id in params['job_ids']:
             states[job_id] = job_info.get('job_status_info', {}).get(job_id, {})
-        return {
+        if params.get('with_job_params', 0) == 1:
+            for job_id in params['job_ids']:
+                job_params[job_id] = job_info.get('job_param_info', {}).get(job_id, None)
+        ret = {
             'job_states': states
         }
+        if len(job_params) > 0:
+            ret['job_params'] = job_params
+        return ret
 
     def list_methods_spec(self, params):
         return read_json_file(config.get('specs', 'app_specs_file'))

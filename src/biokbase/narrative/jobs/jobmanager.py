@@ -56,7 +56,7 @@ class JobManager(object):
         So it does the following steps.
         1. app_util.system_variable('workspace_id')
         2. get list of jobs with that ws id from UJS (also gets tag, cell_id, run_id)
-        3. initialize the Job objects by running NJS.get_job_params on each of those (also gets app_id)
+        3. initialize the Job objects by running NJS.get_job_params (also gets app_id)
         4. start the status lookup loop.
         """
 
@@ -80,12 +80,17 @@ class JobManager(object):
             self._send_comm_message('job_init_err', error)
             raise new_e
 
+        job_ids = [j[0] for j in nar_jobs]
+        job_param_info = clients.get('job_service').check_jobs({
+            'job_ids': job_ids, 'with_job_params': 1
+        })
+        job_param_info = job_param_info['job_params']
         for info in nar_jobs:
             job_id = info[0]
             user_info = info[1]
             job_meta = info[10]
             try:
-                job_info = clients.get('job_service').get_job_params(job_id)[0]
+                job_info = job_param_info[job_id]
 
                 self._running_jobs[job_id] = {
                     'refresh': True,
@@ -131,8 +136,7 @@ class JobManager(object):
             for job_id in self._running_jobs:
                 job = self._running_jobs[job_id]['job']
                 job_state = self._get_job_state(job_id)
-                job_params = job.parameters()
-                job_state['app_id'] = job_params[0].get('app_id', 'Unknown App')
+                job_state['app_id'] = job.app_id
                 job_state['owner'] = job.owner
                 status_set.append(job_state)
             if not len(status_set):
@@ -565,8 +569,6 @@ class JobManager(object):
             self._running_jobs[job_id]['refresh'] = is_refreshing
             del self._running_jobs[job_id]['canceling']
 
-        #
-        # self._send_comm_message('job_canceled', {'job_id': job_id})
         # Rather than a separate message, how about triggering a job-status message:
         self._lookup_job_status(job_id)
 

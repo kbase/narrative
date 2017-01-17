@@ -71,7 +71,7 @@ define (
             this.ip_cell = options.cell;
 
             this.metadataInit();
-            
+
             this.render(options.info);
 
             return this;
@@ -99,14 +99,14 @@ define (
             var type_spec = this.options.type_spec;
             var app_spec = this.options.app_spec;
             var output = this.options.output;
-            
+
             var onViewerCreated = function (widget) {
                 widgetTitleElem.empty()
                 .append(widget.title)
                 .append('&nbsp;<a href="' + self.shortMarkdownDesc(self.obj_info,
                     self.options.lp_url) + '" target="_blank">' + self.obj_info.name + '</a>');
 
-                self.metadataRender(self.$elem);
+                // self.metadataRender(self.$elem);
                 self.$elem.append(widget.widget);
                 self.$elem.closest('.cell').trigger('set-title', [self.obj_info.name]);
             };
@@ -134,14 +134,14 @@ define (
 //-------------------------------------------------------------------------------------
 
         /**
-         * Higher-level interface to relevant workspace functions for 
+         * Higher-level interface to relevant workspace functions for
          * a given single object.
          */
         WorkspaceObject: function(wsclient, obj_spec) {
             var ws = wsclient, spec = obj_spec, self = this, i=0;
             // Get info for every version of this object
             ws.list_objects({ids: [spec.wsid], minObjectID: spec.objid,
-                                    maxObjectID: spec.objid, showAllVersions: 1})                    
+                                    maxObjectID: spec.objid, showAllVersions: 1})
                 .then(function(objlist) {
                     var info = {};
                     for (i=0; i < objlist.length; i++) {
@@ -149,7 +149,7 @@ define (
                         info[o[4]] = {objid: o[0], name: o[1], type: o[2],
                             save_date: o[3], version: o[4], saved_by: o[5],
                             wsid: o[6], workspace: o[7], chsum: o[8],
-                            size: o[9], meta: o[10], 
+                            size: o[9], meta: o[10],
                             id: o[0], ws_id: o[6] /* aliases */ };
                     }
                     return info;
@@ -165,20 +165,20 @@ define (
                 object_versions: function() {
                     return _.keys(self.metadata_info);
                 },
-                
+
                 /**
                  * The 'object_info' thing for a single object.
                  */
                 info_for_version: function(ver) {
                     return self.metadata_info[ver];
                 },
-                
+
                 /**
                  * References from/to the object.
                  */
                 references: function(ver) {
                     var result = {from: [], to: []};
-                    
+
                     var references_to = function(result) {
                         var subset_spec = {objid: spec.objid, wsid: spec.wsid,
                                            included: ['/refs'], 'ver': ver};
@@ -188,7 +188,7 @@ define (
                             return result;
                         });
                     },
-                        
+
                     references_from = function(result) {
                         return ws.list_referencing_objects([spec]).then(function(rfrom) {
                             console.debug('@@ references-from, got data:', rfrom);
@@ -198,13 +198,13 @@ define (
                             return result;
                         });
                     };
-                    
+
                     // chain the promises
                     return references_to(result).then(references_from);
                 }
             }
         },
-        
+
         /**
          * Initialize instance vars for metadata display.
          */
@@ -221,8 +221,8 @@ define (
             this.node_class = 'kb-data-obj-panel-gnode';
             return this;
         },
-        
-        
+
+
         /**
          * Panel to show object metadata and versions.
          *
@@ -231,7 +231,7 @@ define (
          */
         metadataRender: function ($elem) {
             var self = this, fade_ms = 400;
-        
+
             console.info('@@ create metadata panel - start');
             try {
                 var $meta_button = $('<button>')
@@ -247,7 +247,7 @@ define (
                     .click(function(event) {
                         $(this).parent().fadeOut(fade_ms);
                         $meta_button.show();
-                    });                     
+                    });
                 var $meta_panel = $('<div>')
                         .addClass('row kb-data-obj-panel')
                         .append(
@@ -276,7 +276,7 @@ define (
             console.info('@@ create metadata panel - end:', $meta_panel);
             return this;
         },
-        
+
         showMetadata: function($elem) {
             var success = true;
             var self = this;
@@ -290,9 +290,9 @@ define (
                 $info.html("<dl>" +
                            "<dt>Version</dt><dd>" +
                               "<span class='" + this.verlist_class + "'></span></dd>" +
-                           "<dt>Name</dt><dd>" + this.obj_info.name + "</dd>" + 
+                           "<dt>Name</dt><dd>" + this.obj_info.name + "</dd>" +
                            "<dt>ID</dt><dd>" + objref + "</dd>" +
-                           "<dt>Type</dt><dd>" + this.obj_info.type + "</dd>" + 
+                           "<dt>Type</dt><dd>" + this.obj_info.type + "</dd>" +
                            "<dt>Saved</dt><dd>" + this.obj_info.save_date + "</dd>" +
                            "<dt>Saved by</dt><dd>" + this.obj_info.saved_by + "</dd>" +
                            "<dt>Size</dt><dd>" + this.humanSize(this.obj_info.size, false) + "</dd>" +
@@ -302,7 +302,7 @@ define (
                 var $version_list = $info.find('.' + this.verlist_class);
                 // Generate version list
                 var version_list = this.wsobj.object_versions();
-                self.obj_maxver = _.max(version_list); 
+                self.obj_maxver = _.max(version_list);
                 for(var i=1; i <= self.obj_maxver; i++) {
                     var $ver_span = $('<span>');
                     $ver_span.text(i);
@@ -312,7 +312,7 @@ define (
                         var v = self.metadata_ver_cur = 1 * $(event.target).text();
                         self.obj_info = self.metadata_info[v];
                         // Re-display
-                        self.showMetadata($elem);                      
+                        self.showMetadata($elem);
                     });
                 }
                 // Select currently viewed version in the list
@@ -326,7 +326,7 @@ define (
                 var $g_rto = $("<div class='kb-data-obj-graph-ref-to'>")
                     .append('<table><thead><tr><th>Objects Referenced</th></tr></thead><tbody>');
                 // fetch refs
-                this.wsobj.references().then(function(refs) { 
+                this.wsobj.references().then(function(refs) {
                     _.each(refs.from, function(r) {
                         $g_rfrom.find('tbody').append($('<tr>').append($('<td>').text(r)));
                     });
@@ -342,14 +342,14 @@ define (
             catch (ex) {
                 console.error('Failed to populate metadata:', ex);
                 success = false;
-            }            
+            }
             return success;
         },
 
         selectCurrentVersion: function($elem) {
             var ver_selector = '.' + this.verlist_class + ' :nth-child(' +
                 this.metadata_ver_cur + ')';
-            $elem.find('.' + this.verlist_class).removeClass('selected'); 
+            $elem.find('.' + this.verlist_class).removeClass('selected');
             $elem.find(ver_selector).addClass('selected');
             this.metadata_ver_shown = self.metadata_ver_cur;
         },
@@ -377,13 +377,13 @@ define (
             } while(bytes >= thresh && u < units.length - 1);
             return bytes.toFixed(1)+' '+units[u];
         },
-        
+
         createInfoObject: function (info) {
             return _.object(['id', 'name', 'type', 'save_date', 'version',
                 'saved_by', 'ws_id', 'ws_name', 'chsum', 'size',
                 'meta'], info);
         },
-        
+
         createViewer: function(error_message, type_spec, app_spec, output_params) {
             var o = this.obj_info;
             if (error_message) {
@@ -397,10 +397,10 @@ define (
                         mdDesc += '\n' + p[0] + ': ' + p[1];
                     });
                 }
-                return {widget: $('<div>').append($('<pre>').append(mdDesc)), 
+                return {widget: $('<div>').append($('<pre>').append(mdDesc)),
                     title: 'Unknown Data Type'};
             }
-            
+
             var output = $.extend({}, output_params);
             output._obj_info = o;
             output.widgetTitle = type_spec.name || 'Unknown Data Type';
@@ -430,6 +430,6 @@ define (
                 title: output.widgetTitle
             };
         }
-     
+
     });
 });

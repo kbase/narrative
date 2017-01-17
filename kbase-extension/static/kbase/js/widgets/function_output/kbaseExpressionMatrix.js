@@ -225,7 +225,7 @@ define (
                         { sTitle: "Function", mData: "function"},
                         { sTitle: "Min", mData:"min" },
                         { sTitle: "Max", mData:"max" },
-                        { sTitle: "Avgerage", mData:"avg" },
+                        { sTitle: "Average", mData:"avg" },
                         { sTitle: "Std. Dev.", mData:"std"},
                         { sTitle: "Missing Values?", mData:"missing_values" }
                     ]

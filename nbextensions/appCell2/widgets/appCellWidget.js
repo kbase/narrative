@@ -1005,7 +1005,11 @@ define([
         }
 
         function buildRunControlPanelRunButtons(events) {
-            return div({ class: 'btn-group' },
+            var style = {};
+            if (Jupyter.narrative.readonly) {
+                style.display = 'none';
+            }
+            var buttonDiv = div({ class: 'btn-group', style: style},
                 Object.keys(actionButtons.availableButtons).map(function(key) {
                     var button = actionButtons.availableButtons[key],
                         classes = ['kb-flat-btn', 'kb-btn-action'].concat(button.classes);
@@ -1029,6 +1033,7 @@ define([
                     });
                 })
             );
+            return buttonDiv;
         }
 
         function buildRunControlPanelDisplayButtons(events) {
@@ -1108,7 +1113,7 @@ define([
                                 right: '100px',
                                 top: '0',
                                 height: '100px',
-                                borderRight: '1px silver solid'
+                                borderRight: Jupyter.narrative.readonly ? 'none' : '1px silver solid'
                             }
                         }, [
                             div({

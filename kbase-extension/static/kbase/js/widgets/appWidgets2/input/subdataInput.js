@@ -393,7 +393,7 @@ define([
                         {
                             type: 'blur',
                             handler: function() {
-                                console.log('SingleSubData Search BLUR');
+                                // console.log('SingleSubData Search BLUR');
                                 // Jupyter.narrative.enableKeyboardManager();
                             }
                         },
@@ -676,7 +676,7 @@ define([
 
         function resetModelValue() {
             model.reset();
-            model.setItem('value', spec.defaultValue);
+            model.setItem('value', spec.data.defaultValue);
         }
 
         function validate() {
@@ -721,7 +721,7 @@ define([
                     // We use the raw default values here since we are not really using
                     // it as the default value, but as a set of additional items
                     // to select.
-                    var defaultValues = spec.defaultValue;
+                    var defaultValues = spec.data.defaultValue;
                     if (defaultValues && (defaultValues instanceof Array) && (defaultValues.length > 0)) {
                         defaultValues.forEach(function(itemId) {
                             if (itemId && itemId.trim().length > 0) {

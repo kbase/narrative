@@ -40,7 +40,7 @@ define([
 
     function factory(config) {
         var runtime = Runtime.make(),
-            parentBus = config.bus,
+            paramsBus = config.bus,
             workspaceInfo = config.workspaceInfo,
             initialParams = config.initialParams,
             container,
@@ -104,19 +104,31 @@ define([
                         appSpec: appSpec,
                         parameterSpec: parameterSpec,
                         workspaceId: workspaceInfo.id,
-                        referenceType: 'name'
+                        referenceType: 'name',
+                        paramsChannelName: paramsBus.channelName
                     });
 
                     // Forward all changed parameters to the controller. That is our main job!
                     fieldWidget.bus.on('changed', function(message) {
-                        parentBus.emit('parameter-changed', {
+                        paramsBus.send({
                             parameter: parameterSpec.id,
                             newValue: message.newValue
+                        },
+                        {
+                            key: {
+                                type: 'parameter-changed',
+                                parameter: parameterSpec.id
+                            }                            
+                        });
+
+                        paramsBus.emit('parameter-changed', {
+                             parameter: parameterSpec.id,
+                             newValue: message.newValue
                         });
                     });
 
                     fieldWidget.bus.on('touched', function() {
-                        parentBus.emit('parameter-touched', {
+                        paramsBus.emit('parameter-touched', {
                             parameter: parameterSpec.id
                         });
                     });
@@ -124,20 +136,20 @@ define([
 
                     // An input widget may ask for the current model value at any time.
                     fieldWidget.bus.on('sync', function() {
-                        parentBus.emit('parameter-sync', {
+                        paramsBus.emit('parameter-sync', {
                             parameter: parameterSpec.id
                         });
                     });
 
                     fieldWidget.bus.on('sync-params', function(message) {
-                        parentBus.emit('sync-params', {
+                        paramsBus.emit('sync-params', {
                             parameters: message.parameters,
                             replyToChannel: fieldWidget.bus.channelName
                         });
                     });
 
                     fieldWidget.bus.on('set-param-state', function(message) {
-                        parentBus.emit('set-param-state', {
+                        paramsBus.emit('set-param-state', {
                             id: parameterSpec.id,
                             state: message.state
                         });
@@ -148,8 +160,7 @@ define([
                             type: 'get-param-state'
                         },
                         handle: function(message) {
-                            console.log('getting param state');
-                            return parentBus.request({ id: parameterSpec.id }, {
+                            return paramsBus.request({ id: parameterSpec.id }, {
                                 key: {
                                     type: 'get-param-state'
                                 }
@@ -162,7 +173,7 @@ define([
                      * Or in fact any parameter value at any time...
                      */
                     fieldWidget.bus.on('get-parameter-value', function(message) {
-                        parentBus.request({
+                        paramsBus.request({
                                 parameter: message.parameter
                             }, {
                                 key: 'get-parameter-value'
@@ -180,7 +191,7 @@ define([
                         },
                         handle: function(message) {
                             if (message.parameterName) {
-                                return parentBus.request(message, {
+                                return paramsBus.request(message, {
                                     key: {
                                         type: 'get-parameter'
                                     }
@@ -192,7 +203,7 @@ define([
                     });
 
                     // Just pass the update along to the input widget.
-                    parentBus.listen({
+                    paramsBus.listen({
                         key: {
                             type: 'update',
                             parameter: parameterSpec.id
@@ -379,41 +390,6 @@ define([
             });
         }
 
-        // Maybe
-        function validateParameterSpec(spec) {
-            var errorMessages = [];
-
-            console.log('VALIDATING', spec);
-
-            // loop through spec parameters
-
-            // if sequence, validate sequence, then each item
-
-            // if struct, validate each struct item.
-
-            // otherwise, validate each item.
-            // spec.parameters.forEach(function (parameter) {
-
-            // });
-
-
-            // ensure that inputs are consistent with inputs
-
-            // and outputs with output
-
-            // and params with param
-
-            // validate type
-
-            return spec;
-        }
-
-        //function validateParameterSpecs(params) {
-        //    return params.map(function(spec) {
-        //        return validateParameterSpec(spec);
-        //    });
-        // }
-
         function makeParamsLayout(params) {
             var view = {};
             var paramMap = {};
@@ -589,10 +565,10 @@ define([
         function start() {
             return Promise.try(function() {
                 // send parent the ready message
-                parentBus.emit('ready');
+                paramsBus.emit('ready');
 
                 // parent will send us our initial parameters
-                parentBus.on('run', function(message) {
+                paramsBus.on('run', function(message) {
                     doAttach(message.node);
 
                     model.setItem('appSpec', message.appSpec);
@@ -611,7 +587,7 @@ define([
                         });
                 });
 
-                parentBus.on('parameter-changed', function(message) {
+                paramsBus.on('parameter-changed', function(message) {
                     // Also, tell each of our inputs that a param has changed.
                     // TODO: use the new key address and subscription
                     // mechanism to make this more efficient.

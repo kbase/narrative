@@ -12,7 +12,7 @@ define([
 
     'bootstrap',
     'css!font-awesome'
-], function(
+], function (
     Promise,
     html,
     Validation,
@@ -59,22 +59,22 @@ define([
         }
 
         function setModelValue(value) {
-            return Promise.try(function() {
+            return Promise.try(function () {
                     viewModel.data = value;
                 })
-                .then(function() {
+                .then(function () {
                     // render();
                 })
-                .catch(function(err) {
+                .catch(function (err) {
                     console.error('Error setting model value', err);
                 });
         }
 
         function unsetModelValue() {
-            return Promise.try(function() {
+            return Promise.try(function () {
                     viewModel.data = {};
                 })
-                .then(function(changed) {
+                .then(function (changed) {
                     // render();
                 });
         }
@@ -112,14 +112,14 @@ define([
 
         function copyProps(from, props) {
             var newObj = {};
-            props.forEach(function(prop) {
+            props.forEach(function (prop) {
                 newObj[prop] = from[prop];
             });
             return newObj;
         }
 
         function validate(rawValue) {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 // var validationOptions = {
                 //     required: spec.data.constraints.required
                 // };
@@ -186,7 +186,7 @@ define([
                 input({
                     id: events.addEvent({
                         type: 'click',
-                        handler: function(e) {
+                        handler: function (e) {
                             doToggleEnableControl(e);
                         }
                     }),
@@ -203,7 +203,7 @@ define([
         }
 
         function makeInputControl(events, bus) {
-            var promiseOfFields = fieldLayout.map(function(fieldName) {
+            var promiseOfFields = fieldLayout.map(function (fieldName) {
                 var fieldSpec = struct.specs[fieldName];
                 var fieldValue = viewModel.data[fieldName];
 
@@ -215,10 +215,10 @@ define([
 
 
             return Promise.all(promiseOfFields)
-                .then(function(fields) {
+                .then(function (fields) {
                     var layout = div({
                         class: 'row'
-                    }, fields.map(function(field) {
+                    }, fields.map(function (field) {
                         return div({ id: field.id, style: { border: '0px orange dashed', padding: '0px' } });
                     }).join('\n'));
                     return {
@@ -241,7 +241,7 @@ define([
             // (at present) to have yet another one...
 
             validate(viewModel.data)
-                .then(function(result) {
+                .then(function (result) {
                     bus.emit('validation', result);
                 });
         }
@@ -252,7 +252,7 @@ define([
          */
         function makeSingleInputControl(value, fieldSpec, events) {
             return resolver.loadInputControl(fieldSpec)
-                .then(function(widgetFactory) {
+                .then(function (widgetFactory) {
                     var id = html.genId(),
                         fieldWidget = FieldWidget.make({
                             inputControlFactory: widgetFactory,
@@ -262,11 +262,12 @@ define([
                             // appSpec: appSpec,
                             parameterSpec: fieldSpec,
                             // workspaceId: workspaceInfo.id,
-                            referenceType: 'ref'
+                            referenceType: 'ref',
+                            paramsChannelName: config.paramsChannelName
                         });
 
                     // set up listeners for the input
-                    fieldWidget.bus.on('sync', function() {
+                    fieldWidget.bus.on('sync', function () {
                         var value = viewModel.data[fieldSpec.id];
                         if (value) {
                             fieldWidget.bus.emit('update', {
@@ -274,18 +275,18 @@ define([
                             });
                         }
                     });
-                    fieldWidget.bus.on('validation', function(message) {
+                    fieldWidget.bus.on('validation', function (message) {
                         if (message.diagnosis === 'optional-empty') {
                             bus.emit('changed', {
                                 newValue: lang.copy(viewModel.data)
                             });
                         }
                     });
-                    fieldWidget.bus.on('changed', function(message) {
+                    fieldWidget.bus.on('changed', function (message) {
                         doChanged(fieldSpec.id, message.newValue);
                     });
 
-                    fieldWidget.bus.on('touched', function() {
+                    fieldWidget.bus.on('touched', function () {
                         bus.emit('touched', {
                             parameter: fieldSpec.id
                         });
@@ -309,17 +310,17 @@ define([
                     node: container
                 });
                 return makeInputControl(events)
-                    .then(function(result) {
+                    .then(function (result) {
                         ui.setContent('input-container.subcontrols', result.content);
                         events.attachEvents();
                         structFields = {};
-                        result.fields.forEach(function(field) {
+                        result.fields.forEach(function (field) {
                             structFields[field.fieldName] = field;
                         });
                         // Start up all the widgets
 
                         return Promise.all(
-                            result.fields.map(function(field) {
+                            result.fields.map(function (field) {
                                 return field.instance.start({
                                     node: document.getElementById(field.id)
                                 });
@@ -327,10 +328,10 @@ define([
                     });
             } else {
                 return Promise.all(
-                        Object.keys(structFields).map(function(fieldName) {
+                        Object.keys(structFields).map(function (fieldName) {
                             return structFields[fieldName].instance.stop();
                         }))
-                    .then(function() {
+                    .then(function () {
                         ui.setContent('input-container.subcontrols', '');
                         structFields = {};
                     });
@@ -403,7 +404,7 @@ define([
 
         function start(arg) {
             var events;
-            return Promise.try(function() {
+            return Promise.try(function () {
                     parent = arg.node;
                     container = parent.appendChild(document.createElement('div'));
                     ui = UI.make({ node: container });
@@ -415,20 +416,20 @@ define([
                     //     key: 'get-param-state'
                     // });
                 })
-                .then(function() {
+                .then(function () {
                     return render(events);
                 })
-                .then(function() {
+                .then(function () {
                     return renderSubcontrols();
                 })
-                .then(function() {
+                .then(function () {
                     events.attachEvents(container);
 
-                    bus.on('reset-to-defaults', function() {
+                    bus.on('reset-to-defaults', function () {
                         resetModelValue();
                     });
 
-                    bus.on('update', function(message) {
+                    bus.on('update', function (message) {
                         // Update the model, and since we have sub widgets,
                         // we should send the individual data to them.
                         // setModelValue(message.value);
@@ -436,7 +437,7 @@ define([
                         // FORNOW: just ignore
                         if (viewModel.state.enabled) {
                             viewModel.data = lang.copy(message.value);
-                            Object.keys(message.value).forEach(function(id) {
+                            Object.keys(message.value).forEach(function (id) {
                                 structFields[id].instance.bus.emit('update', {
                                     value: message.value[id]
                                 });
@@ -446,7 +447,7 @@ define([
                     });
 
                     // A fake submit.
-                    bus.on('submit', function() {
+                    bus.on('submit', function () {
                         bus.emit('submitted', {
                             value: lang.copy(viewModel.data)
                         });
@@ -457,21 +458,21 @@ define([
                     // know...
                     // bus.emit('sync');
                 })
-                .catch(function(err) {
+                .catch(function (err) {
                     console.error('ERROR', err);
                     container.innerHTML = err.message;
                 });
         }
 
         function stop() {
-            return Promise.try(function() {
+            return Promise.try(function () {
                     if (structFields) {
-                        return Promise.all(Object.keys(structFields).map(function(id) {
+                        return Promise.all(Object.keys(structFields).map(function (id) {
                             return structFields[id].instance.stop();
                         }));
                     }
                 })
-                .then(function() {
+                .then(function () {
                     if (parent && container) {
                         parent.removeChild(container);
                     }
@@ -485,7 +486,7 @@ define([
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
         }
     };

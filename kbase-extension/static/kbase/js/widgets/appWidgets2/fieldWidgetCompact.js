@@ -64,9 +64,9 @@ define([
             enabled;
 
         try {
-            // console.log('field widget config', config);
             inputControl = inputControlFactory.make({
                 bus: bus,
+                paramsChannelName: config.paramsChannelName,
                 channelName: bus.channelName,
                 initialValue: config.initialValue,
                 appSpec: config.appSpec,

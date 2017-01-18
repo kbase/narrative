@@ -3,6 +3,11 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v4.2.1 (more notes will follow).
 
+### Version 3.1.3
+__Changes__
+- Fixed bug where read-only Narratives were still interactive (apps had run and reset buttons)
+- Fixed bug where copying a read-only Narrative created a bad forwarding URL.
+
 ### Version 3.1.2
 __Changes__
 - Do an autosave after starting an import job.

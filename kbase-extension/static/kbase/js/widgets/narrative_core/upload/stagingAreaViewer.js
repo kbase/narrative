@@ -42,6 +42,7 @@ define([
             this.ftpUrl = Config.url('ftp_api_url');
             this.updatePathFn = options.updatePathFn || this.setPath;
             this.path = options.path;
+            this.uploaders = Config.get('uploaders');
 
             return this;
         },
@@ -128,7 +129,7 @@ define([
         },
 
         renderFiles: function(files) {
-            var $fileTable = $(this.ftpFileTableTmpl({files: files}));
+            var $fileTable = $(this.ftpFileTableTmpl({files: files, uploaders: this.uploaders.dropdown_order}));
             this.$elem.append($fileTable)
             this.$elem.find('table').dataTable({
                 dom: '<"file-path pull-left">frtip',

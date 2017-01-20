@@ -34,9 +34,14 @@ define([
             if (this.options.cellId) {
                 this.cell = Jupyter.narrative.getCellByKbaseId(this.options.cellId);
                 if (!this.cell) {
-                    this.cell = $('#' + this.options.cellId).parents('.cell').data().cell;
+                    var cellElem = $('#' + this.options.cellId).parents('.cell').data();
+                    if (cellElem) {
+                        this.cell = cellElem.cell;
+                    }
                 }
-                this.cell.element.trigger('hideCodeArea.cell');
+                if (this.cell) {
+                    this.cell.element.trigger('hideCodeArea.cell');
+                }
             }
             if (this.options.widget.toLowerCase() === "null") {
                 this.options.widget = 'kbaseDefaultNarrativeOutput';

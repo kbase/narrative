@@ -314,6 +314,9 @@ class WidgetManager(object):
         # Let the kwargs override constants
         input_data.update(params)
 
+        if cell_id is not None:
+            cell_id = "\"{}\"".format(cell_id)
+
         input_template = """
         element.html("<div id='{{input_id}}' class='kb-vis-area'></div>");
         require(['kbaseNarrativeOutputCell'], function(KBaseNarrativeOutputCell) {
@@ -321,7 +324,7 @@ class WidgetManager(object):
                 "data": {{input_data}},
                 "type":"{{output_type}}",
                 "widget":"{{widget_name}}",
-                "cellId":"{{cell_id}}",
+                "cellId":{{cell_id}},
                 "title":"{{cell_title}}",
                 "time":{{timestamp}}
             });
@@ -385,6 +388,9 @@ class WidgetManager(object):
             (output_widget, output) = map_outputs_from_state([], input_params, spec)
             input_data['output'] = output
 
+        if cell_id is not None:
+            cell_id = "\"{}\"".format(cell_id)
+
         input_template = """
         element.html("<div id='{{input_id}}' class='kb-vis-area'></div>");
 
@@ -393,7 +399,7 @@ class WidgetManager(object):
                 "data": {{input_data}},
                 "type":"viewer",
                 "widget":"{{widget_name}}",
-                "cellId":"{{cell_id}}",
+                "cellId":{{cell_id}},
                 "title":"{{cell_title}}",
                 "time":{{timestamp}}
             });

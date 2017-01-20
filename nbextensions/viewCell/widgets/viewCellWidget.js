@@ -5,6 +5,7 @@ define([
     'jquery',
     'bluebird',
     'uuid',
+    'base/js/namespace',
     'common/runtime',
     'common/events',
     'common/html',
@@ -25,6 +26,7 @@ define([
     $,
     Promise,
     Uuid,
+    JupyterNamespace,
     Runtime,
     Events,
     html,
@@ -514,6 +516,10 @@ define([
         }
 
         function renderLayout() {
+            var readOnlyStyle = {};
+            if (JupyterNamespace.narrative.readonly) {
+                readOnlyStyle.display = 'none';
+            }
             var events = Events.make(),
                 content = div({ class: 'kbase-extension kb-app-cell', style: { display: 'flex', alignItems: 'stretch' } }, [
                     div({ class: 'prompt', dataElement: 'prompt', style: { display: 'flex', alignItems: 'stretch', flexDirection: 'column' } }, [
@@ -605,7 +611,8 @@ define([
                                     body: div({ dataElement: 'widget' })
                                 }),
                                 div({
-                                    dataElement: 'availableActions'
+                                    dataElement: 'availableActions',
+                                    style: readOnlyStyle,
                                 }, [
                                     div({ class: 'btn-toolbar kb-btn-toolbar-cell-widget' }, [
                                         div({ class: 'btn-group' }, [
@@ -1431,7 +1438,7 @@ define([
         function evaluateAppState() {
             validateModel()
                 .then(function(result) {
-                    // we have a tree of validations, so we need to walk the tree to see if anything 
+                    // we have a tree of validations, so we need to walk the tree to see if anything
                     // does not validate.
                     var messages = gatherValidationMessages(result);
 

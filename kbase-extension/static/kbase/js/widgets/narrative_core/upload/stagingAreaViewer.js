@@ -200,40 +200,26 @@ define([
         },
 
         initImportApp: function(type, file) {
-            //TODO = move this to configuration.
-            var appIds = {
-                'se_reads': 'genome_transform/reads_to_assembly',
-                'pe_reads': 'genome_transform/reads_to_assembly',
-                'sra_reads': 'genome_transform/sra_reads_to_assembly',
-                'genbank_genome': 'genome_transform/narrative_genbank_to_genome'
-            };
-
-            var appId = appIds[type];
-            if (appId) {
+            var appInfo = this.uploaders.app_info[type];
+            if (appInfo) {
+                var tag = 'dev';
+                //TODO = get spec from app panel. or at least tag.
                 var nms = new NarrativeMethodStore(Config.url('narrative_method_store'));
-                Promise.resolve(nms.get_method_spec({tag: 'dev', ids: [appId]}))
+                Promise.resolve(nms.get_method_spec({tag: tag, ids: [appInfo.app_id]}))
                 .then(function(spec) {
                     spec = spec[0];
-                    var newCell = Jupyter.narrative.narrController.buildAppCodeCell(spec, 'dev');
+                    var newCell = Jupyter.narrative.narrController.buildAppCodeCell(spec, tag);
                     var meta = newCell.metadata;
-                    switch(type) {
-                        case 'se_reads':
-                            meta.kbase.appCell.params.file_path_list = ['/data/bulk' + this.path + '/' + file];
-                            meta.kbase.appCell.params.reads_type = 'SingleEndLibrary';
-                            meta.kbase.appCell.params.reads_id = file.replace(/\s/g, '_') + '_reads';
-                            break;
-                        case 'pe_reads':
-                            meta.kbase.appCell.params.file_path_list = ['/data/bulk' + this.path + '/' + file];
-                            meta.kbase.appCell.params.reads_type = 'PairedEndLibrary';
-                            meta.kbase.appCell.params.reads_id = file.replace(/\s/g, '_') + '_reads';
-                            break;
-                        case 'sra_reads':
-                            meta.kbase.appCell.params.file_path_list = ['/data/bulk' + this.path + '/' + file];
-                            meta.kbase.appCell.params.reads_id = file.replace(/\s/g, '_') + '_reads';
-                            break;
-                        case 'genbank_genome':
-                        default:
-                            break;
+                    var fileParam = '/data/bulk' + this.path + '/' + file;
+                    if (appInfo.app_input_param_type === "list") {
+                        fileParam = [fileParam];
+                    }
+                    meta.kbase.appCell.params[appInfo.app_input_param] = fileParam;
+                    meta.kbase.appCell.params[appInfo.app_output_param] = file.replace(/\s/g, '_' + appInfo.app_output_suffix);
+                    for (var p in appInfo.app_static_params) {
+                        if (appInfo.app_static_params.hasOwnProperty(p)) {
+                            meta.kbase.appCell.params[p] = appInfo.app_static_params[p];
+                        }
                     }
                     newCell.metadata = meta;
                     Jupyter.narrative.scrollToCell(newCell);
@@ -243,6 +229,52 @@ define([
                     console.error(err);
                 });
             }
+            //
+            //
+            //
+            // //TODO = move this to configuration.
+            // var appIds = {
+            //     'se_reads': 'genome_transform/reads_to_assembly',
+            //     'pe_reads': 'genome_transform/reads_to_assembly',
+            //     'sra_reads': 'genome_transform/sra_reads_to_assembly',
+            //     'genbank_genome': 'genome_transform/narrative_genbank_to_genome'
+            // };
+            //
+            // var appId = appIds[type];
+            // if (appId) {
+            //     var nms = new NarrativeMethodStore(Config.url('narrative_method_store'));
+            //     Promise.resolve(nms.get_method_spec({tag: 'dev', ids: [appId]}))
+            //     .then(function(spec) {
+            //         spec = spec[0];
+            //         var newCell = Jupyter.narrative.narrController.buildAppCodeCell(spec, 'dev');
+            //         var meta = newCell.metadata;
+            //         switch(type) {
+            //             case 'se_reads':
+            //                 meta.kbase.appCell.params.file_path_list = ['/data/bulk' + this.path + '/' + file];
+            //                 meta.kbase.appCell.params.reads_type = 'SingleEndLibrary';
+            //                 meta.kbase.appCell.params.reads_id = file.replace(/\s/g, '_') + '_reads';
+            //                 break;
+            //             case 'pe_reads':
+            //                 meta.kbase.appCell.params.file_path_list = ['/data/bulk' + this.path + '/' + file];
+            //                 meta.kbase.appCell.params.reads_type = 'PairedEndLibrary';
+            //                 meta.kbase.appCell.params.reads_id = file.replace(/\s/g, '_') + '_reads';
+            //                 break;
+            //             case 'sra_reads':
+            //                 meta.kbase.appCell.params.file_path_list = ['/data/bulk' + this.path + '/' + file];
+            //                 meta.kbase.appCell.params.reads_id = file.replace(/\s/g, '_') + '_reads';
+            //                 break;
+            //             case 'genbank_genome':
+            //             default:
+            //                 break;
+            //         }
+            //         newCell.metadata = meta;
+            //         Jupyter.narrative.scrollToCell(newCell);
+            //         Jupyter.narrative.hideOverlay();
+            //     }.bind(this))
+            //     .catch(function(err) {
+            //         console.error(err);
+            //     });
+            // }
         },
 
         startTour: function() {

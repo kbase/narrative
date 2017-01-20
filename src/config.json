@@ -14,7 +14,8 @@
         "typeahead_search_limit": 50000,
         "initial_sort_limit": 10000,
         "max_name_length": 33,
-        "refresh_interval_ms": 30000
+        "refresh_interval_ms": 30000,
+        "max_single_request": 1000
     },
     "tooltip": {
         "hideDelay": 0,

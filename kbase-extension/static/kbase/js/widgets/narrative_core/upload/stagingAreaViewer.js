@@ -179,56 +179,63 @@ define([
                         }
                     },
                     sType: 'numeric'
-                }
-            ]
+                }],
+                fnRowCallback: function(nRow, aData, iDisplayIndex, iDisplayIndexFull) {
+                    console.log(aData[4]);
+                    $('td:eq(4)', nRow).find('select').select2({
+                        placeholder: 'Select a format'
+                    });
+                    $('td:eq(4)', nRow).find('button[data-import]').on('click', function(e) {
+                        var importType = $(e.currentTarget).prevAll('#import-type').val();
+                        var importFile = $(e.currentTarget).data().import;
+                        this.initImportApp(importType, importFile)
+                        .then(function() {
+                            this.updateView();
+                        }.bind(this));
+                    }.bind(this));
+                    $('td:eq(0)', nRow).find('button[data-name]').on('click', function(e) {
+                        this.updatePathFn(this.path += '/' + $(e.currentTarget).data().name);
+                    }.bind(this));
+                }.bind(this)
             });
-            this.$elem.find('table button[data-name]').on('click', function(e) {
-                this.updatePathFn(this.path += '/' + $(e.currentTarget).data().name);
-            }.bind(this));
-            this.$elem.find('table button[data-report]').on('click', function(e) {
-                alert("Show report for reference '" + $(e.currentTarget).data().report + "'");
-            });
-            this.$elem.find('table select').select2({
-                placeholder: 'Select a format'
-            });
-            this.$elem.find('table button[data-import]').on('click', function(e) {
-                var importType = $(e.currentTarget).prevAll('#import-type').val();
-                var importFile = $(e.currentTarget).data().import;
-                this.initImportApp(importType, importFile);
-            }.bind(this));
+            // this.$elem.find('table button[data-report]').on('click', function(e) {
+            //     alert("Show report for reference '" + $(e.currentTarget).data().report + "'");
+            // });
             this.renderPath();
         },
 
         initImportApp: function(type, file) {
-            var appInfo = this.uploaders.app_info[type];
-            if (appInfo) {
-                var tag = 'dev';
-                //TODO = get spec from app panel. or at least tag.
-                var nms = new NarrativeMethodStore(Config.url('narrative_method_store'));
-                Promise.resolve(nms.get_method_spec({tag: tag, ids: [appInfo.app_id]}))
-                .then(function(spec) {
-                    spec = spec[0];
-                    var newCell = Jupyter.narrative.narrController.buildAppCodeCell(spec, tag);
-                    var meta = newCell.metadata;
-                    var fileParam = '/data/bulk' + this.path + '/' + file;
-                    if (appInfo.app_input_param_type === "list") {
-                        fileParam = [fileParam];
-                    }
-                    meta.kbase.appCell.params[appInfo.app_input_param] = fileParam;
-                    meta.kbase.appCell.params[appInfo.app_output_param] = file.replace(/\s/g, '_' + appInfo.app_output_suffix);
-                    for (var p in appInfo.app_static_params) {
-                        if (appInfo.app_static_params.hasOwnProperty(p)) {
-                            meta.kbase.appCell.params[p] = appInfo.app_static_params[p];
+            return Promise.try(function() {
+                var appInfo = this.uploaders.app_info[type];
+                if (appInfo) {
+                    var tag = 'dev';
+                    //TODO = get spec from app panel. or at least tag.
+                    var nms = new NarrativeMethodStore(Config.url('narrative_method_store'));
+                    Promise.resolve(nms.get_method_spec({tag: tag, ids: [appInfo.app_id]}))
+                    .then(function(spec) {
+                        spec = spec[0];
+                        var newCell = Jupyter.narrative.narrController.buildAppCodeCell(spec, tag);
+                        var meta = newCell.metadata;
+                        var fileParam = '/data/bulk' + this.path + '/' + file;
+                        if (appInfo.app_input_param_type === "list") {
+                            fileParam = [fileParam];
                         }
-                    }
-                    newCell.metadata = meta;
-                    Jupyter.narrative.scrollToCell(newCell);
-                    Jupyter.narrative.hideOverlay();
-                }.bind(this))
-                .catch(function(err) {
-                    console.error(err);
-                });
-            }
+                        meta.kbase.appCell.params[appInfo.app_input_param] = fileParam;
+                        meta.kbase.appCell.params[appInfo.app_output_param] = file.replace(/\s/g, '_' + appInfo.app_output_suffix);
+                        for (var p in appInfo.app_static_params) {
+                            if (appInfo.app_static_params.hasOwnProperty(p)) {
+                                meta.kbase.appCell.params[p] = appInfo.app_static_params[p];
+                            }
+                        }
+                        newCell.metadata = meta;
+                        Jupyter.narrative.scrollToCell(newCell);
+                        Jupyter.narrative.hideOverlay();
+                    }.bind(this))
+                    .catch(function(err) {
+                        console.error(err);
+                    });
+                }
+            }.bind(this));
         },
 
         startTour: function() {

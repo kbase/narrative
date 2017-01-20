@@ -5,6 +5,7 @@ define([
     'require',
     'bluebird',
     'uuid',
+    'base/js/namespace',
     'common/runtime',
     'common/events',
     'common/html',
@@ -30,6 +31,7 @@ define([
     require,
     Promise,
     Uuid,
+    Jupyter,
     Runtime,
     Events,
     html,
@@ -189,6 +191,10 @@ define([
         }
 
         function buildLayout(events) {
+            var readOnlyStyle = {};
+            if (Jupyter.narrative.readonly) {
+                readOnlyStyle.display = 'none';
+            }
             return div({ class: 'kbase-extension kb-editor-cell', style: { display: 'flex', alignItems: 'stretch' } }, [
                 div({ class: 'prompt', dataElement: 'prompt', style: { display: 'flex', alignItems: 'stretch', flexDirection: 'column' } }, [
                     div({ dataElement: 'status' })
@@ -287,7 +293,8 @@ define([
                                 body: div({ dataElement: 'widget' })
                             }),
                             div({
-                                dataElement: 'available-actions'
+                                dataElement: 'available-actions',
+                                style: readOnlyStyle
                             }, [
                                 div({ class: 'btn-toolbar kb-btn-toolbar-cell-widget' }, [
                                     div({ class: 'btn-group' }, [
@@ -355,7 +362,7 @@ define([
 
             var fixedApp = fixApp(app);
             var code = PythonInterop.buildEditorRunner(cellId, runId, fixedApp, params);
-            // TODO: do something with the runId 
+            // TODO: do something with the runId
 
             // setStatus('Successfully built code');
 
@@ -590,7 +597,7 @@ define([
             }];
         }
 
-        // TODO: this should be a the error area -- and we should switch the 
+        // TODO: this should be a the error area -- and we should switch the
         // editor into error mode.
         function loadErrorWidget(error) {
             console.error('ERROR', error);
@@ -651,7 +658,7 @@ define([
                     controller.desc = 'update editor widget';
                     widgets.editor = {
                         path: ['editor', 'widget'],
-                        // module: widgetModule,                        
+                        // module: widgetModule,
                         type: 'update',
                         bus: bus,
                         instance: widget
@@ -756,11 +763,11 @@ define([
         }
 
         /*
-         * Given an object ref, fetch the set object via the setApi, 
+         * Given an object ref, fetch the set object via the setApi,
          * then populate
          */
         function loadData(objectRef) {
-            // TODO: check if the editor has unsaved changed, and 
+            // TODO: check if the editor has unsaved changed, and
             // show an error message if so, and refuse to switch.
             var setApiClient = new GenericClient({
                     url: runtime.config('services.service_wizard.url'),
@@ -775,13 +782,13 @@ define([
 
             return setApiClient.callFunc('get_reads_set_v1', [params])
                 .spread(function(setObject) {
-                    // After getting the reads set object, we populate our 
+                    // After getting the reads set object, we populate our
                     // view model (data model-ish) with the results.
                     // The editor will sync up with the model, and pick up the
-                    // values.                    
+                    // values.
                     model.setItem('params', {});
 
-                    // TODO: move this into code or config specific to 
+                    // TODO: move this into code or config specific to
                     // the reads set editor.
                     // *** removed the .value
                     model.setItem('params.name', setObject.info[1]);
@@ -831,7 +838,7 @@ define([
                     output_object_name: name,
                     data: {
                         description: '',
-                        // set api has bug -- will throw exception if fetch a 
+                        // set api has bug -- will throw exception if fetch a
                         // set with no items.
                         // stuff a sample item in here to start with.
                         items: []
@@ -1059,7 +1066,7 @@ define([
                     };
                     // When the user selects a reads set to edit.
                     widget.channel.on('changed', function(message) {
-                        // Call this when we have a new object to edit. It will 
+                        // Call this when we have a new object to edit. It will
                         // take care of updating the cell state as well as
                         // rendering the object.
                         //editorState.setItem('current.set.ref', objectInfo.ref);
@@ -1166,7 +1173,7 @@ define([
 
                     return validateModel()
                         .then(function(result) {
-                            // we have a tree of validations, so we need to walk the tree to see if anything 
+                            // we have a tree of validations, so we need to walk the tree to see if anything
                             // does not validate.
                             var messages = gatherValidationMessages(result);
 

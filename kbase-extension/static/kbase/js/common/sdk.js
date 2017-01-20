@@ -122,7 +122,7 @@ define([
                     // ??
                 }
                 break;
-            case 'text_subdata':
+            case 'textsubdata':
                 if (spec.default_values) {
                     return spec.default_values[0].split(',');
                 } else {

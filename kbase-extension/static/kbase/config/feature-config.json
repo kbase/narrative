@@ -1,5 +1,5 @@
 {
-    "stagingDataViewer": false,
+    "stagingDataViewer": true,
     "advanced": false,
     "developer": false
 }

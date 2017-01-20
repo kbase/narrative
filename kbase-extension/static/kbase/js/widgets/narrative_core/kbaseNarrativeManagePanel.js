@@ -1105,6 +1105,7 @@ define([
                 }]
             ))
             .then(function(result) {
+                result = result[0];
                 return {
                     status: 'success',
                     url: [window.location.origin,

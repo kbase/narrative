@@ -178,6 +178,7 @@ define([
                             workspaceInfo: workspaceInfo,
                             initialParams: model.getItem('params')
                         });
+
                     bus.emit('run', {
                         node: arg.node,
                         appSpec: model.getItem('app.spec'),
@@ -258,7 +259,7 @@ define([
                             });
                         });
                 }, function(err) {
-                    console.log('ERROR', err);
+                    console.error('ERROR', err);
                     reject(err);
                 });
             });
@@ -345,7 +346,7 @@ define([
                             });
                         });
                 }, function(err) {
-                    console.log('ERROR', err);
+                    console.error('ERROR', err);
                     reject(err);
                 });
             });
@@ -408,7 +409,7 @@ define([
                             });
                         });
                 }, function(err) {
-                    console.log('ERROR', err);
+                    console.error('ERROR', err);
                     reject(err);
                 });
             });
@@ -558,7 +559,7 @@ define([
 
             return controlBarTabs.selectedTab.widget.stop()
                 .catch(function(err) {
-                    console.log('ERROR stopping', err);
+                    console.error('ERROR stopping', err);
                 })
                 .finally(function() {
                     var widgetNode = ui.getElement('run-control-panel.tab-pane.widget');
@@ -1005,7 +1006,11 @@ define([
         }
 
         function buildRunControlPanelRunButtons(events) {
-            return div({ class: 'btn-group' },
+            var style = {};
+            if (Jupyter.narrative.readonly) {
+                style.display = 'none';
+            }
+            var buttonDiv = div({ class: 'btn-group', style: style},
                 Object.keys(actionButtons.availableButtons).map(function(key) {
                     var button = actionButtons.availableButtons[key],
                         classes = ['kb-flat-btn', 'kb-btn-action'].concat(button.classes);
@@ -1029,6 +1034,7 @@ define([
                     });
                 })
             );
+            return buttonDiv;
         }
 
         function buildRunControlPanelDisplayButtons(events) {
@@ -1108,7 +1114,7 @@ define([
                                 right: '100px',
                                 top: '0',
                                 height: '100px',
-                                borderRight: '1px silver solid'
+                                borderRight: Jupyter.narrative.readonly ? 'none' : '1px silver solid'
                             }
                         }, [
                             div({
@@ -1975,7 +1981,6 @@ define([
                             } else if (jobState.creation_time) {
                                 errorStage = 'queued';
                             }
-                            console.log('ERROR???', jobState, errorStage);
                             if (errorStage) {
                                 return {
                                     mode: 'error',
@@ -2275,7 +2280,7 @@ define([
             widgets.runClock = makeRunClock();
             var jobState = model.getItem('exec.jobState');
             if (!jobState) {
-                console.log('What, no job state?');
+                console.warn('What, no job state?');
                 return;
             }
             widgets.runClock.start({
@@ -2298,7 +2303,7 @@ define([
             widgets.runClock = makeRunClock();
             var jobState = model.getItem('exec.jobState');
             if (!jobState) {
-                console.log('What, no job state?');
+                console.warn('What, no job state?');
                 return;
             }
             widgets.runClock.start({
@@ -2551,9 +2556,9 @@ define([
 
                 // Events from widgets...
 
-                busEventManager.add(parentBus.on('newstate', function(message) {
-                    console.log('GOT NEWSTATE', message);
-                }));
+                // busEventManager.add(parentBus.on('newstate', function(message) {
+                //     console.log('GOT NEWSTATE', message);
+                // }));
 
                 busEventManager.add(parentBus.on('reset-to-defaults', function() {
                     bus.emit('reset-to-defaults');
@@ -2804,8 +2809,6 @@ define([
 
                 paramsToExport[key] = value;
             });
-
-            // console.log('EXPORTING', model.getItem('params'), paramsToExport);
 
             return paramsToExport;
         }
@@ -3088,5 +3091,5 @@ define([
         }
     };
 }, function(err) {
-    console.log('ERROR loading appCell appCellWidget', err);
+    console.error('ERROR loading appCell appCellWidget', err);
 });

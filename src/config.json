@@ -6,6 +6,16 @@
     "git_commit_hash": "60e2219",
     "git_commit_time": "Thu Mar 3 15:44:21 2016 -0800",
     "release_notes": "https://github.com/kbase/narrative/blob/staging/RELEASE_NOTES.md",
+    "data_panel": {
+        "ws_chunk_size": 10000,
+        "ws_max_objs_to_fetch": 30000,
+        "obj_render_initial": 40,
+        "obj_render_scroll": 5,
+        "typeahead_search_limit": 50000,
+        "initial_sort_limit": 10000,
+        "max_name_length": 33,
+        "refresh_interval_ms": 30000
+    },
     "tooltip": {
         "hideDelay": 0,
         "showDelay": 750

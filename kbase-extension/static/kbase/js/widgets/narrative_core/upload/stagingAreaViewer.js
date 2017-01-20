@@ -229,52 +229,6 @@ define([
                     console.error(err);
                 });
             }
-            //
-            //
-            //
-            // //TODO = move this to configuration.
-            // var appIds = {
-            //     'se_reads': 'genome_transform/reads_to_assembly',
-            //     'pe_reads': 'genome_transform/reads_to_assembly',
-            //     'sra_reads': 'genome_transform/sra_reads_to_assembly',
-            //     'genbank_genome': 'genome_transform/narrative_genbank_to_genome'
-            // };
-            //
-            // var appId = appIds[type];
-            // if (appId) {
-            //     var nms = new NarrativeMethodStore(Config.url('narrative_method_store'));
-            //     Promise.resolve(nms.get_method_spec({tag: 'dev', ids: [appId]}))
-            //     .then(function(spec) {
-            //         spec = spec[0];
-            //         var newCell = Jupyter.narrative.narrController.buildAppCodeCell(spec, 'dev');
-            //         var meta = newCell.metadata;
-            //         switch(type) {
-            //             case 'se_reads':
-            //                 meta.kbase.appCell.params.file_path_list = ['/data/bulk' + this.path + '/' + file];
-            //                 meta.kbase.appCell.params.reads_type = 'SingleEndLibrary';
-            //                 meta.kbase.appCell.params.reads_id = file.replace(/\s/g, '_') + '_reads';
-            //                 break;
-            //             case 'pe_reads':
-            //                 meta.kbase.appCell.params.file_path_list = ['/data/bulk' + this.path + '/' + file];
-            //                 meta.kbase.appCell.params.reads_type = 'PairedEndLibrary';
-            //                 meta.kbase.appCell.params.reads_id = file.replace(/\s/g, '_') + '_reads';
-            //                 break;
-            //             case 'sra_reads':
-            //                 meta.kbase.appCell.params.file_path_list = ['/data/bulk' + this.path + '/' + file];
-            //                 meta.kbase.appCell.params.reads_id = file.replace(/\s/g, '_') + '_reads';
-            //                 break;
-            //             case 'genbank_genome':
-            //             default:
-            //                 break;
-            //         }
-            //         newCell.metadata = meta;
-            //         Jupyter.narrative.scrollToCell(newCell);
-            //         Jupyter.narrative.hideOverlay();
-            //     }.bind(this))
-            //     .catch(function(err) {
-            //         console.error(err);
-            //     });
-            // }
         },
 
         startTour: function() {

@@ -1,0 +1,49 @@
+{
+    "dropdown_order": [
+        {
+            "id": "se_reads",
+            "name": "Single-End Reads"
+        },
+        {
+            "id": "pe_reads",
+            "name": "Paired-End Reads"
+        },
+        {
+            "id": "genbank_genome",
+            "name": "Genbank Genome"
+        }
+    ],
+    "app_info": {
+        "se_reads": {
+            "app_id": "genome_transform/reads_to_assembly",
+            "app_input_param": "file_path_list",
+            "app_input_param_type": "list",
+            "app_static_params": {
+                "reads_type": "SingleEndLibrary"
+            },
+            "app_output_param": "reads_id",
+            "app_output_suffix": "_reads",
+            "multiselect": false
+        },
+        "pe_reads": {
+            "app_id": "genome_transform/reads_to_assembly",
+            "app_input_param": "file_path_list",
+            "app_input_param_type": "list",
+            "app_static_params": {
+                "reads_type": "PairedEndLibrary"
+            },
+            "app_output_param": "reads_id",
+            "app_output_suffix": "_reads",
+            "multiselect": true
+        },
+        "genbank_genome": {
+            "app_id": "genome_transform/narrative_genbank_to_genome",
+            "app_input_param": "foo",
+            "app_input_param_type": "string",
+            "app_static_params": {},
+            "app_output_param": "bar",
+            "app_output_suffix": "_genome",
+            "multiselect": false
+        }
+    }
+}

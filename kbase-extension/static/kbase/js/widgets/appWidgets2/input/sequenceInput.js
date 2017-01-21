@@ -172,6 +172,7 @@ define([
                         // at least to create and manage the channel.
                         inputWidget = InputWidget.make({
                             bus: inputBus,
+                            paramsChannelName: config.paramsChannelName,
                             channelName: inputBus.channelName,
                             parameterSpec: itemSpec,
                             showOwnMessages: true,
@@ -193,6 +194,23 @@ define([
 
                     inputBus.on('touched', function() {
                         channel.emit('touched');
+                    });
+
+                    inputBus.respond({
+                        key: {
+                            type: 'get-parameter'
+                        },
+                        handle: function (message) {
+                            if (message.parameterName) {
+                                return channel.request(message, {
+                                    key: {
+                                        type: 'get-parameter'
+                                    }
+                                });
+                            } else {
+                                return null;
+                            }
+                        }
                     });
 
                     preButton = div({
@@ -261,7 +279,10 @@ define([
             return {
                 type: 'click',
                 handler: function() {
-                    addNewControl();
+                    addNewControl()
+                    .then(function() {
+                        autoValidate();
+                    });
                 }
             };
         }
@@ -357,7 +378,10 @@ define([
                 }
                 return Promise.all(initialValue.map(function(value) {
                     return addNewControl(value);
-                }));
+                }))
+                .then(function () {
+                    autoValidate();
+                });
             });
         }
 

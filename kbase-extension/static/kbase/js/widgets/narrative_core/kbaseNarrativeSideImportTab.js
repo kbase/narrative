@@ -517,6 +517,9 @@ define (
                     }
             };
             cell.metadata = meta;
+            cell.events.one('output_appended.OutputArea', function() {
+                Jupyter.narrative.saveNarrative();
+            });
             cell.execute();
             Jupyter.narrative.hideOverlay();
             this.showInfo(''); // clear the info message when we close the overlay

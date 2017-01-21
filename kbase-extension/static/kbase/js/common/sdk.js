@@ -122,7 +122,7 @@ define([
                     // ??
                 }
                 break;
-            case 'text_subdata':
+            case 'textsubdata':
                 if (spec.default_values) {
                     return spec.default_values[0].split(',');
                 } else {
@@ -146,12 +146,12 @@ define([
         }
 
         // Singular item?
-        if (!spec.allow_multiple) {
+        //if (!spec.allow_multiple) {
             return defaultToNative(converted, defaultValues[0]);
-        }
-        return defaultValues.map(function(defaultValue) {
-            return defaultToNative(converted, defaultValue);
-        });
+        //}
+        //return defaultValues.map(function(defaultValue) {
+        //    return defaultToNative(converted, defaultValue);
+        //});
     }
 
     function updateDefaultValue(converted, spec) {

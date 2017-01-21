@@ -10,7 +10,7 @@ define([
     'common/ui',
     'common/props',
     'base/js/namespace',
-    '../subdataMethods/manager',
+    './subdataMethods/manager',
     'bootstrap',
     'css!font-awesome'
 ], function(
@@ -844,7 +844,6 @@ define([
         }
 
         function updateParam(paramId, value) {
-            console.log('update param?', paramId, value);
             var newValue;
             if (value === '') {
                 newValue = null;
@@ -861,6 +860,7 @@ define([
 
             // If any of the required parameters are missing, we need to reset the
             // primary value.
+            // TODO: we need to get this via the message bus!!!
             if (subdataInfo.params.dependencies.some(function(paramId) {
                     return (model.getItem(['required-params', paramId], null) === null);
                 })) {
@@ -1080,7 +1080,6 @@ define([
 
                 container.innerHTML = theLayout.content;
 
-                console.log('setting initial value...', config, spec, arg);
                 if (config.initialValue) {
                     model.setItem('selectedItems', config.initialValue);
                 }

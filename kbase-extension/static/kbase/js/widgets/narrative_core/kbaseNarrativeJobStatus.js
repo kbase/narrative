@@ -85,9 +85,7 @@ define([
             }
 
             this.cell = findCell();
-
-            // this.cell = Jupyter.narrative.getCellByKbaseId(this.$elem.attr('id'));
-            //console.log('initializing with job id = ' + this.jobId);
+            this.cell.element.trigger('hideCodeArea.cell');
             if (!this.jobId) {
                 this.showError("No Job id provided!");
                 return this;

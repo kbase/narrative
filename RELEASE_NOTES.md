@@ -3,6 +3,22 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v4.2.1 (more notes will follow).
 
+### Version 3.1.3
+__Changes__
+- Fixed bug where read-only Narratives were still interactive (apps had run and reset buttons)
+- Fixed bug where copying a read-only Narrative created a bad forwarding URL.
+
+### Version 3.1.2
+__Changes__
+- Do an autosave after starting an import job.
+- Hide the code area for the 'Job Status' widget, whenever that widget gets instantiated.
+- Remove 'Object Details...' button from data viewers (it's just hidden for now).
+- In the App Cell Report tab, remove 'Summary' or 'Report' areas if either of those are missing.
+
+### Version 3.1.1
+__Changes__
+- Optimized how job status polling works.
+
 ### Version 3.1.0
 __Changes__
 - Release of ReadsSet viewer and Reads viewer.

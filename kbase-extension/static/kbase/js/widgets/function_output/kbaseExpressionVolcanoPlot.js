@@ -150,11 +150,15 @@ define(['jquery',
                   $("#" + pref + "showselectedgenes").click(function() {
                     dtable.clear().draw();
                     $("#" + pref + "voltablediv").show();
+                    var redRows = [];
+                    var seenCircles = 0;
+                    var numCircles = svg.selectAll("circle").size();
                     svg.selectAll("circle")
+                      .transition()
                       .attr("fill", function(d) {
                         var cc = colorx(d.log2fc_fa, d.p_value_f);
                         if ( cc == "red" ) {
-                          dtable.row.add([
+                          redRows.push([
                               d.gene,
                               d.locus,
                               d.value_1,
@@ -162,9 +166,14 @@ define(['jquery',
                               d.log2fc_f,
                               d.p_value,
                               d.function
-                          ]).draw();
+                          ]);
                         }
                         return cc;
+                      })
+                      .each('end', function(d) {
+                        if (seenCircles == numCircles) {
+                          dtable.rows.add(redRows).draw();
+                        }
                       });
 
                     $("#" + pref + "voltablediv").show();
@@ -277,26 +286,32 @@ define(['jquery',
                     fc = $("#" + pref + "fc").val();
                     console.log("fc changed", fc);
                     $('#' + pref + 'selfc').text(parseFloat(fc).toFixed(2));
+                    var numCircles = svg.selectAll("circle").size();
+                    var seenCircles = 0;
                     svg.selectAll("circle")
+                      .transition()
                       .attr("fill", function(d) {
                         var cc = colorx(d.log2fc_fa, d.p_value_f);
                         if ( cc == "red" ) {
                           cnt = cnt + 1;
                         }
                         return cc;
-                      }).call(updateCnt);
+                      }).each('end', function() {
+                        seenCircles++;
+                        if (numCircles == seenCircles) {
+                          updateCnt()
+                        }
+                      });
 
                   });
 
                   var cnt = 0;
                   var updateCnt = function() {
-                    console.log(cnt);
                     $('#'+pref+'showselectedgenes').text("Show Selected (" + cnt + " Genes)");
                     cnt = 0;
                   }
 
                   $("#" + pref + "pvalue").slider({tooltip_position:'bottom', step:0.01, precision: 2, min :ymin, max:ymax.toFixed(2)}).on('slide',function(){
-                    console.log("pvalue changed");
                     pv = $("#" + pref + "pvalue").val();
                     $('#' + pref + 'selpval').text(parseFloat(pv).toFixed(2));
                     svg.selectAll("circle")
@@ -341,8 +356,8 @@ define(['jquery',
                      pv = 1.0;
                      fc = 1.0;
                      */
-                  pv = $("#" + pref + "pvalue").val();
-                  fc = $("#" + pref + "fc").val();
+                  pv = $("#" + pref + "pvalue").slider('getValue');
+                  fc = $("#" + pref + "fc").slider('getValue');
 
                   /*
                      console.log(pv);

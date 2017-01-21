@@ -282,6 +282,30 @@ class JobManager(object):
                 'job_id': job.job_id
             }
 
+        elif 'lookup_error' in state:
+            kblogging.log_event(self._log, "lookup_job_status.error", {
+                'err': 'Problem while getting state for job {}'.format(job.job_id),
+                'info': str(state['lookup_error'])
+            })
+            state = {
+                'job_state': 'error',
+                'error': {
+                    'error': 'Unable to fetch current state. Please try again later, or contact KBase.',
+                    'message': 'Error while looking up job state',
+                    'name': 'Job Error',
+                    'code': -1,
+                    'source': 'JobManager._construct_job_status',
+                    'exception': {
+                        'error_message': 'Error while fetching job state',
+                        'error_type': 'failed-lookup',
+                    },
+                    'error_response': state['lookup_error'],
+                    'creation_time': 0,
+                    'cell_id': job.cell_id,
+                    'run_id': job.run_id,
+                    'job_id': job.job_id
+                }
+            }
         if state.get('finished', 0) == 1:
             try:
                 widget_info = job.get_viewer_params(state)
@@ -314,7 +338,7 @@ class JobManager(object):
             job = None
             if job_id in self._running_jobs:
                 job = self._running_jobs[job_id]['job']
-            status_set[job_id] = self._construct_job_status(job, job_states[job_id])
+            status_set[job_id] = self._construct_job_status(job, job_states.get(job_id, None))
         return status_set
 
     def _lookup_job_status(self, job_id):
@@ -605,15 +629,26 @@ class JobManager(object):
             else:
                 jobs_to_lookup.append(job_id)
         # 3. Lookup those jobs what need it. Cache 'em as we go, if finished.
-        fetched_states = clients.get('job_service').check_jobs({'job_ids': jobs_to_lookup})
+        try:
+            fetched_states = clients.get('job_service').check_jobs({'job_ids': jobs_to_lookup})
+        except Exception as e:
+            kblogging.log_event(self._log, 'get_all_job_states_error', {'err': str(e)})
+            return {}
+
+        error_states = fetched_states.get('check_errors', {})
         fetched_states = fetched_states.get('job_states', {})
         for job_id in jobs_to_lookup:
-            state = fetched_states[job_id]
-            state['cell_id'] = self._running_jobs[job_id]['job'].cell_id
-            state['run_id'] = self._running_jobs[job_id]['job'].run_id
-            if state.get('finished', 0) == 1:
-                self._completed_job_states[state['job_id']] = state
-            job_states[state['job_id']] = state
+            if job_id in fetched_states:
+                state = fetched_states[job_id]
+                state['cell_id'] = self._running_jobs[job_id]['job'].cell_id
+                state['run_id'] = self._running_jobs[job_id]['job'].run_id
+                if state.get('finished', 0) == 1:
+                    self._completed_job_states[state['job_id']] = state
+                job_states[state['job_id']] = state
+            elif job_id in error_states:
+                error = error_states[job_id]
+                job_states[state['job_id']] = {'lookup_error': error}
+
         return job_states
 
     def _get_job_state(self, job_id):

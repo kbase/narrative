@@ -17,8 +17,8 @@ define (
 		'util/string',
         'base/js/namespace',
         'common/pythonInterop',
-        'kbase-client-api',
-        'util/kbaseApiUtil'
+        'util/kbaseApiUtil',
+        'kbase-client-api'
 	], function(
         KBWidget,
         bootstrap,

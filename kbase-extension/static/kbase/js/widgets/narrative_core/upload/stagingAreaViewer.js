@@ -10,6 +10,7 @@ define([
     'util/timeFormat',
     './uploadTour',
     'util/kbaseApiUtil',
+    'util/bootstrapDialog',
     'text!kbase/templates/data_staging/ftp_file_table.html',
     'text!kbase/templates/data_staging/ftp_file_header.html',
     'text!kbase/templates/data_staging/file_path.html',
@@ -27,6 +28,7 @@ define([
     TimeFormat,
     UploadTour,
     APIUtil,
+    BootstrapDialog,
     FtpFileTableHtml,
     FtpFileHeaderHtml,
     FilePathHtml
@@ -228,7 +230,14 @@ define([
                         Jupyter.narrative.hideOverlay();
                     }.bind(this))
                     .catch(function(err) {
-                        alert("Sorry, unable to create App Cell to start your upload.");
+                        new BootstrapDialog({
+                            title: "Can't create uploader app!",
+                            body: "Sorry, unable to create App Cell to start your upload. You may need to set your Apps panel to 'dev' or 'beta'.",
+                            buttons: [ $('<button class="btn btn-primary" data-dismiss="modal">OK</button>') ],
+                            closeButton: true,
+                            enterToTrigger: true
+                        }).show();
+                        // alert("Sorry, unable to create App Cell to start your upload. You may need to set your Apps panel to 'dev' or 'beta'.");
                         console.error(err);
                     });
                 }

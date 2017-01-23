@@ -1,11 +1,15 @@
 define([
-    'bluebird'
+    'bluebird',
+    'uuid'
 ], function (
-    Promise
+    Promise,
+    Uuid
 ) {
     function factory(config) {
         var root = config.root;
         var name = config.name;
+
+        var serviceId = new Uuid(4).format();
 
         var lastId = 0; //: number;
         var sentCount; //: number;
@@ -37,6 +41,16 @@ define([
                 listener, response;
 
             receivedCount += 1;
+
+            if (!message.address && !message.address.to) {
+                console.warn('Message without address.to - ignored (iframe)', message);
+                return;
+            }
+
+            if (message.address.to !== serviceId) {
+                // console.log('not for us (iframe) ... ignoring', message, serviceId);
+                return;
+            }
 
             if (message.id && awaitingResponse[message.id]) {
                 try {
@@ -71,6 +85,10 @@ define([
         function send(partnerName, message) {
             var partner = getPartner(partnerName);
             message.from = name;
+            message.address = {
+                to: partner.serviceId,
+                from: serviceId
+            };
             sentCount += 1;
             partner.window.postMessage(message, partner.host);
         }
@@ -101,15 +119,16 @@ define([
             root.removeEventListener('message', receive);
         }
 
-        return {
+        return Object.freeze({
             start: start,
             stop: stop,
             send: send,
             request: request,
             receive: receive,
             listen: listen,
-            addPartner: addPartner
-        };
+            addPartner: addPartner,
+            serviceId: serviceId
+        });
     }
 
     return {

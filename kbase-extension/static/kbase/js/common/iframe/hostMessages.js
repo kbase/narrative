@@ -1,5 +1,10 @@
 define([
-], function () {
+    'bluebird',
+    'uuid'
+], function (
+    Promise,
+    Uuid
+) {
     'use strict';
     function factoryHost(config) {
         var awaitingResponse = {},
@@ -9,6 +14,9 @@ define([
             receivedCount = 0,
             root = config.root,
             name = config.name;
+
+        var serviceId = new Uuid(4).format();
+
 
         function genId() {
             lastId += 1;
@@ -31,6 +39,16 @@ define([
             var origin = event.origin || event.originalEvent.origin,
                 message = event.data,
                 listener, response;
+
+            if (!message.address || !message.address.to) {
+                console.warn('Message without address.to - ignored (host)', message);
+                return;
+            }
+
+            if (message.address.to !== serviceId) {
+                // console.log('not for us (host) ... ignoring', message, serviceId);
+                return;
+            }                
             
             if (message.id && awaitingResponse[message.id]) {
                 try {
@@ -67,6 +85,10 @@ define([
         function sendMessage(partnerName, message) {
             var partner = getPartner(partnerName);
             message.from = name;
+            message.address = {
+                to: partner.serviceId,
+                from: serviceId
+            };
             partner.window.postMessage(message, partner.host);
         }
 
@@ -112,7 +134,7 @@ define([
         }
         
 
-        return {       
+        return Object.freeze({       
             start: start,
             stop: stop,
      
@@ -122,8 +144,9 @@ define([
             // sendMessages: sendMessages,
             listen: listenForMessage,
             setName: setName,
-            stats: stats
-        };
+            stats: stats,
+            serviceId: serviceId
+        });
     }
 
     return {

@@ -135,8 +135,6 @@ define([
 
             //self.objIdentity = {ref : "11699/2/77"};
             
-            console.log('load and render:', this.options);
-
             self.ws.get_objects([self.objIdentity])
                 .then(function (result) {
                     self.reportData = result[0].data;
@@ -202,6 +200,7 @@ define([
                     baseUrl: 'http://localhost:8888/narrative/static/',
                     paths: {
                         bluebird: 'ext_components/bluebird/js/browser/bluebird.min',
+                        uuid: 'ext_components/pure-uuid/uuid',
                         messages: 'kbase/js/common/iframe/messages',
                         heightNotifier: 'kbase/js/common/iframe/heightNotifier'
                     }
@@ -229,7 +228,8 @@ define([
                     },
                     dataParams: encodeURIComponent(JSON.stringify({
                         parentHost: iframeOrigin,
-                        iframeId: iframeId
+                        iframeId: iframeId,
+                        serviceId: iframeMessages.serviceId
                     }))
                 }, arg.content + iframeScript)).replace(/"/g, '&quot;'),
                 width = arg.width || '100%',
@@ -251,6 +251,12 @@ define([
                     xsrcdoc: '<p>Hi!</p>',
                     srcdoc: iframeContent
                 });
+
+            // console.log('built  params with: ', {
+            //     parentHost: iframeOrigin,
+            //     iframeId: iframeId,
+            //     serviceId: iframeMessages.serviceId
+            // });
 
             return {
                 parentHost: iframeOrigin,
@@ -420,7 +426,6 @@ define([
                     var htmlServiceURL = serviceStatus.url;
                     if (report.html_links && report.html_links.length) {
                         return report.html_links.map(function (item, index) {
-                            console.log('LINK', item);
                             return {
                                 name: item.name,
                                 url: [htmlServiceURL, 'api', 'v1', _this.objIdentity.ref, '$', index, item.name].join('/')
@@ -470,13 +475,23 @@ define([
                 name: 'ready',
                 handler: function (message) {
                     if (message.iframeId !== iframe.id) {
-                        console.error('Unexpected "ready"', message, message.iframeId, iframe.id);
+                        // We may receive this if a 'ready' was received
+                        // from another cell. Perhaps there is a better
+                        // way of filtering messages before getting here!
+                        // TODO: implement an address feature to allow a 
+                        //   message bus to ignore messages not sent to it.
+                        //   we use the frame id for this, but it should actually
+                        //   be a feature of the message bus itself.
+                        //   E.g. each one has an id (uuid), and messages must
+                        //   carry address.to and address.from
+                        // console.error('Unexpected "ready"', message, message.iframeId, iframe.id);
                         return;
                     }
 
                     iframe.messages.addPartner({
                         name: message.iframeId,
                         host: iframe.host,
+                        serviceId: message.address.from,
                         window: container.querySelector('[data-frame="' + iframe.id + '"]').contentWindow
                     });
 
@@ -489,6 +504,11 @@ define([
             iframe.messages.listen({
                 name: 'rendered',
                 handler: function (message) {
+                    // console.log('rendered!', message);
+                    // if (message.iframeId !== iframe.id) {
+                    //     console.log('...ignored', message.iframeId, iframe.id);
+                    //     return;
+                    // }
                     var height = message.height,
                         iframeNode = _this.$mainPanel[0].querySelector('[data-frame="' + iframe.id + '"]');
 
@@ -499,6 +519,9 @@ define([
             iframe.messages.listen({
                 name: 'clicked',
                 handler: function (message) {
+                    if (message.iframeId !== iframe.id) {
+                        return;
+                    }
                     document.getElementById(message.iframeId).dispatchEvent(new Event('click', {
                         bubbles: true,
                         cancelable: true
@@ -698,55 +721,50 @@ define([
 
                 // REPORT SECTION
 
-                if (report.direct_html) {
+                /*
+                The "inline" report can come from either the direct_html property or the direct_html_link_index. 
+                The direct_html_link_index will take precedence since it offers a better method for referencing
+                content within an iframe. Generally the app developer should use either method, not both
+                 */
+
+                if (report.direct_html || report.direct_html_link_index) {
                     (function () {
                         showingReport = true;
                         // an iframe to hold the contents of the report.
                         var iframe;
                         // a link to view the same report in its own window
                         var reportLink;
-                        if (/<html/.test(report.direct_html)) {
-                            console.warn('Html document inserted into iframe', report);
-                            if (report.direct_html_link_index) {
-                                iframe = _this.makeIframeSrc({
-                                    src: report.html_links[report.direct_html_link_index].URL,
-                                    maxHeight: '500px'
+                        if (report.direct_html_link_index) {
+                            reportLink = div({
+                                style: {
+                                    margin: '4px 4px 8px 0',
+                                    xborder: '1px silver solid'
+                                }
+                            }, a({
+                                href: _this.reportLinks[0].url,
+                                target: '_blank',
+                                class: 'btn btn-default'
+                            }, 'View Report in separate window'));
+                            iframe = _this.makeIframeSrc({
+                                src: report.html_links[report.direct_html_link_index].URL,
+                                maxHeight: '600px'
+                            });
+                        } else {
+                            // If the direct_html is a full document we cannot (yet?) insert 
+                            // the necessary code to gracefully handle resizing and click-passthrough.
+                            if (/<html/.test(report.direct_html)) {
+                                console.warn('Html document inserted into iframe', report);                                
+                                iframe = _this.makeIframeSrcDataPlain({
+                                    content: report.direct_html,
+                                    height: '600px',
+                                    events: events
                                 });
                             } else {
-                                // if (report.html_links.length && report.html_links.length > 0) {
-                                if (_this.reportLinks && _this.reportLinks.length > 0) {
-                                    reportLink = div({
-                                        style: {
-                                            margin: '4px 4px 8px 0',
-                                            xborder: '1px silver solid'
-                                        }
-                                    }, a({
-                                        href: _this.reportLinks[0].url,
-                                        target: '_blank',
-                                        class: 'btn btn-default'
-                                    }, 'View Report in separate window'));
-                                    iframe = _this.makeIframeSrcUrl({
-                                        // TODO: use the index in the report
-                                        // fake for now!!
-                                        url: _this.reportLinks[0].url,
-                                        height: '600px',
-                                        events: events
-                                    });
-                                } else {
-                                    iframe = _this.makeIframeSrcDataPlain({
-                                        content: report.direct_html,
-                                        height: '600px',
-                                        events: events
-                                    });
-                                }
-
-
+                                iframe = _this.makeIframe({
+                                    content: report.direct_html,
+                                    maxHeight: '600px'
+                                });
                             }
-                        } else {
-                            iframe = _this.makeIframe({
-                                content: report.direct_html,
-                                maxHeight: '500px'
-                            });
                         }
 
                         _this.$mainPanel.append(div({ dataElement: 'html-panel' }));

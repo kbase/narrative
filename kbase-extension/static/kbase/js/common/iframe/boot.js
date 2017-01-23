@@ -38,7 +38,8 @@ define([
             messageManager.addPartner({
                 name: 'parent',
                 window: window.parent,
-                host: params.parentHost
+                host: params.parentHost,
+                serviceId: params.serviceId
             });
 
             messageManager.listen({

@@ -8,8 +8,8 @@ define([
     'handlebars',
     'util/string',
     'util/timeFormat',
-    'kbase-client-api',
     './uploadTour',
+    'util/kbaseApiUtil',
     'text!kbase/templates/data_staging/ftp_file_table.html',
     'text!kbase/templates/data_staging/ftp_file_header.html',
     'text!kbase/templates/data_staging/file_path.html',
@@ -25,8 +25,8 @@ define([
     Handlebars,
     StringUtil,
     TimeFormat,
-    KBaseClients,
     UploadTour,
+    APIUtil,
     FtpFileTableHtml,
     FtpFileHeaderHtml,
     FilePathHtml
@@ -181,7 +181,6 @@ define([
                     sType: 'numeric'
                 }],
                 fnRowCallback: function(nRow, aData, iDisplayIndex, iDisplayIndexFull) {
-                    console.log(aData[4]);
                     $('td:eq(4)', nRow).find('select').select2({
                         placeholder: 'Select a format'
                     });
@@ -208,12 +207,9 @@ define([
             return Promise.try(function() {
                 var appInfo = this.uploaders.app_info[type];
                 if (appInfo) {
-                    var tag = 'dev';
-                    //TODO = get spec from app panel. or at least tag.
-                    var nms = new NarrativeMethodStore(Config.url('narrative_method_store'));
-                    Promise.resolve(nms.get_method_spec({tag: tag, ids: [appInfo.app_id]}))
+                    var tag = APIUtil.getAppVersionTag();
+                    APIUtil.getAppSpec(appInfo.app_id)
                     .then(function(spec) {
-                        spec = spec[0];
                         var newCell = Jupyter.narrative.narrController.buildAppCodeCell(spec, tag);
                         var meta = newCell.metadata;
                         var fileParam = '/data/bulk' + this.path + '/' + file;
@@ -232,6 +228,7 @@ define([
                         Jupyter.narrative.hideOverlay();
                     }.bind(this))
                     .catch(function(err) {
+                        alert("Sorry, unable to create App Cell to start your upload.");
                         console.error(err);
                     });
                 }

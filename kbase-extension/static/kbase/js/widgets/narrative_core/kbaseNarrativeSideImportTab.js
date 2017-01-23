@@ -17,7 +17,8 @@ define (
 		'util/string',
         'base/js/namespace',
         'common/pythonInterop',
-        'kbase-client-api'
+        'kbase-client-api',
+        'util/kbaseApiUtil'
 	], function(
         KBWidget,
         bootstrap,
@@ -27,7 +28,8 @@ define (
         select2,
         StringUtil,
         Jupyter,
-        PythonInterop
+        PythonInterop,
+        APIUtil
 	) {
     'use strict';
     return KBWidget({
@@ -224,17 +226,17 @@ define (
             return this;
         },
 
-        getVersionTag: function() {
-            var tag = Jupyter.narrative.sidePanel.$methodsWidget.currentTag;
-            if (!tag) {
-                tag = "release";
-            }
-            return tag;
-        },
+        // getVersionTag: function() {
+        //     var tag = Jupyter.narrative.sidePanel.$methodsWidget.currentTag;
+        //     if (!tag) {
+        //         tag = "release";
+        //     }
+        //     return tag;
+        // },
 
         getMethodSpecs: function(callback, errorCallback) {
             var self = this;
-            var tag = self.getVersionTag();
+            var tag = APIUtil.getAppVersionTag();
             if (self.allMethodIds[tag] && self.methodFullInfo[tag] && self.methods[tag]) {
                 callback(self.methodFullInfo[tag], self.methods[tag], tag);
                 return;

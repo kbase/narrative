@@ -25,7 +25,6 @@ define([
 
         function set(name, value) {
             window.__kbase_semaphores__[name] = value;
-            console.log('SET', name, value, window.__kbase_semaphores__);
         }
 
         function get(name, defaultValue) {

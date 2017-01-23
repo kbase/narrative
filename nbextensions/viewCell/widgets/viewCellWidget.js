@@ -631,55 +631,7 @@ define([
         }
 
         function validateModel() {
-            return spec.validateModel(model.getItem('params'));
-            return {
-                isValid: true,
-                errors: []
-            };
-            /*
-             * Validation is currently very simple.
-             * Iterate through all parameters in the model specification.
-             * If the model contains a value, validate it.
-             * Record any failure
-             * If the model does not contain a value, and it is optional, use the "null value" for that type.
-             * If the model does not contain a value, and it is required, record that failure
-             * If there are any failures, the validation feails.
-             * And return the set of failures.
-             *
-             * FOR NOW: let us assume that values only get into the model if
-             * they are valid.
-             * All we need to do now then is to ensure that all required fields are present,
-             * and missing fields get their default "nullish" value.
-             *
-             * Also FOR NOW: we don't have a model of what "blank" is for a field, so we use this:
-             * - for strings, empty string or undefined
-             * - for ints, undefined
-             * - for floats, undefined
-             * - for sets, empty array
-             * - for object refs, empty string (we should check if refs are valid here as well, but not yet.)
-             *
-             *
-             */
-            // var params = model.getItem('params'),
-            //     errors = env.parameters.map(function(parameterSpec) {
-            //         if (parameterSpec.required()) {
-            //             if (parameterSpec.isEmpty(params[parameterSpec.id()])) {
-            //                 return {
-            //                     diagnosis: 'required-missing',
-            //                     errorMessage: 'The ' + parameterSpec.dataType() + ' "' + parameterSpec.id() + '" is required but was not provided'
-            //                 };
-            //             }
-            //         }
-            //     }).filter(function(error) {
-            //         if (error) {
-            //             return true;
-            //         }
-            //         return false;
-            //     });
-            // return {
-            //     isValid: (errors.length === 0),
-            //     errors: errors
-            // };
+            return spec.validateModel(model.getItem('params'));           
         }
 
         // TODO: we need to determine the proper forms for a app identifier, and

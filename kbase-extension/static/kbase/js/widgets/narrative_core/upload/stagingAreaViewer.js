@@ -237,7 +237,6 @@ define([
                             closeButton: true,
                             enterToTrigger: true
                         }).show();
-                        // alert("Sorry, unable to create App Cell to start your upload. You may need to set your Apps panel to 'dev' or 'beta'.");
                         console.error(err);
                     });
                 }

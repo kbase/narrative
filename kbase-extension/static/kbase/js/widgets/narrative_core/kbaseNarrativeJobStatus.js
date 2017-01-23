@@ -5,16 +5,18 @@ define([
     'bluebird',
     'jquery',
     'underscore',
+    'handlebars',
     'kbwidget',
     'narrativeConfig',
     'kbase-client-api',
     'base/js/namespace',
     'util/timeFormat',
-    'handlebars',
+    'kb_service/client/workspace',
     'kbaseAuthenticatedWidget',
     'kbaseTabs',
     'kbaseReportView',
     'common/runtime',
+    'common/semaphore',
     'text!kbase/templates/job_status/status_table.html',
     'text!kbase/templates/job_status/header.html',
     'text!kbase/templates/job_status/log_panel.html',
@@ -26,16 +28,18 @@ define([
     Promise,
     $,
     _,
+    Handlebars,
     KBWidget,
     Config,
     KBaseClientApi,
     Jupyter,
     TimeFormat,
-    Handlebars,
+    Workspace,
     KBaseAuthenticatedWidget,
     KBaseTabs,
     KBaseReportView,
     Runtime,
+    Semaphore,
     JobStatusTableTemplate,
     HeaderTemplate,
     LogPanelTemplate,
@@ -52,15 +56,15 @@ define([
             jobInfo: null,
             statusText: null
         },
-        pendingLogRequest: false,   // got a log request pending? (used for keeping log instances separate)
-        pendingLogStart: 0,         // pending top line number we're expecting.
-        maxLineRequest: 100,        // max number of lines to request
-        maxLogLine: 0,              // max log lines available (as of last push)
-        currentLogStart: 0,         // current first line in viewer
-        currentLogLength: 0,        // current number of lines
-        maxLogLines: 200,           // num lines before we start trimming
+        pendingLogRequest: false, // got a log request pending? (used for keeping log instances separate)
+        pendingLogStart: 0, // pending top line number we're expecting.
+        maxLineRequest: 100, // max number of lines to request
+        maxLogLine: 0, // max log lines available (as of last push)
+        currentLogStart: 0, // current first line in viewer
+        currentLogLength: 0, // current number of lines
+        maxLogLines: 200, // num lines before we start trimming
 
-        init: function(options) {
+        init: function (options) {
             this._super(options);
             this.jobId = this.options.jobId;
             this.state = this.options.state;
@@ -70,6 +74,7 @@ define([
             this.appInfo = this.options.info;
 
             var cellNode = this.$elem.closest('.cell').get(0);
+
             function findCell() {
                 var cells = Jupyter.notebook.get_cell_elements().toArray().filter(function (element) {
                     if (element === cellNode) {
@@ -104,45 +109,58 @@ define([
                 this.state = cellState;
             }
 
+            this.busConnection = this.runtime.bus().connect();
+            this.channel = this.busConnection.channel();
 
-            var bus = this.runtime.bus();
+            Semaphore.make().when('comm', 'ready', Config.get('comm_wait_timeout'))
+                .then(function () {
+                    this.busConnection.listen({
+                        channel: {
+                            jobId: this.jobId
+                        },
+                        key: {
+                            type: 'job-status'
+                        },
+                        handle: function (message) {
+                            this.handleJobStatus(message);
+                        }.bind(this)
+                    });
 
-            bus.listen({
-                channel: {
-                    jobId: this.jobId
-                },
-                key: {
-                    type: 'job-status'
-                },
-                handle: function (message) {
-                    this.handleJobStatus(message);
-                }.bind(this)
-            });
 
+                    this.busConnection.listen({
+                        channel: {
+                            jobId: this.jobId
+                        },
+                        key: {
+                            type: 'job-logs'
+                        },
+                        handle: function (message) {
+                            this.handleJobLogs(message);
+                        }.bind(this)
+                    });
 
-            bus.listen({
-                channel: {
-                    jobId: this.jobId
-                },
-                key: {
-                    type: 'job-logs'
-                },
-                handle: function (message) {
-                    this.handleJobLogs(message);
-                }.bind(this)
-            });
+                    this.busConnection.listen({
+                        channel: {
+                            jobId: this.jobId
+                        },
+                        key: {
+                            type: 'job-log-deleted'
+                        },
+                        handle: function (message) {
+                            this.handleJobLogDeleted(message);
+                        }.bind(this)
+                    });
 
-            bus.listen({
-                channel: {
-                    jobId: this.jobId
-                },
-                key: {
-                    type: 'job-log-deleted'
-                },
-                handle: function (message) {
-                    this.handleJobLogDeleted(message);
-                }.bind(this)
-            });
+                    this.channel.emit('request-job-status', {
+                        jobId: this.jobId
+                    });
+                }.bind(this))
+                .catch(function (err) {
+                    console.error('Jobs Comm channel not available', err);
+                });
+
+            // TODO: can we introduce a stop method for kbwidget?
+            // We need to disconnect these listeners when this widget is removed.
 
             // render up the panel's view layer.
             this.initializeView();
@@ -151,7 +169,7 @@ define([
             return this;
         },
 
-        initializeView: function() {
+        initializeView: function () {
             /* Tabs with 3 parts.
              * Initial = Status.
              * Second = Console.
@@ -172,15 +190,14 @@ define([
             this.newDataView = this.makeNewDataView();
             var $tabDiv = $('<div>');
             this.tabController = new KBaseTabs($tabDiv, {
-                tabs: [
-                    {
+                tabs: [{
                         tab: 'Status',
                         content: body,
                     },
                     {
                         tab: 'Logs',
                         content: this.logsView
-                    },
+                    }
                     // {
                     //     tab: 'Report',
                     //     content: this.reportView
@@ -194,7 +211,7 @@ define([
             this.$elem.append($tabDiv);
         },
 
-        updateView: function() {
+        updateView: function () {
             // Update status panel (always)
             this.view.statusPanel.remove();
             this.view.statusPanel = this.updateJobStatusPanel();
@@ -215,19 +232,22 @@ define([
 
         },
 
-        showNewObjects: function() {
+        showNewObjects: function () {
             if (!this.showingNewObjects) {
                 // If we have a report ref, show that widget.
                 if (this.outputWidgetInfo && this.outputWidgetInfo.params &&
                     this.outputWidgetInfo.params.report_ref) {
-                    this.tabController.addTab({tab: 'New Data Objects', showContentCallback: function() {
-                        var params = this.outputWidgetInfo.params;
-                        params.showReportText = false;
-                        params.showCreatedObjects = true;
-                        var $newObjDiv = $('<div>');
-                        new KBaseReportView($newObjDiv, params);
-                        return $newObjDiv;
-                    }.bind(this)});
+                    this.tabController.addTab({
+                        tab: 'New Data Objects',
+                        showContentCallback: function () {
+                            var params = this.outputWidgetInfo.params;
+                            params.showReportText = false;
+                            params.showCreatedObjects = true;
+                            var $newObjDiv = $('<div>');
+                            new KBaseReportView($newObjDiv, params);
+                            return $newObjDiv;
+                        }.bind(this)
+                    });
                 }
                 // If not, try to guess what we've got?
                 else {
@@ -235,39 +255,42 @@ define([
                     var refs = this.guessReferences(results);
                     if (refs && refs.length > 0) {
                         var objRefs = [];
-                        refs.forEach(function(ref) {
-                            objRefs.push({ref: ref});
+                        refs.forEach(function (ref) {
+                            objRefs.push({ ref: ref });
                         });
                         var newObjTmpl = Handlebars.compile(NewObjectsTemplate);
-                        var wsClient = new Workspace(Config.url('workspace'), {token: this.runtime.authToken()});
-                        Promise.resolve(wsClient.get_object_info_new({objects: objRefs}))
-                        .then(function(objInfo) {
-                            this.tabController.addTab({tab: 'New Data Objects', showContentCallback: function() {
-                                var renderedInfo = [];
-                                var $div = $('<div>');
-                                objInfo.forEach(function(obj) {
-                                    renderedInfo.push({
-                                        'name': obj[1],
-                                        'type': obj[2].split('-')[0].split('.')[1],
-                                        'fullType': obj[2]
-                                        // 'description': objsCreated[k].description ? objsCreated[k].description : '',
-                                        // 'ws_info': objI[k]
-                                    });
+                        var wsClient = new Workspace(Config.url('workspace'), { token: this.runtime.authToken() });
+                        Promise.resolve(wsClient.get_object_info_new({ objects: objRefs }))
+                            .then(function (objInfo) {
+                                this.tabController.addTab({
+                                    tab: 'New Data Objects',
+                                    showContentCallback: function () {
+                                        var renderedInfo = [];
+                                        var $div = $('<div>');
+                                        objInfo.forEach(function (obj) {
+                                            renderedInfo.push({
+                                                'name': obj[1],
+                                                'type': obj[2].split('-')[0].split('.')[1],
+                                                'fullType': obj[2]
+                                                    // 'description': objsCreated[k].description ? objsCreated[k].description : '',
+                                                    // 'ws_info': objI[k]
+                                            });
+                                        });
+                                        var $objTable = $(newObjTmpl(renderedInfo));
+                                        for (var i = 0; i < objInfo.length; i++) {
+                                            var info = objInfo[0];
+                                            $objTable.find('#' + objInfo[i][1]).click(function () {
+                                                this.openViewerCell(this.createInfoObject(info));
+                                            }.bind(this));
+                                        }
+                                        $div.append($objTable);
+                                        return $div;
+                                    }.bind(this)
                                 });
-                                var $objTable = $(newObjTmpl(renderedInfo));
-                                for (var i=0; i<objInfo.length; i++) {
-                                    var info = objInfo[0];
-                                    $objTable.find('#' + objInfo[i][1]).click(function() {
-                                        this.openViewerCell(this.createInfoObject(info));
-                                    }.bind(this));
-                                }
-                                $div.append($objTable);
-                                return $div;
-                            }.bind(this)});
-                        }.bind(this))
-                        .catch(function(error) {
-                            //die silently.
-                        });
+                            }.bind(this))
+                            .catch(function (error) {
+                                //die silently.
+                            });
                     }
                 }
                 this.showingNewObjects = true;
@@ -292,7 +315,8 @@ define([
         createInfoObject: function (info) {
             return _.object(['id', 'name', 'type', 'save_date', 'version',
                 'saved_by', 'ws_id', 'ws_name', 'chsum', 'size',
-                'meta'], info);
+                'meta'
+            ], info);
         },
 
         /**
@@ -301,7 +325,7 @@ define([
          * Handles whether it's a string, array, or object.
          * Scans recursively, too. Fun!
          */
-        guessReferences: function(obj) {
+        guessReferences: function (obj) {
             /* 3 cases.
              * 1. obj == string
              * - test for xxx/yyy/zzz format. if so == ref
@@ -311,82 +335,83 @@ define([
              * - scan all elements with guessReferences
              */
             var type = Object.prototype.toString.call(obj);
-            switch(type) {
-                case '[object String]':
-                    if (obj.match(/^[^\/]+\/[^\/]+(\/[^\/]+)?$/)) {
-                        return [obj];
-                    }
-                    else {
-                        return null;
-                    }
-
-                case '[object Array]':
-                    var ret = [];
-                    obj.forEach(function (elem) {
-                        var refs = this.guessReferences(elem);
-                        if (refs) {
-                            ret = ret.concat(refs);
-                        }
-                    }.bind(this));
-                    return ret;
-
-                case '[object Object]':
-                    var ret = [];
-                    Object.keys(obj).forEach(function(key) {
-                        var refs = this.guessReferences(obj[key]);
-                        if (refs) {
-                            ret = ret.concat(refs);
-                        }
-                    }.bind(this));
-                    return ret;
-
-                default:
+            switch (type) {
+            case '[object String]':
+                if (obj.match(/^[^\/]+\/[^\/]+(\/[^\/]+)?$/)) {
+                    return [obj];
+                } else {
                     return null;
-            }
-        },
+                }
 
-        makeNewDataView: function() {
-            return $('<div>');
-        },
+            case '[object Array]':
+                var ret = [];
+                obj.forEach(function (elem) {
+                    var refs = this.guessReferences(elem);
+                    if (refs) {
+                        ret = ret.concat(refs);
+                    }
+                }.bind(this));
+                return ret;
 
-        showReport: function() {
-            if (!this.showingReport) {
-                this.tabController.addTab({tab: 'Report', showContentCallback: function() {
-                    var params = this.outputWidgetInfo.params;
-                    params.showReportText = true;
-                    params.showCreatedObjects = false;
-                    var $reportDiv = $('<div>');
-                    new KBaseReportView($reportDiv, params);
-                    return $reportDiv;
-                }.bind(this)});
-                this.showingReport = true;
-            }
-        },
+            case '[object Object]':
+                var ret = [];
+                Object.keys(obj).forEach(function (key) {
+                    var refs = this.guessReferences(obj[key]);
+                    if (refs) {
+                        ret = ret.concat(refs);
+                    }
+                }.bind(this));
+                return ret;
 
-        makeReportPanel: function() {
-            return $('<div>');
-        },
-
-        makeBody: function() {
-            return $('<div>');
-        },
-
-        makeHeader: function() {
-            var tmpl = Handlebars.compile(HeaderTemplate);
-            return $(tmpl(this.appInfo));
-        },
-
-        getCellState: function() {
-            var metadata = this.cell.metadata;
-            if (metadata.kbase && metadata.kbase.state) {
-                return metadata.kbase.state;
-            }
-            else {
+            default:
                 return null;
             }
         },
 
-        setCellState: function() {
+        makeNewDataView: function () {
+            return $('<div>');
+        },
+
+        showReport: function () {
+            if (!this.showingReport) {
+                this.tabController.addTab({
+                    tab: 'Report',
+                    showContentCallback: function () {
+                        var params = this.outputWidgetInfo.params;
+                        params.showReportText = true;
+                        params.showCreatedObjects = false;
+                        var $reportDiv = $('<div>');
+                        new KBaseReportView($reportDiv, params);
+                        return $reportDiv;
+                    }.bind(this)
+                });
+                this.showingReport = true;
+            }
+        },
+
+        makeReportPanel: function () {
+            return $('<div>');
+        },
+
+        makeBody: function () {
+            return $('<div>');
+        },
+
+        makeHeader: function () {
+            var tmpl = Handlebars.compile(HeaderTemplate);
+            return $(tmpl(this.appInfo));
+        },
+
+        getCellState: function () {
+            var metadata = this.cell.metadata;
+            if (metadata.kbase && metadata.kbase.state) {
+                return metadata.kbase.state;
+            } else {
+                return null;
+            }
+        },
+
+        setCellState: function () {
             var metadata = this.cell.metadata;
             metadata['kbase'] = {
                 type: 'output',
@@ -397,7 +422,17 @@ define([
         },
 
         handleJobStatus: function (message) {
-            // console.log('HANDLE JOB STATUS', message);
+            // stop listeneing for job state if completed...
+            if (message.jobState.job_state === 'completed') {
+                this.channel.emit('request-job-completion', {
+                    jobId: this.jobId
+                });
+                // TODO: we need to remove all of the job listeners at this point, but 
+                // the busConnection also has the job log listeners, which may be used at any time.
+                // What we need to do is move these into separate widgets which can be stopped and started
+                // as the tabs are activated, and control their own bus connections.
+                // this.busConnection.stop();
+            }
             this.state = message.jobState;
             this.outputWidgetInfo = message.outputWidgetInfo;
             this.setCellState();
@@ -417,17 +452,39 @@ define([
             this.showLogMessage('Job has been deleted. No log available.');
         },
 
-        showError: function(message) {
+        showError: function (message) {
             this.$elem.append(message);
         },
 
-        updateJobStatusPanel: function() {
+        updateJobStatusPanel: function () {
+            var elapsedQueueTime;
+            var elapsedRunTime;
+
+            if (!this.state.creation_time) {
+                elapsedQueueTime = '-';
+                elapsedRunTime = '-';
+            } else {
+                if (!this.state.exec_start_time) {
+                    elapsedQueueTime = TimeFormat.calcTimeDifference(this.state.creation_time, new Date().getTime());
+                    elapsedRunTime = '-';
+                } else {
+                    elapsedQueueTime = TimeFormat.calcTimeDifference(this.state.creation_time, this.state.exec_start_time);
+                    if (!this.state.finish_time) {
+                        // 
+                        elapsedRunTime = TimeFormat.calcTimeDifference(this.state.exec_start_time, new Date().getTime());
+                    } else {
+                        elapsedRunTime = TimeFormat.calcTimeDifference(this.state.exec_start_time, this.state.finish_time);
+                    }
+                }
+            }
+
             var info = {
                 jobId: this.jobId,
                 status: this.state.job_state,
                 creationTime: TimeFormat.readableTimestamp(this.state.creation_time),
-                queueTime: TimeFormat.calcTimeDifference(this.state.creation_time, this.state.exec_start_time),
+                queueTime: elapsedQueueTime,
                 queuePos: this.state.position ? this.state.position : null,
+                runTime: elapsedRunTime
             };
 
             if (this.state.exec_start_time) {
@@ -441,22 +498,22 @@ define([
             return $(this.statusTableTmpl(info));
         },
 
-        makeJobStatusPanel: function() {
+        makeJobStatusPanel: function () {
             this.statusTableTmpl = Handlebars.compile(JobStatusTableTemplate);
             return this.updateJobStatusPanel();
         },
 
-        makeLogsPanel: function() {
+        makeLogsPanel: function () {
             var logsPanelTmpl = Handlebars.compile(LogPanelTemplate);
             this.logLineTmpl = Handlebars.compile(LogLineTemplate);
             var $logsPanel = $(logsPanelTmpl());
-            $logsPanel.find('#kblog-play').click(function() {
+            $logsPanel.find('#kblog-play').click(function () {
                 this.sendLogRequest('latest');
                 $logsPanel.find('button[id!="kblog-stop"]').prop('disabled', true);
                 $logsPanel.find('#kblog-stop').prop('disabled', false);
                 this.doLogLoop = true;
             }.bind(this));
-            $logsPanel.find('#kblog-stop').click(function() {
+            $logsPanel.find('#kblog-stop').click(function () {
                 if (this.looper)
                     clearTimeout(this.looper);
                 $logsPanel.find('button[id!="kblog-stop"]').prop('disabled', false);
@@ -464,19 +521,19 @@ define([
                 this.logsView.find('#kblog-spinner').hide();
                 this.doLogLoop = false;
             }.bind(this));
-            $logsPanel.find('#kblog-top').click(function() {
+            $logsPanel.find('#kblog-top').click(function () {
                 // go to beginning.
                 this.sendLogRequest(0);
             }.bind(this));
-            $logsPanel.find('#kblog-back').click(function() {
+            $logsPanel.find('#kblog-back').click(function () {
                 // go back a chunk.
                 this.sendLogRequest(Math.max(this.currentLogStart - this.maxLineRequest, 0));
             }.bind(this));
-            $logsPanel.find('#kblog-forward').click(function() {
+            $logsPanel.find('#kblog-forward').click(function () {
                 // go forward a chunk.
                 this.sendLogRequest(this.currentLogStart + this.currentLogLength);
             }.bind(this));
-            $logsPanel.find('#kblog-bottom').click(function() {
+            $logsPanel.find('#kblog-bottom').click(function () {
                 // go to end.
                 this.sendLogRequest('latest');
             }.bind(this));
@@ -485,13 +542,14 @@ define([
             //     console.log('scrolling happened!');
             // });
             $logsPanel.find("#kblog-header")
-                      .children()
-                      .tooltip()
-                      .on('click', function(e) { console.log(e); $(e.currentTarget).tooltip('hide'); });
+                .children()
+                .tooltip()
+                .on('click', function (e) { 
+                    $(e.currentTarget).tooltip('hide'); });
             return $logsPanel;
         },
 
-        sendLogRequest: function(firstLine) {
+        sendLogRequest: function (firstLine) {
             this.logsView.find('#kblog-spinner').show();
             this.pendingLogRequest = true;
             this.pendingLogLine = firstLine;
@@ -502,8 +560,7 @@ define([
                         num_lines: this.maxLineRequest
                     }
                 });
-            }
-            else {
+            } else {
                 this.runtime.bus().emit('request-job-log', {
                     jobId: this.jobId,
                     options: {
@@ -514,23 +571,23 @@ define([
             }
         },
 
-        showLogMessage: function(message) {
+        showLogMessage: function (message) {
             this.logsView.find("#kblog-msg").html(message);
         },
 
-        updateLogs: function(logs) {
+        updateLogs: function (logs) {
             this.pendingLogRequest = false;
             if (logs.max_lines > this.maxLogLines) {
-                this.showLogMessage("Showing lines " + (logs.first+1) + " to " + (logs.first + logs.lines.length) + " of " + logs.max_lines);
+                this.showLogMessage("Showing lines " + (logs.first + 1) + " to " + (logs.first + logs.lines.length) + " of " + logs.max_lines);
             }
             if (logs.first === null || logs.first === undefined || !logs.lines) {
                 return;
             }
             this.logsView.find('#kblog-panel').empty();
             var firstLine = logs.first;
-            for (var i=0; i<logs.lines.length; i++) {
+            for (var i = 0; i < logs.lines.length; i++) {
                 // logs.lines[i].line = logs.lines[i].line.trim().replace('\n', '');
-                this.logsView.find('#kblog-panel').append($(this.logLineTmpl({lineNum: (firstLine+i+1), log: logs.lines[i]})));
+                this.logsView.find('#kblog-panel').append($(this.logLineTmpl({ lineNum: (firstLine + i + 1), log: logs.lines[i] })));
             }
             this.maxLogLine = logs.maxLines;
             this.currentLogStart = logs.first;
@@ -540,9 +597,8 @@ define([
                 // don't bother looping if we're complete.
                 if (this.state.job_state === 'suspend' || this.state.job_state === 'completed') {
                     this.logsView.find('#kblog-stop').click();
-                }
-                else {
-                    this.looper = setTimeout(function() { this.sendLogRequest('latest', true); }.bind(this), 2000);
+                } else {
+                    this.looper = setTimeout(function () { this.sendLogRequest('latest', true); }.bind(this), 2000);
                 }
             }
             // var lastPos = this.logsView.find('#kblog-panel').children().last().

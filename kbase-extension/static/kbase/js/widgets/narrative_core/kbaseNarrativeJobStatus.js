@@ -112,7 +112,7 @@ define([
             this.busConnection = this.runtime.bus().connect();
             this.channel = this.busConnection.channel();
 
-            Semaphore.make().when('comm', 'ready', 5000)
+            Semaphore.make().when('comm', 'ready', Config.get('comm_wait_timeout'))
                 .then(function () {
                     this.busConnection.listen({
                         channel: {

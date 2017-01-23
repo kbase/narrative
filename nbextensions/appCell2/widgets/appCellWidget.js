@@ -21,6 +21,7 @@ define([
     'common/format',
     'common/spec',
     'common/semaphore',
+    'narrativeConfig',
     'google-code-prettify/prettify',
     './appCellWidget-fsm',
     './tabs/runStatsTab',
@@ -53,6 +54,7 @@ define([
     format,
     Spec,
     Semaphore,
+    Config,
     PR,
     AppStates,
     runStatsTabWidget,
@@ -2412,7 +2414,7 @@ define([
         }
 
         function start() {
-            return Semaphore.make().when('comm', 'ready', 5000)
+            return Semaphore.make().when('comm', 'ready', Config.get('comm_wait_timeout'))
                 .then(function () {
                     /*
                      * listeners for the local input cell message bus

@@ -3,6 +3,14 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v4.2.1 (more notes will follow).
 
+### Version 3.1.4
+__Changes__
+- Linked the new reads uploaders to the staging panel.
+- Wired the staging panel to include the subpath (not the username, just any subdirectories) in the input to uploaders.
+- Linked the staging panel to get its uploader specs from a source that includes the currently selected version tag.
+- Added configuration for several data panel properties (max number of items to fetch, etc.).
+- Added a semaphore lock that prevents any backend job lookup calls from being made before the channel is ready.
+
 ### Version 3.1.3
 __Changes__
 - Fixed bug where read-only Narratives were still interactive (apps had run and reset buttons)

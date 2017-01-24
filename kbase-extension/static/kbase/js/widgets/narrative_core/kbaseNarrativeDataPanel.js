@@ -467,7 +467,7 @@ define([
             ];
 
             if (Config.get('features').stagingDataViewer) {
-                tabList.push({tabName: '<small>Staging<small>', content: stagingPanel});
+                tabList.push({tabName: '<small>Staging (Beta)<small>', content: stagingPanel});
             }
 
             // add tabs

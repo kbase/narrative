@@ -866,12 +866,19 @@ define([
                 return new Uuid(4).format();
             }
 
+            function connectionListen() {
+                var l = listen.apply(null, arguments);
+                listeners.push(l);
+            }
+
 
             return {
                 channel: channel,
                 genName: genName,
                 stats: stats,
-                stop: stop
+                stop: stop,
+                // global listeners, etc.
+                listen: connectionListen
             };
         }
 

@@ -58,7 +58,8 @@ define([
         loading_gif: ConfigSet.loading_gif,
         use_local_widgets: ConfigSet.use_local_widgets,
         features: FeatureSet,
-        data_panel: ConfigSet.data_panel
+        data_panel: ConfigSet.data_panel,
+        comm_wait_timeout: ConfigSet.comm_wait_timeout
     };
 
     debug = config.mode === "debug";

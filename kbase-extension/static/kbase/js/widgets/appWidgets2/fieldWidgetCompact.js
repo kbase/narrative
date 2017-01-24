@@ -19,7 +19,7 @@ define([
     'common/runtime',
     './errorControl',
     'css!google-code-prettify/prettify.css'
-], function(
+], function (
     Promise,
     PR,
     html,
@@ -127,7 +127,7 @@ define([
                         class: 'btn btn-link alert-link',
                         id: events.addEvent({
                             type: 'click',
-                            handler: function() {
+                            handler: function () {
                                 showMessageDialog(messageDef.id);
                             }
                         })
@@ -217,24 +217,24 @@ define([
 
         function parameterInfoTypeRules(spec) {
             switch (spec.data.type) {
-                case 'float':
-                    return [
-                        tr([th('Min'), td(spec.data.constraints.min)]), // update this in the spec
-                        tr([th('Max'), td(spec.data.constraints.max)])
-                    ];
-                case 'int':
-                    // just for now ...
-                    //                    if (spec.spec.field_type === 'checkbox') {
-                    //                        return [
-                    //                            // TODO: fix
-                    //                            tr([th('Value when checked'), td(Props.getDataItem(spec.spec, 'checkbox_options.checked_value', UI.na()))]),
-                    //                            tr([th('Value when un-checked'), td(Props.getDataItem(spec.spec, 'checkbox_options.unchecked_value', UI.na()))])
-                    //                        ];
-                    //                    }
-                    return [
-                        tr([th('Min'), td(spec.data.constraints.min)]),
-                        tr([th('Max'), td(spec.data.constraints.max)])
-                    ];
+            case 'float':
+                return [
+                    tr([th('Min'), td(spec.data.constraints.min)]), // update this in the spec
+                    tr([th('Max'), td(spec.data.constraints.max)])
+                ];
+            case 'int':
+                // just for now ...
+                //                    if (spec.spec.field_type === 'checkbox') {
+                //                        return [
+                //                            // TODO: fix
+                //                            tr([th('Value when checked'), td(Props.getDataItem(spec.spec, 'checkbox_options.checked_value', UI.na()))]),
+                //                            tr([th('Value when un-checked'), td(Props.getDataItem(spec.spec, 'checkbox_options.unchecked_value', UI.na()))])
+                //                        ];
+                //                    }
+                return [
+                    tr([th('Min'), td(spec.data.constraints.min)]),
+                    tr([th('Max'), td(spec.data.constraints.max)])
+                ];
             }
         }
 
@@ -244,7 +244,7 @@ define([
                 tr([th('Data type'), td(spec.data.type)]),
                 // tr([th('Field type'), td(spec.spec.field_type)]),
                 tr([th('Multiple values?'), td(spec.multipleItems ? 'yes' : 'no')]),
-                (function() {
+                (function () {
                     //                    if (!spec.spec.default_values) {
                     //                        return;
                     //                    }
@@ -257,7 +257,7 @@ define([
                     //                    }
                     return tr([th('Default value'), td(spec.data.defaultValue)]);
                 }()),
-                (function() {
+                (function () {
                     if (spec.data.constraints.types) {
                         return tr([th('Valid types'), td(spec.data.constraints.types.join('<br>'))]);
                     }
@@ -398,7 +398,7 @@ define([
                                 tabindex: "-1",
                                 id: events.addEvent({
                                     type: 'click',
-                                    handler: function() {
+                                    handler: function () {
                                         places.infoPanel.querySelector('[data-element="big-tip"]').classList.toggle('hidden');
                                         // ui.getElement('big-tip').classList.toggle('hidden');
                                     }
@@ -442,40 +442,42 @@ define([
         // LIFECYCLE
 
         function attach(node) {
-            parent = node;
-            container = parent.appendChild(document.createElement('div'));
-            ui = UI.make({ node: container });
-            var events = Events.make({
-                node: container
+            return Promise.try(function () {
+                parent = node;
+                container = parent.appendChild(document.createElement('div'));
+                ui = UI.make({ node: container });
+                var events = Events.make({
+                    node: container
+                });
+
+                var rendered = render(events);
+                container.innerHTML = rendered.content;
+                events.attachEvents();
+                // TODO: use the pattern in which the render returns an object,
+                // which includes events and other functions to be run after
+                // content is added to the dom.
+                PR.prettyPrint(null, container);
+
+                places = {
+                    field: document.getElementById(fieldId),
+                    message: document.getElementById(rendered.places.message),
+                    messagePanel: document.getElementById(rendered.places.messagePanel),
+                    infoPanel: document.getElementById(rendered.places.infoPanel),
+                    feedback: document.getElementById(rendered.places.feedback),
+                    feedbackIndicator: document.getElementById(rendered.places.feedbackIndicator),
+                    inputControl: document.getElementById(rendered.places.inputControl)
+                };
+                if (inputControl.attach) {
+                    return inputControl.attach(places.inputControl);
+                }
             });
-
-            var rendered = render(events);
-            container.innerHTML = rendered.content;
-            events.attachEvents();
-            // TODO: use the pattern in which the render returns an object,
-            // which includes events and other functions to be run after
-            // content is added to the dom.
-            PR.prettyPrint(null, container);
-
-            places = {
-                field: document.getElementById(fieldId),
-                message: document.getElementById(rendered.places.message),
-                messagePanel: document.getElementById(rendered.places.messagePanel),
-                infoPanel: document.getElementById(rendered.places.infoPanel),
-                feedback: document.getElementById(rendered.places.feedback),
-                feedbackIndicator: document.getElementById(rendered.places.feedbackIndicator),
-                inputControl: document.getElementById(rendered.places.inputControl)
-            };
-            if (inputControl.attach) {
-                return inputControl.attach(places.inputControl);
-            }
         }
 
         function start(arg) {
-            attach(arg.node);
-            return Promise.try(function() {
-                bus.on('validation', function(message) {
-                    switch (message.diagnosis) {
+            attach(arg.node)
+                .then(function () {
+                    bus.on('validation', function (message) {
+                        switch (message.diagnosis) {
                         case 'valid':
                             feedbackOk();
                             clearError();
@@ -504,42 +506,42 @@ define([
                             feedbackNone();
                             clearError();
                             break;
+                        }
+                    });
+                    // bus.on('touched', function (message) {
+                    //     places.feedback.style.backgroundColor = 'yellow';
+                    // });
+                    // bus.on('changed', function () {
+                    //     places.feedback.style.backgroundColor = '';
+                    // });
+                    bus.on('saved', function (message) {
+                        console.log('FIELD detected saved');
+                    });
+                    bus.on('enable', function (message) {
+                        doEnable();
+                    });
+                    bus.on('disable', function (message) {
+                        doDisable();
+                    });
+
+                    if (inputControl.start) {
+                        return inputControl.start({
+                                node: places.inputControl
+                            })
+                            .then(function () {
+                                // TODO: get rid of this pattern
+                                bus.emit('run', {
+                                    node: places.inputControl
+                                });
+                            });
                     }
                 });
-                // bus.on('touched', function (message) {
-                //     places.feedback.style.backgroundColor = 'yellow';
-                // });
-                // bus.on('changed', function () {
-                //     places.feedback.style.backgroundColor = '';
-                // });
-                bus.on('saved', function(message) {
-                    console.log('FIELD detected saved');
-                });
-                bus.on('enable', function(message) {
-                    doEnable();
-                });
-                bus.on('disable', function(message) {
-                    doDisable();
-                });
-
-                if (inputControl.start) {
-                    return inputControl.start({
-                            node: places.inputControl
-                        })
-                        .then(function() {
-                            // TODO: get rid of this pattern
-                            bus.emit('run', {
-                                node: places.inputControl
-                            });
-                        });
-                }
-            });
         }
 
         function stop() {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 return inputControl.stop()
-                    .then(function() {
+                    .then(function () {
                         if (parent && container) {
                             parent.removeChild(container);
                         }
@@ -557,7 +559,7 @@ define([
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
         }
     };

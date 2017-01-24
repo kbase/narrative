@@ -57,8 +57,8 @@ define([
         workspaceId: workspaceId,
         loading_gif: ConfigSet.loading_gif,
         use_local_widgets: ConfigSet.use_local_widgets,
-        features: FeatureSet
-
+        features: FeatureSet,
+        comm_wait_timeout: ConfigSet.comm_wait_timeout
     };
 
     debug = config.mode === "debug";

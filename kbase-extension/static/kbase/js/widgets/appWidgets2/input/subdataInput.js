@@ -57,6 +57,7 @@ define([
             workspaceId = runtime.getEnv('workspaceId'),
             busConnection = runtime.bus().connect(),
             channel = busConnection.channel(config.channelName),
+            paramsChannel = busConnection.channel(config.paramsChannelName),
             parent,
             container,
             model,
@@ -859,73 +860,79 @@ define([
              *
              */
 
-            channel.listen({
-                key: {
-                    type: 'parameter-changed',
-                    parameter: spec.data.constraints.subdataSelection.constant_ref
-                },
-                handle: function(message) {
-                    var newValue = message.newValue;
-                    if (message.newValue === '') {
-                        newValue = null;
+            if (spec.data.constraints.subdataSelection.constant_ref) {
+                paramsChannel.listen({
+                    key: {
+                        type: 'parameter-changed',
+                        parameter: spec.data.constraints.subdataSelection.constant_ref
+                    },
+                    handle: function(message) { 
+                        var newValue = message.newValue;
+                        if (message.newValue === '') {
+                            newValue = null;
+                        }
+                        // reset the entire model.
+                        model.reset();
+                        model.setItem('referenceObjectName', newValue);
+                        syncAvailableValues()
+                            .then(function() {
+                                updateInputControl('availableValues');
+                            })
+                            .catch(function(err) {
+                                console.error('ERROR syncing available values', err);
+                            });
                     }
-                    // reset the entire model.
-                    model.reset();
-                    model.setItem('referenceObjectName', newValue);
-                    syncAvailableValues()
-                        .then(function() {
-                            updateInputControl('availableValues');
-                        })
-                        .catch(function(err) {
-                            console.error('ERROR syncing available values', err);
-                        });
-                }
-            });
+                });
+            }
 
-            channel.listen({
-                key: {
-                    type: 'parameter-changed',
-                    parameter: spec.data.constraints.subdataSelection.parameter_id
-                },
-                handle: function(message) {
-                    var newValue = message.newValue;
-                    if (message.newValue === '') {
-                        newValue = null;
+            if (spec.data.constraints.subdataSelection.parameter_id) {
+                paramsChannel.listen({
+                    key: {
+                        type: 'parameter-changed',
+                        parameter: spec.data.constraints.subdataSelection.parameter_id
+                    },
+                    handle: function(message) {
+                        var newValue = message.newValue;
+                        if (message.newValue === '') {
+                            newValue = null;
+                        }
+                        // reset the entire model.
+                        model.reset();
+                        model.setItem('referenceObjectName', newValue);
+                        syncAvailableValues()
+                            .then(function() {
+                                updateInputControl('availableValues');
+                            })
+                            .catch(function(err) {
+                                console.error('ERROR syncing available values', err);
+                            });
                     }
-                    // reset the entire model.
-                    model.reset();
-                    model.setItem('referenceObjectName', newValue);
-                    syncAvailableValues()
-                        .then(function() {
-                            updateInputControl('availableValues');
-                        })
-                        .catch(function(err) {
-                            console.error('ERROR syncing available values', err);
-                        });
-                }
-            });
+                });
+            }
 
-            channel.listen({
-                key: {
-                    type: 'parameter-value',
-                    parameter: spec.data.constraints.subdataSelection.parameter_id
-                },
-                handle: function(message) {
-                    var newValue = message.newValue;
-                    if (message.newValue === '') {
-                        newValue = null;
+            if (spec.data.constraints.subdataSelection.parameter_id) {
+                paramsChannel.listen({
+                    key: {
+                        type: 'parameter-value',
+                        parameter: spec.data.constraints.subdataSelection.parameter_id
+                    },
+                    handle: function(message) {
+                        var newValue = message.newValue;
+                        if (message.newValue === '') {
+                            newValue = null;
+                        }
+                        model.reset();
+                        model.setItem('referenceObjectName', newValue);
+                        syncAvailableValues()
+                            .then(function() {
+                                updateInputControl('availableValues');
+                            })
+                            .catch(function(err) {
+                                console.error('ERROR syncing available values', err);
+                            });
                     }
-                    model.reset();
-                    model.setItem('referenceObjectName', newValue);
-                    syncAvailableValues()
-                        .then(function() {
-                            updateInputControl('availableValues');
-                        })
-                        .catch(function(err) {
-                            console.error('ERROR syncing available values', err);
-                        });
-                }
-            });
+                });
+            }
 
             // This control has a dependency relationship in that its
             // selection of available values is dependent upon a sub-property
@@ -939,7 +946,7 @@ define([
             //            });
             // channel.emit('sync');
 
-            channel.request({
+            paramsChannel.request({
                     parameterName: spec.id
                 }, {
                     key: {
@@ -999,14 +1006,14 @@ define([
                 // Get initial data.
                 // Weird, but will make it look nicer.
                 Promise.all([
-                        channel.request({
+                        paramsChannel.request({
                             parameterName: spec.id
                         }, {
                             key: {
                                 type: 'get-parameter'
                             }
                         }),
-                        channel.request({
+                        paramsChannel.request({
                             parameterName: spec.data.constraints.subdataSelection.parameter_id
                         }, {
                             key: {
@@ -1019,10 +1026,20 @@ define([
                         // not play nice with the model props defaulting mechanism which
                         // works with absent or undefined (null being considered an actual value, which
                         // it is of course!)
-                        if (paramValue.value === null) {
+                        // if (paramValue.value === null || paramValue.value === undefined) {
+                        //     model.setItem('selectedItems', []);
+                        // } else {
+                        //     var selectedItems = paramValue.value;
+                        //     if (!(selectedItems instanceof Array)) {
+                        //         selectedItems = [selectedItems];
+                        //     }
+                        //     model.setItem('selectedItems', selectedItems);
+                        // }
+                        // updateInputControl('value');
+                         if (!config.initialValue) {
                             model.setItem('selectedItems', []);
                         } else {
-                            var selectedItems = paramValue.value;
+                            var selectedItems = config.initialValue;
                             if (!(selectedItems instanceof Array)) {
                                 selectedItems = [selectedItems];
                             }

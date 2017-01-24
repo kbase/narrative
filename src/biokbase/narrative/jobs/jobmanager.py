@@ -92,15 +92,21 @@ class JobManager(object):
             try:
                 job_info = job_param_info[job_id]
 
+                job = Job.from_state(job_id,
+                                     job_info,
+                                     user_info[0],
+                                     app_id=job_info.get('app_id'),
+                                     tag=job_meta.get('tag', 'release'),
+                                     cell_id=job_meta.get('cell_id', None),
+                                     run_id=job_meta.get('run_id', None))
+
+                # Note that when jobs for this narrative are initially loaded,
+                # they are set to not be refreshed. Rather, if a client requests
+                # updates via the start_job_update message, the refresh flag will
+                # be set to True.
                 self._running_jobs[job_id] = {
-                    'refresh': True,
-                    'job': Job.from_state(job_id,
-                                          job_info,
-                                          user_info[0],
-                                          app_id=job_info.get('app_id'),
-                                          tag=job_meta.get('tag', 'release'),
-                                          cell_id=job_meta.get('cell_id', None),
-                                          run_id=job_meta.get('run_id', None))
+                    'refresh': False,
+                    'job': job
                 }
 
             except Exception as e:
@@ -373,7 +379,9 @@ class JobManager(object):
         self._running_jobs[job.job_id] = {'job': job, 'refresh': True}
         # push it forward! create a new_job message.
         self._lookup_job_status(job.job_id)
-        self._send_comm_message('new_job', {})
+        self._send_comm_message('new_job', {
+            'job_id': job.job_id
+        })
 
     def get_job(self, job_id):
         """

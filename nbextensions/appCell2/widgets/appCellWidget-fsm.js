@@ -181,6 +181,10 @@ define([], function() {
                 },
                 {
                     mode: 'processing',
+                    state: 'launched'
+                },
+                {
+                    mode: 'processing',
                     stage: 'queued'
                 },
                 {

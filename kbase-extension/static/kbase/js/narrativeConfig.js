@@ -62,6 +62,9 @@ define([
         features: FeatureSet,
         uploaders: StagingUpload
 
+        features: FeatureSet,
+        data_panel: ConfigSet.data_panel,
+        comm_wait_timeout: ConfigSet.comm_wait_timeout
     };
 
     debug = config.mode === "debug";

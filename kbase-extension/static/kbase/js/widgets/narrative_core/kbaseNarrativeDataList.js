@@ -58,23 +58,6 @@ define([
             ws_url: Config.url('workspace'),
             lp_url: Config.url('landing_pages'),
             loadingImage: Config.get('loading_gif'),
-            ws_chunk_size: 10000, // this is the limit of the number of objects to retrieve from the ws on each pass
-            ws_max_objs_to_fetch: 75000, // this is the total limit of the number of objects before we stop trying to get more
-            // note that if there are more objects than this, then sorts/search filters may
-            // not show accurate results
-
-            objs_to_render_to_start: 40, // initial number of rows to display
-            objs_to_render_on_scroll: 5, // number of rows to add when the user scrolls to the bottom, should be <=5, much more and
-            // the addition of new rows becomes jerky
-
-            maxObjsToPreventFilterAsYouTypeInSearch: 50000, //if there are more than this # of objs, user must click search
-            //instead of updating as you type
-
-            max_objs_to_prevent_initial_sort: 10000, // initial sort makes loading slower, so we can turn it off if
-            // there are more than this number of objects
-
-            max_name_length: 33,
-            refresh_interval: 10000,
             parentControlPanel: null,
             slideTime: 400
         },
@@ -239,6 +222,29 @@ define([
         init: function(options) {
             this._super(options);
             var self = this;
+
+            var dataConfig = Config.get('data_panel');
+            // this is the limit of the number of objects to retrieve from the ws on each pass
+            // note that if there are more objects than this, then sorts/search filters may
+            // not show accurate results
+            this.options.ws_chunk_size = dataConfig.ws_chunk_size;
+            this.options.ws_max_objs_to_fetch = dataConfig.ws_max_objs_to_fetch;
+
+            // initial number of rows to display
+            this.options.objs_to_render_to_start = dataConfig.obj_render_initial;
+            // number of rows to add when the user scrolls to the bottom, should be <=5,
+            // much more and the addition of new rows becomes jerky
+            this.options.objs_to_render_on_scroll = dataConfig.obj_render_scroll;
+
+            //if there are more than this # of objs, user must click search
+            //instead of updating as you type
+            this.options.maxObjsToPreventFilterAsYouTypeInSearch = dataConfig.typeahead_search_limit;
+
+            // initial sort makes loading slower, so we can turn it off if
+            // there are more than this number of objects
+            this.options.max_objs_to_prevent_initial_sort = dataConfig.initial_sort_limit;
+            this.options.max_name_length = dataConfig.max_name_length;
+            this.options.refresh_interval = dataConfig.refresh_interval_ms;
 
             this.$controllerDiv = $('<div>');
             this.$elem.append(this.$controllerDiv);

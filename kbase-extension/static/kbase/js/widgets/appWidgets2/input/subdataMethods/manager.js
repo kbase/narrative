@@ -236,6 +236,7 @@ define([
                 }];
             return workspace.get_object_subset(query)
                 .then(function(result) {
+                    console.log('extracting items', result, arg);
                     return arg.extractItems(result, arg.params);
                 });
         }

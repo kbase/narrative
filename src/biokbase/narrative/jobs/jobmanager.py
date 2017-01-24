@@ -344,17 +344,31 @@ class JobManager(object):
         for job_id in self._running_jobs.keys():
             if self._running_jobs[job_id]['refresh'] or ignore_refresh_flag:
                 jobs_to_lookup.append(job_id)
+        # Only bother with the message if there are 
         status_set = self._construct_job_status_set(jobs_to_lookup)
         self._send_comm_message('job_status_all', status_set)
+
+        return len(jobs_to_lookup)
+
+    def _start_job_status_loop(self):
+        kblogging.log_event(self._log, 'starting job status loop', {})
+        if self._lookup_timer == None:
+            self._lookup_job_status_loop()
 
     def _lookup_job_status_loop(self):
         """
         Initialize a loop that will look up job info. This uses a Timer thread on a 10
         second loop to update things.
         """
-        self._lookup_all_job_status()
-        self._lookup_timer = threading.Timer(10, self._lookup_job_status_loop)
-        self._lookup_timer.start()
+        
+        refreshing_jobs = self._lookup_all_job_status()
+        # Automatically stop when there are no more jobs requesting a refresh.
+        print('here')
+        if refreshing_jobs == 0:
+            self.cancel_job_lookup_loop()
+        else:
+            self._lookup_timer = threading.Timer(10, self._lookup_job_status_loop)
+            self._lookup_timer.start()
 
     def cancel_job_lookup_loop(self):
         """
@@ -441,7 +455,7 @@ class JobManager(object):
                 self.cancel_job_lookup_loop()
 
             elif r_type == 'start_update_loop':
-                self._lookup_job_status_loop()
+                self._start_job_status_loop()
 
             elif r_type == 'stop_job_update':
                 if job_id is not None:
@@ -450,6 +464,7 @@ class JobManager(object):
             elif r_type == 'start_job_update':
                 if job_id is not None:
                     self._running_jobs[job_id]['refresh'] = True
+                    self._start_job_status_loop()
 
             elif r_type == 'delete_job':
                 if job_id is not None:

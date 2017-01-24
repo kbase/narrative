@@ -293,27 +293,7 @@ define([
 
         function renderLayout() {
             var events = Events.make(),
-                content = form({ dataElement: 'input-widget-form' }, [
-                    ui.buildPanel({
-                        type: 'default',
-                        body: [
-                            // ui.makeButton('Show Advanced', 'toggle-advanced', {events: events}),
-                            div({
-                                class: 'btn-toolbar pull-right'
-                            }, [
-                                ui.buildButton({
-                                    events: events,
-                                    name: 'reset-to-defaults',
-                                    icon: {
-                                        name: 'recycle'
-                                    },
-                                    label: 'Reset'
-                                })
-                                // ui.makeButton('Reset to Defaults', 'reset-to-defaults', {events: events})
-                            ])
-                        ],
-                        classes: ['kb-panel-light']
-                    }),
+                content = form({ dataElement: 'input-widget-form' }, [                    
                     ui.buildPanel({
                         title: span(['Input Objects', span({ dataElement: 'advanced-hidden-message', style: { marginLeft: '6px', fontStyle: 'italic' } })]),
                         name: 'input-objects-area',

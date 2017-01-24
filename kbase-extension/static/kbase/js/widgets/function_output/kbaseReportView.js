@@ -264,7 +264,7 @@ define([
         // preserved for a minute. The approach below blocks off the report and presents a 
         // translucent layer and link on top of the report area. The premise is that the 
         // content is nearly useless, so don't encourage users to try to use it.
-        
+
         // openReportWindow: function (arg) {
         //     var w = window.open('http://www.apple.com', 'report');
         //     w.focus();
@@ -730,7 +730,7 @@ define([
                         var reportLink;
                         // button to open the report in an external window.
                         var reportButton;
-                        if (report.direct_html_link_index !== null) {
+                        if (typeof report.direct_html_link_index === 'number') {
                             reportLink = _this.reportLinks[report.direct_html_link_index];
                             if (reportLink) {
                                 reportButton = div({

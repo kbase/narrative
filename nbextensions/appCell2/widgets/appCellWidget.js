@@ -1949,12 +1949,8 @@ define([
         //       it is created during the code build (since it needs to be passed
         //       to the kernel)
         function doRun() {
-            console.log('doRun - 1');
             fsm.newState({ mode: 'execute-requested' });
-            console.log('doRun - 2');
             renderUI();
-            console.log('doRun - 3');
-
 
             // Save this to the exec state change log.
             var execLog = model.getItem('exec.log');
@@ -1969,11 +1965,8 @@ define([
                 }
             });
             model.setItem('exec.log', execLog);
-            console.log('doRun - 4');
 
             cell.execute();
-            console.log('doRun - 5');
-
         }
 
         // LIFECYCLE API
@@ -2113,7 +2106,7 @@ define([
             });
             jobListeners.push(ev);
 
-            runtime.bus().emit('request-job-status', {
+            runtime.bus().emit('request-job-update', {
                 jobId: jobId
             });
         }
@@ -2547,7 +2540,6 @@ define([
                             case 'launched':
                             case 'queued':
                             case 'running':
-                                console.log('app cell starting in processing mode, so listening for job updates...');
                                 startListeningForJobMessages(model.getItem('exec.jobState.job_id'));
                                 requestJobStatus(model.getItem('exec.jobState.job_id'));
                                 break;

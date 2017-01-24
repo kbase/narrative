@@ -62,7 +62,7 @@ define([
             this.$messagePane = $('<div/>').addClass('kbwidget-message-pane kbwidget-hide-message');
             this.$elem.append(this.$messagePane);
 
-            this.$mainPanel = $('<div>');
+            this.$mainPanel = $('<div>').addClass('report-widget');
             this.$elem.append(this.$mainPanel);
 
             return this;
@@ -252,12 +252,6 @@ define([
                     srcdoc: iframeContent
                 });
 
-            // console.log('built  params with: ', {
-            //     parentHost: iframeOrigin,
-            //     iframeId: iframeId,
-            //     serviceId: iframeMessages.serviceId
-            // });
-
             return {
                 parentHost: iframeOrigin,
                 host: iframeOrigin,
@@ -267,106 +261,105 @@ define([
             };
         },
 
-        openReportWindow: function (arg) {
-            var w = window.open('http://www.apple.com', 'report');
-            w.focus();
-        },
+        // preserved for a minute. The approach below blocks off the report and presents a 
+        // translucent layer and link on top of the report area. The premise is that the 
+        // content is nearly useless, so don't encourage users to try to use it.
+        
+        // openReportWindow: function (arg) {
+        //     var w = window.open('http://www.apple.com', 'report');
+        //     w.focus();
+        // },
 
-        makeIframeDoc: function (arg) {
-            var t = html.tag,
-                iframe = t('iframe'),
-                div = t('div');
+        // makeIframeDoc: function (arg) {
+        //     var t = html.tag,
+        //         iframe = t('iframe'),
+        //         div = t('div');
 
-            var iframeId = 'frame_' + html.genId();
+        //     var iframeId = 'frame_' + html.genId();
 
-            var _this = this;
+        //     var _this = this;
 
-            // The iframe content needs requirejs amd.
+        //     // The iframe content needs requirejs amd.
 
-            var width = arg.width || '100%',
-                maxHeight = arg.maxHeight || 'auto',
-                iframeContent = arg.content,
-                iframeHtml = iframe({
-                    style: {
-                        display: 'block',
-                        width: width,
-                        height: '500px',
-                        maxHeight: maxHeight,
-                        margin: 0,
-                        padding: 0
-                    },
-                    dataFrame: iframeId,
-                    frameborder: '0',
-                    id: iframeId,
-                    src: 'data:text/html;charset=utf-8,' + encodeURIComponent(iframeContent)
-                }),
-                wrappedIframe = div({
-                    style: {
-                        position: 'relative'
-                    }
-                }, [
-                    div({
-                        id: arg.events.addEvent({
-                            type: 'click',
-                            handler: function (e) {
-                                _this.openReportWindow({
-                                    url: 'something'
-                                });
-                            }
-                        }),
-                        style: {
-                            position: 'absolute',
-                            top: '0',
-                            bottom: '0',
-                            left: '0',
-                            right: '0',
-                            backgroundColor: 'rgba(200,200,200,0.5)'
-                        }
-                    }, [
-                        div({
-                            style: {
-                                position: 'absolute',
-                                top: '50%',
-                                fontSize: '200%',
-                                color: '#FFF',
-                                fontWeight: 'bold',
-                                padding: '8px',
-                                backgroundColor: 'rgba(100,100,100,0.5)',
-                                textAlign: 'center',
-                                margin: 'auto',
-                                border: '2px green solid'
-                            }
-                        }, 'Click anywhere to view report')
-                    ]),
-                    iframeHtml
-                ]);
+        //     var width = arg.width || '100%',
+        //         maxHeight = arg.maxHeight || 'auto',
+        //         iframeContent = arg.content,
+        //         iframeHtml = iframe({
+        //             style: {
+        //                 display: 'block',
+        //                 width: width,
+        //                 height: arg.height,
+        //                 maxHeight: maxHeight,
+        //                 margin: 0,
+        //                 padding: 0
+        //             },
+        //             dataFrame: iframeId,
+        //             frameborder: '0',
+        //             id: iframeId,
+        //             src: 'data:text/html;charset=utf-8,' + encodeURIComponent(iframeContent)
+        //         }),
+        //         wrappedIframe = div({
+        //             style: {
+        //                 position: 'relative'
+        //             }
+        //         }, [
+        //             div({
+        //                 id: arg.events.addEvent({
+        //                     type: 'click',
+        //                     handler: function (e) {
+        //                         _this.openReportWindow({
+        //                             url: 'something'
+        //                         });
+        //                     }
+        //                 }),
+        //                 style: {
+        //                     position: 'absolute',
+        //                     top: '0',
+        //                     bottom: '0',
+        //                     left: '0',
+        //                     right: '0',
+        //                     backgroundColor: 'rgba(200,200,200,0.5)'
+        //                 }
+        //             }, [
+        //                 div({
+        //                     style: {
+        //                         position: 'absolute',
+        //                         top: '50%',
+        //                         fontSize: '200%',
+        //                         color: '#FFF',
+        //                         fontWeight: 'bold',
+        //                         padding: '8px',
+        //                         backgroundColor: 'rgba(100,100,100,0.5)',
+        //                         textAlign: 'center',
+        //                         margin: 'auto',
+        //                         border: '2px green solid'
+        //                     }
+        //                 }, 'Click anywhere to view report')
+        //             ]),
+        //             iframeHtml
+        //         ]);
 
-            return {
-                id: iframeId,
-                content: wrappedIframe
-            };
-        },
+        //     return {
+        //         id: iframeId,
+        //         content: wrappedIframe
+        //     };
+        // },
 
         makeIframeSrcDataPlain: function (arg) {
             var t = html.tag,
-                iframe = t('iframe'),
-                div = t('div');
+                iframe = t('iframe');
 
             var iframeId = 'frame_' + html.genId();
-
-            var _this = this;
 
             // The iframe content needs requirejs amd.
 
             var width = arg.width || '100%',
-                height = arg.height || 'auto',
                 iframeContent = arg.content,
                 iframeHtml = iframe({
                     style: {
                         display: 'block',
                         width: width,
-                        height: height,
-                        // maxHeight: maxHeight,
+                        height: arg.height || 'auto',
                         margin: 0,
                         padding: 0
                     },
@@ -394,7 +387,7 @@ define([
                     style: {
                         display: 'block',
                         width: width,
-                        height: '500px',
+                        height: arg.height,
                         maxHeight: maxHeight,
                         margin: 0,
                         padding: 0
@@ -428,8 +421,9 @@ define([
                         return report.html_links.map(function (item, index) {
                             return {
                                 name: item.name,
-                                url: [htmlServiceURL, 'api', 'v1', _this.objIdentity.ref, '$', index, item.name].join('/')
-                            }
+                                url: [htmlServiceURL, 'api', 'v1', _this.objIdentity.ref, '$', index, item.name].join('/'),
+                                description: item.description
+                            };
                         });
                     } else {
                         return [];
@@ -444,13 +438,13 @@ define([
             var iframeId = 'frame_' + html.genId();
 
             var width = arg.width || '100%',
-                maxHeight = arg.maxHeight || 'auto',
+                // maxHeight = arg.maxHeight || 'auto',
                 iframeHtml = iframe({
                     style: {
                         display: 'block',
                         width: width,
-                        height: '500px',
-                        maxHeight: maxHeight,
+                        height: arg.height,
+                        // maxHeight: maxHeight,
                         margin: 0,
                         padding: 0
                     },
@@ -458,7 +452,7 @@ define([
                     frameborder: '0',
                     scrolling: 'yes',
                     id: iframeId,
-                    src: arg.url
+                    src: arg.src
                 });
 
             return {
@@ -727,28 +721,39 @@ define([
                 content within an iframe. Generally the app developer should use either method, not both
                  */
 
-                if (report.direct_html || report.direct_html_link_index) {
+                if (report.direct_html || report.direct_html_link_index >= 0) {
                     (function () {
                         showingReport = true;
                         // an iframe to hold the contents of the report.
                         var iframe;
-                        // a link to view the same report in its own window
+                        // a link to view the report (url, name, desc)
                         var reportLink;
-                        if (report.direct_html_link_index) {
-                            reportLink = div({
-                                style: {
-                                    margin: '4px 4px 8px 0',
-                                    xborder: '1px silver solid'
-                                }
-                            }, a({
-                                href: _this.reportLinks[0].url,
-                                target: '_blank',
-                                class: 'btn btn-default'
-                            }, 'View Report in separate window'));
-                            iframe = _this.makeIframeSrc({
-                                src: report.html_links[report.direct_html_link_index].URL,
-                                maxHeight: '600px'
-                            });
+                        // button to open the report in an external window.
+                        var reportButton;
+                        if (report.direct_html_link_index !== null) {
+                            reportLink = _this.reportLinks[report.direct_html_link_index];
+                            if (reportLink) {
+                                reportButton = div({
+                                    style: {
+                                        margin: '4px 4px 8px 0',
+                                        xborder: '1px silver solid'
+                                    }
+                                }, a({
+                                    href: reportLink.url,
+                                    target: '_blank',
+                                    class: 'btn btn-default'
+                                }, 'View Report in separate window'));
+                                iframe = _this.makeIframeSrcUrl({
+                                    src: reportLink.url,
+                                    height: report.html_window_height ? report.html_window_height + 'px' : '500px'
+                                });
+                            } else {
+                                iframe = {
+                                    content: div({
+                                        class: 'alert alert-danger'
+                                    }, 'Report not found for index ' + report.direct_html_link_index)
+                                };
+                            }
                         } else {
                             // If the direct_html is a full document we cannot (yet?) insert 
                             // the necessary code to gracefully handle resizing and click-passthrough.
@@ -756,13 +761,16 @@ define([
                                 console.warn('Html document inserted into iframe', report);                                
                                 iframe = _this.makeIframeSrcDataPlain({
                                     content: report.direct_html,
-                                    height: '600px',
+                                    height: report.html_window_height ? report.html_window_height + 'px' : '500px',
                                     events: events
                                 });
                             } else {
+                                // note that for direct_html, we set the max height. this content is expected 
+                                // to be smaller than linked content, and we will want the container 
+                                // to shrink, but if it is larger, we simply don't want it to be too tall.
                                 iframe = _this.makeIframe({
                                     content: report.direct_html,
-                                    maxHeight: '600px'
+                                    maxHeight: report.html_window_height ? report.html_window_height + 'px' : '500px'
                                 });
                             }
                         }
@@ -776,7 +784,7 @@ define([
                                 type: 'default',
                                 classes: ['kb-panel-container'],
                                 body: div([
-                                    reportLink,
+                                    reportButton,
                                     iframe.content
                                 ])
                             })
@@ -788,41 +796,6 @@ define([
                     }());
                 }
 
-                // REPORT LINK
-                // Hmm, this is duplicated with the html_links section below.
-                // It appears to only be placed in the html report section as a convenience
-                // But is there always a link if there is report content? No
-                // Also, they are not the same thing.
-                if (report.direct_html_link_index >= 0) {
-                    (function () {
-                        showingReport = true;
-                        var id = html.genId();
-                        var content = a({
-                            id: id
-                        }, 'Download');
-                        var url = report.html_links[report.direct_html_link_index].URL;
-
-                        _this.$mainPanel.append(div({ dataElement: 'html-link-panel' }));
-                        ui.setContent('html-link-panel',
-                            ui.buildCollapsiblePanel({
-                                title: 'HTML Report Link',
-                                name: 'report-section-toggle',
-                                hidden: false,
-                                type: 'default',
-                                classes: ['kb-panel-container'],
-                                body: content
-                            })
-                        );
-
-                        var link = document.getElementById(id);
-                        link.addEventListener('click', function (e) {
-                            e.stopPropagation();
-                            window.location.href = _this.importExportLink(url, 'report.html');
-                        });
-                    }());
-                }
-
-
                 // SUMMARY SECTION
 
                 self.$mainPanel.append(div({ dataElement: 'summary-section' }));
@@ -833,7 +806,10 @@ define([
                         fontFamily: 'Monaco,monospace',
                         fontSize: '9pt',
                         color: '#555',
-                        whiteSpace: 'pre-wrap'
+                        whiteSpace: 'pre-wrap',
+                        overflow: 'auto',
+                        height: 'auto',
+                        maxHeight: report.summary_window_height ? report.summary_window_height + 'px' : '500px'
                             //resize: 'vertical',
                             //rows: self.options.report_window_line_height,
                             //readonly: true
@@ -861,16 +837,19 @@ define([
                     var $ul = $.jqElem('ul');
                     self.reportLinks.forEach(function (reportLink) {
                         var link_id = StringUtil.uuid();
-                        $ul.append(
-                            $.jqElem('li')
+                        var $linkItem = $.jqElem('li')
                             .append(
                                 $.jqElem('a')
                                 .attr('href', reportLink.url)
                                 .attr('target', '_blank')
                                 .attr('id', link_id)
                                 .append(reportLink.name || reportLink.url)
-                            )
-                        );
+                            );
+                        if (reportLink.description) {
+                            $linkItem.append('<br/>');
+                            $linkItem.append(reportLink.description);
+                        }
+                        $ul.append($linkItem);
                     });
 
                     self.$mainPanel.append(div({ dataElement: 'downloadable-html' }));

@@ -90,41 +90,21 @@ define([
             var m = shock_url.match(/\/node\/(.+)$/);
             if (m) {
                 var shock_id = m[1];
-                var url = 'https://ci.kbase.us/services/data_import_export/download?&id=' + shock_id + '&token=' + this.authToken() + '&wszip=0&name=' + name;
-
+                var query = {
+                    id: shock_id,
+                    wszip: 0,
+                    name: name
+                };
+                var queryString = Object.keys(query)
+                    .map(function (key) {
+                        return [key, query[key]]
+                            .map(encodeURIComponent)
+                            .join('=');
+                    })
+                    .join('&');
+                var url = Config.get('urls').data_import_export + '/download?' + queryString;
                 return url;
             }
-        },
-
-        preauthMagicClick: function (url, link_id) {
-            var self = this;
-            $.ajax({
-                url: url,
-                type: 'GET',
-                //processData : false,
-                //dataType : 'binary',
-                headers: { 'Authorization': 'Oauth ' + self.authToken() },
-                //processData : false
-            }).then(function (d) {
-
-                $('#' + link_id).on('click', function (e) {
-
-                    e.stopPropagation();
-                    self.preauthMagicClick(url, link_id);
-                    window.location.href = self.properPreauthURL(d.data.url);
-                });
-            }).fail(function (d) {
-                //console.log("FAILED ", d);
-            });
-        },
-
-
-        properPreauthURL: function (url) {
-            var m = url.match(new RegExp('^http://ci.kbase.us/preauth/(.+)$'));
-            if (m) {
-                url = 'https://ci.kbase.us/services/shock-api/preauth/' + m[1];
-            }
-            return url;
         },
 
         loadAndRender: function () {
@@ -134,7 +114,7 @@ define([
             self.objIdentity = self.buildObjectIdentity(this.options.workspace_name, this.options.report_name, null, this.options.report_ref);
 
             //self.objIdentity = {ref : "11699/2/77"};
-            
+
             self.ws.get_objects([self.objIdentity])
                 .then(function (result) {
                     self.reportData = result[0].data;
@@ -196,8 +176,10 @@ define([
 
             // The iframe content needs requirejs amd.
 
+            var narrativeBase = window.location.origin + '/narrative';
+
             var requireConfig = {
-                    baseUrl: 'http://localhost:8888/narrative/static/',
+                    baseUrl: narrativeBase + '/static/',
                     paths: {
                         bluebird: 'ext_components/bluebird/js/browser/bluebird.min',
                         uuid: 'ext_components/pure-uuid/uuid',
@@ -207,7 +189,7 @@ define([
                 },
                 iframeScript = div([
                     script({
-                        src: 'http://localhost:8888/narrative/static/ext_components/requirejs/require.js'
+                        src: narrativeBase + '/static/ext_components/requirejs/require.js'
                     }),
                     script(
                         'require.config(' + JSON.stringify(requireConfig) + ');'
@@ -411,8 +393,7 @@ define([
             var client = new GenericClient({
                 url: Config.url('service_wizard'),
                 token: this.authToken(),
-                module: 'HTMLFileSetServ',
-                version: 'dev'
+                module: 'HTMLFileSetServ'
             });
             return client.lookupModule()
                 .spread(function (serviceStatus) {
@@ -758,7 +739,7 @@ define([
                             // If the direct_html is a full document we cannot (yet?) insert 
                             // the necessary code to gracefully handle resizing and click-passthrough.
                             if (/<html/.test(report.direct_html)) {
-                                console.warn('Html document inserted into iframe', report);                                
+                                console.warn('Html document inserted into iframe', report);
                                 iframe = _this.makeIframeSrcDataPlain({
                                     content: report.direct_html,
                                     height: report.html_window_height ? report.html_window_height + 'px' : '500px',
@@ -880,13 +861,12 @@ define([
                         report.file_links,
                         function (i, v) {
                             var link_id = StringUtil.uuid();
-                            //self.preauthMagicClick(v.URL + '?download_url', link_id);
                             $ul.append(
                                 $.jqElem('li')
                                 .append(
                                     $.jqElem('a')
-                                    //.attr('href', self.importExportLink(v.URL, v.name || 'download-' + i) )
                                     .attr('id', link_id)
+                                    .attr('href', '#')
                                     .append(v.name || v.URL)
                                     .prop('download', true)
                                     .attr('download', 'download')

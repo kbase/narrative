@@ -43,7 +43,7 @@ define([
             this.filePathTmpl = Handlebars.compile(FilePathHtml);
             this.ftpUrl = Config.url('ftp_api_url');
             this.updatePathFn = options.updatePathFn || this.setPath;
-            this.path = options.path;
+            this.setPath(options.path);
             this.uploaders = Config.get('uploaders');
 
             return this;
@@ -67,6 +67,13 @@ define([
 
         setPath: function(path) {
             this.path = path;
+            // factor out the current subdirectory path into its own variable
+            var subpath = path.split('/');
+            var subpathTokens = subpath.length - 1;
+            if (this.path.startsWith('/')) {
+                subpathTokens--;
+            }
+            this.subpath = subpath.slice(subpath.length - subpathTokens).join('/');
             this.updateView();
         },
 
@@ -214,12 +221,15 @@ define([
                     .then(function(spec) {
                         var newCell = Jupyter.narrative.narrController.buildAppCodeCell(spec, tag);
                         var meta = newCell.metadata;
-                        var fileParam = '/data/bulk' + this.path + '/' + file;
+                        var fileParam = file;
+                        if (this.subpath) {
+                            fileParam = this.subpath + '/' + file;
+                        }
                         if (appInfo.app_input_param_type === "list") {
                             fileParam = [fileParam];
                         }
                         meta.kbase.appCell.params[appInfo.app_input_param] = fileParam;
-                        meta.kbase.appCell.params[appInfo.app_output_param] = file.replace(/\s/g, '_' + appInfo.app_output_suffix);
+                        meta.kbase.appCell.params[appInfo.app_output_param] = file.replace(/\s/g, '_') + appInfo.app_output_suffix;
                         for (var p in appInfo.app_static_params) {
                             if (appInfo.app_static_params.hasOwnProperty(p)) {
                                 meta.kbase.appCell.params[p] = appInfo.app_static_params[p];

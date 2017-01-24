@@ -15,24 +15,22 @@
     ],
     "app_info": {
         "se_reads": {
-            "app_id": "genome_transform/reads_to_assembly",
-            "app_input_param": "file_path_list",
-            "app_input_param_type": "list",
+            "app_id": "kb_uploadmethods/load_single_end_reads_from_file",
+            "app_input_param": "fwd_staging_file_name",
+            "app_input_param_type": "string",
             "app_static_params": {
-                "reads_type": "SingleEndLibrary"
             },
-            "app_output_param": "reads_id",
+            "app_output_param": "name",
             "app_output_suffix": "_reads",
             "multiselect": false
         },
         "pe_reads": {
-            "app_id": "genome_transform/reads_to_assembly",
-            "app_input_param": "file_path_list",
-            "app_input_param_type": "list",
+            "app_id": "kb_uploadmethods/load_paired_end_reads_from_file",
+            "app_input_param": "fwd_staging_file_name",
+            "app_input_param_type": "string",
             "app_static_params": {
-                "reads_type": "PairedEndLibrary"
             },
-            "app_output_param": "reads_id",
+            "app_output_param": "name",
             "app_output_suffix": "_reads",
             "multiselect": true
         },

@@ -171,6 +171,7 @@ define(['jquery',
                         return cc;
                       })
                       .each('end', function(d) {
+                        seenCircles++;
                         if (seenCircles == numCircles) {
                           dtable.rows.add(redRows).draw();
                         }

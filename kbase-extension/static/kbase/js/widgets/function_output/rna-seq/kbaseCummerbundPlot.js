@@ -160,7 +160,16 @@ define (
             }
 
             ws.get_objects([ws_params]).then(function (d) {
-                $plot.setDataset(d[0].data.cummerbundplotSet);
+
+                if (! d[0].data.cummerbundplotSet || !d[0].data.cummerbundplotSet.length) {
+                  $plot.$elem.empty();
+                  $plot.$elem
+                      .addClass('alert alert-danger')
+                      .html("No cummerbundplotSet for " + ws_params.workspace + ':' + ws_params.name + ', [' + ws_params.wsid + ']');
+                }
+                else {
+                  $plot.setDataset(d[0].data.cummerbundplotSet);
+                }
             }).fail(function(d) {
                 $plot.$elem.empty();
                 $plot.$elem

@@ -386,6 +386,22 @@ define([
             };
         },
 
+        escapeHtml: function (string) {
+            var entityMap = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;',
+                '/': '&#x2F;',
+                '`': '&#x60;',
+                '=': '&#x3D;'
+            };
+            return String(string).replace(/[&<>"'`=\/]/g, function fromEntityMap(s) {
+                return entityMap[s];
+            });
+        },
+
         getLinks: function (report) {
             // NOTE: this returns a promise -- we must look up the html file set service url first.
             var _this = this;
@@ -402,6 +418,7 @@ define([
                         return report.html_links.map(function (item, index) {
                             return {
                                 name: item.name,
+                                label: _this.escapeHtml(item.label),
                                 url: [htmlServiceURL, 'api', 'v1', _this.objIdentity.ref, '$', index, item.name].join('/'),
                                 description: item.description
                             };
@@ -824,7 +841,7 @@ define([
                                 .attr('href', reportLink.url)
                                 .attr('target', '_blank')
                                 .attr('id', link_id)
-                                .append(reportLink.name || reportLink.url)
+                                .append(reportLink.label || reportLink.url)
                             );
                         if (reportLink.description) {
                             $linkItem.append('<br/>');

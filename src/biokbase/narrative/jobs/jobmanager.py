@@ -344,7 +344,7 @@ class JobManager(object):
         for job_id in self._running_jobs.keys():
             if self._running_jobs[job_id]['refresh'] or ignore_refresh_flag:
                 jobs_to_lookup.append(job_id)
-        # Only bother with the message if there are 
+        # Only bother with the message if there are
         status_set = self._construct_job_status_set(jobs_to_lookup)
         self._send_comm_message('job_status_all', status_set)
 
@@ -360,10 +360,9 @@ class JobManager(object):
         Initialize a loop that will look up job info. This uses a Timer thread on a 10
         second loop to update things.
         """
-        
+
         refreshing_jobs = self._lookup_all_job_status()
         # Automatically stop when there are no more jobs requesting a refresh.
-        print('here')
         if refreshing_jobs == 0:
             self.cancel_job_lookup_loop()
         else:

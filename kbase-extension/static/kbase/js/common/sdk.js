@@ -537,7 +537,7 @@ define([
                 type: dataType,
                 sequence: false,
                 constraints: {
-                    required: false
+                    required: required
                 },
                 defaultValue: null
             }

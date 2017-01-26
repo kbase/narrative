@@ -126,7 +126,6 @@ define([
                         }.bind(this)
                     });
 
-
                     this.busConnection.listen({
                         channel: {
                             jobId: this.jobId
@@ -151,7 +150,7 @@ define([
                         }.bind(this)
                     });
 
-                    this.channel.emit('request-job-status', {
+                    this.channel.emit('request-job-update', {
                         jobId: this.jobId
                     });
                 }.bind(this))

@@ -9,6 +9,7 @@ define([
     'common/props',
     '../paramResolver',
     '../validators/sequence',
+    '../fieldWidgetMicro',
 
     'bootstrap',
     'css!font-awesome'
@@ -22,7 +23,8 @@ define([
     lang,
     Props,
     Resolver,
-    Validation
+    Validation,
+    FieldWidget
 ) {
     'use strict';
 
@@ -70,33 +72,33 @@ define([
 
         function setModelValue(value, index) {
             return Promise.try(function() {
-                    if (index !== undefined) {
-                        if (value) {
-                            model.value[index] = value;
-                        } else {
-                            model.value.splice(index, 1);
-                        }
+                if (index !== undefined) {
+                    if (value) {
+                        model.value[index] = value;
                     } else {
-                        if (value) {
-                            model.value = value;
-                        } else {
-                            unsetModelValue();
-                        }
+                        model.value.splice(index, 1);
                     }
-                    normalizeModel();
-                })
-                .then(function() {
-                    return render();
-                });
+                } else {
+                    if (value) {
+                        model.value = value;
+                    } else {
+                        unsetModelValue();
+                    }
+                }
+                normalizeModel();
+            })
+            .then(function() {
+                return render();
+            });
         }
 
         function unsetModelValue() {
             return Promise.try(function() {
-                    model.value = [];
-                })
-                .then(function() {
-                    return render();
-                });
+                model.value = [];
+            })
+            .then(function() {
+                return render();
+            });
         }
 
         function resetModelValue() {
@@ -161,7 +163,7 @@ define([
         //   specialized to be very lightweight for the sequence control.
         function makeSingleInputControl(control, events) {
             return resolver.loadInputControl(itemSpec)
-                .then(function(InputWidget) {
+                .then(function(widgetFactory) {
                     // CONTROL
                     var preButton, postButton,
                         widgetId = html.genId(),
@@ -170,17 +172,30 @@ define([
                         }),
                         // TODO: should be a very lightweight wrapper widget here,
                         // at least to create and manage the channel.
-                        inputWidget = InputWidget.make({
-                            bus: inputBus,
-                            paramsChannelName: config.paramsChannelName,
-                            channelName: inputBus.channelName,
+                        // inputWidget = InputWidget.make({
+                        //     bus: inputBus,
+                        //     paramsChannelName: config.paramsChannelName,
+                        //     channelName: inputBus.channelName,
+                        //     parameterSpec: itemSpec,
+                        //     showOwnMessages: true,
+                        //     initialValue: control.value
+                        // }),
+                        fieldWidget = FieldWidget.make({
+                            inputControlFactory: widgetFactory,
+                            showHint: false,
+                            showLabel: false,
+                            showInfo: false,
+                            useRowHighight: true,
+                            initialValue: control.value,
+                            // appSpec: appSpec,
                             parameterSpec: itemSpec,
-                            showOwnMessages: true,
-                            initialValue: control.value
+                            // workspaceId: workspaceInfo.id,
+                            referenceType: 'ref',
+                            paramsChannelName: config.paramsChannelName
                         });
 
                     // set up listeners for the input
-                    inputBus.on('sync', function() {
+                    fieldWidget.bus.on('sync', function() {
                         var value = viewModel.getItem(['items', control.index, 'value']);
                         if (value) {
                             inputBus.emit('update', {
@@ -188,15 +203,15 @@ define([
                             });
                         }
                     });
-                    inputBus.on('changed', function(message) {
+                    fieldWidget.bus.on('changed', function(message) {
                         doChanged(control.index, message.newValue);
                     });
 
-                    inputBus.on('touched', function() {
+                    fieldWidget.bus.on('touched', function() {
                         channel.emit('touched');
                     });
 
-                    inputBus.respond({
+                    fieldWidget.bus.respond({
                         key: {
                             type: 'get-parameter'
                         },
@@ -257,7 +272,7 @@ define([
                     ]);
                     return {
                         id: widgetId,
-                        instance: inputWidget,
+                        instance: fieldWidget,
                         bus: inputBus,
                         content: content
                     };

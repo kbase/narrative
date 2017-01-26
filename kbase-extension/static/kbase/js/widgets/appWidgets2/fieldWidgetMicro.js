@@ -1,5 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true*/
 /*
  * The Field Widget has two main jobs:
  * - render an input within within a layout
@@ -87,20 +85,16 @@ define([
 
         function doEnable() {
             if (!enabled) {
-                // do something...
                 var mask = ui.getElement('field-mask');
                 mask.classList.add('hidden');
-
                 enabled = true;
             }
         }
 
         function doDisable() {
             if (enabled) {
-                // do something
                 var mask = ui.getElement('field-mask');
                 mask.classList.remove('hidden');
-
                 enabled = false;
             }
         }
@@ -221,19 +215,7 @@ define([
         function parameterInfoTypeRules(spec) {
             switch (spec.data.type) {
             case 'float':
-                return [
-                    tr([th('Min'), td(spec.data.constraints.min)]), // update this in the spec
-                    tr([th('Max'), td(spec.data.constraints.max)])
-                ];
             case 'int':
-                // just for now ...
-                //                    if (spec.spec.field_type === 'checkbox') {
-                //                        return [
-                //                            // TODO: fix
-                //                            tr([th('Value when checked'), td(Props.getDataItem(spec.spec, 'checkbox_options.checked_value', UI.na()))]),
-                //                            tr([th('Value when un-checked'), td(Props.getDataItem(spec.spec, 'checkbox_options.unchecked_value', UI.na()))])
-                //                        ];
-                //                    }
                 return [
                     tr([th('Min'), td(spec.data.constraints.min)]),
                     tr([th('Max'), td(spec.data.constraints.max)])
@@ -245,29 +227,14 @@ define([
             return table({ class: 'table table-striped' }, [
                 tr([th('Required'), td(spec.data.constraints.required ? 'yes' : 'no')]),
                 tr([th('Data type'), td(spec.data.type)]),
-                // tr([th('Field type'), td(spec.spec.field_type)]),
                 tr([th('Multiple values?'), td(spec.multipleItems ? 'yes' : 'no')]),
                 (function () {
-                    //                    if (!spec.spec.default_values) {
-                    //                        return;
-                    //                    }
-                    //                    if (spec.spec.default_values.length === 0) {
-                    //                        return;
-                    //                    }
-                    //                    var defaultValues = spec.defaultValue();
-                    //                    if (defaultValues instanceof Array) {
-                    //                        return tr([th('Default value'), td(defaultValues.join('<br>'))]);
-                    //                    }
                     return tr([th('Default value'), td(spec.data.defaultValue)]);
                 }()),
                 (function () {
                     if (spec.data.constraints.types) {
                         return tr([th('Valid types'), td(spec.data.constraints.types.join('<br>'))]);
                     }
-
-                    //if (spec.spec.text_options && spec.spec.text_options.valid_ws_types && spec.spec.text_options.valid_ws_types.length > 0) {//
-                    //                    return tr([th('Valid types'), td(spec.spec.text_options.valid_ws_types.join('<br>'))]);
-                    //              }
                 }())
             ].concat(parameterInfoTypeRules(spec)));
         }
@@ -404,7 +371,6 @@ define([
                                         type: 'click',
                                         handler: function () {
                                             places.infoPanel.querySelector('[data-element="big-tip"]').classList.toggle('hidden');
-                                            // ui.getElement('big-tip').classList.toggle('hidden');
                                         }
                                     })
                                 }, span({ class: 'fa fa-info-circle' })))
@@ -425,7 +391,23 @@ define([
                             dataElement: 'message'
                         } )
                     ])
-                ])
+                ]),
+                (function () {
+                    if (!config.showInfo) {                
+                        return '';
+                    }
+
+                    return div({
+                        id: ids.infoPanel,
+                        class: 'info-panel row',
+                        dataElement: 'info-panel'
+                    }, [
+                        div({ class: 'col-md-12' }, div({ id: infoId }, [
+                            renderInfoTip()
+                        ]))
+
+                    ]);
+                }())
             ]);
 
             return {
@@ -521,14 +503,14 @@ define([
 
                     if (inputControl.start) {
                         return inputControl.start({
+                            node: places.inputControl
+                        })
+                        .then(function () {
+                            // TODO: get rid of this pattern
+                            bus.emit('run', {
                                 node: places.inputControl
-                            })
-                            .then(function () {
-                                // TODO: get rid of this pattern
-                                bus.emit('run', {
-                                    node: places.inputControl
-                                });
                             });
+                        });
                     }
                 });
         }
@@ -543,7 +525,7 @@ define([
                         bus.stop();
                         return null;
                     });
-            })
+            });
         }
 
         return {

@@ -1,5 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true*/
 /*
  * The Field Widget has two main jobs:
  * - render an input within within a layout
@@ -165,7 +163,6 @@ define([
             component.events.attachEvents(document.body);
         }
 
-
         function clearError() {
             places.field.classList.remove('-error');
             places.field.classList.remove('-warning');
@@ -218,19 +215,7 @@ define([
         function parameterInfoTypeRules(spec) {
             switch (spec.data.type) {
             case 'float':
-                return [
-                    tr([th('Min'), td(spec.data.constraints.min)]), // update this in the spec
-                    tr([th('Max'), td(spec.data.constraints.max)])
-                ];
             case 'int':
-                // just for now ...
-                //                    if (spec.spec.field_type === 'checkbox') {
-                //                        return [
-                //                            // TODO: fix
-                //                            tr([th('Value when checked'), td(Props.getDataItem(spec.spec, 'checkbox_options.checked_value', UI.na()))]),
-                //                            tr([th('Value when un-checked'), td(Props.getDataItem(spec.spec, 'checkbox_options.unchecked_value', UI.na()))])
-                //                        ];
-                //                    }
                 return [
                     tr([th('Min'), td(spec.data.constraints.min)]),
                     tr([th('Max'), td(spec.data.constraints.max)])
@@ -245,26 +230,12 @@ define([
                 // tr([th('Field type'), td(spec.spec.field_type)]),
                 tr([th('Multiple values?'), td(spec.multipleItems ? 'yes' : 'no')]),
                 (function () {
-                    //                    if (!spec.spec.default_values) {
-                    //                        return;
-                    //                    }
-                    //                    if (spec.spec.default_values.length === 0) {
-                    //                        return;
-                    //                    }
-                    //                    var defaultValues = spec.defaultValue();
-                    //                    if (defaultValues instanceof Array) {
-                    //                        return tr([th('Default value'), td(defaultValues.join('<br>'))]);
-                    //                    }
                     return tr([th('Default value'), td(spec.data.defaultValue)]);
                 }()),
                 (function () {
                     if (spec.data.constraints.types) {
                         return tr([th('Valid types'), td(spec.data.constraints.types.join('<br>'))]);
                     }
-
-                    //if (spec.spec.text_options && spec.spec.text_options.valid_ws_types && spec.spec.text_options.valid_ws_types.length > 0) {//
-                    //                    return tr([th('Valid types'), td(spec.spec.text_options.valid_ws_types.join('<br>'))]);
-                    //              }
                 }())
             ].concat(parameterInfoTypeRules(spec)));
         }
@@ -290,25 +261,25 @@ define([
                 div({ dataElement: 'big-tip', class: 'hidden' }, html.makeTabs({
                     alignRight: true,
                     tabs: [{
-                            label: 'Description',
-                            name: 'description',
-                            content: div({ style: { padding: '0px' } }, infoTipText)
-                        },
-                        {
-                            label: 'About',
-                            name: 'about',
-                            content: parameterInfoContent(spec)
-                        },
-                        {
-                            label: 'Rules',
-                            name: 'rules',
-                            content: parameterInfoRules(spec)
-                        },
-                        {
-                            label: 'Spec',
-                            name: 'spec',
-                            content: rawSpec(spec)
-                        }
+                        label: 'Description',
+                        name: 'description',
+                        content: div({ style: { padding: '0px' } }, infoTipText)
+                    },
+                    {
+                        label: 'About',
+                        name: 'about',
+                        content: parameterInfoContent(spec)
+                    },
+                    {
+                        label: 'Rules',
+                        name: 'rules',
+                        content: parameterInfoRules(spec)
+                    },
+                    {
+                        label: 'Spec',
+                        name: 'spec',
+                        content: rawSpec(spec)
+                    }
                     ]
                 }))
             ]);
@@ -395,7 +366,7 @@ define([
                             div({ dataElement: 'info' }, button({
                                 class: 'btn btn-link btn-xs',
                                 type: 'button',
-                                tabindex: "-1",
+                                tabindex: '-1',
                                 id: events.addEvent({
                                     type: 'click',
                                     handler: function () {
@@ -418,7 +389,7 @@ define([
                             id: ids.message,
                             class: 'message',
                             dataElement: 'message'
-                        }, 'yeah')
+                        })
                     ])
                 ]),
                 div({
@@ -514,9 +485,6 @@ define([
                     // bus.on('changed', function () {
                     //     places.feedback.style.backgroundColor = '';
                     // });
-                    bus.on('saved', function (message) {
-                        console.log('FIELD detected saved');
-                    });
                     bus.on('enable', function (message) {
                         doEnable();
                     });
@@ -526,14 +494,14 @@ define([
 
                     if (inputControl.start) {
                         return inputControl.start({
+                            node: places.inputControl
+                        })
+                        .then(function () {
+                            // TODO: get rid of this pattern
+                            bus.emit('run', {
                                 node: places.inputControl
-                            })
-                            .then(function () {
-                                // TODO: get rid of this pattern
-                                bus.emit('run', {
-                                    node: places.inputControl
-                                });
                             });
+                        });
                     }
                 });
         }
@@ -548,7 +516,7 @@ define([
                         bus.stop();
                         return null;
                     });
-            })
+            });
         }
 
         return {

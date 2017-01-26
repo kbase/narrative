@@ -201,6 +201,10 @@ span#searchspan{
     padding: 8px;
 }
 
+.navbar-kbase a:hover {
+    cursor: pointer;
+}
+
 /* Top bar nav buttons
    --------------------------
 */

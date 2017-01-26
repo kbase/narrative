@@ -26,6 +26,7 @@ define (
         options: {
             numBins : 10,
             magicHeight : 10,
+            minHeight : 300,
         },
 
         _accessors : [
@@ -58,7 +59,11 @@ define (
             }
             else {
 
-                var $heatElem = $.jqElem('div').css({width : 800, height : newDataset.column_labels.length * this.options.magicHeight});
+                var calculatedHeight = newDataset.column_labels.length * this.options.magicHeight;
+
+                var heatHeight = Math.max(calculatedHeight, this.options.minHeight);
+
+                var $heatElem = $.jqElem('div').css({width : 800, height : heatHeight});
 
                 var $heatmap =
                      new kbaseHeatmap($heatElem, {
@@ -80,14 +85,16 @@ define (
                     }
                 }
 
-                this.data('heatmap').setDataset(
-                    {
+var heatmap_dataset =                     {
                         row_ids : newDataset.column_labels,
                         column_ids : newDataset.row_labels,
                         row_labels : newDataset.column_labels,
                         column_labels : newDataset.row_labels,
                         data : invertedData,//newDataset.data,
-                    }
+                    };
+
+                this.data('heatmap').setDataset(
+                  heatmap_dataset
                 );
 
 
@@ -237,6 +244,7 @@ define (
         },
 
         load_data_ref : function(ws, dataset) {
+          var $self = this;
           ws.get_objects([{ref : dataset.data_ref}]).then(function(b) {
 
               $self.setDataset(b[0].data, dataset);

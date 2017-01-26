@@ -3,6 +3,14 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v4.2.1 (more notes will follow).
 
+### Version 3.1.5
+__Changes__
+- Added staging area uploaders for Genbank files, and SRA reads.
+- Fixed (other) problems with backend job lookup.
+- Changed group parameters toggle look and feel.
+- Fixed minor UI problems with volcano plot.
+- Fixed potential problem with Cummerbund output viewer.
+
 ### Version 3.1.4
 __Changes__
 - Linked the new reads uploaders to the staging panel.

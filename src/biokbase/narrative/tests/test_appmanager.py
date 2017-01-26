@@ -5,6 +5,8 @@ from IPython.display import HTML
 import unittest
 import mock
 import os
+import ConfigParser
+
 """
 Tests for the app manager.
 """
@@ -13,12 +15,14 @@ Tests for the app manager.
 class AppManagerTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(self):
+        config = ConfigParser.ConfigParser()
+        config.read('test.cfg')
         self.am = AppManager()
-        self.good_app_id = 'NarrativeTest/test_input_params'
-        self.good_tag = 'dev'
-        self.bad_app_id = 'NotARealApp'
-        self.bad_tag = 'NotARealTag'
-        self.test_app_id = "AssemblyRAST/run_arast"
+        self.good_app_id = config.get('app_tests', 'good_app_id')
+        self.good_tag = config.get('app_tests', 'good_app_tag')
+        self.bad_app_id = config.get('app_tests', 'bad_app_id')
+        self.bad_tag = config.get('app_tests', 'bad_app_tag')
+        self.test_app_id = config.get('app_tests', 'test_app_id')
         self.test_app_params = {
             "read_library_names": ["rhodo.art.jgi.reads"],
             "output_contigset_name": "rhodo_contigs",
@@ -27,11 +31,11 @@ class AppManagerTestCase(unittest.TestCase):
             "pipeline": "",
             "min_contig_len": None
         }
-        self.test_job_id = "new_job_id"
-        self.test_tag = "dev"
-        self.public_ws = "wjriehl:1475006266615"
-        self.ws_id = 11635
-        self.app_input_ref = "11635/19/4"
+        self.test_job_id = config.get('app_tests', 'test_job_id')
+        self.test_tag = config.get('app_tests', 'test_app_tag')
+        self.public_ws = config.get('app_tests', 'public_ws_name')
+        self.ws_id = int(config.get('app_tests', 'public_ws_id'))
+        self.app_input_ref = config.get('app_tests', 'test_input_ref')
 
     def test_reload(self):
         self.am.reload()

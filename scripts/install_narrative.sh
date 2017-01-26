@@ -209,11 +209,12 @@ then
     /bin/mv $SCRIPT_TGT $d
     log "Done installing scripts"
 
-    log "oh, wait, one more thing...installing nbextensions"
+    log "Installing nbextensions"
     cd nbextensions
     sh install.sh
     cd ../..
-    log "now, done."
+    jupyter nbextension enable --py --sys-prefix widgetsnbextension
+    log "Done installing nbextensions"
 fi
 
 console "Done. Run the narrative from your virtual environment $VIRTUAL_ENV with the command: $SCRIPT_TGT"

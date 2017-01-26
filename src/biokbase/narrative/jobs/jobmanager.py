@@ -344,7 +344,6 @@ class JobManager(object):
         for job_id in self._running_jobs.keys():
             if self._running_jobs[job_id]['refresh'] or ignore_refresh_flag:
                 jobs_to_lookup.append(job_id)
-        # Only bother with the message if there are 
         status_set = self._construct_job_status_set(jobs_to_lookup)
         self._send_comm_message('job_status_all', status_set)
 
@@ -352,7 +351,7 @@ class JobManager(object):
 
     def _start_job_status_loop(self):
         kblogging.log_event(self._log, 'starting job status loop', {})
-        if self._lookup_timer == None:
+        if self._lookup_timer is None:
             self._lookup_job_status_loop()
 
     def _lookup_job_status_loop(self):
@@ -360,7 +359,7 @@ class JobManager(object):
         Initialize a loop that will look up job info. This uses a Timer thread on a 10
         second loop to update things.
         """
-        
+
         refreshing_jobs = self._lookup_all_job_status()
         # Automatically stop when there are no more jobs requesting a refresh.
         if refreshing_jobs == 0:

@@ -363,7 +363,6 @@ class JobManager(object):
         
         refreshing_jobs = self._lookup_all_job_status()
         # Automatically stop when there are no more jobs requesting a refresh.
-        print('here')
         if refreshing_jobs == 0:
             self.cancel_job_lookup_loop()
         else:

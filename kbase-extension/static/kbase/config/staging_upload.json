@@ -22,8 +22,7 @@
             "app_id": "kb_uploadmethods/load_single_end_reads_from_file",
             "app_input_param": "fwd_staging_file_name",
             "app_input_param_type": "string",
-            "app_static_params": {
-            },
+            "app_static_params": {},
             "app_output_param": "name",
             "app_output_suffix": "_reads",
             "multiselect": false
@@ -32,15 +31,14 @@
             "app_id": "kb_uploadmethods/load_paired_end_reads_from_file",
             "app_input_param": "fwd_staging_file_name",
             "app_input_param_type": "string",
-            "app_static_params": {
-            },
+            "app_static_params": {},
             "app_output_param": "name",
             "app_output_suffix": "_reads",
             "multiselect": true
         },
         "sra_reads": {
             "app_id": "genome_transform/sra_reads_to_library",
-            "app_input_param": "file_path_list",
+            "app_input_param": "file_path",
             "app_input_param_type": "string",
             "app_static_params": {},
             "app_output_param": "name",
@@ -49,7 +47,7 @@
         },
         "genbank_genome": {
             "app_id": "genome_transform/genbank_to_genome_GFU",
-            "app_input_param": "file",
+            "app_input_param": "file_path",
             "app_input_param_type": "string",
             "app_static_params": {},
             "app_output_param": "genome_name",

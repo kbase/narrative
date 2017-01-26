@@ -387,6 +387,9 @@ define([
         },
 
         escapeHtml: function (string) {
+            if (typeof string !== 'string') {
+                return;
+            }
             var entityMap = {
                 '&': '&amp;',
                 '<': '&lt;',
@@ -418,7 +421,8 @@ define([
                         return report.html_links.map(function (item, index) {
                             return {
                                 name: item.name,
-                                label: _this.escapeHtml(item.label),
+                                // If label is not provided, name must be.
+                                label: _this.escapeHtml(item.label || item.name),
                                 url: [htmlServiceURL, 'api', 'v1', _this.objIdentity.ref, '$', index, item.name].join('/'),
                                 description: item.description
                             };
@@ -835,13 +839,14 @@ define([
                     var $ul = $.jqElem('ul');
                     self.reportLinks.forEach(function (reportLink) {
                         var link_id = StringUtil.uuid();
+                        console.log('LABEL?', reportLink);
                         var $linkItem = $.jqElem('li')
                             .append(
                                 $.jqElem('a')
                                 .attr('href', reportLink.url)
                                 .attr('target', '_blank')
                                 .attr('id', link_id)
-                                .append(reportLink.label || reportLink.url)
+                                .append(reportLink.label || reportLink.name)
                             );
                         if (reportLink.description) {
                             $linkItem.append('<br/>');

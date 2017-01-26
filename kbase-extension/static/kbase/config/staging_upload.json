@@ -9,6 +9,10 @@
             "name": "Paired-End Reads"
         },
         {
+            "id": "sra_reads",
+            "name": "SRA Reads"
+        },
+        {
             "id": "genbank_genome",
             "name": "Genbank Genome"
         }
@@ -34,12 +38,21 @@
             "app_output_suffix": "_reads",
             "multiselect": true
         },
-        "genbank_genome": {
-            "app_id": "genome_transform/narrative_genbank_to_genome",
-            "app_input_param": "foo",
+        "sra_reads": {
+            "app_id": "genome_transform/sra_reads_to_library",
+            "app_input_param": "file_path_list",
             "app_input_param_type": "string",
             "app_static_params": {},
-            "app_output_param": "bar",
+            "app_output_param": "name",
+            "app_output_suffix": "_reads",
+            "multiselect": false
+        },
+        "genbank_genome": {
+            "app_id": "genome_transform/genbank_to_genome_GFU",
+            "app_input_param": "file",
+            "app_input_param_type": "string",
+            "app_static_params": {},
+            "app_output_param": "genome_name",
             "app_output_suffix": "_genome",
             "multiselect": false
         }

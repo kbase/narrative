@@ -500,11 +500,6 @@ define([
             iframe.messages.listen({
                 name: 'rendered',
                 handler: function (message) {
-                    // console.log('rendered!', message);
-                    // if (message.iframeId !== iframe.id) {
-                    //     console.log('...ignored', message.iframeId, iframe.id);
-                    //     return;
-                    // }
                     var height = message.height,
                         iframeNode = _this.$mainPanel[0].querySelector('[data-frame="' + iframe.id + '"]');
 
@@ -723,7 +718,17 @@ define([
                 content within an iframe. Generally the app developer should use either method, not both
                  */
 
-                if (report.direct_html || report.direct_html_link_index >= 0) {
+                var hasDirectHtml = false;
+                var hasDirectHtmlIndex = false;
+                if (report.direct_html && report.direct_html.length > 0) {
+                    hasDirectHtml = true;
+                }
+                if (typeof report.direct_html_link_index === 'number' && 
+                    report.direct_html_link_index >= 0) {
+                    hasDirectHtmlIndex = true;
+                }
+
+                if (hasDirectHtml || hasDirectHtmlIndex) {
                     (function () {
                         showingReport = true;
                         // an iframe to hold the contents of the report.
@@ -732,7 +737,7 @@ define([
                         var reportLink;
                         // button to open the report in an external window.
                         var reportButton;
-                        if (typeof report.direct_html_link_index === 'number') {
+                        if (hasDirectHtmlIndex) {
                             reportLink = _this.reportLinks[report.direct_html_link_index];
                             if (reportLink) {
                                 reportButton = div({
@@ -744,7 +749,7 @@ define([
                                     href: reportLink.url,
                                     target: '_blank',
                                     class: 'btn btn-default'
-                                }, 'View Report in separate window'));
+                                }, 'View report in separate window'));
                                 iframe = _this.makeIframeSrcUrl({
                                     src: reportLink.url,
                                     height: report.html_window_height ? report.html_window_height + 'px' : '500px'
@@ -800,35 +805,38 @@ define([
 
                 // SUMMARY SECTION
 
-                self.$mainPanel.append(div({ dataElement: 'summary-section' }));
+                if (report.text_message && report.text_message.length > 0) {
 
-                var reportSummary = div({
-                    style: {
-                        width: '100%',
-                        fontFamily: 'Monaco,monospace',
-                        fontSize: '9pt',
-                        color: '#555',
-                        whiteSpace: 'pre-wrap',
-                        overflow: 'auto',
-                        height: 'auto',
-                        maxHeight: report.summary_window_height ? report.summary_window_height + 'px' : '500px'
-                            //resize: 'vertical',
-                            //rows: self.options.report_window_line_height,
-                            //readonly: true
-                    }
-                }, report.text_message);
+                    self.$mainPanel.append(div({ dataElement: 'summary-section' }));
 
-                ui.setContent('summary-section',
-                    ui.buildCollapsiblePanel({
-                        title: 'Summary',
-                        name: 'summary-section-toggle',
-                        hidden: false,
-                        collapsed: showingReport ? true : false,
-                        type: 'default',
-                        classes: ['kb-panel-container'],
-                        body: reportSummary
-                    })
-                );
+                    var reportSummary = div({
+                        style: {
+                            width: '100%',
+                            fontFamily: 'Monaco,monospace',
+                            fontSize: '9pt',
+                            color: '#555',
+                            whiteSpace: 'pre-wrap',
+                            overflow: 'auto',
+                            height: 'auto',
+                            maxHeight: report.summary_window_height ? report.summary_window_height + 'px' : '500px'
+                                //resize: 'vertical',
+                                //rows: self.options.report_window_line_height,
+                                //readonly: true
+                        }
+                    }, report.text_message);
+
+                    ui.setContent('summary-section',
+                        ui.buildCollapsiblePanel({
+                            title: 'Summary',
+                            name: 'summary-section-toggle',
+                            hidden: false,
+                            collapsed: showingReport ? true : false,
+                            type: 'default',
+                            classes: ['kb-panel-container'],
+                            body: reportSummary
+                        })
+                    );
+                }
             }
 
             // LINKS SECTION
@@ -839,7 +847,6 @@ define([
                     var $ul = $.jqElem('ul');
                     self.reportLinks.forEach(function (reportLink) {
                         var link_id = StringUtil.uuid();
-                        console.log('LABEL?', reportLink);
                         var $linkItem = $.jqElem('li')
                             .append(
                                 $.jqElem('a')

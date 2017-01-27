@@ -648,7 +648,7 @@ def validate_param_value(param, value, workspace):
     return (ws_ref, None)
 
 
-def resolve_ref(workspace, value):
+def resolve_single_ref(workspace, value):
     ret = None
     if '/' in value:
         path_items = [item.strip() for item in value.split(';')]
@@ -664,6 +664,13 @@ def resolve_ref(workspace, value):
         info = _ws_client.get_object_info_new({'objects': [{'workspace': workspace, 'name': value}]})[0]
         ret = "{}/{}/{}".format(info[6], info[0], info[4])
     return ret
+
+def resolve_ref(workspace, value):
+    if isinstance(value, list):
+        return [resolve_single_ref(workspace, v) for v in value]
+    else:
+        return resolve_single_ref(workspace, value)
+ 
 
 
 def resolve_ref_if_typed(value, spec_param):

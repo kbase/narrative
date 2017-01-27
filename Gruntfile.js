@@ -22,7 +22,9 @@ module.exports = function(grunt) {
         requirejs: {
             compile: {
                 options: {
-                    baseUrl: "./static",
+                    appDir: 'kbase-extension',
+                    dir: 'kbase-extension-built',
+                    // baseUrl: "./static",
                     mainConfigFile: "static/narrative_paths.js",
                     findNestedDependencies: true,
                     optimize: "uglify2",
@@ -116,6 +118,9 @@ module.exports = function(grunt) {
 
     });
 
+    grunt.registerTask('minify', [
+        'requirejs'
+    ]);
 
     grunt.registerTask('build', [
         'requirejs',

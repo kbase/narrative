@@ -143,10 +143,6 @@ define([
 
                     viewModel.setItem('items', items);
 
-                    //bus.emit('changed', {
-                    //     newValue: exportModel()
-                    // });
-
                     autoValidate();
                 });
         }
@@ -170,16 +166,6 @@ define([
                         inputBus = runtime.bus().makeChannelBus({
                             description: 'Array input control'
                         }),
-                        // TODO: should be a very lightweight wrapper widget here,
-                        // at least to create and manage the channel.
-                        // inputWidget = InputWidget.make({
-                        //     bus: inputBus,
-                        //     paramsChannelName: config.paramsChannelName,
-                        //     channelName: inputBus.channelName,
-                        //     parameterSpec: itemSpec,
-                        //     showOwnMessages: true,
-                        //     initialValue: control.value
-                        // }),
                         fieldWidget = FieldWidget.make({
                             inputControlFactory: widgetFactory,
                             showHint: false,
@@ -187,9 +173,7 @@ define([
                             showInfo: false,
                             useRowHighight: true,
                             initialValue: control.value,
-                            // appSpec: appSpec,
                             parameterSpec: itemSpec,
-                            // workspaceId: workspaceInfo.id,
                             referenceType: 'ref',
                             paramsChannelName: config.paramsChannelName
                         });
@@ -377,7 +361,7 @@ define([
                     .catch(function(err) {
                         console.log('ERROR!!!', err);
                     });
-            })
+            });
         }
 
         function render(initialValue) {
@@ -448,12 +432,12 @@ define([
         function stop() {
             return Promise.try(function() {
                 return Promise.all(viewModel.getItem('items').map(function(item) {
-                        return item.inputControl.instance.stop();
-                    }))
-                    .then(function() {
-                        busConnection.stop();
-                    });
-            })
+                    return item.inputControl.instance.stop();
+                }))
+                .then(function() {
+                    busConnection.stop();
+                });
+            });
         }
 
         return {

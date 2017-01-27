@@ -229,8 +229,7 @@ define([
                     dataFrame: iframeId,
                     frameborder: '0',
                     id: iframeId,
-                    xsandbox: 'allow-same-origin allow-scripts',
-                    xsrcdoc: '<p>Hi!</p>',
+                    // sandbox: 'allow-same-origin allow-scripts',
                     srcdoc: iframeContent
                 });
 

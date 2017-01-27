@@ -7,8 +7,7 @@ define([
     'dropzone',
     'handlebars',
     'text!kbase/templates/data_staging/dropzone_area.html',
-    'text!kbase/templates/data_staging/dropped_file.html',
-    'css!ext_components/dropzone/dist/dropzone.css',
+    'text!kbase/templates/data_staging/dropped_file.html'
 ], function(
     $,
     Promise,

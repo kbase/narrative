@@ -22,16 +22,55 @@ module.exports = function(grunt) {
         requirejs: {
             compile: {
                 options: {
-                    appDir: 'kbase-extension',
-                    dir: 'kbase-extension-built',
+                    baseUrl: 'kbase-extension/static',
+                    include: ['narrativeMain'],
                     // baseUrl: "./static",
-                    mainConfigFile: "static/narrative_paths.js",
+                    mainConfigFile: "kbase-extension/static/narrative_paths.js",
                     findNestedDependencies: true,
                     optimize: "uglify2",
                     generateSourceMaps: true,
                     preserveLicenseComments: false,
-                    name: "narrative_paths",
-                    out: "static/dist/kbase-narrative-min.js"
+                    out: "dist/kbase-narrative-min.js",
+                    paths: {
+                        jquery: 'empty:',
+                        jqueryui: 'empty:',
+                        bootstrap: 'empty:',
+                        narrativeConfig: 'empty:',
+                        'base/js/utils': 'empty:',
+                        'base/js/namespace': 'empty:',
+                        // 'kbase/js/widgets/narrative_core/upload/fileUploadWidget': 'empty:',
+                        bootstraptour: 'empty:',
+                        // 'kbase/js/widgets/narrative_core/upload/uploadTour': 'empty:',
+                        'services/kernels/comm': 'empty:',
+                        // 'common/ui': 'empty:',
+                        'notebook/js/celltoolbar': 'empty:',
+                        'base/js/events': 'empty:',
+                        'base/js/keyboard': 'empty:',
+                        'notebook/js/notebook': 'empty:',
+                        narrativeTour: 'empty:',
+                        'notebook/js/main': 'empty:'
+                    },
+                    // exclude: [
+                    //     'text!kbase/templates/data_staging/dropzone_area.html',
+                    //     'text!kbase/templates/data_staging/dropped_file.html',
+                    //     'css!ext_components/dropzone/dist/dropzone.css',
+                    //     'json!kbase/config/config.json',
+                    //     'json!kbase/config/icons.json',
+                    //     'json!kbase/config/cdn-service-config.json',
+                    //     'json!kbase/config/feature-config.json',
+                    //     'json!kbase/config/staging_upload.json',
+                    //     'json!config.json',
+                    //     'css!ext_components/dropzone/dist/dropzone.css'
+                    // ],
+                    inlineText: false,
+                    onBuildWrite: function (moduleName, path, contents) {
+                        if (moduleName.lastIndexOf('text!', 0) === 0 ||
+                            moduleName.lastIndexOf('css!', 0) === 0 ||
+                            moduleName.lastIndexOf('json!', 0) === 0) {
+                            return '';
+                        }
+                        return contents;
+                    },
                 }
             }
         },

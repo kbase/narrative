@@ -3,7 +3,6 @@
 define([
     'bluebird',
     'jquery',
-    'base/js/namespace',
     'kb_common/html',
     'kb_common/utils',
     'kb_service/client/workspace',
@@ -12,16 +11,15 @@ define([
     'common/events',
     'common/runtime',
     'common/ui',
+    'common/data',
     'util/timeFormat',
-    'kb_sdk_clients/genericClient',
 
     'select2',
     'bootstrap',
     'css!font-awesome'
-], function (
+], function(
     Promise,
     $,
-    Jupyter,
     html,
     utils,
     Workspace,
@@ -30,8 +28,8 @@ define([
     Events,
     Runtime,
     UI,
-    TimeFormat,
-    GenericClient) {
+    Data,
+    TimeFormat) {
     'use strict';
 
     // Constants
@@ -47,7 +45,9 @@ define([
             objectRefType = config.referenceType || 'name',
             parent,
             container,
-            bus = config.bus,
+            runtime = Runtime.make(),
+            bus = runtime.bus().connect(),
+            channel = bus.channel(config.channelName),
             ui,
             model = {
                 blacklistValues: undefined,
@@ -55,27 +55,32 @@ define([
                 availableValuesMap: {},
                 value: undefined
             },
-            runtime = Runtime.make(),
             eventListeners = [],
             workspaceId = runtime.getEnv('workspaceId');
 
         // TODO: getting rid of blacklist temporarily until we work out how to state-ify everything by reference.
         model.blacklistValues = []; //config.blacklist || [];
 
-        // Validate configuration.
-        if (!workspaceId) {
-            throw new Error('Workspace id required for the select2 object selection widget');
+        function objectInfoHasRef(objectInfo, ref) {
+            if (objectInfo.dataPaletteRef) {
+                return objectInfo.dataPaletteRef === ref;
+            }
+            if (/\//.test(ref)) {
+                return objectInfo.ref;
+            }
+            return objectInfo.name;
         }
 
-        function makeInputControl(events, bus) {
+        function makeInputControl() {
             var selectOptions;
             if (model.availableValues) {
                 var filteredOptions = [];
                 selectOptions = model.availableValues
-                    .filter(function (objectInfo, idx) {
+                    .filter(function(objectInfo, idx) {
                         if (model.blacklistValues) {
-                            return !model.blacklistValues.some(function (value) {
-                                if (value === getObjectRef(objectInfo)) {
+                            return !model.blacklistValues.some(function(value) {
+                                if (objectInfoHasRef(objectInfo, value)) {
+                                    // if (value === getObjectRef(objectInfo)) {
                                     filteredOptions.push(idx);
                                     return true;
                                 }
@@ -83,10 +88,11 @@ define([
                             });
                         }
                     })
-                    .map(function (objectInfo, idx) {
+                    .map(function(objectInfo, idx) {
                         var selected = false,
                             ref = idx; //getObjectRef(objectInfo);
-                        if (getObjectRef(objectInfo) === model.value) {
+                        if (objectInfoHasRef(objectInfo, model.value)) {
+                            // if (getObjectRef(objectInfo) === model.value) {
                             selected = true;
                         }
                         return option({
@@ -118,6 +124,7 @@ define([
             return selected.item(0).value;
         }
 
+
         function setControlValue(value) {
             var stringValue;
             if (value === null) {
@@ -132,22 +139,7 @@ define([
             // element id
             var currentSelectionId = String(model.availableValuesMap[stringValue]);
 
-            // Unselect any currently selected item.
-            Array.prototype.slice.call(control.selectedOptions).forEach(function (option) {
-                option.selected = false;
-            });
-
-            // Select any option which matches our models current selection.
-            // NB matching by id not value.
-            // NB the id is not the index of the option. It is a value assigned to the option,
-            // and used to map the object ref or name to the control.  
-            var options = Array.prototype.slice.call(control.options);
-            options.forEach(function (option) {
-                if (option.value === currentSelectionId) {
-                    option.selected = true;
-                }
-            });
-            $(control).trigger('change');
+            $(control).val(currentSelectionId).trigger('change.select2');
         }
 
         // MODEL
@@ -172,7 +164,7 @@ define([
         // VALIDATION
 
         function validate() {
-            return Promise.try(function () {
+            return Promise.try(function() {
                 var objInfo = model.availableValues[getControlValue()],
                     processedValue = '',
                     validationOptions = {
@@ -191,127 +183,29 @@ define([
 
                 switch (objectRefType) {
                 case 'ref':
-                    return Validation.validateWorkspaceDataPaletteRef(processedValue, validationOptions);
+                    return Validation.validateWorkspaceObjectRef(processedValue, validationOptions);
                 case 'name':
                 default:
                     return Validation.validateWorkspaceObjectName(processedValue, validationOptions);
                 }
             });
-            // .then(function(validationResult) {
-            //     return {
-            //         isValid: validationResult.isValid,
-            //         validated: true,
-            //         diagnosis: validationResult.diagnosis,
-            //         errorMessage: validationResult.errorMessage,
-            //         value: validationResult.parsedValue
-
-            //     };
-            // });
-        }
-
-        function filterObjectInfoByType(objects, types) {
-            return objects.map(function (objectInfo) {
-                    var type = objectInfo.typeModule + '.' + objectInfo.typeName;
-                    if (types.indexOf(type) >= 0) {
-                        return objectInfo;
-                    }
-                })
-                .filter(function (item) {
-                    return item !== undefined;
-                });
         }
 
         function getObjectsByTypes_datalist(types) {
-            var listener = runtime.bus().plisten({
-                channel: 'data',
-                key: {
-                    type: 'workspace-data-updated'
-                },
-                handle: function (message) {
-                    doWorkspaceUpdated(filterObjectInfoByType(message.objectInfo, types));
-                }
+            return Data.getObjectsByTypes(types, bus, function(result) {
+                doWorkspaceUpdated(result.data);
+            })
+            .then(function(result) {
+                return result.data;
             });
-            eventListeners.push(listener.id);
-            return listener.promise
-                .then(function (message) {
-                    return filterObjectInfoByType(message.objectInfo, types);
-                });
         }
 
-        function getObjectsByType_old(type) {
-            return Promise.try(function () {
-                    return Jupyter.narrative.sidePanel.$dataWidget.getLoadedData(type);
-                })
-                .then(function (data) {
-                    var objList = [];
-                    Object.keys(data).forEach(function (typeKey) {
-                        objList = objList.concat(data[typeKey]);
-                    });
-                    return objList.map(function (objectInfo) {
-                        var obj = serviceUtils.objectInfoToObject(objectInfo);
-                        // TODO - port this into kb_service/utils...
-                        obj.dataPaletteRef = null;
-                        if (objectInfo.length > 11) {
-                            obj.dataPaletteRef = objectInfo[11];
-                        }
-                        return obj;
-                    });
-                });
-        }
-
-        function getPaletteObjectsByTypes(types) {
-            var narrativeClient = new GenericClient({
-                module: 'NarrativeService',
-                url: runtime.config('services.service_wizard.url'),
-                version: 'dev',
-                token: runtime.authToken()
-            });
-            return narrativeClient.callFunc('list_objects_with_sets', [{
-                    ws_id: workspaceId,
-                    types: types,
-                    includeMetadata: 1
-                }])
-                .then(function (result) {
-                    var objects = result[0].data.map(function (obj) {
-                        var info = serviceUtils.objectInfoToObject(obj.object_info);
-                        if (obj.dp_info) {
-                            info.paletteRef = obj.dp_info.ref;
-                        }
-                        return info;
-                    });
-                    return objects;
-                });
-        }
 
         function fetchData() {
             var types = spec.data.constraints.types;
             return getObjectsByTypes_datalist(types)
-                .then(function (objects) {
-                    objects.sort(function (a, b) {
-                        if (a.saveDate < b.saveDate) {
-                            return 1;
-                        }
-                        if (a.saveDate === b.saveDate) {
-                            return 0;
-                        }
-                        return -1;
-                    });
-                    return objects;
-                });
-        }
-
-        function fetchData_old() {
-            var types = spec.data.constraints.types;
-            return Promise.all(types.map(function (type) {
-                    return getObjectsByType(type);
-                }))
-                .then(function (objectSets) {
-                    // we could also use [] rather than Array.prototype, but
-                    // this way is both more mysterious and better performing.
-                    return Array.prototype.concat.apply([], objectSets);
-                })
-                .then(function (objects) {
-                    objects.sort(function (a, b) {
+                .then(function(objects) {
+                    objects.sort(function(a, b) {
                         if (a.saveDate < b.saveDate) {
                             return 1;
                         }
@@ -351,17 +245,17 @@ define([
          * Hooks up event listeners
          */
         function render() {
-            return Promise.try(function () {
+            return Promise.try(function() {
                 var events = Events.make(),
-                    inputControl = makeInputControl(events, bus),
+                    inputControl = makeInputControl(events),
                     content = div({ class: 'input-group', style: { width: '100%' } }, inputControl);
 
                 ui.setContent('input-container', content);
 
                 $(ui.getElement('input-container.input')).select2({
-                    disabled: true,
+                    readonly: true,
                     templateResult: formatObjectDisplay,
-                    templateSelection: function (object) {
+                    templateSelection: function(object) {
                         if (!object.id) {
                             return object.text;
                         }
@@ -392,24 +286,24 @@ define([
 
         function autoValidate() {
             return validate()
-                .then(function (result) {
-                    bus.emit('validation', {
+                .then(function(result) {
+                    channel.emit('validation', {
                         errorMessage: result.errorMessage,
                         diagnosis: result.diagnosis
                     });
                 });
         }
 
-        function getObjectRef(objectInfo) {
-            switch (objectRefType) {
-            case 'name':
-                return objectInfo.name;
-            case 'ref':
-                return objectInfo.ref;
-            default:
-                throw new Error('Unsupported object reference type ' + objectRefType);
-            }
-        }
+        // function getObjectRef(objectInfo) {
+        //     switch (objectRefType) {
+        //         case 'name':
+        //             return objectInfo.name;
+        //         case 'ref':
+        //             return objectInfo.ref;
+        //         default:
+        //             throw new Error('Unsupported object reference type ' + objectRefType);
+        //     }
+        // }
 
         /*
          * Handle the workspace being updated and reflecting that correctly
@@ -423,15 +317,6 @@ define([
             // compare to availableData.
             if (!utils.isEqual(data, model.availableValues)) {
                 model.availableValues = data;
-                var matching = model.availableValues.filter(function (value) {
-                    if (value.name === getObjectRef(value)) {
-                        return true;
-                    }
-                    return false;
-                });
-                // if (matching.length === 0) {
-                //     model.value = spec.data.nullValue;
-                // }
                 model.availableValuesMap = {};
                 // our map is a little strange.
                 // we have dataPaletteRefs, which are always ref paths
@@ -440,7 +325,7 @@ define([
                 // config setting. This is because some apps don't yet accept
                 // names... 
                 // So our key is either dataPaletteRef or (ref or name)
-                model.availableValues.forEach(function (objectInfo, index) {
+                model.availableValues.forEach(function(objectInfo, index) {
                     var id;
                     if (objectInfo.dataPaletteRef) {
                         id = objectInfo.dataPaletteRef;
@@ -452,24 +337,16 @@ define([
                     model.availableValuesMap[id] = index;
                 });
                 return render()
-                    .then(function () {
+                    .then(function() {
                         setControlValue(getModelValue());
                         autoValidate();
                     });
             }
         }
-
-        function doWorkspaceChanged() {
-            // there are a few thin
-            fetchData()
-                .then(function (data) {
-                    return doWorkspaceUpdated(data);
-                });
-        }
-
+     
         // LIFECYCLE API
         function start(arg) {
-            return Promise.try(function () {
+            return Promise.try(function() {
                 parent = arg.node;
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
@@ -485,23 +362,18 @@ define([
                 }
 
                 return fetchData()
-                    .then(function (data) {
+                    .then(function(data) {
                         doWorkspaceUpdated(data);
-                        // model.availableValues = data;
                         return render();
                     })
-                    .then(function () {
+                    .then(function() {
 
-                        bus.on('reset-to-defaults', function () {
+                        channel.on('reset-to-defaults', function() {
                             resetModelValue();
                         });
-                        bus.on('update', function (message) {
+                        channel.on('update', function(message) {
                             setModelValue(message.value);
                         });
-                        runtime.bus().on('workspace-changed', function () {
-                            doWorkspaceChanged();
-                        });
-                        bus.emit('sync');
 
                         setControlValue(getModelValue());
                         autoValidate();
@@ -510,11 +382,12 @@ define([
         }
 
         function stop() {
-            return Promise.try(function () {
+            return Promise.try(function() {
                 if (container) {
                     parent.removeChild(container);
                 }
-                eventListeners.forEach(function (id) {
+                bus.stop();
+                eventListeners.forEach(function(id) {
                     runtime.bus().removeListener(id);
                 });
             });
@@ -530,7 +403,7 @@ define([
     }
 
     return {
-        make: function (config) {
+        make: function(config) {
             return factory(config);
         }
     };

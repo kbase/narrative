@@ -15,8 +15,7 @@ define([
     Validation,
     Events,
     UI,
-    Props,
-    inputUtils) {
+    Props) {
     'use strict';
 
     // Constants
@@ -25,8 +24,7 @@ define([
         input = t('input');
 
     function factory(config) {
-        var enabled = config.enabled || true,
-            spec = config.parameterSpec,
+        var spec = config.parameterSpec,
             bus = config.bus,
             parent,
             container,
@@ -68,16 +66,6 @@ define([
             setModelValue(spec.data.constraints.defaultValue);
         }
 
-        // sync the dom to the model.
-        function syncModelToControl() {
-            setControlValue(model.getItem('value', null));
-        }
-
-
-        // ENABLE / DISABLE
-
-
-
         // VALIDATION
 
         function validate(value) {
@@ -93,20 +81,12 @@ define([
                 });
         }
 
-        function importControlValue() {
-            return Promise.try(function() {
-                return Validation.importString(getControlValue());
-            });
-        }
-
-
-
-        function makeInputControl(currentValue, events) {
+        function makeViewControl(currentValue) {
             // CONTROL
             var initialControlValue,
                 min = spec.data.constraints.min,
                 max = spec.data.constraints.max;
-            if (currentValue) {
+            if (typeof currentValue === 'number') {
                 initialControlValue = String(currentValue);
             }
             return div({ style: { width: '100%' }, dataElement: 'input-wrapper' }, [
@@ -117,7 +97,6 @@ define([
                         dataElement: 'input',
                         dataType: 'int',
                         readonly: true,
-                        disabled: true,
                         value: initialControlValue,
                         style: {
                             textAlign: 'right'
@@ -132,7 +111,7 @@ define([
         function render() {
             return Promise.try(function() {
                 var events = Events.make(),
-                    inputControl = makeInputControl(model.getItem('value'), events);
+                    inputControl = makeViewControl(model.getItem('value'), events);
 
                 ui.setContent('input-container', inputControl);
                 events.attachEvents(container);

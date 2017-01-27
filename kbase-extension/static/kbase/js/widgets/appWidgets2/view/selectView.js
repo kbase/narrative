@@ -63,12 +63,6 @@ define([
 
         // VALIDATION
 
-        function importControlValue() {
-            return Promise.try(function() {
-                return Validation.importString(getControlValue());
-            });
-        }
-
         function validate(value) {
             return Promise.try(function() {
                 return Validation.validate(value, spec);
@@ -82,7 +76,7 @@ define([
                 });
         }
 
-        function makeInputControl(events) {
+        function makeViewControl(events) {
             var selected,
                 selectOptions = model.availableValues.map(function(item) {
                     selected = false;
@@ -100,8 +94,7 @@ define([
             return select({
                 class: 'form-control',
                 dataElement: 'input',
-                readonly: true,
-                disabled: true
+                readonly: true
             }, [option({ value: '' }, '')].concat(selectOptions));
         }
 
@@ -124,7 +117,7 @@ define([
                 dataElement: 'main-panel'
             }, [
                 div({ dataElement: 'input-container' },
-                    makeInputControl(events)
+                    makeViewControl(events)
                 )
             ]);
             return {

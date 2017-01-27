@@ -3,6 +3,15 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v4.2.1 (more notes will follow).
 
+### Version 3.1.6
+__Changes__
+- Created a help menu with some options migrated from the hamburger menu.
+- Fixed staging area uploader configuration to keep up with uploader app changes.
+- JIRA TASK-378 Fixed issue with app parameters not always enforcing "required" constraint.
+- Fix label display in app report viewer.
+- Fix import job panel not updating job status.
+- Minor tweaks to labels in volcano plot viewer.
+
 ### Version 3.1.5
 __Changes__
 - Added staging area uploaders for Genbank files, and SRA reads.

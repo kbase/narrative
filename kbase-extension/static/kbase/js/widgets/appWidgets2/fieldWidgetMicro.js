@@ -85,20 +85,16 @@ define([
 
         function doEnable() {
             if (!enabled) {
-                // do something...
                 var mask = ui.getElement('field-mask');
                 mask.classList.add('hidden');
-
                 enabled = true;
             }
         }
 
         function doDisable() {
             if (enabled) {
-                // do something
                 var mask = ui.getElement('field-mask');
                 mask.classList.remove('hidden');
-
                 enabled = false;
             }
         }
@@ -114,6 +110,9 @@ define([
             var events = Events.make(),
                 content = div({
                     class: 'alert alert-' + messageDef.type,
+                    style: {
+                        marginBottom: '0'
+                    },
                     role: 'alert'
                 }, [
                     span({ style: { fontWeight: 'bold' } }, messageDef.title),
@@ -162,6 +161,7 @@ define([
             places.message.classList.add('-warning');
             component.events.attachEvents(document.body);
         }
+
 
         function clearError() {
             places.field.classList.remove('-error');
@@ -227,7 +227,6 @@ define([
             return table({ class: 'table table-striped' }, [
                 tr([th('Required'), td(spec.data.constraints.required ? 'yes' : 'no')]),
                 tr([th('Data type'), td(spec.data.type)]),
-                // tr([th('Field type'), td(spec.spec.field_type)]),
                 tr([th('Multiple values?'), td(spec.multipleItems ? 'yes' : 'no')]),
                 (function () {
                     return tr([th('Default value'), td(spec.data.defaultValue)]);
@@ -239,14 +238,6 @@ define([
                 }())
             ].concat(parameterInfoTypeRules(spec)));
         }
-
-        function parameterInfoLittleTip(spec) {
-            return spec.data.type;
-            //var mult = (spec.multipleItems() ? '[]' : ''),
-            //    type = spec.dataType();
-            //return mult + type;
-        }
-
 
         function renderInfoTip() {
             var infoTipText;
@@ -307,7 +298,7 @@ define([
                 advanced = '';
             }
             var content = div({
-                class: ['form-horizontal', 'kb-app-parameter-row', 'parameter-panel', advanced].join(' '),
+                class: ['form-horizontal', 'xkb-app-parameter-row', 'parameter-panel', advanced].join(' '),
                 dataAdvancedParameter: spec.ui.advanced,
                 id: fieldId,
                 style: { position: 'relative' }
@@ -334,10 +325,15 @@ define([
                         marginBottom: '0'
                     }
                 }, [
-                    label({ class: 'col-md-3 xcontrol-label kb-app-parameter-name control-label' }, [
-                        spec.ui.label || spec.ui.id
-                    ]),
-                    div({ class: 'input-group col-md-9' }, [
+                    (function () {
+                        if (config.showLabel === false) {
+                            return '';
+                        }
+                        return label({ class: 'col-md-3 xcontrol-label kb-app-parameter-name control-label' }, [
+                            spec.ui.label || spec.ui.id
+                        ]);
+                    }()),
+                    div({ class: ['input-group', config.showLabel == false ? 'col-md-12' : 'col-md-9'].join(' ')}, [
                         div({
                             id: ids.inputControl,
                             dataElement: 'input-control'
@@ -356,26 +352,30 @@ define([
                                 dataElement: 'indicator'
                             })
                         ]),
-                        div({
-                            class: 'input-group-addon',
-                            style: {
-                                width: '30px',
-                                padding: '0'
+                        (function () {
+                            if (config.showInfo === false) {
+                                return '';
                             }
-                        }, [
-                            div({ dataElement: 'info' }, button({
-                                class: 'btn btn-link btn-xs',
-                                type: 'button',
-                                tabindex: '-1',
-                                id: events.addEvent({
-                                    type: 'click',
-                                    handler: function () {
-                                        places.infoPanel.querySelector('[data-element="big-tip"]').classList.toggle('hidden');
-                                        // ui.getElement('big-tip').classList.toggle('hidden');
-                                    }
-                                })
-                            }, span({ class: 'fa fa-info-circle' })))
-                        ])
+                            return div({
+                                class: 'input-group-addon',
+                                style: {
+                                    width: '30px',
+                                    padding: '0'
+                                }
+                            }, [
+                                div({ dataElement: 'info' }, button({
+                                    class: 'btn btn-link btn-xs',
+                                    type: 'button',
+                                    tabindex: '-1',
+                                    id: events.addEvent({
+                                        type: 'click',
+                                        handler: function () {
+                                            places.infoPanel.querySelector('[data-element="big-tip"]').classList.toggle('hidden');
+                                        }
+                                    })
+                                }, span({ class: 'fa fa-info-circle' })))
+                            ]);
+                        }())
                     ])
                 ]),
                 div({
@@ -383,25 +383,31 @@ define([
                     class: 'message-panel hidden',
                     dataElement: 'message-panel'
                 }, [
-                    div({ class: 'col-md-3' }),
-                    div({ class: 'col-md-9' }, [
+                    div({ class: config.showLabel == false ? '' : 'col-md-3'}),
+                    div({ class: config.showLabel == false ? 'col-md-12' : 'col-md-9'}, [
                         div({
                             id: ids.message,
                             class: 'message',
                             dataElement: 'message'
-                        })
+                        } )
                     ])
                 ]),
-                div({
-                    id: ids.infoPanel,
-                    class: 'info-panel row',
-                    dataElement: 'info-panel'
-                }, [
-                    div({ class: 'col-md-12' }, div({ id: infoId }, [
-                        renderInfoTip()
-                    ]))
+                (function () {
+                    if (!config.showInfo) {                
+                        return '';
+                    }
 
-                ])
+                    return div({
+                        id: ids.infoPanel,
+                        class: 'info-panel row',
+                        dataElement: 'info-panel'
+                    }, [
+                        div({ class: 'col-md-12' }, div({ id: infoId }, [
+                            renderInfoTip()
+                        ]))
+
+                    ]);
+                }())
             ]);
 
             return {
@@ -485,6 +491,9 @@ define([
                     // bus.on('changed', function () {
                     //     places.feedback.style.backgroundColor = '';
                     // });
+                    bus.on('saved', function (message) {
+                        console.log('FIELD detected saved');
+                    });
                     bus.on('enable', function (message) {
                         doEnable();
                     });

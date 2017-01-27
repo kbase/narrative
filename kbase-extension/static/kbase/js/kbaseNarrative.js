@@ -148,12 +148,12 @@ define(
     // Wrappers for the Jupyter/Jupyter function so we only maintain it in one place.
     Narrative.prototype.patchKeyboardMapping = function () {
         var commonShortcuts = [
-            'a', 'b', 'm', 'f', 'y', 'r',
+            'a', 'm', 'f', 'y', 'r',
             '1', '2', '3', '4', '5', '6',
             'k', 'j', 'b', 'x', 'c', 'v',
             'z', 'd,d', 's', 'l', 'o', 'h',
             'i,i', '0,0', 'q', 'shift-j', 'shift-k',
-            'shift-h', 'shift-m', 'shift-o', 'shift-v'
+            'shift-m', 'shift-o', 'shift-v'
         ],
             commandShortcuts = [],
             editShortcuts = [

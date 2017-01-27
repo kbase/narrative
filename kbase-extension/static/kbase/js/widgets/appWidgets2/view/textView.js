@@ -91,7 +91,7 @@ define([
 
         // DOM & RENDERING
 
-        function makeInputControl(events) {
+        function makeViewControl(events) {
             return input({
                 class: 'form-control',
                 readonly: true,
@@ -103,7 +103,7 @@ define([
             return div({
                 dataElement: 'input-container'
             }, [
-                makeInputControl(events)
+                makeViewControl(events)
             ]);
         }
 

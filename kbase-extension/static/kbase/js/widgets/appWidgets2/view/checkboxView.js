@@ -25,8 +25,7 @@ define([
         label = t('label');
 
     function factory(config) {
-        var options = {},
-            spec = config.parameterSpec,
+        var spec = config.parameterSpec,
             bus = config.bus,
             parent, container,
             ui,
@@ -94,40 +93,19 @@ define([
 
         // RENDERING
 
-        function makeInputControl(events, bus) {
+        function makeViewControl() {
             // CONTROL
             var checked = false;
             if (model.value === 1) {
                 checked = true;
             }
             return label([
-                input({
-                    id: events.addEvents({
-                        events: [{
-                            type: 'change',
-                            handler: function() {
-                                validate()
-                                    .then(function(result) {
-                                        if (config.showOwnMessages) {
-                                            ui.setContent('input-container.message', '');
-                                        }
-                                        if (result.diagnosis === 'optional-empty') {
-                                            setModelValue(result.parsedValue);
-                                        } else {
-                                            setModelValue(result.parsedValue);
-                                        }
-                                        bus.emit('validation', {
-                                            errorMessage: result.errorMessage,
-                                            diagnosis: result.diagnosis
-                                        });
-                                    });
-                            }
-                        }]
-                    }),
+                input({                   
                     type: 'checkbox',
                     dataElement: 'input',
                     checked: checked,
-                    value: 1
+                    value: 1,
+                    readonly: true
                 })
             ]);
         }
@@ -137,7 +115,7 @@ define([
                 dataElement: 'main-panel'
             }, [
                 div({ dataElement: 'input-container' },
-                    makeInputControl(events, bus)
+                    makeViewControl(events, bus)
                 )
             ]);
         }
@@ -174,8 +152,6 @@ define([
                     syncModelToControl();
                 });
 
-
-                // bus.emit('sync');
                 return null;
             });
         }
@@ -185,8 +161,6 @@ define([
                 parent.removeChild(container);
             }
         }
-
-        // INIT
 
         return {
             start: start,

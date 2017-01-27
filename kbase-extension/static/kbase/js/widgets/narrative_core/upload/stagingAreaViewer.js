@@ -8,8 +8,9 @@ define([
     'handlebars',
     'util/string',
     'util/timeFormat',
-    'kbase-client-api',
     './uploadTour',
+    'util/kbaseApiUtil',
+    'util/bootstrapDialog',
     'text!kbase/templates/data_staging/ftp_file_table.html',
     'text!kbase/templates/data_staging/ftp_file_header.html',
     'text!kbase/templates/data_staging/file_path.html',
@@ -25,8 +26,9 @@ define([
     Handlebars,
     StringUtil,
     TimeFormat,
-    KBaseClients,
     UploadTour,
+    APIUtil,
+    BootstrapDialog,
     FtpFileTableHtml,
     FtpFileHeaderHtml,
     FilePathHtml
@@ -41,7 +43,8 @@ define([
             this.filePathTmpl = Handlebars.compile(FilePathHtml);
             this.ftpUrl = Config.url('ftp_api_url');
             this.updatePathFn = options.updatePathFn || this.setPath;
-            this.path = options.path;
+            this.setPath(options.path);
+            this.uploaders = Config.get('uploaders');
 
             return this;
         },
@@ -64,6 +67,13 @@ define([
 
         setPath: function(path) {
             this.path = path;
+            // factor out the current subdirectory path into its own variable
+            var subpath = path.split('/');
+            var subpathTokens = subpath.length - 1;
+            if (this.path.startsWith('/')) {
+                subpathTokens--;
+            }
+            this.subpath = subpath.slice(subpath.length - subpathTokens).join('/');
             this.updateView();
         },
 
@@ -128,7 +138,7 @@ define([
         },
 
         renderFiles: function(files) {
-            var $fileTable = $(this.ftpFileTableTmpl({files: files}));
+            var $fileTable = $(this.ftpFileTableTmpl({files: files, uploaders: this.uploaders.dropdown_order}));
             this.$elem.append($fileTable)
             this.$elem.find('table').dataTable({
                 dom: '<"file-path pull-left">frtip',
@@ -178,70 +188,69 @@ define([
                         }
                     },
                     sType: 'numeric'
-                }
-            ]
+                }],
+                fnRowCallback: function(nRow, aData, iDisplayIndex, iDisplayIndexFull) {
+                    $('td:eq(4)', nRow).find('select').select2({
+                        placeholder: 'Select a format'
+                    });
+                    $('td:eq(4)', nRow).find('button[data-import]').on('click', function(e) {
+                        var importType = $(e.currentTarget).prevAll('#import-type').val();
+                        var importFile = $(e.currentTarget).data().import;
+                        this.initImportApp(importType, importFile)
+                        .then(function() {
+                            this.updateView();
+                        }.bind(this));
+                    }.bind(this));
+                    $('td:eq(0)', nRow).find('button[data-name]').on('click', function(e) {
+                        this.updatePathFn(this.path += '/' + $(e.currentTarget).data().name);
+                    }.bind(this));
+                }.bind(this)
             });
-            this.$elem.find('table button[data-name]').on('click', function(e) {
-                this.updatePathFn(this.path += '/' + $(e.currentTarget).data().name);
-            }.bind(this));
-            this.$elem.find('table button[data-report]').on('click', function(e) {
-                alert("Show report for reference '" + $(e.currentTarget).data().report + "'");
-            });
-            this.$elem.find('table select').select2({
-                placeholder: 'Select a format'
-            });
-            this.$elem.find('table button[data-import]').on('click', function(e) {
-                var importType = $(e.currentTarget).prevAll('#import-type').val();
-                var importFile = $(e.currentTarget).data().import;
-                this.initImportApp(importType, importFile);
-            }.bind(this));
+            // this.$elem.find('table button[data-report]').on('click', function(e) {
+            //     alert("Show report for reference '" + $(e.currentTarget).data().report + "'");
+            // });
             this.renderPath();
         },
 
         initImportApp: function(type, file) {
-            //TODO = move this to configuration.
-            var appIds = {
-                'se_reads': 'genome_transform/reads_to_assembly',
-                'pe_reads': 'genome_transform/reads_to_assembly',
-                'sra_reads': 'genome_transform/sra_reads_to_assembly',
-                'genbank_genome': 'genome_transform/narrative_genbank_to_genome'
-            };
-
-            var appId = appIds[type];
-            if (appId) {
-                var nms = new NarrativeMethodStore(Config.url('narrative_method_store'));
-                Promise.resolve(nms.get_method_spec({tag: 'dev', ids: [appId]}))
-                .then(function(spec) {
-                    spec = spec[0];
-                    var newCell = Jupyter.narrative.narrController.buildAppCodeCell(spec, 'dev');
-                    var meta = newCell.metadata;
-                    switch(type) {
-                        case 'se_reads':
-                            meta.kbase.appCell.params.file_path_list = ['/data/bulk' + this.path + '/' + file];
-                            meta.kbase.appCell.params.reads_type = 'SingleEndLibrary';
-                            meta.kbase.appCell.params.reads_id = file.replace(/\s/g, '_') + '_reads';
-                            break;
-                        case 'pe_reads':
-                            meta.kbase.appCell.params.file_path_list = ['/data/bulk' + this.path + '/' + file];
-                            meta.kbase.appCell.params.reads_type = 'PairedEndLibrary';
-                            meta.kbase.appCell.params.reads_id = file.replace(/\s/g, '_') + '_reads';
-                            break;
-                        case 'sra_reads':
-                            meta.kbase.appCell.params.file_path_list = ['/data/bulk' + this.path + '/' + file];
-                            meta.kbase.appCell.params.reads_id = file.replace(/\s/g, '_') + '_reads';
-                            break;
-                        case 'genbank_genome':
-                        default:
-                            break;
-                    }
-                    newCell.metadata = meta;
-                    Jupyter.narrative.scrollToCell(newCell);
-                    Jupyter.narrative.hideOverlay();
-                }.bind(this))
-                .catch(function(err) {
-                    console.error(err);
-                });
-            }
+            return Promise.try(function() {
+                var appInfo = this.uploaders.app_info[type];
+                if (appInfo) {
+                    var tag = APIUtil.getAppVersionTag();
+                    APIUtil.getAppSpec(appInfo.app_id)
+                    .then(function(spec) {
+                        var newCell = Jupyter.narrative.narrController.buildAppCodeCell(spec, tag);
+                        var meta = newCell.metadata;
+                        var fileParam = file;
+                        if (this.subpath) {
+                            fileParam = this.subpath + '/' + file;
+                        }
+                        if (appInfo.app_input_param_type === "list") {
+                            fileParam = [fileParam];
+                        }
+                        meta.kbase.appCell.params[appInfo.app_input_param] = fileParam;
+                        meta.kbase.appCell.params[appInfo.app_output_param] = file.replace(/\s/g, '_') + appInfo.app_output_suffix;
+                        for (var p in appInfo.app_static_params) {
+                            if (appInfo.app_static_params.hasOwnProperty(p)) {
+                                meta.kbase.appCell.params[p] = appInfo.app_static_params[p];
+                            }
+                        }
+                        newCell.metadata = meta;
+                        Jupyter.narrative.scrollToCell(newCell);
+                        Jupyter.narrative.hideOverlay();
+                    }.bind(this))
+                    .catch(function(err) {
+                        new BootstrapDialog({
+                            title: "Can't create uploader app!",
+                            body: "Sorry, unable to create App Cell to start your upload. You may need to set your Apps panel to 'dev' or 'beta'.",
+                            buttons: [ $('<button class="btn btn-primary" data-dismiss="modal">OK</button>') ],
+                            closeButton: true,
+                            enterToTrigger: true
+                        }).show();
+                        console.error(err);
+                    });
+                }
+            }.bind(this));
         },
 
         startTour: function() {

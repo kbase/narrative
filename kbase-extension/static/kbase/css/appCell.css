@@ -171,6 +171,26 @@ control with padding, and then scooting the icon back into its column.
 }
 
 
+.report-widget .panel-title > [data-toggle="collapse"]::before {
+    display: inline-block;
+    margin-left: 0px;
+    margin-right: 4px;
+    font-family: "FontAwesome";
+    font-style: normal;
+    font-weight: normal;
+    font-size: 90%;
+    width: 12px;
+    color: silver;
+    line-height: 1;
+    vertical-align: baseline;
+    content: "\f078 ";
+}
+.report-widget .panel-title > [data-toggle="collapse"].collapsed::before {
+    margin-left: 2px; margin-right: 2px;
+    content: "\f054 ";
+}
+
+
 
 .kb-app-cell .panel-title > [data-toggle="collapse"]::before {
     display: inline-block;

@@ -26,8 +26,8 @@ define([
     // Constants
     var t = html.tag,
         div = t('div'),
-        input = t('input'),
-        span = t('span'),
+        button = t('button'),
+        p = t('p'),
         resolver = Resolver.make();
 
     function factory(config) {
@@ -130,16 +130,41 @@ define([
         function updateValue() {}
 
         function doToggleEnableControl() {
-            var label = document.querySelector('#' + places.enableControl + ' [data-element="label"]');
+            var button = document.querySelector('#' + places.enableControl + ' button');
             if (viewModel.state.enabled) {
+                // Note this spins off as an orphaned promise.
+                ui.showConfirmDialog({
+                    title: 'Disable parameter group "' + spec.ui.label + '"?',
+                    body: div([
+                        p('Disabling this parameter group will also remove any values you may have set.'),
+                        p('If enabled again, the values will be set to their defaults.'),
+                        p('Continue to disable this parameter group?')
+                    ]),
+                    yesLabel: 'Yes',
+                    noLabel: 'No'
+                })
+                .then(function (confirmed) {
+                    if (!confirmed) {
+                        return;
+                    }
+                    viewModel.state.enabled = false;
+                    button.innerHTML = 'Enable';
+                    viewModel.data = null;
+                    bus.emit('set-param-state', {
+                        state: viewModel.state
+                    });
+                    bus.emit('changed', {
+                        newValue: lang.copy(viewModel.data)
+                    });
+                    renderSubcontrols();
+                });
+
                 // Disable it
-                viewModel.state.enabled = false;
-                label.innerHTML = 'Enable';
-                viewModel.data = null;
+               
             } else {
                 // Enable it
                 viewModel.state.enabled = true;
-                label.innerHTML = 'Disable';
+                button.innerHTML = 'Disable';
                 viewModel.data = lang.copy(spec.data.defaultValue);
             }
             bus.emit('set-param-state', {
@@ -183,21 +208,13 @@ define([
             return div({
                 id: places.enableControl
             }, [
-                input({
+                button({
                     id: events.addEvent({
                         type: 'click',
-                        handler: function (e) {
-                            doToggleEnableControl(e);
-                        }
+                        handler: doToggleEnableControl
                     }),
-                    type: 'checkbox',
-                    checked: checked
-                }),
-                span({
-                    dataElement: 'label',
-                    style: {
-                        marginLeft: '4px'
-                    }
+                    type: 'button',
+                    class: 'btn btn-default'
                 }, label)
             ]);
         }

@@ -18,7 +18,7 @@ define([
     'select2',
     'bootstrap',
     'css!font-awesome'
-], function(
+], function (
     Promise,
     $,
     Jupyter,
@@ -72,9 +72,9 @@ define([
             if (model.availableValues) {
                 var filteredOptions = [];
                 selectOptions = model.availableValues
-                    .filter(function(objectInfo, idx) {
+                    .filter(function (objectInfo, idx) {
                         if (model.blacklistValues) {
-                            return !model.blacklistValues.some(function(value) {
+                            return !model.blacklistValues.some(function (value) {
                                 if (value === getObjectRef(objectInfo)) {
                                     filteredOptions.push(idx);
                                     return true;
@@ -83,7 +83,7 @@ define([
                             });
                         }
                     })
-                    .map(function(objectInfo, idx) {
+                    .map(function (objectInfo, idx) {
                         var selected = false,
                             ref = idx; //getObjectRef(objectInfo);
                         if (getObjectRef(objectInfo) === model.value) {
@@ -133,7 +133,7 @@ define([
             var currentSelectionId = String(model.availableValuesMap[stringValue]);
 
             // Unselect any currently selected item.
-            Array.prototype.slice.call(control.selectedOptions).forEach(function(option) {
+            Array.prototype.slice.call(control.selectedOptions).forEach(function (option) {
                 option.selected = false;
             });
 
@@ -142,7 +142,7 @@ define([
             // NB the id is not the index of the option. It is a value assigned to the option,
             // and used to map the object ref or name to the control.  
             var options = Array.prototype.slice.call(control.options);
-            options.forEach(function(option) {
+            options.forEach(function (option) {
                 if (option.value === currentSelectionId) {
                     option.selected = true;
                 }
@@ -172,7 +172,7 @@ define([
         // VALIDATION
 
         function validate() {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 var objInfo = model.availableValues[getControlValue()],
                     processedValue = '',
                     validationOptions = {
@@ -190,11 +190,11 @@ define([
                 }
 
                 switch (objectRefType) {
-                    case 'ref':
-                        return Validation.validateWorkspaceDataPaletteRef(processedValue, validationOptions);
-                    case 'name':
-                    default:
-                        return Validation.validateWorkspaceObjectName(processedValue, validationOptions);
+                case 'ref':
+                    return Validation.validateWorkspaceDataPaletteRef(processedValue, validationOptions);
+                case 'name':
+                default:
+                    return Validation.validateWorkspaceObjectName(processedValue, validationOptions);
                 }
             });
             // .then(function(validationResult) {
@@ -210,13 +210,13 @@ define([
         }
 
         function filterObjectInfoByType(objects, types) {
-            return objects.map(function(objectInfo) {
+            return objects.map(function (objectInfo) {
                     var type = objectInfo.typeModule + '.' + objectInfo.typeName;
                     if (types.indexOf(type) >= 0) {
                         return objectInfo;
                     }
                 })
-                .filter(function(item) {
+                .filter(function (item) {
                     return item !== undefined;
                 });
         }
@@ -227,27 +227,27 @@ define([
                 key: {
                     type: 'workspace-data-updated'
                 },
-                handle: function(message) {
+                handle: function (message) {
                     doWorkspaceUpdated(filterObjectInfoByType(message.objectInfo, types));
                 }
             });
             eventListeners.push(listener.id);
             return listener.promise
-                .then(function(message) {
+                .then(function (message) {
                     return filterObjectInfoByType(message.objectInfo, types);
                 });
         }
 
         function getObjectsByType_old(type) {
-            return Promise.try(function() {
+            return Promise.try(function () {
                     return Jupyter.narrative.sidePanel.$dataWidget.getLoadedData(type);
                 })
-                .then(function(data) {
+                .then(function (data) {
                     var objList = [];
-                    Object.keys(data).forEach(function(typeKey) {
+                    Object.keys(data).forEach(function (typeKey) {
                         objList = objList.concat(data[typeKey]);
                     });
-                    return objList.map(function(objectInfo) {
+                    return objList.map(function (objectInfo) {
                         var obj = serviceUtils.objectInfoToObject(objectInfo);
                         // TODO - port this into kb_service/utils...
                         obj.dataPaletteRef = null;
@@ -271,8 +271,8 @@ define([
                     types: types,
                     includeMetadata: 1
                 }])
-                .then(function(result) {
-                    var objects = result[0].data.map(function(obj) {
+                .then(function (result) {
+                    var objects = result[0].data.map(function (obj) {
                         var info = serviceUtils.objectInfoToObject(obj.object_info);
                         if (obj.dp_info) {
                             info.paletteRef = obj.dp_info.ref;
@@ -286,8 +286,8 @@ define([
         function fetchData() {
             var types = spec.data.constraints.types;
             return getObjectsByTypes_datalist(types)
-                .then(function(objects) {
-                    objects.sort(function(a, b) {
+                .then(function (objects) {
+                    objects.sort(function (a, b) {
                         if (a.saveDate < b.saveDate) {
                             return 1;
                         }
@@ -302,16 +302,16 @@ define([
 
         function fetchData_old() {
             var types = spec.data.constraints.types;
-            return Promise.all(types.map(function(type) {
+            return Promise.all(types.map(function (type) {
                     return getObjectsByType(type);
                 }))
-                .then(function(objectSets) {
+                .then(function (objectSets) {
                     // we could also use [] rather than Array.prototype, but
                     // this way is both more mysterious and better performing.
                     return Array.prototype.concat.apply([], objectSets);
                 })
-                .then(function(objects) {
-                    objects.sort(function(a, b) {
+                .then(function (objects) {
+                    objects.sort(function (a, b) {
                         if (a.saveDate < b.saveDate) {
                             return 1;
                         }
@@ -323,28 +323,6 @@ define([
                     return objects;
                 });
         }
-
-        function doChange() {
-            validate()
-                .then(function(result) {
-                    if (result.isValid) {
-                        model.value = result.value;
-                        bus.emit('changed', {
-                            newValue: result.value
-                        });
-                    } else if (result.diagnosis === 'required-missing') {
-                        model.value = spec.data.nullValue;
-                        bus.emit('changed', {
-                            newValue: spec.data.nullValue
-                        });
-                    }
-                    bus.emit('validation', {
-                        errorMessage: result.errorMessage,
-                        diagnosis: result.diagnosis
-                    });
-                });
-        }
-
 
         /**
          * Formats the display of an object in the dropdown.
@@ -367,41 +345,13 @@ define([
             ]));
         }
 
-        function getSelect2Data() {
-            return model.availableValues.map(function(objectInfo) {
-                return {
-                    id: objectInfo.name,
-                    text: div([
-                        div([
-                            span({
-                                style: {
-                                    wordWrap: 'break-word',
-                                    fontWeight: 'bold'
-                                }
-                            }, objectInfo.name),
-                            ' (v' + objectInfo.version + ')'
-                        ]),
-                        div({
-                            style: {
-                                marginLeft: '7px'
-                            }
-                        }, [
-                            div({ style: { fontStyle: 'italic' } }, (objectInfo.typeName)),
-                            div(['Narrative id: ', objectInfo.wsid]),
-                            div(['updated ', TimeFormat.getTimeStampStr(objectInfo.save_date), ' by ', objectInfo.saved_by])
-                        ])
-                    ])
-                }
-            });
-        }
-
         /*
          * Creates the markup
          * Places it into the dom node
          * Hooks up event listeners
          */
         function render() {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 var events = Events.make(),
                     inputControl = makeInputControl(events, bus),
                     content = div({ class: 'input-group', style: { width: '100%' } }, inputControl);
@@ -409,15 +359,14 @@ define([
                 ui.setContent('input-container', content);
 
                 $(ui.getElement('input-container.input')).select2({
+                    disabled: true,
                     templateResult: formatObjectDisplay,
-                    templateSelection: function(object) {
+                    templateSelection: function (object) {
                         if (!object.id) {
                             return object.text;
                         }
                         return model.availableValues[object.id].name;
                     }
-                }).on('change', function() {
-                    doChange();
                 });
                 events.attachEvents(container);
 
@@ -443,7 +392,7 @@ define([
 
         function autoValidate() {
             return validate()
-                .then(function(result) {
+                .then(function (result) {
                     bus.emit('validation', {
                         errorMessage: result.errorMessage,
                         diagnosis: result.diagnosis
@@ -453,12 +402,12 @@ define([
 
         function getObjectRef(objectInfo) {
             switch (objectRefType) {
-                case 'name':
-                    return objectInfo.name;
-                case 'ref':
-                    return objectInfo.ref;
-                default:
-                    throw new Error('Unsupported object reference type ' + objectRefType);
+            case 'name':
+                return objectInfo.name;
+            case 'ref':
+                return objectInfo.ref;
+            default:
+                throw new Error('Unsupported object reference type ' + objectRefType);
             }
         }
 
@@ -474,7 +423,7 @@ define([
             // compare to availableData.
             if (!utils.isEqual(data, model.availableValues)) {
                 model.availableValues = data;
-                var matching = model.availableValues.filter(function(value) {
+                var matching = model.availableValues.filter(function (value) {
                     if (value.name === getObjectRef(value)) {
                         return true;
                     }
@@ -491,7 +440,7 @@ define([
                 // config setting. This is because some apps don't yet accept
                 // names... 
                 // So our key is either dataPaletteRef or (ref or name)
-                model.availableValues.forEach(function(objectInfo, index) {
+                model.availableValues.forEach(function (objectInfo, index) {
                     var id;
                     if (objectInfo.dataPaletteRef) {
                         id = objectInfo.dataPaletteRef;
@@ -503,7 +452,7 @@ define([
                     model.availableValuesMap[id] = index;
                 });
                 return render()
-                    .then(function() {
+                    .then(function () {
                         setControlValue(getModelValue());
                         autoValidate();
                     });
@@ -513,14 +462,14 @@ define([
         function doWorkspaceChanged() {
             // there are a few thin
             fetchData()
-                .then(function(data) {
+                .then(function (data) {
                     return doWorkspaceUpdated(data);
                 });
         }
 
         // LIFECYCLE API
         function start(arg) {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 parent = arg.node;
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
@@ -536,20 +485,20 @@ define([
                 }
 
                 return fetchData()
-                    .then(function(data) {
+                    .then(function (data) {
                         doWorkspaceUpdated(data);
                         // model.availableValues = data;
                         return render();
                     })
-                    .then(function() {
+                    .then(function () {
 
-                        bus.on('reset-to-defaults', function() {
+                        bus.on('reset-to-defaults', function () {
                             resetModelValue();
                         });
-                        bus.on('update', function(message) {
+                        bus.on('update', function (message) {
                             setModelValue(message.value);
                         });
-                        runtime.bus().on('workspace-changed', function() {
+                        runtime.bus().on('workspace-changed', function () {
                             doWorkspaceChanged();
                         });
                         bus.emit('sync');
@@ -561,11 +510,11 @@ define([
         }
 
         function stop() {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 if (container) {
                     parent.removeChild(container);
                 }
-                eventListeners.forEach(function(id) {
+                eventListeners.forEach(function (id) {
                     runtime.bus().removeListener(id);
                 });
             });
@@ -581,7 +530,7 @@ define([
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
         }
     };

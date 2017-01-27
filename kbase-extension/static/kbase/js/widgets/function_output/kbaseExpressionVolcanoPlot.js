@@ -122,8 +122,8 @@ define(['jquery',
                 tabPane.append('<center><div class="chart" id="p' + pref + 'divchart" style="width:100%; border-bottom:1px solid #ccc;margin-bottom:30px;"> ' +
                '</div><br/>-Log10(q-value ) = <b><span id="' +pref+ 'selpval"></span></b> &nbsp; &nbsp; &nbsp; | &nbsp; &nbsp; &nbsp;Log2(Fold Change) = <b><span id="' +pref+ 'selfc"></span></b> </center><br/></div> <br/><div id="' + pref + 'voltablediv" style="width:80%;margin-left:auto;margin-right:auto;text-align:center;" ><center>' +
                '<table class="table table-striped table-bordered" cellspacing="0" width="100%" id="' + pref + 'voltable" >' +
-               '<thead><tr><th>Gene</th><th>Gene description</th><th>Log2(Condition 1) </th><th>Log2(Condition 2)</th><th>Log2(Fold Change)</th> <th>-Log10(q-value)</th></tr>' +
-               '</thead><tfoot><tr><th>Gene</th><th>Gene description</th><th>Log2(Condition 1)</th><th>Log2(Condition 2)</th><th>Log2(Fold Change)</th><th>-Log10(q-value)</th> </tr></tfoot>' +
+               '<thead><tr><th>Gene</th><th>Gene description</th><th>Log2(FPKM+1) Condition 1 </th><th>Log2(FPKM+1) Condition 2</th><th>Log2(Fold Change)</th> <th>-Log10(q-value)</th></tr>' +
+               '</thead><tfoot><tr><th>Gene</th><th>Gene description</th><th>Log2(FPKM+1) Condition 1</th><th>Log2(FPKM+1) Condition 2</th><th>Log2(Fold Change)</th><th>-Log10(q-value)</th> </tr></tfoot>' +
                '<tbody id="' + pref + 'voltablebody">' +
                '</tbody></table></center></div> </center></div></div></div></div></div> </div>');
 

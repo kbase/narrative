@@ -19,6 +19,7 @@ define([
     'json!kbase/config/icons.json',
     'json!kbase/config/cdn-service-config.json',
     'json!kbase/config/feature-config.json',
+    'json!kbase/config/staging_upload.json',
     'require'
 ], function (
     paths,
@@ -28,6 +29,7 @@ define([
     IconsSet,
     ServiceSet,
     FeatureSet,
+    StagingUpload,
     localRequire
 ) {
     'use strict';
@@ -57,8 +59,10 @@ define([
         workspaceId: workspaceId,
         loading_gif: ConfigSet.loading_gif,
         use_local_widgets: ConfigSet.use_local_widgets,
-        features: FeatureSet
-
+        features: FeatureSet,
+        uploaders: StagingUpload,
+        data_panel: ConfigSet.data_panel,
+        comm_wait_timeout: ConfigSet.comm_wait_timeout
     };
 
     debug = config.mode === "debug";

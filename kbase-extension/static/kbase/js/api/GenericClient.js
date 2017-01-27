@@ -9,7 +9,7 @@ define([
     Promise
 ) {
     'use strict';
-    
+
     var globalUrlLookupCache = {}; // "<module>:<version>" -> {'cached_url': <url>, 'last_refresh_time': <milliseconds>}
 
     function GenericClient(url, auth, auth_cb, use_url_lookup, timeout, async_job_check_time_ms) {
@@ -29,7 +29,7 @@ define([
 
         var _auth = auth ? auth : { 'token': '', 'user_id': '' };
         var _auth_cb = auth_cb;
-        
+
         var refresh_cycle_ms = 300000;
 
         this.sync_call = function (service_method, param_list, _callback, _errorCallback, service_version) {
@@ -100,7 +100,6 @@ define([
         }
 
         function refresh_cached_url(module_name, version, callback, errorCallback) {
-            var start_time = +(new Date());
             json_call_ajax(lookup_url, 'ServiceWizard.get_service_status', [{
                 module_name: module_name,
                 version: version || null
@@ -114,8 +113,6 @@ define([
                 cached['cached_url'] = _url;
                 var end_time = +(new Date());
                 cached['last_refresh_time'] = end_time;
-                console.log("GenericClient: URL lookup for ", {'module': module_name, 
-                    'version': version}, ", time=" + (end_time - start_time) + " ms");
                 callback({'url': cached['cached_url'], 'refreshed': true});
             }, errorCallback);
         }

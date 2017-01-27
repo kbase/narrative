@@ -339,6 +339,18 @@ class KBaseWSManagerMixin(object):
                     commit_hash = app.get('gitCommitHash', 'unknown')
                     method_info[u'method.' + id + '/' + commit_hash] += 1
                     num_methods += 1
+                elif kbase_type == 'editor':
+                    app = meta['kbase'].get('editorCell', {}).get('app', {})
+                    id = app.get('id', 'UnknownApp')
+                    commit_hash = app.get('gitCommitHash', 'unknown')
+                    method_info[u'method.' + id + '/' + commit_hash] += 1
+                    num_methods += 1                    
+                elif kbase_type == 'view':
+                    app = meta['kbase'].get('viewCell', {}).get('app', {})
+                    id = app.get('id', 'UnknownApp')
+                    commit_hash = app.get('gitCommitHash', 'unknown')
+                    method_info[u'method.' + id + '/' + commit_hash] += 1
+                    num_methods += 1                    
             else:
                 cell_info['jupyter.' + cell.get('cell_type', 'code')] += 1
 

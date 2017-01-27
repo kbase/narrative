@@ -1,3 +1,4 @@
+define(['kbasePathways'], function(kbasePathways) {
 function KBaseFBA_FBAModel(modeltabs) {
     var self = this;
     this.modeltabs = modeltabs;
@@ -231,7 +232,7 @@ function KBaseFBA_FBAModel(modeltabs) {
         }]
     }, {
         "name": "Pathways",
-        "widget": "kbasePathways",
+        "widget": kbasePathways,
         "getParams": function() {
             return {models: [self.data]};
         }
@@ -619,7 +620,7 @@ function KBaseFBA_FBAModel(modeltabs) {
 				}
 			}
 			rxn.gapfillingstring = rxn.gapfilling.join('<br>');
-			
+
             rxn.dispfeatures = "";
             rxn.genes = [];
             for (var gene in rxn.ftrhash) {
@@ -638,7 +639,7 @@ function KBaseFBA_FBAModel(modeltabs) {
 
             rxn.equation = reactants+" "+sign+" "+products;
         }
-        if (gfobjects.length > 0) {        
+        if (gfobjects.length > 0) {
 			var p = self.modeltabs.kbapi('ws', 'get_objects', gfobjects).then(function(data){
 				for (var i=0; i < data.length; i++) {
 					var solrxns = data[i].data.gapfillingSolutions[0].gapfillingSolutionReactions;
@@ -672,3 +673,4 @@ function KBaseFBA_FBAModel(modeltabs) {
 
 // make method of base class
 KBModeling.prototype.KBaseFBA_FBAModel = KBaseFBA_FBAModel;
+})

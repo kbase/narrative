@@ -1,7 +1,7 @@
 'use strict';
 
-define(['kbwidget', 'jquery', 'bootstrap', 'kbaseAuthenticatedWidget', 'kbaseTabTableTabs'],
-function(KBWidget, $, bootstrap, kbaseAuthenticatedWidget, kbaseTabTableTabs) {
+define(['kbwidget', 'jquery', 'bootstrap', 'kbaseAuthenticatedWidget', 'kbaseTabTableTabs', 'kbasePathways'],
+function(KBWidget, $, bootstrap, kbaseAuthenticatedWidget, kbaseTabTableTabs, kbasePathways) {
 return KBWidget({
     name: "kbaseTabTable",
     parent : kbaseAuthenticatedWidget,
@@ -148,8 +148,10 @@ return KBWidget({
                 if (tabSpec.type == 'verticaltbl') continue;
 
                 // if widget, invoke widget with arguments
+                
                 if (tabSpec.widget) {
-                    tabPane[tabSpec.widget]( tabSpec.getParams() );
+                  
+                    new tabSpec.widget(tabPane, tabSpec.getParams() );
                     continue;
                 }
 

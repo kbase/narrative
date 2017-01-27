@@ -92,15 +92,21 @@ class JobManager(object):
             try:
                 job_info = job_param_info[job_id]
 
+                job = Job.from_state(job_id,
+                                     job_info,
+                                     user_info[0],
+                                     app_id=job_info.get('app_id'),
+                                     tag=job_meta.get('tag', 'release'),
+                                     cell_id=job_meta.get('cell_id', None),
+                                     run_id=job_meta.get('run_id', None))
+
+                # Note that when jobs for this narrative are initially loaded,
+                # they are set to not be refreshed. Rather, if a client requests
+                # updates via the start_job_update message, the refresh flag will
+                # be set to True.
                 self._running_jobs[job_id] = {
-                    'refresh': True,
-                    'job': Job.from_state(job_id,
-                                          job_info,
-                                          user_info[0],
-                                          app_id=job_info.get('app_id'),
-                                          tag=job_meta.get('tag', 'release'),
-                                          cell_id=job_meta.get('cell_id', None),
-                                          run_id=job_meta.get('run_id', None))
+                    'refresh': False,
+                    'job': job
                 }
 
             except Exception as e:
@@ -341,14 +347,26 @@ class JobManager(object):
         status_set = self._construct_job_status_set(jobs_to_lookup)
         self._send_comm_message('job_status_all', status_set)
 
+        return len(jobs_to_lookup)
+
+    def _start_job_status_loop(self):
+        kblogging.log_event(self._log, 'starting job status loop', {})
+        if self._lookup_timer is None:
+            self._lookup_job_status_loop()
+
     def _lookup_job_status_loop(self):
         """
         Initialize a loop that will look up job info. This uses a Timer thread on a 10
         second loop to update things.
         """
-        self._lookup_all_job_status()
-        self._lookup_timer = threading.Timer(10, self._lookup_job_status_loop)
-        self._lookup_timer.start()
+
+        refreshing_jobs = self._lookup_all_job_status()
+        # Automatically stop when there are no more jobs requesting a refresh.
+        if refreshing_jobs == 0:
+            self.cancel_job_lookup_loop()
+        else:
+            self._lookup_timer = threading.Timer(10, self._lookup_job_status_loop)
+            self._lookup_timer.start()
 
     def cancel_job_lookup_loop(self):
         """
@@ -373,7 +391,9 @@ class JobManager(object):
         self._running_jobs[job.job_id] = {'job': job, 'refresh': True}
         # push it forward! create a new_job message.
         self._lookup_job_status(job.job_id)
-        self._send_comm_message('new_job', {})
+        self._send_comm_message('new_job', {
+            'job_id': job.job_id
+        })
 
     def get_job(self, job_id):
         """
@@ -433,7 +453,7 @@ class JobManager(object):
                 self.cancel_job_lookup_loop()
 
             elif r_type == 'start_update_loop':
-                self._lookup_job_status_loop()
+                self._start_job_status_loop()
 
             elif r_type == 'stop_job_update':
                 if job_id is not None:
@@ -442,6 +462,7 @@ class JobManager(object):
             elif r_type == 'start_job_update':
                 if job_id is not None:
                     self._running_jobs[job_id]['refresh'] = True
+                    self._start_job_status_loop()
 
             elif r_type == 'delete_job':
                 if job_id is not None:

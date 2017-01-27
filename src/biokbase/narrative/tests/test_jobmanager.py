@@ -171,7 +171,7 @@ class JobManagerTest(unittest.TestCase):
         job_data = msg.get('data', {}).get('content', {})
         job_ids = job_data.keys()
         # assert that each job info that's flagged for lookup gets returned
-        jobs_to_lookup = [j for j in self.jm._running_jobs.keys() if self.jm._running_jobs[j]['refresh']]
+        jobs_to_lookup = [j for j in self.jm._running_jobs.keys()]
         self.assertItemsEqual(job_ids, jobs_to_lookup)
         for job_id in job_ids:
             self.assertTrue(self.validate_status_message(job_data[job_id]))

@@ -18,7 +18,7 @@ define([
     'select2',
     'bootstrap',
     'css!font-awesome'
-], function(
+], function (
     Promise,
     $,
     html,
@@ -66,19 +66,11 @@ define([
         // CONTROL
 
         function getControlValue() {
-            var control = ui.getElement('input-container.input'),
-                selected = control.selectedOptions;
-            // if (selected.length === 0) {
-            //     return;
-            // }
-            // we are modeling a single string value, so we always just get the
-            // first selected element, which is all there should be!
-            // return selected.item(0).value;
+            var control = ui.getElement('input-container.input');
             return $(control).val();
         }
 
         function setControlValue(value) {
-            // console.log('setting control value', value);
             var stringValue;
             if (value === null) {
                 stringValue = '';
@@ -87,10 +79,6 @@ define([
             }
 
             var control = ui.getElement('input-container.input');
-
-            // NB id used as String since we are comparing it below to the actual dom
-            // element id
-            // var currentSelectionId = String(model.availableValuesMap[stringValue]);
 
             $(control).val(value).trigger('change.select2');
         }
@@ -117,10 +105,8 @@ define([
         // VALIDATION
 
         function validate() {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 var value = getControlValue();
-
-                // console.log('value', value);
 
                 return {
                     isValid: true,
@@ -131,28 +117,6 @@ define([
                     parsedValue: value
                 };
             });
-        }
-
-        function doChange() {
-            validate()
-                .then(function(result) {
-                    // console.log('validated??', result);
-                    if (result.isValid) {
-                        model.value = result.parsedValue;
-                        channel.emit('changed', {
-                            newValue: result.parsedValue
-                        });
-                    } else if (result.diagnosis === 'required-missing') {
-                        model.value = spec.data.nullValue;
-                        channel.emit('changed', {
-                            newValue: spec.data.nullValue
-                        });
-                    }
-                    channel.emit('validation', {
-                        errorMessage: result.errorMessage,
-                        diagnosis: result.diagnosis
-                    });
-                });
         }
 
         function doTemplateResult(item) {
@@ -207,18 +171,18 @@ define([
                 token: Runtime.make().authToken()
             });
             return taxonClient.callFunc('search_taxonomy', [{
-                    private: 0,
-                    public: 1,
-                    search: term,
-                    limit: pageSize,
-                    start: startItem
-                }])
-                .then(function(result) {
-                    var elapsed = new Date().getTime() - start;
-                    console.log('Loaded data ' + result[0].hits.length + ' items of ' + result[0].num_of_hits + ' in ' + elapsed + 'ms');
-                    totalItems = result[0].num_of_hits;
-                    return result[0];
-                })
+                private: 0,
+                public: 1,
+                search: term,
+                limit: pageSize,
+                start: startItem
+            }])
+            .then(function (result) {
+                // var elapsed = new Date().getTime() - start;
+                // console.log('Loaded data ' + result[0].hits.length + ' items of ' + result[0].num_of_hits + ' in ' + elapsed + 'ms');
+                totalItems = result[0].num_of_hits;
+                return result[0];
+            });
         }
 
         function getTaxonomyItem(taxonObject) {
@@ -231,7 +195,7 @@ define([
                     token: Runtime.make().authToken()
                 });
             return taxonClient.callFunc('get_scientific_name', [ref])
-                .then(function(result) {
+                .then(function (result) {
                     if (result.length === 0) {
                         throw new Error('Cannot find taxon: ' + ref);
                     }
@@ -243,11 +207,11 @@ define([
                         id: taxonObject,
                         label: result[0]
                     }];
-                })
+                });
         }
 
         function render() {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 var events = Events.make(),
                     inputControl = makeInputControl(events),
                     content = div({ class: 'input-group', style: { width: '100%' } }, inputControl);
@@ -255,29 +219,29 @@ define([
                 ui.setContent('input-container', content);
 
                 $(ui.getElement('input-container.input')).select2({
+                    disabled: true,
                     templateResult: doTemplateResult,
                     templateSelection: doTemplateSelection,
                     minimumInputLength: 2,
-                    escapeMarkup: function(markup) {
+                    escapeMarkup: function (markup) {
                         return markup;
                     },
-                    initSelection: function(element, callback) {
+                    initSelection: function (element, callback) {
                         var currentValue = model.value;
                         if (!currentValue) {
                             return;
                         }
                         getTaxonomyItem(currentValue)
-                            .then(function(taxon) {
+                            .then(function (taxon) {
                                 // console.log('TAXON', taxon);
                                 callback(taxon);
                             });
                     },
-                    formatMoreResults: function(page) {
+                    formatMoreResults: function (page) {
                         return "more???";
                     },
                     language: {
-                        loadingMore: function(arg) {
-                            // console.log('ARG', arg);
+                        loadingMore: function (arg) {
                             return html.loading('Loading more scientific names');
                         }
                     },
@@ -285,13 +249,13 @@ define([
                         service: 'myservice',
                         dataType: 'json',
                         delay: 500,
-                        data: function(params) {
+                        data: function (params) {
                             return {
                                 q: params.term,
                                 page: params.page
                             };
                         },
-                        processResults: function(data, params) {
+                        processResults: function (data, params) {
                             // console.log('processing', data, params);
                             params.page = params.page || 1;
                             return {
@@ -299,17 +263,17 @@ define([
                                 pagination: {
                                     more: (params.page * pageSize) < data.num_of_hits
                                 }
-                            }
+                            };
                         },
-                        transport: function(options, success, failure) {
+                        transport: function (options, success, failure) {
 
                             var status = null;
 
                             doTaxonomySearch(options.data)
-                                .then(function(results) {
+                                .then(function (results) {
                                     success(results);
                                 })
-                                .catch(function(err) {
+                                .catch(function (err) {
                                     status = 'error';
                                     failure();
                                 });
@@ -320,8 +284,6 @@ define([
                             };
                         }
                     }
-                }).on('change', function() {
-                    doChange();
                 });
                 events.attachEvents(container);
 
@@ -347,7 +309,7 @@ define([
 
         function autoValidate() {
             return validate()
-                .then(function(result) {
+                .then(function (result) {
                     channel.emit('validation', {
                         errorMessage: result.errorMessage,
                         diagnosis: result.diagnosis
@@ -355,16 +317,9 @@ define([
                 });
         }
 
-        // function syncModelToControl() {
-        //     if (!model.value) {
-        //         // set empty control...
-        //     }
-
-        // }
-
         // LIFECYCLE API
         function start(arg) {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 parent = arg.node;
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
@@ -380,12 +335,12 @@ define([
                 }
 
                 render()
-                    .then(function() {
+                    .then(function () {
 
-                        channel.on('reset-to-defaults', function() {
+                        channel.on('reset-to-defaults', function () {
                             resetModelValue();
                         });
-                        channel.on('update', function(message) {
+                        channel.on('update', function (message) {
                             setModelValue(message.value);
                         });
                         // bus.channel().on('workspace-changed', function() {
@@ -400,12 +355,12 @@ define([
         }
 
         function stop() {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 if (container) {
                     parent.removeChild(container);
                 }
                 bus.stop();
-                eventListeners.forEach(function(id) {
+                eventListeners.forEach(function (id) {
                     runtime.bus().removeListener(id);
                 });
             });
@@ -421,7 +376,7 @@ define([
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
         }
     };

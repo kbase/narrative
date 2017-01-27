@@ -19,9 +19,9 @@
                 {{#if imported}}
                     <select id="import-type" style="width:80%">
                         <option></option>
-                        <option value="se_reads">Single-End Reads</option>
-                        <option value="pe_reads">Paired-End Reads</option>
-                        <option value="genbank_genome">Genbank Genome</option>
+                        {{#each ../uploaders}}
+                            <option value="{{id}}">{{name}}</option>
+                        {{/each}}
                     </select>
                     <button data-import="{{name}}" class="btn btn-xs btn-primary">
                         <span><i class="fa fa-upload"></i></span>

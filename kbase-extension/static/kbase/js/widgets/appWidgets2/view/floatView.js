@@ -8,11 +8,10 @@ define([
     'common/events',
     'common/ui',
     'common/props',
-    '../inputUtils',
 
     'bootstrap',
     'css!font-awesome'
-], function(Promise, Jupyter, html, Validation, Events, UI, Props, inputUtils) {
+], function(Promise, Jupyter, html, Validation, Events, UI, Props) {
     'use strict';
 
     // Constants
@@ -27,23 +26,6 @@ define([
             container,
             model,
             ui;
-
-        // CONTROL
-
-        function getControlValue() {
-            return ui.getElement('input-container.input').value;
-        }
-
-        function setControlValue(value) {
-            var stringValue;
-            if (value === null) {
-                stringValue = '';
-            } else {
-                stringValue = String(value);
-            }
-
-            ui.getElement('input-container.input').value = stringValue;
-        }
 
         // MODEL
 
@@ -63,23 +45,11 @@ define([
             setModelValue(spec.data.constraints.defaultValue);
         }
 
-        // sync the dom to the model.
-        function syncModelToControl() {
-            setControlValue(model.getItem('value', null));
-        }
-
-
         // VALIDATION
 
         function validate(value) {
             return Promise.try(function() {
                 return Validation.validate(value, spec);
-            });
-        }
-
-        function importControlValue() {
-            return Promise.try(function() {
-                return Validation.importString(getControlValue());
             });
         }
 
@@ -89,98 +59,27 @@ define([
          * Hooks up event listeners
          */
 
-        var autoChangeTimer;
 
-        function cancelTouched() {
-            if (autoChangeTimer) {
-                window.clearTimeout(autoChangeTimer);
-                autoChangeTimer = null;
-            }
-        }
-
-        function handleTouched(interval) {
-            var editPauseInterval = interval || 100;
-            return {
-                type: 'keyup',
-                handler: function(e) {
-                    bus.emit('touched');
-                    cancelTouched();
-                    autoChangeTimer = window.setTimeout(function() {
-                        autoChangeTimer = null;
-                        e.target.dispatchEvent(new Event('change'));
-                    }, editPauseInterval);
-                }
-            };
-        }
-
-        function handleChanged() {
-            return {
-                type: 'change',
-                handler: function() {
-                    cancelTouched();
-                    importControlValue()
-                        .then(function(value) {
-                            model.setItem('value', value);
-                            bus.emit('changed', {
-                                newValue: value
-                            });
-                            return validate(value);
-                        })
-                        .then(function(result) {
-                            if (result.isValid) {
-                                if (config.showOwnMessages) {
-                                    ui.setContent('input-container.message', '');
-                                }
-                            } else if (result.diagnosis === 'required-missing') {
-                                // nothing??
-                            } else {
-                                if (config.showOwnMessages) {
-                                    // show error message -- new!
-                                    var message = inputUtils.buildMessageAlert({
-                                        title: 'ERROR',
-                                        type: 'danger',
-                                        id: result.messageId,
-                                        message: result.errorMessage
-                                    });
-                                    ui.setContent('input-container.message', message.content);
-                                    message.events.attachEvents();
-                                }
-                            }
-                            bus.emit('validation', result);
-                        })
-                        .catch(function(err) {
-                            bus.emit('validation', {
-                                isValid: false,
-                                diagnosis: 'invalid',
-                                errorMessage: err.message
-                            });
-                        });
-                }
-            };
-        }
-
-        function makeInputControl(currentValue, events) {
+        function makeViewControl(currentValue) {
             // CONTROL
             var initialControlValue,
                 min = spec.data.constraints.min,
                 max = spec.data.constraints.max;
-            if (currentValue) {
+            if (typeof currentValue === 'number') {
                 initialControlValue = String(currentValue);
             }
             return div({ style: { width: '100%' }, dataElement: 'input-wrapper' }, [
                 div({ class: 'input-group', style: { width: '100%' } }, [
                     (typeof min === 'number' ? div({ class: 'input-group-addon', fontFamily: 'monospace' }, String(min) + ' &#8804; ') : ''),
-                    input({
-                        id: events.addEvents({
-                            events: [handleChanged(), handleTouched()]
-                        }),
+                    input({                        
                         class: 'form-control',
                         dataElement: 'input',
                         dataType: 'float',
                         style: {
                             textAlign: 'right'
                         },
-                        value: initialControlValue
+                        value: initialControlValue,
+                        readonly: true
                     }),
                     (typeof max === 'number' ? div({ class: 'input-group-addon', fontFamily: 'monospace' }, ' &#8804; ' + String(max)) : '')
                 ]),
@@ -191,13 +90,12 @@ define([
         function render() {
             return Promise.try(function() {
                 var events = Events.make(),
-                    inputControl = makeInputControl(model.getItem('value'), events, bus);
+                    inputControl = makeViewControl(model.getItem('value'), events, bus);
 
                 ui.setContent('input-container', inputControl);
                 events.attachEvents(container);
             });
         }
-
 
         function layout(events) {
             var content = div({
@@ -244,7 +142,7 @@ define([
                 return render()
                     .then(function() {
                         return autoValidate();
-                    })
+                    });
             });
         }
 

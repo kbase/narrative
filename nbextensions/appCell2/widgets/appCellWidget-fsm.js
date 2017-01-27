@@ -1,7 +1,7 @@
 /*global define*/
 /*jslint white:true,browser:true*/
 
-define([], function() {
+define([], function () {
     'use strict';
 
     var appStates = [{
@@ -181,6 +181,10 @@ define([], function() {
                 },
                 {
                     mode: 'processing',
+                    state: 'launched'
+                },
+                {
+                    mode: 'processing',
                     stage: 'queued'
                 },
                 {
@@ -282,7 +286,8 @@ define([], function() {
                     }]
                 }
             },
-            next: [{
+            next: [
+                {
                     mode: 'processing',
                     stage: 'launched'
                 },
@@ -357,7 +362,8 @@ define([], function() {
                     }]
                 }
             },
-            next: [{
+            next: [
+                {
                     mode: 'processing',
                     stage: 'launched'
                 },

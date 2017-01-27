@@ -103,7 +103,7 @@ define(['jquery',
 
                 tabPane.append('<div class="container"><div class="row"><div class="row"><div class="col-md-12 text-center"><div class="box"><div class="box-content"><div>');
                 tabPane.append('<center> <table><tr class="text-center">' +
-                    '<td style="padding-right:20px;">- Log10(p-value)<br/>' +
+                    '<td style="padding-right:20px;">- Log10(q-value)<br/>' +
                     '<b id="' + pref + 'pv1">0</b> &nbsp; &nbsp;' +
                     '<input id="' + pref + 'pvalue" type="text" class="span2" value="" data-slider-step="0.01" /> &nbsp; &nbsp;' +
                     '<b id="' + pref + 'pv2">1.0</b></td><td style="padding-left:20px;border-left: 1px solid #ccc;">' +
@@ -120,23 +120,28 @@ define(['jquery',
                 '</tr></table><br/></div><hr/>');
 
                 tabPane.append('<center><div class="chart" id="p' + pref + 'divchart" style="width:100%; border-bottom:1px solid #ccc;margin-bottom:30px;"> ' +
-               '</div><br/>-Log10( p-value ) = <b><span id="' +pref+ 'selpval"></span></b> &nbsp; &nbsp; &nbsp; | &nbsp; &nbsp; &nbsp;Log2(Fold Change) = <b><span id="' +pref+ 'selfc"></span></b> </center><br/></div> <br/><div id="' + pref + 'voltablediv" style="width:80%;margin-left:auto;margin-right:auto;text-align:center;" ><center>' +
+               '</div><br/>-Log10(q-value ) = <b><span id="' +pref+ 'selpval"></span></b> &nbsp; &nbsp; &nbsp; | &nbsp; &nbsp; &nbsp;Log2(Fold Change) = <b><span id="' +pref+ 'selfc"></span></b> </center><br/></div> <br/><div id="' + pref + 'voltablediv" style="width:80%;margin-left:auto;margin-right:auto;text-align:center;" ><center>' +
                '<table class="table table-striped table-bordered" cellspacing="0" width="100%" id="' + pref + 'voltable" >' +
-               '<thead><tr><th>Gene</th><th>Locus</th><th>Condition 1</th><th>Condition 2</th><th>Fold Change</th> <th>p value</th></tr>' +
-               '</thead><tfoot><tr><th>Gene</th><th>Locus</th><th>Value1</th><th>Value2</th><th>Fold Change</th><th>p value</th> </tr></tfoot>' +
+               '<thead><tr><th>Gene</th><th>Gene description</th><th>Log2(FPKM+1) Condition 1 </th><th>Log2(FPKM+1) Condition 2</th><th>Log2(Fold Change)</th> <th>-Log10(q-value)</th></tr>' +
+               '</thead><tfoot><tr><th>Gene</th><th>Gene description</th><th>Log2(FPKM+1) Condition 1</th><th>Log2(FPKM+1) Condition 2</th><th>Log2(Fold Change)</th><th>-Log10(q-value)</th> </tr></tfoot>' +
                '<tbody id="' + pref + 'voltablebody">' +
                '</tbody></table></center></div> </center></div></div></div></div></div> </div>');
 
                 $(function(){
                   var pv,fc;
 
-                  var colorx = function (x,y) {
+                  var colorx = function (d) {
                     /*
                        console.log("fc = ", fc);
                        console.log("pv = ", pv);
                        */
+                    var x = d.log2fc_f 
+                    var y = d.p_value_f
+
                     if ( Math.abs(x) > fc && Math.abs(y) > pv ) {
-                      return "red";
+                      if (d.significant == 'yes'){
+                       return "red";
+                      }
                     }
                     return "grey";
                   };
@@ -150,21 +155,30 @@ define(['jquery',
                   $("#" + pref + "showselectedgenes").click(function() {
                     dtable.clear().draw();
                     $("#" + pref + "voltablediv").show();
+                    var redRows = [];
+                    var seenCircles = 0;
+                    var numCircles = svg.selectAll("circle").size();
                     svg.selectAll("circle")
+                      .transition()
                       .attr("fill", function(d) {
-                        var cc = colorx(d.log2fc_fa, d.p_value_f);
+                        var cc = colorx(d);
                         if ( cc == "red" ) {
-                          dtable.row.add([
+                          redRows.push([
                               d.gene,
-                              d.locus,
+                              d.gene_function,
                               d.value_1,
                               d.value_2,
-                              d.log2fc_f,
-                              d.p_value,
-                              d.function
-                          ]).draw();
+                              d.log2fc_text,
+                              d.p_value_f,
+                          ]);
                         }
                         return cc;
+                      })
+                      .each('end', function(d) {
+                        seenCircles++;
+                        if (seenCircles == numCircles) {
+                          dtable.rows.add(redRows).draw();
+                        }
                       });
 
                     $("#" + pref + "voltablediv").show();
@@ -173,7 +187,7 @@ define(['jquery',
                     fc = $("#" + pref + "fc").val();
 
                     svg.selectAll("circle")
-                      .attr("fill", function(d) { return colorx(d.log2fc_fa, d.p_value_f); });
+                      .attr("fill", function(d) { return colorx(d); });
                   });
 
                   /*
@@ -277,31 +291,37 @@ define(['jquery',
                     fc = $("#" + pref + "fc").val();
                     console.log("fc changed", fc);
                     $('#' + pref + 'selfc').text(parseFloat(fc).toFixed(2));
+                    var numCircles = svg.selectAll("circle").size();
+                    var seenCircles = 0;
                     svg.selectAll("circle")
+                      .transition()
                       .attr("fill", function(d) {
-                        var cc = colorx(d.log2fc_fa, d.p_value_f);
+                        var cc = colorx(d);
                         if ( cc == "red" ) {
                           cnt = cnt + 1;
                         }
                         return cc;
-                      }).call(updateCnt);
+                      }).each('end', function() {
+                        seenCircles++;
+                        if (numCircles == seenCircles) {
+                          updateCnt()
+                        }
+                      });
 
                   });
 
                   var cnt = 0;
                   var updateCnt = function() {
-                    console.log(cnt);
                     $('#'+pref+'showselectedgenes').text("Show Selected (" + cnt + " Genes)");
                     cnt = 0;
                   }
 
                   $("#" + pref + "pvalue").slider({tooltip_position:'bottom', step:0.01, precision: 2, min :ymin, max:ymax.toFixed(2)}).on('slide',function(){
-                    console.log("pvalue changed");
                     pv = $("#" + pref + "pvalue").val();
                     $('#' + pref + 'selpval').text(parseFloat(pv).toFixed(2));
                     svg.selectAll("circle")
                       .attr("fill", function(d) {
-                        var cc = colorx(d.log2fc_fa, d.p_value_f);
+                        var cc = colorx(d);
                         if ( cc == "red" ) {
                           cnt = cnt + 1;
                         }
@@ -341,8 +361,8 @@ define(['jquery',
                      pv = 1.0;
                      fc = 1.0;
                      */
-                  pv = $("#" + pref + "pvalue").val();
-                  fc = $("#" + pref + "fc").val();
+                  pv = $("#" + pref + "pvalue").slider('getValue');
+                  fc = $("#" + pref + "fc").slider('getValue');
 
                   /*
                      console.log(pv);
@@ -374,7 +394,7 @@ define(['jquery',
                     return yScale(parseFloat(d.p_value_f));
                   })
                   .attr("r", 3)
-                    .attr("fill", function(d) { return colorx(d.log2fc_fa, d.p_value_f); })
+                    .attr("fill", function(d) { return colorx(d); })
                     .on("mouseover", function() {
                       d3.select(this)
                         .transition().duration(100)
@@ -423,7 +443,7 @@ define(['jquery',
                     .attr("text-anchor", "end")
                     .attr("x", w/2)
                     .attr("y", h-40)
-                    .text("Fold change");
+                    .text("Log2(Fold change)");
 
                   svg.append("text")
                     .attr("class", "ylabel")
@@ -431,7 +451,7 @@ define(['jquery',
                     .attr("y", 40)
                     .attr("x", -h/2+50)
                     .attr("transform", "rotate(-90)")
-                    .text("-log10(p-value)");
+                    .text("-Log10(q-value)");
 
                   ;});
 

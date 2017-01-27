@@ -363,7 +363,7 @@ define([
          */
         dataImporter: function (narWSName) {
             var self = this;
-            var maxObjFetch = 100000;
+            var maxObjFetch = Config.get('data_panel').ws_max_objs_to_fetch || 30000;
 
             if (this.$login == undefined) {
                 if (this.loginInit) {
@@ -467,7 +467,7 @@ define([
             ];
 
             if (Config.get('features').stagingDataViewer) {
-                tabList.push({tabName: '<small>Staging<small>', content: stagingPanel});
+                tabList.push({tabName: '<small>Staging (Beta)<small>', content: stagingPanel});
             }
 
             // add tabs
@@ -781,7 +781,7 @@ define([
                 var paramsList = [],
                     curParam = newParamSet({type: type}),
                     curTotal = 0,
-                    maxRequest = 1000,
+                    maxRequest = Config.get('data_panel').max_single_request || 1000,
                     totalFetch = 0;
 
                 // Set up all possible requests. We'll break out of
@@ -840,21 +840,17 @@ define([
                         return Promise.resolve(serviceClient.sync_call(
                             'NarrativeService.list_objects_with_sets',
                             [param]
-                        ))
-
-                        // return Promise.resolve(ws.list_objects(param))
-                            .then(function (data) {
-                                data = data[0]['data']
-                                // filter out Narrative objects.
-                                for (var i = 0; i < data.length && dataList.length < maxObjFetch; i++) {
-                                    if (data[i].object_info[2].startsWith('KBaseNarrative'))
-                                        continue;
-                                    else
-                                        dataList.push(data[i].object_info);
-                                }
-                                return dataList;
+                        )).then(function (data) {
+                            data = data[0]['data']
+                            // filter out Narrative objects.
+                            for (var i = 0; i < data.length && dataList.length < maxObjFetch; i++) {
+                                if (data[i].object_info[2].startsWith('KBaseNarrative'))
+                                    continue;
+                                else
+                                    dataList.push(data[i].object_info);
                             }
-                            );
+                            return dataList;
+                        });
                     }
                 }, []);
             }

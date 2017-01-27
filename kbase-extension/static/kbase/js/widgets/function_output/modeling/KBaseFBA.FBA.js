@@ -1,4 +1,4 @@
-define(['kbasePMIBarchart'], function(kbasePMIBarchart) {
+define(['kbasePMIBarchart', 'kbasePathways'], function(kbasePMIBarchart, kbasePathways) {
 function KBaseFBA_FBA(modeltabs) {
     var self = this;
     this.modeltabs = modeltabs;
@@ -241,7 +241,7 @@ function KBaseFBA_FBA(modeltabs) {
     },
     {
         "name": "Pathways",
-        "widget": "kbasePathways",
+        "widget": kbasePathways,
         "getParams": function() {
             return {models: [self.model],
                     fbas: [self.data]};
@@ -562,7 +562,6 @@ function KBaseFBA_FBA(modeltabs) {
                     });
                 });
             }
-
 			var kbModeling = new KBModeling();  // this is a mess
 			self.model = new kbModeling["KBaseFBA_FBAModel"](self.modeltabs);
 

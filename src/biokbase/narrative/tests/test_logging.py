@@ -3,7 +3,8 @@ import os
 import time
 import unittest
 #
-from biokbase.narrative.common.tests import util
+#from biokbase.narrative.common.tests import util
+import util
 from biokbase.narrative.common import kblogging
 
 """

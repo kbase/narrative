@@ -9,7 +9,8 @@ return KBWidget({
 
         var imageWorkspace = 'nconrad:kegg',
             mapWorkspace = 'nconrad:pathwaysjson',
-            container = this.$elem;
+            container = $.jqElem('div');
+        this.$elem.append(container);
 
         var kbapi = new KBModeling().kbapi;
 
@@ -19,51 +20,54 @@ return KBWidget({
         // add tabs
         var selectionTable = $('<table cellpadding="0" cellspacing="0" border="0" \
             class="table table-bordered table-striped">');
-        var tabs = container.kbaseTabTableTabs({tabs: [
+
+        var tabs = new kbaseTabTableTabs(container, {tabs: [
                                         {name: 'Selection', content: selectionTable, active: true}
                                     ]});
 
+//container.append(selectionTable);
         this.load_map_list = function() {
             // load table for maps
-            container.loading();
+            this.$elem.loading();
+
             kbapi('ws', 'list_objects', {workspaces: [mapWorkspace], includeMetadata: 1})
             .done(function(d){
-                container.rmLoading();
+                self.$elem.rmLoading();
 
                 var tableSettings = {
-                    "aaData": d,
-                    "fnDrawCallback": events,
-                    "aaSorting": [[ 1, "asc" ]],
-                    "aoColumns": [
-                        { sTitle: 'Name', mData: function(d) {
+                    "drawCallback": events,
+                    "sorting": [[ 1, "asc" ]],
+                    "columns": [
+                        { title: 'Name', mData: function(d) {
                             return '<a class="pathway-link" data-map_id="'+d[1]+'">'+d[10].name+'</a>';
                         }},
-                        { sTitle: 'Map ID', mData: 1},
-                        { sTitle: 'Rxn Count', sWidth: '10%', mData: function(d){
+                        { title: 'Map ID', mData: 1},
+                        { title: 'Rxn Count', sWidth: '10%', mData: function(d){
                             if ('reaction_ids' in d[10]){
                                 return d[10].reaction_ids.split(',').length;
                             } else {
                                 return 'N/A';
                             }
                         }},
-                        { sTitle: 'Cpd Count', sWidth: '10%', mData: function(d) {
+                        { title: 'Cpd Count', sWidth: '10%', mData: function(d) {
                             if ('compound_ids' in d[10]) {
                                 return d[10].compound_ids.split(',').length;
                             } else {
                                 return 'N/A';
                             }
                         }} ,
-                        { sTitle: "Source","sWidth": "10%", mData: function(d) {
+                        { title: "Source","sWidth": "10%", mData: function(d) {
                             return "KEGG";
                         }},
                     ],
-                    "oLanguage": {
-                        "sEmptyTable": "No objects in workspace",
-                        "sSearch": "Search:"
+                    "language": {
+                        "emptyTable": "No objects in workspace",
+                        "search": "Search:"
                     }
                 }
 
-                var table = selectionTable.dataTable(tableSettings);
+                var table = selectionTable.DataTable(tableSettings);
+                table.rows.add(d).draw();
 
             }).fail(function(e){
                 container.prepend('<div class="alert alert-danger">'+

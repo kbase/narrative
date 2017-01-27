@@ -206,7 +206,7 @@ define([
                     id: iframeId,
                     dataFrame: iframeId,
                     style: {
-                        overflow: 'auto'
+                        overflow: 'hidden'
                     },
                     dataParams: encodeURIComponent(JSON.stringify({
                         parentHost: iframeOrigin,
@@ -225,10 +225,10 @@ define([
                         margin: 0,
                         padding: 0
                     },
+                    scrolling: 'no',
                     dataFrame: iframeId,
                     frameborder: '0',
                     id: iframeId,
-                    // src: 'data:text/html;charset=utf-8,' + encodeURIComponent(iframeContent),
                     xsandbox: 'allow-same-origin allow-scripts',
                     xsrcdoc: '<p>Hi!</p>',
                     srcdoc: iframeContent

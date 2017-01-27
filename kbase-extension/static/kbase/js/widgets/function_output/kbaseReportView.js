@@ -242,8 +242,8 @@ define([
             };
         },
 
-        // preserved for a minute. The approach below blocks off the report and presents a 
-        // translucent layer and link on top of the report area. The premise is that the 
+        // preserved for a minute. The approach below blocks off the report and presents a
+        // translucent layer and link on top of the report area. The premise is that the
         // content is nearly useless, so don't encourage users to try to use it.
 
         // openReportWindow: function (arg) {
@@ -473,7 +473,7 @@ define([
                         // We may receive this if a 'ready' was received
                         // from another cell. Perhaps there is a better
                         // way of filtering messages before getting here!
-                        // TODO: implement an address feature to allow a 
+                        // TODO: implement an address feature to allow a
                         //   message bus to ignore messages not sent to it.
                         //   we use the frame id for this, but it should actually
                         //   be a feature of the message bus itself.
@@ -712,7 +712,7 @@ define([
                 // REPORT SECTION
 
                 /*
-                The "inline" report can come from either the direct_html property or the direct_html_link_index. 
+                The "inline" report can come from either the direct_html property or the direct_html_link_index.
                 The direct_html_link_index will take precedence since it offers a better method for referencing
                 content within an iframe. Generally the app developer should use either method, not both
                  */
@@ -722,7 +722,7 @@ define([
                 if (report.direct_html && report.direct_html.length > 0) {
                     hasDirectHtml = true;
                 }
-                if (typeof report.direct_html_link_index === 'number' && 
+                if (typeof report.direct_html_link_index === 'number' &&
                     report.direct_html_link_index >= 0) {
                     hasDirectHtmlIndex = true;
                 }
@@ -761,7 +761,7 @@ define([
                                 };
                             }
                         } else {
-                            // If the direct_html is a full document we cannot (yet?) insert 
+                            // If the direct_html is a full document we cannot (yet?) insert
                             // the necessary code to gracefully handle resizing and click-passthrough.
                             if (/<html/.test(report.direct_html)) {
                                 console.warn('Html document inserted into iframe', report);
@@ -771,8 +771,8 @@ define([
                                     events: events
                                 });
                             } else {
-                                // note that for direct_html, we set the max height. this content is expected 
-                                // to be smaller than linked content, and we will want the container 
+                                // note that for direct_html, we set the max height. this content is expected
+                                // to be smaller than linked content, and we will want the container
                                 // to shrink, but if it is larger, we simply don't want it to be too tall.
                                 iframe = _this.makeIframe({
                                     content: report.direct_html,
@@ -991,26 +991,6 @@ define([
             this.$elem.empty();
             this.$elem.append($errorDiv);
         },
-        buildObjectIdentity: function (workspaceID, objectID, objectVer, wsRef) {
-            var obj = {};
-            if (wsRef) {
-                obj['ref'] = wsRef;
-            } else {
-                if (/^\d+$/.exec(workspaceID))
-                    obj['wsid'] = workspaceID;
-                else
-                    obj['workspace'] = workspaceID;
 
-                // same for the id
-                if (/^\d+$/.exec(objectID))
-                    obj['objid'] = objectID;
-                else
-                    obj['name'] = objectID;
-
-                if (objectVer)
-                    obj['ver'] = objectVer;
-            }
-            return obj;
-        }
     });
 });

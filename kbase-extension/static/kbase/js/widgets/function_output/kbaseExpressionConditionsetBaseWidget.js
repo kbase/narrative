@@ -1,11 +1,11 @@
 /**
  * Base class for viewers visualizaing expression of a set of conditions from various aspects
- * 
+ *
  * The descendant classes should override:
  * 1. getSubmtrixParams - to set params for get_submatrix_stat method from the KBaseFeatureValues service
  * 2. buildWidget - to create a custom visuzualization
  *
- * 
+ *
  *
  *
  * Pavel Novichkov <psnovichkov@lbl.gov>
@@ -73,7 +73,7 @@ define([
 
             // Create a message pane
             this.$messagePane = $("<div/>").addClass("kbwidget-message-pane kbwidget-hide-message");
-            this.$elem.append(this.$messagePane);       
+            this.$elem.append(this.$messagePane);
 
             return this;
         },
@@ -86,12 +86,12 @@ define([
                     "service_wizard");
                 this.genericClient = new GenericClient(serviceWizardURL, auth);
             } else {
-                this.featureValueClient = new KBaseFeatureValues(this.options.featureValueURL, auth);   
+                this.featureValueClient = new KBaseFeatureValues(this.options.featureValueURL, auth);
             }
-            this.ws = new Workspace(this.options.wsURL, auth);         
+            this.ws = new Workspace(this.options.wsURL, auth);
 
             // Let's go...
-            this.loadAndRender();           
+            this.loadAndRender();
             return this;
         },
 
@@ -198,7 +198,7 @@ define([
 
             var $vizContainer = $("<div/>");
             this.$elem.append( $vizContainer );
-            this.buildWidget( $vizContainer );            
+            this.buildWidget( $vizContainer );
         },
 
         buildOverviewDiv: function($containerDiv){
@@ -229,22 +229,22 @@ define([
                         { sTitle: "Name", mData: "id"},
                         // { sTitle: "Function", mData: "function"},
                         { sTitle: "Min", mData:"min" },
-                        { sTitle: "Max", mData:"max" },  
-                        { sTitle: "Avg", mData:"avg" },                                                      
+                        { sTitle: "Max", mData:"max" },
+                        { sTitle: "Avg", mData:"avg" },
                         { sTitle: "Std", mData:"std"},
                         { sTitle: "Missing", mData:"missing_values" }
                     ],
                     "oLanguage": {
                                 "sEmptyTable": "No conditions found!",
                                 "sSearch": "Search: "
-                    }                    
+                    }
                 } );
 
             $overviewSwitch.click(function(){
                 $overvewContainer.toggle();
             });
         },
-      
+
         buildConditionsTableData: function(){
             var submatrixStat = this.submatrixStat;
             var tableData = [];
@@ -278,12 +278,12 @@ define([
                        .append($("<td />").append(value));
             return $row;
         },
-        
+
         loading: function(isLoading) {
             if (isLoading)
                 this.showMessage("<img src='" + this.options.loadingImage + "'/>");
             else
-                this.hideMessage();                
+                this.hideMessage();
         },
 
         showMessage: function(message) {
@@ -318,44 +318,22 @@ define([
                                  "and will be fixed shortly."
                 }
             }
-            
+
             var $errorDiv = $("<div>")
                             .addClass("alert alert-danger")
                             .append("<b>Error:</b>")
                             .append("<br>" + errString);
             this.$elem.empty();
             this.$elem.append($errorDiv);
-        },            
+        },
 
         uuid: function() {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, 
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,
                 function(c) {
                     var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
                     return v.toString(16);
                 });
         },
-
-        buildObjectIdentity: function(workspaceID, objectID, objectVer, wsRef) {
-            var obj = {};
-            if (wsRef) {
-                obj['ref'] = wsRef;
-            } else {
-                if (/^\d+$/.exec(workspaceID))
-                    obj['wsid'] = workspaceID;
-                else
-                    obj['workspace'] = workspaceID;
-
-                // same for the id
-                if (/^\d+$/.exec(objectID))
-                    obj['objid'] = objectID;
-                else
-                    obj['name'] = objectID;
-                
-                if (objectVer)
-                    obj['ver'] = objectVer;
-            }
-            return obj;
-        }
 
     });
 });

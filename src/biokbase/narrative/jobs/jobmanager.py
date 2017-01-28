@@ -81,33 +81,38 @@ class JobManager(object):
             raise new_e
 
         job_ids = [j[0] for j in nar_jobs]
-        job_param_info = clients.get('job_service').check_jobs({
+        job_states = clients.get('job_service').check_jobs({
             'job_ids': job_ids, 'with_job_params': 1
         })
-        job_param_info = job_param_info['job_params']
+        job_param_info = job_states['job_params']
+        job_check_error = job_states['check_error']
+        error_jobs = list()
         for info in nar_jobs:
             job_id = info[0]
             user_info = info[1]
             job_meta = info[10]
             try:
-                job_info = job_param_info[job_id]
+                if job_id in job_param_info:
+                    job_info = job_param_info[job_id]
 
-                job = Job.from_state(job_id,
-                                     job_info,
-                                     user_info[0],
-                                     app_id=job_info.get('app_id'),
-                                     tag=job_meta.get('tag', 'release'),
-                                     cell_id=job_meta.get('cell_id', None),
-                                     run_id=job_meta.get('run_id', None))
+                    job = Job.from_state(job_id,
+                                         job_info,
+                                         user_info[0],
+                                         app_id=job_info.get('app_id'),
+                                         tag=job_meta.get('tag', 'release'),
+                                         cell_id=job_meta.get('cell_id', None),
+                                         run_id=job_meta.get('run_id', None))
 
-                # Note that when jobs for this narrative are initially loaded,
-                # they are set to not be refreshed. Rather, if a client requests
-                # updates via the start_job_update message, the refresh flag will
-                # be set to True.
-                self._running_jobs[job_id] = {
-                    'refresh': False,
-                    'job': job
-                }
+                    # Note that when jobs for this narrative are initially loaded,
+                    # they are set to not be refreshed. Rather, if a client requests
+                    # updates via the start_job_update message, the refresh flag will
+                    # be set to True.
+                    self._running_jobs[job_id] = {
+                        'refresh': False,
+                        'job': job
+                    }
+                elif job_id in job_check_error:
+                    error_jobs.append(job_id)
 
             except Exception as e:
                 kblogging.log_event(self._log, 'init_error', {'err': str(e)})
@@ -123,6 +128,23 @@ class JobManager(object):
                 }
                 self._send_comm_message('job_init_lookup_err', error)
                 raise new_e # should crash and burn on any of these.
+
+        if len(error_jobs):
+            err_str = 'Unable to find info for some jobs on initial lookup'
+            err_type = 'job_init_partial_err'
+            if len(error_jobs) == len(nar_jobs):
+                err_str = 'Unable to get info for any job on initial lookup'
+                err_type = 'job_init_lookup_err'
+            error = {
+                'error': err_str,
+                'job_ids': error_jobs,
+                'message': 'Job information was unavailable from the server',
+                'code': -2,
+                'source': 'jobmanager',
+                'name': 'jobmanager',
+                'service': 'job_service',
+            }
+            self._send_comm_message(err_type, error)
 
         if not self._running_lookup_loop and start_lookup_thread:
             # only keep one loop at a time in cause this gets called again!

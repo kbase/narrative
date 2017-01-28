@@ -9,7 +9,7 @@ require.config({
         'jquery-dataTables': 'ext_components/datatables/media/js/jquery.dataTables.min',
         'jquery-dataTables-bootstrap': 'ext_components/datatables/media/js/dataTables.bootstrap.min',
         bloodhound: 'ext_components/corejs-typeahead/dist/bloodhound.min',
-        css: 'ext_components/require-css/css',
+        // css: 'ext_components/require-css/css',
         d3: 'ext_components/d3/d3.min',
         domReady: 'ext_components/requirejs/domReady',
         dropzone: 'ext_components/dropzone/dist/dropzone-amd-module',
@@ -49,7 +49,7 @@ require.config({
         narrative_core: 'kbase/js/widgets/narrative_core',
         configPath: 'kbase',
         narrativeViewers: 'kbase/js/widgets/narrative_core/narrativeViewers',
-        jquery: 'components/jquery/jquery.min',
+        jquery: 'ext_components/jquery/dist/jquery.min',
         jqueryui: 'components/jquery-ui/ui/minified/jquery-ui.min',
         bootstrap: 'components/bootstrap/js/bootstrap.min',
         // 'css'                                   : 'ext_components/require-css/css.min',
@@ -320,6 +320,12 @@ require.config({
         'kbaseDeletePrompt': 'kbase/js/widgets/kbaseDeletePrompt'
 
     },
+    map: {
+        '*': {
+            'css': 'ext_components/require-css/css'
+        }
+    },
+
     shim: {
         bloodhound: {
             deps: ['jquery'],

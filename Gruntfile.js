@@ -22,6 +22,7 @@ module.exports = function(grunt) {
         requirejs: {
             compile: {
                 options: {
+                    name: 'narrative_paths',
                     baseUrl: 'kbase-extension/static',
                     include: ['narrativeMain'],
                     // baseUrl: "./static",
@@ -32,15 +33,15 @@ module.exports = function(grunt) {
                     preserveLicenseComments: false,
                     out: "dist/kbase-narrative-min.js",
                     paths: {
-                        jquery: 'empty:',
-                        jqueryui: 'empty:',
-                        bootstrap: 'empty:',
+                        // jquery: 'empty:',
+                        // jqueryui: 'empty:',
+                        // bootstrap: 'empty:',
                         narrativeConfig: 'empty:',
                         'base/js/utils': 'empty:',
                         'base/js/namespace': 'empty:',
                         // 'kbase/js/widgets/narrative_core/upload/fileUploadWidget': 'empty:',
                         bootstraptour: 'empty:',
-                        // 'kbase/js/widgets/narrative_core/upload/uploadTour': 'empty:',
+                        'kbase/js/widgets/narrative_core/upload/uploadTour': 'empty:',
                         'services/kernels/comm': 'empty:',
                         // 'common/ui': 'empty:',
                         'notebook/js/celltoolbar': 'empty:',
@@ -50,27 +51,19 @@ module.exports = function(grunt) {
                         narrativeTour: 'empty:',
                         'notebook/js/main': 'empty:'
                     },
-                    // exclude: [
-                    //     'text!kbase/templates/data_staging/dropzone_area.html',
-                    //     'text!kbase/templates/data_staging/dropped_file.html',
-                    //     'css!ext_components/dropzone/dist/dropzone.css',
-                    //     'json!kbase/config/config.json',
-                    //     'json!kbase/config/icons.json',
-                    //     'json!kbase/config/cdn-service-config.json',
-                    //     'json!kbase/config/feature-config.json',
-                    //     'json!kbase/config/staging_upload.json',
-                    //     'json!config.json',
-                    //     'css!ext_components/dropzone/dist/dropzone.css'
-                    // ],
                     inlineText: false,
-                    onBuildWrite: function (moduleName, path, contents) {
-                        if (moduleName.lastIndexOf('text!', 0) === 0 ||
-                            moduleName.lastIndexOf('css!', 0) === 0 ||
-                            moduleName.lastIndexOf('json!', 0) === 0) {
-                            return '';
-                        }
-                        return contents;
-                    },
+                    // onBuildWrite: function (moduleName, path, contents) {
+                    //     if (moduleName.lastIndexOf('text!', 0) === 0 ||
+                    //         moduleName.lastIndexOf('css!', 0) === 0 ||
+                    //         moduleName.lastIndexOf('json!', 0) === 0) {
+                    //         return '';
+                    //     }
+                    //     return contents;
+                    // },
+                    buildCSS: false,
+                    pragmasOnSave: {
+                        excludeRequireCss: true,
+                    }
                 }
             }
         },

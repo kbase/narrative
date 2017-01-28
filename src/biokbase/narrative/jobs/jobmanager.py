@@ -84,8 +84,8 @@ class JobManager(object):
         job_states = clients.get('job_service').check_jobs({
             'job_ids': job_ids, 'with_job_params': 1
         })
-        job_param_info = job_states['job_params']
-        job_check_error = job_states['check_error']
+        job_param_info = job_states.get('job_params', {})
+        job_check_error = job_states.get('check_error', {})
         error_jobs = dict()
         for info in nar_jobs:
             job_id = info[0]

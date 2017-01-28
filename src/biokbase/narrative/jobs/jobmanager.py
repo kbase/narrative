@@ -86,7 +86,7 @@ class JobManager(object):
         })
         job_param_info = job_states['job_params']
         job_check_error = job_states['check_error']
-        error_jobs = list()
+        error_jobs = dict()
         for info in nar_jobs:
             job_id = info[0]
             user_info = info[1]
@@ -112,7 +112,23 @@ class JobManager(object):
                         'job': job
                     }
                 elif job_id in job_check_error:
-                    error_jobs.append(job_id)
+                    job_err_state = {
+                        'job_state': 'error',
+                        'error': {
+                            'error': 'KBase execution engine returned an error while looking up this job.',
+                            'message': job_check_error[job_id].get('message', 'No error message available'),
+                            'name': 'Job Error',
+                            'code': job_check_error[job_id].get('code', -999),
+                            'exception': {
+                                'error_message': 'Job lookup in execution engine failed',
+                                'error_type': job_check_error[job_id].get('name', 'unknown'),
+                                'error_stacktrace': job_check_error[job_id].get('error', '')
+                            }
+                        },
+                        'cell_id': job_meta.get('cell_id', None),
+                        'run_id': job_meta.get('run_id', None),
+                    }
+                    error_jobs[job_id] = job_err_state
 
             except Exception as e:
                 kblogging.log_event(self._log, 'init_error', {'err': str(e)})
@@ -127,17 +143,17 @@ class JobManager(object):
                     'service': 'job_service'
                 }
                 self._send_comm_message('job_init_lookup_err', error)
-                raise new_e # should crash and burn on any of these.
+                raise new_e  # should crash and burn on any of these.
 
-        if len(error_jobs):
+        if len(job_check_error):
             err_str = 'Unable to find info for some jobs on initial lookup'
             err_type = 'job_init_partial_err'
-            if len(error_jobs) == len(nar_jobs):
+            if len(job_check_error) == len(nar_jobs):
                 err_str = 'Unable to get info for any job on initial lookup'
                 err_type = 'job_init_lookup_err'
             error = {
                 'error': err_str,
-                'job_ids': error_jobs,
+                'job_errors': error_jobs,
                 'message': 'Job information was unavailable from the server',
                 'code': -2,
                 'source': 'jobmanager',

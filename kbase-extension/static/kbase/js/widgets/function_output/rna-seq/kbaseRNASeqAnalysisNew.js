@@ -82,15 +82,26 @@ define (
                     analysis.sample_ids,
                     function (i, v) {
                         num_sample_ids++;
-                        all_promises.push(
-                            ws.get_object_info([
-                              //{ref : v}
-                              {
-                                workspace : $rna.options.workspace,
-                                name : v
-                              }
-                            ])
-                        )
+
+                        if (v.match(/\//)) {
+                          all_promises.push(
+                              ws.get_object_info([
+                                {ref : v}
+                              ])
+                          )
+                        }
+                        else {
+
+                          all_promises.push(
+                              ws.get_object_info([
+                                //{ref : v}
+                                {
+                                  workspace : $rna.options.workspace,
+                                  name : v
+                                }
+                              ])
+                          )
+                        }
                     }
                 );
             }

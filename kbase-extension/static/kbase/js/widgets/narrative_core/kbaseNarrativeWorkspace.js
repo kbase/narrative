@@ -369,7 +369,7 @@ define([
                 .append($jumpButton);
 
             this.copyModal = new BootstrapDialog({
-                title: 'Copy a narrative',
+                title: 'Copy this Narrative',
                 body: $copyModalBody,
                 closeButton: true,
                 buttons: [

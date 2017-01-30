@@ -140,7 +140,7 @@
             console.error(error);
             var $errorHeader = $('<div>')
                                .addClass('alert alert-danger')
-                               .append('<b>Sorry, an error occurred while loading your KBase App.</b><br>Please contact the KBase team at <a href="mailto:help@kbase.us?subject=Narrative%App%20loading%20error">help@kbase.us</a> with the information below.');
+                               .append('<b>Sorry, an error occurred while loading your KBase App.</b><br>Please <a href="http://kbase.us/contact-us/">contact the KBase team</a> with the information below.');
             var $errorPanel = $('<div>')
                                 .addClass('panel kb-app-panel');
             $errorPanel.append($errorHeader);

@@ -140,7 +140,7 @@ define([
             // element id
             var currentSelectionId = String(model.availableValuesMap[stringValue]);
 
-            $(control).val(currentSelectionId).trigger('change');
+            $(control).val(currentSelectionId).trigger('change.select2');
         }
 
         // MODEL
@@ -183,114 +183,28 @@ define([
                 }
 
                 switch (objectRefType) {
-                    case 'ref':
-                        return Validation.validateWorkspaceObjectRef(processedValue, validationOptions);
-                    case 'name':
-                    default:
-                        return Validation.validateWorkspaceObjectName(processedValue, validationOptions);
+                case 'ref':
+                    return Validation.validateWorkspaceObjectRef(processedValue, validationOptions);
+                case 'name':
+                default:
+                    return Validation.validateWorkspaceObjectName(processedValue, validationOptions);
                 }
             });
-            // .then(function(validationResult) {
-            //     return {
-            //         isValid: validationResult.isValid,
-            //         validated: true,
-            //         diagnosis: validationResult.diagnosis,
-            //         errorMessage: validationResult.errorMessage,
-            //         value: validationResult.parsedValue
-
-            //     };
-            // });
-        }
-
-        function filterObjectInfoByType(objects, types) {
-            return objects.map(function(objectInfo) {
-                    var type = objectInfo.typeModule + '.' + objectInfo.typeName;
-                    if (types.indexOf(type) >= 0) {
-                        return objectInfo;
-                    }
-                })
-                .filter(function(item) {
-                    return item !== undefined;
-                });
         }
 
         function getObjectsByTypes_datalist(types) {
             return Data.getObjectsByTypes(types, bus, function(result) {
-                    doWorkspaceUpdated(result.data);
-                })
-                .then(function(result) {
-                    return result.data;
-                });
+                doWorkspaceUpdated(result.data);
+            })
+            .then(function(result) {
+                return result.data;
+            });
         }
 
-        function getObjectsByTypes_datalistx(types) {
-            var listener = runtime.bus().plisten({
-                channel: 'data',
-                key: {
-                    type: 'workspace-data-updated'
-                },
-                handle: function(message) {
-                    doWorkspaceUpdated(filterObjectInfoByType(message.objectInfo, types));
-                }
-            });
-            eventListeners.push(listener.id);
-            return listener.promise
-                .then(function(message) {
-                    return filterObjectInfoByType(message.objectInfo, types);
-                });
-        }
-
-        function getPaletteObjectsByTypes(types) {
-            var narrativeClient = new GenericClient({
-                module: 'NarrativeService',
-                url: runtime.config('services.service_wizard.url'),
-                version: 'dev',
-                token: runtime.authToken()
-            });
-            return narrativeClient.callFunc('list_objects_with_sets', [{
-                    ws_id: workspaceId,
-                    types: types,
-                    includeMetadata: 1
-                }])
-                .then(function(result) {
-                    var objects = result[0].data.map(function(obj) {
-                        var info = serviceUtils.objectInfoToObject(obj.object_info);
-                        if (obj.dp_info) {
-                            info.paletteRef = obj.dp_info.ref;
-                        }
-                        return info;
-                    });
-                    return objects;
-                });
-        }
 
         function fetchData() {
             var types = spec.data.constraints.types;
             return getObjectsByTypes_datalist(types)
-                .then(function(objects) {
-                    objects.sort(function(a, b) {
-                        if (a.saveDate < b.saveDate) {
-                            return 1;
-                        }
-                        if (a.saveDate === b.saveDate) {
-                            return 0;
-                        }
-                        return -1;
-                    });
-                    return objects;
-                });
-        }
-
-        function fetchData_old() {
-            var types = spec.data.constraints.types;
-            return Promise.all(types.map(function(type) {
-                    return getObjectsByType(type);
-                }))
-                .then(function(objectSets) {
-                    // we could also use [] rather than Array.prototype, but
-                    // this way is both more mysterious and better performing.
-                    return Array.prototype.concat.apply([], objectSets);
-                })
                 .then(function(objects) {
                     objects.sort(function(a, b) {
                         if (a.saveDate < b.saveDate) {
@@ -326,7 +240,6 @@ define([
                 });
         }
 
-
         /**
          * Formats the display of an object in the dropdown.
          */
@@ -346,34 +259,6 @@ define([
                     'updated ' + TimeFormat.getTimeStampStr(objectInfo.save_date) + ' by ' + objectInfo.saved_by
                 ])
             ]));
-        }
-
-        function getSelect2Data() {
-            return model.availableValues.map(function(objectInfo) {
-                return {
-                    id: objectInfo.name,
-                    text: div([
-                        div([
-                            span({
-                                style: {
-                                    wordWrap: 'break-word',
-                                    fontWeight: 'bold'
-                                }
-                            }, objectInfo.name),
-                            ' (v' + objectInfo.version + ')'
-                        ]),
-                        div({
-                            style: {
-                                marginLeft: '7px'
-                            }
-                        }, [
-                            div({ style: { fontStyle: 'italic' } }, (objectInfo.typeName)),
-                            div(['Narrative id: ', objectInfo.wsid]),
-                            div(['updated ', TimeFormat.getTimeStampStr(objectInfo.save_date), ' by ', objectInfo.saved_by])
-                        ])
-                    ])
-                }
-            });
         }
 
         /*
@@ -455,15 +340,6 @@ define([
             // compare to availableData.
             if (!utils.isEqual(data, model.availableValues)) {
                 model.availableValues = data;
-                // var matching = model.availableValues.filter(function(value) {
-                //     if (value.name === getObjectRef(value)) {
-                //         return true;
-                //     }
-                //     return false;
-                // });
-                // if (matching.length === 0) {
-                //     model.value = spec.data.nullValue;
-                // }
                 model.availableValuesMap = {};
                 // our map is a little strange.
                 // we have dataPaletteRefs, which are always ref paths

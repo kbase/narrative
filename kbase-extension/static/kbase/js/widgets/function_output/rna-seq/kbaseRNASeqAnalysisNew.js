@@ -204,12 +204,12 @@ define (
                 );
 
                 if (analysis.sample_ids) {
-
+console.log("REF MAP", ref_map_by_id);
                     var sample_id_data = [];
                     $.each(
                       analysis.sample_ids,
                       function (i, v) {
-
+console.log("ITERATE ON ", i, v);
                         sample_id_data.push(
                           [
                             ref_map_by_id[v].name,

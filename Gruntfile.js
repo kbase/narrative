@@ -26,24 +26,25 @@ module.exports = function(grunt) {
                     baseUrl: 'kbase-extension/static',
                     include: ['narrativeMain'],
                     // baseUrl: "./static",
-                    mainConfigFile: "kbase-extension/static/narrative_paths.js",
+                    mainConfigFile: 'kbase-extension/static/narrative_paths.js',
                     findNestedDependencies: true,
-                    optimize: "uglify2",
+                    // optimize: 'uglify2',
                     generateSourceMaps: true,
                     preserveLicenseComments: false,
-                    out: "dist/kbase-narrative-min.js",
+                    out: 'dist/kbase-narrative-min.js',
                     paths: {
                         // jquery: 'empty:',
-                        // jqueryui: 'empty:',
-                        // bootstrap: 'empty:',
+                        jqueryui: 'empty:',
+                        bootstrap: 'empty:',
+                        'jquery-ui': 'empty:',
                         narrativeConfig: 'empty:',
                         'base/js/utils': 'empty:',
                         'base/js/namespace': 'empty:',
-                        // 'kbase/js/widgets/narrative_core/upload/fileUploadWidget': 'empty:',
+                        'kbase/js/widgets/narrative_core/upload/fileUploadWidget': 'empty:',
                         bootstraptour: 'empty:',
                         'kbase/js/widgets/narrative_core/upload/uploadTour': 'empty:',
                         'services/kernels/comm': 'empty:',
-                        // 'common/ui': 'empty:',
+                        'common/ui': 'empty:',
                         'notebook/js/celltoolbar': 'empty:',
                         'base/js/events': 'empty:',
                         'base/js/keyboard': 'empty:',
@@ -52,6 +53,11 @@ module.exports = function(grunt) {
                         'notebook/js/main': 'empty:'
                     },
                     inlineText: false,
+                    // exclude: [
+                    //     'jqueryui',
+                    //     'bootstrap',
+                    //     'jquery-ui'
+                    // ],
                     // onBuildWrite: function (moduleName, path, contents) {
                     //     if (moduleName.lastIndexOf('text!', 0) === 0 ||
                     //         moduleName.lastIndexOf('css!', 0) === 0 ||
@@ -63,6 +69,12 @@ module.exports = function(grunt) {
                     buildCSS: false,
                     pragmasOnSave: {
                         excludeRequireCss: true,
+                    },
+                    optimizeAllPluginResources: false,
+                    // wrapShim: true,
+                    done: function(done, output) {
+                        console.log(output);
+                        done();
                     }
                 }
             }

@@ -102,7 +102,7 @@ define ([
 
             this.$searchInput = $('<input type="text">')
                                 .addClass('form-control')
-                                .attr('Placeholder', 'Search methods')
+                                .attr('Placeholder', 'Search apps')
                                 .on('input',
                                     $.proxy(function(e) {
                                         this.filterList();

@@ -29,20 +29,20 @@ module.exports = function(grunt) {
                     mainConfigFile: 'kbase-extension/static/narrative_paths.js',
                     findNestedDependencies: true,
                     // optimize: 'uglify2',
-                    generateSourceMaps: true,
+                    generateSourceMaps: false,
                     preserveLicenseComments: false,
                     out: 'kbase-extension/static/kbase-narrative-min.js',
                     paths: {
-                        jquery: 'empty:',
+                        // jquery: 'empty:',
                         jqueryui: 'empty:',
                         bootstrap: 'empty:',
                         'jquery-ui': 'empty:',
                         narrativeConfig: 'empty:',
                         'base/js/utils': 'empty:',
                         'base/js/namespace': 'empty:',
-                        'kbase/js/widgets/narrative_core/upload/fileUploadWidget': 'empty:',
+                        // 'kbase/js/widgets/narrative_core/upload/fileUploadWidget': 'empty:',
                         bootstraptour: 'empty:',
-                        'kbase/js/widgets/narrative_core/upload/uploadTour': 'empty:',
+                        // 'kbase/js/widgets/narrative_core/upload/uploadTour': 'empty:',
                         'services/kernels/comm': 'empty:',
                         'common/ui': 'empty:',
                         'notebook/js/celltoolbar': 'empty:',
@@ -67,9 +67,9 @@ module.exports = function(grunt) {
                     //     return contents;
                     // },
                     buildCSS: false,
-                    pragmasOnSave: {
-                        excludeRequireCss: true,
-                    },
+                    // pragmasOnSave: {
+                    //     excludeRequireCss: true,
+                    // },
                     optimizeAllPluginResources: false,
                     // wrapShim: true,
                     done: function(done, output) {

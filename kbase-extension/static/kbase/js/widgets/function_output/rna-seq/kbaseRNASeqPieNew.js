@@ -416,7 +416,7 @@ define (
                 this.options.output.read_sample_ids,
                 function (i,v) {
 
-                  var label = '';
+                  var label = v;
                   $.each(
                     $rnaseq.options.output.mapped_rnaseq_alignments,
                     function (i, id) {

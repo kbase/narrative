@@ -13,12 +13,6 @@
                 "ws": "RefSeq_Genomes",
                 "search": false
             },
-            "phytozome_genomes": {
-                "name": "Phytozome Genomes",
-                "type": "KBaseGenomes.Genome",
-                "ws": "Phytozome_Genomes",
-                "search": false
-            },
             "ensembl_genomes": {
                 "name": "Ensembl Genomes",
                 "type": "KBaseGenomeAnnotations.GenomeAnnotation",
@@ -140,12 +134,6 @@
                 "ws": "KBaseMedia",
                 "search": false
             },
-            "phytozome_genomes": {
-                "name": "Phytozome Genomes",
-                "type": "KBaseGenomes.Genome",
-                "ws": "Phytozome_Genomes",
-                "search": false
-            },
             "se_reads": {
                 "name": "RNA-seq Reads (single-end)",
                 "type": "KBaseAssembly.SingleEndLibrary",
@@ -241,12 +229,6 @@
                 "name": "Media",
                 "type": "KBaseBiochem.Media",
                 "ws": "KBaseMedia",
-                "search": false
-            },
-            "phytozome_genomes": {
-                "name": "Phytozome Genomes",
-                "type": "KBaseGenomes.Genome",
-                "ws": "Phytozome_Genomes",
                 "search": false
             },
             "se_reads": {
@@ -346,12 +328,6 @@
                 "ws": "KBaseMedia",
                 "search": false
             },
-            "phytozome_genomes": {
-                "name": "Phytozome Genomes",
-                "type": "KBaseGenomes.Genome",
-                "ws": "Phytozome_Genomes",
-                "search": false
-            },
             "se_reads": {
                 "name": "RNA-seq Reads (single-end)",
                 "type": "KBaseAssembly.SingleEndLibrary",
@@ -424,13 +400,6 @@
                     ],
                     "displayName": "Example ExpressionMatrix",
                     "header": "Gene expression data in a gene vs. condition matrix"
-                },
-                {
-                    "name": [
-                        "TranscriptomeHack"
-                    ],
-                    "displayName": "Example Sorghum Transcriptomes",
-                    "header": "Sorghum bicolor transcriptome data in response to ABA and osmotic stress"
                 }
             ]
         }

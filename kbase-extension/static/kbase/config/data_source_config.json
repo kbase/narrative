@@ -109,13 +109,6 @@
                     ],
                     "displayName": "Example ExpressionMatrix",
                     "header": "Gene expression data in a gene vs. condition matrix"
-                },
-                {
-                    "name": [
-                        "TranscriptomeHack"
-                    ],
-                    "displayName": "Example Sorghum Transcriptomes",
-                    "header": "Sorghum bicolor transcriptome data in response to ABA and osmotic stress"
                 }
             ]
         }
@@ -206,13 +199,6 @@
                     ],
                     "displayName": "Example ExpressionMatrix",
                     "header": "Gene expression data in a gene vs. condition matrix"
-                },
-                {
-                    "name": [
-                        "TranscriptomeHack"
-                    ],
-                    "displayName": "Example Sorghum Transcriptomes",
-                    "header": "Sorghum bicolor transcriptome data in response to ABA and osmotic stress"
                 }
             ]
         }
@@ -303,13 +289,6 @@
                     ],
                     "displayName": "Example ExpressionMatrix",
                     "header": "Gene expression data in a gene vs. condition matrix"
-                },
-                {
-                    "name": [
-                        "TranscriptomeHack"
-                    ],
-                    "displayName": "Example Sorghum Transcriptomes",
-                    "header": "Sorghum bicolor transcriptome data in response to ABA and osmotic stress"
                 }
             ]
         }

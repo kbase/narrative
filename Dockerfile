@@ -40,7 +40,7 @@ RUN npm install && bower install --allow-root --config.interactive=false
 # (commented out for now)
 # RUN cd kbase-extension/
 # src/notebook/ipython_profiles/profile_narrative/kbase_templates && npm install && grunt build
-grunt minify
+RUN grunt minify
 
 
 # Add Tini. Tini operates as a process subreaper for jupyter. This prevents

@@ -471,7 +471,7 @@ define([
 
                 // here is what we do:
 
-                // based on the param ordering (layout), render the html layout, 
+                // based on the param ordering (layout), render the html layout,
                 // with an id mapped per parameter in this set
 
 
@@ -600,7 +600,7 @@ define([
                         console.error('ERROR in start', err);
                     });
 
-                parentBus.on('parameter-changed', function (message) {
+                paramsBus.on('parameter-changed', function (message) {
                     // Also, tell each of our inputs that a param has changed.
                     // TODO: use the new key address and subscription
                     // mechanism to make this more efficient.

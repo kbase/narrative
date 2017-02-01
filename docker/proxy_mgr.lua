@@ -1231,6 +1231,7 @@ M.set_proxy = set_proxy
 M.check_proxy = check_proxy
 M.use_proxy = use_proxy
 M.initialize = initialize
+M.get_session = get_session
 M.narrative_shutdown = narrative_shutdown
 
 return M

@@ -445,7 +445,7 @@ define([
         }
 
         function start(arg) {
-            attach(arg.node)
+            return attach(arg.node)
                 .then(function () {
                     bus.on('validation', function (message) {
                         switch (message.diagnosis) {

@@ -429,14 +429,6 @@ define([
                             return params.specs[id];
                         }));
 
-                // new params format is a map with an accompanying ordering layout
-
-                // here is what we do:
-
-                // based on the param ordering (layout), render the html layout, 
-                // with an id mapped per parameter in this set
-
-
                 return Promise.resolve()
                     .then(function () {
                         if (inputParams.layout.length === 0) {
@@ -526,22 +518,6 @@ define([
                             }));
                         }
                     })
-                    // .then(function () {
-                    //     console.log('advance-ing...');
-                    //     return Promise.all(widgets.map(function (widget) {
-                    //         return widget.widget.start()
-                    //             .catch(function (err) {
-                    //                 console.error('error', err, widget);
-                    //                 throw err;
-                    //             })
-                    //     }));
-                    // })
-                    // .then(function () {
-                    //     console.log('advance-ing2...');
-                    //     return Promise.all(widgets.map(function (widget) {
-                    //         return widget.widget.run(params);
-                    //     }));
-                    // })
                     .then(function () {
                         renderAdvanced('input-objects');
                         renderAdvanced('parameters');
@@ -549,30 +525,14 @@ define([
             });
         }
 
-        function start() {
+        function start(arg) {
             return Promise.try(function () {
                 // send parent the ready message
-                paramsBus.emit('ready');
 
-                // parent will send us our initial parameters
-                paramsBus.on('run', function (message) {
-                    doAttach(message.node);
+                doAttach(arg.node);
 
-                    model.setItem('appSpec', message.appSpec);
-                    model.setItem('parameters', message.parameters);
-                    model.setItem('converted', message.converted);
-
-                    // we then create our widgets
-                    renderParameters()
-                        .then(function () {
-                            // do something after success
-                            attachEvents();
-                        })
-                        .catch(function (err) {
-                            // do somethig with the error.
-                            console.error('ERROR in start', err);
-                        });
-                });
+                model.setItem('appSpec', arg.appSpec);
+                model.setItem('parameters', arg.parameters);
 
                 paramsBus.on('parameter-changed', function (message) {
                     // Also, tell each of our inputs that a param has changed.
@@ -588,6 +548,16 @@ define([
                         // bus.emit('parameter-changed', message);
                     });
                 });
+                // we then create our widgets
+                return renderParameters()
+                    .then(function () {
+                        // do something after success
+                        attachEvents();
+                    })
+                    .catch(function (err) {
+                        // do somethig with the error.
+                        console.error('ERROR in start', err);
+                    });
             });
         }
 

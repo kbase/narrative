@@ -9,6 +9,7 @@ define([
     'common/error',
     'common/jupyter',
     'kb_common/html',
+    'kb_common/format',
     'common/props',
     'kb_service/client/narrativeMethodStore',
     'common/pythonInterop',
@@ -21,11 +22,10 @@ define([
     'common/format',
     'common/spec',
     'common/semaphore',
+    'common/lang',
     'narrativeConfig',
     'google-code-prettify/prettify',
     './appCellWidget-fsm',
-    './tabs/runStatsTab',
-    './tabs/jobStateTab',
     './tabs/resultsTab',
     './tabs/logTab',
     './tabs/errorTab',
@@ -42,6 +42,7 @@ define([
     ToErr,
     JupyterProxy,
     html,
+    formatting,
     Props,
     NarrativeMethodStore,
     PythonInterop,
@@ -54,11 +55,10 @@ define([
     format,
     Spec,
     Semaphore,
+    lang,
     Config,
     PR,
     AppStates,
-    runStatsTabWidget,
-    jobStateTabWidget,
     resultsTabWidget,
     logTabWidget,
     errorTabWidget
@@ -81,7 +81,8 @@ define([
         appStates = AppStates;
 
     function factory(config) {
-        var container, places, ui,
+        var hostNode,
+            container, ui,
             workspaceInfo = config.workspaceInfo,
             runtime = Runtime.make(),
             cell = config.cell,
@@ -120,8 +121,6 @@ define([
                 }
             },
             widgets = {},
-            inputBusses = [],
-            inputBusMap = {},
             fsm,
             saveMaxFrequency = config.saveMaxFrequency || 5000,
             controlBarTabs = {},
@@ -167,12 +166,21 @@ define([
                 }
             };
 
-
         // NEW - TABS
 
-        function loadParamsWidget(arg) {
+        function pRequire(module) {
             return new Promise(function (resolve, reject) {
-                require(['./appParamsWidget'], function (Widget) {
+                require(module, function () {
+                    resolve(arguments);
+                }, function (err) {
+                    reject(err);
+                });
+            });
+        }
+
+        function loadParamsWidget(arg) {
+            return pRequire(['./appParamsWidget'])
+                .spread(function (Widget) {
                     // TODO: widget should make own bus.
                     var bus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for input widget' }),
                         widget = Widget.make({
@@ -180,12 +188,6 @@ define([
                             workspaceInfo: workspaceInfo,
                             initialParams: model.getItem('params')
                         });
-
-                    bus.emit('run', {
-                        node: arg.node,
-                        appSpec: model.getItem('app.spec'),
-                        parameters: spec.getSpec().parameters
-                    });
 
                     bus.on('sync-params', function (message) {
                         message.parameters.forEach(function (paramId) {
@@ -253,23 +255,23 @@ define([
                         }
                     });
 
-                    return widget.start()
+                    return widget.start({
+                            node: arg.node,
+                            appSpec: model.getItem('app.spec'),
+                            parameters: spec.getSpec().parameters
+                        })
                         .then(function () {
-                            resolve({
+                            return {
                                 bus: bus,
                                 instance: widget
-                            });
+                            };
                         });
-                }, function (err) {
-                    console.error('ERROR', err);
-                    reject(err);
                 });
-            });
         }
 
         function loadViewParamsWidget(arg) {
-            return new Promise(function (resolve, reject) {
-                require(['./appParamsViewWidget'], function (Widget) {
+            return pRequire(['./appParamsViewWidget'])
+                .spread(function (Widget) {
                     // TODO: widget should make own bus.
                     var bus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for input widget' }),
                         widget = Widget.make({
@@ -277,12 +279,6 @@ define([
                             workspaceInfo: workspaceInfo,
                             initialParams: model.getItem('params')
                         });
-
-                    bus.emit('run', {
-                        node: arg.node,
-                        appSpec: model.getItem('app.spec'),
-                        parameters: spec.getSpec().parameters
-                    });
 
                     bus.on('sync-params', function (message) {
                         message.parameters.forEach(function (paramId) {
@@ -323,7 +319,7 @@ define([
                         handle: function (message) {
                             return {
                                 state: model.getItem('paramState', message.id)
-                            }
+                            };
                         }
                     });
 
@@ -338,84 +334,119 @@ define([
                         }
                     });
 
+                    bus.on('parameter-changed', function (message) {
+                        // TODO: should never get these in the following states....
 
+                        var state = fsm.getCurrentState().state;
+                        if (state.mode === 'editing') {
+                            model.setItem(['params', message.parameter], message.newValue);
+                            evaluateAppState();
+                        } else {
+                            console.warn('parameter-changed event detected when not in editing mode - ignored');
+                        }
+                    });
 
-                    return widget.start()
+                    return widget.start({
+                            node: arg.node,
+                            appSpec: model.getItem('app.spec'),
+                            parameters: spec.getSpec().parameters
+                        })
                         .then(function () {
-                            resolve({
+                            return {
                                 bus: bus,
                                 instance: widget
-                            });
+                            };
                         });
-                }, function (err) {
-                    console.error('ERROR', err);
-                    reject(err);
                 });
-            });
         }
 
-        function loadViewParamsWidgetx(arg) {
-            return new Promise(function (resolve, reject) {
-                require(['./appParamsViewWidget'], function (Widget) {
-                    // TODO: widget should make own bus
-                    var bus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for load input view widget' }),
-                        widget = Widget.make({
-                            bus: bus,
-                            workspaceInfo: workspaceInfo
-                        });
+        // function loadViewParamsWidget(arg) {
+        //     return new Promise(function (resolve, reject) {
+        //         require(['./appParamsViewWidget'], function (Widget) {
+        //             // TODO: widget should make own bus.
+        //             var bus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for input widget' }),
+        //                 widget = Widget.make({
+        //                     bus: bus,
+        //                     workspaceInfo: workspaceInfo,
+        //                     initialParams: model.getItem('params')
+        //                 });
 
-                    bus.on('sync-all-parameters', function () {
-                        var params = model.getItem('params');
-                        Object.keys(params).forEach(function (key) {
+        //             bus.emit('run', {
+        //                 node: arg.node,
+        //                 appSpec: model.getItem('app.spec'),
+        //                 parameters: spec.getSpec().parameters
+        //             });
 
-                            bus.send({
-                                parameter: key,
-                                value: params[key]
-                            }, {
-                                // This points the update back to a listener on this key
-                                key: {
-                                    type: 'update',
-                                    parameter: key
-                                }
-                            });
+        //             bus.on('sync-params', function (message) {
+        //                 message.parameters.forEach(function (paramId) {
+        //                     bus.send({
+        //                         parameter: paramId,
+        //                         value: model.getItem(['params', message.parameter])
+        //                     }, {
+        //                         key: {
+        //                             type: 'update',
+        //                             parameter: message.parameter
+        //                         }
+        //                     });
+        //                 });
+        //             });
 
-                            //bus.emit('update', {
-                            //    parameter: key,
-                            //    value: params[key]
-                            //});
-                        });
-                    });
-                    bus.on('parameter-sync', function (message) {
-                        var value = model.getItem(['params', message.parameter]);
-                        bus.send({
-                            parameter: message.parameter,
-                            value: value
-                        }, {
-                            // This points the update back to a listener on this key
-                            key: {
-                                type: 'update',
-                                parameter: message.parameter
-                            }
-                        });
-                    });
-                    bus.emit('run', {
-                        node: arg.node,
-                        parameters: spec.getSpec().parameters
-                    });
+        //             bus.on('parameter-sync', function (message) {
+        //                 var value = model.getItem(['params', message.parameter]);
+        //                 bus.send({
+        //                     //                            parameter: message.parameter,
+        //                     value: value
+        //                 }, {
+        //                     // This points the update back to a listener on this key
+        //                     key: {
+        //                         type: 'update',
+        //                         parameter: message.parameter
+        //                     }
+        //                 });
+        //             });
 
-                    return widget.start()
-                        .then(function () {
-                            resolve({
-                                bus: bus,
-                                instance: widget
-                            });
-                        });
-                }, function (err) {
-                    console.error('ERROR', err);
-                    reject(err);
-                });
-            });
-        }
+        //             bus.on('set-param-state', function (message) {
+        //                 model.setItem('paramState', message.id, message.state);
+        //             });
+
+        //             bus.respond({
+        //                 key: {
+        //                     type: 'get-param-state'
+        //                 },
+        //                 handle: function (message) {
+        //                     return {
+        //                         state: model.getItem('paramState', message.id)
+        //                     }
+        //                 }
+        //             });
+
+        //             bus.respond({
+        //                 key: {
+        //                     type: 'get-parameter'
+        //                 },
+        //                 handle: function (message) {
+        //                     return {
+        //                         value: model.getItem(['params', message.parameterName])
+        //                     };
+        //                 }
+        //             });
+
+
+
+        //             return widget.start()
+        //                 .then(function () {
+        //                     resolve({
+        //                         bus: bus,
+        //                         instance: widget
+        //                     });
+        //                 });
+        //         }, function (err) {
+        //             console.error('ERROR', err);
+        //             reject(err);
+        //         });
+        //     });
+        // }
+
 
         function configureWidget() {
             function factory(config) {
@@ -614,6 +645,9 @@ define([
          * If tab not open, close any open one and open it.
          * If tab open, close it, leaving no tabs open.
          */
+        // Track whether the user has selected a tab.
+        // This is reset when the user closes a tab.
+        var userSelectedTab = false;
         function toggleTab(tabId) {
             if (controlBarTabs.selectedTab) {
                 if (controlBarTabs.selectedTab.id === tabId) {
@@ -623,15 +657,24 @@ define([
                             //tab.
                             return hidePane();
                         })
+                        .then(function () {
+                            userSelectedTab = false;
+                        });
                 }
                 return stopTab()
                     .then(function () {
                         return startTab(tabId);
+                    })
+                    .then(function () {
+                        userSelectedTab = true;
                     });
             }
             return showPane()
                 .then(function () {
                     startTab(tabId);
+                })
+                .then(function () {
+                    userSelectedTab = true;
                 });
         }
 
@@ -649,31 +692,20 @@ define([
                     xicon: 'pencil',
                     widget: viewConfigureWidget()
                 },
-                runStats: {
-                    label: 'Stats',
-                    xicon: 'bar-chart',
-                    widget: runStatsTabWidget
-                },
-                //                jobState: {
-                //                    label: 'State',
-                //                    xicon: 'table',
-                //                    features: ['developer'],
-                //                    widget: jobStateTabWidget
-                //                },
                 logs: {
-                    label: 'Log',
+                    label: 'Job Status',
                     xicon: 'list',
                     widget: logTabWidget
                 },
                 results: {
-                    label: 'Results',
+                    label: 'Result',
                     xicon: 'file',
                     widget: resultsTabWidget
                 },
                 error: {
                     label: 'Error',
-                    xicon: 'exclamation',
-                    type: 'danger',
+                    icon: 'exclamation',
+                    xtype: 'danger',
                     widget: errorTabWidget
                 }
             }
@@ -1025,6 +1057,10 @@ define([
                         type: button.type || 'default',
                         classes: classes,
                         hidden: true,
+                        // Overriding button class styles for this context.
+                        style: {
+                            margin: '6px'
+                        },
                         event: {
                             type: 'actionButton',
                             data: {
@@ -1033,7 +1069,7 @@ define([
                         },
                         icon: {
                             name: button.icon.name,
-                            size: 3
+                            size: 2
                         }
                     });
                 })
@@ -1088,54 +1124,85 @@ define([
         function buildRunControlPanel(events) {
             return div({ dataElement: 'run-control-panel' }, [
                 div({
-                    style: { border: '1px silver solid', height: '100px', position: 'relative' }
+                    style: { border: '1px silver solid', height: '50px', position: 'relative' }
                 }, [
                     div({ style: { position: 'absolute', top: '0', bottom: '0', left: '0', right: '0' } }, [
+                        div({
+                            style: {
+                                width: '50px',
+                                height: '50px',
+                                position: 'absolute',
+                                top: '0',
+                                left: '0'
+                            }
+                        }, [
+                            div({
+                                style: {
+                                    height: '50px',
+                                    textAlign: 'center',
+                                    lineHeight: '50px',
+                                    verticalAlign: 'middle',
+                                    textStyle: 'italic'
+                                }
+                            }, [
+                                buildRunControlPanelRunButtons(events)
+                            ])
+                        ]),
+
                         div({
                             dataElement: 'status',
                             style: {
                                 position: 'absolute',
-                                left: '0',
+                                left: '50px',
                                 top: '0',
-                                width: '100px',
-                                height: '100px',
-                                borderRight: '1px silver solid'
+                                width: '200px',
+                                height: '50px'
                             }
                         }, [
-                            div({ style: { height: '40px', marginTop: '10px', textAlign: 'center', lineHeight: '40px', verticalAlign: 'middle' } }, [
-                                span({ dataElement: 'indicator' }, [
-                                    span({ dataElement: 'icon', class: 'fa fa-question fa-2x', style: { lineHeight: '40px' } })
+                            div({
+                                style: {
+                                    height: '50px',
+                                    marginTop: '0px',
+                                    textAlign: 'center',
+                                    xborder: '1px silver solid',
+                                    lineHeight: '50px',
+                                    verticalAlign: 'middle'
+                                }
+                            }, [
+                                span({ dataElement: 'message' }),
+                                span(' '),
+                                span({ dataElement: 'measure', style: { fontWeight: 'bold' } }),
+                                span({
+                                    dataElement: 'finished',
+                                    class: 'hidden'
+                                }, [
+                                    span({dataElement: 'label'}, 'on '),
+                                    span({
+                                        dataElement: 'time',
+                                        style: { 
+                                            fontWeight: 'bold' 
+                                        } 
+                                    })
                                 ])
-                            ]),
-                            div({ dataElement: 'message', style: { height: '20px', marginTop: '5px', textAlign: 'center' } }, 'status'),
-                            div({ dataElement: 'measure', style: { height: '20px', marginBotton: '5px', textAlign: 'center' } })
+                            ])
                         ]),
                         div({
                             dataElement: 'toolbar',
                             style: {
                                 position: 'absolute',
-                                left: '100px',
-                                right: '100px',
+                                left: '250px',
+                                right: '0',
                                 top: '0',
-                                height: '100px',
-                                borderRight: Jupyter.narrative.readonly ? 'none' : '1px silver solid'
+                                height: '50px'
                             }
                         }, [
                             div({
                                 style: {
                                     height: '50px',
-                                    padding: '5px',
-                                    xborderBottom: '1px silver solid'
-                                }
-                            }, [
-                                div({ dataElement: 'message' })
-                            ]),
-                            div({
-                                style: {
-                                    height: '50px',
                                     lineHeight: '50px',
-                                    paddingLeft: '15px',
-                                    verticalAlign: 'bottom'
+                                    xpaddingRight: '15px',
+                                    verticalAlign: 'bottom',
+                                    textAlign: 'center'
                                 }
                             }, [
                                 div({
@@ -1145,27 +1212,6 @@ define([
                                         verticalAlign: 'bottom'
                                     }
                                 }, buildRunControlPanelDisplayButtons(events))
-                            ])
-                        ]),
-                        div({
-                            style: {
-                                width: '100px',
-                                height: '100px',
-                                position: 'absolute',
-                                top: '0',
-                                right: '0'
-                            }
-                        }, [
-                            div({
-                                style: {
-                                    height: '100px',
-                                    textAlign: 'center',
-                                    lineHeight: '100px',
-                                    verticalAlign: 'middle',
-                                    textStyle: 'italic'
-                                }
-                            }, [
-                                buildRunControlPanelRunButtons(events)
                             ])
                         ])
                     ])
@@ -1631,9 +1677,11 @@ define([
 
             // Tab state
 
-
+            // TODO: let user-selection override auto-selection of tab, unless
+            // the user-selected tab is no longer enabled or is hidden.
 
             // disable tab buttons
+            var tabSelected = false;
             Object.keys(state.ui.tabs).forEach(function (tabId) {
                 var tab = state.ui.tabs[tabId];
                 if (tab.enabled) {
@@ -1641,7 +1689,9 @@ define([
                 } else {
                     ui.disableButton(tabId);
                 }
-                if (tab.selected) {
+                // TODO honor user-selected tab.                
+                if (tab.selected && !userSelectedTab) {
+                    tabSelected = true;
                     selectTab(tabId);
                 }
                 if (tab.hidden) {
@@ -1650,6 +1700,11 @@ define([
                     ui.showButton(tabId);
                 }
             });
+            // If no new tabs selected (even re-selecting an existing open tab)
+            // close the open tab.
+            if (!tabSelected && !userSelectedTab) {
+                unselectTab();
+            }
 
             // enable tab buttons
             //state.ui.tabs.disabled.forEach(function (tabId) {
@@ -1981,7 +2036,8 @@ define([
 
         function attach(node) {
             return Promise.try(function () {
-                container = node;
+                hostNode = node;
+                container = hostNode.appendChild(document.createElement('div'));
                 ui = UI.make({
                     node: container,
                     bus: bus
@@ -2000,12 +2056,15 @@ define([
                 var layout = renderLayout();
                 container.innerHTML = layout.content;
                 layout.events.attachEvents(container);
-                places = {
-                    status: container.querySelector('[data-element="status"]'),
-                    notifications: container.querySelector('[data-element="notifications"]'),
-                    widget: container.querySelector('[data-element="widget"]')
-                };
                 return null;
+            });
+        }
+
+        function detach() {
+            return Promise.try(function () {
+                if (hostNode && container) {
+                    hostNode.removeChild(container);
+                }
             });
         }
 
@@ -2161,12 +2220,14 @@ define([
                 container,
                 channel = runtime.bus().makeChannelBus({ description: 'Clock channel' }),
                 clockId = html.genId(),
+                startDate,
                 startTime;
 
             function buildLayout() {
-                return div({
+                return span({
                     id: clockId,
                     style: {
+                        color: 'green',
                         fontFamily: 'monospace'
                     }
                 });
@@ -2176,14 +2237,14 @@ define([
                 if (!startTime) {
                     return;
                 }
-                var now = new Date().getTime(),
-                    elapsed = now - startTime;
+                var now = new Date(),
+                    elapsed = now.getTime() - startTime;
 
                 var clockNode = document.getElementById(clockId);
                 if (!clockNode) {
                     console.error('Could not find clock node at' + clockId);
                 }
-                clockNode.innerHTML = format.elapsedTime(elapsed);
+                clockNode.innerHTML = format.niceDuration(elapsed);
             }
 
 
@@ -2196,6 +2257,7 @@ define([
                     container.innerHTML = layout;
 
                     startTime = arg.startTime;
+                    startDate = new Date(arg.startTime);
 
                     listeners.push(runtime.bus().on('clock-tick', function () {
                         renderClock();
@@ -2282,8 +2344,23 @@ define([
 
             // Update the measurement in the control panel.
             var jobState = model.getItem('exec.jobState');
-            var elapsedRunTime = format.elapsedTime(jobState.finish_time - jobState.exec_start_time);
-            ui.setContent('run-control-panel.status.measure', elapsedRunTime);
+            var elapsedRunTime = format.niceDuration(jobState.finish_time - jobState.exec_start_time);
+            ui.setContent('run-control-panel.status.measure', span({
+                style: {
+                    color: 'blue',
+                    fontFamily: 'monospace'
+                }
+            }, elapsedRunTime));
+
+            // Enable and populate the timestamp part
+            // ui.getElement('run-control-panel.status.finished').classList.remove('hidden');
+            // var finishTime = formatting.niceTime(new Date(jobState.finish_time));
+            // ui.setContent('run-control-panel.status.finished.time', span({
+            //     style: {
+            //         color: 'blue',
+            //         fontFamily: 'monospace'
+            //     }
+            // }, finishTime));
 
             // widgets named 'no-display' are a trigger to skip the output cell process.
             var skipOutputCell = model.getItem('exec.outputWidgetInfo.name') === 'no-display';
@@ -2619,7 +2696,9 @@ define([
         }
 
         function stop() {
-            busEventManager.removeAll();
+            return Promise.try(function () {
+                busEventManager.removeAll();
+            });
         }
 
         function exportParams() {
@@ -2907,6 +2986,8 @@ define([
                 });
         }
 
+
+
         /*
          Grok a sensible error structure out of something returned by something.
          */
@@ -2930,6 +3011,8 @@ define([
             init: init,
             attach: attach,
             start: start,
+            stop: stop,
+            detach: detach,
             run: run
         };
     }

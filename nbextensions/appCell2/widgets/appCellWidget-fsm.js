@@ -20,9 +20,6 @@ define([], function () {
                     logs: {
                         enabled: false
                     },
-                    runStats: {
-                        enabled: false
-                    },
                     results: {
                         enabled: false
                     },
@@ -74,9 +71,6 @@ define([], function () {
                         hidden: true
                     },
                     logs: {
-                        enabled: false
-                    },
-                    runStats: {
                         enabled: false
                     },
                     results: {
@@ -136,9 +130,6 @@ define([], function () {
                         hidden: true
                     },
                     logs: {
-                        enabled: false
-                    },
-                    runStats: {
                         enabled: false
                     },
                     results: {
@@ -231,13 +222,11 @@ define([], function () {
                     },
                     viewConfigure: {
                         enabled: true,
-                        selected: true
+                        selected: false
                     },
                     logs: {
-                        enabled: false
-                    },
-                    runStats: {
-                        enabled: false
+                        enabled: true,
+                        selected: false
                     },
                     results: {
                         enabled: false
@@ -320,14 +309,10 @@ define([], function () {
                         hidden: true
                     },
                     viewConfigure: {
-                        enabled: true,
-                        selected: true
+                        enabled: true
                     },
                     logs: {
-                        enabled: false
-                    },
-                    runStats: {
-                        enabled: false
+                        enabled: true
                     },
                     results: {
                         enabled: false
@@ -416,11 +401,7 @@ define([], function () {
                         enabled: true
                     },
                     logs: {
-                        enabled: false
-                    },
-                    runStats: {
-                        enabled: true,
-                        selected: true
+                        enabled: true
                     },
                     results: {
                         enabled: false
@@ -444,7 +425,7 @@ define([], function () {
                         type: 'list'
                     }
                 },
-                label: 'queued...',
+                label: 'queued for',
                 message: 'The App is queued for running.'
             },
             on: {
@@ -522,10 +503,6 @@ define([], function () {
                         enabled: true
                     },
                     logs: {
-                        enabled: true,
-                        selected: true
-                    },
-                    runStats: {
                         enabled: true
                     },
                     results: {
@@ -550,7 +527,7 @@ define([], function () {
                         type: 'bolt'
                     }
                 },
-                label: 'running...',
+                label: 'running for',
                 message: 'The App is now running.'
             },
             on: {
@@ -614,9 +591,6 @@ define([], function () {
                         enabled: true
                     },
                     logs: {
-                        enabled: false
-                    },
-                    runStats: {
                         enabled: true
                     },
                     results: {
@@ -686,9 +660,6 @@ define([], function () {
                         enabled: true
                     },
                     logs: {
-                        enabled: false
-                    },
-                    runStats: {
                         enabled: true,
                         selected: true
                     },
@@ -743,9 +714,6 @@ define([], function () {
                     logs: {
                         enabled: true
                     },
-                    runStats: {
-                        enabled: true
-                    },
                     results: {
                         enabled: true,
                         selected: true
@@ -769,7 +737,7 @@ define([], function () {
                         type: 'check'
                     }
                 },
-                label: 'completed',
+                label: 'finished in',
                 message: 'The App has successfully finished.'
             },
             on: {
@@ -817,9 +785,6 @@ define([], function () {
                         enabled: true
                     },
                     logs: {
-                        enabled: false
-                    },
-                    runStats: {
                         enabled: false
                     },
                     results: {
@@ -880,9 +845,6 @@ define([], function () {
                     logs: {
                         enabled: false
                     },
-                    runStats: {
-                        enabled: false
-                    },
                     results: {
                         enabled: false,
                         hidden: true
@@ -939,9 +901,6 @@ define([], function () {
                         enabled: true
                     },
                     logs: {
-                        enabled: true
-                    },
-                    runStats: {
                         enabled: true
                     },
                     results: {
@@ -1001,9 +960,6 @@ define([], function () {
                     logs: {
                         enabled: false
                     },
-                    runStats: {
-                        enabled: false
-                    },
                     results: {
                         enabled: false,
                         hidden: true
@@ -1058,9 +1014,6 @@ define([], function () {
                         enabled: false
                     },
                     logs: {
-                        enabled: false
-                    },
-                    runStats: {
                         enabled: false
                     },
                     results: {

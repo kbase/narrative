@@ -43,23 +43,23 @@ define([
 
     function setupNotebook(workspaceInfo) {
         return Promise.all(Jupyter.notebook.get_cells().map(function(cell) {
-                if (AppCell.isAppCell(cell)) {
-                    var appCell = AppCell.make({
-                        cell: cell,
-                        workspaceInfo: workspaceInfo
-                    });
-                    appCell.setupCell(cell);
-                    return appCell;
-                }
-            }))
-            .then(function(possibleAppCells) {
-                return possibleAppCells.filter(function(appCell) {
-                    if (appCell) {
-                        return true;
-                    }
-                    return false;
+            if (AppCell.isAppCell(cell)) {
+                var appCell = AppCell.make({
+                    cell: cell,
+                    workspaceInfo: workspaceInfo
                 });
-            });
+                return appCell.setupCell(cell);
+                // return appCell;
+            }
+        }));
+        // .then(function(possibleAppCells) {
+        //     return possibleAppCells.filter(function(appCell) {
+        //         if (appCell) {
+        //             return true;
+        //         }
+        //         return false;
+        //     });
+        // });
     }
 
     function getWorkspaceRef() {

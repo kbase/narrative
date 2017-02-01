@@ -74,9 +74,10 @@ This builds up a venv, installs all requirements into it, and builds the Narrati
 **2. Install into an existing virtualenv**
 
 Activate your virtualenv, then just run the script with no flags.
+For Anaconda/Miniconda, set `VIRTUAL_ENV` to the top-level directory in the checked out repo.
 ```
-> source /path/to/my_virtualenv/bin/activate
-> scripts/install_narrative.sh
+> source /path/to/my_virtual_env/bin/activate
+> VIRTUAL_ENV=`pwd` scripts/install_narrative.sh
 ```
 
 That's it, you get the same result as above.

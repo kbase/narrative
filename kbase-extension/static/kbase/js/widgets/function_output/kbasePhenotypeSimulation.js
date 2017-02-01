@@ -1,7 +1,7 @@
 (function( $, undefined ) {
-    $.KBWidget({
+    return KBWidget({
         name: "PhenotypeSimulation",
-        parent: "kbaseAuthenticatedWidget",
+        parent : kbaseAuthenticatedWidget,
         version: "1.0.0",
         simulation_id: null,
         ws_name: null,

@@ -7,7 +7,7 @@
  * This is a base class widget for any sidebar widgets that want its behavior.
  * Those sidebars should just include a title option. 
  * Usage: 
- * $('#my-element').kbaseNarrativeControlPanel({ 
+  new kbaseNarrativeControlPanel(* $('#my-element'), { 
  *     title : 'My Controls', 
  *     collapsible : true,
  *     buttons: [],
@@ -16,10 +16,21 @@
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @public
  */
-define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function($) {
-    $.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'kbaseAuthenticatedWidget'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		kbaseAuthenticatedWidget
+	) {
+    return KBWidget({
         name: 'kbaseNarrativeControlPanel', 
-        parent: 'kbaseAuthenticatedWidget',
+        parent : kbaseAuthenticatedWidget,
         version: '0.0.1',
         options: {
             title: 'Control',

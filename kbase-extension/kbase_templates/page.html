@@ -21,6 +21,9 @@
     <link rel="stylesheet" type="text/css" href="{{ static_url("kbase/css/landing-pages.css") }}" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseEditor.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseNotify.css") }}" type="text/css" />
+    <link rel="stylesheet" href="{{ static_url("kbase/css/methodCell.css") }}" type="text/css" />
+    <link rel="stylesheet" href="{{ static_url("kbase/css/bootstrapHelper.css") }}" type="text/css" />
+    <link rel="stylesheet" href="{{ static_url("kbase/css/buttons.css") }}" type="text/css" />
 
     <script src="{{ static_url("ext_components/bowser/bowser.min.js") }}" type="text/javascript" charset="utf-8"></script>
     <script>
@@ -74,7 +77,7 @@
             moment: 'components/moment/moment',
             codemirror: 'components/codemirror',
             termjs: 'components/term.js/src/term',
-            typeahead: 'components/jquery-typeahead/dist/jquery.typeahead',
+            typeahead: 'components/jquery-typeahead/dist/jquery.typeahead'
           },
           shim: {
             underscore: {
@@ -142,15 +145,13 @@
                         <span class="fa fa-navicon"></span>
                     </button>
                     <ul class="dropdown-menu" role="menu" aria-labelledby="kb-nav-menu">
-                        <li><a href="/functional-site/#/search/?q=*" target="_blank">Search Data</a></li>
-                        <li><a href="/functional-site/#/dashboard" target="_blank">Dashboard</a></li>
-                        <li><a id="kb-status-btn" href="" target="_blank">KBase Service Status</a></li>
-                        <li role="presentation" class="divider"></li>
-                        <li><a id="kb-about-btn">About the Narrative</a></li>
-                        <li><a target="_blank" href="https://kbase.us/narrative-guide/">Narrative User Guide</a></li>
-                        <li><a target="_blank" href="https://kbase.us/contact-us/">Contact Us</a></li>
-                        <li role="presentation" class="divider"></li>
-                        <li><a id="kb-shutdown-btn">Shutdown and Restart</a></li>
+                        <li><a href="/#search/?q=*" target="_blank"><div class="kb-nav-menu-icon"><span class="fa fa-search"></span></div> Search Data</a></li>
+                        <li><a href="/#dashboard" target="_blank"><div class="kb-nav-menu-icon"><span class="fa fa-dashboard"></span></div> Dashboard</a></li>
+                        <li><a href="/#bulk-ui" target="_blank"><div class="kb-nav-menu-icon"><span class="fa fa-database"></span></div> Bulk Import (beta)</a></li>
+                        <li class="divider"></li>
+                        <li><a id="kb-about-btn"><div class="kb-nav-menu-icon"><span class="fa fa-info-circle"></span></div> About the Narrative</a></li>
+                        <li class="divider"></li>
+                        <li><a id="kb-shutdown-btn"><div class="kb-nav-menu-icon"><span class="fa fa-power-off"></span></div> Shutdown and Restart</a></li>
                     </ul>
                 </div>
                 <a href="http://www.kbase.us">
@@ -176,7 +177,6 @@
                 <span class="kb-navbar-buttons">
                     <div id="kb-notify-area"><div id="notification_area"></div></div>
 
-
                     <button id="kb-view-only-copy" class="btn btn-default navbar-btn kb-nav-btn hidden">
                         <div class="fa fa-copy"></div>
                         <div class="kb-nav-btn-txt">copy</div>
@@ -188,22 +188,38 @@
                         <div class="kb-nav-btn-txt">Get new version!</div>
                     </button>
                     <div class="btn-group">
+                        <button id="kb-help-menu" class="btn btn-default navbar-btn kb-nav-btn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <div id="kb-help-icon" class="fa fa-question"><span class="caret"></div>
+                            <div class="kb-nav-btn-txt">help</div>
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="kb-help-menu">
+                            <li><a id="kb-tour"><div class="kb-nav-menu-icon"><span class="fa fa-map-o"></span></div> Narrative Tour</a></li>
+                            <li><a target="_blank" href="https://kbase.us/narrative-guide/"><div class="kb-nav-menu-icon"><span class="fa fa-book"></span></div> Narrative User Guide</a></li>
+                            <li><a target="_blank" href="https://kbase.us/contact-us/"><div class="kb-nav-menu-icon"><span class="fa fa-envelope-o"></span></div> Contact Us</a></li>
+                        </ul>
+                    </div>
+                    <div class="btn-group">
                         <button id="kb-ipy-menu" class="btn btn-default navbar-btn kb-nav-btn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             <div id="kb-kernel-icon" class="fa fa-circle-o"><span class="caret"></div>
                             <div class="kb-nav-btn-txt">kernel</div>
                         </button>
                         <ul class="dropdown-menu" aria-labelledby="kb-ipy-menu">
-                            <li><a id="kb-kernel-int-btn"><span class="fa fa-times"></span> Interrupt</a></li>
-                            <li><a id="kb-kernel-ref-btn"><span class="fa fa-refresh"></span> Restart</a></li>
-                            <li><a id="kb-kernel-rec-btn"><span class="fa fa-power-off"></span> Reconnect</a></li>
+                            <li><a id="kb-kernel-int-btn"><div class="kb-nav-menu-icon"><span class="fa fa-times"></span></div> Interrupt</a></li>
+                            <li><a id="kb-kernel-ref-btn"><div class="kb-nav-menu-icon"><span class="fa fa-refresh"></span></div> Restart</a></li>
+                            <li><a id="kb-kernel-rec-btn"><div class="kb-nav-menu-icon"><span class="fa fa-power-off"></span></div> Reconnect</a></li>
                             <li class="divider"></li>
 
                             <li title="About Jupyter Notebook"><a id="notebook_about" href="#">About Jupyter</a></li>
+                            <li title="About IPywidgets" style="display:none"><div style="display:none"><a id="help_menu" href="#"></a></div></li>
                         </ul>
                     </div>
                     <a id="kb-share-btn" tabindex="0" role="button" class="btn btn-default navbar-btn kb-nav-btn">
                       <div class="fa fa-share-alt"></div>
                       <div class="kb-nav-btn-txt">share</div>
+                    </a>
+                    <a id="kb-settings-btn" tabindex="0" role="button" class="btn btn-default navbar-btn kb-nav-btn">
+                      <div class="fa fa-cog"></div>
+                      <div class="kb-nav-btn-txt">settings</div>
                     </a>
                     <button id="kb-save-btn" class="btn btn-default navbar-btn kb-nav-btn">
                         <div class="fa fa-save"></div>

@@ -2,8 +2,7 @@
 
     Simplified prompt for delete confirmations.
 
-    var $deleteModal = $('<div></div>').kbaseDeletePrompt(
-        {
+    var $deleteModal =  new kbaseDeletePrompt($('<div></div>'), {
             name : tab,
             callback :
                 function(e, $prompt) {
@@ -28,11 +27,23 @@
     Sure, you could just set it up through kbasePrompt. But why bother?
 */
 
-(function( $, undefined ) {
-    $.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'kbasePrompt'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		kbasePrompt
+	) {
+
+    return KBWidget({
 
 		  name: "kbaseDeletePrompt",
-		parent: 'kbasePrompt',
+		parent : kbasePrompt,
 
         version: "1.0.0",
         options: {
@@ -41,26 +52,26 @@
 
         init: function(options) {
 
-            this._super(options);
-
-            return $('<div></div>').kbasePrompt(
+            this._super(
+              {
+                title : 'Confirm deletion',
+                body : 'Really delete <strong>' + options.name + '</strong>?',
+                controls : [
+                    'cancelButton',
                     {
-                        title : 'Confirm deletion',
-                        body : 'Really delete <strong>' + this.options.name + '</strong>?',
-                        controls : [
-                            'cancelButton',
-                            {
-                                name : 'Delete',
-                                type : 'primary',
-                                callback : this.options.callback
-                            }
-                        ],
+                        name : 'Delete',
+                        type : 'primary',
+                        callback : options.callback
                     }
-                )
+                ],
+              }
+            );
+
+            return this;
 
         },
 
 
     });
 
-}( jQuery ) );
+});

@@ -5,22 +5,33 @@
  browser: true,
  white: true
  */
-define([
-    'jquery',
-    'bluebird',
-    'narrativeConfig',
-    'narrative_core/catalog/app_card',
-    'util/display',
-    'catalog-client-api',
-    'kbase-client-api',
-    'kbwidget',
-    'kbaseAuthenticatedWidget', 
-    'bootstrap',
-],
-    function ($, Promise, Config, AppCard, DisplayUtil) {
-        $.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'bluebird',
+		'narrativeConfig',
+		'narrative_core/catalog/app_card',
+		'util/display',
+		'catalog-client-api',
+		'kbase-client-api',
+		'kbaseAuthenticatedWidget'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Promise,
+		Config,
+		AppCard,
+		DisplayUtil,
+		catalog_client_api,
+		kbase_client_api,
+		kbaseAuthenticatedWidget
+	) {
+        return KBWidget({
             name: "KBaseCatalogBrowser",
-            parent: "kbaseAuthenticatedWidget",  // todo: do we still need th
+            parent : kbaseAuthenticatedWidget,  // todo: do we still need th
             options: {
                 tag: null,
                 ignoreCategories: {}
@@ -66,7 +77,7 @@ define([
 
             init: function (options) {
                 this._super(options);
-                
+
                 var self = this;
 
                 self.categories = {
@@ -144,12 +155,10 @@ define([
                     self.updateFavoritesCounts()
                         .then(function() {
                             self.hideLoading();
-                            if(self.organizeBy) {
-                                self.renderAppList(self.organizeBy);
-                            } else {
-                                self.organizeBy = 'favorites';
-                                self.renderAppList('favorites');
+                            if (!self.organizeBy) {
+                                self.organizeBy = 'category';
                             }
+                            self.renderAppList(self.organizeBy);
                             self.updateRunStats();
                             return self.updateMyFavorites();
 
@@ -216,13 +225,13 @@ define([
                     self.nms.get_method_spec({ids:[appCard.info.id],tag:self.options.tag})
                             .then(function(spec){
                                 // todo: cache this sped into the methods list
-                                self.trigger('methodClicked.Narrative', spec);
+                                self.trigger('methodClicked.Narrative', [spec[0], self.options.tag]);
                             });
                 } else if (appCard.type === 'app'){
                     self.nms.get_app_spec({ids:[appCard.info.id],tag:self.options.tag})
                             .then(function(spec){
                                 // todo: cache this sped into the methods list
-                                self.trigger('appClicked.Narrative', spec);
+                                self.trigger('appClicked.Narrative', [spec[0], self.options.tag]);
                             });
                 }
             },
@@ -570,7 +579,7 @@ define([
                             if(skip) continue;
 
                             // [NARRATIVE_EDIT] - always logged in, so we don't / can't check session
-                            var m = new AppCard('method',methods[k],tag,self.nms_base_url, 
+                            var m = new AppCard('method',methods[k],tag,self.nms_base_url,
                                 self.toggleFavorite, {catalog:self.catalog, browserWidget:self},
                                 true, function(card) { self.clickCallback(card); } ); //self.runtime.service('session').isLoggedIn());
                             self.appList.push(m);
@@ -601,7 +610,7 @@ define([
                             }
                             if(skip) continue;
 
-                            var a = new AppCard('app',apps[k],null,self.nms_base_url, null, {}, 
+                            var a = new AppCard('app',apps[k],null,self.nms_base_url, null, {},
                                 true, function(card) { self.clickCallback(card); });
                             self.appList.push(a);
                         }
@@ -905,7 +914,7 @@ define([
 
                 }
 
-                
+
 
                 else if (organizeBy=='category') {
 
@@ -1144,6 +1153,3 @@ define([
             }
         });
     });
-
-
-

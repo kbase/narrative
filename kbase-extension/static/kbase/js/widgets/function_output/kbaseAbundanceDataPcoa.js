@@ -1,12 +1,27 @@
 /**
  * KBase widget to display table of BIOM data
  */
-define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget',
-        'kbStandalonePlot', 'RGBColor'],
-        function($) {
-    $.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+        'narrativeConfig',
+		'kbaseAuthenticatedWidget',
+		'kbStandalonePlot',
+		'RGBColor'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+        Config,
+		kbaseAuthenticatedWidget,
+		kbStandalonePlot,
+		RGBColor
+	) {
+    return KBWidget({
             name: 'AbundanceDataPcoa',
-            parent: "kbaseAuthenticatedWidget",
+            parent : kbaseAuthenticatedWidget,
             version: '1.0.0',
             token: null,
             options: {
@@ -15,18 +30,18 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget',
 	            x_axis: "1",
 	            y_axis: "2"
         },
-	    ws_url: window.kbconfig.urls.workspace,
-	    loading_image: window.kbconfig.loading_gif,
-        
+        ws_url: Config.url('workspace'),
+	    loading_image: Config.get('loading_gif'),
+
 	    init: function(options) {
             this._super(options);
             return this;
         },
-	
+
         render: function() {
 	        var self = this;
 	        var pref = this.uuidv4();
-	        
+
 	        var container = this.$elem;
 	        container.empty();
             if (self.token == null) {
@@ -124,7 +139,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget',
 	        });
 	        return self;
         },
-        
+
         loggedInCallback: function(event, auth) {
             this.token = auth.token;
             this.render();

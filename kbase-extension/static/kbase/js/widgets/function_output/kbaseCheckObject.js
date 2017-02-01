@@ -2,7 +2,7 @@
  * KBase widget to display if workspace object exists.
  */
 (function($, undefined) {
-    $.KBWidget({
+    return KBWidget({
         name: 'CheckObject',
         version: '1.0.0',
         options: {

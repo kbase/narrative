@@ -4,24 +4,37 @@
  * @public
  */
 
-define(['jquery', 
-        'narrativeConfig',
-        'util/string',
-		'kbwidget', 
-		'kbaseAuthenticatedWidget', 
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'narrativeConfig',
+		'util/string',
+		'kbaseAuthenticatedWidget',
 		'kbaseTabs',
 		'jquery-dataTables',
 		'jquery-dataTables-bootstrap',
 		'kbaseTreechart',
-		'knhx'
-//        ,'jquery-dataScroller'
-		],
-function($,
-         Config,
-         StringUtil) {
-	$.KBWidget({
+		'knhx',
+		// 'jquery-dataScroller'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Config,
+		StringUtil,
+		kbaseAuthenticatedWidget,
+		kbaseTabs,
+		jquery_dataTables,
+		jquery_dataTables_bootstrap,
+		kbaseTreechart,
+		knhx
+		// jquery_dataScroller
+	) {
+	return KBWidget({
 		name: 'kbaseExpressionFeatureClusters',
-		parent: 'kbaseAuthenticatedWidget',
+		parent : kbaseAuthenticatedWidget,
 		version: '1.0.0',
 		options: {
 			clusterSetID: null,
@@ -41,18 +54,18 @@ function($,
 		genomeID: null,
 		genomeName: null,
 		features: null,
-					
+
 		init: function(options) {
 			this._super(options);
 			// Create a message pane
             this.$messagePane = $("<div/>").addClass("kbwidget-message-pane kbwidget-hide-message");
-            this.$elem.append(this.$messagePane);		
+            this.$elem.append(this.$messagePane);
 			return this;
 		},
 
 		loggedInCallback: function(event, auth) {
 
-			
+
 			// error if not properly initialized
 			if (this.options.clusterSetID == null) {
 				this.showMessage("[Error] Couldn't retrieve clusters");
@@ -61,10 +74,10 @@ function($,
 
 			// Create a new workspace client
 			this.ws = new Workspace(this.options.workspaceURL, auth);
-		   
+
 			// Let's go...
-			this.loadAndRender();           
-		   
+			this.loadAndRender();
+
 			return this;
 		},
 
@@ -83,35 +96,35 @@ function($,
 			var kbws = this.ws;
 			var clusterSetRef = self.buildObjectIdentity(this.options.workspaceID, this.options.clusterSetID);
 
-			kbws.get_objects([clusterSetRef], 
+			kbws.get_objects([clusterSetRef],
 				function(data) {
 					self.clusterSet = data[0].data;
 					self.expMatrixRef = self.clusterSet.original_data;
 
-					kbws.get_object_subset([					
+					kbws.get_object_subset([
 							{ 'ref':self.expMatrixRef, 'included':
 							    ['/genome_ref', '/feature_mapping', '/data/row_ids', '/data/col_ids'] }
-						], 
+						],
 						function(data) {
 							self.expMatrixName = data[0].info[1];
 							self.genomeRef = data[0].data.genome_ref;
                             self.featureMapping = data[0].data.feature_mapping;
 							self.matrixRowIds = data[0].data.data.row_ids;
-							self.matrixColIds = data[0].data.data.col_ids;	
+							self.matrixColIds = data[0].data.data.col_ids;
 
 							if (self.genomeRef) {
 							    kbws.get_object_subset(
 							            [{ 'ref':self.genomeRef, 'included':
-							                ['/id', '/scientific_name', '/features/[*]/id', 'features/[*]/type', 
-							                 'features/[*]/function', 'features/[*]/aliases'] }								
-							            ], 
-							            function(data){									
+							                ['/id', '/scientific_name', '/features/[*]/id', 'features/[*]/type',
+							                 'features/[*]/function', 'features/[*]/aliases'] }
+							            ],
+							            function(data){
 							                self.genomeID = data[0].info[1];
 							                self.genomeName = data[0].data.scientific_name;
 							                self.features = data[0].data.features;
 							                // Now we are ready to visualize it
 							                self.render();
-							            }, 
+							            },
 							            function(error){
 							                console.error(error);
 			                                self.render();
@@ -120,7 +133,7 @@ function($,
 							} else {
 							    self.render();
 							}
-						}, 
+						},
 						function(error){
 							self.clientError(error);
 						}
@@ -128,7 +141,7 @@ function($,
 				}, function(error){
 					self.clientError(error);
 				}
-			);	
+			);
 		},
 
 		render: function(){
@@ -145,40 +158,40 @@ function($,
 			var tabPane = $('<div id="'+pref+'tab-content">');
 			$container.append(tabPane);
 
-			tabPane.kbaseTabs({canDelete : true, tabs : []});                    
-			///////////////////////////////////// Overview table ////////////////////////////////////////////           
+			var tabWidget = new kbaseTabs(tabPane, {canDelete : true, tabs : []});
+			///////////////////////////////////// Overview table ////////////////////////////////////////////
 			var tabOverview = $("<div/>");
-			tabPane.kbaseTabs('addTab', {tab: 'Overview', content: tabOverview, canDelete : false, show: true});
+			tabWidget.addTab({tab: 'Overview', content: tabOverview, canDelete : false, show: true});
 			var tableOver = $('<table class="table table-striped table-bordered" '+
 				'style="width: 100%; margin-left: 0px; margin-right: 0px;" id="'+pref+'overview-table"/>');
 			tabOverview.append(tableOver);
 			tableOver
-				.append( self.makeRow( 
-					'Feature clusters', 
-					self.clusterSet.feature_clusters.length ) ) 
-				// .append( self.makeRow( 
-				// 	'Condition clusters', 
+				.append( self.makeRow(
+					'Feature clusters',
+					self.clusterSet.feature_clusters.length ) )
+				// .append( self.makeRow(
+				// 	'Condition clusters',
 				// 	self.clusterSet.condition_clusters.length ) )
-				.append( self.makeRow( 
-					'Genome', 
+				.append( self.makeRow(
+					'Genome',
 					$('<span />').append(self.genomeName).css('font-style', 'italic') ) )
-				.append( self.makeRow( 
-					'Expression matrix', 
+				.append( self.makeRow(
+					'Expression matrix',
 					self.expMatrixName ) )
-				.append( self.makeRow( 
-					'Expression matrix: #conditions', 
+				.append( self.makeRow(
+					'Expression matrix: #conditions',
 					self.matrixColIds.length ) )
-				.append( self.makeRow( 
-					'Expression matrix: #genes', 
+				.append( self.makeRow(
+					'Expression matrix: #genes',
 					self.matrixRowIds.length ) )
 				;
 
-			///////////////////////////////////// Clusters tab ////////////////////////////////////////////          
+			///////////////////////////////////// Clusters tab ////////////////////////////////////////////
 
 			var $tabClusters = $("<div/>");
-			tabPane.kbaseTabs('addTab', {tab: 'Clusters', content: $tabClusters, canDelete : false, show: false});
+			tabWidget.addTab({tab: 'Clusters', content: $tabClusters, canDelete : false, show: false});
 
-			///////////////////////////////////// Clusters table ////////////////////////////////////////////          
+			///////////////////////////////////// Clusters table ////////////////////////////////////////////
 
 			self.buildActionMenu($container);
 			$(document).mousedown( function(e){
@@ -186,7 +199,7 @@ function($,
 				if(e.target.getAttribute('methodInput') == null){
 					self.$menu.hide();
 				}
-			});			
+			});
 
 			var tableClusters = $('<table id="'+pref+'clusters-table" \
 				class="table table-bordered table-striped" style="width: 100%; margin-left: 0px; margin-right: 0px;">\
@@ -208,54 +221,54 @@ function($,
 				],
 				'fnDrawCallback': events
 			} );
-			
+
             function events() {
 				self.registerActionButtonClick();
 				updateClusterLinks("clusters");
             }
-            
+
             function updateClusterLinks(showClass) {
                 $('.show-'+showClass+'_'+self.pref).unbind('click');
                 $('.show-'+showClass+'_'+self.pref).click(function() {
                     var pos = $(this).data('pos');
                     var tabName = "Cluster " + pos;
-                    if (tabPane.kbaseTabs('hasTab', tabName)) {
-                        tabPane.kbaseTabs('showTab', tabName);
+                    if (tabWidget.hasTab(tabName)) {
+                        tabWidget.showTab(tabName);
                         return;
                     }
                     var tabDiv = $("<div/>");
-                    tabPane.kbaseTabs('addTab', {tab: tabName, content: tabDiv, canDelete : true, show: true, deleteCallback: function(name) {
-                        tabPane.kbaseTabs('removeTab', name);
+                    tabWidget.addTab({tab: tabName, content: tabDiv, canDelete : true, show: true, deleteCallback: function(name) {
+                        tabWidget.removeTab(name);
                     }});
                     self.buildClusterFeaturesTable(tabDiv, pos);
-                    tabPane.kbaseTabs('showTab', tabName);
+                    tabWidget.showTab(tabName);
                 })
             }
 
-            ///////////////////////////////////// Features tab ////////////////////////////////////////////          
+            ///////////////////////////////////// Features tab ////////////////////////////////////////////
             var featureTabDiv = $("<div/>");
-            tabPane.kbaseTabs('addTab', {tab: "Features", content: featureTabDiv, canDelete : false, show: false});
+            tabWidget.addTab({tab: "Features", content: featureTabDiv, canDelete : false, show: false});
             self.buildClusterFeaturesTable(featureTabDiv, null, function() {
                 updateClusterLinks("clusters2");
             });
 
-            ///////////////////////////////////// Hierarchical dendrogram tab ////////////////////////////////////////////   
+            ///////////////////////////////////// Hierarchical dendrogram tab ////////////////////////////////////////////
             /*var newick = self.clusterSet.feature_dendrogram;
             if (newick) {
                 var tree = kn_parse(newick);
                 var root = self.transformKnhxTree(tree.root, 10);
                 console.log(JSON.stringify(root.children[0].children[0].children[0].children[0]));
                 var tabDendro = $("<div style='max-height: 600px;'/>");
-                tabPane.kbaseTabs('addTab', {tab: 'Dendrogram', content: tabDendro, canDelete : false, show: false});
+                tabWidget.addTab({tab: 'Dendrogram', content: tabDendro, canDelete : false, show: false});
                 var dendroPanel = $("<div/>");
                 tabDendro.append(dendroPanel);
-                dendroPanel.kbaseTreechart({ 
+                 new kbaseTreechart(dendroPanel, {
                     lineStyle: 'square',
                     dataset: root
                 });
             }*/
 		},
-		
+
 		transformKnhxTree: function(node, scale) {
 		    var ret = {};
 		    if (node.d > 0) {
@@ -269,7 +282,7 @@ function($,
 		        for (var i = 0; i < node.child.length; i++)
 		            children.push(this.transformKnhxTree(node.child[i], scale));
 		    } else {
-                ret.name = "Name: " + node.name;		        
+                ret.name = "Name: " + node.name;
 		    }
 		    return ret;
 		},
@@ -278,17 +291,16 @@ function($,
 			var self = this;
 			var pref = self.pref;
 			$('.' + pref + 'action_button').on('click', function(e){
-			    
+
 				var $actionButton = $(e.target);
 				if ($actionButton.prop("tagName") !== "BUTTON")
 				    $actionButton = $actionButton.parent();
-				var x = $actionButton.position().left + $('#notebook-container').scrollLeft();
-				var y = $actionButton.position().top + $('#notebook-container').scrollTop() + $actionButton[0].offsetHeight;
-				
+				var x = $actionButton.position().left;
+				var y = $actionButton.position().top + $actionButton[0].offsetHeight;
 				self.$menu
                     .data("invokedOn", $actionButton)
                     .css({
-                        position: "absolute",                        
+                        position: "absolute",
                         left: x,
                         top: y
                     })
@@ -296,7 +308,7 @@ function($,
                     .off('click')
                     .on('click', 'a', function (e) {
                         self.$menu.hide();
-                
+
                         var $invokedOn = self.$menu.data("invokedOn");
                         var $selectedMenu = $(e.target);
                         var rowIndex = $invokedOn[0].getAttribute('rowIndex');
@@ -305,9 +317,9 @@ function($,
                         var geneIds = self.getClusterGeneIds(rowIndex);
 
                         if(methodInput==='build_feature_set') {
-							IPython.narrative.createAndRunMethod(methodInput, 
+							IPython.narrative.createAndRunMethod(methodInput,
 								{
-									'input_genome':self.genomeID, 
+									'input_genome':self.genomeID,
 									'input_feature_ids': geneIds.join(","),
 									'output_feature_set': self.options.clusterSetID + "_Cluster"+rowIndex+"_Features",
 									'description': 'Features were selected from Cluster ' + rowIndex + ' of a FeatureClusters data object '+
@@ -315,14 +327,14 @@ function($,
 								}
 							);
 						} else {
-							IPython.narrative.createAndRunMethod(methodInput, 
+							IPython.narrative.createAndRunMethod(methodInput,
 								{
-									'input_expression_matrix':self.expMatrixName, 
+									'input_expression_matrix':self.expMatrixName,
 									'input_gene_ids': geneIds.join(",")
 								}
 							);
 						}
-                    });                
+                    });
 			});
 		},
 
@@ -359,7 +371,7 @@ function($,
 
 		buildActionMenu: function($container){
 			var $menu = $(' \
-				<ul id="contextMenu" class="dropdown-menu" role="menu" style="display:none; list-style:none" > \
+				<ul id="contextMenu" class="dropdown-menu" role="menu" style="display:none; list-style:none; margin:0" > \
 				    <li><a tabindex="-1" href="#" methodInput="view_expression_profile">View expression profile</a></li> \
 				    <li><a tabindex="-1" href="#" methodInput="view_expression_pairwise_correlation">View pairwise correlation</a></li> \
 				    <li><a tabindex="-1" href="#" methodInput="view_expression_heatmap">View in sortable condition heatmap</a></li> \
@@ -371,7 +383,7 @@ function($,
 				    // <li class="divider"></li> \
 				    // <li><a tabindex="-1" href="#" methodInput="build_feature_set">Create a FeatureSet</a></li> \
 
-			$container.append($menu);	
+			$container.append($menu);
 			this.$menu = $menu;
 		},
 
@@ -410,12 +422,12 @@ function($,
 		        var feature = id2features[fid];
 		        if (feature) {
 		            if(feature.aliases && feature.aliases.length > 0)
-		                aliases= feature.aliases.join(', '); 
+		                aliases= feature.aliases.join(', ');
 		            type = feature.type;
                     func = feature['function'];
 		        }
                 if (genomeRef) {
-                    fid = '<a href="/#dataview/'+genomeRef+'?sub=Feature&subid='+fid + 
+                    fid = '<a href="/#dataview/'+genomeRef+'?sub=Feature&subid='+fid +
                     '" target="_blank">'+fid+'</a>';
                 }
 		        tableData.push(
@@ -446,7 +458,7 @@ function($,
 
 		    return tabDiv;
 		},
-	
+
 		buildFeatureId2FeatureHash: function(){
 			var self = this;
 			var features = self.features;
@@ -477,7 +489,7 @@ function($,
 			if (isLoading)
 				this.showMessage("<img src='" + this.options.loadingImage + "'/>");
 			else
-				this.hideMessage();                
+				this.hideMessage();
 		},
 
 		showMessage: function(message) {
@@ -507,17 +519,17 @@ function($,
 					obj['objid'] = objectID;
 				else
 					obj['name'] = objectID;
-				
+
 				if (objectVer)
 					obj['ver'] = objectVer;
 			}
 			return obj;
-		},        
+		},
 
 		clientError: function(error){
 			this.loading(false);
 			this.showMessage(error.error.error);
-		}        
+		}
 
 	});
 });

@@ -4,21 +4,37 @@
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @public
  */
-define(['jquery',
-        'narrativeConfig',
-        'kbwidget',
-        'kbaseNarrativeInput',
-        'kbaseNarrativeParameterTextInput',
-        'kbaseNarrativeParameterDropdownInput',
-        'kbaseNarrativeParameterCheckboxInput',
-        'kbaseNarrativeParameterTextareaInput',
-        'kbaseNarrativeParameterFileInput',
-        'kbaseNarrativeParameterTextSubdataInput'],
-function( $, Config ) {
+define ([
+    'kbwidget',
+    'bootstrap',
+    'jquery',
+    'narrativeConfig',
+    'kbaseNarrativeInput',
+    'kbaseNarrativeParameterTextInput',
+    'kbaseNarrativeParameterDropdownInput',
+    'kbaseNarrativeParameterCheckboxInput',
+    'kbaseNarrativeParameterTextareaInput',
+    'kbaseNarrativeParameterFileInput',
+    'kbaseNarrativeParameterTextSubdataInput',
+    'kbaseNarrativeParameterAjaxTextSubdataInput'
+], function (
+    KBWidget,
+    bootstrap,
+    $,
+    Config,
+    KBaseNarrativeInput,
+    KBaseNarrativeParameterTextInput,
+    KBaseNarrativeParameterDropdownInput,
+    KBaseNarrativeParameterCheckboxInput,
+    KBaseNarrativeParameterTextareaInput,
+    KBaseNarrativeParameterFileInput,
+    KBaseNarrativeParameterTextSubdataInput,
+    KBaseNarrativeParameterAjaxTextSubdataInput
+) {
     'use strict';
-    $.KBWidget({
+    return KBWidget({
         name: "kbaseNarrativeMethodInput",
-        parent: "kbaseNarrativeInput",
+        parent : KBaseNarrativeInput,
         version: "1.0.0",
         options: {
             loadingImage: Config.get('loading_gif'),
@@ -38,9 +54,9 @@ function( $, Config ) {
         parameters: null,
         // maps parameter id to widget for fast lookup of widget
         parameterIdLookup : {},
-        
+
         $advancedOptionsDiv : null,
-        
+
         /**
          * Builds the input div for a function cell, based on the given method object.
          * @param {Object} method - the method being constructed around.
@@ -53,10 +69,12 @@ function( $, Config ) {
             var method = this.options.method;
             var params = method.parameters;
 
+            // console.log('list params', params);
+
             var $inputParameterContainer = $('<div>');
             var $optionsDiv = $('<div>');
             this.$advancedOptionsDiv = $('<div>')
-            
+
             this.parameters = [];
             this.parameterIdLookup = {};
             for (var i=0; i<params.length; i++) {
@@ -65,30 +83,39 @@ function( $, Config ) {
 
                 // check what kind of parameter here.
                 if (paramSpec.field_type === "text") {
-                    var textInputWidget = $stepDiv["kbaseNarrativeParameterTextInput"]({loadingImage: this.options.loadingImage, parsedParameterSpec: params[i], isInSidePanel: this.options.isInSidePanel});
+                    var textInputWidget = new KBaseNarrativeParameterTextInput($stepDiv, {loadingImage: this.options.loadingImage, parsedParameterSpec: params[i], isInSidePanel: this.options.isInSidePanel});
                     this.parameters.push({id:paramSpec.id, widget:textInputWidget});
                     this.parameterIdLookup[paramSpec.id] = textInputWidget;
                 } else if (paramSpec.field_type === "dropdown") {
-                    var dropdownInputWidget = $stepDiv["kbaseNarrativeParameterDropdownInput"]({loadingImage: this.options.loadingImage, parsedParameterSpec: params[i], isInSidePanel: this.options.isInSidePanel});
+                    var dropdownInputWidget = new KBaseNarrativeParameterDropdownInput($stepDiv, {loadingImage: this.options.loadingImage, parsedParameterSpec: params[i], isInSidePanel: this.options.isInSidePanel});
                     this.parameters.push({id:paramSpec.id, widget:dropdownInputWidget});
                     this.parameterIdLookup[paramSpec.id] = dropdownInputWidget;
                 } else if (paramSpec.field_type === "checkbox") {
-                    var checkboxInputWidget = $stepDiv["kbaseNarrativeParameterCheckboxInput"]({loadingImage: this.options.loadingImage, parsedParameterSpec: params[i], isInSidePanel: this.options.isInSidePanel});
+                    var checkboxInputWidget = new KBaseNarrativeParameterCheckboxInput($stepDiv, {loadingImage: this.options.loadingImage, parsedParameterSpec: params[i], isInSidePanel: this.options.isInSidePanel});
                     this.parameters.push({id:paramSpec.id, widget:checkboxInputWidget});
                     this.parameterIdLookup[paramSpec.id] = checkboxInputWidget;
                 } else if (paramSpec.field_type === "textarea") {
-                    var textareaInputWidget = $stepDiv["kbaseNarrativeParameterTextareaInput"]({loadingImage: this.options.loadingImage, parsedParameterSpec: params[i], isInSidePanel: this.options.isInSidePanel});
+                    var textareaInputWidget = new KBaseNarrativeParameterTextareaInput($stepDiv, {loadingImage: this.options.loadingImage, parsedParameterSpec: params[i], isInSidePanel: this.options.isInSidePanel});
                     this.parameters.push({id:paramSpec.id, widget:textareaInputWidget});
                     this.parameterIdLookup[paramSpec.id] = textareaInputWidget;
                 } else if (paramSpec.field_type === "textsubdata") {
-                    var textInputWidget = $stepDiv["kbaseNarrativeParameterTextSubdataInput"]({
-                        loadingImage: this.options.loadingImage, parsedParameterSpec: params[i], 
+                    var textInputWidget = new KBaseNarrativeParameterTextSubdataInput($stepDiv, {
+                        loadingImage: this.options.loadingImage, parsedParameterSpec: params[i],
                         isInSidePanel: this.options.isInSidePanel, kbaseMethodInputWidget: self
                     });
                     this.parameters.push({id:paramSpec.id, widget:textInputWidget});
                     this.parameterIdLookup[paramSpec.id] = textInputWidget;
+                } else if (paramSpec.field_type === "ajax_textsubdata"){
+                    var ajaxTextInputWidget = new KBaseNarrativeParameterAjaxTextSubdataInput($stepDiv, {
+                        loadingImage: this.options.loadingImage,
+                        parsedParameterSpec: params[i],
+                        isInSidePanel: this.options.isInSidePanel,
+                        ajaxConfig: this.ajaxConfig
+                    });
+                    this.parameters.push({id: paramSpec.id, widget: ajaxTextInputWidget});
+                    this.parameterIdLookup[paramSpec.id] = ajaxTextInputWidget;
                 } else if (paramSpec.field_type === "file") {
-                    var fileInputWidget = $stepDiv["kbaseNarrativeParameterFileInput"]({loadingImage: this.options.loadingImage, parsedParameterSpec: params[i], isInSidePanel: this.options.isInSidePanel});
+                    var fileInputWidget = new KBaseNarrativeParameterFileInput($stepDiv, {loadingImage: this.options.loadingImage, parsedParameterSpec: params[i], isInSidePanel: this.options.isInSidePanel});
                     this.parameters.push({id:paramSpec.id, widget:fileInputWidget});
                     this.parameterIdLookup[paramSpec.id] = fileInputWidget;
                 } else if (paramSpec.field_type === "tab") {
@@ -98,7 +125,7 @@ function( $, Config ) {
                     $stepDiv.append('<span class="label label-danger">Parameter '+paramSpec.id+
                                     ' not displaying properly, invalid parameter type: "'+paramSpec.field_type+'"</span>');
                 }
-                
+
                 // If it is an advanced option, then we must place it in the correct div
                 var isAdvanced = false;
                 if (paramSpec.advanced) {
@@ -130,10 +157,10 @@ function( $, Config ) {
                                                      .append("no advanced options"));
                 $inputParameterContainer.append($advancedOptionsControllerRow);
             }
-            
+
             this.$elem.append($inputParameterContainer);
             this.$elem.css({"margin-bottom":"5px"});
-            
+
         },
 
         addParameterDiv: function(paramPos, paramSpec, $stepDiv, $optionsDiv, $advancedOptionsDiv, isAdvanced) {
@@ -145,7 +172,7 @@ function( $, Config ) {
                 $optionsDiv.append($stepDiv);
             }
         },
-        
+
         /**
          *OLD STYLE: we keep this for compatibility, but you should use new get parameter values!!!
          * Returns a list of parameters in the order in which the given method
@@ -166,7 +193,7 @@ function( $, Config ) {
         /**
          * Returns an object representing the state of this widget.
          * In this particular case, it is a list of key-value pairs, like this:
-         * { 
+         * {
          *   'param0' : 'parameter value',
          *   'param1' : 'parameter value'
          * }
@@ -181,7 +208,7 @@ function( $, Config ) {
                     state[id] = this.parameters[i].widget.getState();
                 }
             }
-            
+
             return state;
         },
 
@@ -215,8 +242,8 @@ function( $, Config ) {
                 }
             }
         },
-        
-        
+
+
         /*
          * This is called when this method is run to allow you to check if the parameters
          * that the user has entered is correct.  You need to return an object that indicates
@@ -239,7 +266,7 @@ function( $, Config ) {
                     }
                 }
             }
-            return isValidRet; 
+            return isValidRet;
         },
 
 	/*
@@ -263,7 +290,7 @@ function( $, Config ) {
             }
 	    return Promise.all(promises);
 	},
-        
+
 	/*
 	 * Invoke the cacnelImport method on each of the parameters (if the widget
 	 * implements that method.
@@ -280,7 +307,7 @@ function( $, Config ) {
                 }
             }
 	},
-        
+
         /*
          * Necessary for Apps to disable editing parameters that are automatically filled
          * from a previous step.  Returns nothing.
@@ -295,7 +322,7 @@ function( $, Config ) {
                 }
             }
         },
-        
+
         /*
          * Allows those parameters to be renabled, which may be an option for advanced users.
          */
@@ -309,7 +336,7 @@ function( $, Config ) {
                 }
             }
         },
-        
+
         /*
          * An App (or a narrative that needs to auto populate certain fields) needs to set
          * specific parameter values based on the App spec, so we need a way to do this.
@@ -324,7 +351,7 @@ function( $, Config ) {
                 }
             }
         },
-        
+
         /*
          * We need to be able to retrieve any parameter value from this method.  Valid parameter
          * values may be strings, numbers, objects, or lists, but must match what is declared
@@ -340,8 +367,8 @@ function( $, Config ) {
             }
             return value;
         },
-        
-        
+
+
         /*
          * When we actually run the method, we need all the parameter inputs.  This should return
          * an array of objects, where each object has 'id' and 'value' defined giving the parameter ID
@@ -353,7 +380,7 @@ function( $, Config ) {
              *          { id: 'param1', value: 'MyGenome' },
              *          ...
              *      ]
-             *  
+             *
              */
             var values = [];
             if (this.parameters) {
@@ -364,7 +391,7 @@ function( $, Config ) {
             }
             return values;
         },
-        
+
         /** lock/unlock inputs allows temporary lock and unlock of the inputs only if they are enabled
         this means that unlocking will not enable the input if it was previously disabled by the disableInputEditing method. **/
         lockInputs: function() {
@@ -381,14 +408,15 @@ function( $, Config ) {
                 }
             }
         },
-        
-        
-        
+
+
+
         /**
          * allows an app or other higher-level function to attach a listener on a a parameter
          * so that when it changes, something else can be updated.
          */
         addInputListener: function(parameterId, onChangeFunc) {
+            // console.log('adding input listener ...', this.parameterIdLookup);
             if (this.parameterIdLookup) {
                 var widget = this.parameterIdLookup[parameterId];
                 if (widget) {
@@ -396,24 +424,17 @@ function( $, Config ) {
                 }
             }
         },
-        
+
         /*
          * This function is invoked every time we run app or method. This is the difference between it
-         * and getAllParameterValues/getParameterValue which could be invoked many times before running 
-         * (e.g. when widget is rendered). 
+         * and getAllParameterValues/getParameterValue which could be invoked many times before running
+         * (e.g. when widget is rendered).
          */
         prepareDataBeforeRun: function() {
             if (this.parameters) {
                 for (var i = 0; i < this.parameters.length; i++)
                     this.parameters[i].widget.prepareValueBeforeRun(this.options.method);
             }
-        },
-        
-        genUUID: function() {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
-                return v.toString(16);
-            });
         }
     });
 });

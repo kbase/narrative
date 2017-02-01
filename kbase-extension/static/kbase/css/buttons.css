@@ -1,0 +1,50 @@
+
+/* A flat button, with no unselected background color, but with hover and click
+   styles */
+.btn.kb-flat-btn {
+    background-color: #FFF;
+    xpadding: 1px 7px;
+    xfont-size: 24px;
+    border: none;
+    text-shadow: none !important;
+    margin: 0;
+    /* box-shadow: 0 0 3px #CECECE; */
+    xmargin-right: 5px;
+}
+.kb-flat-btn-wrapper { /* don't add shadows here */
+  box-shadow: none;
+}
+
+/* Set a plain default color -- should be overridden when building the button. */
+.btn.kb-flat-btn  {
+    color: #666;
+}
+
+/* Text spacing */
+.btn.kb-flat-btn .kb-nav-btn-txt {
+    font-size: 10pt;
+    margin-top: -5px;
+}
+
+/* ?? 
+ color nav icons
+.navbar-buttons .fa::before {  
+  color: #2196F3;
+}
+*/
+
+.btn.kb-flat-btn:hover {
+  background-color: #F5F5F5;
+}
+
+/* ?? 
+ restore rounded corners 
+#kb-ipy-menu { 
+  border-radius: 4px !important;
+  margin-right: 0;
+}
+*/
+
+.btn.kb-flat-btn:hover, .btn.kb-flat-btn:active  {
+    background-color: #CCC;
+}

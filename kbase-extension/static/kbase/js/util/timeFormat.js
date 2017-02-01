@@ -34,7 +34,7 @@ define([], function() {
 
     /**
      * VERY simple date parser.
-     * Returns a valid Date object if that time stamp's real. 
+     * Returns a valid Date object if that time stamp's real.
      * Returns null otherwise.
      * @param {String} time - the timestamp to convert to a Date
      * @returns {Object} - a Date object or null if the timestamp's invalid.
@@ -46,7 +46,7 @@ define([], function() {
          *
          * Try to make a new Date object.
          * If that fails, break it apart - This might be caused by some issues with the typical ISO
-         * timestamp style in certain browsers' implementations. From breaking it apart, build a 
+         * timestamp style in certain browsers' implementations. From breaking it apart, build a
          * new Date object directly.
          */
         var d = new Date(time);
@@ -83,15 +83,15 @@ define([], function() {
      * readable string in the UTC time.
      *
      * This assumes that the timestamp string is in the following format:
-     * 
+     *
      * YYYY-MM-DDThh:mm:ssZ, where Z is the difference
      * in time to UTC in the format +/-HHMM, eg:
      *   2012-12-17T23:24:06-0500 (EST time)
      *   2013-04-03T08:56:32+0000 (UTC time)
-     * 
+     *
      * If the string is not in that format, this method returns the unchanged
      * timestamp.
-     *        
+     *
      * @param {String} timestamp - the timestamp string returned by the service
      * @returns {String} a parsed timestamp in the format "YYYY-MM-DD HH:MM:SS" in the browser's local time.
      * @private
@@ -111,9 +111,9 @@ define([], function() {
      * YYYY-MM-DD HH:MM:SS
      * e.g.
      * 2016-01-05 13:26:02
-     * 
+     *
      * Adds leading zeros to each field if necessary.
-     * 
+     *
      * If it is not a dateObj, this just returns the input, unchanged.
      *
      * @param {Object} dateObj - the JavaScript Date object to format.
@@ -132,11 +132,11 @@ define([], function() {
             return value;
         };
 
-        return dateObj.getFullYear() + '-' + 
-               addLeadingZero(dateObj.getMonth() + 1) + '-' + 
-               addLeadingZero(dateObj.getDate()) + ' ' + 
-               addLeadingZero(dateObj.getHours()) + ':' + 
-               addLeadingZero(dateObj.getMinutes()) + ':' + 
+        return dateObj.getFullYear() + '-' +
+               addLeadingZero(dateObj.getMonth() + 1) + '-' +
+               addLeadingZero(dateObj.getDate()) + ' ' +
+               addLeadingZero(dateObj.getHours()) + ':' +
+               addLeadingZero(dateObj.getMinutes()) + ':' +
                addLeadingZero(dateObj.getSeconds());
     }
 
@@ -181,7 +181,7 @@ define([], function() {
      * into something human readable, e.g. "1.5 hrs"
      *
      * essentially does |d2-d1|, and makes it legible.
-     * 
+     *
      * @return {string} Time difference.
      */
     function calcTimeDifference (d1, d2) {
@@ -233,9 +233,16 @@ define([], function() {
      * Ported out from data list widget... needs updating.
      * edited from: http://stackoverflow.com/questions/3177836/how-to-format-time-since-xxx-e-g-4-minutes-ago-similar-to-stack-exchange-site
      */
-    function getTimeStampStr (objInfoTimeStamp) {
+    function getTimeStampStr (objInfoTimeStamp, alwaysExact) {
         var date = new Date(objInfoTimeStamp);
         var seconds = Math.floor((new Date() - date) / 1000);
+        if (seconds < 0) {
+            seconds = 0;
+        }
+
+        var exactDate = function(date) {
+            return monthLookup[date.getMonth()] + " " + date.getDate() + ", " + date.getFullYear();
+        }
 
         // f-ing safari, need to add extra ':' delimiter to parse the timestamp
         if (isNaN(seconds)) {
@@ -246,36 +253,47 @@ define([], function() {
             if (isNaN(seconds)) {
                 // just in case that didn't work either, then parse without the timezone offset, but
                 // then just show the day and forget the fancy stuff...
-                date = new Date(tokens[0]);
-                return monthLookup[date.getMonth()] + " " + date.getDate() + ", " + date.getFullYear();
+                return exactDate(new Date(tokens[0]));
             }
+        }
+
+        var pluralizeTimeStr = function(num, timeSpan) {
+            var suffix = '';
+            if (num > 1 || num === 0) {
+                suffix = 's';
+            }
+            return num + ' ' + timeSpan + suffix + ' ago';
+        };
+
+        if (alwaysExact) {
+            return exactDate(date);
         }
 
         var interval = Math.floor(seconds / 31536000);
         if (interval > 1) {
-            return monthLookup[date.getMonth()] + " " + date.getDate() + ", " + date.getFullYear();
+            return exactDate(date);
         }
         interval = Math.floor(seconds / 2592000);
         if (interval > 1) {
             if (interval < 4) {
-                return interval + " months ago";
+                return pluralizeTimeStr(interval, 'month');
             } else {
-                return monthLookup[date.getMonth()] + " " + date.getDate() + ", " + date.getFullYear();
+                return exactDate(date);
             }
         }
         interval = Math.floor(seconds / 86400);
         if (interval > 1) {
-            return interval + " days ago";
+            return pluralizeTimeStr(interval, 'day');
         }
         interval = Math.floor(seconds / 3600);
         if (interval > 1) {
-            return interval + " hours ago";
+            return pluralizeTimeStr(interval, 'hour');
         }
         interval = Math.floor(seconds / 60);
         if (interval > 1) {
-            return interval + " minutes ago";
+            return pluralizeTimeStr(interval, 'minute');
         }
-        return Math.floor(seconds) + " seconds ago";
+        return pluralizeTimeStr(Math.floor(seconds), 'second');
     }
 
     /**

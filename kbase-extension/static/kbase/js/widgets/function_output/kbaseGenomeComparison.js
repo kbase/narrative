@@ -4,17 +4,27 @@
  * @public
  */
 
-define(['jquery', 
-        'narrativeConfig',
-        'util/string',
-        'kbwidget',
-        'kbaseAuthenticatedWidget'], 
-function($,
-         Config,
-         StringUtil) {
-$.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'narrativeConfig',
+		'util/string',
+		'kbaseAuthenticatedWidget',
+		'GenomeAnnotationAPI-client-api'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Config,
+		StringUtil,
+		kbaseAuthenticatedWidget,
+		GenomeAnnotationAPI_client_api
+	) {
+return KBWidget({
     name: "GenomeComparisonWidget",
-    parent: "kbaseAuthenticatedWidget",
+    parent : kbaseAuthenticatedWidget,
     version: "1.0.0",
 	ws_name: null,
 	ws_id: null,
@@ -24,8 +34,7 @@ $.KBWidget({
     },
 
     wsUrl: Config.url('workspace'),
-    jobSrvUrl: Config.url('user_and_job_state'),
-    cmpImgUrl: Config.url('genomeCmp').replace('jsonrpc', 'image'),
+    swUrl: Config.url('service_wizard'),
     loadingImage: Config.get('loading_gif'),
     timer: null,
     geneRows: 21,
@@ -34,6 +43,8 @@ $.KBWidget({
     size: 500,
     imgI: 0,
     imgJ: 0,
+    imgLeftIndent: 35,
+    imgBottomIndent: 15,
     scale: null,
     stepPercent: 25,
     geneI: -1,
@@ -55,18 +66,14 @@ $.KBWidget({
     	this.pref = StringUtil.uuid();
         return this;
     },
-    
+
     render: function() {
         var self = this;
         var container = this.$elem;
     	container.empty();
-        if (!self.authToken()) {
-        	container.append("<div>[Error] You're not logged in</div>");
-        	return;
-        }
 
         var kbws = new Workspace(this.wsUrl, {'token': self.authToken()});
-        //var jobSrv = new UserAndJobState(this.jobSrvUrl, {'token': self.authToken()});
+        var gaapi = new GenomeAnnotationAPI(this.swUrl, {'token':self.authToken()});
 
         var dataIsReady = function() {
         	var cmp_ref = self.cmp_ref;
@@ -85,15 +92,18 @@ $.KBWidget({
         var cmpIsLoaded = function() {
         	container.empty();
             container.append("<div><img src=\""+self.loadingImage+"\">&nbsp;&nbsp;loading comparison data...</div>");
-        	kbws.get_object_subset([{ref: self.cmp.genome1ref, included: ["scientific_name"]},
-        	                        {ref: self.cmp.genome2ref, included: ["scientific_name"]}], function(data) {
-        		self.genome1wsName = data[0].info[7];
-        		self.genome1objName = data[0].info[1];
-            	var genome1id = data[0].data.scientific_name;
-        		self.genome2wsName = data[1].info[7];
-            	self.genome2objName = data[1].info[1];
-            	var genome2id = data[1].data.scientific_name;
+            $.when(gaapi.get_genome_v1({genomes: [{ref: self.cmp.genome1ref}, {ref: self.cmp.genome2ref}], 
+                    included_fields: ["scientific_name"]})).done(function(data) {
+                genomes = data.genomes;
+        		self.genome1wsName = genomes[0].info[7];
+        		self.genome1objName = genomes[0].info[1];
+            	var genome1id = genomes[0].data.scientific_name;
+        		self.genome2wsName = genomes[1].info[7];
+            	self.genome2objName = genomes[1].info[1];
+            	var genome2id = genomes[1].data.scientific_name;
         		container.empty();
+                var $nc = $('#notebook-container');
+                $nc.append("<div id='widget-tooltip"+self.pref+"' class='ipython_tooltip' style='display:none; min-height: 25px; position: absolute;'>Test message</div>");
             	var table = $('<table/>')
             		.addClass('table table-bordered')
             		.css({'margin-left': 'auto', 'margin-right': 'auto'});
@@ -114,7 +124,7 @@ $.KBWidget({
             	table.append(createTableRow("Comparison object", self.ws_id));
             	table.append(createTableRow("Genome1 (x-axis)", '<a href="/#dataview/'+self.genome1wsName+'/'+self.genome1objName+'" target="_blank">' + genome1id + '</a>' +
             			" (" + self.cmp.proteome1names.length + " genes, " + count1hits + " have hits)"));
-            	table.append(createTableRow("Genome2 (y-axis)", '<a href="/#dataview/'+self.genome2wsName+'/'+self.genome2objName+'" target="_blank">' + genome2id + '</a>' + 
+            	table.append(createTableRow("Genome2 (y-axis)", '<a href="/#dataview/'+self.genome2wsName+'/'+self.genome2objName+'" target="_blank">' + genome2id + '</a>' +
             			" (" + self.cmp.proteome2names.length + " genes, " + count2hits + " have hits)"));
             	if (self.scale == null)
             		self.scale = self.size * 100 / Math.max(self.cmp.proteome1names.length, self.cmp.proteome2names.length);
@@ -122,33 +132,30 @@ $.KBWidget({
             	var sr = ' style="border: 0px; margin: 0px; padding: 0px;"';
             	var sd = ' style="border: 0px; margin: 0px; padding: 1px;"';
             	var sb = ' style="width: 27px;"';
-            	table.append('<tr><td>' + 
+            	table.append('<tr><td>' +
             			'<center>' +
             			'<button id="'+self.pref+'btn-zi">Zoom +</button>'+
-            			'&nbsp;' + 
+            			'&nbsp;' +
             			'<button id="'+self.pref+'btn-zo">Zoom -</button>'+
-            			'<br><br><table'+st+'><tr'+sr+'><td'+sd+'>' + 
+            			'<br><br><table'+st+'><tr'+sr+'><td'+sd+'>' +
             			'<button id="'+self.pref+'btn-mul"'+sb+'>&#8598;</button>'+
             			'</td><td'+sd+'>' +
             			'<button id="'+self.pref+'btn-mu"'+sb+'>&#8593;</button>'+
-            			'</td><td'+sd+'>' + 
+            			'</td><td'+sd+'>' +
             			'<button id="'+self.pref+'btn-mur"'+sb+'>&#8599;</button>'+
             			'</td></tr><tr'+sr+'><td'+sd+'>' +
             			'<button id="'+self.pref+'btn-ml"'+sb+'>&#8592;</button>'+
             			'</td><td'+sd+'/><td'+sd+'>' +
             			'<button id="'+self.pref+'btn-mr"'+sb+'>&#8594;</button>'+
-            			'</td></tr><tr'+sr+'><td'+sd+'>' + 
+            			'</td></tr><tr'+sr+'><td'+sd+'>' +
             			'<button id="'+self.pref+'btn-mdl"'+sb+'>&#8601;</button>'+
             			'</td><td'+sd+'>' +
             			'<button id="'+self.pref+'btn-md"'+sb+'>&#8595;</button>'+
-            			'</td><td'+sd+'>' + 
+            			'</td><td'+sd+'>' +
             			'<button id="'+self.pref+'btn-mdr"'+sb+'>&#8600;</button>'+
             			'</td></tr></table></center>' +
             			'</td><td><div style="float:left;width:'+(self.size+40)+'px;max-width:'+(self.size+40)+'px">'+
-            			'<div style="position:relative">'+
-            			'<img id="'+self.pref+'img" src=""/>'+
-            			'<div id="'+self.pref+'rect" style="position:absolute; z-index: 2; border: 1px; border-style: solid; border-color: red; background-color: transparent; display:none; pointer-events:none;"/>'+
-            			'</div>'+
+            			'<div id="'+self.pref+'img"/>'+
             			'</div>'+
             			'<div style="float:left;width:300px;max-width:300px"><table id="'+self.pref+'genes"'+st+'><tr'+st+'><td'+st+'>'+self.selectHitsMessage+'</td></tr></table></div></td></tr>');
             	self.refreshImage();
@@ -158,7 +165,7 @@ $.KBWidget({
             		var ySize = Math.min(self.size, self.cmp.proteome2names.length * self.scale / 100);
             		var centerI = self.imgI + xSize * 50 / self.scale;
             		var centerJ = self.imgJ + ySize * 50 / self.scale;
-                    if (self.size * 100 / (self.scale * mult) > 1.1 * 
+                    if (self.size * 100 / (self.scale * mult) > 1.1 *
                     		Math.max(self.cmp.proteome1names.length, self.cmp.proteome2names.length)) {
                     	return;
                     }
@@ -202,7 +209,7 @@ $.KBWidget({
             	$('#'+self.pref+'btn-mdr').click(function() {
             		move(-1,1);
             	});
-            	
+
             	var hitSearch = function(e) {
             		var scrX = e.pageX;
             		var scrY = e.pageY;
@@ -212,19 +219,24 @@ $.KBWidget({
             			scrY = e.clientY + document.body.scrollTop
             				+ document.documentElement.scrollTop;
             		}
-            		var parentOffset = $('#'+self.pref+'img').offset();
-            		var relX = scrX - parentOffset.left - 35;
-            		var relY = scrY - parentOffset.top;
+            	    var $elem = $('#'+self.pref+'img');
+            	    var $nc = $('#notebook-container');
+            	    var ncPos = $nc.position();
+            	    var elemScrRect = $elem[0].getBoundingClientRect();
+            	    var relX = scrX - elemScrRect.left - self.imgLeftIndent;
+            	    var relY = scrY - elemScrRect.top;
+                    var docX = scrX - ncPos.left + $nc.scrollLeft();
+                    var docY = scrY - ncPos.top + $nc.scrollTop();
             		var xSize = Math.min(self.size, self.cmp.proteome1names.length * self.scale / 100);
             		var ySize = Math.min(self.size, self.cmp.proteome2names.length * self.scale / 100);
             		var bestDist = -1;
             		var bestI = -1;
             		var bestJ = -1;
             		if (relX >= 0 && relX <= xSize && relY >= 0 && relY <= ySize) {
-            			for (var i in self.cmp.data1) {
+            			for (var key1 in self.cmp.data1) {
+            			    var i = Number(key1);
             				var x = (i - self.imgI) * self.scale / 100;
                     		if (x >= 0 && x < xSize && Math.abs(relX - x) <= 2) {
-                    			//alert("x=" + x + ", i=" + i);
                 				for (var tuplePos in self.cmp.data1[i]) {
                 					var tuple = self.cmp.data1[i][tuplePos];
                 					var j = tuple[0];
@@ -241,21 +253,21 @@ $.KBWidget({
                     		}
             			}
             		}
-            		return {scrX: scrX, scrY: scrY, relX: relX, relY: relY, bestDist: bestDist, bestI: bestI, bestJ: bestJ};
+            		return {scrX: docX, scrY: docY, relX: relX, relY: relY, bestDist: bestDist, bestI: bestI, bestJ: bestJ};
             	};
-            	            	
+
             	$('#'+self.pref+'img').hover(
             			function() {
-            				$('#widget-tooltip').show();
+            				$('#widget-tooltip'+self.pref).show();
             			},
             			function() {
-            				$('#widget-tooltip').hide();
+            				$('#widget-tooltip'+self.pref).hide();
             			}
             	).mousemove(function(e) {
             		var hit = hitSearch(e);
-    				var tip = $('#widget-tooltip');
+    				var tip = $('#widget-tooltip' + self.pref);
             		if (Number(hit.bestDist) >= 0) {
-            			var msg = 'X-axis: ' + self.cmp.proteome1names[Number(hit.bestI)] + 
+            			var msg = 'X-axis: ' + self.cmp.proteome1names[Number(hit.bestI)] +
             				', Y-axis: ' + self.cmp.proteome2names[Number(hit.bestJ)] +
             				'<br>click to see details...';
             			tip.html(msg);
@@ -279,7 +291,7 @@ $.KBWidget({
             		}
             		self.refreshGenes();
             	});
-            }, function(data) {
+            }).fail(function(data) {
             	var tdElem = $('#'+self.pref+'job');
 				tdElem.html("Error accessing genome objects: " + data.error.message);
             });
@@ -290,31 +302,7 @@ $.KBWidget({
 
 	refreshDetailedRect: function() {
         var self = this;
-		var rect = $('#'+self.pref+'rect').append(rect);
-		if (self.geneI < 0 || self.geneJ < 0) {
-			rect.hide();
-			return;
-		}
-		var parentOffset = $('#'+self.pref+'img').offset();
-		var x = (self.geneI - self.imgI) * self.scale / 100;
-		var y = (self.geneJ - self.imgJ) * self.scale / 100;
-		if (x < 0 || x >= self.size || y < 0 || y >= self.size) {
-			rect.hide();
-			return;
-		}
-		var half = self.geneRows * self.scale / 200;
-		if (half < 1)
-			half = 1;
-		var ySize = Math.min(self.size, self.cmp.proteome2names.length * self.scale / 100);
-		var scrX = x + 35 - half - 1;  // + parentOffset.left 
-		var scrY = ySize + 1 - y - half - 1;  // + parentOffset.top;
-		rect.css({
-			'top': Math.round(scrY) + 'px',
-			'left': Math.round(scrX) + 'px',
-			'width': (1 + half * 2) + 'px',
-			'height': (1 + half * 2) + 'px'
-		});
-		rect.show();
+        self.refreshImage();
 	},
 
 	refreshImage: function() {
@@ -333,10 +321,85 @@ $.KBWidget({
 			self.imgJ = 0;
 		self.imgI = Math.round(self.imgI);
 		self.imgJ = Math.round(self.imgJ);
-		var img = self.cmpImgUrl + "?ws=" + self.ws_name + "&id=" + self.ws_id + "&x=" + self.imgI + 
-				"&y=" + self.imgJ + "&w=" + self.size + "&sp=" + self.scale + "&token=" + encodeURIComponent(self.authToken());
-		$('#'+self.pref+'img').attr('src', img);
-		self.refreshDetailedRect();
+		var $svg = $('#'+self.pref+'img');
+		var i0 = self.imgI;
+		var j0 = self.imgJ;
+		var w0 = self.size;
+		var h0 = self.size;
+		var sp = self.scale;
+		var xShift = self.imgLeftIndent;
+        var yShift = self.imgBottomIndent;
+        var w = w0 + xShift;
+        var h = h0 + yShift;
+        var svg =
+            '<svg id="'+self.pref+'svg" style="width:'+w+'px;height:'+h+'px;background-color:white" '+
+            'viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="xMinYMin meet">';
+        var isFirefox = typeof InstallTrigger !== 'undefined';
+        var imax = self.cmp.proteome1names.length;
+        if ((imax - 1 - i0) * sp / 100.0 > w0)
+            imax = Math.min(self.cmp.proteome1names.length, Math.round(w0 * 100.0 / sp) + i0 + 1);
+        var xmax = Math.min(w0, Math.round((imax - i0 - 1) * sp / 100.0) + 1);
+        var jmax = self.cmp.proteome2names.length;
+        if ((jmax - 1 - j0) * sp / 100.0 > h0)
+            jmax = Math.min(self.cmp.proteome2names.length, Math.round(h0 * 100.0 / sp) + j0 + 1);
+        var ymax = Math.min(h0, Math.round((jmax - j0 - 1) * sp / 100.0) + 1);
+        var fieldX = xShift;
+        var fieldY = 0;
+        if (isFirefox) {
+            fieldX += 0.5;
+            fieldY += 0.5;
+        }
+        svg += '<rect x="'+fieldX+'" y="'+fieldY+'" width="'+xmax+'" height="'+ymax+'" style="fill:rgb(0,75,75)"/>';
+        for (var i = i0; i < imax; i++) {
+            var x = xShift + Math.round((i - i0) * sp / 100.0);
+            var hitList = self.cmp.data1[i];
+            for (var hitPos in hitList) {
+                var hit = hitList[hitPos];
+                var j = hit[0];
+                if (j < j0 || j >= jmax)
+                    continue;
+                var y = ymax - 1 - Math.round((j - j0) * sp / 100.0);
+                var bbhPercent = hit[2];
+                var gbPart = Math.min(255, Math.max(0, Math.round(255.0 * (bbhPercent - 90.0) / 10.0)));
+                var greenPart = 255 - Math.round((255 - gbPart) / 2);
+                var bluePart = gbPart;
+                if (isFirefox) {
+                    x += 0.5;
+                    y += 0.5;
+                }
+                svg += '<rect x="'+x+'" y="'+y+'" width="1" height="1" style="fill:rgb(255,'+greenPart+','+bluePart+')"/>';
+            }
+        }
+        svg += '<text x="'+xShift+'" y="'+(ymax-5)+'" fill="black" text-anchor="end" font-family="monospace" font-size="12">' + (j0 + 1) + '</text>';
+        svg += '<text x="'+xShift+'" y="'+12+'" fill="black" text-anchor="end" font-family="monospace" font-size="12">' + jmax + '</text>';
+        svg += '<text x="'+xShift+'" y="'+(ymax+10)+'" fill="black" font-family="monospace" font-size="12">' + (i0 + 1) + '</text>';
+        svg += '<text x="'+(xmax+xShift-1)+'" y="'+(ymax+10)+'" fill="black" text-anchor="end" font-family="monospace" font-size="12">' + imax + '</text>';
+        if (self.geneI >= 0 && self.geneJ >= 0) {
+            var x = (self.geneI - self.imgI) * self.scale / 100;
+            var y = (self.geneJ - self.imgJ) * self.scale / 100;
+            if (x >= 0 && x < self.size && y >= 0 && y < self.size) {
+                var half = Math.round(self.geneRows * self.scale / 200);
+                if (half < 1)
+                    half = 1;
+                var ySize = Math.min(self.size, self.cmp.proteome2names.length * self.scale / 100);
+                var rX = Math.round(x + xShift - half - 1);
+                var rY = Math.round(ySize + 1 - y - half - 1);
+                if (isFirefox) {
+                    rX += 0.5;
+                    rY += 0.5;
+                }
+                var rS = 1 + half * 2;
+                var rX2 = rX + rS - 1;
+                var rY2 = rY + rS - 1;
+                svg += '<rect x="'+rX+'" y="'+rY+'" width="'+rS+'" height="1" style="fill:red"/>';
+                svg += '<rect x="'+rX+'" y="'+rY+'" width="1" height="'+rS+'" style="fill:red;"/>';
+                svg += '<rect x="'+rX2+'" y="'+rY+'" width="1" height="'+rS+'" style="fill:red;"/>';
+                svg += '<rect x="'+rX+'" y="'+rY2+'" width="'+rS+'" height="1" style="fill:red;"/>';
+            }
+        }
+        svg += '</svg>';
+        $svg.empty();
+        $svg.append($(svg));
 	},
 
 	refreshGenes: function() {
@@ -369,7 +432,7 @@ $.KBWidget({
 				'<td rowspan="'+(self.geneRows+2)+'" width="10" style="border: 0px; margin: 0px; padding: 0px; text-align: center; vertical-align: middle;"><button id="'+self.pref+'btn-dirJ"'+sb+'>'+arrowJ+'</button></td>'+
 				'</tr>');
 		var svgLines = '';
-		var svgLineEnds = []; // [{x1:...,y1:...,x2:...,y2:...,gene1:...,gene2:...,bit_score:...,percent_of_bbh:...}] 
+		var svgLineEnds = []; // [{x1:...,y1:...,x2:...,y2:...,gene1:...,gene2:...,bit_score:...,percent_of_bbh:...}]
 		for (var rowPos = 0; rowPos < self.geneRows; rowPos++) {
 			var i = self.geneI + (rowPos - half) * self.dirI;
 			var j = self.geneJ + (rowPos - half) * self.dirJ;
@@ -384,10 +447,10 @@ $.KBWidget({
 				labelJ = '<font color="red">' + labelJ + '</font>';
 			}
 			var tdSt = ' style="border: 0px; margin: 0px; padding: 0px; font-size: 12px; height: '+self.geneRowH+'px; text-align: center; vertical-align: middle;"';
-			var tds = '<td '+tdSt+'>' + '<a href="/#genes/'+self.genome1wsName+'/'+self.genome1objName+'/'+self.cmp.proteome1names[i]+'" target="_blank">' + labelI + '</a>' + '</td>';
+			var tds = '<td '+tdSt+'>' + '<a href="/#dataview/'+self.genome1wsName+'/'+self.genome1objName+'?sub=Feature&subid='+self.cmp.proteome1names[i]+'" target="_blank">' + labelI + '</a>' + '</td>';
 			if (rowPos == 0)
 				tds += '<td id="'+self.pref+'glinks" rowspan="'+self.geneRows+'" width="30"'+sr+'/>';
-			tds += '<td '+tdSt+'>' + '<a href="/#genes/'+self.genome2wsName+'/'+self.genome2objName+'/'+self.cmp.proteome2names[j]+'" target="_blank">' + labelJ + '</a>' + '</td>';
+			tds += '<td '+tdSt+'>' + '<a href="/#dataview/'+self.genome2wsName+'/'+self.genome2objName+'?sub=Feature&subid='+self.cmp.proteome2names[j]+'" target="_blank">' + labelJ + '</a>' + '</td>';
 			tbl.append('<tr'+sr+'>'+tds+'</tr>');
 			var y1 = rowPos * (self.geneRowH + 0.2) + rowHalf;
 			for (var tuplePos in self.cmp.data1[i]) {
@@ -414,10 +477,10 @@ $.KBWidget({
 		svgTd.append('<svg width="30" height="'+svgH+'">'+svgLines+'</svg>');
 		svgTd.hover(
     			function() {
-    				$('#widget-tooltip').show();
+    				$('#widget-tooltip'+self.pref).show();
     			},
     			function() {
-    				$('#widget-tooltip').hide();
+    				$('#widget-tooltip'+self.pref).hide();
     			}
     	).mousemove(function(e) {
     		var scrX = e.pageX;
@@ -428,29 +491,34 @@ $.KBWidget({
     			scrY = e.clientY + document.body.scrollTop
     				+ document.documentElement.scrollTop;
     		}
-    		var parentOffset = svgTd.offset();
-    		var x = scrX - parentOffset.left;
-    		var y = scrY - parentOffset.top;
+            var $elem = svgTd;
+            var $nc = $('#notebook-container');
+            var ncPos = $nc.position();
+            var docX = scrX - ncPos.left + $nc.scrollLeft();
+            var docY = scrY - ncPos.top + $nc.scrollTop();
+            var elemScrRect = $elem[0].getBoundingClientRect();
+            var x = scrX - elemScrRect.left;
+            var y = scrY - elemScrRect.top;
     		var minDist = -1;
     		var bestLine = null;
     		for (var n in svgLineEnds) {
     			var l = svgLineEnds[n];
-    			// [{x1:...,y1:...,x2:...,y2:...,gene1:...,gene2:...,bit_score:...,percent_of_bbh:...}] 
-    			var dist = Math.abs((l.y2-l.y1)*x-(l.x2-l.x1)*y+l.x2*l.y1-l.y2*l.x1) / 
+    			// [{x1:...,y1:...,x2:...,y2:...,gene1:...,gene2:...,bit_score:...,percent_of_bbh:...}]
+    			var dist = Math.abs((l.y2-l.y1)*x-(l.x2-l.x1)*y+l.x2*l.y1-l.y2*l.x1) /
     					Math.sqrt((l.y2-l.y1)*(l.y2-l.y1)+(l.x2-l.x1)*(l.x2-l.x1));
     			if ((minDist < 0) || (dist < minDist)) {
     				minDist = dist;
     				bestLine = l;
     			}
     		}
-			var tip = $('#widget-tooltip');
+			var tip = $('#widget-tooltip'+self.pref);
 			if (minDist && minDist <= 2) {
-    			var msg = 'Gene1: ' + bestLine.gene1 + '<br>Gene2: ' + bestLine.gene2 + '<br>' + 
+    			var msg = 'Gene1: ' + bestLine.gene1 + '<br>Gene2: ' + bestLine.gene2 + '<br>' +
     					'Bit-score: ' + bestLine.bit_score + '<br>Percent of related BBH bit-score: ' + bestLine.percent_of_bbh + '%';
     			tip.html(msg);
     			tip.css({
-    				'top': (Number(scrY) + 10) + 'px',
-    				'left': (Number(scrX) + 10) + 'px'
+    				'top': (Number(docY) + 10) + 'px',
+    				'left': (Number(docX) + 10) + 'px'
     			});
     			tip.show();
     			return;

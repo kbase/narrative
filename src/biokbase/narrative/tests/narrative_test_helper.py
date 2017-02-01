@@ -45,7 +45,7 @@ def upload_narrative(nar_file, auth_token, url=ci_ws, set_public=False):
     data and info that is usually returned by the Workspace.get_objects
     method.
 
-    Returns a dict of three elements: 
+    Returns a dict of three elements:
         ws: the id of the workspace that was created
         obj: the id of the narrative object
         ref: the above two joined together into an object ref (for convenience)
@@ -73,7 +73,7 @@ def upload_narrative(nar_file, auth_token, url=ci_ws, set_public=False):
     metadata = nar['info'][10]
     ws_save_obj = {
         'type': 'KBaseNarrative.Narrative',
-        'data': nar['data'], 
+        'data': nar['data'],
         'name': nar['info'][1],
         'meta': nar['info'][10],
         'provenance': [{
@@ -105,5 +105,5 @@ if __name__ == '__main__':
     password = getpass('Password for {}: '.format(test_user_id))
     t = biokbase.auth.Token(user_id=test_user_id, password=password)
 
-    fetch_narrative('4442/1', t.token, file_name='long_name_narrative_4.0.json')
+    fetch_narrative('8245/32', t.token, file_name='updater_test_poplar.json')
 

@@ -5,16 +5,27 @@
  * @author Michael Sneddon <mwsneddon@lbl.gov>
  * @public
  */
-define(['jquery',
-        'narrativeConfig',
+define (
+	[
+        'bluebird',
         'kbwidget',
-        'kbaseAuthenticatedWidget', 
-        'select2'], 
-function($, Config) {
+        'bootstrap',
+        'jquery',
+        'narrativeConfig',
+        'kbaseAuthenticatedWidget',
+        'select2'
+	], function(
+        Promise,
+        KBWidget,
+        bootstrap,
+        $,
+        Config,
+        kbaseAuthenticatedWidget
+	) {
     'use strict';
-    $.KBWidget({
+    return KBWidget({
         name: "kbaseNarrativeSharePanel",
-        parent: "kbaseAuthenticatedWidget",
+        parent : kbaseAuthenticatedWidget,
         version: "1.0.0",
         options: {
             ws_url: Config.url('workspace'),
@@ -33,14 +44,14 @@ function($, Config) {
         $notificationPanel: null,
         init: function (options) {
             this._super(options);
-            
+
             this.$notificationPanel = $('<div>');
             this.$elem.append(this.$notificationPanel);
 
             this.$mainPanel = $('<div>');
             this.$elem.append(this.$mainPanel);
             this.showWorking("loading narrative information");
-            this.getInfoAndRender();
+            // this.getInfoAndRender();
 
             if (!this.options.ws_name_or_id) {
                 //fail!
@@ -119,7 +130,7 @@ function($, Config) {
             }
         },
         /*
-         
+
          WORKSPACE INFO
          0: ws_id id
          1: ws_name workspace
@@ -130,8 +141,8 @@ function($, Config) {
          6: permission globalread,
          7: lock_status lockstat
          8: usermeta metadata
-         
-         
+
+
          */
         isPrivate: true, // set if this ws is private or public
         render: function () {
@@ -211,19 +222,10 @@ function($, Config) {
 
                 if (isOwner) {
                     var $addUsersDiv = $('<div>').css({'margin-top': '10px'});
-                    var $input = $('<input>')
+                    var $input = $('<select>')
                         .attr('type', 'text')
-                        .css({'width': self.options.add_user_input_width})
-                        .on('select2-focus', function () {
-                            if (Jupyter && Jupyter.narrative) {
-                                Jupyter.narrative.disableKeyboardManager();
-                            }
-                        })
-                        .on('select2-blur', function () {
-                            if (Jupyter && Jupyter.narrative) {
-                                Jupyter.narrative.enableKeyboardManager();
-                            }
-                        });
+                        .addClass('kb-share-select');
+                        // .css({'width': self.options.add_user_input_width});
 
                     var $addAction =
                         $('<div>')
@@ -312,8 +314,6 @@ function($, Config) {
                     self.setupSelect2($input, 'share with...');
                     self.$mainPanel.append($addUsersDiv);
                 }
-
-
 
                 var $othersDiv = $('<div>').css({
                     'margin-top': '15px',
@@ -415,75 +415,103 @@ function($, Config) {
         setupSelect2: function ($input, placeholder) {
             var self = this;
             var noMatchesFoundStr = "Search by Name or Username";//"no users found";
-            $input.select2({
-                matcher: self.select2Matcher,
-                formatNoMatches: noMatchesFoundStr,
-                placeholder: placeholder,
-                allowClear: true,
-                multiple: true,
-                query: function (query) {
 
-                    var term = query.term.trim();
-                    var results = [];
-
-                    if (term.length >= 2) {
-                        self.user_profile.filter_users({filter: term},
-                            function (users) {
-                                if (users.length > 0) {
-                                    for (var k = 0; k < users.length; k++) {
-                                        results.push({id: users[k].username, text: users[k].realname, found: true});
-                                    }
-                                    query.callback({results: results});
-                                } else {
-                                    // no matches in our profile, see if there was a globus match...
-                                    term = term.toLowerCase();
-                                    if (!/[^a-z0-9]/.test(term)) {
-                                        self.user_profile.lookup_globus_user([term],
-                                            function (data) {
-                                                if (data.hasOwnProperty(term)) {
-                                                    results.push({id: term, text: data[term].fullName, found: false});
-                                                } else {
-                                                    results.push({id: term, text: term, found: false});
-                                                }
-                                                query.callback({results: results});
-                                            },
-                                            function (error) {
-                                                // something went really wrong
-                                                console.error(error);
-                                                self.render();
-                                                results.push({id: term, text: term, found: false});
-                                                query.callback({results: results});
-                                            });
-                                    } else {
-                                        results.push({id: term, text: term, found: false});
-                                        query.callback({results: results});
-                                    }
-                                }
-                            },
-                            function (error) {
-                                results.push({id: term, text: term, found: false});
-                                console.error(error);
-                                query.callback({results: results});
-                            });
-                    } else {
-                        query.callback({results: results});
-                    }
-                },
-                formatSelection: function (object, container) {
-                    if (object.found) {
-                        var toShow = self.renderUserIconAndName(object.id, object.text);
-                        return $('<div>').append(toShow[0]).append(toShow[1].css({'white-space': 'normal'})).html(); // wrapped in a div that we drop
-                    }
-                    return "<b>" + object.text + "</b> (not found)";
-                },
-                formatResult: function (object, container, query) {
-                    if (object.found) {
-                        var toShow = self.renderUserIconAndName(object.id, object.text);
-                        // hack on a hack on a hack!
-                        return $('<div>').append(toShow[0]).append(toShow[1].html()).html(); // wrapped in a div that we drop
-                    }
-                    return "<b>" + object.text + "</b> (not found)";
+            $.fn.select2.amd.require([
+                'select2/data/array',
+                'select2/utils'
+            ], function(ArrayData, Utils) {
+                function CustomData ($element, options) {
+                    CustomData.__super__.constructor.call(this, $element, options);
                 }
+                Utils.Extend(CustomData, ArrayData);
+
+                CustomData.prototype.query = function(params, callback) {
+                    var term = params.term || '';
+                    term = term.trim();
+                    if (term.length >= 2) {
+                        Promise.resolve(self.user_profile.filter_users({filter: term}))
+                        .then(function(users) {
+                            var results = [];
+                            users.forEach(function(user) {
+                                results.push({
+                                    id: user.username,
+                                    text: user.realname,
+                                    found: true
+                                })
+                            });
+                            return Promise.try(function() { return results; });
+                        })
+                        .then(function(results) {
+                            if (results.length === 0) {
+                                term = term.toLowerCase();
+                                if (!/[^a-z0-9]/.test(term)) {
+                                    return Promise.resolve(self.user_profile.lookup_globus_user([term]))
+                                    .then(function(data) {
+                                        var res = {
+                                            id: term,
+                                            text: term,
+                                            found: false
+                                        };
+                                        if (data.hasOwnProperty(term)) {
+                                            res.text = data[term].fullName;
+                                        }
+                                        return Promise.try(function() { return results; });
+                                    });
+                                } else {
+                                    return Promise.try(function() {
+                                        return [];
+                                    });
+                                }
+                            } else {
+                                return Promise.try(function() { return results; });
+                            }
+                        })
+                        .then(function (results) {
+                            if (results.length === 0) {
+                                results = [{
+                                    id: term,
+                                    text: term,
+                                    found: false
+                                }];
+                            }
+                            callback({ results: results });
+                        });
+                    }
+                    else {
+                        callback({ results: [] });
+                    }
+                }
+
+                $input.select2({
+                    formatNoMatches: noMatchesFoundStr,
+                    placeholder: placeholder,
+                    multiple: true,
+                    dataAdapter: CustomData,
+                    dropdownAutoWidth: true,
+                    containerCssClass: 'kb-share-select',
+                    language: {
+                        noResults: function () {
+                            return noMatchesFoundStr;
+                        }
+                    },
+                    escapeMarkup: function(markup) {
+                        return markup;
+                    },
+                    templateSelection: function (object) {
+                        if (object.found) {
+                            var toShow = self.renderUserIconAndName(object.id, object.text);
+                            return $('<span>').append(toShow[0]).append(toShow[1].css({'white-space': 'normal'})).css({'width': '100%'});
+                        }
+                        return $("<b>" + object.text + "</b> (not found)");
+                    },
+                    templateResult: function (object) {
+                        if (object.found) {
+                            var toShow = self.renderUserIconAndName(object.id, object.text);
+                            return $('<span>').append(toShow[0]).append(toShow[1]);
+                        }
+                        return $("<b>" + object.text + "</b> (not found)");
+                    }
+                });
             });
         },
         showWorking: function (message) {

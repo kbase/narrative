@@ -1,12 +1,28 @@
-define(['jquery', 
-        'kbwidget', 
-        'kbaseAuthenticatedWidget', 
-        'kbaseTabs',
-        'jquery-dataTables',
-        'jquery-dataTables-bootstrap'], function( $ ) {
-    $.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'kbaseAuthenticatedWidget',
+		'kbaseTabs',
+		'jquery-dataTables',
+		'jquery-dataTables-bootstrap',
+        'util/string',
+        'narrativeConfig',
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		kbaseAuthenticatedWidget,
+		kbaseTabs,
+		jquery_dataTables,
+		jquery_dataTables_bootstrap,
+        StringUtil,
+        Config
+	) {
+    return KBWidget({
         name: "kbaseGenomeComparisonViewer",
-        parent: "kbaseAuthenticatedWidget",
+        parent : kbaseAuthenticatedWidget,
         version: "1.0.0",
         id: null,
         ws: null,
@@ -16,17 +32,17 @@ define(['jquery',
             id: null,
             ws: null
         },
-        wsUrl: window.kbconfig.urls.workspace,
-        loadingImage: window.kbconfig.loading_gif,
+        wsUrl: Config.url('workspace'),
+        loadingImage: Config.get('loading_gif'),
 
         init: function(options) {
             this._super(options);
-            this.pref = this.genUUID();
+            this.pref = StringUtil.uuid();
             this.ws = options.ws;
             this.id = options.id;
             return this;
         },
-        
+
         render: function() {
             var self = this;
 
@@ -39,7 +55,7 @@ define(['jquery',
         	container.append("<div><img src=\""+self.loadingImage+"\">&nbsp;&nbsp;loading genome comparison data...</div>");
 
             var kbws = new Workspace(self.wsUrl, {'token': self.authToken()});
-            
+
             //var request = {auth: self.authToken(), workspace: self.ws_name, id: self.simulation_id, type: 'KBasePhenotypes.PhenotypeSimulationSet'};
             kbws.get_objects([{ref: self.ws +"/"+ self.id}], function(data) {
             	///////////////////////////////////// Data Preparation ////////////////////////////////////////////
@@ -52,10 +68,10 @@ define(['jquery',
             	container.empty();
             	var tabPane = $('<div id="'+self.pref+'tab-content">');
         		container.append(tabPane);
-        		tabPane.kbaseTabs({canDelete : true, tabs : []});
-    			///////////////////////////////////// Overview table ////////////////////////////////////////////    		
+                var tabObj = new kbaseTabs(tabPane, {canDelete : true, tabs : []});
+    			///////////////////////////////////// Overview table ////////////////////////////////////////////
         		var tabOverview = $("<div/>");
-    			tabPane.kbaseTabs('addTab', {tab: 'Overview', content: tabOverview, canDelete : false, show: true});
+    			tabObj.addTab({tab: 'Overview', content: tabOverview, canDelete : false, show: true});
         		var tableOver = $('<table class="table table-striped table-bordered" '+
         				'style="margin-left: auto; margin-right: auto;" id="'+self.pref+'overview-table"/>');
         		tabOverview.append(tableOver);
@@ -70,9 +86,9 @@ define(['jquery',
         		}
         		tableOver.append('<tr><td>Owner</td><td>'+info[5]+'</td></tr>');
         		tableOver.append('<tr><td>Creation</td><td>'+info[3]+'</td></tr>');
-        		///////////////////////////////////// Genomes table ////////////////////////////////////////////    		
+        		///////////////////////////////////// Genomes table ////////////////////////////////////////////
         		var tabGenomes = $("<div/>");
-    			tabPane.kbaseTabs('addTab', {tab: 'Genomes', content: tabGenomes, canDelete : false, show: false});
+    			tabObj.addTab({tab: 'Genomes', content: tabGenomes, canDelete : false, show: false});
         		var tableGenomes = $('<table class="table table-striped table-bordered" '+
         				'style="margin-left: auto; margin-right: auto;" id="'+self.pref+'genome-table"/>');
         		tabGenomes.append(tableGenomes);
@@ -100,9 +116,9 @@ define(['jquery',
             		}
             		tableGenomes.append('<tr><td>'+row.join('</td><td>')+'</td></tr>');
             	}
-            	///////////////////////////////////// Functions table ////////////////////////////////////////////    		
+            	///////////////////////////////////// Functions table ////////////////////////////////////////////
         		var tabFunctions = $("<div/>");
-    			tabPane.kbaseTabs('addTab', {tab: 'Functions', content: tabFunctions, canDelete : false, show: false});
+    			tabObj.addTab({tab: 'Functions', content: tabFunctions, canDelete : false, show: false});
         		var tableFunctions = $('<table class="table table-striped table-bordered" '+
         				'style="margin-left: auto; margin-right: auto;" id="'+self.pref+'function-table"/>');
         		tabFunctions.append(tableFunctions);
@@ -146,7 +162,7 @@ define(['jquery',
             		var func = functions[i];
     				func.subsystem = func.subsystem.replace(/_/g, ' ');
     				var funcdata = {
-    					"id": '<a class="show-function'+self.pref+'" data-id="'+func.id+'">'+func.id+'</a>',
+    					"id": '<a class="show-function'+self.pref+'" data-pos="'+i+'">'+func.id+'</a>',
     					"subsystem": func.subsystem,
     					"primclass": func.primclass,
     					"subclass": func.subclass,
@@ -198,16 +214,16 @@ define(['jquery',
             				funcdata.families += '<a class="show-family'+self.pref+'" data-id="'+families[sortedfams[j]].id+'">'+families[sortedfams[j]].id+'</a>';
             			}
             		}
-            		tableSettings.aaData.push(funcdata);	
+            		tableSettings.aaData.push(funcdata);
     			}
     			tableFunctions.dataTable(tableSettings);
-        		///////////////////////////////////// Families table ////////////////////////////////////////////    		
+        		///////////////////////////////////// Families table ////////////////////////////////////////////
         		var tabFamilies = $("<div/>");
     			if (self.options.withExport) {
         			tabFamilies.append("<p><b>Please choose homolog family and push 'Export' "+
         						"button on opened ortholog tab.</b></p><br>");
         		}
-    			tabPane.kbaseTabs('addTab', {tab: 'Families', content: tabFamilies, canDelete : false, show: false});
+    			tabObj.addTab({tab: 'Families', content: tabFamilies, canDelete : false, show: false});
         		var tableFamilies = $('<table class="table table-striped table-bordered" '+
         				'style="margin-left: auto; margin-right: auto;" id="'+self.pref+'genome-table"/>');
         		tabFamilies.append(tableFamilies);
@@ -294,14 +310,14 @@ define(['jquery',
             			} else {
 							famdata.funcgenes += count+": "+famindecies[sortedfuncs[j]]+"("+Math.round(100*famindecies[sortedfuncs[j]]/functions[sortedfuncs[j]].numgenes)+"%)";
 							famdata.funcgenomes += count+": "+famgenomes[sortedfuncs[j]]+"("+Math.round(100*famgenomes[sortedfuncs[j]]/functions[sortedfuncs[j]].number_genomes)+"%)";
-							famdata.functions += count+": "+'<a class="show-function'+self.pref+'" data-id="'+functions[sortedfuncs[j]].id+'">'+functions[sortedfuncs[j]].id+'</a>';
+							famdata.functions += count+": "+'<a class="show-function'+self.pref+'" data-pos="'+sortedfuncs[j]+'">'+functions[sortedfuncs[j]].id+'</a>';
 							famdata.subsystem += count+": "+functions[sortedfuncs[j]].subsystem;
 							famdata.primclass += count+": "+functions[sortedfuncs[j]].primclass;
 							famdata.subclass += count+": "+functions[sortedfuncs[j]].subclass;
 						}
 						count++;
             		}
-            		tableSettings.aaData.push(famdata);	
+            		tableSettings.aaData.push(famdata);
     			}
     			tableFamilies.dataTable(tableSettings);
 				///////////////////////////////////// Event handling for links ///////////////////////////////////////////
@@ -310,8 +326,8 @@ define(['jquery',
         			$('.show-family'+self.pref).unbind('click');
         			$('.show-family'+self.pref).click(function() {
         				var id = $(this).data('id');
-            			if (tabPane.kbaseTabs('hasTab', id)) {
-            				tabPane.kbaseTabs('showTab', id);
+            			if (tabObj.hasTab(id)) {
+            				tabObj.showTab(id);
             				return;
             			}
             			var fam;
@@ -373,22 +389,18 @@ define(['jquery',
 								genome.name,genes,scores,funcs,sss,primclass,subclass
 							];
 							tableFamGen.append('<tr><td>'+row.join('</td><td>')+'</td></tr>');
-						}					
-        				tabPane.kbaseTabs('addTab', {tab: id, content: tabContent, canDelete : true, show: true});
+						}
+        				tabObj.addTab({tab: id, content: tabContent, canDelete : true, show: true});
         			});
         			$('.show-function'+self.pref).unbind('click');
         			$('.show-function'+self.pref).click(function() {
-        				var id = $(this).data('id');
-            			if (tabPane.kbaseTabs('hasTab', id)) {
-            				tabPane.kbaseTabs('showTab', id);
+        				var pos = $(this).data('pos');
+                        var func = functions[pos];
+        				var id = func.id;
+            			if (tabObj.hasTab(id)) {
+            				tabObj.showTab(id);
             				return;
             			}
-            			var func;
-        				for (var i in functions) {
-        					if (functions[i].id == id) {
-        						func = functions[i];
-        					}
-        				}
             			var tabContent = $("<div/>");
         				var tableFuncGen = $('<table class="table table-striped table-bordered" '+
 								'style="margin-left: auto; margin-right: auto;" id="'+self.pref+id+'-table"/>');
@@ -401,10 +413,7 @@ define(['jquery',
 							var genome = genomes[i];
 							var genes = "";
 							var scores = "";
-							var functions = "";
-							var sss = "";
-							var primclass = "";
-							var subclass = "";
+							var fams = "";
 							if (func.genome_features[genome.genome_ref] === undefined) {
 								genes = "none";
 								scores = "none";
@@ -417,17 +426,17 @@ define(['jquery',
 										scores += "<br>";
 										fams += "<br>";
 									}
-									genes += genearray[0];
-									scores += genearray[2];
-									fams += families[genearray[1]].id;
+									genes += genearray[k][0];
+									scores += genearray[k][2];
+									fams += families[genearray[k][1]].id;
 								}
 							}
 							var row = [
-								genome.name,genes,fams,scores
+								genome.name,genes,scores,fams
 							];
 							tableFuncGen.append('<tr><td>'+row.join('</td><td>')+'</td></tr>');
 						}
-        				tabPane.kbaseTabs('addTab', {tab: id, content: tabContent, canDelete : true, show: true});
+        				tabObj.addTab({tab: id, content: tabContent, canDelete : true, show: true});
         			});
         		}
         		function getSortedKeys(obj) {
@@ -438,7 +447,7 @@ define(['jquery',
             	container.empty();
                 container.append('<p>[Error] ' + data.error.message + '</p>');
                 return;
-            });            	
+            });
             return this;
         },
 
@@ -453,7 +462,7 @@ define(['jquery',
             this.render();
             return this;
         },
-        
+
         genUUID: function() {
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
                 var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);

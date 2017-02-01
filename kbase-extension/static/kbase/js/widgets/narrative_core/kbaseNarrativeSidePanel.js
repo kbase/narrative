@@ -1,19 +1,33 @@
 /*global define*/
 /*jslint white: true*/
-define(['jquery', 
-        'narrativeConfig',
-        'jqueryui',
-        'kbwidget', 
-        'kbaseNarrativeDataPanel', 
-        'kbaseNarrativeMethodPanel', 
-        'kbaseNarrativeManagePanel', 
-        'kbaseNarrativeJobsPanel',
-        'kbaseNarrative'],
-function($, Config) {
-    'use strict',
-    $.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'narrativeConfig',
+		'jqueryui',
+		'kbaseNarrativeDataPanel',
+		'kbaseNarrativeMethodPanel',
+		'kbaseNarrativeManagePanel',
+		'kbaseNarrativeJobsPanel',
+		'kbaseNarrative'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Config,
+		jqueryui,
+		kbaseNarrativeDataPanel,
+		kbaseNarrativeMethodPanel,
+		kbaseNarrativeManagePanel,
+		kbaseNarrativeJobsPanel,
+		kbaseNarrative
+	) {
+    'use strict';
+    return KBWidget({
         name: 'kbaseNarrativeSidePanel',
-        parent: 'kbaseWidget',
+
         options: {
             loadingImage: Config.get('loading_gif'),
             autorender: true,
@@ -44,7 +58,7 @@ function($, Config) {
                 {
                     name : 'kbaseNarrativeDataPanel',
                     params : {
-                        collapseCallback: $.proxy(function(isMinimized) { 
+                        collapseCallback: $.proxy(function(isMinimized) {
                                 this.handleMinimizedDataPanel(isMinimized);
                             }
                             ,this)
@@ -52,9 +66,9 @@ function($, Config) {
                 },
                 {
                     name : 'kbaseNarrativeMethodPanel',
-                    params : { 
-                        autopopulate: false , 
-                        collapseCallback: $.proxy(function(isMinimized) { 
+                    params : {
+                        autopopulate: false ,
+                        collapseCallback: $.proxy(function(isMinimized) {
                                 this.handleMinimizedMethodPanel(isMinimized);
                             }
                             ,this)
@@ -94,10 +108,10 @@ function($, Config) {
                     tabName : 'Narratives',
                     content: $managePanel
                 },
-                {
-                    tabName : this.$jobsWidget.title,
-                    content: $jobsPanel
-                }
+                // {
+                //     tabName : this.$jobsWidget.title,
+                //     content: $jobsPanel
+                // }
             ], true);
 
             this.$elem.addClass('kb-side-panel');
@@ -142,12 +156,14 @@ function($, Config) {
         setReadOnlyMode: function(readOnly) {
             // toggle off the methods and jobs panels
             this.$methodsWidget.$elem.toggle(!readOnly);
-            this.$jobsWidget.$elem.toggle(!readOnly);
-            this.$dataWidget.$elem.css({'height': (readOnly ? '100%' : '50%')});
+            // this.$jobsWidget.$elem.toggle(!readOnly);
 
             // toggle off the jobs header
-            this.$tabs.header.find('div:nth-child(4).kb-side-header').toggle(!readOnly); // hide the jobs header
-            this.$tabs.header.find('div.kb-side-header').css({'width': (readOnly ? ((100-this.hideButtonSize)/2)+'%' : ((100-this.hideButtonSize)/3)+'%')});
+            // this.$tabs.header.find('div:nth-child(4).kb-side-header').toggle(!readOnly); // hide the jobs header
+            // this.$tabs.header.find('div.kb-side-header').css({'width': (readOnly ? ((100-this.hideButtonSize)/2)+'%' : ((100-this.hideButtonSize)/3)+'%')});
+
+            this.$dataWidget.setReadOnlyMode(readOnly);
+            this.handleMinimizedMethodPanel(readOnly);
         },
 
         /**
@@ -323,7 +339,13 @@ function($, Config) {
                                  .addClass('kb-side-separator')
                                  .css({'height' : height + '%'});
 
-                retObj[widgetInfo.name] = $widgetDiv[widgetInfo.name](widgetInfo.params);
+                var constructor_mapping = {
+                    'kbaseNarrativeDataPanel' : kbaseNarrativeDataPanel,
+                    'kbaseNarrativeMethodPanel' : kbaseNarrativeMethodPanel,
+                    'kbaseNarrativeManagePanel' : kbaseNarrativeManagePanel,
+                    'kbaseNarrativeJobsPanel' : kbaseNarrativeJobsPanel,
+                };
+                retObj[widgetInfo.name] = new constructor_mapping[widgetInfo.name]($widgetDiv, widgetInfo.params);
                 $panelSet.append($widgetDiv);
             }
             retObj['panelSet'] = $panelSet;

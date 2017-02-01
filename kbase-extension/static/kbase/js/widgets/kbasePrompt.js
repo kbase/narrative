@@ -4,8 +4,7 @@
 
     var tab = 'Some Tab Value';
 
-    var $deleteModal = $('<div></div>').kbasePrompt(
-        {
+    var $deleteModal =  new kbasePrompt($('<div></div>'), {
             title : 'Confirm deletion',
             body : 'Really delete <strong>' + tab + '</strong>?',
             modalClass : 'fade', //Not required. jquery animation class to show/hide. Defaults to 'fade'
@@ -54,7 +53,7 @@
 
 (function( $, undefined ) {
 
-    $.KBWidget({
+    return KBWidget({
 
 		  name: "kbasePrompt",
 

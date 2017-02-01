@@ -42,14 +42,19 @@ end
 -- return a list of the container ids that have listeners on
 -- port 8888. Keyed on container name, value is IP:Port that can
 -- be fed into an nginx proxy target
-local function get_notebooks(self)
+local function get_notebooks(self, image)
     local ok, res = pcall(docker.client.containers, docker.client)
     local portmap = {}
+    if image then
+        ngx.log(ngx.INFO, string.format("use image %s", image))
+    else
+        image=M.repository_image
+    end
     ngx.log(ngx.DEBUG, string.format("list containers result: %s", p.write(res.body)))
     if ok then
         for index, container in pairs(res.body) do
             -- we only care about containers matching repository_image and listening on the proper port
-            first, last = string.find(container.Image, M.repository_image)
+            first, last = string.find(container.Image, image)
             if first == 1 then
                 for i, v in pairs(container.Ports) do
                     if v.PrivatePort == M.private_port then
@@ -72,13 +77,28 @@ end
 -- Actually launch a new docker container.
 -- Return docker ID and table of info: { state, ip:port, session, last_time, last_ip }
 --
-local function launch_notebook(self)
+local function launch_notebook(self, image)
     -- don't wrap this in a pcall, if it fails let it propagate to
     -- the caller
     local conf = docker.config()
     local bind_syslog = nil
-    conf.Image = string.format("%s:%s", M.repository_image, M.repository_version)
+    if image then
+        ngx.log(ngx.INFO, string.format("use image %s", image))
+        conf.Image = image
+    else
+        conf.Image = string.format("%s:%s", M.repository_image, M.repository_version)
+    end
     conf.PortSpecs = {tostring(M.private_port)}
+    if M.syslog_src then
+        -- Make sure it exists and is writeable
+        local stat = lfs.attributes(M.syslog_src)
+        if stat ~= nil and stat.mode == 'socket' then
+            conf.HostConfig.Binds={ string.format("%s:%s",M.syslog_src,"/dev/log") }
+            ngx.log(ngx.INFO, string.format("Binding %s in container %s", M.syslog_src, id))
+        else
+            ngx.log(ngx.ERR, string.format("%s is not writeable, not mounting in container %s", M.syslog_src, id))
+        end
+    end
     ngx.log(ngx.INFO, string.format("Spinning up instance of %s on port %d", conf.Image, M.private_port))
     -- we wrap the next call in pcall because we want to trap the case where we get an
     -- error and try deleting the old container and creating a new one again
@@ -99,21 +119,7 @@ local function launch_notebook(self)
     if ok then
         assert(res.status == 201, "Failed to create container: "..json.encode(res.body))
         local id = res.body.Id
-        if M.syslog_src then
-            -- Make sure it exists and is writeable
-            local stat = lfs.attributes(M.syslog_src)
-            if stat ~= nil and stat.mode == 'socket' then
-                bind_syslog = { string.format("%s:%s",M.syslog_src,"/dev/log") }
-                ngx.log(ngx.INFO, string.format("Binding %s in container %s", bind_syslog[1], id))
-            else
-                ngx.log(ngx.ERR, string.format("%s is not writeable, not mounting in container %s", M.syslog_src, id))
-            end
-        end
-        if bind_syslog ~= nil then
-            res = docker.client:start_container{id = id, payload = {PublishAllPorts = true, Binds = bind_syslog}}
-        else
-            res = docker.client:start_container{id = id, payload = {PublishAllPorts = true}}
-        end      
+        res = docker.client:start_container{id = id}
         assert(res.status == 204, "Failed to start container "..id.." : "..json.encode(res.body))
         -- get back the container info to pull out the port mapping
         res = docker.client:inspect_container{id=id}

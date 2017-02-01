@@ -5,19 +5,31 @@
  */
 'use strict';
 
-define(['jquery',
-        'narrativeConfig',
-        'kbwidget',
-        'kbaseAuthenticatedWidget', 
-        'jquery-dataTables',
-        'jquery-dataTables-bootstrap',
-        'knhx', 
-        'widgetMaxWidthCorrection'], 
-function($, 
-         Config) {
-    $.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'narrativeConfig',
+		'kbaseAuthenticatedWidget',
+		'jquery-dataTables',
+		'jquery-dataTables-bootstrap',
+		'knhx',
+		'widgetMaxWidthCorrection'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Config,
+		kbaseAuthenticatedWidget,
+		jquery_dataTables,
+		jquery_dataTables_bootstrap,
+		knhx,
+		widgetMaxWidthCorrection
+	) {
+    return KBWidget({
         name: 'kbaseFeatureSet',
-        parent: 'kbaseAuthenticatedWidget',
+        parent : kbaseAuthenticatedWidget,
         version: '0.0.1',
         options: {
             featureset_name: null,
@@ -62,7 +74,7 @@ function($,
             this.$mainPanel.empty();
             this.loadFeatureSet();
         },
-        
+
 
         features: null, // genomeId : [{fid: x, data: x}]
 
@@ -101,7 +113,7 @@ function($,
                 });
         },
 
-        
+
         genomeLookupTable: null, // genomeId: { featureId: indexInFeatureList }
         genomeObjectInfo: null, //{},
         featureTableData: null, // list for datatables
@@ -122,7 +134,7 @@ function($,
                         self.genomeObjectInfo[subdata_query[k].ref] = data[k].info;
                         self.genomeLookupTable[subdata_query[k].ref] = {}
                         for (var f=0; f<data[k].data.features.length; f++) {
-                            self.genomeLookupTable[subdata_query[k].ref][data[k].data.features[f].id] = f; 
+                            self.genomeLookupTable[subdata_query[k].ref][data[k].data.features[f].id] = f;
                         }
                     }
 
@@ -144,8 +156,8 @@ function($,
                                 for(var f=0; f<g.features.length; f++) {
                                     var aliases = "None";
                                     if(g.features[f].aliases) {
-                                        if(g.features[f].aliases.length>0) { 
-                                            aliases= g.features[f].aliases.join(', '); 
+                                        if(g.features[f].aliases.length>0) {
+                                            aliases= g.features[f].aliases.join(', ');
                                         }
                                     }
 
@@ -227,7 +239,7 @@ function($,
                 errString = error;
             else if (error.error && error.error.message)
                 errString = error.error.message;
-            
+
             var $errorDiv = $("<div>")
                             .addClass("alert alert-danger")
                             .append("<b>Error:</b>")
@@ -251,7 +263,7 @@ function($,
                     obj['objid'] = objectID;
                 else
                     obj['name'] = objectID;
-                
+
                 if (objectVer)
                     obj['ver'] = objectVer;
             }

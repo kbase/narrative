@@ -2,8 +2,7 @@
 
     Easy widget to serve as a tabbed container.
 
-    var $tabs = $('#tabs').kbaseTabs(
-        {
+    var $tabs =  new kbaseTabs($('#tabs'), {
             tabPosition : 'bottom', //or left or right or top. Defaults to 'top'
             canDelete : true,       //whether or not the tab can be removed. Defaults to false.
             tabs : [
@@ -33,8 +32,20 @@
 
 */
 
-define(['jquery', 'kbwidget', 'kbaseDeletePrompt'], function($) { 
-    $.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'kbaseDeletePrompt'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		kbaseDeletePrompt
+	) {
+
+    return KBWidget({
 
         name: "kbaseTabs",
 
@@ -123,10 +134,10 @@ define(['jquery', 'kbwidget', 'kbaseDeletePrompt'], function($) {
             var $tab = $('<div></div>')
                 .addClass('tab-pane fade');
 
-            var hasContent = false;
+            $tab.hasContent = false;
             if(tab.content) {
                 $tab.append(tab.content);
-                hasContent = true;
+                $tab.hasContent = true;
             }
 
             if (this.options.border) {
@@ -176,10 +187,12 @@ define(['jquery', 'kbwidget', 'kbaseDeletePrompt'], function($) {
                                             relatedTarget   : previous
                                         })
                                     });
-                                if(!hasContent) {
+                                if(!$tab.hasContent) {
                                     if(tab.showContentCallback) {
-                                        $tab.append(tab.showContentCallback());
-                                        hasContent = true;
+                                        $tab.append(tab.showContentCallback($tab));
+                                        if (! tab.dynamicContent) {
+                                          $tab.hasContent = true;
+                                        }
                                     }
                                 }
                             }
@@ -195,7 +208,8 @@ define(['jquery', 'kbwidget', 'kbaseDeletePrompt'], function($) {
                             .css('margin-left', '10px')
                             .css('font-size', '10px')
                             .css('margin-bottom', '3px')
-                            .attr('title', this.deleteTabToolTip(tab.tab))
+                            .css('border', '0')
+                            //.attr('title', this.deleteTabToolTip(tab.tab))
                             .tooltip()
                             .bind('click', $.proxy(function (e) {
                                 e.preventDefault();
@@ -268,17 +282,16 @@ define(['jquery', 'kbwidget', 'kbaseDeletePrompt'], function($) {
         shouldShowTab : function (tab) { return 1; },
 
         deletePrompt : function(tabName) {
-            var $deleteModal = $('<div></div>').kbaseDeletePrompt(
-                {
+            var $deleteModal =  new kbaseDeletePrompt($('<div></div>'), {
                     name     : tabName,
                     callback : this.deleteTabCallback(tabName),
                 }
             );
-
             $deleteModal.openPrompt();
         },
 
         deleteTabCallback : function (tabName) {
+
             return $.proxy(function(e, $prompt) {
                 if ($prompt != undefined) {
                     $prompt.closePrompt();

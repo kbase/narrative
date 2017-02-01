@@ -1,6 +1,6 @@
 (function( $, undefined ) {
 
-$.KBWidget({
+return KBWidget({
     name: "kbaseMediaEditorNarrative",
     version: "1.0.0",
     options: {
@@ -20,7 +20,7 @@ $.KBWidget({
         var fba = new fbaModelServices(window.kbconfig.urls.fba);
         var kbws = new workspaceService(window.kbconfig.urls.workspace);
 
-//      var panel = self.$elem.kbasePanel({title: 'Media Info', subText: media})
+//      var panel =  new kbasePanel(self.$elem, {title: 'Media Info', subText: media})
 
         var container = $("<div>"); //panel.body();
         self.$elem.append(container);
@@ -320,7 +320,7 @@ $.KBWidget({
 
                 };
                 container.append('<div id="save-to-ws"></div>')
-                var test = $('#save-to-ws').kbaseSimpleWSSelect({defaultWS:ws, auth: token});
+                var test =  new kbaseSimpleWSSelect($('#save-to-ws'), {defaultWS:ws, auth: token});
                 test.show();
 
 

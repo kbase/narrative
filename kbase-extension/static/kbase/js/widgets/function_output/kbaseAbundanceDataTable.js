@@ -1,11 +1,25 @@
 /**
  * KBase widget to display table of BIOM data
  */
-define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget',
-        'kbStandaloneTable'], function($) {
-    $.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+        'narrativeConfig',
+		'kbaseAuthenticatedWidget',
+		'kbStandaloneTable'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+        Config,
+		kbaseAuthenticatedWidget,
+		kbStandaloneTable
+	) {
+    return KBWidget({
         name: 'AbundanceDataTable',
-        parent: "kbaseAuthenticatedWidget",
+        parent : kbaseAuthenticatedWidget,
         version: '1.0.0',
         token: null,
         options: {
@@ -13,8 +27,8 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget',
 	        ws: null,
 	        name: 0
         },
-	    ws_url: window.kbconfig.urls.workspace,
-	    loading_image: window.kbconfig.loading_gif,
+	    ws_url: Config.url('workspace'),
+	    loading_image: Config.get('loading_gif'),
 
 	    init: function(options) {
             this._super(options);

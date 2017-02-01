@@ -1,8 +1,8 @@
 (function( $, undefined ) {
 
-$.KBWidget({
+return KBWidget({
     name: "GenomeUploadWidget",     
-    parent: "kbaseAuthenticatedWidget",
+    parent : kbaseAuthenticatedWidget,
     version: "1.0.0",
 	token: null,
 	ws_name: null,

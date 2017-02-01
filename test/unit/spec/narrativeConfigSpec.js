@@ -4,7 +4,14 @@
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
 
-define(['narrativeConfig', 'bluebird'], function(Config, Promise) {
+define (
+	[
+		'narrativeConfig',
+		'bluebird'
+	], function(
+		Config,
+		Promise
+	) {
     'use strict';
     describe('Tests for narrativeConfig', function() {
         it('loaded the config module', function() {
@@ -46,6 +53,12 @@ define(['narrativeConfig', 'bluebird'], function(Config, Promise) {
 
         it('should return undefined for an unknown configuration key', function() {
             expect(Config.get('gleeblegorf')).toBeUndefined();
+        });
+
+        it('can use the get method to see what features should be enabled or not', function() {
+            var features = Config.get('features');
+            expect(features).toEqual(jasmine.any(Object));
+            expect(features.stagingDataViewer).toBeDefined();
         });
     });
 });

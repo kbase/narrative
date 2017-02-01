@@ -1,0 +1,22 @@
+#!/bin/bash
+
+export NARRATIVE_DIR=$d
+export JUPYTER_CONFIG_DIR=$NARRATIVE_DIR/kbase-extension
+export JUPYTER_RUNTIME_DIR=/tmp/jupyter_runtime
+export JUPYTER_DATA_DIR=/tmp/jupyter_data
+export JUPYTER_PATH=$NARRATIVE_DIR/kbase-extension
+export IPYTHONDIR=$NARRATIVE_DIR/kbase-extension/ipython
+export KBASE_PROXY_CONFIG=/kb/dev_container/narrative/kbase-logdb.conf
+
+CFGDIR=$JUPYTER_CONFIG_DIR/static/kbase
+
+if [ -n "$ENVIRON" ]
+then
+    sed >/tmp/config.json "s/\\"config\\": \\".*\\"/\\"config\\": \\"$ENVIRON\\"/" $NARRATIVE_DIR/src/config.json && cp /tmp/config.json $NARRATIVE_DIR/src/config.json
+
+
+fi
+
+cp $NARRATIVE_DIR/src/config.json $JUPYTER_CONFIG_DIR/static/kbase/config/
+
+python /kb/dev_container/narrative/src/biokbase/narrative/exporter/run_narrative.py "$@"

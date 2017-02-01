@@ -4,25 +4,39 @@
  * @public
  */
 
-define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbasePrompt'], 
-    function($) {
-    $.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+        'narrativeConfig',
+		'kbaseAuthenticatedWidget',
+		'kbasePrompt'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+        Config,
+		kbaseAuthenticatedWidget,
+		kbasePrompt
+	) {
+    return KBWidget({
         name: "kbaseGenomeSetBuilder",
-        parent: "kbaseAuthenticatedWidget",
+        parent : kbaseAuthenticatedWidget,
         version: "1.0.0",
         options: {
         	loadExisting: null,
         	wsName: null,
         	genomeSetName: null,
-            loadingImage: window.kbconfig.loading_gif,
+            loadingImage: Config.get('loading_gif'),
         },
 
         useSelect2: true,
         IGNORE_VERSION: true,
         pref: null,
-        wsUrl: window.kbconfig.urls.workspace,
+        wsUrl: Config.url('workspace'),
         genomeList: null,
-        	
+
         init: function(options) {
             this._super(options);
             this.pref = this.genUUID();
@@ -86,7 +100,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbasePrompt'],
         		this.renderState({});
         	}
         },
-                
+
         renderState: function(state) {
         	this.$elem.empty();
         	var cellStyle = "border:none; vertical-align:middle;";
@@ -94,7 +108,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbasePrompt'],
             		"<b>Target genome set object name:</b> " + this.options.genomeSetName + "<br>" +
             		"<font size='-1'>(genome fields may be left blank if they are not needed)</font><br>"+
             		"<table id='gnms" + this.pref + "' class='table'>" +
-        			"<tr style='" + cellStyle + "'>" + 
+        			"<tr style='" + cellStyle + "'>" +
             		"<td style='" + cellStyle + "'><b>Genome set description</b></td>" +
             		"<td style='" + cellStyle + " width: 80%;'>" +
             			"<input class='form-control' style='width: 100%' id='descr"+this.pref+"' name='descr' value='' type='text'/>" +
@@ -144,7 +158,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbasePrompt'],
 					description: state['descr'],
 					elements: elems
 			};
-			kbws.save_objects({workspace: this.options.wsName, objects: [{type: 'KBaseSearch.GenomeSet', 
+			kbws.save_objects({workspace: this.options.wsName, objects: [{type: 'KBaseSearch.GenomeSet',
 				name: this.options.genomeSetName, data: gset}]}, function(data) {
         			self.trigger('updateData.Narrative');
 					self.showInfo('Genome set object <b>' + self.options.genomeSetName + '</b> '+
@@ -153,19 +167,19 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbasePrompt'],
 					alert('Error: ' + data.error.message);
 				});
         },
-        
+
         addParam: function(genomeObjectName) {
         	var self = this;
         	var paramPos = this.size(this.getState());
         	var pid = "param" + paramPos;
         	var cellStyle = "border:none; vertical-align:middle;";
         	$('#gnms'+this.pref).append("" +
-        			"<tr style='" + cellStyle + "'>" + 
+        			"<tr style='" + cellStyle + "'>" +
                 		"<td style='" + cellStyle + "'><b>Genome " + (paramPos + 1) + "</b></td>" +
                 		"<td style='" + cellStyle + " width: 80%;'>" +
                 			"<input class='form-control' style='width: 100%' name='"+pid+"' " +
                 					"id='inp_"+pid+"_"+this.pref+"' value='"+genomeObjectName+"' type='text'/>" +
-                			
+
                 		"</td>" +
                 		"<td style='"+cellStyle+"'><center>"+
                 			"<button id='btn_"+pid+'_'+this.pref+"' class='form-control' style='max-width:40px;'>"+
@@ -176,19 +190,19 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbasePrompt'],
         		$('#inp_' + pid + '_' + self.pref).val('');
             });
         },
-        
+
         size: function(obj) {
         	var size = 0;
         	for (var key in obj)
-        		if (obj.hasOwnProperty(key) && key.indexOf("param") == 0) 
+        		if (obj.hasOwnProperty(key) && key.indexOf("param") == 0)
         			size++;
         	return size;
         },
-        
+
         /**
          * Returns an object representing the state of this widget.
          * In this particular case, it is a list of key-value pairs, like this:
-         * { 
+         * {
          *   'param0' : 'parameter value',
          *   'param1' : 'parameter value'
          * }
@@ -307,9 +321,9 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbasePrompt'],
             this.render();
             return this;
         },
-        
+
         showInfo: function(message) {
-        	$('<div/>').kbasePrompt({title : 'Information', body : message}).openPrompt();
+        	 new kbasePrompt($('<div/>'), {title : 'Information', body : message}).openPrompt();
         }
     });
 });

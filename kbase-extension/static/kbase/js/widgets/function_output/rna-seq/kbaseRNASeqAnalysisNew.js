@@ -212,7 +212,7 @@ define (
 
                         sample_id_data.push(
                           [
-                            ref_map_by_id[v].name,
+                            ref_map_by_id[v] ? ref_map_by_id[v].name : v,
                             analysis.condition[i]
                           ]
                         )

@@ -84,18 +84,10 @@ define([
         }
 
         function renderReportView(params) {
-            /*ui.setContent('report',
-                ui.buildCollapsiblePanel({
-                    title: 'Report',
-                    name: 'report-toggle',
-                    hidden: false,
-                    type: 'default',
-                    classes: ['kb-panel-container'],
-                    body: [
-                        div({dataElement: 'report-widget'})
-                    ]
-                })
-            );*/
+            params = JSON.parse(JSON.stringify(params));
+            // Override the option to show created objects listed in the report 
+            // object. For some reason this single option defaults to false!
+            params.showCreatedObjects = true;
             ui.setContent('report', div({dataElement: 'report-widget'}));
             new KBaseReportView($(ui.getElement('report-widget')), params);
         }

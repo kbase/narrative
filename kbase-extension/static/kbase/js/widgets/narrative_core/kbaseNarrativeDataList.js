@@ -664,7 +664,7 @@ define([
 
             var $filterMethodInput = $('<span>')
                 .tooltip({
-                    title: 'Show Methods with this as input',
+                    title: 'Show Apps with this as input',
                     container: '#' + this.mainListId,
                     delay: {
                         show: Config.get('tooltip').showDelay,
@@ -679,7 +679,7 @@ define([
 
             var $filterMethodOutput = $('<span>')
                 .tooltip({
-                    title: 'Show Methods with this as output',
+                    title: 'Show Apps with this as output',
                     container: '#' + this.mainListId,
                     delay: {
                         show: Config.get('tooltip').showDelay,

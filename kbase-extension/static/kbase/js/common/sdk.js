@@ -531,7 +531,9 @@ define([
                 class: spec.ui_class,
                 type: spec.field_type,
                 control: spec.field_type,
-                advanced: spec.advanced ? true : false
+                // If embedded in an advanced sequence control,
+                // the subcontrol does not need the advanced flag.
+                advanced: false
             },
             data: {
                 type: dataType,

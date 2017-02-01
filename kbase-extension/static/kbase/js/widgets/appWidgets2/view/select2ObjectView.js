@@ -104,6 +104,7 @@ define([
 
             // CONTROL
             var selectElem = select({
+                id: html.genId(),
                 class: 'form-control',
                 dataElement: 'input'
             }, [option({ value: '' }, '')].concat(selectOptions));
@@ -261,6 +262,9 @@ define([
                         }
                         return model.availableValues[object.id].name;
                     }
+                })
+                .on('advanced-shown.kbase', function (e) {
+                    $(e.target).select2({width: 'resolve'});
                 });
                 events.attachEvents(container);
 

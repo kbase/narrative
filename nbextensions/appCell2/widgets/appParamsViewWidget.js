@@ -3,6 +3,7 @@
 
 define([
     'bluebird',
+    'jquery',
     // CDN
     'kb_common/html',
     // LOCAL
@@ -19,6 +20,7 @@ define([
 
 ], function(
     Promise,
+    $,
     html,
     UI,
     Events,
@@ -218,11 +220,8 @@ define([
 
             if (advancedInputs.length === 0) {
                 ui.setContent([areaElement, 'advanced-hidden-message'], '');
-                // ui.disableButton('toggle-advanced');
                 return;
             }
-
-            //            ui.enableButton('toggle-advanced');
 
             var removeClass = (settings.showAdvanced ? 'advanced-parameter-hidden' : 'advanced-parameter-showing'),
                 addClass = (settings.showAdvanced ? 'advanced-parameter-showing' : 'advanced-parameter-hidden');
@@ -230,6 +229,11 @@ define([
                 var input = advancedInputs[i];
                 input.classList.remove(removeClass);
                 input.classList.add(addClass);
+                 
+                var actualInput = input.querySelector('[data-element="input"]');
+                if (actualInput) {
+                    $(actualInput).trigger('advanced-shown.kbase');
+                }
             }
             //
             //            // How many advanaced?

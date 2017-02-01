@@ -268,7 +268,11 @@ define([
             converted.ui.showSourceObject = spec.textsubdata_options.show_src_obj ? true : false;
             break;
         case 'customSubdata':
-            converted.ui.multiSelection = spec.textsubdata_options.multiselection ? true : false;
+            if (spec.textsubdata) {
+                converted.ui.multiSelection = spec.textsubdata_options.multiselection ? true : false;
+            } else {
+                converted.ui.multiSelection = false;
+            }
             // converted.ui.showSourceObject = spec.textsubdata_options.show_src_obj ? true : false;
             break;
         }

@@ -584,7 +584,7 @@ define([
                                          });*/
 
                                         displayData.push({
-                                            'name': '<a class="report_row_' + pref + '" data-objname="' + objInfo[k][1] + '">' + objInfo[k][1] + '</a>',
+                                            'name': '<a style="cursor: pointer;" class="report_row_' + pref + '" data-objname="' + objInfo[k][1] + '">' + objInfo[k][1] + '</a>',
                                             'type': objInfo[k][2].split('-')[0].split('.')[1],
                                             'fullType': objInfo[k][2],
                                             'description': objsCreated[k].description ? objsCreated[k].description : '',

@@ -86,33 +86,55 @@ class JobManager(object):
             raise new_e
 
         job_ids = [j[0] for j in nar_jobs]
-        job_param_info = clients.get('job_service').check_jobs({
+        job_states = clients.get('job_service').check_jobs({
             'job_ids': job_ids, 'with_job_params': 1
         })
-        job_param_info = job_param_info['job_params']
+        job_param_info = job_states.get('job_params', {})
+        job_check_error = job_states.get('check_error', {})
+        error_jobs = dict()
         for info in nar_jobs:
             job_id = info[0]
             user_info = info[1]
             job_meta = info[10]
             try:
-                job_info = job_param_info[job_id]
 
-                job = Job.from_state(job_id,
-                                     job_info,
-                                     user_info[0],
-                                     app_id=job_info.get('app_id'),
-                                     tag=job_meta.get('tag', 'release'),
-                                     cell_id=job_meta.get('cell_id', None),
-                                     run_id=job_meta.get('run_id', None))
+                if job_id in job_param_info:
+                    job_info = job_param_info[job_id]
 
-                # Note that when jobs for this narrative are initially loaded,
-                # they are set to not be refreshed. Rather, if a client requests
-                # updates via the start_job_update message, the refresh flag will
-                # be set to True.
-                self._running_jobs[job_id] = {
-                    'refresh': 0,
-                    'job': job
-                }
+                    job = Job.from_state(job_id,
+                                         job_info,
+                                         user_info[0],
+                                         app_id=job_info.get('app_id'),
+                                         tag=job_meta.get('tag', 'release'),
+                                         cell_id=job_meta.get('cell_id', None),
+                                         run_id=job_meta.get('run_id', None))
+
+                    # Note that when jobs for this narrative are initially loaded,
+                    # they are set to not be refreshed. Rather, if a client requests
+                    # updates via the start_job_update message, the refresh flag will
+                    # be set to True.
+                    self._running_jobs[job_id] = {
+                        'refresh': 0,
+                        'job': job
+                    }
+                elif job_id in job_check_error:
+                    job_err_state = {
+                        'job_state': 'error',
+                        'error': {
+                            'error': 'KBase execution engine returned an error while looking up this job.',
+                            'message': job_check_error[job_id].get('message', 'No error message available'),
+                            'name': 'Job Error',
+                            'code': job_check_error[job_id].get('code', -999),
+                            'exception': {
+                                'error_message': 'Job lookup in execution engine failed',
+                                'error_type': job_check_error[job_id].get('name', 'unknown'),
+                                'error_stacktrace': job_check_error[job_id].get('error', '')
+                            }
+                        },
+                        'cell_id': job_meta.get('cell_id', None),
+                        'run_id': job_meta.get('run_id', None),
+                    }
+                    error_jobs[job_id] = job_err_state
 
             except Exception as e:
                 kblogging.log_event(self._log, 'init_error', {'err': str(e)})
@@ -127,7 +149,24 @@ class JobManager(object):
                     'service': 'job_service'
                 }
                 self._send_comm_message('job_init_lookup_err', error)
-                raise new_e # should crash and burn on any of these.
+                raise new_e  # should crash and burn on any of these.
+
+        if len(job_check_error):
+            err_str = 'Unable to find info for some jobs on initial lookup'
+            err_type = 'job_init_partial_err'
+            if len(job_check_error) == len(nar_jobs):
+                err_str = 'Unable to get info for any job on initial lookup'
+                err_type = 'job_init_lookup_err'
+            error = {
+                'error': err_str,
+                'job_errors': error_jobs,
+                'message': 'Job information was unavailable from the server',
+                'code': -2,
+                'source': 'jobmanager',
+                'name': 'jobmanager',
+                'service': 'job_service',
+            }
+            self._send_comm_message(err_type, error)
 
         if not self._running_lookup_loop and start_lookup_thread:
             # only keep one loop at a time in cause this gets called again!
@@ -293,6 +332,30 @@ class JobManager(object):
                 'job_id': job.job_id
             }
 
+        elif 'lookup_error' in state:
+            kblogging.log_event(self._log, "lookup_job_status.error", {
+                'err': 'Problem while getting state for job {}'.format(job.job_id),
+                'info': str(state['lookup_error'])
+            })
+            state = {
+                'job_state': 'error',
+                'error': {
+                    'error': 'Unable to fetch current state. Please try again later, or contact KBase.',
+                    'message': 'Error while looking up job state',
+                    'name': 'Job Error',
+                    'code': -1,
+                    'source': 'JobManager._construct_job_status',
+                    'exception': {
+                        'error_message': 'Error while fetching job state',
+                        'error_type': 'failed-lookup',
+                    },
+                    'error_response': state['lookup_error'],
+                    'creation_time': 0,
+                    'cell_id': job.cell_id,
+                    'run_id': job.run_id,
+                    'job_id': job.job_id
+                }
+            }
         if state.get('finished', 0) == 1:
             try:
                 widget_info = job.get_viewer_params(state)
@@ -326,7 +389,7 @@ class JobManager(object):
             job = None
             if job_id in self._running_jobs:
                 job = self._running_jobs[job_id]['job']
-            status_set[job_id] = self._construct_job_status(job, job_states[job_id])
+            status_set[job_id] = self._construct_job_status(job, job_states.get(job_id, None))
         return status_set
 
     def _lookup_job_status(self, job_id):
@@ -649,15 +712,26 @@ class JobManager(object):
             else:
                 jobs_to_lookup.append(job_id)
         # 3. Lookup those jobs what need it. Cache 'em as we go, if finished.
-        fetched_states = clients.get('job_service').check_jobs({'job_ids': jobs_to_lookup})
+        try:
+            fetched_states = clients.get('job_service').check_jobs({'job_ids': jobs_to_lookup})
+        except Exception as e:
+            kblogging.log_event(self._log, 'get_all_job_states_error', {'err': str(e)})
+            return {}
+
+        error_states = fetched_states.get('check_errors', {})
         fetched_states = fetched_states.get('job_states', {})
         for job_id in jobs_to_lookup:
-            state = fetched_states[job_id]
-            state['cell_id'] = self._running_jobs[job_id]['job'].cell_id
-            state['run_id'] = self._running_jobs[job_id]['job'].run_id
-            if state.get('finished', 0) == 1:
-                self._completed_job_states[state['job_id']] = state
-            job_states[state['job_id']] = state
+            if job_id in fetched_states:
+                state = fetched_states[job_id]
+                state['cell_id'] = self._running_jobs[job_id]['job'].cell_id
+                state['run_id'] = self._running_jobs[job_id]['job'].run_id
+                if state.get('finished', 0) == 1:
+                    self._completed_job_states[state['job_id']] = state
+                job_states[state['job_id']] = state
+            elif job_id in error_states:
+                error = error_states[job_id]
+                job_states[state['job_id']] = {'lookup_error': error}
+
         return job_states
 
     def _get_job_state(self, job_id):

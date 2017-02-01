@@ -82,15 +82,26 @@ define (
                     analysis.sample_ids,
                     function (i, v) {
                         num_sample_ids++;
-                        all_promises.push(
-                            ws.get_object_info([
-                              //{ref : v}
-                              {
-                                workspace : $rna.options.workspace,
-                                name : v
-                              }
-                            ])
-                        )
+
+                        if (v.match(/\//)) {
+                          all_promises.push(
+                              ws.get_object_info([
+                                {ref : v}
+                              ])
+                          )
+                        }
+                        else {
+
+                          all_promises.push(
+                              ws.get_object_info([
+                                //{ref : v}
+                                {
+                                  workspace : $rna.options.workspace,
+                                  name : v
+                                }
+                              ])
+                          )
+                        }
                     }
                 );
             }
@@ -175,6 +186,7 @@ define (
                 var info_keys = ['id', 'name', 'type', 'save_date', 'version', 'saved_by', 'ws_id', 'ws_name', 'chsum', 'size', 'meta'];
 
                 var ref_map = {};
+                var ref_map_by_id = {};
                 $.each(
                     extra_args,
                     function(i, v) {
@@ -186,7 +198,7 @@ define (
                                 info_obj[key] = v[0][i];
                             }
                         );
-                        //ref_map[ [ v[0][6], v[0][0], v[0][4] ].join('/')] = info_obj;
+                        ref_map_by_id[ [ v[0][6], v[0][0], v[0][4] ].join('/')] = info_obj;
                         ref_map[info_obj['name']] = info_obj;
                     }
                 );
@@ -197,9 +209,10 @@ define (
                     $.each(
                       analysis.sample_ids,
                       function (i, v) {
+
                         sample_id_data.push(
                           [
-                            v,
+                            ref_map_by_id[v] ? ref_map_by_id[v].name : v,
                             analysis.condition[i]
                           ]
                         )

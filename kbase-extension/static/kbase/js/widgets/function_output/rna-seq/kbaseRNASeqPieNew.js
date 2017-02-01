@@ -324,6 +324,10 @@ define (
                     name : $pie.options[obj_key] || $pie.options.ws_alignment_sample_id,
                 };
 
+                if (this.options.ws_alignment_sample_id) {
+                  ws_params = { ref : this.options.ws_sample_id };
+                }
+
                 ws.get_objects([ws_params]).then(function (d) {
                   $pie.options.output = d[0].data;
 
@@ -344,7 +348,6 @@ define (
                   }
                 })
                 .fail(function(d) {
-
                     $pie.$elem.empty();
                     $pie.$elem
                         .addClass('alert alert-danger')
@@ -412,10 +415,22 @@ define (
               $.each(
                 this.options.output.read_sample_ids,
                 function (i,v) {
+
+                  var label = v;
+                  $.each(
+                    $rnaseq.options.output.mapped_rnaseq_alignments,
+                    function (i, id) {
+                      if (id[v]) {
+                        label = id[v];
+                        return;
+                      }
+                    }
+                  );
+
                   $selector.append(
                     $.jqElem('option')
                       .attr('value', $rnaseq.options.output.sample_alignments[i])
-                      .append(v)
+                      .append(label)
                   )
                 }
               );

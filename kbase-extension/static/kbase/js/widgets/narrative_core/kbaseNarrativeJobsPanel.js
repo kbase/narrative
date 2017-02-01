@@ -483,6 +483,22 @@ define([
                 console.error('Error from job comm:', msg);
                 break;
 
+            case 'job_init_partial_err':
+                var content = msg.content.data.content;
+                var jobErrors = content.job_errors;
+                for (var jobId in jobErrors) {
+                    if (jobErrors.hasOwnProperty(jobId)) {
+                        this.sendJobMessage('job-status', jobId, {
+                            jobId: jobId,
+                            jobState: jobErrors[jobId],
+                            outputWidgetInfo: {}
+                        });
+                    }
+                }
+                console.warn('Job initialization in kernel resulted in errors!');
+                console.warn(msg);
+                break;
+
             case 'job_init_err':
             case 'job_init_lookup_err':
                 var content = msg.content.data.content;
@@ -519,7 +535,7 @@ define([
 
 
                 $modalBody.find('button#kb-job-err-report').click(function (e) {
-                    alert('reporting error!');
+
                 });
                 modal.getElement().on('hidden.bs.modal', function () {
                     modal.destroy();
@@ -547,8 +563,8 @@ define([
             var commSemaphore = Semaphore.make();
             commSemaphore.add('comm', false);
             return new Promise(function (resolve, reject) {
-                    // First we check to see if our comm channel already 
-                    // exists. If so, we do some funny business to create a 
+                    // First we check to see if our comm channel already
+                    // exists. If so, we do some funny business to create a
                     // new client side for it, register it, and set up our
                     // handler on it.
                     //console.log(new Date().getTime() + ' : Initializing comm channel');
@@ -568,7 +584,7 @@ define([
                     });
                 })
                 .then(function () {
-                    // If no existing comm channel could be hooked up to, we have an alternative 
+                    // If no existing comm channel could be hooked up to, we have an alternative
                     // strategy, apparently. We register our channel endpoint, even though there is
                     // no back end yet, and our next call to utlize it below will create it??
                     if (_this.comm) {

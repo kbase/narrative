@@ -3,6 +3,12 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v4.2.1 (more notes will follow).
 
+### Version 3.1.7
+__Changes__
+- Fixed an issue where if looking up any job status fails, all job statuses fail to update.
+- Fixed problems with viewing RNA seq object viewers.
+- Fixed a problem with displaying output widgets for many apps.
+
 ### Version 3.1.6
 __Changes__
 - Created a help menu with some options migrated from the hamburger menu.

@@ -7,6 +7,7 @@ This is built on the Jupyter Notebook v4.2.1 (more notes will follow).
 __Changes__
 - JIRA TASK-434 Made improvements to speed up loading and (hopefully) improve stability.
 - JIRA TASK-439 Fixed a problem with adding inputs to subselected parameters in apps.
+- JIRA TASK-440 Advanced dropdowns should now have the right horizontal size when un-hidden.
 - Made a change to publically available data - Phytozome genomes are now just part of the genomes list.
 - Fixed issue with viewer cells not rendering properly.
 - Enable a tab that displays which output objects were created in a report viewer.

@@ -938,12 +938,12 @@ define([
             }
             style.padding = '6px';
             var buttonDiv = div({ 
-                class: 'btn-group xbtn-block', 
+                class: 'btn-group', 
                 style: style 
             },
                 Object.keys(actionButtons.availableButtons).map(function (key) {
                     var button = actionButtons.availableButtons[key],
-                        classes = ['xkb-flat-btn', 'xkb-btn-action', 'xbtn-block'].concat(button.classes),
+                        classes = [].concat(button.classes),
                         icon;
                     if (button.icon) {
                         icon = {
@@ -960,9 +960,6 @@ define([
                         hidden: true,
                         // Overriding button class styles for this context.
                         style: {
-                            xmargin: '6px',
-                            xwidth: '100%',
-                            xboxSizing: 'border-box',
                             width: '80px'
                         },
                         event: {
@@ -1069,7 +1066,6 @@ define([
                                     height: '50px',
                                     marginTop: '0px',
                                     textAlign: 'left',
-                                    xborder: '1px silver solid',
                                     lineHeight: '50px',
                                     verticalAlign: 'middle'
                                 }

@@ -22,32 +22,61 @@ module.exports = function(grunt) {
         requirejs: {
             compile: {
                 options: {
-                    baseUrl: "./static",
-                    mainConfigFile: "static/narrative_paths.js",
+                    name: 'narrative_paths',
+                    baseUrl: 'kbase-extension/static',
+                    include: ['narrativeMain'],
+                    // baseUrl: "./static",
+                    mainConfigFile: 'kbase-extension/static/narrative_paths.js',
                     findNestedDependencies: true,
-                    optimize: "uglify2",
-                    generateSourceMaps: true,
+                    // optimize: 'uglify2',
+                    generateSourceMaps: false,
                     preserveLicenseComments: false,
-                    name: "narrative_paths",
-                    out: "static/dist/kbase-narrative-min.js"
+                    out: 'kbase-extension/static/kbase-narrative-min.js',
+                    paths: {
+                        // jquery: 'empty:',
+                        jqueryui: 'empty:',
+                        bootstrap: 'empty:',
+                        'jquery-ui': 'empty:',
+                        narrativeConfig: 'empty:',
+                        'base/js/utils': 'empty:',
+                        'base/js/namespace': 'empty:',
+                        // 'kbase/js/widgets/narrative_core/upload/fileUploadWidget': 'empty:',
+                        bootstraptour: 'empty:',
+                        // 'kbase/js/widgets/narrative_core/upload/uploadTour': 'empty:',
+                        'services/kernels/comm': 'empty:',
+                        'common/ui': 'empty:',
+                        'notebook/js/celltoolbar': 'empty:',
+                        'base/js/events': 'empty:',
+                        'base/js/keyboard': 'empty:',
+                        'notebook/js/notebook': 'empty:',
+                        // narrativeTour: 'empty:',
+                        'notebook/js/main': 'empty:'
+                    },
+                    inlineText: false,
+                    // exclude: [
+                    //     'jqueryui',
+                    //     'bootstrap',
+                    //     'jquery-ui'
+                    // ],
+                    // onBuildWrite: function (moduleName, path, contents) {
+                    //     if (moduleName.lastIndexOf('text!', 0) === 0 ||
+                    //         moduleName.lastIndexOf('css!', 0) === 0 ||
+                    //         moduleName.lastIndexOf('json!', 0) === 0) {
+                    //         return '';
+                    //     }
+                    //     return contents;
+                    // },
+                    buildCSS: false,
+                    // pragmasOnSave: {
+                    //     excludeRequireCss: true,
+                    // },
+                    optimizeAllPluginResources: false,
+                    // wrapShim: true,
+                    done: function(done, output) {
+                        console.log(output);
+                        done();
+                    }
                 }
-            }
-        },
-
-        // Put a 'revision' stamp on the output file. This attaches an 8-character
-        // md5 hash to the end of the requirejs built file.
-        filerev: {
-            options: {
-                algorithm: 'md5',
-                length: 8
-            },
-            source: {
-                files: [{
-                    src: [
-                        'static/dist/kbase-narrative-min.js', //kbase/js/kbase-narrative.min.js',
-                    ],
-                    dest: 'static/dist/' // 'static/kbase/js'
-                }]
             }
         },
 
@@ -55,18 +84,23 @@ module.exports = function(grunt) {
         // the right spot (near the top, the narrative_paths reference)
         'regex-replace': {
             dist: {
-                src: ['page.html'],
+                src: ['kbase-extension/kbase_templates/notebook.html'],
                 actions: [
                     {
                         name: 'requirejs-onefile',
-                        search: 'narrative_paths',
+                        // search: 'narrativeMain',
+                        search: 'narrativeMain.js',
+
                         replace: function(match) {
-                            // do a little sneakiness here. we just did the filerev thing, so get that mapping
-                            // and return that (minus the .js on the end)
-                            var revvedFile = grunt.filerev.summary['static/dist/kbase-narrative-min.js'];
-                            // starts with 'static/' and ends with '.js' so return all but the first 7 and last 3 characters
-                            return revvedFile.substr(7, revvedFile.length - 10);
+                            return 'kbase-narrative-min.js'
                         },
+
+                        //     // do a little sneakiness here. we just did the filerev thing, so get that mapping
+                        //     // and return that (minus the .js on the end)
+                        //     var revvedFile = 'kbase-narrative-min.js';
+                        //     // starts with 'static/' and ends with '.js' so return all but the first 7 and last 3 characters
+                        //     return revvedFile.substr(7, revvedFile.length - 10);
+                        // },
                         flags: ''
                     }
                 ]
@@ -116,6 +150,10 @@ module.exports = function(grunt) {
 
     });
 
+    grunt.registerTask('minify', [
+        'requirejs',
+        'regex-replace'
+    ]);
 
     grunt.registerTask('build', [
         'requirejs',

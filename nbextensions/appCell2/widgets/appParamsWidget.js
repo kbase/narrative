@@ -3,6 +3,7 @@
 
 define([
     'bluebird',
+    'jquery',
     // CDN
     'kb_common/html',
     // LOCAL
@@ -19,6 +20,7 @@ define([
 
 ], function (
     Promise,
+    $,
     html,
     UI,
     Events,
@@ -219,7 +221,6 @@ define([
         }
 
         function renderAdvanced(area) {
-
             // area is either "input" or "parameter"
 
             var areaElement = area + '-area',
@@ -237,6 +238,11 @@ define([
                 var input = advancedInputs[i];
                 input.classList.remove(removeClass);
                 input.classList.add(addClass);
+                                
+                var actualInput = input.querySelector('[data-element="input"]');
+                if (actualInput) {
+                    $(actualInput).trigger('advanced-shown.kbase');
+                }
             }
 
             // Also update the count in the paramters.

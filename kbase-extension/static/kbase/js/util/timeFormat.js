@@ -8,7 +8,7 @@
 define([], function() {
     'use strict';
 
-    var monthLookup = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    var monthLookup = ['Jan', 'Feb', 'Mar', 'Apr', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
     /**
      * @method makePrettyTimestamp
@@ -26,7 +26,7 @@ define([], function() {
 
         var parsedTime = reformatDate(d);
         var timediff = calcTimeFromNow(d);
-        var timeMillis = d ? d.getTime() : "";
+        var timeMillis = d ? d.getTime() : '';
 
         var timeHtml = '<span href="#" data-toggle="tooltip" title="' + parsedTime + '" millis="' + timeMillis + '" >' + timediff + '</span>';
         return timeHtml;
@@ -241,13 +241,13 @@ define([], function() {
         }
 
         var exactDate = function(date) {
-            return monthLookup[date.getMonth()] + " " + date.getDate() + ", " + date.getFullYear();
-        }
+            return monthLookup[date.getMonth()] + ' ' + date.getDate() + ', ' + date.getFullYear();
+        };
 
         // f-ing safari, need to add extra ':' delimiter to parse the timestamp
         if (isNaN(seconds)) {
             var tokens = objInfoTimeStamp.split('+');  // this is just the date without the GMT offset
-            var newTimestamp = tokens[0] + '+' + tokens[0].substr(0, 2) + ":" + tokens[1].substr(2, 2);
+            var newTimestamp = tokens[0] + '+' + tokens[1].substr(0, 2) + ':' + tokens[1].substr(2, 2);
             date = new Date(newTimestamp);
             seconds = Math.floor((new Date() - date) / 1000);
             if (isNaN(seconds)) {
@@ -318,7 +318,7 @@ define([], function() {
         var day = format(d.getDate());
         var year = d.getFullYear();
 
-        return hours + ":" + minutes + ":" + seconds + ", " + month + "/" + day + "/" + year;
+        return hours + ':' + minutes + ':' + seconds + ', ' + month + '/' + day + '/' + year;
     }
 
 

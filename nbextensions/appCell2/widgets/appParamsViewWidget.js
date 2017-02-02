@@ -395,11 +395,12 @@ define([
                 return Promise.resolve()
                     .then(function () {
                         if (inputParams.layout.length === 0) {
-                            places.inputFields.innerHTML = span({
-                                style: {
-                                    fontStyle: 'italic'
-                                }
-                            }, 'This app does not have input objects');
+                            ui.getElement('input-objects-area').classList.add('hidden');
+                            // places.inputFields.innerHTML = span({
+                            //     style: {
+                            //         fontStyle: 'italic'
+                            //     }
+                            // }, 'This app does not have input objects');
                         } else {
                             places.inputFields.innerHTML = inputParams.content;
                             return Promise.all(inputParams.layout.map(function (parameterId) {
@@ -429,7 +430,8 @@ define([
                     })
                     .then(function () {
                         if (outputParams.layout.length === 0) {
-                            places.outputFields.innerHTML = span({ style: { fontStyle: 'italic' } }, 'This app does not create any named output objects');
+                            ui.getElement('output-objects-area').classList.add('hidden');
+                            // places.outputFields.innerHTML = span({ style: { fontStyle: 'italic' } }, 'This app does not create any named output objects');
                         } else {
                             places.outputFields.innerHTML = outputParams.content;
                             return Promise.all(outputParams.layout.map(function (parameterId) {
@@ -456,7 +458,8 @@ define([
                     .then(function () {
                         if (parameterParams.layout.length === 0) {
                             // TODO: should be own node
-                            places.parameterFields.innerHTML = span({ style: { fontStyle: 'italic' } }, 'No parameters for this app');
+                            ui.getElement('parameter-objects-area').classList.add('hidden');
+                            // places.parameterFields.innerHTML = span({ style: { fontStyle: 'italic' } }, 'No parameters for this app');
                         } else {
                             places.parameterFields.innerHTML = parameterParams.content;
 

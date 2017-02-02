@@ -25,6 +25,7 @@ define([
         div = t('div'),
         button = t('button'),
         span = t('span'),
+        p = t('p'),
         pre = t('pre'),
         fsm,
         appStates = [{
@@ -56,7 +57,7 @@ define([
                         mode: 'error'
                     },
                     {
-                        mode: 'cancelled'
+                        mode: 'canceled'
                     }
                 ]
             },
@@ -86,12 +87,29 @@ define([
                         mode: 'complete'
                     },
                     {
-                        mode: 'cancelled'
+                        mode: 'canceled'
                     },
                     {
                         mode: 'error'
                     }
-                ]
+                ],
+                on: {
+                    enter: {
+                        messages: [{
+                            emit: 'on-queued'
+                        }]
+                    },
+                    resume: {
+                        messages: [{
+                            emit: 'on-queued'
+                        }]
+                    },
+                    exit: {
+                        messages: [{
+                            emit: 'exit-queued'
+                        }]
+                    }
+                }
             },
             {
                 state: {
@@ -119,7 +137,7 @@ define([
                         mode: 'complete'
                     },
                     {
-                        mode: 'cancelled'
+                        mode: 'canceled'
                     },
                     {
                         mode: 'error'
@@ -167,7 +185,24 @@ define([
                     {
                         mode: 'error'
                     }
-                ]
+                ],
+                on: {
+                    enter: {
+                        messages: [{
+                            emit: 'on-active-noauto'
+                        }]
+                    },
+                    resume: {
+                        messages: [{
+                            emit: 'on-active-noauto'
+                        }]
+                    },
+                    exit: {
+                        messages: [{
+                            emit: 'exit-active-noauto'
+                        }]
+                    }
+                }
             },
             {
                 state: {
@@ -178,16 +213,50 @@ define([
                         enabled: ['top', 'back', 'forward', 'bottom'],
                         disabled: ['play', 'stop']
                     }
+                },
+                on: {
+                    enter: {
+                        messages: [{
+                            emit: 'on-complete'
+                        }]
+                    },
+                    resume: {
+                        messages: [{
+                            emit: 'on-complete'
+                        }]
+                    },
+                    exit: {
+                        messages: [{
+                            emit: 'exit-complete'
+                        }]
+                    }
                 }
             },
             {
                 state: {
-                    mode: 'cancelled'
+                    mode: 'canceled'
                 },
                 ui: {
                     buttons: {
                         enabled: ['top', 'back', 'forward', 'bottom'],
                         disabled: ['play', 'stop']
+                    }
+                },
+                on: {
+                    enter: {
+                        messages: [{
+                            emit: 'on-canceled'
+                        }]
+                    },
+                    resume: {
+                        messages: [{
+                            emit: 'on-canceled'
+                        }]
+                    },
+                    exit: {
+                        messages: [{
+                            emit: 'exit-canceled'
+                        }]
                     }
                 }
             },
@@ -199,6 +268,23 @@ define([
                     buttons: {
                         enabled: ['top', 'back', 'forward', 'bottom'],
                         disabled: ['play', 'stop']
+                    }
+                },
+                on: {
+                    enter: {
+                        messages: [{
+                            emit: 'on-error'
+                        }]
+                    },
+                    resume: {
+                        messages: [{
+                            emit: 'on-error'
+                        }]
+                    },
+                    exit: {
+                        messages: [{
+                            emit: 'exit-error'
+                        }]
                     }
                 }
             }
@@ -443,7 +529,7 @@ define([
                     span({ class: 'fa fa-fast-forward' })
                 ]),
                 // div({dataElement: 'fsm-debug'}),
-                div({ dataElement: 'spinner', class: 'pull-right' }, [
+                div({ dataElement: 'spinner', class: 'pull-right hidden' }, [
                     span({ class: 'fa fa-spinner fa-pulse fa-ex fa-fw' })
                 ])
             ]);
@@ -460,9 +546,7 @@ define([
                             renderControls(events)
                         ])
                     ]),
-                    div({ dataElement: 'panel' }, [
-                        pre(['Log viewer initialized, awaiting most recent log messages...'])
-                    ])
+                    div({ dataElement: 'panel' })
                 ]);
 
             return {
@@ -655,7 +739,7 @@ define([
                             requestLatestJobLog();
                             stopJobUpdates();
                             newState = {
-                                mode: 'cancelled'
+                                mode: 'canceled'
                             };
                             break;
                         default:
@@ -689,7 +773,7 @@ define([
                             break;
                         case 'canceled':
                             newState = {
-                                mode: 'cancelled'
+                                mode: 'canceled'
                             };
                             break;
                         default:
@@ -718,7 +802,7 @@ define([
                             break;
                         case 'canceled':
                             newState = {
-                                mode: 'cancelled'
+                                mode: 'canceled'
                             };
                             break;
                         default:
@@ -734,13 +818,13 @@ define([
                             // technically, an error, what to do?
                             return;
                         }
-                    case 'cancelled':
+                    case 'canceled':
                         switch (jobStatus) {
                         case 'canceled':
                             return;
                         default:
-                            console.error('Unexpected log status ' + jobStatus + ' for "cancelled" state');
-                            throw new Error('Unexpected log status ' + jobStatus + ' for "cancelled" state');
+                            console.error('Unexpected log status ' + jobStatus + ' for "canceled" state');
+                            throw new Error('Unexpected log status ' + jobStatus + ' for "canceled" state');
                         }
                     case 'error':
                         switch (jobStatus) {
@@ -802,11 +886,18 @@ define([
             // }
         }
 
+        function doOnQueued(message) {
+            ui.setContent('kb-log.panel', renderLine({
+                lineNumber: '',
+                text: 'Job is queued, logs will be available when the job is running.'
+            }));            
+        }
+        function doExitQueued(message) {
+            ui.setContent('kb-log.panel', '');
+        }
+
         function initializeFSM() {
             // events emitted by the fsm.
-
-
-
             fsm = Fsm.make({
                 states: appStates,
                 initialState: {
@@ -824,6 +915,19 @@ define([
             });
             fsm.bus.on('exit-active', function (message) {
                 doStopFetchingLogs();
+            });
+            fsm.bus.on('on-canceled', function (message) {
+                requestLatestJobLog();
+                stopJobUpdates();
+            });
+            fsm.bus.on('exit-canceled', function (message) {
+                //  nothing to do?
+            });
+            fsm.bus.on('on-queued', function (message) {
+                doOnQueued(message);
+            });
+            fsm.bus.on('exit-queued', function (message) {
+                doExitQueued(message);
             });
         }
 

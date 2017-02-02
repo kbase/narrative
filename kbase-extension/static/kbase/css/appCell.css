@@ -399,10 +399,10 @@ warning: orange
 }
 
 .kb-app-cell .btn.disabled {
-    background-color: #FFF;
+    xbackground-color: #888;
 }
 
-.kb-app-cell .btn-primary.kb-btn-action.-rerun {
+/*.kb-app-cell .btn-primary.kb-btn-action.-rerun {
     color: rgb(33, 150, 243)
 }
 
@@ -418,7 +418,7 @@ warning: orange
 
 .kb-app-cell .btn-danger.kb-btn-action.-reset {
     color: rgb(209,82,65)
-}
+}*/
 
 .kb-app-status-ok {
     color:  rgb(75,184,86);

@@ -134,7 +134,7 @@ define([
                 availableButtons: {
                     runApp: {
                         help: 'Run the app',
-                        type: 'primary',
+                        type: 'success',
                         classes: ['-run'],
                         xicon: {
                             name: 'play'
@@ -152,23 +152,22 @@ define([
                     },
                     reRunApp: {
                         help: 'Edit and re-run the app',
-                        type: 'primary',
+                        type: 'default',
                         classes: ['-rerun'],
                         xicon: {
                             name: 'refresh'
                         },
-                        label: 'Re-Run'
+                        label: 'Reset'
                     },
                     resetApp: {
                         help: 'Reset the app and return to Edit mode',
-                        type: 'danger',
+                        type: 'default',
                         classes: ['-reset'],
                         xicon: {
                             name: 'refresh'
                         },
-                        label: 'Re-Run'
+                        label: 'Reset'
                     }
-
                 }
             };
 
@@ -700,8 +699,8 @@ define([
                 },
                 error: {
                     label: 'Error',
-                    icon: 'exclamation',
-                    xtype: 'danger',
+                    xicon: 'exclamation',
+                    type: 'danger',
                     widget: errorTabWidget
                 }
             }
@@ -1040,12 +1039,20 @@ define([
         function buildRunControlPanelRunButtons(events) {
             var style = {};
             if (Jupyter.narrative.readonly) {
-                style.display = 'none';
+                style.display = 'none';            
             }
-            var buttonDiv = div({ class: 'btn-group', style: style },
+            //style.width = '100%';
+            //style.boxSizing = 'border-box';
+            style.padding = '6px';
+            //style.display = 'inline-block';
+            //style.width = '100%';
+            var buttonDiv = div({ 
+                class: 'btn-group xbtn-block', 
+                style: style 
+            },
                 Object.keys(actionButtons.availableButtons).map(function (key) {
                     var button = actionButtons.availableButtons[key],
-                        classes = ['xkb-flat-btn', 'xkb-btn-action'].concat(button.classes),
+                        classes = ['xkb-flat-btn', 'xkb-btn-action', 'xbtn-block'].concat(button.classes),
                         icon;
                     if (button.icon) {
                         icon = {
@@ -1062,7 +1069,10 @@ define([
                         hidden: true,
                         // Overriding button class styles for this context.
                         style: {
-                            margin: '6px'
+                            xmargin: '6px',
+                            xwidth: '100%',
+                            xboxSizing: 'border-box',
+                            width: '80px'
                         },
                         event: {
                             type: 'actionButton',
@@ -1130,7 +1140,7 @@ define([
                     div({ style: { position: 'absolute', top: '0', bottom: '0', left: '0', right: '0' } }, [
                         div({
                             style: {
-                                width: '75px',
+                                width: '100px',
                                 height: '50px',
                                 position: 'absolute',
                                 top: '0',
@@ -1140,7 +1150,9 @@ define([
                             div({
                                 style: {
                                     height: '50px',
-                                    textAlign: 'center',
+                                    width: '100px',
+                                    overflow: 'hidden',
+                                    textAlign: 'left',
                                     lineHeight: '50px',
                                     verticalAlign: 'middle',
                                     textStyle: 'italic'
@@ -1154,7 +1166,7 @@ define([
                             dataElement: 'status',
                             style: {
                                 position: 'absolute',
-                                left: '75px',
+                                left: '100px',
                                 top: '0',
                                 width: '400px',
                                 height: '50px'
@@ -1196,7 +1208,7 @@ define([
                             dataElement: 'toolbar',
                             style: {
                                 position: 'absolute',
-                                left: '475px',
+                                left: '500px',
                                 right: '0',
                                 top: '0',
                                 height: '50px'
@@ -1935,10 +1947,11 @@ define([
 
         function doRerun() {
             var confirmationMessage = div([
-                p('This action will clear the Results and re-enable the Configure tab for editing. You may then change inputs and run the app again. (Any output you have already produced will be left intact.)'),
-                p('Proceed to Resume Editing?')
+                p('This action will clear the Results and re-enable the Configure tab for editing. You may then change inputs and run the app again.'), 
+                p('Any output you have already produced will be left intact in the Narrative and Data Panel'),
+                p('Proceed to Reset and resume editing?')
             ]);
-            ui.showConfirmDialog({ title: 'Edit and Re-Run?', body: confirmationMessage })
+            ui.showConfirmDialog({ title: 'Reset and resume editing?', body: confirmationMessage })
                 .then(function (confirmed) {
                     if (!confirmed) {
                         return;
@@ -2384,7 +2397,7 @@ define([
                 color = 'red';
                 break;
             case 'canceled':
-                label = 'cancellation';
+                label = 'cancelation';
                 color = 'orange';
                 break;
             default:
@@ -2557,7 +2570,7 @@ define([
             var jobState = model.getItem('exec.jobState');
 
             var message = span([
-                span({style: {color: 'orange'}}, 'Cancelled'),
+                span({style: {color: 'orange'}}, 'Canceled'),
                 ' on ',
                 format.niceTime(jobState.finish_time),
                 ' (',

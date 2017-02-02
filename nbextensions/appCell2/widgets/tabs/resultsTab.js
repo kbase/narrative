@@ -37,13 +37,13 @@ define([
                 var finishDate = new Date(jobState.finish_time);
 
                 var layout = div([
-                    ui.buildCollapsiblePanel({
-                        title: 'Status',
-                        name: 'summary',
-                        hidden: false,
-                        type: 'default',
-                        classes: ['kb-panel-container']
-                    }),
+                    // ui.buildCollapsiblePanel({
+                    //     title: 'Status',
+                    //     name: 'summary',
+                    //     hidden: false,
+                    //     type: 'default',
+                    //     classes: ['kb-panel-container']
+                    // }),
                     ui.buildCollapsiblePanel({
                         title: 'Results',
                         name: 'results',

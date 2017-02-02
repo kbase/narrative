@@ -266,12 +266,17 @@ define([], function () {
             on: {
                 enter: {
                     messages: [{
-                        emit: 'sync-all-display-parameters'
+                        emit: 'on-execute-requested'
                     }]
                 },
                 resume: {
                     messages: [{
-                        emit: 'sync-all-display-parameters'
+                        emit: 'on-execute-requested'
+                    }]
+                },
+                exit: {
+                    messages: [{
+                        emit: 'exit-execute-requested'
                     }]
                 }
             },
@@ -341,9 +346,19 @@ define([], function () {
                 message: 'The App has now entered the execution engine.'
             },
             on: {
+                enter: {
+                    messages: [{
+                        emit: 'on-launched'
+                    }]
+                },
                 resume: {
                     messages: [{
-                        emit: 'sync-all-display-parameters'
+                        emit: 'on-launched'
+                    }]
+                },
+                exit: {
+                    messages: [{
+                        emit: 'exit-launched'
                     }]
                 }
             },
@@ -425,7 +440,7 @@ define([], function () {
                         type: 'list'
                     }
                 },
-                label: 'queued for',
+                label: 'queued',
                 message: 'The App is queued for running.'
             },
             on: {
@@ -527,7 +542,7 @@ define([], function () {
                         type: 'bolt'
                     }
                 },
-                label: 'running for',
+                label: 'running',
                 message: 'The App is now running.'
             },
             on: {
@@ -619,6 +634,23 @@ define([], function () {
                 label: 'canceling...',
                 message: 'Canceling App execution...'
             },
+            on: {
+                enter: {
+                    messages: [{
+                        emit: 'on-cancelling'
+                    }]
+                },
+                resume: {
+                    messages: [{
+                        emit: 'on-cancelling'
+                    }]
+                },
+                exit: {
+                    messages: [{
+                        emit: 'exit-cancelling'
+                    }]
+                }
+            },
             next: [{
                     mode: 'canceled'
                 },
@@ -688,6 +720,23 @@ define([], function () {
                 label: 'canceled',
                 message: 'App execution has been successfully canceled.'
             },
+            on: {
+                enter: {
+                    messages: [{
+                        emit: 'on-cancelled'
+                    }]
+                },
+                resume: {
+                    messages: [{
+                        emit: 'on-cancelled'
+                    }]
+                },
+                exit: {
+                    messages: [{
+                        emit: 'exit-cancelled'
+                    }]
+                }
+            },
             next: [{
                     mode: 'canceled'
                 },
@@ -737,7 +786,7 @@ define([], function () {
                         type: 'check'
                     }
                 },
-                label: 'finished in',
+                label: 'finished',
                 message: 'The App has successfully finished.'
             },
             on: {
@@ -871,6 +920,23 @@ define([], function () {
                 label: 'error',
                 message: 'An error was encountered while the App was queued.'
             },
+            on: {
+                enter: {
+                    messages: [{
+                        emit: 'on-error'
+                    }]
+                },
+                resume: {
+                    messages: [{
+                        emit: 'on-error'
+                    }]
+                },
+                exit: {
+                    messages: [{
+                        emit: 'exit-error'
+                    }]
+                }
+            },
             next: [{
                     mode: 'error',
                     stage: 'queued'
@@ -928,6 +994,23 @@ define([], function () {
                 },
                 label: 'error',
                 message: 'An error was encountered running the App.'
+            },
+            on: {
+                enter: {
+                    messages: [{
+                        emit: 'on-error'
+                    }]
+                },
+                resume: {
+                    messages: [{
+                        emit: 'on-error'
+                    }]
+                },
+                exit: {
+                    messages: [{
+                        emit: 'exit-error'
+                    }]
+                }
             },
             next: [{
                     mode: 'error',

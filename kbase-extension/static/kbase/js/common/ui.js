@@ -24,7 +24,8 @@ define([
         table = t('table'),
         tr = t('tr'),
         th = t('th'),
-        td = t('td');
+        td = t('td'),
+        i = t('i');
 
     // "static" methods
     function na() {
@@ -1187,6 +1188,28 @@ define([
             });
         }
 
+        function loading(arg) {
+            var prompt;
+            if (arg.message) {
+                prompt = arg.message + '... &nbsp &nbsp';
+            }
+            var sizeClass;
+            if (arg.size) {
+                sizeClass = 'fa-' + arg.size;
+            }
+            var style = {};
+            if (arg.color) {
+                style.color = arg.color;
+            }
+            return span([
+                prompt,
+                i({
+                    class: ['fa', 'fa-spinner', 'fa-pulse', sizeClass, 'fa-fw', 'margin-bottom'].join(' '),
+                    style: style
+                })
+            ]);
+        }
+
         return Object.freeze({
             getElement: getElement,
             getElements: getElements,
@@ -1233,7 +1256,8 @@ define([
             updateFromViewModel: updateFromViewModel,
             buildPresentableJson: buildPresentableJson,
             buildErrorTabs: buildErrorTabs,
-            htmlEncode: htmlEncode
+            htmlEncode: htmlEncode,
+            loading: loading
         });
     }
 

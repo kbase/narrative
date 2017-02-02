@@ -88,7 +88,7 @@ define([
                     } else {
                         viewModel.run._attrib.style = { fontWeight: 'bold' };
                         viewModel.run.active = true;
-                        viewModel.run.label = 'Running for';
+                        viewModel.run.label = 'Running ' + ui.loading({size: null, color: 'green'});
                         viewModel.run.elapsed = format.niceDuration(now - jobState.exec_start_time);
 
                         viewModel.finish._attrib.hidden = true;
@@ -120,7 +120,7 @@ define([
                         // Queue Status - in the queue
                         viewModel.queue._attrib.style = { fontWeight: 'bold' };
                         viewModel.queue.active = true;
-                        viewModel.queue.label = 'In Queue for ';
+                        viewModel.queue.label = 'Queued ' + ui.loading({size: null, color: 'orange'});
                         // console.log('position???', jobState);
                         if (jobState.position) {
                             viewModel.queue.position.label = ', currently at position ';

@@ -228,11 +228,8 @@ define([
 
             if (advancedInputs.length === 0) {
                 ui.setContent([areaElement, 'advanced-hidden-message'], '');
-                // ui.disableButton('toggle-advanced');
                 return;
             }
-
-            //            ui.enableButton('toggle-advanced');
 
             var removeClass = (settings.showAdvanced ? 'advanced-parameter-hidden' : 'advanced-parameter-showing'),
                 addClass = (settings.showAdvanced ? 'advanced-parameter-showing' : 'advanced-parameter-hidden');
@@ -241,12 +238,6 @@ define([
                 input.classList.remove(removeClass);
                 input.classList.add(addClass);
             }
-            //
-            //            // How many advanaced?
-            //
-            //            // Also update the button
-            //            var button = container.querySelector('[data-button="toggle-advanced"]');
-            //            button.innerHTML = (settings.showAdvanced ? 'Hide Advanced' : 'Show Advanced (' + advancedInputs.length + ' hidden)');
 
             // Also update the count in the paramters.
             var events = Events.make({ node: container });
@@ -295,7 +286,15 @@ define([
             var events = Events.make(),
                 content = form({ dataElement: 'input-widget-form' }, [                    
                     ui.buildPanel({
-                        title: span(['Input Objects', span({ dataElement: 'advanced-hidden-message', style: { marginLeft: '6px', fontStyle: 'italic' } })]),
+                        title: span([
+                            'Input Objects', 
+                            span({ 
+                                dataElement: 'advanced-hidden-message', 
+                                style: { 
+                                    marginLeft: '6px', 
+                                    fontStyle: 'italic' 
+                                } 
+                            })]),
                         name: 'input-objects-area',
                         body: div({ dataElement: 'input-fields' }),
                         classes: ['kb-panel-light']
@@ -432,11 +431,12 @@ define([
                 return Promise.resolve()
                     .then(function () {
                         if (inputParams.layout.length === 0) {
-                            places.inputFields.innerHTML = span({
-                                style: {
-                                    fontStyle: 'italic'
-                                }
-                            }, 'This app does not have input objects');
+                            ui.getElement('input-objects-area').classList.add('hidden');
+                            // places.inputFields.innerHTML = span({
+                            //     style: {
+                            //         fontStyle: 'italic'
+                            //     }
+                            // }, 'This app does not have input objects');
                         } else {
                             places.inputFields.innerHTML = inputParams.content;
                             return Promise.all(inputParams.layout.map(function (parameterId) {
@@ -466,7 +466,8 @@ define([
                     })
                     .then(function () {
                         if (outputParams.layout.length === 0) {
-                            places.outputFields.innerHTML = span({ style: { fontStyle: 'italic' } }, 'This app does not create any named output objects');
+                            ui.getElement('output-objects-area').classList.add('hidden');
+                            // places.outputFields.innerHTML = span({ style: { fontStyle: 'italic' } }, 'This app does not create any named output objects');
                         } else {
                             places.outputFields.innerHTML = outputParams.content;
                             return Promise.all(outputParams.layout.map(function (parameterId) {
@@ -493,7 +494,8 @@ define([
                     .then(function () {
                         if (parameterParams.layout.length === 0) {
                             // TODO: should be own node
-                            places.parameterFields.innerHTML = span({ style: { fontStyle: 'italic' } }, 'No parameters for this app');
+                            ui.getElement('parameters-area').classList.add('hidden');
+                            // places.parameterFields.innerHTML = span({ style: { fontStyle: 'italic' } }, 'No parameters for this app');
                         } else {
                             places.parameterFields.innerHTML = parameterParams.content;
 

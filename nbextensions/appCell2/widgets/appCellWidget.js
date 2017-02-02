@@ -29,6 +29,7 @@ define([
     './tabs/resultsTab',
     './tabs/logTab',
     './tabs/errorTab',
+    './runClock',
     'css!google-code-prettify/prettify.css',
     'css!font-awesome.css'
 ], function (
@@ -61,7 +62,8 @@ define([
     AppStates,
     resultsTabWidget,
     logTabWidget,
-    errorTabWidget
+    errorTabWidget,
+    RunClock
 ) {
     'use strict';
 
@@ -134,33 +136,37 @@ define([
                         help: 'Run the app',
                         type: 'primary',
                         classes: ['-run'],
-                        icon: {
+                        xicon: {
                             name: 'play'
-                        }
+                        },
+                        label: 'Run'                    
                     },
                     cancel: {
                         help: 'Cancel the running app',
                         type: 'danger',
                         classes: ['-cancel'],
-                        icon: {
+                        xicon: {
                             name: 'stop'
-                        }
+                        },
+                        label: 'Cancel'
                     },
                     reRunApp: {
                         help: 'Edit and re-run the app',
                         type: 'primary',
                         classes: ['-rerun'],
-                        icon: {
+                        xicon: {
                             name: 'refresh'
-                        }
+                        },
+                        label: 'Re-Run'
                     },
                     resetApp: {
                         help: 'Reset the app and return to Edit mode',
                         type: 'danger',
                         classes: ['-reset'],
-                        icon: {
+                        xicon: {
                             name: 'refresh'
-                        }
+                        },
+                        label: 'Re-Run'
                     }
 
                 }
@@ -531,23 +537,6 @@ define([
             });
         }
 
-        function updateFromViewModel(ui, viewModel, path) {
-            if (!path) {
-                path = [];
-            }
-            if (typeof viewModel === 'string') {
-                ui.setContent(path, viewModel);
-            } else if (typeof viewModel === 'number') {
-                ui.setContent(path, String(viewModel));
-            } else if (viewModel === null) {
-                ui.setContent(path, '-');
-            } else {
-                Object.keys(viewModel).forEach(function (key) {
-                    updateFromViewModel(ui, viewModel[key], path.concat(key));
-                });
-            }
-        }
-
         function startTab(tabId) {
             var selectedTab = controlBarTabs.tabs[tabId];
 
@@ -639,6 +628,13 @@ define([
                     paneNode.classList.remove('hidden');
                 }
             });
+        }
+
+        function selectedTabId() {
+            if (controlBarTabs.selectedTab) {
+                return controlBarTabs.selectedTab.id;
+            }
+            return null;
         }
 
         /*
@@ -1049,7 +1045,14 @@ define([
             var buttonDiv = div({ class: 'btn-group', style: style },
                 Object.keys(actionButtons.availableButtons).map(function (key) {
                     var button = actionButtons.availableButtons[key],
-                        classes = ['kb-flat-btn', 'kb-btn-action'].concat(button.classes);
+                        classes = ['xkb-flat-btn', 'xkb-btn-action'].concat(button.classes),
+                        icon;
+                    if (button.icon) {
+                        icon = {
+                            name: button.icon.name,
+                            size: 2
+                        };
+                    }
                     return ui.buildButton({
                         tip: button.help,
                         name: key,
@@ -1067,10 +1070,8 @@ define([
                                 action: key
                             }
                         },
-                        icon: {
-                            name: button.icon.name,
-                            size: 2
-                        }
+                        icon: icon,
+                        label: button.label
                     });
                 })
             );
@@ -1129,7 +1130,7 @@ define([
                     div({ style: { position: 'absolute', top: '0', bottom: '0', left: '0', right: '0' } }, [
                         div({
                             style: {
-                                width: '50px',
+                                width: '75px',
                                 height: '50px',
                                 position: 'absolute',
                                 top: '0',
@@ -1153,9 +1154,9 @@ define([
                             dataElement: 'status',
                             style: {
                                 position: 'absolute',
-                                left: '50px',
+                                left: '75px',
                                 top: '0',
-                                width: '200px',
+                                width: '400px',
                                 height: '50px'
                             }
                         }, [
@@ -1163,34 +1164,39 @@ define([
                                 style: {
                                     height: '50px',
                                     marginTop: '0px',
-                                    textAlign: 'center',
+                                    textAlign: 'left',
                                     xborder: '1px silver solid',
                                     lineHeight: '50px',
                                     verticalAlign: 'middle'
                                 }
                             }, [
-                                span({ dataElement: 'message' }),
-                                span(' '),
-                                span({ dataElement: 'measure', style: { fontWeight: 'bold' } }),
-                                span({
-                                    dataElement: 'finished',
-                                    class: 'hidden'
-                                }, [
-                                    span({dataElement: 'label'}, 'on '),
-                                    span({
-                                        dataElement: 'time',
-                                        style: { 
-                                            fontWeight: 'bold' 
-                                        } 
-                                    })
+                                // div([
+                                //     span({ dataElement: 'message' }),
+                                //     span(' '),
+                                //     span({ dataElement: 'measure', style: { fontWeight: 'bold' } })
+                                // ]),
+                                div([
+                                    span({ dataElement: 'execMessage' })
                                 ])
+                                // span({
+                                //     dataElement: 'finished',
+                                //     class: 'hidden'
+                                // }, [
+                                //     span({dataElement: 'label'}, 'on '),
+                                //     span({
+                                //         dataElement: 'time',
+                                //         style: { 
+                                //             fontWeight: 'bold' 
+                                //         } 
+                                //     })
+                                // ])
                             ])
                         ]),
                         div({
                             dataElement: 'toolbar',
                             style: {
                                 position: 'absolute',
-                                left: '250px',
+                                left: '475px',
                                 right: '0',
                                 top: '0',
                                 height: '50px'
@@ -1200,9 +1206,9 @@ define([
                                 style: {
                                     height: '50px',
                                     lineHeight: '50px',
-                                    xpaddingRight: '15px',
+                                    paddingRight: '15px',
                                     verticalAlign: 'bottom',
-                                    textAlign: 'center'
+                                    textAlign: 'right'
                                 }
                             }, [
                                 div({
@@ -1454,9 +1460,67 @@ define([
                     model.setItem('fsm.currentState', fsm.getCurrentState().state);
                     // save the narrative!
 
-                },
-                bus: bus
+                }
             });
+            // fsm events
+
+            fsm.bus.on('on-execute-requested', function () {
+                ui.setContent('run-control-panel.status.execMessage', 'Sending...');
+            });
+            fsm.bus.on('exit-execute-requested', function () {
+                ui.setContent('run-control-panel.status.execMessage', '');
+            });
+            fsm.bus.on('on-launched', function () {
+                ui.setContent('run-control-panel.status.execMessage', 'Launching...');
+            });
+            fsm.bus.on('exit-launched', function () {
+                ui.setContent('run-control-panel.status.execMessage', '');
+            });
+
+            fsm.bus.on('start-queueing', function () {
+                doStartQueueing();
+            });
+            fsm.bus.on('stop-queueing', function () {
+                doStopQueueing();
+            });
+
+            fsm.bus.on('start-running', function () {
+                doStartRunning();
+            });
+            fsm.bus.on('stop-running', function () {
+                doStopRunning();
+            });
+
+            fsm.bus.on('on-success', function () {
+                doOnSuccess();
+            });
+
+            fsm.bus.on('exit-success', function () {
+                doExitSuccess();
+            });
+
+            fsm.bus.on('on-error', function () {
+                doOnError();
+            });
+
+            fsm.bus.on('exit-error', function () {
+                doExitError();
+            });
+            fsm.bus.on('on-cancelling', function () {
+                doOnCancelling();
+            });
+
+            fsm.bus.on('exit-cancelling', function () {
+                doExitCancelling();
+            });
+            fsm.bus.on('on-cancelled', function () {
+                doOnCancelled();
+            });
+
+            fsm.bus.on('exit-cancelled', function () {
+                doExitCancelled();
+            });
+
             try {
                 fsm.start(currentState);
             } catch (ex) {
@@ -1647,13 +1711,13 @@ define([
                 ui.showElement('outdated');
             }
 
-            if (state.ui.message) {
-                ui.setContent('run-control-panel.toolbar.message', state.ui.message);
-            } else {
-                ui.setContent('run-control-panel.toolbar.message', '');
-            }
+            // if (state.ui.message) {
+            //     ui.setContent('run-control-panel.toolbar.message', state.ui.message);
+            // } else {
+            //     ui.setContent('run-control-panel.toolbar.message', '');
+            // }
 
-            ui.setContent('run-control-panel.status.message', state.ui.label);
+           //  ui.setContent('run-control-panel.status.message', state.ui.label);
 
             var indicatorNode = ui.getElement('run-control-panel.status.indicator');
             var iconNode = ui.getElement('run-control-panel.status.indicator.icon');
@@ -1681,6 +1745,14 @@ define([
             // the user-selected tab is no longer enabled or is hidden.
 
             // disable tab buttons
+            // If current tab is not enabled in this state, then forget that the user 
+            // made a selection.
+            
+            var userStateTab = state.ui.tabs[selectedTabId()];
+            if (!userStateTab || !userStateTab.enabled || userStateTab.hidden) {
+                userSelectedTab = false;
+            }
+
             var tabSelected = false;
             Object.keys(state.ui.tabs).forEach(function (tabId) {
                 var tab = state.ui.tabs[tabId];
@@ -1689,7 +1761,9 @@ define([
                 } else {
                     ui.disableButton(tabId);
                 }
-                // TODO honor user-selected tab.                
+                // TODO honor user-selected tab.
+                // Unless the tab is not enabled in this state, in which case
+                // we do switch to the one called for by the state.         
                 if (tab.selected && !userSelectedTab) {
                     tabSelected = true;
                     selectTab(tabId);
@@ -2007,6 +2081,11 @@ define([
             fsm.newState({ mode: 'execute-requested' });
             renderUI();
 
+            // We want to close down the configure tab, so let's forget about
+            // the fact that the user may have opened and closed the tab...
+            userSelectedTab = false;
+
+            // TODO: if we don't use this, we should remove it.
             // Save this to the exec state change log.
             var execLog = model.getItem('exec.log');
             if (!execLog) {
@@ -2215,142 +2294,151 @@ define([
             }
         }
 
-        function makeRunClock(config) {
-            var listeners = [],
-                container,
-                channel = runtime.bus().makeChannelBus({ description: 'Clock channel' }),
-                clockId = html.genId(),
-                startDate,
-                startTime;
-
-            function buildLayout() {
-                return span({
-                    id: clockId,
-                    style: {
-                        color: 'green',
-                        fontFamily: 'monospace'
-                    }
-                });
-            }
-
-            function renderClock() {
-                if (!startTime) {
-                    return;
-                }
-                var now = new Date(),
-                    elapsed = now.getTime() - startTime;
-
-                var clockNode = document.getElementById(clockId);
-                if (!clockNode) {
-                    console.error('Could not find clock node at' + clockId);
-                }
-                clockNode.innerHTML = format.niceDuration(elapsed);
-            }
-
-
-            function start(arg) {
-                return Promise.try(function () {
-                    // create clock layout on container.
-                    //channel.on('run', function (message) {
-                    container = arg.node;
-                    var layout = buildLayout();
-                    container.innerHTML = layout;
-
-                    startTime = arg.startTime;
-                    startDate = new Date(arg.startTime);
-
-                    listeners.push(runtime.bus().on('clock-tick', function () {
-                        renderClock();
-                    }));
-                    //});
-                });
-            }
-
-            function stop() {
-                return Promise.try(function () {
-                    listeners.forEach(function (listener) {
-                        channel.bus().removeListener(listener);
-                    });
-                });
-            }
-
-            return {
-                start: start,
-                stop: stop,
-                bus: function () {
-                    return bus;
-                }
-            };
-        }
-
-        var widgets = {};
+        // FSM state change events
 
         function doStartRunning() {
-            widgets.runClock = makeRunClock();
             var jobState = model.getItem('exec.jobState');
             if (!jobState) {
                 console.warn('What, no job state?');
                 return;
             }
+
+            var message = span([
+                ui.loading({size: null, color: 'green'}),
+                ' Running - ',
+                span({dataElement: 'clock'})
+            ]);
+            ui.setContent('run-control-panel.status.execMessage', message);
+
+            widgets.runClock = RunClock.make({
+                prefix: 'started ',
+                suffix: ' ago'
+            });
             widgets.runClock.start({
-                    node: ui.getElement('run-control-panel.status.measure'),
-                    startTime: jobState.exec_start_time
-                })
-                .catch(function (err) {
-                    ui.setContent('run-control-panel.status.measure', 'ERROR:' + err.message);
-                });
+                node: ui.getElement('run-control-panel.status.execMessage.clock'),
+                startTime: jobState.exec_start_time
+            })
+            .catch(function (err) {
+                ui.setContent('run-control-panel.status.execMessage.clock', 'ERROR:' + err.message);
+            });
         }
 
         function doStopRunning() {
-            ui.setContent('run-control-panel.status.measure', '');
+            // ui.setContent('run-control-panel.status.measure', '');
             if (widgets.runClock) {
                 widgets.runClock.stop();
             }
         }
 
         function doStartQueueing() {
-            widgets.runClock = makeRunClock();
             var jobState = model.getItem('exec.jobState');
             if (!jobState) {
                 console.warn('What, no job state?');
                 return;
             }
+
+            var message = span([
+                ui.loading({color: 'green'}),
+                ' Waiting in Queue - ',
+                span({dataElement: 'clock'})
+            ]);
+            ui.setContent('run-control-panel.status.execMessage', message);
+
+            widgets.runClock = RunClock.make({
+                prefix: 'for '
+            });
             widgets.runClock.start({
-                    node: ui.getElement('run-control-panel.status.measure'),
-                    startTime: jobState.creation_time
-                })
-                .catch(function (err) {
-                    ui.setContent('run-control-panel.status.measure', 'ERROR:' + err.message);
-                });
+                node: ui.getElement('run-control-panel.status.execMessage.clock'),
+                startTime: jobState.creation_time
+            })
+            .catch(function (err) {
+                ui.setContent('run-control-panel.status.execMessage.clock', 'ERROR:' + err.message);
+            });
         }
 
         function doStopQueueing() {
-            ui.setContent('run-control-panel.status.measure', '');
+            // ui.setContent('run-control-panel.status.measure', '');
             if (widgets.runClock) {
                 widgets.runClock.stop();
             }
         }
 
         function doExitSuccess() {
-            ui.setContent('run-control-panel.status.measure', '');
+            if (widgets.runClock) {
+                widgets.runClock.stop();
+            }
+            // ui.setContent('run-control-panel.status.measure', '');
+            ui.setContent('run-control-panel.status.execMessage', '');
+        }
+
+        function niceState(jobState) {
+            var label;
+            var color;
+            switch (jobState) {
+            case 'completed':
+                label = 'success';
+                color = 'green';
+                break;
+            case 'suspend':
+                label = 'error';
+                color = 'red';
+                break;
+            case 'canceled':
+                label = 'cancellation';
+                color = 'orange';
+                break;
+            default:
+                label = jobState;
+                color = 'black';
+            }
+
+            return span({
+                style: {
+                    color: color,
+                    fontWeight: 'bold'
+                }
+            }, label);
         }
 
         function doOnSuccess() {
             // have we created output yet?
-            var jobId = model.getItem('exec.jobState.job_id'),
+            var jobState = model.getItem('exec.jobState'),
+                jobId = model.getItem('exec.jobState.job_id'),
                 outputCellId = model.getItem(['output', 'byJob', jobId, 'cell', 'id']),
-                outputCell, notification,
-                outputCreated = model.getItem(['exec', 'outputCreated']);
+                outputCell, notification;
+
+            var message = span([
+                'Finished with ',
+                niceState(jobState.job_state),
+                ' on ',
+                format.niceTime(jobState.finish_time),
+                ' (',
+                span({dataElement: 'clock'}),
+                ')'
+            ]);
+
+            ui.setContent('run-control-panel.status.execMessage', message);
 
             // Update the measurement in the control panel.
-            var jobState = model.getItem('exec.jobState');
-            var elapsedRunTime = format.niceDuration(jobState.finish_time - jobState.exec_start_time);
-            ui.setContent('run-control-panel.status.measure', span({
-                style: {
-                    color: 'blue',
-                    fontFamily: 'monospace'
-                }
-            }, elapsedRunTime));
+            // var elapsedRunTime = format.niceDuration(jobState.finish_time - jobState.exec_start_time);
+            // ui.setContent('run-control-panel.status.measure', span({
+            //     style: {
+            //         color: 'blue',
+            //         fontFamily: 'monospace'
+            //     }
+            // }, elapsedRunTime));
+
+            // Show time since this app cell run finished.
+            widgets.runClock = RunClock.make({
+                suffix: ' ago'
+            });
+            widgets.runClock.start({
+                node: ui.getElement('run-control-panel.status.execMessage.clock'),
+                startTime: jobState.finish_time
+            })
+            .catch(function (err) {
+                ui.setContent('run-control-panel.status.execMessage.clock', 'ERROR:' + err.message);
+            });
 
             // Enable and populate the timestamp part
             // ui.getElement('run-control-panel.status.finished').classList.remove('hidden');
@@ -2420,6 +2508,83 @@ define([
 
         function doReportError() {
             alert('placeholder for reporting an error');
+        }
+
+        function doOnError() {
+            var jobState = model.getItem('exec.jobState');
+
+            var message = span([
+                'Finished with ',
+                niceState(jobState.job_state),
+                ' on ',
+                format.niceTime(jobState.finish_time),
+                ' (',
+                span({dataElement: 'clock'}),
+                ')'
+            ]);
+
+            ui.setContent('run-control-panel.status.execMessage', message);
+
+            // Show time since this app cell run finished.
+            widgets.runClock = RunClock.make({
+                suffix: ' ago'
+            });
+            widgets.runClock.start({
+                node: ui.getElement('run-control-panel.status.execMessage.clock'),
+                startTime: jobState.finish_time
+            })
+            .catch(function (err) {
+                ui.setContent('run-control-panel.status.execMessage.clock', 'ERROR:' + err.message);
+            });
+        }
+
+        function doExitError() {
+            if (widgets.runClock) {
+                widgets.runClock.stop();
+            }
+            ui.setContent('run-control-panel.status.execMessage', '');
+        }
+
+        function doOnCancelling() {
+            ui.setContent('run-control-panel.status.execMessage', 'Cancelling...');
+        }
+
+        function doExitCancelling() {
+            ui.setContent('run-control-panel.status.execMessage', '');
+        }
+
+        function doOnCancelled() {
+            var jobState = model.getItem('exec.jobState');
+
+            var message = span([
+                span({style: {color: 'orange'}}, 'Cancelled'),
+                ' on ',
+                format.niceTime(jobState.finish_time),
+                ' (',
+                span({dataElement: 'clock'}),
+                ')'
+            ]);
+
+            ui.setContent('run-control-panel.status.execMessage', message);
+
+            // Show time since this app cell run finished.
+            widgets.runClock = RunClock.make({
+                suffix: ' ago'
+            });
+            widgets.runClock.start({
+                node: ui.getElement('run-control-panel.status.execMessage.clock'),
+                startTime: jobState.finish_time
+            })
+            .catch(function (err) {
+                ui.setContent('run-control-panel.status.execMessage.clock', 'ERROR:' + err.message);
+            });
+        }
+
+        function doExitCancelled() {
+            if (widgets.runClock) {
+                widgets.runClock.stop();
+            }
+            ui.setContent('run-control-panel.status.execMessage', '');
         }
 
 
@@ -2553,27 +2718,6 @@ define([
                         doRemove();
                     }));
 
-                    busEventManager.add(bus.on('start-queueing', function () {
-                        doStartQueueing();
-                    }));
-                    busEventManager.add(bus.on('stop-queueing', function () {
-                        doStopQueueing();
-                    }));
-
-                    busEventManager.add(bus.on('start-running', function () {
-                        doStartRunning();
-                    }));
-                    busEventManager.add(bus.on('stop-running', function () {
-                        doStopRunning();
-                    }));
-
-                    busEventManager.add(bus.on('on-success', function () {
-                        doOnSuccess();
-                    }));
-
-                    busEventManager.add(bus.on('exit-success', function () {
-                        doExitSuccess();
-                    }));
 
                     //busEventManager.add(bus.on('sync-all-display-parameters', function () {
                     //    widgets.paramsDisplayWidget.bus.emit('sync-all-parameters');

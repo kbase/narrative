@@ -41,9 +41,14 @@ define([
                     }
                 },
                 next: [{
+                        mode: 'queued',
+                        auto: true
+                    },
+                    {
                         mode: 'active',
                         auto: true
                     },
+                    
                     {
                         mode: 'complete'
                     },
@@ -52,6 +57,39 @@ define([
                     },
                     {
                         mode: 'cancelled'
+                    }
+                ]
+            },
+            {
+                state: {
+                    mode: 'queued',
+                    auto: true
+                },
+                meta: {
+                    description: 'The job is queued, there are no logs yet.'
+                },
+                ui: {
+                    buttons: {
+                        enabled: [],
+                        disabled: ['play', 'stop', 'top', 'back', 'forward', 'bottom']
+                    }
+                },
+                next: [{
+                        mode: 'active',
+                        auto: false
+                    },
+                    {
+                        mode: 'active',
+                        auto: true
+                    },
+                    {
+                        mode: 'complete'
+                    },
+                    {
+                        mode: 'cancelled'
+                    },
+                    {
+                        mode: 'error'
                     }
                 ]
             },
@@ -86,7 +124,24 @@ define([
                     {
                         mode: 'error'
                     }
-                ]
+                ],
+                on: {
+                    enter: {
+                        messages: [{
+                            emit: 'on-active'
+                        }]
+                    },
+                    resume: {
+                        messages: [{
+                            emit: 'on-active'
+                        }]
+                    },
+                    exit: {
+                        messages: [{
+                            emit: 'exit-active'
+                        }]
+                    }
+                }
             },
             {
                 state: {
@@ -179,16 +234,19 @@ define([
         }
 
         function stopAutoFetch() {
-            var state = fsm.getCurrentState().state;
-            if (state.mode === 'active' && state.auto) {
-                looping = false;
-                fsm.newState({ mode: 'active', auto: false });
-            }
+            looping = false;
+            // var state = fsm.getCurrentState().state;
+            // if (state.mode === 'active' && state.auto) {
+            //     fsm.newState({ mode: 'active', auto: false });
+            // }
         }
 
         function startAutoFetch() {
+            if (looping) {
+                return;
+            }
             var state = fsm.getCurrentState().state;
-            if (state.mode === 'new' || (state.mode === 'active' && !state.auto)) {
+            if (state.mode === 'active' && state.auto) {
                 looping = true;
                 fsm.newState({ mode: 'active', auto: true });
                 runtime.bus().emit('request-latest-job-log', {
@@ -202,6 +260,13 @@ define([
 
 
         function doStartFetchingLogs() {
+            startAutoFetch();
+        }
+
+        function doPlayLogs() {
+            fsm.updateState({
+                auto: true
+            });
             startAutoFetch();
         }
 
@@ -306,7 +371,7 @@ define([
                     title: 'Start fetching logs',
                     id: events.addEvent({
                         type: 'click',
-                        handler: doStartFetchingLogs
+                        handler: doPlayLogs
                     })
                 }, [
                     span({ class: 'fa fa-play' })
@@ -605,13 +670,12 @@ define([
                             // no change
                             break;
                         case 'in-progress':
-                            doStartFetchingLogs();
                             newState = {
                                 mode: 'active',
                                 auto: true
                             };
                             break;
-                        // may happen that the job state jumps over in-progress...
+                            // may happen that the job state jumps over in-progress...
                         case 'completed':
                             newState = {
                                 mode: 'complete'
@@ -632,11 +696,14 @@ define([
                             console.error('Unknown log status', jobStatus, message);
                             throw new Error('Unknown log status ' + jobStatus);
                         }
-                        break; 
+                        break;
                     case 'active':
                         switch (jobStatus) {
                         case 'queued':
+                            // this should not occur!
+                            break;
                         case 'in-progress':
+                            doStartFetchingLogs();
                             break;
                         case 'completed':
                             newState = {
@@ -694,9 +761,6 @@ define([
                 }
             });
             externalEventListeners.push(ev);
-
-           
-
         }
 
         function stopEventListeners() {
@@ -731,14 +795,18 @@ define([
             }
 
             // Emit messages for this state.
-            if (state.ui.messages) {
-                state.ui.messages.forEach(function (message) {
-                    bus.send(message.message, message.address);
-                });
-            }
+            // if (state.ui.messages) {
+            //     state.ui.messages.forEach(function (message) {
+            //         bus.send(message.message, message.address);
+            //     });
+            // }
         }
 
         function initializeFSM() {
+            // events emitted by the fsm.
+
+
+
             fsm = Fsm.make({
                 states: appStates,
                 initialState: {
@@ -751,6 +819,12 @@ define([
                 }
             });
             fsm.start();
+            fsm.bus.on('on-active', function (message) {
+                doStartFetchingLogs();
+            });
+            fsm.bus.on('exit-active', function (message) {
+                doStopFetchingLogs();
+            });
         }
 
         function startJobUpdates() {
@@ -797,6 +871,7 @@ define([
             stopEventListeners();
             stopJobUpdates();
             bus.stop();
+            fsm.stop();
         }
 
         // MAIN

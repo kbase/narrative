@@ -1168,8 +1168,9 @@ define([
                                 position: 'absolute',
                                 left: '100px',
                                 top: '0',
-                                width: '400px',
-                                height: '50px'
+                                width: '450px',
+                                height: '50px',
+                                overflow: 'hidden'
                             }
                         }, [
                             div({
@@ -1208,7 +1209,7 @@ define([
                             dataElement: 'toolbar',
                             style: {
                                 position: 'absolute',
-                                left: '500px',
+                                left: '550px',
                                 right: '0',
                                 top: '0',
                                 height: '50px'

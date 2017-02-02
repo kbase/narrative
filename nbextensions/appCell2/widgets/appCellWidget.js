@@ -77,7 +77,6 @@ define([
         td = t('td'),
         pre = t('pre'),
         input = t('input'),
-        img = t('img'),
         p = t('p'),
         blockquote = t('blockquote'),
         appStates = AppStates;
@@ -365,94 +364,6 @@ define([
                 });
         }
 
-        // function loadViewParamsWidget(arg) {
-        //     return new Promise(function (resolve, reject) {
-        //         require(['./appParamsViewWidget'], function (Widget) {
-        //             // TODO: widget should make own bus.
-        //             var bus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for input widget' }),
-        //                 widget = Widget.make({
-        //                     bus: bus,
-        //                     workspaceInfo: workspaceInfo,
-        //                     initialParams: model.getItem('params')
-        //                 });
-
-        //             bus.emit('run', {
-        //                 node: arg.node,
-        //                 appSpec: model.getItem('app.spec'),
-        //                 parameters: spec.getSpec().parameters
-        //             });
-
-        //             bus.on('sync-params', function (message) {
-        //                 message.parameters.forEach(function (paramId) {
-        //                     bus.send({
-        //                         parameter: paramId,
-        //                         value: model.getItem(['params', message.parameter])
-        //                     }, {
-        //                         key: {
-        //                             type: 'update',
-        //                             parameter: message.parameter
-        //                         }
-        //                     });
-        //                 });
-        //             });
-
-        //             bus.on('parameter-sync', function (message) {
-        //                 var value = model.getItem(['params', message.parameter]);
-        //                 bus.send({
-        //                     //                            parameter: message.parameter,
-        //                     value: value
-        //                 }, {
-        //                     // This points the update back to a listener on this key
-        //                     key: {
-        //                         type: 'update',
-        //                         parameter: message.parameter
-        //                     }
-        //                 });
-        //             });
-
-        //             bus.on('set-param-state', function (message) {
-        //                 model.setItem('paramState', message.id, message.state);
-        //             });
-
-        //             bus.respond({
-        //                 key: {
-        //                     type: 'get-param-state'
-        //                 },
-        //                 handle: function (message) {
-        //                     return {
-        //                         state: model.getItem('paramState', message.id)
-        //                     }
-        //                 }
-        //             });
-
-        //             bus.respond({
-        //                 key: {
-        //                     type: 'get-parameter'
-        //                 },
-        //                 handle: function (message) {
-        //                     return {
-        //                         value: model.getItem(['params', message.parameterName])
-        //                     };
-        //                 }
-        //             });
-
-
-
-        //             return widget.start()
-        //                 .then(function () {
-        //                     resolve({
-        //                         bus: bus,
-        //                         instance: widget
-        //                     });
-        //                 });
-        //         }, function (err) {
-        //             console.error('ERROR', err);
-        //             reject(err);
-        //         });
-        //     });
-        // }
-
-
         function configureWidget() {
             function factory(config) {
                 var container,
@@ -739,14 +650,6 @@ define([
                     tag: app.tag
                 };
             default:
-                // we may be able to grok this.
-                //if (app.spec.info.ver) {
-                //    return {
-                //        ids: [app.spec.info.id],
-                //        tag: 'release',
-                //        version: app.spec.info.ver
-                //    };
-                //}
                 console.error('Invalid tag', app);
                 throw new ToErr.KBError({
                     type: 'internal-app-cell-error',
@@ -777,11 +680,11 @@ define([
                 });
         }
 
-
         // RENDER API
 
         function syncFatalError() {
             return;
+            // TODO: resolve "fatal error" handling. I think this can be removed, but let's hold off.
             // var advice = model.getItem('fatalError.advice'),
             //     info = model.getItem('fatalError.info'),
             //     ul = t('ul'),
@@ -899,7 +802,6 @@ define([
             if (!node) {
                 return;
             }
-            // node.style.display = null;
             node.classList.remove('hidden');
         }
 
@@ -908,10 +810,6 @@ define([
             if (!node) {
                 return;
             }
-            //if (!node.getAttribute('data-original-display')) {
-            //    node.setAttribute('data-original-display', )
-            // }
-            // node.style.display = 'none';
             node.classList.add('hidden');
         }
 
@@ -956,8 +854,6 @@ define([
                             checked: (settingsValue ? true : false),
                             dataSetting: key,
                             value: key,
-                            //dataToggle: 'tooltip',
-                            //title: setting.help || '',
                             id: events.addEvent({
                                 type: 'change',
                                 handler: function (e) {
@@ -973,7 +869,6 @@ define([
                 content
             ]));
             events.attachEvents();
-            // ui.enableTooltips('settings');
 
             //Ensure that the settings are reflected in the UI.
             Object.keys(settings).forEach(function (key) {
@@ -1041,11 +936,7 @@ define([
             if (Jupyter.narrative.readonly) {
                 style.display = 'none';            
             }
-            //style.width = '100%';
-            //style.boxSizing = 'border-box';
             style.padding = '6px';
-            //style.display = 'inline-block';
-            //style.width = '100%';
             var buttonDiv = div({ 
                 class: 'btn-group xbtn-block', 
                 style: style 
@@ -1183,26 +1074,9 @@ define([
                                     verticalAlign: 'middle'
                                 }
                             }, [
-                                // div([
-                                //     span({ dataElement: 'message' }),
-                                //     span(' '),
-                                //     span({ dataElement: 'measure', style: { fontWeight: 'bold' } })
-                                // ]),
                                 div([
                                     span({ dataElement: 'execMessage' })
                                 ])
-                                // span({
-                                //     dataElement: 'finished',
-                                //     class: 'hidden'
-                                // }, [
-                                //     span({dataElement: 'label'}, 'on '),
-                                //     span({
-                                //         dataElement: 'time',
-                                //         style: { 
-                                //             fontWeight: 'bold' 
-                                //         } 
-                                //     })
-                                // ])
                             ])
                         ]),
                         div({
@@ -1236,12 +1110,7 @@ define([
                     ])
                 ]),
                 div({
-                    dataElement: 'tab-pane',
-                    // style: {
-                    //     border: '1px rgb(32, 77, 16) solid',
-                    //     padding: '4px',
-                    //     backgroundColor: '#f5f5f5'
-                    // }
+                    dataElement: 'tab-pane'
                 }, [
                     div({ dataElement: 'widget' })
                 ])
@@ -1322,45 +1191,6 @@ define([
                                     });
                                 }()),
                                 buildRunControlPanel(events)
-                                // ui.buildCollapsiblePanel({
-                                //     title: 'Output ' + span({class: 'fa fa-arrow-left'}),
-                                //     name: 'output-group',
-                                //     hidden: true,
-                                //     type: 'default',
-                                //     classes: ['kb-panel-container'],
-                                //     body: div({dataElement: 'widget'})
-                                // }),
-                                //                                ui.buildPanel({
-                                //                                    title: 'Error',
-                                //                                    name: 'fatal-error',
-                                //                                    hidden: true,
-                                //                                    type: 'danger',
-                                //                                    classes: ['kb-panel-container'],
-                                //                                    body: div([
-                                //                                        div({class: 'alert alert-danger'}, 'This App cell could not load due to errors described below'),
-                                //                                        ui.buildGridTable({
-                                //                                            row: {
-                                //                                                style: {marginBottom: '6px'}
-                                //                                            },
-                                //                                            cols: [
-                                //                                                {
-                                //                                                    width: 2,
-                                //                                                    style: {fontWeight: 'bold'}
-                                //                                                },
-                                //                                                {
-                                //                                                    width: 10
-                                //                                                }
-                                //                                            ],
-                                //                                            table: [
-                                //                                                ['Title', div({dataElement: 'title'})],
-                                //                                                ['Message', div({dataElement: 'message'})],
-                                //                                                ['Advice', div({dataElement: 'advice'})],
-                                //                                                ['Info', div({dataElement: 'info'})],
-                                //                                                ['Details', div({dataElement: 'detail', style: {maxHeight: '300px', maxWidth: '100%', overflow: 'scroll', fontFamily: 'monospace'}})]
-                                //                                            ]
-                                //                                        })
-                                //                                    ])
-                                //                                })
                             ])
                         ])
                     ])
@@ -1369,36 +1199,6 @@ define([
                 content: content,
                 events: events
             };
-        }
-
-        // TODO: move to ... validation? specs?
-        function isEmpty(value) {
-
-            if (value === undefined || value === null) {
-                return true;
-            }
-
-            switch (typeof value) {
-            case 'string':
-                if (value.length === 0) {
-                    return true;
-                }
-                break;
-            case 'number':
-                return false;
-            case 'object':
-                if (value instanceof Array) {
-                    if (value.length === 0) {
-                        return true;
-                    }
-                }
-                if (Object.keys(value).length === 0) {
-                    return true;
-                }
-                break;
-            }
-            return false;
-
         }
 
         // this should be elevated to the collection of parameters.
@@ -1445,14 +1245,6 @@ define([
             cell.set_text('');
         }
 
-        function setStatus(cell, status) {
-            model.setItem('attributes.status', status);
-        }
-
-        function getStatus(cell) {
-            model.getItem('attributes.status');
-        }
-
         function initializeFSM() {
             var currentState = model.getItem('fsm.currentState');
             if (!currentState) {
@@ -1466,9 +1258,6 @@ define([
                 initialState: {
                     mode: 'new'
                 },
-                //xinitialState: {
-                //    mode: 'editing', params: 'incomplete'
-                //},
                 onNewState: function (fsm) {
                     model.setItem('fsm.currentState', fsm.getCurrentState().state);
                     // save the narrative!
@@ -1564,12 +1353,6 @@ define([
         }
 
         function initCodeInputArea() {
-            // var codeInputArea = cell.input[0];
-            //if (!cell.kbase.inputAreaDisplayStyle) {
-            //    cell.kbase.inputAreaDisplayStyle = codeInputArea.css('display');
-            // }
-            // try this hack to reset the initial state for the input subarea...
-            //codeInputArea[0].setAttribute('data-toggle-initial-state', 'hidden');
             model.setItem('user-settings.showCodeInputArea', false);
         }
 
@@ -1582,7 +1365,7 @@ define([
             }
         }
 
-        function toggleCodeInputArea(cell) {
+        function toggleCodeInputArea() {
             if (model.getItem('user-settings.showCodeInputArea')) {
                 model.setItem('user-settings.showCodeInputArea', false);
             } else {
@@ -1592,7 +1375,7 @@ define([
             return model.getItem('user-settings.showCodeInputArea');
         }
 
-        function toggleSettings(cell) {
+        function toggleSettings() {
             var name = 'showSettings',
                 selector = 'settings',
                 node = ui.getElement(selector),
@@ -1659,57 +1442,7 @@ define([
             model.setItem('notifications', []);
         }
 
-
-        //        function showToggle(name) {
-        //
-        //        }
-        //
-        //        function ensureToggle(name) {
-        //            var propName = 'user-settings.show-' + name,
-        //                elementPath = 'toggle-' + name,
-        //
-        //        }
-        //
-        //        // just simple display block/none for now
-        //        function renderToggle(name) {
-        //            var propName = 'user-settings.show-' + name,
-        //                elementPath = 'toggle-' + name,
-        //                node = dom.getElement(elementPath),
-        //                originalStyle = model.getItem(propName);
-        //
-        //            if (orig
-        //
-        //        }
-        //
-        //        function toggleToggle(name) {
-        //            var propName = 'user-settings.show-' + name;
-        //            if (model.getItem(propName)) {
-        //                model.setItem(propName, false);
-        //            } else {
-        //                model.setItem(propName, true);
-        //            }
-        //            renderToggle(name);
-        //            return model.getItem(propName);
-        //        }
-
         // WIDGETS
-
-        function showWidget(name, widgetModule, path) {
-            var bus = runtime.bus().makeChannelBus({ description: 'Bus for showWidget' }),
-                widget = widgetModule.make({
-                    bus: bus,
-                    workspaceInfo: workspaceInfo
-                });
-            widgets[name] = {
-                path: path,
-                module: widgetModule,
-                instance: widget
-            };
-            widget.start();
-            bus.emit('attach', {
-                node: ui.getElement(path)
-            });
-        }
 
         /*
          *
@@ -1724,29 +1457,15 @@ define([
                 ui.showElement('outdated');
             }
 
-            // if (state.ui.message) {
-            //     ui.setContent('run-control-panel.toolbar.message', state.ui.message);
-            // } else {
-            //     ui.setContent('run-control-panel.toolbar.message', '');
-            // }
-
-           //  ui.setContent('run-control-panel.status.message', state.ui.label);
-
             var indicatorNode = ui.getElement('run-control-panel.status.indicator');
             var iconNode = ui.getElement('run-control-panel.status.indicator.icon');
             if (iconNode) {
                 // clear the classes
 
                 indicatorNode.className = state.ui.appStatus.classes.join(' ');
-                //var classes = ['fa', 'fa-' + state.ui.appStatus.icon.type, 'fa-3x'].concat(state.ui.appStatus.classes);
-                //classes.forEach(function(klass) {
-                //    iconNode.classList.add(klass);
-                //});
-                // iconNode.classList.add.apply(iconNode.classList, classes);
 
                 iconNode.className = '';
                 iconNode.classList.add('fa', 'fa-' + state.ui.appStatus.icon.type, 'fa-3x');
-                // iconNode.style.color = state.ui.icon.color;
             }
 
             // Clear the measure
@@ -1793,16 +1512,6 @@ define([
                 unselectTab();
             }
 
-            // enable tab buttons
-            //state.ui.tabs.disabled.forEach(function (tabId) {
-            //    ui.disableButton(tabId);
-            //});
-
-            // Select tab, if any
-            //if (state.ui.tabs.selected) {
-            //    selectTab(state.ui.tabs.selected);
-            // }
-
             if (state.ui.actionButton) {
                 if (actionButtons.current.name) {
                     ui.hideButton(actionButtons.current.name);
@@ -1816,44 +1525,6 @@ define([
                     ui.enableButton(name);
                 }
             }
-
-
-            // Button state
-            //            state.ui.buttons.enabled.forEach(function (button) {
-            //                ui.enableButton(button);
-            //            });
-            //            state.ui.buttons.disabled.forEach(function (button) {
-            //                ui.disableButton(button);
-            //            });
-            //            state.ui.buttons.hidden.forEach(function (button) {
-            //                ui.hideButton(button);
-            //            });
-
-
-            // Element state
-
-            // DISABLE for now, as the tabs have taken over most of this
-            // functionality. May still be useful...
-            //            state.ui.elements.show.forEach(function (element) {
-            //                ui.showElement(element);
-            //            });
-            //            state.ui.elements.hide.forEach(function (element) {
-            //                ui.hideElement(element);
-            //            });
-
-            // Emit messages for this state.
-            //            if (state.ui.messages) {
-            //                state.ui.messages.forEach(function (message) {
-            //                    var tempBus;
-            //                    if (message.widget) {
-            //                        tempBus = widgets[message.widget].bus;
-            //                    } else {
-            //                        tempBus = inputWidgetBus;
-            //                    }
-            //
-            //                    tempBus.send(message.message, message.address);
-            //                });
-            //            }
         }
 
         function toggleReadOnlyMode(readOnly) {
@@ -1912,14 +1583,10 @@ define([
             });
         }
 
-        function resetToEditMode(source) {
+        function resetToEditMode() {
             // only do this if we are not editing.
 
             model.deleteItem('exec');
-
-            // Also ensure that the exec widget is reset
-            // widgets.execWidget.bus.emit('reset');
-            // reloadExecutionWidget();
 
             // TODO: evaluate the params again before we do this.
             fsm.newState({ mode: 'editing', params: 'complete', code: 'built' });
@@ -1929,14 +1596,10 @@ define([
             renderUI();
         }
 
-        function resetAppAndEdit(source) {
+        function resetAppAndEdit() {
             // only do this if we are not editing.
 
             model.deleteItem('exec');
-
-            // Also ensure that the exec widget is reset
-            // widgets.execWidget.bus.emit('reset');
-            // reloadExecutionWidget();
 
             // TODO: evaluate the params again before we do this.
             fsm.newState({ mode: 'editing', params: 'incomplete' });
@@ -2041,7 +1704,6 @@ define([
         }
 
         function updateFromJobState(jobState) {
-
             var currentState = fsm.getCurrentState(),
                 newFsmState = (function () {
                     switch (jobState.job_state) {
@@ -2223,16 +1885,13 @@ define([
                 key: {
                     type: 'job-canceled'
                 },
-                handle: function (message) {
+                handle: function () {
                     //  reset the cell into edit mode
                     var state = fsm.getCurrentState();
                     if (state.state.mode === 'editing') {
                         console.warn('in edit mode, so not resetting ui');
                         return;
                     }
-
-
-
                     resetToEditMode('job-canceled');
                 }
             });
@@ -2245,7 +1904,7 @@ define([
                 key: {
                     type: 'job-does-not-exist'
                 },
-                handle: function (message) {
+                handle: function () {
                     //  reset the cell into edit mode
                     var state = fsm.getCurrentState();
                     if (state.state.mode === 'editing') {
@@ -2298,10 +1957,8 @@ define([
         }
 
         function clearOutput() {
-            // cell.set_text('from biokbase.narrative.jobs import AppManager\nAppManager().clear_app()');
-            // cell.execute();
             var cellNode = cell.element.get(0),
-                textNode = document.querySelector('.output_area.output_text');
+                textNode = cellNode.querySelector('.output_area.output_text');
 
             if (textNode) {
                 textNode.innerHTML = '';
@@ -2338,7 +1995,6 @@ define([
         }
 
         function doStopRunning() {
-            // ui.setContent('run-control-panel.status.measure', '');
             if (widgets.runClock) {
                 widgets.runClock.stop();
             }
@@ -2371,7 +2027,6 @@ define([
         }
 
         function doStopQueueing() {
-            // ui.setContent('run-control-panel.status.measure', '');
             if (widgets.runClock) {
                 widgets.runClock.stop();
             }
@@ -2381,7 +2036,6 @@ define([
             if (widgets.runClock) {
                 widgets.runClock.stop();
             }
-            // ui.setContent('run-control-panel.status.measure', '');
             ui.setContent('run-control-panel.status.execMessage', '');
         }
 
@@ -2433,15 +2087,6 @@ define([
 
             ui.setContent('run-control-panel.status.execMessage', message);
 
-            // Update the measurement in the control panel.
-            // var elapsedRunTime = format.niceDuration(jobState.finish_time - jobState.exec_start_time);
-            // ui.setContent('run-control-panel.status.measure', span({
-            //     style: {
-            //         color: 'blue',
-            //         fontFamily: 'monospace'
-            //     }
-            // }, elapsedRunTime));
-
             // Show time since this app cell run finished.
             widgets.runClock = RunClock.make({
                 suffix: ' ago'
@@ -2454,27 +2099,8 @@ define([
                 ui.setContent('run-control-panel.status.execMessage.clock', 'ERROR:' + err.message);
             });
 
-            // Enable and populate the timestamp part
-            // ui.getElement('run-control-panel.status.finished').classList.remove('hidden');
-            // var finishTime = formatting.niceTime(new Date(jobState.finish_time));
-            // ui.setContent('run-control-panel.status.finished.time', span({
-            //     style: {
-            //         color: 'blue',
-            //         fontFamily: 'monospace'
-            //     }
-            // }, finishTime));
-
             // widgets named 'no-display' are a trigger to skip the output cell process.
             var skipOutputCell = model.getItem('exec.outputWidgetInfo.name') === 'no-display';
-
-
-            // New app -- check the existing exec state, see if the
-            // output has been created already, and if so just exit.
-            // This protects us from the condition in which a user
-            // has removed the output for the latest run.
-            //            if (outputCreated) {
-            //                return;
-            //            }
 
             // If so, is the cell still there?
             if (outputCellId) {
@@ -2512,12 +2138,6 @@ define([
                 createdAt: new Date().toGMTString(),
                 params: model.copyItem('params')
             });
-
-            // widgets.outputWidget.instance.bus().emit('update', {
-            //     jobState: model.getItem('exec.jobState'),
-            //     output: model.getItem('output')
-            // });
-            // bus.emit('output-created', )
         }
 
         function doReportError() {
@@ -2696,7 +2316,8 @@ define([
                         ui.setButtonLabel('toggle-code-view', label);
                     }));
                     busEventManager.add(bus.on('show-notifications', function () {
-                        doShowNotifications();
+                        // TODO: re-enable notifications
+                        // doShowNotifications();
                     }));
                     busEventManager.add(bus.on('edit-cell-metadata', function () {
                         doEditCellMetadata();
@@ -2732,16 +2353,6 @@ define([
                         doRemove();
                     }));
 
-
-                    //busEventManager.add(bus.on('sync-all-display-parameters', function () {
-                    //    widgets.paramsDisplayWidget.bus.emit('sync-all-parameters');
-                    //}));
-
-                    // Events from widgets...
-
-                    // busEventManager.add(parentBus.on('newstate', function(message) {
-                    //     console.log('GOT NEWSTATE', message);
-                    // }));
 
                     busEventManager.add(parentBus.on('reset-to-defaults', function () {
                         bus.emit('reset-to-defaults');
@@ -2785,19 +2396,6 @@ define([
                             // do nothing for now
                         }
                     }
-
-                    // Regardless of what the FSM says, if we are not listening for a
-                    // job update and we already have an execution job state, let's
-                    // see if there is anything new, even if we don't expect anything
-                    // new...
-                    //if (!listeningForJobUpdates) {
-                    //                var jobId = model.getItem('exec.jobState.job_id');
-                    //                if (jobId) {
-                    //                    startListeningForJobMessages(jobId);
-                    //                }
-                    //}
-
-
 
                     // TODO: only turn this on when we need it!
                     busEventManager.add(cellBus.on('run-status', function (message) {
@@ -2897,64 +2495,6 @@ define([
             });
 
             return paramsToExport;
-        }
-
-
-        function loadOutputWidget() {
-            return new Promise(function (resolve, reject) {
-                require(['./appOutputWidget'], function (Widget) {
-                    var widget = Widget.make({
-                        cellId: utils.getMeta(cell, 'attributes', 'id')
-                    });
-                    widgets.outputWidget = {
-                        path: ['output-group', 'widget'],
-                        instance: widget
-                    };
-                    widget.start();
-                    widget.bus().emit('run', {
-                        node: ui.getElement('output-group.widget'),
-                        jobState: model.getItem('exec.jobState'),
-                        output: model.getItem('output')
-                    });
-                    resolve();
-                }, function (err) {
-                    reject(err);
-                });
-            });
-        }
-
-        function makeIcon() {
-            // icon is in the spec ...
-            var appSpec = model.getItem('app.spec'),
-                nmsBase = runtime.config('services.narrative_method_store_image.url'),
-                iconUrl = Props.getDataItem(appSpec, 'info.icon.url');
-
-            if (iconUrl) {
-                return span({ class: 'fa-stack fa-2x', style: { padding: '0 3px 3px 3px' } }, [
-                    img({ src: nmsBase + iconUrl, style: { maxWidth: '50px', maxHeight: '50px', margin: '0x' } })
-                ]);
-            }
-
-            return span({ style: '' }, [
-                span({ class: 'fa-stack fa-2x', style: { textAlign: 'center', color: 'rgb(103,58,183)' } }, [
-                    span({ class: 'fa fa-square fa-stack-2x', style: { color: 'rgb(103,58,183)' } }),
-                    span({ class: 'fa fa-inverse fa-stack-1x fa-cube' })
-                ])
-            ]);
-        }
-
-        function renderIcon() {
-            var prompt = cell.element[0].querySelector('.input_prompt');
-
-            if (!prompt) {
-                return;
-            }
-
-            prompt.innerHTML = div({
-                style: { textAlign: 'center' }
-            }, [
-                makeIcon()
-            ]);
         }
 
         // just a quick hack since we are not truly recursive yet..,
@@ -3095,13 +2635,7 @@ define([
                     utils.setCellMeta(cell, 'kbase.attributes.title', model.getItem('app.spec.info.name'));
                     utils.setCellMeta(cell, 'kbase.attributes.subtitle', model.getItem('app.spec.info.subtitle'));
                     utils.setCellMeta(cell, 'kbase.attributes.info.url', url);
-                    utils.setCellMeta(cell, 'kbase.attributes.info.label', 'more...');
-                    return Promise.all([
-                        // loadInputWidget(),
-                        // loadInputViewWidget(),
-                        // loadExecutionWidget(),
-                        // loadOutputWidget()
-                    ]);
+                    utils.setCellMeta(cell, 'kbase.attributes.info.label', 'more...');                   
                 })
                 .then(function () {
                     // this will not change, so we can just render it here.
@@ -3109,7 +2643,6 @@ define([
                     showAppSpec();
                     PR.prettyPrint(null, container);
                     renderUI();
-                    // renderIcon();
                 })
                 .then(function () {
                     // if we start out in 'new' state, then we need to promote to
@@ -3144,12 +2677,9 @@ define([
                 });
         }
 
-
-
         /*
          Grok a sensible error structure out of something returned by something.
          */
-
 
         // INIT
 

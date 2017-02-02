@@ -1,5 +1,3 @@
-/*global define,console*/
-/*jslint white:true,browser:true*/
 /*
  * KBase App Cell Extension
  *
@@ -49,29 +47,20 @@ define([
                     workspaceInfo: workspaceInfo
                 });
                 return appCell.setupCell(cell);
-                // return appCell;
             }
         }));
-        // .then(function(possibleAppCells) {
-        //     return possibleAppCells.filter(function(appCell) {
-        //         if (appCell) {
-        //             return true;
-        //         }
-        //         return false;
-        //     });
-        // });
     }
 
     function getWorkspaceRef() {
         // TODO: all kbase notebook metadata should be on a kbase top level property;
-        var workspaceName = Jupyter.notebook.metadata.ws_name, // Jupyter.notebook.metadata.kbase.ws_name,
+        var workspaceName = Jupyter.notebook.metadata.ws_name,
             workspaceId;
 
         if (workspaceName) {
             return { workspace: workspaceName };
         }
 
-        workspaceId = Jupyter.notebook.metadata.ws_id; // Jupyter.notebook.metadata.kbase.ws_id;
+        workspaceId = Jupyter.notebook.metadata.ws_id; 
         if (workspaceId) {
             return { id: workspaceId };
         }
@@ -130,7 +119,6 @@ define([
                 // If the cell has been set with the metadata key kbase.type === 'app'
                 // we have a app cell.
                 $([Jupyter.events]).on('inserted.Cell', function(event, data) {
-                    // console.log('inserted?', data);
                     if (!data.kbase || !(data.kbase.type === 'app2' || data.kbase.type === 'app')) {
                         return;
                     }
@@ -157,7 +145,7 @@ define([
     // MAIN
     // module state instantiation
 
-    // TODO: move this to a another location? 
+    // TODO: move this to a another location!!
     var clock = Clock.make({
         bus: runtime.bus(),
         resolution: 1000
@@ -169,5 +157,5 @@ define([
         load_ipython_extension: load_ipython_extension
     };
 }, function(err) {
-    console.log('ERROR loading appCell main', err);
+    console.error('ERROR loading appCell main', err);
 });

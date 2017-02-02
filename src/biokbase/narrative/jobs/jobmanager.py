@@ -564,7 +564,6 @@ class JobManager(object):
                     try:
                         self._get_latest_job_logs(job_id, num_lines=num_lines)
                     except Exception as e:
-                        print str(e)
                         self._send_comm_message('job_comm_error', {
                             'job_id': job_id,
                             'message': str(e),

@@ -32,21 +32,16 @@
     background: #f2dede;
 }
 .kb-app-cell  .kb-app-parameter-row .message.-warning {
-    xbackground: yellow;
 }
 .kb-app-cell .kb-app-parameter-row .message {
-    xpadding: 5px;
     text-align: center;
     font-family: 'Oxygen', sans-serif;
-    xfont-weight: bold;
-    /* font-size: 9pt; */
 }
 
 .kb-app-cell .kb-app-parameter-row .message.-error {
     color: #F44336;
 }
 .kb-app-cell .kb-app-parameter-row .message.-warning {
-    xcolor: orange;
 }
 
 /* not sure how to get text in these divs to valign middle... */
@@ -55,20 +50,12 @@
     color: #777;
     text-align: left;
     vertical-align: bottom;
-    xmargin-top: 3px;
     padding-right: 4px;
     padding-left: 0px;
     white-space: normal;
-    xborder-bottom: 1px #ddd dotted;
 }
 .kb-app-cell .kb-app-parameter-input {
     vertical-align:middle;
-    xwhite-space: nowrap;
-    xpadding-left:10px;
-    xborder-bottom: 1px #ccc dotted;
-}
-.kb-app-cell .kb-app-parameter-input input {
-    xfont-weight: bold;
 }
 
 .kb-app-cell .kb-app-parameter-input select.form-control {
@@ -189,8 +176,6 @@ control with padding, and then scooting the icon back into its column.
     margin-left: 2px; margin-right: 2px;
     content: "\f054 ";
 }
-
-
 
 .kb-app-cell .panel-title > [data-toggle="collapse"]::before {
     display: inline-block;
@@ -324,8 +309,6 @@ warning: orange
     margin-bottom: 4px;
 }
 
-
-
 /* DANGER - for error */
 .btn.kb-app-cell-btn.btn-danger {
     color: rgb(209,82,65);
@@ -357,8 +340,6 @@ warning: orange
     margin-bottom: 4px;
 }
 
-
-
 /* DISABLED is gray border and text */
 /*
 .btn.kb-app-cell-btn.btn-primary.disabled:hover {
@@ -380,14 +361,11 @@ warning: orange
 
 
 .kb-app-cell [data-element="run-control-panel"] {
-    xpadding-left: 8px;
     width: 100%;
 }
 
 .kb-app-cell [data-element="tab-pane"] {
     border-top: 2px rgb(33, 150, 243) solid;
-    xborder: 1px solid rgb(32, 77, 16);
-    xbackground-color: #f5f5f5;
 }
 
 .kb-app-cell [data-element="tab-pane"] > div:empty {
@@ -397,28 +375,6 @@ warning: orange
 .kb-app-cell [data-element="tab-pane"] > div {
     padding: 4px;
 }
-
-.kb-app-cell .btn.disabled {
-    xbackground-color: #888;
-}
-
-/*.kb-app-cell .btn-primary.kb-btn-action.-rerun {
-    color: rgb(33, 150, 243)
-}
-
-
-.kb-app-cell .btn-primary.kb-btn-action.-run {
-    color: rgb(75,184,86)
-}
-
-
-.kb-app-cell .btn-danger.kb-btn-action.-cancel {
-    color: rgb(209,82,65)
-}
-
-.kb-app-cell .btn-danger.kb-btn-action.-reset {
-    color: rgb(209,82,65)
-}*/
 
 .kb-app-status-ok {
     color:  rgb(75,184,86);
@@ -441,9 +397,6 @@ warning: orange
     padding-top: 4px;
     background-color: #FFF;
 }
-
-// the speciality stylings for typeahead. Maybe they should be in a different style sheet?
-
 
 .tt-input,
 .tt-query {
@@ -489,7 +442,9 @@ warning: orange
 
 .tt-header {
   font-size : 75%;
+  /* this doesn't work, don't want to just turn it on, though:
   font-color : gray;
+  */
   font-style : italic;
   padding-left : 5px;
 }

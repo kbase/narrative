@@ -405,21 +405,13 @@ define([
                 if (!arg.icon.classes) {
                     arg.icon.classes = [];
                 }
-                // arg.icon.classes.push('pull-left');
-
                 icon = buildIcon(arg.icon);
             }
 
             if (arg.hidden) {
                 buttonClasses.push('hidden');
             }
-            // if (arg.style) {
-            //     switch (arg.style) {
-            //     case 'flat':
-            //         buttonClasses.push('kb-flat-btn');
-            //         break;
-            //     }
-            // }
+
             if (arg.classes) {
                 buttonClasses = buttonClasses.concat(arg.classes);
             }
@@ -468,39 +460,15 @@ define([
         }
 
         function hideButton(name) {
-            // getButton(name).classList.remove('disabled');
             getButton(name).classList.add('hidden');
         }
 
         function showButton(name) {
-            // getButton(name).classList.remove('disabled');
             getButton(name).classList.remove('hidden');
         }
 
         function setButtonLabel(name, label) {
             getButton(name).innerHTML = label;
-        }
-
-        // Hmm, something like this, but need to think it through more.
-        //        function setButton(name, options) {
-        //            var buttonNode = getButton(name);
-        //            if (options.label) {
-        //                buttonNode.innerHTML = options.label;
-        //            }
-        //            if (options.classes) {
-        //                // who no classList.empty()?
-        //                options.className = null;
-        //                options.classes.forEach(function (klass) {
-        //                    buttonNode.classList.add(klass);
-        //                });
-        //            }
-        //
-        //        }
-
-        function ensureOriginalDisplayStyle(el) {
-            if (el.getAttribute('data-original-display-style') === null) {
-                el.setAttribute('data-original-display-style', el.style.display);
-            }
         }
 
         function hideElement(name) {
@@ -536,7 +504,6 @@ define([
                 icon;
             if (args.hidden) {
                 classes.push('hidden');
-                // style.display = 'none';
             }
             if (args.classes) {
                 classes = classes.concat(args.classes);
@@ -957,8 +924,8 @@ define([
 
         // TURN THIS INTO A MINI WIDGET!
         function jsonBlockWidget() {
-            function factory(config) {
-                var config = config || {},
+            function factory(cfg) {
+                var config = cfg || {},
                     indent = config.indent || 3,
                     fontSize = config.fontSize || 0.8;
 

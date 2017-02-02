@@ -53,12 +53,12 @@ local function get_notebooks(self, image)
     ngx.log(ngx.DEBUG, string.format("list containers result: %s", p.write(res.body)))
     if ok then
         for index, container in pairs(res.body) do
+            res = docker.client:inspect_container{id=container.Id}
             -- we only care about containers matching repository_image and listening on the proper port
-            first, last = string.find(container.Image, image)
+            first, last = string.find(res.body.Config.Image, image)
             if first == 1 then
                 for i, v in pairs(container.Ports) do
                     if v.PrivatePort == M.private_port then
-                        res = docker.client:inspect_container{id=container.Id}
                         local ports = res.body.NetworkSettings.Ports
                         local ip = res.body.NetworkSettings.IPAddress
                         local ip_port = string.format("%s:%d", ip, M.private_port)

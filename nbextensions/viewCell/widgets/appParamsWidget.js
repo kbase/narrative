@@ -3,6 +3,7 @@
 
 define([
     'bluebird',
+    'jquery',
     // CDN
     'kb_common/html',
     // LOCAL
@@ -19,6 +20,7 @@ define([
 
 ], function (
     Promise,
+    $,
     html,
     UI,
     Events,
@@ -218,7 +220,6 @@ define([
         }
 
         function renderAdvanced(area) {
-
             // area is either "input" or "parameter"
 
             var areaElement = area + '-area',
@@ -239,6 +240,11 @@ define([
                 var input = advancedInputs[i];
                 input.classList.remove(removeClass);
                 input.classList.add(addClass);
+                
+                var actualInput = input.querySelector('[data-element="input"]');
+                if (actualInput) {
+                    $(actualInput).trigger('advanced-shown.kbase');
+                }
             }
             //
             //            // How many advanaced?
@@ -471,7 +477,7 @@ define([
 
                 // here is what we do:
 
-                // based on the param ordering (layout), render the html layout, 
+                // based on the param ordering (layout), render the html layout,
                 // with an id mapped per parameter in this set
 
 
@@ -600,7 +606,7 @@ define([
                         console.error('ERROR in start', err);
                     });
 
-                parentBus.on('parameter-changed', function (message) {
+                paramsBus.on('parameter-changed', function (message) {
                     // Also, tell each of our inputs that a param has changed.
                     // TODO: use the new key address and subscription
                     // mechanism to make this more efficient.

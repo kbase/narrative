@@ -223,9 +223,7 @@ define (
                 if (isOwner) {
                     var $addUsersDiv = $('<div>').css({'margin-top': '10px'});
                     var $input = $('<select>')
-                        // .attr('type', 'text')
                         .addClass('kb-share-select');
-                        // .css({'width': self.options.add_user_input_width});
 
                     var $addAction =
                         $('<div>')

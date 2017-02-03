@@ -310,7 +310,7 @@ define([
         },
 
         buildTabs: function (tabs, isOuter) {
-            var $header = $('<div>');
+            var $header = $('<div style="background-color: #2196F3">');
             var $body = $('<div>');
 
             for (var i = 0; i < tabs.length; i++) {

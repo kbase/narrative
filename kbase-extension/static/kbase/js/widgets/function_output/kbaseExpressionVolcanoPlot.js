@@ -319,12 +319,13 @@ define(['jquery',
                     cnt = 0;
                   }
 
-                  $("#" + pref + "pvalue").slider({tooltip_position:'bottom', step:0.01, precision: 2, min :ymin, max:ymax.toFixed(2)}).on('slide',function(){
+                  var slider2Update = _.debounce(function(){
                     pv = $("#" + pref + "pvalue").val();
                     $('#' + pref + 'selpval').text(parseFloat(pv).toFixed(2));
                     var numCircles = svg.selectAll("circle").size();
                     var seenCircles = 0;
                     svg.selectAll("circle")
+                      .transition()
                       .attr("fill", function(d) {
                         var cc = colorx(d);
                         if ( cc == "red" ) {
@@ -338,6 +339,8 @@ define(['jquery',
                         }
                       });
                   });
+
+                  $("#" + pref + "pvalue").slider({tooltip_position:'bottom', step:0.01, precision: 2, min :ymin, max:ymax.toFixed(2)}).on('slide',slider2Update);
 
                   $("#" + pref + "fc").slider('setValue', fcmax.toFixed(2));
                   $("#" + pref + "pvalue").slider('setValue', ymax.toFixed(2));

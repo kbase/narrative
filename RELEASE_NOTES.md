@@ -10,7 +10,7 @@ __Changes__
 - Changed what publicly available data is visible.
 - Fixed data panel timestamps in Safari.
 - Fixed sharing user lookup input field in Safari.
-- Made many app cell improvements.
+- Made many visual improvements to the app cell.
 
 ### Version 3.1.8
 __Changes__

@@ -26,7 +26,6 @@ define([
             nms;
         function start(arg) {
             return Promise.try(function () {
-
                 container = arg.node;
                 model = arg.model;
                 ui = UI.make({node: container}),
@@ -38,26 +37,40 @@ define([
                 var finishDate = new Date(jobState.finish_time);
 
                 var layout = div([
-                    div({dataElement: 'summary'}),
-                    div({dataElement: 'results'}),
+                    // ui.buildCollapsiblePanel({
+                    //     title: 'Status',
+                    //     name: 'summary',
+                    //     hidden: false,
+                    //     type: 'default',
+                    //     classes: ['kb-panel-container']
+                    // }),
+                    ui.buildCollapsiblePanel({
+                        title: 'Results',
+                        name: 'results',
+                        hidden: true,
+                        type: 'default',
+                        classes: ['kb-panel-container']
+                    }),
                     div({dataElement: 'report'}),
                     div({dataElement: 'next-steps'})
                 ]);
                 container.innerHTML = layout;
 
-                ui.setContent('summary', p([
-                    'Results from run finished on ',
+                ui.setContent('summary.body', p([
+                    'Finished on ',
                     finishDate.toLocaleDateString(),
                     ' at ',
                     finishDate.toLocaleTimeString()
                 ].join('')));
 
                 // If there's a "report_ref" key in the results, load and show the report.
+                // console.log('SHOWING RESULTS', result);
                 if (result.params.report_name) {
                     // do report widget.
                     renderReportView(result.params);
                 } else {
-                    ui.setContent('results', ui.buildPresentableJson(result));
+                    ui.getElement('results').classList.remove('hidden');
+                    ui.setContent('results.body', ui.buildPresentableJson(result));
                 }
 
                 // Look up this app's info to get it's suggested next steps.

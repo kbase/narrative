@@ -1,6 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true*/
-
 define([
     // please use jquery with discretion.
     'jquery',
@@ -12,11 +9,13 @@ define([
     'google-code-prettify/prettify',
     'css!google-code-prettify/prettify.css',
     'bootstrap'
-], function($, Promise, html, Jupyter, Runtime, Events, PR) {
+], function ($, Promise, html, Jupyter, Runtime, Events, PR) {
     'use strict';
     var t = html.tag,
         div = t('div'),
+        p = t('p'),
         span = t('span'),
+        ol = t('ol'),
         ul = t('ul'),
         li = t('li'),
         a = t('a'),
@@ -25,7 +24,8 @@ define([
         table = t('table'),
         tr = t('tr'),
         th = t('th'),
-        td = t('td');
+        td = t('td'),
+        i = t('i');
 
     // "static" methods
     function na() {
@@ -83,12 +83,12 @@ define([
 
         modalDialogNode = modalNode.querySelector('.modal');
         $(modalDialogNode).modal('show');
-        return new Promise(function(resolve) {
-            modalDialogNode.querySelector('[data-element="ok"]').addEventListener('click', function() {
+        return new Promise(function (resolve) {
+            modalDialogNode.querySelector('[data-element="ok"]').addEventListener('click', function () {
                 confirmNode.parentElement.removeChild(confirmNode);
                 resolve(false);
             });
-            modalDialogNode.addEventListener('hide.bs.modal', function() {
+            modalDialogNode.addEventListener('hide.bs.modal', function () {
                 resolve(false);
             });
         });
@@ -112,7 +112,7 @@ define([
                     div({ class: 'modal-body' }, [
                         content
                     ]),
-                    div({ class: 'modal-footer' }, buttons.map(function(btn) {
+                    div({ class: 'modal-footer' }, buttons.map(function (btn) {
                         return button({
                             type: 'button',
                             class: 'btn btn-' + (btn.type || 'default'),
@@ -161,15 +161,15 @@ define([
 
         modalDialogNode = modalNode.querySelector('.modal');
         $(modalDialogNode).modal('show');
-        return new Promise(function(resolve, reject) {
-            modalDialogNode.querySelector('[data-element="cancel"]').addEventListener('click', function(e) {
+        return new Promise(function (resolve, reject) {
+            modalDialogNode.querySelector('[data-element="cancel"]').addEventListener('click', function (e) {
                 confirmNode.parentElement.removeChild(confirmNode);
                 resolve({
                     action: 'cancel'
                 });
             });
-            args.buttons.forEach(function(btn) {
-                modalDialogNode.querySelector('[data-element="' + btn.action + '"]').addEventListener('click', function(e) {
+            args.buttons.forEach(function (btn) {
+                modalDialogNode.querySelector('[data-element="' + btn.action + '"]').addEventListener('click', function (e) {
                     try {
                         var result = btn.handler(e);
                         if (result) {
@@ -186,7 +186,7 @@ define([
                 });
             });
 
-            modalDialogNode.addEventListener('hide.bs.modal', function(e) {
+            modalDialogNode.addEventListener('hide.bs.modal', function (e) {
                 resolve({
                     action: 'cancel'
                 });
@@ -207,7 +207,10 @@ define([
             if (typeof names === 'string') {
                 names = names.split('.');
             }
-            var selector = names.map(function(name) {
+            if (names.length === 0) {
+                return container;
+            }
+            var selector = names.map(function (name) {
                 return '[data-element="' + name + '"]';
             }).join(' ');
 
@@ -222,7 +225,7 @@ define([
             if (typeof names === 'string') {
                 names = names.split('.');
             }
-            var selector = names.map(function(name) {
+            var selector = names.map(function (name) {
                 return '[data-element="' + name + '"]';
             }).join(' ');
 
@@ -255,7 +258,7 @@ define([
             if (typeof names === 'string') {
                 names = [names];
             }
-            var selector = names.map(function(dataSelector) {
+            var selector = names.map(function (dataSelector) {
                 return '[data-' + dataSelector.type + '="' + dataSelector.name + '"]';
             }).join(' ');
 
@@ -269,8 +272,8 @@ define([
          * concatenated
          */
         function findNode(nodePath) {
-            var selector = nodePath.map(function(pathElement) {
-                return Object.keys(pathElement).map(function(dataKey) {
+            var selector = nodePath.map(function (pathElement) {
+                return Object.keys(pathElement).map(function (dataKey) {
                     var dataValue = pathElement[dataKey];
                     return '[data-' + dataKey + '="' + dataValue + '"]';
                 }).join('');
@@ -339,24 +342,24 @@ define([
             modalDialogNode = modalNode.querySelector('.modal');
 
             $(modalDialogNode).modal('show');
-            return new Promise(function(resolve) {
-                modalDialogNode.querySelector('[data-element="yes"]').addEventListener('click', function() {
+            return new Promise(function (resolve) {
+                modalDialogNode.querySelector('[data-element="yes"]').addEventListener('click', function () {
                     $(modalDialogNode).modal('hide');
                     confirmNode.parentElement.removeChild(confirmNode);
                     resolve(true);
                 });
-                modalDialogNode.addEventListener('keyup', function(e) {
+                modalDialogNode.addEventListener('keyup', function (e) {
                     if (e.keyCode === 13) {
                         $(modalDialogNode).modal('hide');
                         confirmNode.parentElement.removeChild(confirmNode);
                         resolve(true);
                     }
                 });
-                modalDialogNode.querySelector('[data-element="no"]').addEventListener('click', function() {
+                modalDialogNode.querySelector('[data-element="no"]').addEventListener('click', function () {
                     confirmNode.parentElement.removeChild(confirmNode);
                     resolve(false);
                 });
-                modalDialogNode.addEventListener('hide.bs.modal', function() {
+                modalDialogNode.addEventListener('hide.bs.modal', function () {
                     resolve(false);
                 });
             });
@@ -365,7 +368,7 @@ define([
         function addButtonClickEvent(events, eventName, data) {
             return events.addEvent({
                 type: 'click',
-                handler: function(e) {
+                handler: function (e) {
                     bus.send({
                         event: e,
                         button: e.target,
@@ -402,21 +405,13 @@ define([
                 if (!arg.icon.classes) {
                     arg.icon.classes = [];
                 }
-                // arg.icon.classes.push('pull-left');
-
                 icon = buildIcon(arg.icon);
             }
 
             if (arg.hidden) {
                 buttonClasses.push('hidden');
             }
-            if (arg.style) {
-                switch (arg.style) {
-                    case 'flat':
-                        buttonClasses.push('kb-flat-btn');
-                        break;
-                }
-            }
+
             if (arg.classes) {
                 buttonClasses = buttonClasses.concat(arg.classes);
             }
@@ -429,11 +424,12 @@ define([
                 class: buttonClasses.join(' '),
                 title: title,
                 dataButton: arg.name,
-                id: addButtonClickEvent(events, arg.event.type || arg.name, arg.event.data)
+                id: addButtonClickEvent(events, arg.event.type || arg.name, arg.event.data),
+                style: arg.style
             };
 
             if (arg.features) {
-                arg.features.forEach(function(feature) {
+                arg.features.forEach(function (feature) {
                     attribs['data-feature-' + feature] = true;
                 });
             }
@@ -464,39 +460,15 @@ define([
         }
 
         function hideButton(name) {
-            // getButton(name).classList.remove('disabled');
             getButton(name).classList.add('hidden');
         }
 
         function showButton(name) {
-            // getButton(name).classList.remove('disabled');
             getButton(name).classList.remove('hidden');
         }
 
         function setButtonLabel(name, label) {
             getButton(name).innerHTML = label;
-        }
-
-        // Hmm, something like this, but need to think it through more.
-        //        function setButton(name, options) {
-        //            var buttonNode = getButton(name);
-        //            if (options.label) {
-        //                buttonNode.innerHTML = options.label;
-        //            }
-        //            if (options.classes) {
-        //                // who no classList.empty()?
-        //                options.className = null;
-        //                options.classes.forEach(function (klass) {
-        //                    buttonNode.classList.add(klass);
-        //                });
-        //            }
-        //
-        //        }
-
-        function ensureOriginalDisplayStyle(el) {
-            if (el.getAttribute('data-original-display-style') === null) {
-                el.setAttribute('data-original-display-style', el.style.display);
-            }
         }
 
         function hideElement(name) {
@@ -532,7 +504,6 @@ define([
                 icon;
             if (args.hidden) {
                 classes.push('hidden');
-                // style.display = 'none';
             }
             if (args.classes) {
                 classes = classes.concat(args.classes);
@@ -540,15 +511,21 @@ define([
             if (args.icon) {
                 icon = [' ', buildIcon(args.icon)];
             }
-            return div({ class: classes.join(' '), dataElement: args.name }, [
-                (function() {
+            return div({
+                class: classes.join(' '),
+                dataElement: args.name
+            }, [
+                (function () {
                     if (args.title) {
                         return div({ class: 'panel-heading' }, [
-                            div({ class: 'panel-title' }, [args.title, icon])
+                            div({ class: 'panel-title', dataElement: 'title' }, [args.title, icon])
                         ]);
                     }
                 }()),
-                div({ class: 'panel-body' }, [
+                div({
+                    class: 'panel-body',
+                    dataElement: 'body'
+                }, [
                     args.body
                 ])
             ]);
@@ -601,6 +578,7 @@ define([
             return div({ class: classes.join(' '), dataElement: args.name }, [
                 div({ class: 'panel-heading' }, [
                     div({ class: 'panel-title' }, span({
+                        dataElement: 'title',
                         class: toggleClasses.join(' '),
                         dataToggle: 'collapse',
                         dataTarget: '#' + collapseId,
@@ -608,7 +586,7 @@ define([
                     }, [args.title, icon]))
                 ]),
                 div({ id: collapseId, class: collapseClasses.join(' ') },
-                    div({ class: 'panel-body' }, [
+                    div({ class: 'panel-body', dataElement: 'body' }, [
                         args.body
                     ])
                 )
@@ -663,7 +641,7 @@ define([
 
         function setContent(path, content) {
             var node = getElements(path);
-            node.forEach(function(node) {
+            node.forEach(function (node) {
                 node.innerHTML = content;
             });
         }
@@ -673,7 +651,7 @@ define([
             if (!node) {
                 return;
             }
-            qsa(node, '[data-toggle="tooltip"]').forEach(function(node) {
+            qsa(node, '[data-toggle="tooltip"]').forEach(function (node) {
                 $(node).tooltip();
             });
         }
@@ -755,12 +733,12 @@ define([
                 }
             }
             if (arg.classes) {
-                arg.classes.forEach(function(klass) {
+                arg.classes.forEach(function (klass) {
                     klasses.push(klass);
                 });
             }
             if (arg.style) {
-                Object.keys(arg.style).forEach(function(key) {
+                Object.keys(arg.style).forEach(function (key) {
                     style[key] = arg.style[key];
                 });
             }
@@ -837,7 +815,7 @@ define([
                 tabClasses = ['nav', 'nav-tabs'],
                 tabStyle = {},
                 activeIndex, tabTabs,
-                tabs = arg.tabs.filter(function(tab) {
+                tabs = arg.tabs.filter(function (tab) {
                     return (tab ? true : false);
                 }),
                 events = [],
@@ -858,14 +836,14 @@ define([
                 tabsAttribs.id = tabsId;
             }
 
-            tabs.forEach(function(tab) {
+            tabs.forEach(function (tab) {
                 tab.panelId = html.genId();
                 tab.tabId = html.genId();
                 if (tab.name) {
                     tabMap[tab.name] = tab.tabId;
                 }
                 if (tab.events) {
-                    tab.events.forEach(function(event) {
+                    tab.events.forEach(function (event) {
                         events.push({
                             id: tab.tabId,
                             jquery: true,
@@ -889,7 +867,7 @@ define([
             }
             content = div(tabsAttribs, [
                 ul({ class: tabClasses.join(' '), role: 'tablist' },
-                    tabTabs.map(function(tab, index) {
+                    tabTabs.map(function (tab, index) {
                         var tabAttribs = {
                                 role: 'presentation'
                             },
@@ -921,7 +899,7 @@ define([
                         return li(tabAttribs, a(linkAttribs, [icon, label].join(' ')));
                     })),
                 div({ class: 'tab-content' },
-                    tabs.map(function(tab, index) {
+                    tabs.map(function (tab, index) {
                         var attribs = {
                             role: 'tabpanel',
                             class: panelClasses.join(' '),
@@ -946,8 +924,8 @@ define([
 
         // TURN THIS INTO A MINI WIDGET!
         function jsonBlockWidget() {
-            function factory(config) {
-                var config = config || {},
+            function factory(cfg) {
+                var config = cfg || {},
                     indent = config.indent || 3,
                     fontSize = config.fontSize || 0.8;
 
@@ -963,7 +941,7 @@ define([
                 }
 
                 function start(arg) {
-                    return Promise.try(function() {
+                    return Promise.try(function () {
                         arg.node.innerHTML = render(arg.obj);
                         PR.prettyPrint(null, arg.node);
                     });
@@ -979,17 +957,23 @@ define([
                 };
             }
             return {
-                make: function(config) {
+                make: function (config) {
                     return factory(config);
                 }
             };
         }
 
         function buildGridTable(arg) {
-            return arg.table.map(function(row) {
-                return div({ class: 'row', style: arg.row.style }, arg.cols.map(function(col, index) {
+            return arg.table.map(function (row) {
+                return div({ class: 'row', style: arg.row.style }, arg.cols.map(function (col, index) {
                     return div({ class: 'col-md-' + String(col.width), style: col.style }, row[index]);
                 }));
+            });
+        }
+
+        function camelToHyphen(s) {
+            return s.replace(/[A-Z]/g, function (m) {
+                return '-' + m.toLowerCase();
             });
         }
 
@@ -997,49 +981,200 @@ define([
             if (!path) {
                 path = [];
             }
+            var node = getElement(path);
+            if (!node) {
+                return;
+            }
             if (typeof viewModel === 'string') {
                 setContent(path, viewModel);
             } else if (typeof viewModel === 'number') {
                 setContent(path, String(viewModel));
             } else if (viewModel === null) {
-                setContent(path, '-');
+                setContent(path, '');
             } else {
-                Object.keys(viewModel).forEach(function(key) {
-                    updateFromViewModel(viewModel[key], path.concat(key));
+                Object.keys(viewModel).forEach(function (key) {
+                    var value = viewModel[key];
+                    if (key === '_attrib') {
+                        Object.keys(value).forEach(function (attribKey) {
+                            var attribValue = value[attribKey];
+                            // console.log('attrib?', attribKey, attribValue);
+                            switch (attribKey) {
+                            case 'hidden':
+                                // console.log('HIDING?', attribKey, node, attribValue);
+                                if (attribValue) {
+                                    node.classList.add('hidden');
+                                } else {
+                                    node.classList.remove('hidden');
+                                }
+                                break;
+                            case 'style':
+                                Object.keys(attribValue).forEach(function (key) {
+                                    node.style[camelToHyphen(key)] = attribValue[key];
+                                });
+                            }
+                        });
+                    } else {
+                        updateFromViewModel(value, path.concat(key));
+                    }
                 });
             }
         }
 
         function buildPresentableJson(data) {
             switch (typeof data) {
-                case 'string':
-                    return data;
-                case 'number':
-                    return String(data);
-                case 'boolean':
-                    return String(data);
-                case 'object':
-                    if (data === null) {
-                        return 'NULL';
-                    }
-                    if (data instanceof Array) {
-                        return table({ class: 'table table-striped' },
-                            data.map(function(datum, index) {
-                                return tr([
-                                    th(String(index)),
-                                    td(buildPresentableJson(datum))
-                                ]);
-                            }).join('\n')
-                        );
-                    }
+            case 'string':
+                return data;
+            case 'number':
+                return String(data);
+            case 'boolean':
+                return String(data);
+            case 'object':
+                if (data === null) {
+                    return 'NULL';
+                }
+                if (data instanceof Array) {
                     return table({ class: 'table table-striped' },
-                        Object.keys(data).map(function(key) {
-                            return tr([th(key), td(buildPresentableJson(data[key]))]);
+                        data.map(function (datum, index) {
+                            return tr([
+                                th(String(index)),
+                                td(buildPresentableJson(datum))
+                            ]);
                         }).join('\n')
                     );
-                default:
-                    return 'Not representable: ' + (typeof data);
+                }
+                return table({ class: 'table table-striped' },
+                    Object.keys(data).map(function (key) {
+                        return tr([th(key), td(buildPresentableJson(data[key]))]);
+                    }).join('\n')
+                );
+            default:
+                return 'Not representable: ' + (typeof data);
             }
+        }
+
+        function buildError(err) {
+            return div({}, [
+                buildPanel({
+                    title: 'Message',
+                    body: err.message,
+                    classes: [
+                        'kb-panel-light'
+                    ]
+                }),
+                err.fileName ? buildPanel({
+                    title: 'File',
+                    body: err.fileName,
+                    classes: [
+                        'kb-panel-light'
+                    ]
+                }) : '',
+                err.lineNumber ? buildPanel({
+                    title: 'Line number',
+                    body: err.lineNumber,
+                    classes: [
+                        'kb-panel-light'
+                    ]
+                }) : '',
+                err.columnNumber ? buildPanel({
+                    title: 'Column number',
+                    body: err.columnNumber,
+                    classes: [
+                        'kb-panel-light'
+                    ]
+                }) : ''
+            ]);
+        }
+
+        function htmlEncode(str) {
+            return str
+                .replace(/&/, '&amp;')
+                .replace(/'/, '&#039;')
+                .replace(/"/, '&quot;')
+                .replace(/</, '&lt;')
+                .replace(/>/, '&gt;');
+        }
+
+        function buildErrorStacktrace(err) {
+            return div([
+                ol({}, err.stack.split(/\n/)
+                    .map(function (item) {
+                        return li({
+                            style: {
+                                marginTop: '6px'
+                            }
+                        }, [
+                            htmlEncode(item)
+                        ]);
+                    }))
+            ]);
+        }
+
+        function buildErrorTabs(arg) {
+            return html.makeTabs({
+                tabs: [{
+                        label: 'Summary',
+                        name: 'summary',
+                        content: div({
+                            style: {
+                                marginTop: '10px'
+                            }
+                        }, [
+                            arg.preamble,
+                            p(arg.error.message)
+                        ])
+                    },
+                    {
+                        label: 'Details',
+                        name: 'details',
+                        content: div({
+                            style: {
+                                marginTop: '10px'
+                            }
+                        }, [
+                            buildError(arg.error)
+                        ])
+                    },
+                    {
+                        label: 'Stack Trace',
+                        name: 'stacktrace',
+                        content: div({
+                            style: {
+                                marginTop: '10px'
+                            }
+                        }, [
+                            buildPanel({
+                                title: 'Javascript Stack Trace',
+                                body: buildErrorStacktrace(arg.error),
+                                classes: [
+                                    'kb-panel-light'
+                                ]
+                            })
+                        ])
+                    }
+                ]
+            });
+        }
+
+        function loading(arg) {
+            var prompt;
+            if (arg.message) {
+                prompt = arg.message + '... &nbsp &nbsp';
+            }
+            var sizeClass;
+            if (arg.size) {
+                sizeClass = 'fa-' + arg.size;
+            }
+            var style = {};
+            if (arg.color) {
+                style.color = arg.color;
+            }
+            return span([
+                prompt,
+                i({
+                    class: ['fa', 'fa-spinner', 'fa-pulse', sizeClass, 'fa-fw', 'margin-bottom'].join(' '),
+                    style: style
+                })
+            ]);
         }
 
         return Object.freeze({
@@ -1086,12 +1221,15 @@ define([
             updateTab: updateTab,
             buildGridTable: buildGridTable,
             updateFromViewModel: updateFromViewModel,
-            buildPresentableJson: buildPresentableJson
+            buildPresentableJson: buildPresentableJson,
+            buildErrorTabs: buildErrorTabs,
+            htmlEncode: htmlEncode,
+            loading: loading
         });
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
         },
         // "static" methods

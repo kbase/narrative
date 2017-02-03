@@ -302,6 +302,7 @@ define([
             linesPerPage = config.linesPerPage || 10,
             loopFrequency = 5000,
             looping = false,
+            stopped = false,
             listeningForJob = false;
 
         // VIEW ACTIONS
@@ -321,6 +322,7 @@ define([
 
         function stopAutoFetch() {
             looping = false;
+            stopped = true;
             // var state = fsm.getCurrentState().state;
             // if (state.mode === 'active' && state.auto) {
             //     fsm.newState({ mode: 'active', auto: false });
@@ -329,6 +331,9 @@ define([
 
         function startAutoFetch() {
             if (looping) {
+                return;
+            }
+            if (stopped) {
                 return;
             }
             var state = fsm.getCurrentState().state;
@@ -344,19 +349,18 @@ define([
             }
         }
 
-
-        function doStartFetchingLogs() {
-            startAutoFetch();
-        }
-
         function doPlayLogs() {
             fsm.updateState({
                 auto: true
             });
+            stopped = false;
             startAutoFetch();
         }
 
-        function doStopFetchingLogs() {
+        function doStopPlayLogs() {
+            fsm.updateState({
+                auto: false
+            });
             stopAutoFetch();
         }
 
@@ -470,7 +474,7 @@ define([
                     title: 'Stop fetching logs',
                     id: events.addEvent({
                         type: 'click',
-                        handler: doStopFetchingLogs
+                        handler: doStopPlayLogs
                     })
                 }, [
                     span({ class: 'fa fa-stop' })
@@ -714,7 +718,7 @@ define([
                             break;
                         case 'in-progress':
                             startJobUpdates();
-                            doStartFetchingLogs();
+                            startAutoFetch();
                             newState = {
                                 mode: 'active',
                                 auto: true
@@ -787,7 +791,7 @@ define([
                             // this should not occur!
                             break;
                         case 'in-progress':
-                            doStartFetchingLogs();
+                            startAutoFetch();
                             break;
                         case 'completed':
                             newState = {
@@ -910,17 +914,17 @@ define([
                 }
             });
             fsm.start();
-            fsm.bus.on('on-active', function (message) {
-                doStartFetchingLogs();
+            fsm.bus.on('on-active', function () {
+                startAutoFetch();
             });
-            fsm.bus.on('exit-active', function (message) {
-                doStopFetchingLogs();
+            fsm.bus.on('exit-active', function () {
+                stopAutoFetch();
             });
-            fsm.bus.on('on-canceled', function (message) {
+            fsm.bus.on('on-canceled', function () {
                 requestLatestJobLog();
                 stopJobUpdates();
             });
-            fsm.bus.on('exit-canceled', function (message) {
+            fsm.bus.on('exit-canceled', function () {
                 //  nothing to do?
             });
             fsm.bus.on('on-queued', function (message) {

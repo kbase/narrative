@@ -127,7 +127,7 @@ class Job(object):
             state[u'cell_id'] = self.cell_id
             state[u'run_id'] = self.run_id
             self._last_state = state
-            return state
+            return dict(state)
         except Exception as e:
             raise Exception("Unable to fetch info for job {} - {}".format(self.job_id, e))
 

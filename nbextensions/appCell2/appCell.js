@@ -32,10 +32,7 @@ define([
 
     var t = html.tag,
         div = t('div'),
-        textarea = t('textarea'),
-        p = t('p'),
-        ol = t('ol'),
-        li = t('li');
+        p = t('p');
 
     function isAppCell(cell) {
         if (cell.cell_type !== 'code') {

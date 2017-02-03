@@ -1079,7 +1079,6 @@ define([
                             dataElement: 'toolbar',
                             style: {
                                 position: 'absolute',
-                                left: '550px',
                                 right: '0',
                                 top: '0',
                                 height: '50px'
@@ -1087,11 +1086,12 @@ define([
                         }, [
                             div({
                                 style: {
+                                    display: 'inline-block',
+                                    right: '0',
                                     height: '50px',
                                     lineHeight: '50px',
                                     paddingRight: '15px',
-                                    verticalAlign: 'bottom',
-                                    textAlign: 'right'
+                                    verticalAlign: 'bottom'
                                 }
                             }, [
                                 div({

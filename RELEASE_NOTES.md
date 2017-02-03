@@ -3,6 +3,13 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v4.2.1 (more notes will follow).
 
+### Version 3.1.10
+__Changes__
+- Fixed broken Import tab in the data slideout.
+- Adjusted text in staging area tour.
+- Fixed issue in App cells where the tab buttons could crowd each other out.
+- Adjusted behavior of slider buttons in volcano plot widget to be more performant.
+
 ### Version 3.1.9
 __Changes__
 - Expanded the reach of the front end code compiler.

@@ -5,6 +5,7 @@ define(['jquery',
     'kbwidget',
     'kbaseAuthenticatedWidget',
     'kbaseTabs',
+    'underscore',
     'css!ext_components/jquery.tipsy/css/jquery.tipsy.css',
     'css!ext_components/bootstrap-slider/slider.css',
     'bootstrap',
@@ -18,7 +19,7 @@ define(['jquery',
               Config,
               KBWidget,
               KBaseAuthenticatedWidget,
-              KBaseTabs) {
+              KBaseTabs, _) {
     return KBWidget({
           name: "kbaseExpressionVolcanoPlot",
           parent: KBaseAuthenticatedWidget,
@@ -135,7 +136,7 @@ define(['jquery',
                        console.log("fc = ", fc);
                        console.log("pv = ", pv);
                        */
-                    var x = d.log2fc_f 
+                    var x = d.log2fc_f
                     var y = d.p_value_f
 
                     if ( Math.abs(x) > fc && Math.abs(y) > pv ) {
@@ -287,7 +288,7 @@ define(['jquery',
                   $("#" + pref + "pv1").text((ymin).toFixed(2));
                   $("#" + pref + "pv2").text((ymax).toFixed(2));
 
-                  $("#" + pref + "fc").slider({tooltip_position:'bottom', step: 0.01, min :0.0, precision: 2,max:fcmax.toFixed(2)}).on('slide', function() {
+                  var sliderUpdate = _.debounce(function() {
                     fc = $("#" + pref + "fc").val();
                     console.log("fc changed", fc);
                     $('#' + pref + 'selfc').text(parseFloat(fc).toFixed(2));
@@ -308,7 +309,9 @@ define(['jquery',
                         }
                       });
 
-                  });
+                  }, 300);
+
+                  $("#" + pref + "fc").slider({tooltip_position:'bottom', step: 0.01, min :0.0, precision: 2,max:fcmax.toFixed(2)}).on('slide', sliderUpdate);
 
                   var cnt = 0;
                   var updateCnt = function() {
@@ -319,6 +322,8 @@ define(['jquery',
                   $("#" + pref + "pvalue").slider({tooltip_position:'bottom', step:0.01, precision: 2, min :ymin, max:ymax.toFixed(2)}).on('slide',function(){
                     pv = $("#" + pref + "pvalue").val();
                     $('#' + pref + 'selpval').text(parseFloat(pv).toFixed(2));
+                    var numCircles = svg.selectAll("circle").size();
+                    var seenCircles = 0;
                     svg.selectAll("circle")
                       .attr("fill", function(d) {
                         var cc = colorx(d);
@@ -326,7 +331,12 @@ define(['jquery',
                           cnt = cnt + 1;
                         }
                         return cc;
-                      }).call(updateCnt);
+                      }).each('end', function() {
+                        seenCircles++;
+                        if (numCircles == seenCircles) {
+                          updateCnt();
+                        }
+                      });
                   });
 
                   $("#" + pref + "fc").slider('setValue', fcmax.toFixed(2));

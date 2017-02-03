@@ -1,8 +1,5 @@
-/*global define*/
-/*jslint white:true,browser:true*/
-
 define([
-    'kb_common/format',
+    'kb_common/format'
 ], function (format) {
     'use strict';
 
@@ -57,7 +54,6 @@ define([
             }
         }
 
-        // return [pad(units[4], 2), pad(units[3], 2), pad(units[2], 2), pad(units[1], 2)].join(':');
         return minimized.map(function (value) {
             return pad(value, 2);
         })
@@ -108,16 +104,12 @@ define([
 
         parts.pop();
 
-
         var keep = false;
         for (var i = 0; i < parts.length; i += 1) {
             if (!keep) {
                 if (parts[i].value > 0) {
                     keep = true;
-                    // if (i > 0) {
-                        // minimized.push(parts[i - 1]);
-                        minimized.push(parts[i]);
-                    // }
+                    minimized.push(parts[i]);
                 }
             } else {
                 minimized.push(parts[i]);
@@ -128,6 +120,10 @@ define([
             // This means that there is are no time measurements > 1 second.
             return '<1s';
         } else {
+            // Skip seconds if we are into the hours...
+            if (minimized.length > 2) {
+                minimized.pop();
+            }
             // return [pad(units[4], 2), pad(units[3], 2), pad(units[2], 2), pad(units[1], 2)].join(':');
             return minimized.map(function (item) {
                 // return pad(item.value, 2) + item.name;

@@ -2071,21 +2071,38 @@ define([
                 outputCellId = model.getItem(['output', 'byJob', jobId, 'cell', 'id']),
                 outputCell, notification;
 
+            // show either the clock, if < 24 hours, or the timestamp.
             var message = span([
                 'Finished with ',
                 niceState(jobState.job_state),
-                ' on ',
-                format.niceTime(jobState.finish_time),
-                ' (',
-                span({dataElement: 'clock'}),
-                ')'
+                ' ',
+                span({dataElement: 'clock'})
             ]);
-
             ui.setContent('run-control-panel.status.execMessage', message);
 
             // Show time since this app cell run finished.
             widgets.runClock = RunClock.make({
-                suffix: ' ago'
+                on: {
+                    tick: function (elapsed) {
+                        var clock;
+                        var day = 1000 * 60 * 60 * 24;
+                        if (elapsed > day) {
+                            clock = span([
+                                ' on ',
+                                format.niceTime(jobState.finish_time)
+                            ]);
+                            return {
+                                content: clock,
+                                stop: true
+                            };
+                        } else {
+                            clock = [config.prefix || '', format.niceDuration(elapsed), config.suffix || ''].join('');
+                            return {
+                                content: clock + ' ago'                        
+                            };
+                        }
+                    }
+                }                
             });
             widgets.runClock.start({
                 node: ui.getElement('run-control-panel.status.execMessage.clock'),
@@ -2094,6 +2111,38 @@ define([
             .catch(function (err) {
                 ui.setContent('run-control-panel.status.execMessage.clock', 'ERROR:' + err.message);
             });
+
+            // if (elapsed > 1000 * 60 * 60 * 24) {
+            //     message = span([
+            //         'Finished with ',
+            //         niceState(jobState.job_state),
+            //         ' on ',
+            //         format.niceTime(jobState.finish_time)
+            //     ]);
+            //     ui.setContent('run-control-panel.status.execMessage', message);
+            // } else {
+            //     message = span([
+            //         'Finished with ',
+            //         niceState(jobState.job_state),
+            //         ' ',
+            //         span({dataElement: 'clock'})
+            //     ]);
+
+            //     ui.setContent('run-control-panel.status.execMessage', message);
+
+            //     // Show time since this app cell run finished.
+            //     widgets.runClock = RunClock.make({
+            //         suffix: ' ago'
+            //     });
+            //     widgets.runClock.start({
+            //         node: ui.getElement('run-control-panel.status.execMessage.clock'),
+            //         startTime: jobState.finish_time
+            //     })
+            //     .catch(function (err) {
+            //         ui.setContent('run-control-panel.status.execMessage.clock', 'ERROR:' + err.message);
+            //     });
+            // }
+
 
             // widgets named 'no-display' are a trigger to skip the output cell process.
             var skipOutputCell = model.getItem('exec.outputWidgetInfo.name') === 'no-display';

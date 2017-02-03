@@ -3,6 +3,15 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v4.2.1 (more notes will follow).
 
+### Version 3.1.9
+__Changes__
+- Expanded the reach of the front end code compiler.
+- Adjusted the logic of job polling to only poll jobs that are currently attached to Narrative cells and running.
+- Changed what publicly available data is visible.
+- Fixed data panel timestamps in Safari.
+- Fixed sharing user lookup input field in Safari.
+- Made many app cell improvements.
+
 ### Version 3.1.8
 __Changes__
 - JIRA TASK-434 Made improvements to speed up loading and (hopefully) improve stability.

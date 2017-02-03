@@ -223,9 +223,7 @@ define (
                 if (isOwner) {
                     var $addUsersDiv = $('<div>').css({'margin-top': '10px'});
                     var $input = $('<select>')
-                        .attr('type', 'text')
                         .addClass('kb-share-select');
-                        // .css({'width': self.options.add_user_input_width});
 
                     var $addAction =
                         $('<div>')
@@ -488,28 +486,24 @@ define (
                     multiple: true,
                     dataAdapter: CustomData,
                     dropdownAutoWidth: true,
-                    containerCssClass: 'kb-share-select',
                     language: {
                         noResults: function () {
                             return noMatchesFoundStr;
                         }
-                    },
-                    escapeMarkup: function(markup) {
-                        return markup;
                     },
                     templateSelection: function (object) {
                         if (object.found) {
                             var toShow = self.renderUserIconAndName(object.id, object.text);
                             return $('<span>').append(toShow[0]).append(toShow[1].css({'white-space': 'normal'})).css({'width': '100%'});
                         }
-                        return $("<b>" + object.text + "</b> (not found)");
+                        return $('<b>' + object.text + '</b> (not found)');
                     },
                     templateResult: function (object) {
                         if (object.found) {
                             var toShow = self.renderUserIconAndName(object.id, object.text);
                             return $('<span>').append(toShow[0]).append(toShow[1]);
                         }
-                        return $("<b>" + object.text + "</b> (not found)");
+                        return $('<b>' + object.text + '</b> (not found)');
                     }
                 });
             });

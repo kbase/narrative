@@ -587,10 +587,10 @@ class JobManager(object):
             first_line = max_lines - num_lines
             logs = logs[first_line:]
         self._send_comm_message('job_logs', {
-            'job_id': job_id, 
-            'first': first_line, 
-            'max_lines': max_lines, 
-            'lines': logs, 
+            'job_id': job_id,
+            'first': first_line,
+            'max_lines': max_lines,
+            'lines': logs,
             'latest': True})
 
     def _get_job_logs(self, job_id, first_line=0, num_lines=None):

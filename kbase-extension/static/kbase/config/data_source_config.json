@@ -7,16 +7,10 @@
                 "ws": "KBasePublicGenomesV5",
                 "search": true
             },
-            "refseq_genomes": {
-                "name": "RefSeq Genomes",
-                "type": "KBaseGenomeAnnotations.GenomeAnnotation",
-                "ws": "RefSeq_Genomes",
-                "search": false
-            },
-            "ensembl_genomes": {
-                "name": "Ensembl Genomes",
-                "type": "KBaseGenomeAnnotations.GenomeAnnotation",
-                "ws": "ReferenceEnsemblPlantGenomeAnnotations",
+            "plant_genomes": {
+                "name": "Plant Genomes",
+                "type": "KBaseGenomes.Genome",
+                "ws": "Phytozome_Genomes",
                 "search": false
             },
             "media": {
@@ -121,6 +115,12 @@
                 "ws": "KBasePublicGenomesV5",
                 "search": true
             },
+            "plant_genomes": {
+                "name": "Plant Genomes",
+                "type": "KBaseGenomes.Genome",
+                "ws": "Phytozome_Genomes",
+                "search": false
+            },
             "media": {
                 "name": "Media",
                 "type": "KBaseBiochem.Media",
@@ -211,6 +211,12 @@
                 "ws": "KBasePublicGenomesV5",
                 "search": true
             },
+            "plant_genomes": {
+                "name": "Plant Genomes",
+                "type": "KBaseGenomes.Genome",
+                "ws": "Phytozome_Genomes",
+                "search": false
+            },
             "media": {
                 "name": "Media",
                 "type": "KBaseBiochem.Media",
@@ -256,11 +262,10 @@
                 },
                 {
                     "name": [
-                        "ContigSet",
-                        "Assembly"
+                        "ContigSet"
                     ],
-                    "displayName": "Example Assemblies",
-                    "header": "Assembled DNA sequences"
+                    "displayName": "Example Contig Sets",
+                    "header": "A set of DNA sequences"
                 },
                 {
                     "name": [
@@ -300,6 +305,12 @@
                 "type": "KBaseGenomes.Genome",
                 "ws": "KBasePublicGenomesV5",
                 "search": true
+            },
+            "plant_genomes": {
+                "name": "Plant Genomes",
+                "type": "KBaseGenomes.Genome",
+                "ws": "Phytozome_Genomes",
+                "search": false
             },
             "media": {
                 "name": "Media",

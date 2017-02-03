@@ -251,26 +251,27 @@ define([
                 // div({dataElement: 'little-tip'}, parameterInfoLittleTip(spec)),
                 div({ dataElement: 'big-tip', class: 'hidden' }, html.makeTabs({
                     alignRight: true,
-                    tabs: [{
-                        label: 'Description',
-                        name: 'description',
-                        content: div({ style: { padding: '0px' } }, infoTipText)
-                    },
-                    {
-                        label: 'About',
-                        name: 'about',
-                        content: parameterInfoContent(spec)
-                    },
-                    {
-                        label: 'Rules',
-                        name: 'rules',
-                        content: parameterInfoRules(spec)
-                    },
-                    {
-                        label: 'Spec',
-                        name: 'spec',
-                        content: rawSpec(spec)
-                    }
+                    tabs: [ // 
+                        {
+                            label: 'Description',
+                            name: 'description',
+                            content: div({ style: { padding: '0px' } }, infoTipText)
+                        },
+                        {
+                            label: 'About',
+                            name: 'about',
+                            content: parameterInfoContent(spec)
+                        },
+                        {
+                            label: 'Rules',
+                            name: 'rules',
+                            content: parameterInfoRules(spec)
+                        },
+                        {
+                            label: 'Spec',
+                            name: 'spec',
+                            content: rawSpec(spec)
+                        }
                     ]
                 }))
             ]);
@@ -333,7 +334,7 @@ define([
                             spec.ui.label || spec.ui.id
                         ]);
                     }()),
-                    div({ class: ['input-group', config.showLabel == false ? 'col-md-12' : 'col-md-9'].join(' ')}, [
+                    div({ class: ['input-group', config.showLabel == false ? 'col-md-12' : 'col-md-9'].join(' ') }, [
                         div({
                             id: ids.inputControl,
                             dataElement: 'input-control'
@@ -383,17 +384,17 @@ define([
                     class: 'message-panel hidden',
                     dataElement: 'message-panel'
                 }, [
-                    div({ class: config.showLabel == false ? '' : 'col-md-3'}),
-                    div({ class: config.showLabel == false ? 'col-md-12' : 'col-md-9'}, [
+                    div({ class: config.showLabel == false ? '' : 'col-md-3' }),
+                    div({ class: config.showLabel == false ? 'col-md-12' : 'col-md-9' }, [
                         div({
                             id: ids.message,
                             class: 'message',
                             dataElement: 'message'
-                        } )
+                        })
                     ])
                 ]),
                 (function () {
-                    if (!config.showInfo) {                
+                    if (!config.showInfo) {
                         return '';
                     }
 
@@ -451,7 +452,7 @@ define([
         }
 
         function start(arg) {
-            attach(arg.node)
+            return attach(arg.node)
                 .then(function () {
                     bus.on('validation', function (message) {
                         switch (message.diagnosis) {
@@ -491,9 +492,6 @@ define([
                     // bus.on('changed', function () {
                     //     places.feedback.style.backgroundColor = '';
                     // });
-                    bus.on('saved', function (message) {
-                        console.log('FIELD detected saved');
-                    });
                     bus.on('enable', function (message) {
                         doEnable();
                     });
@@ -503,14 +501,14 @@ define([
 
                     if (inputControl.start) {
                         return inputControl.start({
-                            node: places.inputControl
-                        })
-                        .then(function () {
-                            // TODO: get rid of this pattern
-                            bus.emit('run', {
                                 node: places.inputControl
+                            })
+                            .then(function () {
+                                // TODO: get rid of this pattern
+                                bus.emit('run', {
+                                    node: places.inputControl
+                                });
                             });
-                        });
                     }
                 });
         }

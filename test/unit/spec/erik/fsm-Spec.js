@@ -1,45 +1,40 @@
 /*global define,describe,it,expect*/
 /*jslint white:true,browser:true*/
 define([
-    'common/fsm',
-    'common/monoBus'
-], function (Fsm, Bus) {
+    'common/fsm'
+], function (Fsm) {
     'use strict';
 
-    var simpleStates = [
-        {
-            state: {
-                mode: 'awake'
-            },
-            next: [
-                {
+    var simpleStates = [{
+                state: {
                     mode: 'awake'
                 },
-                {
-                    mode: 'asleep'
-                }
-            ]
-        },
-        {
-            state: {
-                mode: 'asleep'
+                next: [{
+                        mode: 'awake'
+                    },
+                    {
+                        mode: 'asleep'
+                    }
+                ]
             },
-            next: [
-                {
+            {
+                state: {
                     mode: 'asleep'
                 },
-                {
-                    mode: 'awake'
-                }
-            ]
-        }
-    ],
+                next: [{
+                        mode: 'asleep'
+                    },
+                    {
+                        mode: 'awake'
+                    }
+                ]
+            }
+        ],
         awakeState = {
             state: {
                 mode: 'awake'
             },
-            next: [
-                {
+            next: [{
                     mode: 'awake'
                 },
                 {
@@ -47,127 +42,43 @@ define([
                 }
             ]
         },
-    asleepState = {
-        state: {
-            mode: 'asleep'
-        },
-        next: [
-            {
+        asleepState = {
+            state: {
                 mode: 'asleep'
             },
-            {
-                mode: 'awake'
-            }
-        ]
-    };
+            next: [{
+                    mode: 'asleep'
+                },
+                {
+                    mode: 'awake'
+                }
+            ]
+        };
 
-    var statesWithEvents = [
-        {
+    var statesWithEvents = [{
             state: {
                 mode: 'first'
             },
-            next: [
-                {
-                    mode: 'second'
-                }
-            ]
+            next: [{
+                mode: 'second'
+            }]
         },
         {
             state: {
                 mode: 'second'
             },
-            next: [
-                {
-                    mode: 'last'
-                }
-            ],
+            next: [{
+                mode: 'last'
+            }],
             on: {
                 enter: {
-                    messages: [
-                        {
-                            emit: 'in-second',
-                            message: {test: 'second'}
-                        }
-                    ]
+                    messages: [{
+                        emit: 'in-second',
+                        message: { test: 'second' }
+                    }]
                 }
             }
-        },       
-        {
-            state: {
-                mode: 'last'
-            }
-        }
-    ];
-    
-     var statesWithEvents2 = [
-        {
-            state: {
-                mode: 'first'
-            },
-            next: [
-                {
-                    mode: 'second'
-                }
-            ]
         },
-        {
-            state: {
-                mode: 'second'
-            },
-            next: [
-                {
-                    mode: 'last'
-                }
-            ],
-            on: {
-                exit: {
-                    messages: [
-                        {
-                            emit: 'leaving-second',
-                            message: {test: 'second'}
-                        }
-                    ]
-                }
-            }
-        },       
-        {
-            state: {
-                mode: 'last'
-            }
-        }
-    ];
-    
-     var statesWithEvents3 = [
-        {
-            state: {
-                mode: 'first'
-            },
-            next: [
-                {
-                    mode: 'second'
-                }
-            ]
-        },
-        {
-            state: {
-                mode: 'second'
-            },
-            next: [
-                {
-                    mode: 'last'
-                }
-            ],
-            on: {
-                resume: {
-                    messages: [
-                        {
-                            emit: 'back-in-second',
-                            message: {test: 'second'}
-                        }
-                    ]
-                }
-            }
-        },       
         {
             state: {
                 mode: 'last'
@@ -175,14 +86,74 @@ define([
         }
     ];
 
-    var appStates = [
+    var statesWithEvents2 = [{
+            state: {
+                mode: 'first'
+            },
+            next: [{
+                mode: 'second'
+            }]
+        },
         {
+            state: {
+                mode: 'second'
+            },
+            next: [{
+                mode: 'last'
+            }],
+            on: {
+                exit: {
+                    messages: [{
+                        emit: 'leaving-second',
+                        message: { test: 'second' }
+                    }]
+                }
+            }
+        },
+        {
+            state: {
+                mode: 'last'
+            }
+        }
+    ];
+
+    var statesWithEvents3 = [{
+            state: {
+                mode: 'first'
+            },
+            next: [{
+                mode: 'second'
+            }]
+        },
+        {
+            state: {
+                mode: 'second'
+            },
+            next: [{
+                mode: 'last'
+            }],
+            on: {
+                resume: {
+                    messages: [{
+                        emit: 'back-in-second',
+                        message: { test: 'second' }
+                    }]
+                }
+            }
+        },
+        {
+            state: {
+                mode: 'last'
+            }
+        }
+    ];
+
+    var appStates = [{
             state: {
                 mode: 'editing',
                 params: 'incomplete'
             },
-            next: [
-                {
+            next: [{
                     mode: 'editing',
                     params: 'complete'
                 },
@@ -197,13 +168,11 @@ define([
                 mode: 'editing',
                 params: 'complete'
             },
-            next: [
-                {
-                    mode: 'editing',
-                    params: 'complete',
-                    code: 'built'
-                }
-            ]
+            next: [{
+                mode: 'editing',
+                params: 'complete',
+                code: 'built'
+            }]
         },
         {
             state: {
@@ -211,8 +180,7 @@ define([
                 params: 'complete',
                 code: 'built'
             },
-            next: [
-                {
+            next: [{
                     mode: 'editing',
                     params: 'incomplete'
                 },
@@ -232,8 +200,7 @@ define([
                 mode: 'processing',
                 stage: 'launching'
             },
-            next: [
-                {
+            next: [{
                     mode: 'processing',
                     stage: 'queued'
                 },
@@ -257,8 +224,7 @@ define([
                 mode: 'processing',
                 stage: 'queued'
             },
-            next: [
-                {
+            next: [{
                     mode: 'processing',
                     stage: 'running'
                 },
@@ -282,8 +248,7 @@ define([
                 mode: 'processing',
                 stage: 'running'
             },
-            next: [
-                {
+            next: [{
                     mode: 'success'
                 },
                 {
@@ -301,8 +266,7 @@ define([
             state: {
                 mode: 'success'
             },
-            next: [
-                {
+            next: [{
                     mode: 'success'
                 },
                 {
@@ -317,13 +281,11 @@ define([
                 mode: 'error',
                 stage: 'launching'
             },
-            next: [
-                {
-                    mode: 'editing',
-                    params: 'complete',
-                    code: 'built'
-                }
-            ]
+            next: [{
+                mode: 'editing',
+                params: 'complete',
+                code: 'built'
+            }]
 
         },
         {
@@ -331,13 +293,11 @@ define([
                 mode: 'error',
                 stage: 'queued'
             },
-            next: [
-                {
-                    mode: 'editing',
-                    params: 'complete',
-                    code: 'built'
-                }
-            ]
+            next: [{
+                mode: 'editing',
+                params: 'complete',
+                code: 'built'
+            }]
 
         },
         {
@@ -345,13 +305,11 @@ define([
                 mode: 'error',
                 stage: 'running'
             },
-            next: [
-                {
-                    mode: 'editing',
-                    params: 'complete',
-                    code: 'built'
-                }
-            ]
+            next: [{
+                mode: 'editing',
+                params: 'complete',
+                code: 'built'
+            }]
 
         }
     ];
@@ -366,24 +324,24 @@ define([
             }
             expect(alive).toBeTruthy();
         });
-//        it('Two simple objects equal', function() {
-//            var a = {
-//                name: 'erik'
-//            },
-//                b = {
-//                    name: 'erik'
-//                };
-//            expect(Fsm.test.objectEqual(a, b)).toBeTruthy();
-//        });
-//         it('Two simple objects not equal', function() {
-//            var a = {
-//                name: 'erik'
-//            },
-//                b = {
-//                    name: 'alex'
-//                };
-//            expect(Fsm.test.objectEqual(a, b)).not.toBeTruthy();
-//        });
+        //        it('Two simple objects equal', function() {
+        //            var a = {
+        //                name: 'erik'
+        //            },
+        //                b = {
+        //                    name: 'erik'
+        //                };
+        //            expect(Fsm.test.objectEqual(a, b)).toBeTruthy();
+        //        });
+        //         it('Two simple objects not equal', function() {
+        //            var a = {
+        //                name: 'erik'
+        //            },
+        //                b = {
+        //                    name: 'alex'
+        //                };
+        //            expect(Fsm.test.objectEqual(a, b)).not.toBeTruthy();
+        //        });
     });
 
     describe('Operations on a simple FSM', function () {
@@ -391,7 +349,7 @@ define([
             var states = simpleStates,
                 fsm = Fsm.make({
                     states: states,
-                    initialState: {mode: 'asleep'}
+                    initialState: { mode: 'asleep' }
                 });
             expect(fsm).toBeTruthy();
         });
@@ -400,9 +358,9 @@ define([
             var states = simpleStates,
                 fsm = Fsm.make({
                     states: states,
-                    initialState: {mode: 'awake'}
+                    initialState: { mode: 'awake' }
                 }),
-                found = fsm.findState({mode: 'awake'});
+                found = fsm.findState({ mode: 'awake' });
 
             expect(found).toEqual(awakeState);
         });
@@ -411,7 +369,7 @@ define([
             var states = simpleStates,
                 fsm = Fsm.make({
                     states: states,
-                    initialState: {mode: 'awake'}
+                    initialState: { mode: 'awake' }
                 });
             fsm.start();
 
@@ -423,9 +381,9 @@ define([
             var states = simpleStates,
                 fsm = Fsm.make({
                     states: states,
-                    initialState: {mode: 'awake'}
+                    initialState: { mode: 'awake' }
                 });
-            fsm.start({mode: 'asleep'});
+            fsm.start({ mode: 'asleep' });
 
 
             expect(fsm.getCurrentState()).toEqual(asleepState);
@@ -436,10 +394,10 @@ define([
             var states = simpleStates,
                 fsm = Fsm.make({
                     states: states,
-                    initialState: {mode: 'awake'}
+                    initialState: { mode: 'awake' }
                 });
             fsm.start();
-            fsm.newState({mode: 'asleep'});
+            fsm.newState({ mode: 'asleep' });
 
             expect(fsm.getCurrentState()).toEqual(asleepState);
         });
@@ -448,13 +406,13 @@ define([
             var states = simpleStates,
                 fsm = Fsm.make({
                     states: states,
-                    initialState: {mode: 'awake'}
+                    initialState: { mode: 'awake' }
                 });
             fsm.start();
-            fsm.newState({mode: 'asleep'});
-            fsm.newState({mode: 'asleep'});
-            fsm.newState({mode: 'awake'});
-            fsm.newState({mode: 'awake'});
+            fsm.newState({ mode: 'asleep' });
+            fsm.newState({ mode: 'asleep' });
+            fsm.newState({ mode: 'awake' });
+            fsm.newState({ mode: 'awake' });
 
             expect(fsm.getCurrentState()).toEqual(awakeState);
         });
@@ -463,12 +421,12 @@ define([
             var states = simpleStates,
                 fsm = Fsm.make({
                     states: states,
-                    initialState: {mode: 'awake'}
+                    initialState: { mode: 'awake' }
                 });
             fsm.start();
 
             function invalid() {
-                fsm.newState({mode: 'tired'});
+                fsm.newState({ mode: 'tired' });
             }
 
             expect(invalid).toThrow();
@@ -478,61 +436,55 @@ define([
             var states = simpleStates,
                 fsm = Fsm.make({
                     states: states,
-                    initialState: {mode: 'awake'},
+                    initialState: { mode: 'awake' },
                     onNewState: function (fsm) {
                         expect(fsm.getCurrentState()).toEqual(asleepState);
                         done();
                     }
                 });
             fsm.start();
-            fsm.newState({mode: 'asleep'});
+            fsm.newState({ mode: 'asleep' });
 
             // expect(fsm.getCurrentState()).toEqual(asleepState);
         });
 
         it('Sends a message when entering a state', function (done) {
-            var bus = Bus.make(),
-                fsm = Fsm.make({
+            var fsm = Fsm.make({
                     states: statesWithEvents,
-                    initialState: {mode: 'first'},
-                    bus: bus
+                    initialState: { mode: 'first' }
                 });
-            bus.on('in-second', function (message) {
+            fsm.bus.on('in-second', function (message) {
                 expect(message.test).toEqual('second');
                 done();
             });
             fsm.start();
-            fsm.newState({mode: 'second'});
+            fsm.newState({ mode: 'second' });
         });
         it('Sends a message when exiting a state', function (done) {
-            var bus = Bus.make(),
-                fsm = Fsm.make({
-                    states: statesWithEvents2,
-                    initialState: {mode: 'first'},
-                    bus: bus
-                });
-            bus.on('leaving-second', function (message) {
+            var fsm = Fsm.make({
+                states: statesWithEvents2,
+                initialState: { mode: 'first' }
+            });
+            fsm.bus.on('leaving-second', function (message) {
                 expect(message.test).toEqual('second');
                 done();
             });
             fsm.start();
-            fsm.newState({mode: 'second'});
-            fsm.newState({mode: 'last'});
+            fsm.newState({ mode: 'second' });
+            fsm.newState({ mode: 'last' });
         });
         it('Sends a message when resuming a state', function (done) {
-            var bus = Bus.make(),
-                fsm = Fsm.make({
+            var fsm = Fsm.make({
                     states: statesWithEvents3,
-                    initialState: {mode: 'second'},
-                    bus: bus
+                    initialState: { mode: 'second' }
                 });
-            bus.on('back-in-second', function (message) {
+            fsm.bus.on('back-in-second', function (message) {
                 expect(message.test).toEqual('second');
                 done();
             });
             fsm.start();
         });
-        
+
 
     });
 

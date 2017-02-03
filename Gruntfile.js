@@ -24,54 +24,34 @@ module.exports = function(grunt) {
                 options: {
                     name: 'narrative_paths',
                     baseUrl: 'kbase-extension/static',
-                    include: ['narrativeMain'],
-                    // baseUrl: "./static",
+                    include: ['narrativeMain',
+                              'buildTools/loadAppWidgets'],
                     mainConfigFile: 'kbase-extension/static/narrative_paths.js',
                     findNestedDependencies: true,
                     // optimize: 'uglify2',
-                    generateSourceMaps: false,
+                    generateSourceMaps: true,
                     preserveLicenseComments: false,
                     out: 'kbase-extension/static/kbase-narrative-min.js',
                     paths: {
-                        // jquery: 'empty:',
                         jqueryui: 'empty:',
                         bootstrap: 'empty:',
                         'jquery-ui': 'empty:',
                         narrativeConfig: 'empty:',
                         'base/js/utils': 'empty:',
                         'base/js/namespace': 'empty:',
-                        // 'kbase/js/widgets/narrative_core/upload/fileUploadWidget': 'empty:',
                         bootstraptour: 'empty:',
-                        // 'kbase/js/widgets/narrative_core/upload/uploadTour': 'empty:',
                         'services/kernels/comm': 'empty:',
                         'common/ui': 'empty:',
                         'notebook/js/celltoolbar': 'empty:',
                         'base/js/events': 'empty:',
                         'base/js/keyboard': 'empty:',
+                        'base/js/dialog': 'empty:',
                         'notebook/js/notebook': 'empty:',
-                        // narrativeTour: 'empty:',
                         'notebook/js/main': 'empty:'
                     },
                     inlineText: false,
-                    // exclude: [
-                    //     'jqueryui',
-                    //     'bootstrap',
-                    //     'jquery-ui'
-                    // ],
-                    // onBuildWrite: function (moduleName, path, contents) {
-                    //     if (moduleName.lastIndexOf('text!', 0) === 0 ||
-                    //         moduleName.lastIndexOf('css!', 0) === 0 ||
-                    //         moduleName.lastIndexOf('json!', 0) === 0) {
-                    //         return '';
-                    //     }
-                    //     return contents;
-                    // },
                     buildCSS: false,
-                    // pragmasOnSave: {
-                    //     excludeRequireCss: true,
-                    // },
                     optimizeAllPluginResources: false,
-                    // wrapShim: true,
                     done: function(done, output) {
                         console.log(output);
                         done();

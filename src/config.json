@@ -43,6 +43,7 @@
         "login": "https://appdev.kbase.us/services/authorization/Sessions/Login",
         "narrative_job_proxy": "https://appdev.kbase.us/services/narrativejobproxy/",
         "narrative_method_store": "https://appdev.kbase.us/services/narrative_method_store/rpc",
+        "narrative_method_store_image": "https://appdev.kbase.us/services/narrative_method_store/",
         "narrative_method_store_types": "https://next.kbase.us/services/narrative_method_store/rpc",
         "profile_page": "/#people/",
         "protein_info": "",

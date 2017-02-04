@@ -409,12 +409,25 @@ define (
               var promises = [];
               var ws = new Workspace(window.kbconfig.urls.workspace, {token : $rnaseq.authToken()});
               var hackedIDMap = {};
+              var sampleToAlignmentMap = {};
+
+              $.each(
+                $rnaseq.options.output.mapped_alignments_ids,
+                function (i,m) {
+                  $.each(
+                    m,
+                    function (k, v) {
+                      sampleToAlignmentMap[k] = v;
+                    }
+                  )
+                }
+              );
 
               $.each(
                 this.options.output.read_sample_ids,
                 function (i,v) {
                   promises.push(
-                    ws.get_object_info([{ref : v}])
+                    ws.get_object_info([{ref : sampleToAlignmentMap[v]}])
                   );
                 }
               );
@@ -424,6 +437,7 @@ define (
                 $.each(
                   arguments,
                   function (i, v) {
+
                     hackedIDMap[$rnaseq.options.output.read_sample_ids[i]] = v[0][1];
                   }
                 );
@@ -438,6 +452,7 @@ define (
                   $rnaseq.options.output.read_sample_ids,
                   function (i,v) {
 
+                    var objId = v;
                     var label = hackedIDMap[v] || v;
 
                     $selector.append(

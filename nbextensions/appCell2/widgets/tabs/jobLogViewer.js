@@ -180,6 +180,10 @@ define([
                         auto: true
                     },
                     {
+                        mode: 'active',
+                        auto: false
+                    },
+                    {
                         mode: 'complete'
                     },
                     {
@@ -322,7 +326,6 @@ define([
 
         function stopAutoFetch() {
             looping = false;
-            stopped = true;
             // var state = fsm.getCurrentState().state;
             // if (state.mode === 'active' && state.auto) {
             //     fsm.newState({ mode: 'active', auto: false });
@@ -361,6 +364,7 @@ define([
             fsm.updateState({
                 auto: false
             });
+            stopped = true;
             stopAutoFetch();
         }
 
@@ -386,13 +390,12 @@ define([
         }
 
         function doFetchFirstLogChunk() {
-            var currentLine = model.getItem('currentLine');
+            doStopPlayLogs();
 
+            var currentLine = model.getItem('currentLine');
             if (currentLine === 0) {
                 return;
             }
-
-            stopAutoFetch();
 
             requestJobLog(0);
         }
@@ -401,7 +404,7 @@ define([
             var currentLine = model.getItem('currentLine'),
                 newFirstLine = currentLine - linesPerPage;
 
-            stopAutoFetch();
+            doStopPlayLogs();
 
             if (currentLine === 0) {
                 return;
@@ -419,7 +422,7 @@ define([
                 lastLine = model.getItem('lastLine'),
                 newFirstLine;
 
-            stopAutoFetch();
+            doStopPlayLogs();
 
             // Get the current set of log lines again, since we don't have 
             // a full page. 
@@ -438,12 +441,16 @@ define([
             var firstLine,
                 lastLine = model.getItem('lastLine');
 
-            stopAutoFetch();
+            doStopPlayLogs();
 
             if (!lastLine) {
                 requestLatestJobLog();
             } else {
                 firstLine = lastLine - (lastLine % linesPerPage);
+                firstLine = lastLine - linesPerPage;
+                if (firstLine < 0) {
+                    firstLine = 0;
+                }
 
                 requestJobLog(firstLine);
             }
@@ -650,21 +657,34 @@ define([
                             console.warn('No log entries returned', message);
                         }
                     } else {
-                        model.setItem('lines', message.logs.lines);
-                        model.setItem('currentLine', message.logs.first);
-                        model.setItem('latest', true);
-                        model.setItem('fetchedAt', new Date().toUTCString());
-                        // Detect end of log.
-                        var lastLine = model.getItem('lastLine'),
-                            batchLastLine = message.logs.first + message.logs.lines.length;
-                        if (!lastLine) {
-                            lastLine = batchLastLine;
-                        } else {
-                            if (batchLastLine > lastLine) {
-                                lastLine = batchLastLine;
+                        // Don't update if we don't have additional lines.
+                        var needUpdate = true;
+                        var lines = model.getItem('lines');
+                        if (lines && lines.length > 0) {
+                            // console.log('LINES?', lines[0].line, message.logs.lines[0].line);
+                            if ( lines.length === message.logs.lines.length &&
+                                 lines[0].line === message.logs.lines[0].line ) {
+                                needUpdate = false;
                             }
                         }
-                        model.setItem('lastLine', lastLine);
+
+                        if (needUpdate) {
+                            model.setItem('lines', message.logs.lines);
+                            model.setItem('currentLine', message.logs.first);
+                            model.setItem('latest', true);
+                            model.setItem('fetchedAt', new Date().toUTCString());
+                            // Detect end of log.
+                            var lastLine = model.getItem('lastLine'),
+                                batchLastLine = message.logs.first + message.logs.lines.length;
+                            if (!lastLine) {
+                                lastLine = batchLastLine;
+                            } else {
+                                if (batchLastLine > lastLine) {
+                                    lastLine = batchLastLine;
+                                }
+                            }
+                            model.setItem('lastLine', lastLine);
+                        }
                     }
                     if (looping) {
                         scheduleNextRequest();

@@ -49,26 +49,66 @@ define([
                 Object.keys(spec.parameters.specs).forEach(function(id) {
                     var paramSpec = spec.parameters.specs[id];
                     var paramValue = value[id];
-                    validationMap[id] = resolver.validate(paramValue, paramSpec)
+                    validationMap[id] = resolver.validate(paramValue, paramSpec);
                 });
                 return Promise.props(validationMap)
                     .then(function(subValidationResults) {
+                        /*
+                            Propagation rules for struct validation:
+                            optional:
+                            if any subcontrol has an error, so do we, and the message
+                            is just generic (Error in subcontrol).
+                            if any are required and empty, don't do anything (upper context will
+                            catch this)
+                            if all are optional-empty, we are optional-empty
+
+                            required:
+                            if any is a validation error, this becomes error (like above)
+                            otherwise, if any is required-missing, this becomes required-missing
+                            otherwise, if all are optional-empty, we are required-missing
+                        */
+                        var resolved = false;
+                        var subFieldsEmpty = true;
+                        var subParamIds = Object.keys(subValidationResults);
+                        for (var i = 0; i < subParamIds.length; i += 1) {
+                            var result = subValidationResults[subParamIds[i]];
+                            if (!result.isValid) {
+                                validationResult.isValid = false;
+                                if (result.diagnosis === 'required-missing') {
+                                    validationResult.diagnosis = 'required-missing';
+                                    validationResult.messageId = 'required-missing';
+                                } else {
+                                    validationResult.diagnosis = 'invalid';
+                                    validationResult.messageId = 'subfield-invalid';
+                                    validationResult.message = 'A sub-field is invalid';
+                                }
+                                resolved = true;
+                                break;
+                            } else {
+                                if (result.diagosis !== 'optional-empty') {
+                                    subFieldsEmpty = false;
+                                }
+                            }
+                        }
 
                         if (spec.data.constraints.required) {
                             // For now, we need to inspect the sub validation results -- 
                             // if this struct is required any any sub-fields are invalid or
                             // required-missing, we are also required-missing...
                             // could also try to represent an error state...
-                            Object.keys(subValidationResults).forEach(function(id) {
-                                var result = subValidationResults[id];
-                                if (result.isValid === false) {
-                                    //if (result.diagnosis === 'required-missing') {
-                                    validationResult.isValid = false;
-                                    validationResult.diagnosis = 'required-missing';
-                                    validationResult.messageId = 'required-missing';
-                                    //}
-                                }
-                            });
+
+                            if (!resolved && subFieldsEmpty) {
+                                validationResult.isValid = false;
+                                validationResult.diagnosis = 'required-missing';
+                                validationResult.messageId = 'required-missing';
+                            }
+                        } else {
+                           
+                            if (!resolved && subFieldsEmpty) {
+                                validationResult.isValid = false;
+                                validationResult.diagnosis = 'optional-empty';
+                                validationResult.messageId = 'optional-empty';
+                            }
                         }
 
                         // TODO: this .validations property for sub-validations should 
@@ -83,5 +123,5 @@ define([
     return {
         applyConstraints: applyConstraints,
         validate: validate
-    }
+    };
 });

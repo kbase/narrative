@@ -2005,7 +2005,7 @@ define([
 
             var message = span([
                 ui.loading({color: 'green'}),
-                ' Waiting in Queue - ',
+                ' Waiting - in Queue ',
                 span({dataElement: 'clock'})
             ]);
             ui.setContent('run-control-panel.status.execMessage', message);

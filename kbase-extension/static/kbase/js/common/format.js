@@ -124,9 +124,7 @@ define([
             if (minimized.length > 2) {
                 minimized.pop();
             }
-            // return [pad(units[4], 2), pad(units[3], 2), pad(units[2], 2), pad(units[1], 2)].join(':');
             return minimized.map(function (item) {
-                // return pad(item.value, 2) + item.name;
                 return String(item.value) + item.name;
             })
             .join(' ');

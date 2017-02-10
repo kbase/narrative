@@ -12,8 +12,8 @@ define([
     var t = html.tag,
         span = t('span');
 
-    function factory(cfg) {
-        var config = cfg || {},
+    function factory(config) {
+        var config = config || {},
             container,
             runtime = Runtime.make(),
             busConnection = runtime.bus().connect(),
@@ -36,12 +36,26 @@ define([
                 elapsed = now.getTime() - startTime;
 
             var clockNode = document.getElementById(clockId);
-            if (!clockNode) {
-                console.warn('Could not find clock node at' + clockId, 'Stopping the clock');
-                busConnection.stop();
-                return;
+
+            if (config.on && config.on.tick) {
+                try {
+                    var result = config.on.tick(elapsed);
+                    clockNode.innerHTML = result.content;
+                    if (result.stop) {
+                        busConnection.stop();
+                    }
+                } catch (err) {
+                    console.error('Error handling clock tick, closing clock', err);
+                    stop();
+                }
+            } else {
+                if (!clockNode) {
+                    console.warn('Could not find clock node at' + clockId, 'Stopping the clock');
+                    stop();
+                    return;
+                }
+                clockNode.innerHTML = [config.prefix || '', format.niceDuration(elapsed), config.suffix || ''].join('');
             }
-            clockNode.innerHTML = [config.prefix || '', format.niceDuration(elapsed), config.suffix || ''].join('');
         }
 
         function start(arg) {

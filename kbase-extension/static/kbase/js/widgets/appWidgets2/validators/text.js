@@ -15,7 +15,18 @@ define([
             errorMessage, diagnosis = 'valid',
             minLength = constraints.min_length,
             maxLength = constraints.max_length,
-            regexp = constraints.regexp ? new RegExp(constraints.regexp) : false;
+            regexps;
+            
+        if (constraints.regexp) {
+            regexps = constraints.regexp.map(function (item) {
+                return {
+                    regexpText: item.regex,
+                    regexp: new RegExp(item.regex),
+                    message: item.error_text,
+                    invert: item.match ? false : true
+                };
+            });
+        }
 
         if (common.isEmptyString(value)) {
             parsedValue = '';
@@ -29,7 +40,6 @@ define([
             diagnosis = 'invalid';
             errorMessage = 'value must be a string (it is of type "' + (typeof value) + '")';
         } else {
-            // parsedValue = value.trim();
             parsedValue = value;
             if (parsedValue.length < minLength) {
                 diagnosis = 'invalid';
@@ -37,9 +47,21 @@ define([
             } else if (parsedValue.length > maxLength) {
                 diagnosis = 'invalid';
                 errorMessage = 'the maximum length for this parameter is ' + maxLength;
-            } else if (regexp && !regexp.test(parsedValue)) {
-                diagnosis = 'invalid';
-                errorMessage = 'The text value did not match the regular expression constraint ' + constraints.regexp;
+            } else if (regexps) {
+                var regexpErrorMessages = [];
+                regexps.forEach(function (item) {
+                    var matches = item.regexp.test(parsedValue);
+                    if (item.invert) {
+                        matches = !matches;
+                    }
+                    if (!matches) {
+                        regexpErrorMessages.push(item.message || 'Failed regular expression "' + item.regexpText + '"');
+                    }
+                });
+                if (regexpErrorMessages.length > 0) {
+                    diagnosis = 'invalid';
+                    errorMessage = regexpErrorMessages.join('; ');
+                }
             } else {
                 diagnosis = 'valid';
             }
@@ -53,30 +75,6 @@ define([
             parsedValue: parsedValue
         };
     }
-
-    // function validate(value, constraints) {
-    //     try {
-    //         var nativeValue = value;
-    //         return {
-    //             value: {
-    //                 original: value,
-    //                 parsed: nativeValue
-    //             },
-    //             validation: applyConstraints(nativeValue, constraints)
-    //         };
-    //     } catch (ex) {
-    //         return {
-    //             value: {
-    //                 original: value
-    //             },
-    //             validation: {
-    //                 isValid: false,
-    //                 errorMessage: ex.message,
-    //                 diagnosis: 'invalid'
-    //             }
-    //         };
-    //     }
-    // }
 
     function validate(value, spec) {
         return Promise.try(function() {

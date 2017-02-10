@@ -587,10 +587,10 @@ class JobManager(object):
             first_line = max_lines - num_lines
             logs = logs[first_line:]
         self._send_comm_message('job_logs', {
-            'job_id': job_id, 
-            'first': first_line, 
-            'max_lines': max_lines, 
-            'lines': logs, 
+            'job_id': job_id,
+            'first': first_line,
+            'max_lines': max_lines,
+            'lines': logs,
             'latest': True})
 
     def _get_job_logs(self, job_id, first_line=0, num_lines=None):
@@ -707,7 +707,7 @@ class JobManager(object):
         jobs_to_lookup = list()
         for job_id in job_ids:
             if job_id in self._completed_job_states:
-                job_states[job_id] = self._completed_job_states[job_id]
+                job_states[job_id] = dict(self._completed_job_states[job_id])
             else:
                 jobs_to_lookup.append(job_id)
         # 3. Lookup those jobs what need it. Cache 'em as we go, if finished.
@@ -725,7 +725,7 @@ class JobManager(object):
                 state['cell_id'] = self._running_jobs[job_id]['job'].cell_id
                 state['run_id'] = self._running_jobs[job_id]['job'].run_id
                 if state.get('finished', 0) == 1:
-                    self._completed_job_states[state['job_id']] = state
+                    self._completed_job_states[state['job_id']] = dict(state)
                 job_states[state['job_id']] = state
             elif job_id in error_states:
                 error = error_states[job_id]
@@ -737,8 +737,8 @@ class JobManager(object):
         if job_id is None or job_id not in self._running_jobs:
             raise ValueError('job_id {} not found'.format(job_id))
         if job_id in self._completed_job_states:
-            return self._completed_job_states[job_id]
+            return dict(self._completed_job_states[job_id])
         state = self._running_jobs[job_id]['job'].state()
         if state.get('finished', 0) == 1:
-            self._completed_job_states[job_id] = state
-        return state
+            self._completed_job_states[job_id] = dict(state)
+        return dict(state)

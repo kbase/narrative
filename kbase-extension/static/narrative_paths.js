@@ -45,7 +45,7 @@ require.config({
         narrativeTour: 'kbase/js/tour',
         kbaseInputTest: 'kbase/js/widgets/function_input/kbaseInputTest',
         api: 'kbase/js/api',
-        util: 'kbase/js/util/',
+        util: 'kbase/js/util',
         narrative_core: 'kbase/js/widgets/narrative_core',
         configPath: 'kbase',
         narrativeViewers: 'kbase/js/widgets/narrative_core/narrativeViewers',
@@ -92,9 +92,9 @@ require.config({
         widgetService2: 'kbase/js/widgetApi/widgetService2',
 
 
-        common: 'kbase/js/common/',
-        // kb_sdk_clients: 'kbase/js/kb_sdk_clients',
+        common: 'kbase/js/common',
         widgets: 'kbase/js/widgets',
+        appWidgets: 'kbase/js/widgets/appWidgets2',
 
 
         /***

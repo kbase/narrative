@@ -1,5 +1,3 @@
-/*global define*/
-/*jslint white:true,browser:true*/
 define([
     'bluebird',
     'kb_common/html',
@@ -20,7 +18,8 @@ define([
     UI,
     lang,
     Resolver,
-    FieldWidget) {
+    FieldWidget
+) {
     'use strict';
 
     // Constants
@@ -34,7 +33,7 @@ define([
         var spec = config.parameterSpec,
             bus = config.bus,
             container,
-            parent,
+            hostNode,
             ui,
             viewModel = {
                 data: {},
@@ -43,16 +42,12 @@ define([
                 }
             },
             structFields = {},
-            // model = {
-            //     value: {},
-            //     enabled: null
-            // },
-            // structFields,
             fieldLayout = spec.ui.layout,
             struct = spec.parameters,
             places = {};
-
-        if (spec.data.constraints.required || config.initialValue) {
+        if (spec.data.constraints.required || 
+            config.initialValue || 
+            spec.data.constraints.disableable === false) {
             viewModel.state.enabled = true;
         } else {
             viewModel.state.enabled = false;
@@ -60,23 +55,17 @@ define([
 
         function setModelValue(value) {
             return Promise.try(function () {
-                    viewModel.data = value;
-                })
-                .then(function () {
-                    // render();
-                })
-                .catch(function (err) {
-                    console.error('Error setting model value', err);
-                });
+                viewModel.data = value;
+            })
+            .catch(function (err) {
+                console.error('Error setting model value', err);
+            });
         }
 
         function unsetModelValue() {
             return Promise.try(function () {
-                    viewModel.data = {};
-                })
-                .then(function (changed) {
-                    // render();
-                });
+                viewModel.data = {};
+            });
         }
 
         function resetModelValue() {
@@ -87,37 +76,6 @@ define([
             }
         }
 
-        /*
-         * If the parameter is optional, and is empty, return null.
-         * If it allows multiple values, wrap single results in an array
-         * There is a weird twist where if it ...
-         * well, hmm, the only consumer of this, isValid, expects the values
-         * to mirror the input rows, so we shouldn't really filter out any
-         * values.
-         */
-
-        function getInputValue() {
-            return ui.getElement('input-container.input').value;
-        }
-
-        /*
-         *
-         * Text fields can occur in multiples.
-         * We have a choice, treat single-text fields as a own widget
-         * or as a special case of multiple-entry -- 
-         * with a min-items of 1 and max-items of 1.
-         * 
-         *
-         */
-
-        function copyProps(from, props) {
-            var newObj = {};
-            props.forEach(function (prop) {
-                newObj[prop] = from[prop];
-            });
-            return newObj;
-        }
-
         function validate(rawValue) {
             return Promise.try(function () {
                 // var validationOptions = {
@@ -126,8 +84,6 @@ define([
                 return Validation.validate(rawValue, spec);
             });
         }
-
-        function updateValue() {}
 
         function doToggleEnableControl() {
             var button = document.querySelector('#' + places.enableControl + ' button');
@@ -160,7 +116,7 @@ define([
                 });
 
                 // Disable it
-               
+
             } else {
                 // Enable it
                 viewModel.state.enabled = true;
@@ -184,26 +140,13 @@ define([
             // If the group is required, there is no choice, it is always enabled.
             if (required) {
                 return '';
-                // return div({
-                //     id: places.enableControl
-                // }, [
-                //     input({
-                //         type: 'checkbox',
-                //         checked: true,
-                //         readonly: true,
-                //         disabled: true
-                //     }),
-                //     ' This group is required'
-                // ]);
             }
 
-            var label, checked;
+            var label;
             if (viewModel.state.enabled) {
                 label = 'Disable';
-                checked = true;
             } else {
-                label = 'Enable'
-                checked = false;
+                label = 'Enable';
             }
             return div({
                 id: places.enableControl
@@ -229,7 +172,6 @@ define([
 
             // TODO: support different layouts, this is a simple stacked
             // one for now.
-
 
             return Promise.all(promiseOfFields)
                 .then(function (fields) {
@@ -276,9 +218,7 @@ define([
                             showHint: true,
                             useRowHighight: true,
                             initialValue: value,
-                            // appSpec: appSpec,
                             parameterSpec: fieldSpec,
-                            // workspaceId: workspaceInfo.id,
                             referenceType: 'ref',
                             paramsChannelName: config.paramsChannelName
                         });
@@ -362,11 +302,16 @@ define([
                     padding: '4px'
                 }
             }, [
-                div({
-                    class: 'row'
-                }, [
-                    enableControl(events)
-                ]),
+                (function () {
+                    if (spec.data.constraints.disableable === false) {
+                        return;
+                    }
+                    return div({
+                        class: 'row'
+                    }, [
+                        enableControl(events)
+                    ]);
+                }()),
                 div({ dataElement: 'subcontrols' })
             ]);
             ui.setContent('input-container', layout);
@@ -383,56 +328,26 @@ define([
 
         }
 
-        // function autoValidate() {
-        //     return Promise.all(viewModel.data.map(function (value, index) {
-        //             // could get from DOM, but the model is the same.
-        //             var rawValue = container.querySelector('[data-index="' + index + '"]').value;
-        //             return validate(rawValue);
-        //         }))
-        //         .then(function (results) {
-        //             // a bit of a hack -- we need to handle the 
-        //             // validation here, and update the individual rows
-        //             // for now -- just create one mega message.
-        //             var errorMessages = [],
-        //                 validationMessage;
-        //             results.forEach(function (result, index) {
-        //                 if (result.errorMessage) {
-        //                     errorMessages.push(result.errorMessage + ' in item ' + index);
-        //                 }
-        //             });
-        //             if (errorMessages.length) {
-        //                 validationMessage = {
-        //                     diagnosis: 'invalid',
-        //                     errorMessage: errorMessages.join('<br/>')
-        //                 };
-        //             } else {
-        //                 validationMessage = {
-        //                     diagnosis: 'valid'
-        //                 };
-        //             }
-        //             bus.emit('validation', validationMessage);
+        function autoValidate() {
+            validate(viewModel.data)
+                .then(function (results) {
+                    bus.emit('validation', results);
 
-        //         });
-        // }
+                });
+        }
 
         // LIFECYCLE API
 
-        // Okay, we need to 
-
         function start(arg) {
             var events;
-            return Promise.try(function () {
-                    parent = arg.node;
-                    container = parent.appendChild(document.createElement('div'));
-                    ui = UI.make({ node: container });
-                    events = Events.make({ node: container });
-
-                    viewModel.data = lang.copy(config.initialValue);
-
-                    // return bus.request({}, {
-                    //     key: 'get-param-state'
-                    // });
-                })
+            var init = Promise.try(function () {
+                hostNode = arg.node;
+                container = hostNode.appendChild(document.createElement('div'));
+                ui = UI.make({ node: container });
+                events = Events.make({ node: container });
+                viewModel.data = lang.copy(config.initialValue);
+            });
+            return init
                 .then(function () {
                     return render(events);
                 })
@@ -449,7 +364,6 @@ define([
                     bus.on('update', function (message) {
                         // Update the model, and since we have sub widgets,
                         // we should send the individual data to them.
-                        // setModelValue(message.value);
                         // TODO: container environment should know about enable/disabled state?
                         // FORNOW: just ignore
                         if (viewModel.state.enabled) {
@@ -463,17 +377,13 @@ define([
 
                     });
 
-                    // A fake submit.
                     bus.on('submit', function () {
                         bus.emit('submitted', {
                             value: lang.copy(viewModel.data)
                         });
                     });
 
-                    // bus.on('')
-                    // The controller of this widget will be smart enough to 
-                    // know...
-                    // bus.emit('sync');
+                    return autoValidate();
                 })
                 .catch(function (err) {
                     console.error('ERROR', err);
@@ -483,17 +393,17 @@ define([
 
         function stop() {
             return Promise.try(function () {
-                    if (structFields) {
-                        return Promise.all(Object.keys(structFields).map(function (id) {
-                            return structFields[id].instance.stop();
-                        }));
-                    }
-                })
-                .then(function () {
-                    if (parent && container) {
-                        parent.removeChild(container);
-                    }
-                });
+                if (structFields) {
+                    return Promise.all(Object.keys(structFields).map(function (id) {
+                        return structFields[id].instance.stop();
+                    }));
+                }
+            })
+            .then(function () {
+                if (hostNode && container) {
+                    hostNode.removeChild(container);
+                }
+            });
         }
 
         return {

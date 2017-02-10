@@ -180,6 +180,10 @@ define([
                         auto: true
                     },
                     {
+                        mode: 'active',
+                        auto: false
+                    },
+                    {
                         mode: 'complete'
                     },
                     {
@@ -302,6 +306,7 @@ define([
             linesPerPage = config.linesPerPage || 10,
             loopFrequency = 5000,
             looping = false,
+            stopped = false,
             listeningForJob = false;
 
         // VIEW ACTIONS
@@ -331,6 +336,9 @@ define([
             if (looping) {
                 return;
             }
+            if (stopped) {
+                return;
+            }
             var state = fsm.getCurrentState().state;
             if (state.mode === 'active' && state.auto) {
                 looping = true;
@@ -344,19 +352,19 @@ define([
             }
         }
 
-
-        function doStartFetchingLogs() {
-            startAutoFetch();
-        }
-
         function doPlayLogs() {
             fsm.updateState({
                 auto: true
             });
+            stopped = false;
             startAutoFetch();
         }
 
-        function doStopFetchingLogs() {
+        function doStopPlayLogs() {
+            fsm.updateState({
+                auto: false
+            });
+            stopped = true;
             stopAutoFetch();
         }
 
@@ -382,13 +390,12 @@ define([
         }
 
         function doFetchFirstLogChunk() {
-            var currentLine = model.getItem('currentLine');
+            doStopPlayLogs();
 
+            var currentLine = model.getItem('currentLine');
             if (currentLine === 0) {
                 return;
             }
-
-            stopAutoFetch();
 
             requestJobLog(0);
         }
@@ -397,7 +404,7 @@ define([
             var currentLine = model.getItem('currentLine'),
                 newFirstLine = currentLine - linesPerPage;
 
-            stopAutoFetch();
+            doStopPlayLogs();
 
             if (currentLine === 0) {
                 return;
@@ -415,7 +422,7 @@ define([
                 lastLine = model.getItem('lastLine'),
                 newFirstLine;
 
-            stopAutoFetch();
+            doStopPlayLogs();
 
             // Get the current set of log lines again, since we don't have 
             // a full page. 
@@ -434,12 +441,16 @@ define([
             var firstLine,
                 lastLine = model.getItem('lastLine');
 
-            stopAutoFetch();
+            doStopPlayLogs();
 
             if (!lastLine) {
                 requestLatestJobLog();
             } else {
                 firstLine = lastLine - (lastLine % linesPerPage);
+                firstLine = lastLine - linesPerPage;
+                if (firstLine < 0) {
+                    firstLine = 0;
+                }
 
                 requestJobLog(firstLine);
             }
@@ -470,7 +481,7 @@ define([
                     title: 'Stop fetching logs',
                     id: events.addEvent({
                         type: 'click',
-                        handler: doStopFetchingLogs
+                        handler: doStopPlayLogs
                     })
                 }, [
                     span({ class: 'fa fa-stop' })
@@ -646,21 +657,34 @@ define([
                             console.warn('No log entries returned', message);
                         }
                     } else {
-                        model.setItem('lines', message.logs.lines);
-                        model.setItem('currentLine', message.logs.first);
-                        model.setItem('latest', true);
-                        model.setItem('fetchedAt', new Date().toUTCString());
-                        // Detect end of log.
-                        var lastLine = model.getItem('lastLine'),
-                            batchLastLine = message.logs.first + message.logs.lines.length;
-                        if (!lastLine) {
-                            lastLine = batchLastLine;
-                        } else {
-                            if (batchLastLine > lastLine) {
-                                lastLine = batchLastLine;
+                        // Don't update if we don't have additional lines.
+                        var needUpdate = true;
+                        var lines = model.getItem('lines');
+                        if (lines && lines.length > 0) {
+                            // console.log('LINES?', lines[0].line, message.logs.lines[0].line);
+                            if ( lines.length === message.logs.lines.length &&
+                                 lines[0].line === message.logs.lines[0].line ) {
+                                needUpdate = false;
                             }
                         }
-                        model.setItem('lastLine', lastLine);
+
+                        if (needUpdate) {
+                            model.setItem('lines', message.logs.lines);
+                            model.setItem('currentLine', message.logs.first);
+                            model.setItem('latest', true);
+                            model.setItem('fetchedAt', new Date().toUTCString());
+                            // Detect end of log.
+                            var lastLine = model.getItem('lastLine'),
+                                batchLastLine = message.logs.first + message.logs.lines.length;
+                            if (!lastLine) {
+                                lastLine = batchLastLine;
+                            } else {
+                                if (batchLastLine > lastLine) {
+                                    lastLine = batchLastLine;
+                                }
+                            }
+                            model.setItem('lastLine', lastLine);
+                        }
                     }
                     if (looping) {
                         scheduleNextRequest();
@@ -714,7 +738,7 @@ define([
                             break;
                         case 'in-progress':
                             startJobUpdates();
-                            doStartFetchingLogs();
+                            startAutoFetch();
                             newState = {
                                 mode: 'active',
                                 auto: true
@@ -787,7 +811,7 @@ define([
                             // this should not occur!
                             break;
                         case 'in-progress':
-                            doStartFetchingLogs();
+                            startAutoFetch();
                             break;
                         case 'completed':
                             newState = {
@@ -910,17 +934,17 @@ define([
                 }
             });
             fsm.start();
-            fsm.bus.on('on-active', function (message) {
-                doStartFetchingLogs();
+            fsm.bus.on('on-active', function () {
+                startAutoFetch();
             });
-            fsm.bus.on('exit-active', function (message) {
-                doStopFetchingLogs();
+            fsm.bus.on('exit-active', function () {
+                stopAutoFetch();
             });
-            fsm.bus.on('on-canceled', function (message) {
+            fsm.bus.on('on-canceled', function () {
                 requestLatestJobLog();
                 stopJobUpdates();
             });
-            fsm.bus.on('exit-canceled', function (message) {
+            fsm.bus.on('exit-canceled', function () {
                 //  nothing to do?
             });
             fsm.bus.on('on-queued', function (message) {

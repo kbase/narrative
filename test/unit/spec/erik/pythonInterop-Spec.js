@@ -60,11 +60,12 @@ define([
         });
         it('Pythonify a map of ints', function() {
             var jsValue = {one: 1, two: 2, three: 3},
-                pyValue = '{\n    "one": 1,\n    "two": 2,\n    "three": 3\n}';
+                pyValue = '{\n    "one": 1,\n    "two": 2,\n    "three": 3\n}',
+                actual = PythonInterop.pythonifyValue(jsValue);
 
-            expect(PythonInterop.pythonifyValue(jsValue)).toEqual(pyValue);
+            expect(actual).toEqual(pyValue);
         });
-        it('Pythonify a map of ints', function() {
+        it('Pythonify a map of floats', function() {
             var jsValue = {one: 1.2, two: 2.3, three: 3.4},
                 pyValue = '{\n    "one": 1.2,\n    "two": 2.3,\n    "three": 3.4\n}';
 
@@ -90,10 +91,10 @@ define([
         });
         it('Build output works', function () {
             var inputs = {
-                arg1: 1,
-                arg2: 2,
-                arg3: 3
-            },
+                    arg1: 1,
+                    arg2: 2,
+                    arg3: 3
+                },
                 code = 'from biokbase.narrative.widgetmanager import WidgetManager\n' +
                        'WidgetManager().show_output_widget(\n' +
                        '    "widget",\n' +
@@ -107,7 +108,7 @@ define([
                        ')';
             expect(PythonInterop.buildOutputRunner('widget', 'tag', 'my_cell_id', inputs)).toEqual(code);
 
-        })
+        });
     });
 
 });

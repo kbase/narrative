@@ -373,8 +373,8 @@ define([
                 body: $copyModalBody,
                 closeButton: true,
                 buttons: [
-                    $doCopyBtn,
-                    $cancelBtn
+                    $cancelBtn,
+                    $doCopyBtn
                 ]
             });
 

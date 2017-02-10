@@ -1,6 +1,3 @@
-/*global define*/
-/*jslint browser:true,white:true,single:true*/
-
 define([
     'common/props'
 ], function (
@@ -146,12 +143,7 @@ define([
         }
 
         // Singular item?
-        //if (!spec.allow_multiple) {
         return defaultToNative(converted, defaultValues[0]);
-        //}
-        //return defaultValues.map(function(defaultValue) {
-        //    return defaultToNative(converted, defaultValue);
-        //});
     }
 
     function updateDefaultValue(converted, spec) {
@@ -174,22 +166,9 @@ define([
             return 'string';
         case 'dropdown':
             return 'string';
-            // if (spec.allow_multiple) {
-            //     return '[]string';
-            // } else {
-            //     return 'string';
-            // }
         case 'textsubdata':
             return 'subdata';
         case 'custom_textsubdata':
-            //if (spec.allow_multiple) {
-            //    return '[]string';
-            //}
-            // return 'string';
-            //var custom = customTextSubdata();
-            //if (custom) {
-            //    return custom;
-            //}
             return 'customSubdata';
         case 'custom_button':
             switch (spec.id) {
@@ -205,8 +184,6 @@ define([
             break;
         case 'group':
             return 'struct';
-            // case 'reads_group_editor':
-            //     return 'reads_group_editor';
         case 'autocomplete':
             return 'string';
         }
@@ -259,8 +236,6 @@ define([
 
     function updateUI(converted, spec) {
         var dataType = converted.data.type;
-        var fieldType = converted.ui.type;
-        var paramClass = converted.ui.class;
 
         switch (dataType) {
         case 'subdata':
@@ -273,10 +248,8 @@ define([
             } else {
                 converted.ui.multiSelection = false;
             }
-            // converted.ui.showSourceObject = spec.textsubdata_options.show_src_obj ? true : false;
             break;
         }
-
     }
 
     /*
@@ -285,7 +258,6 @@ define([
     function updateConstraints(converted, spec) {
         var dataType = converted.data.type;
         var fieldType = converted.ui.type;
-        var paramClass = converted.ui.class;
         var constraints;
 
         // NOTE:
@@ -304,6 +276,7 @@ define([
                 constraints = {
                     min: Props.getDataItem(spec, 'text_options.min_length'),
                     max: Props.getDataItem(spec, 'text_options.max_length'),
+                    regexp: Props.getDataItem(spec, 'text_options.regex_constraint'),
                     validate: Props.getDataItem(spec, 'text_options.validate_as')
                 };
                 break;
@@ -371,28 +344,9 @@ define([
             }
             break;
         case 'subdata':
-
             constraints = {
                 multiple: false,
                 subdataSelection: spec.textsubdata_options.subdata_selection
-
-                //     // The parameter containing the object name we derive data from
-                //     referredParameter: spec.textsubdata_options.subdata_selection.parameter_id,
-                //     // The "included" parameter to for the workspace call
-                //     subdataIncluded: spec.textsubdata_options.subdata_selection.subdata_included,
-                //     // These are for navigating the results.
-
-                //     // This is the property path to the part of the subdata
-                //     // we want to deal with.
-                //     path: spec.textsubdata_options.subdata_selection.path_to_subdata,
-                //     // This is used to pluck a value off of the leaf array
-                //     // items, object properties (if object), object values (if 'value'),
-                //     // or otherwise just use the property key. This becomes the "id"
-                //     // of the subdata item.
-                //     selectionId: spec.textsubdata_options.subdata_selection.selection_id,
-                //     // Used to generate a description for each item. Becomes the "desc".
-                //     displayTemplate: spec.textsubdata_options.subdata_selection.description_template
-                // }
             };
             break;
         case 'customSubdata':
@@ -487,7 +441,7 @@ define([
             case 'tab':
                 break;
             default:
-                console.log('ERROR unspecified field type', converted, spec)
+                console.error('ERROR unspecified field type', converted, spec)
                 throw new Error('Unknown unspecified field type');
             }
             break;
@@ -583,8 +537,6 @@ define([
             }
         };
 
-        // updateNullValue(converted, spec);
-        // updateDefaultValue(converted, spec);
         updateConstraints(converted, spec);
         updateUI(converted, spec);
         updateData(converted, spec);
@@ -639,50 +591,7 @@ define([
         return converted;
     }
 
-    function convertGroupList(group, params) {
-        var defaultValue = [];
-        var nullValue = [];
-        var itemSpec = convertGroupToStruct(group, params);
-        // A list-embedded struct is always required.
-        itemSpec.data.constraints.required = true;
-        var structSpec = {
-            id: group.id,
-            multipleItems: true,
-            ui: {
-                label: group.ui_name,
-                description: group.description,
-                hint: group.short_hint,
-                class: group.ui_class || 'parameter',
-                control: '',
-                layout: group.parameter_ids
-            },
-            data: {
-                type: '[]struct',
-                constraints: {
-                    required: (function () {
-                        if (group.optional === 1) {
-                            return false;
-                        }
-                        return true;
-                    })
-                },
-                defaultValue: defaultValue,
-                nullValue: nullValue
-            },
-            // may not need this, but it is consistent with struct.
-            parameters: {
-                layout: ['item'],
-                specs: {
-                    item: itemSpec
-                }
-            }
-        };
-        params[group.id] = structSpec;
-
-        return structSpec;
-    }
-
-    function convertGroupToStruct(group, params, options) {
+    function convertGroupToStruct(group, params) {
         // Collect params into group and remove from original params collection.
         var groupParams = {};
         group.parameter_ids.forEach(function (id) {
@@ -692,43 +601,16 @@ define([
             // TODO: figure out what to do with advanced params within groups
             groupParams[id].ui.advanced = false;
         });
-        var required;
-        if (group.optional === 1) {
-            required = false;
-        } else {
-            required = true;
-        }
+        var required = group.optional ? false : true;
 
         var defaultValue;
         var nullValue;
         var zeroValue;
-        // if (required) {
-        //     // Default value is a struct of default values of the
-        //     // struct members. Note that this is fundamentally different
-        //     // from a list of structs/ groups.
-        //     defaultValue = {};
-        //     nullValue = {};
-        //     Object.keys(groupParams).forEach(function(id) {
-        //         defaultValue[id] = groupParams[id].data.defaultValue;
-        //         nullValue[id] = groupParams[id].data.nullValue;
-        //     });
-        //     zeroValue = defaultValue;
-        // } else {
-        //     defaultValue = null;
-        //     nullValue = null;
-        //     zeroValue = {};
-        //     // TODO: use the initial or "0" value for each paramter as well.
-        //     Object.keys(groupParams).forEach(function(id) {
-        //         zeroValue[id] = groupParams[id].data.defaultValue;
-        //     });
-        // }
-
 
         nullValue = null;
         defaultValue = {};
         Object.keys(groupParams).forEach(function (id) {
             defaultValue[id] = groupParams[id].data.defaultValue;
-            //  nullValue[id] = groupParams[id].data.nullValue;
         });
         zeroValue = defaultValue;
 
@@ -768,7 +650,12 @@ define([
 
         // in the context of a sequence, a struct is always "required",
         // no matter what the spec says.
-        itemSpec.data.constraints.required = true;
+        // itemSpec.data.constraints.required = true;
+
+        // Okay, we can no longer piggy back the feature which allows a user
+        // to collapse a struct with the optional/required constraint.
+        // We introduce a new "disableable" - http://www.urbandictionary.com/define.php?term=disableable
+        itemSpec.data.constraints.disableable = false;
 
         var required = (spec.optional ? false : true);
         var converted = {
@@ -780,8 +667,6 @@ define([
                 hint: spec.short_hint,
                 description: spec.description,
                 class: 'parameter',
-                // type: spec.field_type,
-                // control: spec.field_type,
                 advanced: spec.advanced ? true : false
             },
             data: {
@@ -800,8 +685,6 @@ define([
             }
         };
 
-        // updateNullValue(converted, spec);
-        // updateDefaultValue(converted, spec);
         updateConstraints(converted, spec);
         updateUI(converted, spec);
         updateData(converted, spec);
@@ -865,31 +748,6 @@ define([
                 specs: parameterSpecs
             }
         };
-
-        // wrap the rest of the app?
-
-
-        //        return  {
-        //            id: 'name',
-        //
-        //            multipleItems: false,
-        //
-        //            ui: {
-        //                label: 'Reads Set Name',
-        //                description: 'Name of the reads set',
-        //                hint: 'The name of the set of sequence reads',
-        //                class: 'parameter',
-        //                control: null
-        //            },
-        //            data: {
-        //                type: 'string',
-        //                constraints: {
-        //                    required: true,
-        //                    rule: 'WorkspaceObjectName' // ws data_type
-        //                },
-        //                defaultValue: ''
-        //            }
-        //        };
     }
 
     return {

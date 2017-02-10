@@ -590,27 +590,27 @@ define([
             tabs: {
                 configure: {
                     label: 'Configure',
-                    xicon: 'pencil',
+                    // icon: 'pencil',
                     widget: configureWidget()
                 },
                 viewConfigure: {
                     label: 'Configure',
-                    xicon: 'pencil',
+                    // icon: 'pencil',
                     widget: viewConfigureWidget()
                 },
                 logs: {
                     label: 'Job Status',
-                    xicon: 'list',
+                    // icon: 'list',
                     widget: logTabWidget
                 },
                 results: {
                     label: 'Result',
-                    xicon: 'file',
+                    // icon: 'file',
                     widget: resultsTabWidget
                 },
                 error: {
                     label: 'Error',
-                    xicon: 'exclamation',
+                    // icon: 'exclamation',
                     type: 'danger',
                     widget: errorTabWidget
                 }
@@ -2005,7 +2005,7 @@ define([
 
             var message = span([
                 ui.loading({color: 'green'}),
-                ' Waiting in Queue - ',
+                ' Waiting - in Queue ',
                 span({dataElement: 'clock'})
             ]);
             ui.setContent('run-control-panel.status.execMessage', message);
@@ -2371,25 +2371,7 @@ define([
                         bus.emit('reset-to-defaults');
                     }));
 
-
-                    // We need to listen for job-status messages is we are loading
-                    // a cell that has a running job.
-
-                    // TODO: inform the job manager that we are ready to receive
-                    // messages for this job?
-                    // At present the job manager will start doing this after it
-                    // loads the narrative and has inspected the jobs in its metadata.
-                    // But this is a race condition -- and it is probably better
-                    // if the cell invokes this response and then can receive either
-                    // the start of the job-status message stream or a response indicating
-                    // that the job has completed, after which we don't need to
-                    // listen any further.
-
-                    // get the status
-
-                    // if we are in a running state, start listening for jobs
                     var state = model.getItem('fsm.currentState');
-                    // var listeningForJobUpdates = false;
                     if (state) {
                         switch (state.mode) {
                         case 'editing':
@@ -2434,7 +2416,7 @@ define([
                         });
                     }));
 
-                    busEventManager.add(cellBus.on('delete-cell', function (message) {
+                    busEventManager.add(cellBus.on('delete-cell', function () {
                         doDeleteCell();
                     }));
 
@@ -2471,18 +2453,6 @@ define([
         }
 
         function exportParams() {
-
-            // For each param.
-
-            // if certain limited conditions apply
-
-            // transform the params from the fundamental types
-
-            // to something more suitable for the app params.
-
-            // This is necessary because some params, like subdata, have a
-            // natural storage as array, but are supposed to be provided as
-            // a string with comma separators
             var params = model.getItem('params'),
                 paramsToExport = {},
                 parameters = spec.getSpec().parameters;
@@ -2649,7 +2619,6 @@ define([
                 .then(function () {
                     // if we start out in 'new' state, then we need to promote to
                     // editing...
-
                     if (fsm.getCurrentState().state.mode === 'new') {
                         fsm.newState({ mode: 'editing', params: 'incomplete' });
                         evaluateAppState();

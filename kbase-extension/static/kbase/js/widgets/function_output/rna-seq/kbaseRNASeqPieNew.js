@@ -406,39 +406,71 @@ define (
 
             if (this.options.output.read_sample_ids) {
 
-              var $selector = $.jqElem('select').css('width', '500px')
-                .on('change', function(e) {
-                  $rnaseq.loadAlignment( $selector.val() );
+              var promises = [];
+              var ws = new Workspace(window.kbconfig.urls.workspace, {token : $rnaseq.authToken()});
+              var hackedIDMap = {};
+              var sampleToAlignmentMap = {};
+
+              $.each(
+                $rnaseq.options.output.mapped_alignments_ids,
+                function (i,m) {
+                  $.each(
+                    m,
+                    function (k, v) {
+                      sampleToAlignmentMap[k] = v;
+                    }
+                  )
                 }
               );
 
               $.each(
                 this.options.output.read_sample_ids,
                 function (i,v) {
-
-                  var label = v;
-                  $.each(
-                    $rnaseq.options.output.mapped_rnaseq_alignments,
-                    function (i, id) {
-                      if (id[v]) {
-                        label = id[v];
-                        return;
-                      }
-                    }
+                  promises.push(
+                    ws.get_object_info([{ref : sampleToAlignmentMap[v]}])
                   );
-
-                  $selector.append(
-                    $.jqElem('option')
-                      .attr('value', $rnaseq.options.output.sample_alignments[i])
-                      .append(label)
-                  )
                 }
               );
 
-              this.$elem
-                .append("<br>Please select alignment: ")
-                .append($selector)
-                .append("<br><br>");
+              $.when.apply($, promises).then(function () {
+                var args = arguments;
+                $.each(
+                  arguments,
+                  function (i, v) {
+
+                    hackedIDMap[$rnaseq.options.output.read_sample_ids[i]] = v[0][1];
+                  }
+                );
+
+                var $selector = $.jqElem('select').css('width', '500px')
+                  .on('change', function(e) {
+                    $rnaseq.loadAlignment( $selector.val() );
+                  }
+                );
+
+                $.each(
+                  $rnaseq.options.output.read_sample_ids,
+                  function (i,v) {
+
+                    var objId = v;
+                    var label = hackedIDMap[v] || v;
+
+                    $selector.append(
+                      $.jqElem('option')
+                        .attr('value', $rnaseq.options.output.sample_alignments[i])
+                        .append(label)
+                    )
+                  }
+                );
+
+                var $block = $.jqElem('div').append("<br>Please select alignment: ")
+                  .append($selector)
+                  .append("<br><br>");
+
+                $rnaseq.$elem.prepend($block);
+
+              });
+
             }
 
 

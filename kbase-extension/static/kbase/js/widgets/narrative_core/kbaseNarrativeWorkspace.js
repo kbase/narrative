@@ -330,7 +330,7 @@ define([
                     $doCopyBtn.prop('disabled', true);
                     $cancelBtn.prop('disabled', true);
                     $newNameInput.prop('disabled', true);
-                    Jupyter.narrative.sidePanel.$narrativesWidget.copyThisNarrative(null) //$newNameInput.val())
+                    Jupyter.narrative.sidePanel.$narrativesWidget.copyThisNarrative($newNameInput.val())
                         .then(function(result) {
                             Jupyter.narrative.sidePanel.$narrativesWidget.refresh();
                             // show go-to button

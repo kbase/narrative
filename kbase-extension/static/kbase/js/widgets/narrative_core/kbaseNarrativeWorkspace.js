@@ -34,6 +34,7 @@ define([
     'narrativeConfig',
     'util/bootstrapDialog',
     'util/string',
+    'handlebars',
     'kbaseDefaultNarrativeOutput',
     'kbaseDefaultNarrativeInput',
     'kbaseNarrativeAppCell',
@@ -44,6 +45,7 @@ define([
     'kbaseTabs',
     'common/props',
     'kb_service/client/narrativeMethodStore',
+    'text!kbase/templates/report_error_button.html',
     'bootstrap'
 ], function(
     Jupyter,
@@ -57,6 +59,7 @@ define([
     Config,
     BootstrapDialog,
     StringUtil,
+    Handlebars,
     kbaseDefaultNarrativeOutput,
     kbaseDefaultNarrativeInput,
     kbaseNarrativeAppCell,
@@ -66,7 +69,8 @@ define([
     kbaseNarrativeOutputCell,
     kbaseTabs,
     Props,
-    NarrativeMethodStore
+    NarrativeMethodStore,
+    ReportErrorBtnTmpl
 ) {
     'use strict';
     return KBWidget({
@@ -168,48 +172,17 @@ define([
                 }.bind(this)
             );
 
-            // When a user clicks on a function, this event gets fired with
-            // method information. This builds a function cell out of that method
-            // and inserts it in the right place.
-            /** DEPRECATED **
-             * use methodClicked.Narrative or appClicked.Narrative instead *
-             */
-            // $(document).on('function_clicked.Narrative',
-            //     $.proxy(function(event, method) {
-            //         this.buildFunctionCell(method);
-            //     },
-            //     this)
-            // );
-
             $(document).on('methodClicked.Narrative',
                 function(event, method, tag) {
                     this.buildAppCodeCell(method, tag);
                 }.bind(this)
             );
 
-            // $(document).on('appClicked.Narrative',
-            //     function(event, appInfo) {
-            //         this.buildAppCell(appInfo);
-            //     }.bind(this)
-            // );
-
             $(document).on('deleteCell.Narrative',
                 function(event, index) {
                     this.deleteCell(index);
                 }.bind(this)
             );
-
-            // $(document).on('runCell.Narrative',
-            //     function(event, data) {
-            //         this.runMethodCell(data);
-            //     }.bind(this)
-            // );
-
-            // $(document).on('runApp.Narrative',
-            //     function(event, data) {
-            //         this.runAppCell(data);
-            //     }.bind(this)
-            // );
 
             $(document).on('createOutputCell.Narrative',
                 function(event, data) {
@@ -266,7 +239,9 @@ define([
         },
 
         initReadOnlyElements: function() {
-            $('#kb-view-mode').click(function() {
+            var reportErrorBtn = Handlebars.compile(ReportErrorBtnTmpl);
+            $('#kb-view-mode')
+                .click(function() {
                     this.toggleReadOnlyMode();
                 }.bind(this))
                 .tooltip({
@@ -323,17 +298,16 @@ define([
                     $errorMessage.empty();
                     $doCopyBtn.prop('disabled', true);
                     $cancelBtn.prop('disabled', true);
+                    $newNameInput.prop('disabled', true);
                     Jupyter.narrative.sidePanel.$narrativesWidget.copyThisNarrative($newNameInput.val())
                         .then(function(result) {
                             Jupyter.narrative.sidePanel.$narrativesWidget.refresh();
-                            console.log(result);
                             // show go-to button
                             $cancelBtn.html('Close');
                             $jumpButton.click(function() {
                                 window.location.href = result.url;
                             });
                             $jumpButton.show();
-                            $doCopyBtn.prop('disabled', false);
                             $cancelBtn.prop('disabled', false);
                         }.bind(this))
                         .catch(function(error) {
@@ -344,8 +318,11 @@ define([
                             } else {
                                 $errorMessage.append('Sorry, an error occurred while copying. Please try again.');
                             }
+                            $errorMessage.append('<br>If copying continues to fail, please contact KBase with the button below.');
+                            $errorMessage.append(reportErrorBtn());
                             $doCopyBtn.prop('disabled', false);
                             $cancelBtn.prop('disabled', false);
+                            $newNameInput.prop('disabled', false);
                         });
                 }.bind(this));
 
@@ -357,13 +334,12 @@ define([
                     this.copyModal.hide();
                 }.bind(this));
 
-
             var $jumpButton = $('<button>')
                 .addClass('btn btn-info')
                 .text('Open the new Narrative');
 
             var $copyModalBody = $('<div>')
-                .append($('<div>').append("Enter a name for the new Narrative"))
+                .append($('<div>').append('Enter a name for the new Narrative'))
                 .append($('<div>').append($newNameInput))
                 .append($errorMessage)
                 .append($jumpButton);
@@ -373,8 +349,8 @@ define([
                 body: $copyModalBody,
                 closeButton: true,
                 buttons: [
-                    $doCopyBtn,
-                    $cancelBtn
+                    $cancelBtn,
+                    $doCopyBtn
                 ]
             });
 
@@ -383,7 +359,10 @@ define([
                 $doCopyBtn.prop('disabled', false);
                 $cancelBtn.prop('disabled', false);
                 $cancelBtn.html('Cancel');
-                $newNameInput.val(Jupyter.notebook.get_notebook_name() + ' - Copy');
+                $newNameInput
+                    .val(Jupyter.notebook.get_notebook_name() + ' - Copy')
+                    .prop('disabled', false);
+                $errorMessage.empty();
                 this.copyModal.show();
             }.bind(this));
 

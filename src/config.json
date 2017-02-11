@@ -1,7 +1,7 @@
 {
     "config": "ci",
     "name": "KBase Narrative",
-    "version": "3.1.10",
+    "version": "3.1.11",
     "dev_mode": true,
     "git_commit_hash": "60e2219",
     "git_commit_time": "Thu Mar 3 15:44:21 2016 -0800",

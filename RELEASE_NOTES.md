@@ -3,6 +3,15 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v4.2.1 (more notes will follow).
 
+### Version 3.1.11
+__Changes__
+- Fixed a problem where the job log in app cells would continue to poll after the job had finished, or after a user had clicked onto a different tab.
+- Fixed a problem with the Hisat viewer widget not working properly.
+- Grouped parameters in apps should now group in the proper order.
+- Minor adjustments to the ordering of buttons in dialog boxes (cancel buttons go on the left, active actions go on the right).
+- Change text of copy button in view only mode.
+- Adjust workflow of Narrative copying in view only mode to make more sense and prevent multi-clicking the copy button.
+
 ### Version 3.1.10
 __Changes__
 - Fixed broken Import tab in the data slideout.

@@ -232,6 +232,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         """Get the model of a file or directory with or without content."""
         path = path.strip('/')
 
+        self.log.warn('runnning GET on {}'.format(path))
         model = base_model(path, path)
         if self.exists(path) and type != u'directory':
             #It's a narrative object, so try to fetch it.
@@ -239,7 +240,9 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
             if not obj_ref:
                 raise HTTPError(404, u'Unknown Narrative "{}"'.format(path))
             try:
+                self.log.warn('running read_narrative on {}/{}'.format(obj_ref['wsid'], obj_ref['objid']))
                 nar_obj = self.read_narrative(u'{}/{}'.format(obj_ref[u'wsid'], obj_ref[u'objid']), content)
+                self.log.warn('got it!')
                 model[u'type'] = u'notebook'
                 user = self.get_userid()
                 if content:

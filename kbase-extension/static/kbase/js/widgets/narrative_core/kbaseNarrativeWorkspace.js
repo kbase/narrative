@@ -172,48 +172,17 @@ define([
                 }.bind(this)
             );
 
-            // When a user clicks on a function, this event gets fired with
-            // method information. This builds a function cell out of that method
-            // and inserts it in the right place.
-            /** DEPRECATED **
-             * use methodClicked.Narrative or appClicked.Narrative instead *
-             */
-            // $(document).on('function_clicked.Narrative',
-            //     $.proxy(function(event, method) {
-            //         this.buildFunctionCell(method);
-            //     },
-            //     this)
-            // );
-
             $(document).on('methodClicked.Narrative',
                 function(event, method, tag) {
                     this.buildAppCodeCell(method, tag);
                 }.bind(this)
             );
 
-            // $(document).on('appClicked.Narrative',
-            //     function(event, appInfo) {
-            //         this.buildAppCell(appInfo);
-            //     }.bind(this)
-            // );
-
             $(document).on('deleteCell.Narrative',
                 function(event, index) {
                     this.deleteCell(index);
                 }.bind(this)
             );
-
-            // $(document).on('runCell.Narrative',
-            //     function(event, data) {
-            //         this.runMethodCell(data);
-            //     }.bind(this)
-            // );
-
-            // $(document).on('runApp.Narrative',
-            //     function(event, data) {
-            //         this.runAppCell(data);
-            //     }.bind(this)
-            // );
 
             $(document).on('createOutputCell.Narrative',
                 function(event, data) {
@@ -339,7 +308,6 @@ define([
                                 window.location.href = result.url;
                             });
                             $jumpButton.show();
-                            // $doCopyBtn.prop('disabled', false);
                             $cancelBtn.prop('disabled', false);
                         }.bind(this))
                         .catch(function(error) {

@@ -959,9 +959,9 @@ define([
                 $btnToolbar.append($openHistory);
             }
             $btnToolbar.append($openProvenance);
-            if (!Jupyter.narrative.readonly) {
-                $btnToolbar.append($download);
-            }
+            // if (!Jupyter.narrative.readonly) {
+            $btnToolbar.append($download);
+            // }
             if (!Jupyter.narrative.readonly && !fromPalette) {
                 $btnToolbar.append($rename)
                     .append($delete);

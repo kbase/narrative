@@ -1,5 +1,7 @@
-/*global define*/
+/*global define,Workspace*/
 /*jslint white: true*/
+/*eslint-env browser*/
+
 /**
  * Widget to display a table of data objects from a kbase workspace.
  *
@@ -28,9 +30,9 @@ define([
     'kbaseNarrativeSidePublicTab',
     'kbaseNarrativeSideImportTab',
     'kbaseNarrativeExampleDataTab',
+    'kbaseNarrativeStagingDataTab',
     'kbaseLogin',
-    'common/runtime',
-    
+    'kbase-generic-client-api',
     'bootstrap'
 ], function (
     KBWidget,
@@ -46,8 +48,9 @@ define([
     kbaseNarrativeSidePublicTab,
     kbaseNarrativeSideImportTab,
     kbaseNarrativeExampleDataTab,
+    kbaseNarrativeStagingDataTab,
     kbaseLogin,
-    Runtime
+    GenericClient
     ) {
     'use strict';
     return KBWidget({
@@ -84,9 +87,10 @@ define([
             'Data of temporary Narratives is not visible on this tab. Please change ' +
             'the name of the Narrative to make it permanent.',
         renderedTabs: [false, false, false, false, false],
+
+
         init: function (options) {
             this._super(options);
-            var self = this;
 
             this.ws_name = Jupyter.narrative.getWorkspaceName();
 
@@ -101,12 +105,7 @@ define([
                     ws_name: this.ws_name,
                     parentControlPanel: this,
                     slideTime: this.slideTime
-                }
-                );
-            
-            var runtime = Runtime.make();
-            
-            
+                });
 
             /**
              * This should be triggered if something wants to know what data is loaded from the current workspace
@@ -127,33 +126,31 @@ define([
              * in the workspace.
              */
             $(document).on(
-                'updateData.Narrative', $.proxy(function (e) {
+                'updateData.Narrative', function () {
                     this.dataListWidget.refresh();
-                },
-                    this)
-                );
+                }.bind(this)
+            );
 
             /**
              * This should be triggered when something wants to know what workspace this widget is currently linked to.
              */
             $(document).on(
-                'workspaceQuery.Narrative', $.proxy(function (e, callback) {
+                'workspaceQuery.Narrative', function (e, callback) {
                     if (callback) {
                         callback(this.ws_name);
                     }
-                },
-                    this)
-                );
+                }.bind(this)
+            );
 
             $(document).on(
-                'sidePanelOverlayShown.Narrative', function (e) {
+                'sidePanelOverlayShown.Narrative', function () {
                     // find the index of what tab is being shown.
                     if (this.$overlayPanel.is(':visible')) {
                         var idx = $('.kb-side-overlay-container').find('.kb-side-header.active').index();
                         this.updateSlideoutRendering(idx);
                     }
                 }.bind(this)
-                );
+            );
 
             $(document).on()
 
@@ -168,7 +165,7 @@ define([
                     }
                 })
                 .append('<span class="fa fa-arrow-right"></span>')
-                .click(function (event) {
+                .click(function () {
                     this.$slideoutBtn.tooltip('hide');
                     this.trigger('hideGalleryPanelOverlay.Narrative');
                     this.trigger('toggleSidePanelOverlay.Narrative', this.$overlayPanel);
@@ -206,6 +203,7 @@ define([
         loggedInCallback: function (event, auth) {
             this.token = auth.token;
             this.wsClient = new Workspace(this.options.workspaceURL, auth);
+            this.serviceClient = new GenericClient(Config.url('service_wizard'), auth);
             this.isLoggedIn = true;
             if (this.ws_name) {
                 this.importerThing = this.dataImporter(this.ws_name);
@@ -225,6 +223,13 @@ define([
                     function () {
                     }.bind(this)
                 ];
+                if (Config.get('features').stagingDataViewer) {
+                    this.renderFn.push(
+                        function () {
+                            this.stagingTab.updateView();
+                        }.bind(this)
+                    );
+                }
             } else {
                 //console.error("ws_name is not defined");
             }
@@ -266,6 +271,7 @@ define([
         refresh: function () {
             return;
         },
+
         /**
          * Returns the set of currently loaded data objects from the workspace.
          * These are returned as described below.
@@ -285,13 +291,26 @@ define([
          */
         getLoadedData: function (type, ignoreVersion) {
             if (this.dataListWidget) {
-                return this.dataListWidget.getObjData(params, ignoreVersion);
+                return this.dataListWidget.getObjData(type, ignoreVersion);
             } else {
                 return {};
             }
         },
+
+        getDataObjectByName: function(name) {
+            if (this.dataListWidget) {
+                return this.dataListWidget.getDataObjectByName(name);
+            }
+        },
+
+        getDataObjectByRef: function(ref) {
+            if (this.dataListWidget) {
+                return this.dataListWidget.getDataObjectByRef(ref);
+            }
+        },
+
         buildTabs: function (tabs, isOuter) {
-            var $header = $('<div>');
+            var $header = $('<div style="background-color: #2196F3">');
             var $body = $('<div>');
 
             for (var i = 0; i < tabs.length; i++) {
@@ -344,9 +363,8 @@ define([
          */
         dataImporter: function (narWSName) {
             var self = this;
-            var maxObjFetch = 100000;
+            var maxObjFetch = Config.get('data_panel').ws_max_objs_to_fetch || 30000;
 
-            var self = this;
             if (this.$login == undefined) {
                 if (this.loginInit) {
                     return;
@@ -437,16 +455,23 @@ define([
                 sharedPanel = $('<div class="kb-import-content kb-import-shared">'),
                 publicPanel = $('<div class="kb-import-content kb-import-public">'),
                 importPanel = $('<div class="kb-import-content kb-import-import">'),
-                examplePanel = $('<div class="kb-import-content">');
+                examplePanel = $('<div class="kb-import-content">'),
+                stagingPanel = $('<div class="kb-import-content">');
 
-            // add tabs
-            var $tabs = this.buildTabs([
+            var tabList = [
                 {tabName: '<small>My Data</small>', content: minePanel},
                 {tabName: '<small>Shared With Me</small>', content: sharedPanel},
                 {tabName: '<small>Public</small>', content: publicPanel},
                 {tabName: '<small>Example</small>', content: examplePanel},
                 {tabName: '<small>Import</small>', content: importPanel},
-            ]);
+            ];
+
+            if (Config.get('features').stagingDataViewer) {
+                tabList.push({tabName: '<small>Staging (Beta)<small>', content: stagingPanel});
+            }
+
+            // add tabs
+            var $tabs = this.buildTabs(tabList);
 
 
             // (Bill - 1/29/2016)
@@ -549,11 +574,15 @@ define([
             this.publicTab = new kbaseNarrativeSidePublicTab(publicPanel, {$importStatus: importStatus, ws_name: this.ws_name});
             this.importTab = new kbaseNarrativeSideImportTab(importPanel, {ws_name: this.ws_name});
             this.exampleTab = new kbaseNarrativeExampleDataTab(examplePanel, {$importStatus: importStatus, ws_name: this.ws_name});
+            if (Config.get('features').stagingDataViewer) {
+                this.stagingTab = new kbaseNarrativeStagingDataTab(stagingPanel);
+            }
 
             // It is silly to invoke a new object for each widget
             var auth = {token: this.$login.session('token')};
             //var auth = {token: $("#signin-button").kbaseLogin('session', 'token')};
             var ws = new Workspace(this.options.workspaceURL, auth);
+            var serviceClient = new GenericClient(Config.url('service_wizard'), auth);
 
             closeBtn.click(function () {
                 self.trigger('hideSidePanelOverlay.Narrative');
@@ -567,7 +596,6 @@ define([
             var narrativeNameLookup = {};
             this.$overlayPanel = body.append(footer);
 
-            var self = this;
             function cleanupData(data, view) {
                 return Promise.try(function () {
                     // data = [].concat.apply([], data);
@@ -698,7 +726,7 @@ define([
                     });
                 }
                 var params = {includeMetadata: 1},
-                wsIds = [],
+                    wsIds = [],
                     objCount = 0,
                     maxObjCount = 0;
 
@@ -738,13 +766,12 @@ define([
 
                 var newParamSet = function (start) {
                     var param = {
-                        includeMetadata: 1,
-                        ids: []
+                        workspaces: []
                     };
                     if (start.type)
-                        param.type = start.type;
+                        param.types = [start.type];
                     if (start.id)
-                        param.ids.push(start.id);
+                        param.workspaces.push(start.id);
                     return param;
                 }
 
@@ -754,7 +781,7 @@ define([
                 var paramsList = [],
                     curParam = newParamSet({type: type}),
                     curTotal = 0,
-                    maxRequest = 10000,
+                    maxRequest = Config.get('data_panel').max_single_request || 1000,
                     totalFetch = 0;
 
                 // Set up all possible requests. We'll break out of
@@ -766,7 +793,7 @@ define([
                     // if there's room in the request for this
                     // ws, put it there, and boost the total
                     if (curTotal + thisWs.count < maxRequest) {
-                        curParam.ids.push(thisWs.id);
+                        curParam.workspaces.push(String(thisWs.id));
                         curTotal += thisWs.count;
                     }
                     // if there isn't room, but ws isn't gonna
@@ -775,7 +802,7 @@ define([
                     // this ws
                     else if (thisWs.count < maxRequest) {
                         paramsList.push(curParam);
-                        curParam = newParamSet({type: type, id: thisWs.id});
+                        curParam = newParamSet({type: type, id: String(thisWs.id)});
                         curTotal = thisWs.count;
                     }
                     // if there isn't room because that's one big
@@ -784,7 +811,7 @@ define([
                     // kinda inefficient. Don't care.
                     else if (thisWs.count > maxRequest) {
                         for (var j = 0; j < thisWs.count; j += maxRequest) {
-                            var newParam = newParamSet({type: type, id: thisWs.id});
+                            var newParam = newParamSet({type: type, id: String(thisWs.id)});
                             newParam.minObjectID = j + 1;
                             newParam.maxObjectID = j + maxRequest;
                             paramsList.push(newParam);
@@ -792,7 +819,7 @@ define([
                     }
                 }
                 // at the tail end, push that last completed param set
-                if (curParam.ids.length > 0)
+                if (curParam.workspaces.length > 0)
                     paramsList.push(curParam);
 
                 if (objCount > maxObjFetch)
@@ -806,22 +833,24 @@ define([
                     updateProgress(view, progress);
                     if (dataList.length >= maxObjFetch) {
                         return Promise.try(function () {
-                            return dataList;
                             updateProgress(view, 100);
+                            return dataList;
                         });
                     } else {
-                        return Promise.resolve(ws.list_objects(param))
-                            .then(function (data) {
-                                // filter out Narrative objects.
-                                for (var i = 0; i < data.length && dataList.length < maxObjFetch; i++) {
-                                    if (data[i][2].startsWith('KBaseNarrative'))
-                                        continue;
-                                    else
-                                        dataList.push(data[i]);
-                                }
-                                return dataList;
+                        return Promise.resolve(serviceClient.sync_call(
+                            'NarrativeService.list_objects_with_sets',
+                            [param]
+                        )).then(function (data) {
+                            data = data[0]['data']
+                            // filter out Narrative objects.
+                            for (var i = 0; i < data.length && dataList.length < maxObjFetch; i++) {
+                                if (data[i].object_info[2].startsWith('KBaseNarrative'))
+                                    continue;
+                                else
+                                    dataList.push(data[i].object_info);
                             }
-                            );
+                            return dataList;
+                        });
                     }
                 }, []);
             }
@@ -901,8 +930,15 @@ define([
                 for (var i in objs) {
                     var ref = objs[i].ref;
                     var name = objs[i].name;
-                    proms.push(ws.copy_object({to: {workspace: nar_ws_name, name: name},
-                        from: {ref: ref}}));
+                    proms.push(
+                        serviceClient.sync_call(
+                            "NarrativeService.copy_object",
+                            [{
+                                ref: ref,
+                                target_ws_name: nar_ws_name
+                            }]
+                        )
+                    );
                 }
                 return proms;
             }
@@ -1060,9 +1096,9 @@ define([
                     //     continue;
                     // }
                     if (template)
-                        var item = template(item);
+                        item = template(item);
                     else
-                        var item = rowTemplate(item);
+                        item = rowTemplate(item);
 
                     rows.append(item);
                 }
@@ -1153,10 +1189,10 @@ define([
                 // [6] : ws_id wsid // [7] : ws_name workspace // [8] : string chsum
                 // [9] : int size // [10] : usermeta meta
                 var type_tokens = object_info[2].split('.')
-                var type_module = type_tokens[0];
+                // var type_module = type_tokens[0];
                 var type = type_tokens[1].split('-')[0];
-                var unversioned_full_type = type_module + '.' + type;
-                var logo_name = "";
+                // var unversioned_full_type = type_module + '.' + type;
+                // var logo_name = "";
                 var landingPageLink = self.options.lp_url + object_info[6] + '/' + object_info[1];
                 var icons = self.data_icons;
                 var icon = _.has(icons, type) ? icons[type] : icons['DEFAULT'];
@@ -1186,7 +1222,7 @@ define([
                         });
                 }
 
-                var metadata = object_info[10];
+                var metadata = object_info[10] || {};
                 var metadataText = '';
                 for (var key in metadata) {
                     if (metadata.hasOwnProperty(key)) {
@@ -1228,17 +1264,10 @@ define([
                     });
                 $btnToolbar.append($openLandingPage).append($openProvenance);
 
-
-
                 var $mainDiv = $('<div>').addClass('kb-data-list-info').css({padding: '0px', margin: '0px'})
                     .append($btnToolbar)
                     .append($name).append($version).append('<br>')
                     .append($type).append('<br>').append($narName).append('<br>').append($date).append($byUser);
-                //.append($toggleAdvancedViewBtn)
-                //.click(
-                //    function() {
-                //        toggleAdvanced();
-                //    });
 
 
                 var $addDiv =
@@ -1250,28 +1279,54 @@ define([
                         $(this).html('<img src="' + self.options.loadingImage + '">');
 
                         var thisBtn = this;
-                        var targetName = object_info[1];
+                        // var targetName = object_info[1];
                         //console.log(object.name + " -> " + targetName);
-                        ws.copy_object({
-                            to: {ref: self.ws_name + "/" + targetName},
-                            from: {ref: object_info[6] + "/" + object_info[0]}},
-                            function (info) {
-                                $(thisBtn).html('Added');
-                                self.trigger('updateDataList.Narrative');
-                            },
-                            function (error) {
-                                $(thisBtn).html('Error');
-                                if (error.error && error.error.message) {
-                                    if (error.error.message.indexOf('may not write to workspace') >= 0) {
-                                        importStatus.html($('<div>').css({'color': '#F44336', 'width': '500px'}).append('Error: you do not have permission to add data to this Narrative.'));
-                                    } else {
-                                        importStatus.html($('<div>').css({'color': '#F44336', 'width': '500px'}).append('Error: ' + error.error.message));
-                                    }
+                        Promise.resolve(serviceClient.sync_call(
+                            "NarrativeService.copy_object",
+                            [{
+                                ref: object_info[6] + '/' + object_info[0],
+                                target_ws_name: self.ws_name
+                            }]
+                        ))
+                        .then(function() {
+                            $(thisBtn).html('Added');
+                            self.trigger('updateDataList.Narrative');
+                        })
+                        .catch(function(error) {
+                            $(thisBtn).html('Error');
+                            if (error.error && error.error.message) {
+                                if (error.error.message.indexOf('may not write to workspace') >= 0) {
+                                    importStatus.html($('<div>').css({'color': '#F44336', 'width': '500px'}).append('Error: you do not have permission to add data to this Narrative.'));
                                 } else {
-                                    importStatus.html($('<div>').css({'color': '#F44336', 'width': '500px'}).append('Unknown error!'));
+                                    importStatus.html($('<div>').css({'color': '#F44336', 'width': '500px'}).append('Error: ' + error.error.message));
                                 }
-                                console.error(error);
-                            });
+                            } else {
+                                importStatus.html($('<div>').css({'color': '#F44336', 'width': '500px'}).append('Unknown error!'));
+                            }
+                            console.error(error);
+                        })
+
+                        // ws.copy_object({
+                        //
+                        //     to: {ref: self.ws_name + "/" + targetName},
+                        //     from: {ref: object_info[6] + "/" + object_info[0]}},
+                        //     function (info) {
+                        //         $(thisBtn).html('Added');
+                        //         self.trigger('updateDataList.Narrative');
+                        //     },
+                        //     function (error) {
+                        //         $(thisBtn).html('Error');
+                        //         if (error.error && error.error.message) {
+                        //             if (error.error.message.indexOf('may not write to workspace') >= 0) {
+                        //                 importStatus.html($('<div>').css({'color': '#F44336', 'width': '500px'}).append('Error: you do not have permission to add data to this Narrative.'));
+                        //             } else {
+                        //                 importStatus.html($('<div>').css({'color': '#F44336', 'width': '500px'}).append('Error: ' + error.error.message));
+                        //             }
+                        //         } else {
+                        //             importStatus.html($('<div>').css({'color': '#F44336', 'width': '500px'}).append('Unknown error!'));
+                        //         }
+                        //         console.error(error);
+                        //     });
 
                     }));
 

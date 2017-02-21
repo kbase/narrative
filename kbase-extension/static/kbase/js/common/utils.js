@@ -80,10 +80,14 @@ define([
         }
         cell.metadata = temp;
     }
-    function setCellMeta(cell, path, value) {
-        var meta = cell.metadata || {};
-        Props.setDataItem(meta, path, value);
-        cell.metadata = meta;
+    function setCellMeta(cell, path, value, forceRefresh) {
+        if (!cell.metadata) {
+            cell.metadata = {};
+        }
+        Props.setDataItem(cell.metadata, path, value);
+        if (forceRefresh) {
+            cell.metadata = cell.metadata;
+        }
     }
     function getCellMeta(cell, path, defaultValue) {
         return Props.getDataItem(cell.metadata, path, defaultValue);

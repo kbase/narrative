@@ -75,7 +75,7 @@ define (
             this.loading(false);
             this.loadTree();
         },
-        
+
         loadTree: function() {
             var prom;
             var objId = this.buildObjectIdentity(this.options.workspaceID, this.options.treeID, this.options.treeObjVer, null);
@@ -85,7 +85,7 @@ define (
                 prom = this.wsClient.get_objects([objId]);
 
             var self = this;
-            
+
             $.when(prom).done($.proxy(function(objArr) {
                 self.$elem.empty();
 
@@ -93,7 +93,7 @@ define (
                 self.canvasId = "knhx-canvas-" + self.pref;
                 self.$canvas = $('<div id="'+canvasDivId+'">')
                                .append($('<canvas id="' + self.canvasId + '">'));
-                
+
                 if (self.options.height) {
                     self.$canvas.css({'max-height':self.options.height, 'overflow':'scroll'});
                 }
@@ -226,10 +226,15 @@ define (
                                 scrY = ev.clientY + document.body.scrollTop
                                     + document.documentElement.scrollTop;
                             }
-                            var elemPos = $('#canvasContainer_' + canvasId).position();
-                            var ncPos = $('#notebook-container').position();
-                            ev._x = scrX - (ncPos.left + elemPos.left);
-                            ev._y = scrY - (ncPos.top + elemPos.top);
+                            //var elemPos = $('#canvasContainer_' + canvasId).position();
+                            //var ncPos = $('#notebook-container').position();
+                            //var elemScrX = ncPos.left + elemPos.left;
+                            //var elemScrY = ncPos.top + elemPos.top;
+                            var elemScrPos = $('#canvasContainer_' + canvasId)[0].getBoundingClientRect();
+                            var elemScrX = elemScrPos.left;
+                            var elemScrY = elemScrPos.top;
+                            ev._x = scrX - elemScrX;
+                            ev._y = scrY - elemScrY;
                         }
                         if (kn_g_tree) {
                             var id = kn_get_node(kn_g_tree, kn_g_conf, ev._x, ev._y);
@@ -318,7 +323,7 @@ define (
                 errString = error;
             else if (error.error && error.error.message)
                 errString = error.error.message;
-            
+
             var $errorDiv = $("<div>")
                             .addClass("alert alert-danger")
                             .append("<b>Error:</b>")
@@ -351,7 +356,7 @@ define (
             		obj['objid'] = objectID;
             	else
             		obj['name'] = objectID;
-            	
+
             	if (objectVer)
             		obj['ver'] = objectVer;
             }

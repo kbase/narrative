@@ -11,14 +11,16 @@ define (
 		'jquery',
 		'narrativeConfig',
 		'util/string',
-		'kbaseAuthenticatedWidget'
+		'kbaseAuthenticatedWidget',
+		'GenomeAnnotationAPI-client-api'
 	], function(
 		KBWidget,
 		bootstrap,
 		$,
 		Config,
 		StringUtil,
-		kbaseAuthenticatedWidget
+		kbaseAuthenticatedWidget,
+		GenomeAnnotationAPI_client_api
 	) {
 return KBWidget({
     name: "GenomeComparisonWidget",
@@ -32,8 +34,7 @@ return KBWidget({
     },
 
     wsUrl: Config.url('workspace'),
-    jobSrvUrl: Config.url('user_and_job_state'),
-    cmpImgUrl: Config.url('genomeCmp').replace('jsonrpc', 'image'),
+    swUrl: Config.url('service_wizard'),
     loadingImage: Config.get('loading_gif'),
     timer: null,
     geneRows: 21,
@@ -42,6 +43,8 @@ return KBWidget({
     size: 500,
     imgI: 0,
     imgJ: 0,
+    imgLeftIndent: 35,
+    imgBottomIndent: 15,
     scale: null,
     stepPercent: 25,
     geneI: -1,
@@ -70,7 +73,7 @@ return KBWidget({
     	container.empty();
 
         var kbws = new Workspace(this.wsUrl, {'token': self.authToken()});
-        //var jobSrv = new UserAndJobState(this.jobSrvUrl, {'token': self.authToken()});
+        var gaapi = new GenomeAnnotationAPI(this.swUrl, {'token':self.authToken()});
 
         var dataIsReady = function() {
         	var cmp_ref = self.cmp_ref;
@@ -89,16 +92,18 @@ return KBWidget({
         var cmpIsLoaded = function() {
         	container.empty();
             container.append("<div><img src=\""+self.loadingImage+"\">&nbsp;&nbsp;loading comparison data...</div>");
-        	kbws.get_object_subset([{ref: self.cmp.genome1ref, included: ["scientific_name"]},
-        	                        {ref: self.cmp.genome2ref, included: ["scientific_name"]}], function(data) {
-        		self.genome1wsName = data[0].info[7];
-        		self.genome1objName = data[0].info[1];
-            	var genome1id = data[0].data.scientific_name;
-        		self.genome2wsName = data[1].info[7];
-            	self.genome2objName = data[1].info[1];
-            	var genome2id = data[1].data.scientific_name;
+            $.when(gaapi.get_genome_v1({genomes: [{ref: self.cmp.genome1ref}, {ref: self.cmp.genome2ref}], 
+                    included_fields: ["scientific_name"]})).done(function(data) {
+                genomes = data.genomes;
+        		self.genome1wsName = genomes[0].info[7];
+        		self.genome1objName = genomes[0].info[1];
+            	var genome1id = genomes[0].data.scientific_name;
+        		self.genome2wsName = genomes[1].info[7];
+            	self.genome2objName = genomes[1].info[1];
+            	var genome2id = genomes[1].data.scientific_name;
         		container.empty();
-                container.append("<div id='widget-tooltip"+self.pref+"' class='ipython_tooltip' style='display:none; min-height: 25px;'>Test message</div>");
+                var $nc = $('#notebook-container');
+                $nc.append("<div id='widget-tooltip"+self.pref+"' class='ipython_tooltip' style='display:none; min-height: 25px; position: absolute;'>Test message</div>");
             	var table = $('<table/>')
             		.addClass('table table-bordered')
             		.css({'margin-left': 'auto', 'margin-right': 'auto'});
@@ -215,30 +220,23 @@ return KBWidget({
             				+ document.documentElement.scrollTop;
             		}
             	    var $elem = $('#'+self.pref+'img');
-            	    var elemX = $elem.position().left;
-            	    var elemY = $elem.position().top;
             	    var $nc = $('#notebook-container');
-            	    var globalPos = $nc.position();
-            	    var elemScrX = globalPos.left + elemX;
-            	    var elemScrY = globalPos.top + elemY;
-            	    var offsetX = scrX - elemScrX;
-            	    var offsetY = scrY - elemScrY;
-            		var relX = offsetX - 35;
-            		var relY = offsetY;
-                    var scrollX = $nc.scrollLeft();
-                    var scrollY = $nc.scrollTop();
-                    var docX = elemX + scrollX + offsetX;
-                    var docY = elemY + scrollY + offsetY;
+            	    var ncPos = $nc.position();
+            	    var elemScrRect = $elem[0].getBoundingClientRect();
+            	    var relX = scrX - elemScrRect.left - self.imgLeftIndent;
+            	    var relY = scrY - elemScrRect.top;
+                    var docX = scrX - ncPos.left + $nc.scrollLeft();
+                    var docY = scrY - ncPos.top + $nc.scrollTop();
             		var xSize = Math.min(self.size, self.cmp.proteome1names.length * self.scale / 100);
             		var ySize = Math.min(self.size, self.cmp.proteome2names.length * self.scale / 100);
             		var bestDist = -1;
             		var bestI = -1;
             		var bestJ = -1;
             		if (relX >= 0 && relX <= xSize && relY >= 0 && relY <= ySize) {
-            			for (var i in self.cmp.data1) {
+            			for (var key1 in self.cmp.data1) {
+            			    var i = Number(key1);
             				var x = (i - self.imgI) * self.scale / 100;
                     		if (x >= 0 && x < xSize && Math.abs(relX - x) <= 2) {
-                    			//alert("x=" + x + ", i=" + i);
                 				for (var tuplePos in self.cmp.data1[i]) {
                 					var tuple = self.cmp.data1[i][tuplePos];
                 					var j = tuple[0];
@@ -293,7 +291,7 @@ return KBWidget({
             		}
             		self.refreshGenes();
             	});
-            }, function(data) {
+            }).fail(function(data) {
             	var tdElem = $('#'+self.pref+'job');
 				tdElem.html("Error accessing genome objects: " + data.error.message);
             });
@@ -323,16 +321,14 @@ return KBWidget({
 			self.imgJ = 0;
 		self.imgI = Math.round(self.imgI);
 		self.imgJ = Math.round(self.imgJ);
-		//var img = self.cmpImgUrl + "?ws=" + self.ws_name + "&id=" + self.ws_id + "&x=" + self.imgI +
-		//		"&y=" + self.imgJ + "&w=" + self.size + "&sp=" + self.scale + "&token=" + encodeURIComponent(self.authToken());
 		var $svg = $('#'+self.pref+'img');
 		var i0 = self.imgI;
 		var j0 = self.imgJ;
 		var w0 = self.size;
 		var h0 = self.size;
 		var sp = self.scale;
-		var xShift = 35;
-        var yShift = 15;
+		var xShift = self.imgLeftIndent;
+        var yShift = self.imgBottomIndent;
         var w = w0 + xShift;
         var h = h0 + yShift;
         var svg =
@@ -404,7 +400,6 @@ return KBWidget({
         svg += '</svg>';
         $svg.empty();
         $svg.append($(svg));
-		//self.refreshDetailedRect();
 	},
 
 	refreshGenes: function() {
@@ -497,20 +492,13 @@ return KBWidget({
     				+ document.documentElement.scrollTop;
     		}
             var $elem = svgTd;
-            var elemX = $elem.position().left;
-            var elemY = $elem.position().top;
             var $nc = $('#notebook-container');
-            var globalPos = $nc.position();
-            var elemScrX = globalPos.left + elemX;
-            var elemScrY = globalPos.top + elemY;
-            var offsetX = scrX - elemScrX;
-            var offsetY = scrY - elemScrY;
-            var scrollX = $nc.scrollLeft();
-            var scrollY = $nc.scrollTop();
-            var docX = elemX + scrollX + offsetX;
-            var docY = elemY + scrollY + offsetY;
-    		var x = offsetX;
-    		var y = offsetY;
+            var ncPos = $nc.position();
+            var docX = scrX - ncPos.left + $nc.scrollLeft();
+            var docY = scrY - ncPos.top + $nc.scrollTop();
+            var elemScrRect = $elem[0].getBoundingClientRect();
+            var x = scrX - elemScrRect.left;
+            var y = scrY - elemScrRect.top;
     		var minDist = -1;
     		var bestLine = null;
     		for (var n in svgLineEnds) {

@@ -118,12 +118,6 @@ done
 
 console "Install: complete log in: $logfile"
 
-# (temporary?)
-# Setup git submodules
-# --------------------
-git submodule init
-git submodule update
-
 # Setup virtualenv
 # ----------------
 if [ "x$VIRTUAL_ENV" = x ] && [ ! $no_venv -eq 1 ]
@@ -187,12 +181,12 @@ if [ ! $update_only -eq 1 ]
 then
     # Install KBase data_api package
     # ------------------------------
-    git clone https://github.com/kbase/data_api -b develop
-    cd data_api
-    pip install -r requirements.txt
-    $PYTHON setup.py install >> ${logfile} 2>&1
-    cd ..
-    rm -rf data_api
+    # git clone https://github.com/kbase/data_api -b develop
+    # cd data_api
+    # pip install -r requirements.txt
+    # $PYTHON setup.py install >> ${logfile} 2>&1
+    # cd ..
+    # rm -rf data_api
 
 
     # Setup jupyter_narrative script
@@ -215,11 +209,12 @@ then
     /bin/mv $SCRIPT_TGT $d
     log "Done installing scripts"
 
-    log "oh, wait, one more thing...installing nbextensions"
+    log "Installing nbextensions"
     cd nbextensions
     sh install.sh
     cd ../..
-    log "now, done."
+    jupyter nbextension enable --py --sys-prefix widgetsnbextension
+    log "Done installing nbextensions"
 fi
 
 console "Done. Run the narrative from your virtual environment $VIRTUAL_ENV with the command: $SCRIPT_TGT"

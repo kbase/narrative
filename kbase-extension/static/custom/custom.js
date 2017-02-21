@@ -154,7 +154,6 @@ define([
 
             Jupyter.narrative = new Narrative();
             Jupyter.narrative.init();
-            Jupyter.narrative.disableKeyboardManager();
 
             /*
              * Override the move-cursor-down-or-next-cell and
@@ -380,7 +379,7 @@ define([
 
             this.renderMinMax();
 
-            utils.setCellMeta(this, 'kbase.cellState.toggleMinMax', toggleMode);
+            utils.setCellMeta(this, 'kbase.cellState.toggleMinMax', toggleMode, true);
         };
 
         (function () {
@@ -598,6 +597,17 @@ define([
 //            ]);
         };
 
+        p.getIcon = function () {
+            var iconColor = 'silver';
+
+            return span({style: ''}, [
+                span({class: 'fa-stack fa-2x', style: {textAlign: 'center', color: iconColor}}, [
+                    span({class: 'fa fa-square fa-stack-2x', style: {color: iconColor}}),
+                    span({class: 'fa fa-inverse fa-stack-1x fa-' + 'paragraph'})
+                ])
+            ]);
+        };
+
 
 
         /** @method bind_events **/
@@ -710,8 +720,19 @@ define([
                 }
 
                 if (title) {
+                    // trim down to max 50 characters
                     if (title.length > 50) {
                         title = title.substr(0, 50) + '...';
+                    }
+                    // trim down to the 'paragraph' char - signifies the end of a header element
+                    var paraIdx = title.indexOf('¶');
+                    if (paraIdx !== -1) {
+                        title = title.substr(0, paraIdx);
+                    }
+                    // trim down to the end of the first newline - a linebreak should be a title
+                    var newLineIdx = title.indexOf('\n');
+                    if (newLineIdx !== -1) {
+                        title = title.substr(0, newLineIdx);
                     }
                 } else {
                     title = '<i>empty markdown cell - add a title with # </i>';
@@ -719,9 +740,9 @@ define([
 
                 // if (title) {
                 // cell.setCellState('title', title);
-                utils.setCellMeta(cell, 'kbase.attributes.title', title);
+                utils.setCellMeta(cell, 'kbase.attributes.title', title, true);
 
-                this.renderPrompt();
+                // this.renderPrompt();
 
                 // Extract title from h1, if any. otheriwse, first 50 characters
                 //var title = $html.filter('h1').first().first().text();
@@ -772,29 +793,29 @@ define([
             //     "header will appear as the cell title." +
             //     "-->"
     };
-    
+
     // KEYBOARD MANAGER
-    
+
     /*
      * Ensure that the keyboard manager does not reactivate during interaction
      * with the Narrative.
-     * 
-     * Although we disable the keyboard manager at the outset, Jupyter will 
+     *
+     * Although we disable the keyboard manager at the outset, Jupyter will
      * hook into the blur event for inputs  within an inserted dom node.
      * This causes havoc when kbase widgets manipulate the dom by inserting
      * form controls.
-     * 
+     *
      * So ... we just disable this behavior by overriding the register_events
      * method.
-     * 
+     *
      */
-    
-    (function () {
-        keyboardManager.KeyboardManager.prototype.register_events = function (e) {
-            // NOOP
-            return;
-        };
-    }());
+
+     (function () {
+         keyboardManager.KeyboardManager.prototype.register_events = function (e) {
+             // NOOP
+             return;
+         };
+     }());
 
 
 
@@ -845,6 +866,17 @@ define([
             prompt.innerHTML = 'prompt here';
         };
 
+        p.getIcon = function () {
+            var iconColor = 'silver';
+
+            return span({style: ''}, [
+                span({class: 'fa-stack fa-2x', style: {textAlign: 'center', color: iconColor}}, [
+                    span({class: 'fa fa-square fa-stack-2x', style: {color: iconColor}}),
+                    span({class: 'fa fa-inverse fa-stack-1x fa-' + 'terminal'})
+                ])
+            ]);
+        };
+
         originalMethod = codeCell.CodeCell.prototype.bind_events;
         p.bind_events = function () {
             originalMethod.apply(this);
@@ -876,6 +908,24 @@ define([
             $cellNode.on('hideCodeArea.cell', function () {
                 thisCell.hideCodeInputArea();
             });
+
+            if (this.code_mirror) {
+                this.code_mirror.on("change", function(cm, change) {
+                    // alert(' Rendering code cell ', cm, change);
+                    var lineCount = cm.lineCount(),
+                        commentRe = /^\.*?\#\s*(.*)$/;
+                    for (var i = 0; i < lineCount; i += 1) {
+                        var line = cm.getLine(i),
+                            m = commentRe.exec(line);
+                        if (m) {
+                            utils.setCellMeta(thisCell, 'kbase.attributes.title', m[1], true);
+                            break;
+                        }
+                    }
+                    // console.log('Code mirror?', cm, change);
+                    // utils.setCellMeta(cell, 'kbase.attributes.title', 'some title');
+                });
+            }
         };
 
         p.hideCodeInputArea = function () {
@@ -883,14 +933,23 @@ define([
             if (codeInputArea) {
                 codeInputArea.classList.add('hidden');
             }
-        }
+        };
+
+        p.isCodeShowing = function () {
+            var codeInputArea = this.input.find('.input_area')[0];
+            if (codeInputArea) {
+                return !codeInputArea.classList.contains('hidden');
+            }
+            return false;
+        };
 
         p.toggleCodeInputArea = function() {
             var codeInputArea = this.input.find('.input_area')[0];
             if (codeInputArea) {
                 codeInputArea.classList.toggle('hidden');
+                this.metadata = this.metadata;
             }
-        }
+        };
     }());
 
     /*
@@ -926,9 +985,21 @@ define([
                 that.notebook_name = json.name;
                 that.notebook_path = json.path;
                 that.last_modified = new Date(json.last_modified);
-                that.session.rename_notebook(json.path);
+                // that.session.rename_notebook(json.path);
                 that.events.trigger('notebook_renamed.Notebook', json);
             }
+        );
+    };
+
+    // Patch the save widget to skip the 'notebooks' part of the URL when updating
+    // after a notebook rename.
+    saveWidget.SaveWidget.prototype.update_address_bar = function () {
+        var base_url = this.notebook.base_url;
+        var path = this.notebook.notebook_path;
+        var state = {path : path};
+        window.history.replaceState(state, "", nbUtils.url_path_join(
+            base_url,
+            nbUtils.encode_uri_components(path))
         );
     };
 
@@ -962,7 +1033,7 @@ define([
                                 d.modal('hide');
                                 that.notebook.metadata.name = new_name;
                                 that.element.find('span.filename').text(new_name);
-                                Jupyter.narrative.saveNarrative();
+                                // Jupyter.narrative.saveNarrative();
                             }, function (error) {
                             d.find('.rename-message').text(error.message || 'Unknown error');
                             d.find('input[type="text"]').prop('disabled', false).focus().select();

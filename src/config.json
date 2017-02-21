@@ -1,15 +1,23 @@
 {
     "config": "ci",
     "name": "KBase Narrative",
-    "version": "3.0.0-alpha-21",
+    "version": "3.1.11",
     "dev_mode": true,
     "git_commit_hash": "60e2219",
     "git_commit_time": "Thu Mar 3 15:44:21 2016 -0800",
-    "features": {
-        "advanced": false,
-        "developer": false
-    },
     "release_notes": "https://github.com/kbase/narrative/blob/staging/RELEASE_NOTES.md",
+    "comm_wait_timeout": 60000,
+    "data_panel": {
+        "ws_chunk_size": 10000,
+        "ws_max_objs_to_fetch": 30000,
+        "obj_render_initial": 40,
+        "obj_render_scroll": 5,
+        "typeahead_search_limit": 20000,
+        "initial_sort_limit": 10000,
+        "max_name_length": 33,
+        "refresh_interval_ms": 30000,
+        "max_single_request": 1000
+    },
     "tooltip": {
         "hideDelay": 0,
         "showDelay": 750
@@ -17,6 +25,8 @@
     "use_local_widgets": true,
     "loading_gif": "/narrative/static/kbase/images/ajax-loader.gif",
     "appdev": {
+        "ftp_api_url": "https://appdev.kbase.us/services/kb-ftp-api/v0",
+        "ftp_api_root": "/data/bulk",
         "awe": "https://appdev.kbase.us/services/awe-api",
         "catalog": "https://appdev.kbase.us/services/catalog",
         "cdn": "https://appdev.kbase.us/cdn/files",
@@ -33,6 +43,8 @@
         "login": "https://appdev.kbase.us/services/authorization/Sessions/Login",
         "narrative_job_proxy": "https://appdev.kbase.us/services/narrativejobproxy/",
         "narrative_method_store": "https://appdev.kbase.us/services/narrative_method_store/rpc",
+        "narrative_method_store_image": "https://appdev.kbase.us/services/narrative_method_store/",
+        "narrative_method_store_types": "https://next.kbase.us/services/narrative_method_store/rpc",
         "profile_page": "/#people/",
         "protein_info": "",
         "reset_password": "https://gologin.kbase.us/ResetPassword",
@@ -53,6 +65,8 @@
         "ws_browser": "https://appdev.kbase.us/#ws"
     },
     "ci": {
+        "ftp_api_url": "https://ci.kbase.us/services/kb-ftp-api/v0",
+        "ftp_api_root": "/data/bulk",
         "awe": "https://ci.kbase.us/services/awe-api",
         "catalog": "https://ci.kbase.us/services/catalog",
         "cdn": "https://ci.kbase.us/cdn/files",
@@ -74,7 +88,7 @@
         "profile_page": "/#people/",
         "protein_info": "",
         "reset_password": "https://gologin.kbase.us/ResetPassword",
-        "search": "https://kbase.us/services/search/getResults",
+        "search": "https://ci.kbase.us/services/search/getResults",
         "service_wizard": "https://ci.kbase.us/services/service_wizard",
         "shock": "https://ci.kbase.us/services/shock-api",
         "status_page": "http://kbase.us/internal/status/",
@@ -129,7 +143,6 @@
         "workspace": "http://dev04.berkeley.kbase.us:7058",
         "ws_browser": "http://narrative.kbase.us/#ws"
     },
-
     "next": {
         "awe": "https://next.kbase.us/services/awe-api",
         "catalog": "https://next.kbase.us/services/catalog",
@@ -138,6 +151,8 @@
         "data_panel_sources": "/data_source_config.json",
         "fba": "https://next.kbase.us/services/KBaseFBAModeling/",
         "feature_values": "https://next.kbase.us/services/feature_values/jsonrpc",
+        "ftp_api_url": "https://next.kbase.us/services/kb-ftp-api/v0",
+        "ftp_api_root": "/data/bulk",
         "gene_families": "https://next.kbase.us/services/gene_families",
         "genomeCmp": "https://next.kbase.us/services/genome_comparison/jsonrpc",
         "invocation": "",
@@ -176,6 +191,8 @@
         "data_panel_sources": "/data_source_config.json",
         "fba": "https://kbase.us/services/KBaseFBAModeling/",
         "feature_values": "https://kbase.us/services/feature_values/jsonrpc",
+        "ftp_api_url": "https://kbase.us/services/kb-ftp-api/v0",
+        "ftp_api_root": "/data/bulk",
         "gene_families": "https://kbase.us/services/gene_families",
         "genomeCmp": "https://kbase.us/services/genome_comparison/jsonrpc",
         "invocation": "https://kbase.us/services/invocation",

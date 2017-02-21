@@ -15,7 +15,7 @@ define (
         'jquery-dataTables',
         'jquery-dataTables-bootstrap',
         'kbaseFeatureValues-client-api',
-        // 'jquery-dataScroller'
+        'kbase-generic-client-api'
     ], function(
         KBWidget,
         bootstrap,
@@ -25,8 +25,8 @@ define (
         Config,
         jquery_dataTables,
         jquery_dataTables_bootstrap,
-        kbaseFeatureValues_client_api
-        // jquery_dataScroller
+        kbaseFeatureValues_client_api,
+        GenericClient
     ) {
     return KBWidget({
         name: 'kbaseExpressionMatrix',
@@ -225,7 +225,7 @@ define (
                         { sTitle: "Function", mData: "function"},
                         { sTitle: "Min", mData:"min" },
                         { sTitle: "Max", mData:"max" },
-                        { sTitle: "Avgerage", mData:"avg" },
+                        { sTitle: "Average", mData:"avg" },
                         { sTitle: "Std. Dev.", mData:"std"},
                         { sTitle: "Missing Values?", mData:"missing_values" }
                     ]

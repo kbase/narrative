@@ -37,6 +37,7 @@ obj_ref_regex = re.compile('^(?P<wsid>\d+)\/(?P<objid>\d+)(\/(?P<ver>\d+))?$')
 
 MAX_METADATA_STRING_BYTES = 900
 MAX_METADATA_SIZE_BYTES = 16000
+WORKSPACE_TIMEOUT = 30  # seconds
 
 class PermissionsError(ServerError):
     """Raised if user does not have permission to
@@ -74,7 +75,7 @@ class KBaseWSManagerMixin(object):
             raise HTTPError(500, u'Unable to connect to workspace service at {}: {}'.format(self.ws_uri, e))
 
     def ws_client(self):
-        return WorkspaceClient.Workspace(self.ws_uri)
+        return WorkspaceClient.Workspace(self.ws_uri, timeout=WORKSPACE_TIMEOUT)
 
     def _test_obj_ref(self, obj_ref):
         m = obj_ref_regex.match(obj_ref)
@@ -338,6 +339,18 @@ class KBaseWSManagerMixin(object):
                     commit_hash = app.get('gitCommitHash', 'unknown')
                     method_info[u'method.' + id + '/' + commit_hash] += 1
                     num_methods += 1
+                elif kbase_type == 'editor':
+                    app = meta['kbase'].get('editorCell', {}).get('app', {})
+                    id = app.get('id', 'UnknownApp')
+                    commit_hash = app.get('gitCommitHash', 'unknown')
+                    method_info[u'method.' + id + '/' + commit_hash] += 1
+                    num_methods += 1                    
+                elif kbase_type == 'view':
+                    app = meta['kbase'].get('viewCell', {}).get('app', {})
+                    id = app.get('id', 'UnknownApp')
+                    commit_hash = app.get('gitCommitHash', 'unknown')
+                    method_info[u'method.' + id + '/' + commit_hash] += 1
+                    num_methods += 1                    
             else:
                 cell_info['jupyter.' + cell.get('cell_type', 'code')] += 1
 

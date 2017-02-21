@@ -4,6 +4,15 @@ CSS should go in /kbase-extension/static/kbase/css/kbaseNarrative.css
 
 (or the specific css file if available)
 */
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+    background-color: #337ab7;
+    color: #FFF;
+}
+
+.select2-container--default .select2-results__option--highlighted[aria-selected] span {
+    color: #FFF !important;
+}
+
 
 #site {
     overflow: visible;
@@ -52,6 +61,10 @@ div.input_area {
     padding-top: 4px;
 }
 
+div.output_subarea {
+    max-width: inherit;
+}
+
 div.text_cell_input {
     border: 1px solid #CECECE;
     border-radius: 0px;
@@ -63,12 +76,15 @@ div.text_cell_input {
 
 div.cell {
     margin: 8px 0 8px 0px;
-    padding: 0 10px 6px 4px;
+    xpadding: 0 10px 6px 4px;
+    padding: 0;
     border: 1px solid #CCC;
+    border-left: 5px solid #CCC;
     border-radius: 0;
 }
 
 div.cell.selected {
+    margin-left: 0;
     border: 1px solid #4BB856;
     border-left: 5px solid #4BB856;
     padding-left: 0px;
@@ -217,10 +233,6 @@ span#notebook_name:hover {
     color: silver;
 }
 
-.notebook_app .cell .celltoolbar .btn {
-    background-color: transparent;
-}
-
 .text_cell.kb-cell .rendered_html table {
     border: 1px solid #ddd;
 }
@@ -317,4 +329,8 @@ span#notebook_name:hover {
 */
 p {
     margin-bottom: 9px;
+}
+
+.prompt {
+    display: none !important;
 }

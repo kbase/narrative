@@ -26,6 +26,7 @@
         <td>Execution Started</td>
         <td>{{execStartTime}}</td>
     </tr>
+    
     {{/if}}
     {{#if execEndTime}}
     <tr>
@@ -37,6 +38,11 @@
     <tr>
         <td>Execution Time</td>
         <td>{{execRunTime}}</td>
+    </tr>
+    {{else}}
+    <tr>
+        <td>Time running</td>
+        <td>{{runTime}}</td>
     </tr>
     {{/if}}
 </table>

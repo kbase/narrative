@@ -1,0 +1,419 @@
+/* Wrapper class
+  All classes below may be wrapped in this class to avoid polluting
+  the Narrative styles.
+*/
+.kb-editor-cell {
+
+}
+
+.kb-editor-cell .kb-app-warning {
+    font-family: 'Oxygen', sans-serif;
+    text-align: center;
+}
+
+/** new app parameter styling **/
+.kb-editor-cell  .kb-app-parameter-panel {
+    border-left: 3px solid #fff;
+}
+.kb-editor-cell  .kb-app-parameter-panel-hover {
+    border-left: 3px solid #428bca;
+}
+.kb-editor-cell .kb-app-parameter-row {
+    margin:0px;
+}
+/* for some reason, the css :hover doesn't work right on this div, so we use jquery to toggle this class */
+.kb-editor-cell .kb-app-parameter-row-hover {
+    background:#F9F9F9;
+}
+
+.kb-editor-cell  .kb-app-parameter-row .message.-error {
+    background: #f2dede;
+}
+.kb-editor-cell  .kb-app-parameter-row .message.-warning {
+    xbackground: yellow;
+}
+.kb-editor-cell .kb-app-parameter-row .message {
+    text-align: center;
+    font-family: 'Oxygen', sans-serif;
+    /* font-size: 9pt; */
+}
+
+.kb-editor-cell .kb-app-parameter-row .message.-error {
+    color: #F44336;
+}
+.kb-editor-cell .kb-app-parameter-row .message.-warning {
+    xcolor: orange;
+}
+
+/* not sure how to get text in these divs to valign middle... */
+.kb-editor-cell .kb-app-parameter-name {
+    font-family: 'Oxygen', sans-serif;
+    color: #777;
+    text-align: left;
+    vertical-align: bottom;
+    xmargin-top: 3px;
+    padding-right: 4px;
+    padding-left: 0px;
+    white-space: normal;
+    xborder-bottom: 1px #ddd dotted;
+}
+.kb-editor-cell .kb-app-parameter-input {
+    vertical-align:middle;
+    xwhite-space: nowrap;
+    xpadding-left:10px;
+    xborder-bottom: 1px #ccc dotted;
+}
+.kb-editor-cell .kb-app-parameter-input input {
+    xfont-weight: bold;
+}
+
+.kb-editor-cell .kb-app-parameter-input select.form-control {
+    margin: 0;
+}
+
+/*
+This set of styles is a to accomodate the required/satisfied icon which appears
+between the select input control and the help text to the right of it. The
+problem is that within the columns used for layout the select is set to 100% width
+and yet the icon is placed right next to it. The result is that the icon is shoved
+to the right of the select control and into the next column, overlapping the
+help text. The old app handling this was to scoot the help text far enough over
+to accomodate the the icon intruding into its space. This technique makes space
+in the column in which the icon lives, and does this by shrinking the select
+control with padding, and then scooting the icon back into its column.
+*/
+/* .kb-editor-cell .kb-app-parameter-input > div {
+     allow space for the required (red arrow), satisfied (green checkbox) icon
+    padding-right: 20px;
+}
+*/
+.kb-editor-cell .kb-app-parameter-input .kb-app-parameter-accepted-glyph,
+.kb-editor-cell .kb-app-parameter-input .kb-app-parameter-required-glyph {
+    /* This scoots the icon inside */
+    font-size: 15px;
+    margin-left: 0;
+}
+.kb-editor-cell .kb-app-parameter-required-glyph {
+    color: #F44336;
+}
+.kb-editor-cell .kb-app-parameter-hint {
+    padding-left: 7px;
+}
+
+.kb-editor-cell .kb-parameter-data-selection {
+    font-weight: bold;
+}
+
+.kb-editor-cell .kb-app-parameter-hint {
+    color: #777;
+    text-align:left;
+    margin-top:3px;
+}
+
+.kb-editor-cell .kb-app-parameter-accepted-glyph {
+    color: #4BB856;
+}
+
+.kb-editor-cell .kb-app-parameter-info {
+    color: #777;
+}
+
+.kb-editor-cell .kb-parameter-data-row-remove {
+    color: #777;
+}
+.kb-editor-cell .kb-parameter-data-row-add {
+    color: #777;
+}
+
+
+.kb-editor-cell .kb-app-advanced-options-controller-inactive {
+    font-family: 'Oxygen', sans-serif;
+    font-weight: bold;
+    font-style: italic;
+    font-size: 10pt;
+    line-height: 14px;
+    color: #777;
+    text-align: center;
+}
+.kb-editor-cell .kb-app-advanced-options-controller {
+    font-family: 'Oxygen', sans-serif;
+    font-weight: bold;
+    cursor:pointer;
+    font-style: italic;
+    font-size: 10pt;
+    line-height: 14px;
+    color: #0088cc;
+    text-align: center;
+}
+.kb-editor-cell .kb-app-advanced-options-controller:hover {
+    color: #2a6496;
+}
+
+.kb-editor-cell .kb-app-footer {
+    width: 100%;
+    overflow: none;
+    background-color: #F5F5F5;
+    padding: 10px;
+}
+
+.kb-editor-cell .kb-app-subtitle {
+    background-color: #F5F5F5;
+    padding: 3px 5px;
+}
+
+.kb-editor-cell .kb-app-subtitle {
+    background-color: #F5F5F5;
+    padding: 3px 5px;
+}
+
+
+
+.kb-editor-cell .panel-title > [data-toggle="collapse"]::before {
+    display: inline-block;
+    margin-left: 0px;
+    margin-right: 4px;
+    font-family: "FontAwesome";
+    font-style: normal;
+    font-weight: normal;
+    font-size: 90%;
+    width: 12px;
+    color: silver;
+    line-height: 1;
+    vertical-align: baseline;
+    content: "\f078 ";
+}
+.kb-editor-cell .panel-title > [data-toggle="collapse"].collapsed::before {
+    margin-left: 2px; margin-right: 2px;
+    content: "\f054 ";
+}
+
+/* tweaks to elemnts that should be dimmed when the cell is not selected */
+
+.unselected .kb-editor-cell {
+    opacity: 0.5;
+}
+
+.kb-editor-cell .advanced-parameter-showing {
+    display: block;
+}
+.kb-editor-cell .advanced-parameter-hidden {
+    display: none;
+}
+
+.kb-elapsed-time {
+    font-family: monospace;
+}
+.kb-elapsed-time.-active {
+    color: lime;
+}
+
+.kb-editor-cell-info-desc {
+    border: 1px solid #777;
+    padding: 10px;
+    margin-right: 10px;
+    min-height: 100px;
+}
+
+.kb-editor-cell-info {
+    color: #777;
+    font-family: 'Oxygen', sans-serif;
+    font-size: 12pt;
+}
+
+.kb-editor-cell-info .header {
+    border-bottom: 1px solid #777;
+    padding: 5px 0;
+    margin-bottom: 8px;
+}
+
+.kb-editor-cell-info .value {
+    color: #000;
+}
+
+
+/*
+New button color scheme
+
+blue for border, backgrounds, text: rgb(0, 147, 255))
+
+official kbase color: rgb(33,150,243)
+
+disabled color for border, text
+
+enabled run color - (green) -  rgb(2,140,10)
+official kbase green:
+
+rgb(75,184,86)
+
+or 
+
+ rgb(42,190,159) which is the lighter variant. both used in mocks (but depends where you sample).
+
+disabled run color - (green) -
+
+error color - red - rgb(209,82,65)
+
+disabled (gray) - 205,205,205
+
+warning: orange
+
+*/
+
+
+.btn.kb-editor-cell-btn {
+    color: rgb(33, 150, 243);
+    background-color: #FFF;
+    border: 2px rgb(33, 150, 243) solid;
+    margin-bottom: 4px
+}
+
+
+/* Primary Button Style */
+.btn.kb-editor-cell-btn.btn-primary {
+    color: rgb(33, 150, 243);
+    border: 2px rgb(33, 150, 243) solid;
+}
+.btn.kb-editor-cell-btn.btn-primary:hover {
+    color: #FFF;
+    background-color: rgb(33, 150, 243);
+    border-bottom: 6px rgb(33, 150, 243) solid;
+    margin-bottom: 0;
+}
+.btn.kb-editor-cell-btn.btn-primary:active {
+    color: #FFF;
+    background-color: rgb(33, 150, 243);
+}
+/* Hovering over an active cell is different, it tries to make the tab look
+   disassociated but using a gray background so it doesnt look like an inactive
+   tab */
+.btn.kb-editor-cell-btn.btn-primary.active {
+    color: white;
+    background-color: rgb(33, 150, 243);
+    border: 2px rgb(33, 150, 243) solid;
+    border-bottom: 6px rgb(33, 150, 243) solid;
+    margin-bottom: 0;
+}
+.btn.kb-editor-cell-btn.btn-primary.active:hover {
+    color: rgb(33, 150, 243);
+    background-color: #DDD;
+    border-bottom: 2px rgb(33, 150, 243) solid;
+    margin-bottom: 4px;   
+}
+
+
+
+/* DANGER - for error */
+.btn.kb-editor-cell-btn.btn-danger {
+    color: rgb(209,82,65);
+    border: 2px rgb(209,82,65) solid;
+}
+.btn.kb-editor-cell-btn.btn-danger:hover {
+   color: #FFF;
+    background-color: rgb(209,82,65);
+    border-bottom: 6px rgb(209,82,65) solid;
+    margin-bottom: 0;
+}
+.btn.kb-editor-cell-btn.btn-danger.active:hover {
+    color:  rgb(209,82,65);
+    background-color: #DDD;
+    border-bottom: 2px  rgb(209,82,65) solid;
+    margin-bottom: 4px;
+}
+.btn.kb-editor-cell-btn.btn-danger.active {
+    color: white;
+    background-color: rgb(209,82,65);
+    border: 2px rgb(209,82,65) solid;
+    border-bottom: 6px rgb(209,82,65) solid;
+    margin-bottom: 0;
+}
+.btn.kb-editor-cell-btn.btn-danger.active:hover {
+    color: rgb(209,82,65);
+    background-color: #DDD;
+    border-bottom: 2px rgb(209,82,65) solid;
+    margin-bottom: 4px;   
+}
+
+
+
+/* DISABLED is gray border and text */
+/*
+.btn.kb-editor-cell-btn.btn-primary.disabled:hover {
+    color: #888;
+    background-color: #FFF;
+    border-bottom: 2px #888 solid;
+    margin-bottom: 4px;
+}
+*/
+
+.btn.kb-editor-cell-btn.disabled, .btn.kb-editor-cell-btn.disabled:hover, .btn.kb-editor-cell-btn.disabled:active {
+    color: #888;
+    xbackground-color: #FFF;
+    border: 2px #888 solid;
+    margin-bottom: 4px;    
+}
+
+
+
+
+.kb-editor-cell [data-element="run-control-panel"] {
+    xpadding-left: 8px;
+    width: 100%;
+}
+
+.kb-editor-cell [data-element="tab-pane"] {
+    border-top: 2px rgb(33, 150, 243) solid;
+    xborder: 1px solid rgb(32, 77, 16);
+    xbackground-color: #f5f5f5;
+}
+
+.kb-editor-cell [data-element="tab-pane"] > div:empty {
+    padding: 0px;
+}
+
+.kb-editor-cell [data-element="tab-pane"] > div {
+    padding: 4px;
+}
+
+.kb-editor-cell .btn.disabled {
+    xbackground-color: #FFF;
+}
+
+.kb-editor-cell .btn-primary.kb-btn-action.-rerun {
+    color: rgb(33, 150, 243)
+}
+
+
+.kb-editor-cell .btn-primary.kb-btn-action.-run {
+    color: rgb(75,184,86)
+}
+
+
+.kb-editor-cell .btn-danger.kb-btn-action.-cancel {
+    color: rgb(209,82,65)
+}
+
+.kb-editor-cell .btn-danger.kb-btn-action.-reset {
+    color: rgb(209,82,65)
+}
+
+.kb-app-status-ok {
+    color:  rgb(75,184,86);
+}
+.kb-app-status-warning {
+    color:  orange;
+}
+.kb-app-status-danger, .kb-app-status-error {
+    color:  rgb(209,82,65);
+}
+.kb-app-status-default {
+    color:  rgb(33, 150, 243);
+}
+
+/* app cell panels */
+
+/* TODO: higher level selector */
+
+.parameter-panel .info-panel {
+    padding-top: 4px;
+    background-color: #FFF;
+}

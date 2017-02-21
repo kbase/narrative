@@ -10,18 +10,22 @@ define(
         'kbwidget',
         'bootstrap',
         'jquery',
+        'underscore',
         'bluebird',
         'narrativeConfig',
         'util/timeFormat',
-        'kbase-client-api'
+        'kbase-client-api',
+        'kbaseAccordion'
     ], function (
     KBWidget,
     bootstrap,
     $,
+    _,
     Promise,
     Config,
     TimeFormat,
-    kbase_client_api
+    kbase_client_api,
+    KBaseAccordion
     ) {
     'use strict';
 
@@ -95,14 +99,14 @@ define(
     /**
      * @method
      * getMethodIcon
-     * 
-     * Provides a JQuery object containing an Icon for narrative apps (in the 
+     *
+     * Provides a JQuery object containing an Icon for narrative apps (in the
      * legacy style) or methods (soon to be called apps).
      *
      * params = {
      *    isApp: true | false  // set to true to use the default app icon
      *    url:  string         // url to the icon image, if missing this will provide a default
-     *    size: string         // set the max-width and max-height property for url icons 
+     *    size: string         // set the max-width and max-height property for url icons
      *                         // (icons are square), default is 50px
      *    cursor: string       // if set, set the cursor css of the icon, default is 'default'
      *    setColor: true | false  // this param should probably go away, but if true will set the color of the default icon
@@ -152,11 +156,52 @@ define(
         return $icon;
     }
 
+    /**
+     * errorTitle = a string that'll be in bold at the top of the panel.
+     * errorBody = a string that'll be in standard text, in the error's body area.
+     * if errorBody is an object, ...
+     */
+    function createError(title, error, stackTrace) {
+        var $errorPanel = $('<div>')
+                          .addClass('alert alert-danger')
+                          .append('<b>' + title + '</b><br>Please contact the KBase team at <a href="mailto:help@kbase.us?subject=Narrative%20function%20loading%20error">help@kbase.us</a> with the information below.');
+
+        $errorPanel.append('<br><br>');
+
+        // If it's a string, just dump the string.
+        if (typeof error === 'string') {
+            $errorPanel.append(error);
+        }
+
+        // If it's an object, expect an error object
+        else if (typeof error === 'object') {
+            Object.keys(error).forEach(function(key) {
+                $errorPanel.append($('<div>').append('<b>' + key + ':</b> ' + error[key]));
+            });
+        }
+        else if (error) {
+            $errorPanel.append('No other information available. Sorry!');
+        }
+        if (stackTrace) {
+            var $traceAccordion = $('<div>');
+            $errorPanel.append($traceAccordion);
+            new KBaseAccordion($traceAccordion, {
+                elements: [
+                    {
+                        title: 'Error Details',
+                        body: $('<div>').addClass('kb-function-error-traceback').append(stackTrace)
+                    }
+                ]}
+            );
+        }
+        return $errorPanel;
+    }
 
     return {
         lookupUserProfile: lookupUserProfile,
         displayRealName: displayRealName,
         loadingDiv: loadingDiv,
-        getAppIcon: getAppIcon
+        getAppIcon: getAppIcon,
+        createError: createError
     };
 });

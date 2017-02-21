@@ -150,7 +150,7 @@ define([
             }
             var spec = viewerInfo.specs[methodId];
             var inputParamId = spec['parameters'][0]['id'];
-            var output = {};
+            var output = {'_obj_info':o};
             _.each(spec.behavior.output_mapping, function (mapping) {
                 // Get parameter value
                 var param = getParamValue(o, mapping);

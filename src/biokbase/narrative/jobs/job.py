@@ -1,23 +1,17 @@
-"""
-KBase job class
-"""
-__author__ = "Bill Riehl <wjriehl@lbl.gov>"
-
 import biokbase.narrative.clients as clients
 from .specmanager import SpecManager
 from biokbase.narrative.app_util import (
-    system_variable,
     map_inputs_from_job,
     map_outputs_from_state
 )
 import json
 import uuid
-from IPython.display import (
-    Javascript,
-    HTML
-)
 from jinja2 import Template
-from ipykernel.comm import Comm
+
+"""
+KBase job class
+"""
+__author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
 
 class Job(object):
@@ -27,10 +21,11 @@ class Job(object):
     cell_id = None
     run_id = None
     inputs = None
-    # _comm = None
     _job_logs = list()
+    _last_state = None
 
-    def __init__(self, job_id, app_id, inputs, owner, tag='release', app_version=None, cell_id=None, run_id=None):
+    def __init__(self, job_id, app_id, inputs, owner, tag='release', app_version=None,
+                 cell_id=None, run_id=None):
         """
         Initializes a new Job with a given id, app id, and app app_version.
         The app_id and app_version should both align with what's available in
@@ -44,6 +39,7 @@ class Job(object):
         self.run_id = run_id
         self.inputs = inputs
         self.owner = owner
+
         self._njs = clients.get('job_service')
 
     @classmethod
@@ -95,19 +91,32 @@ class Job(object):
         return SpecManager().get_spec(self.app_id, self.tag)
 
     def status(self):
-        return self._njs.check_job(self.job_id)['job_state']
+        return self.state().get('job_state', 'unknown')
 
     def parameters(self):
-        try:
-            return self._njs.get_job_params(self.job_id)
-        except Exception as e:
-            raise Exception("Unable to fetch parameters for job {} - {}".format(self.job_id, e))
+        """
+        Returns the parameters used to start the job. Job tries to use its inputs field, but
+        if that's None, then it makes a call to njs.
+
+        If no exception is raised, this only returns the list of parameters, NOT the whole
+        object fetched from NJS.get_job_params
+        """
+        if self.inputs is not None:
+            return self.inputs
+        else:
+            try:
+                self.inputs = self._njs.get_job_params(self.job_id)[0]['params']
+                return self.inputs
+            except Exception as e:
+                raise Exception("Unable to fetch parameters for job {} - {}".format(self.job_id, e))
 
     def state(self):
         """
         Queries the job service to see the status of the current job.
         Returns a <something> stating its status. (string? enum type? different traitlet?)
         """
+        if self._last_state is not None and self._last_state.get('finished', 0) == 1:
+            return self._last_state
         try:
             state = self._njs.check_job(self.job_id)
             if 'cancelled' in state:
@@ -117,7 +126,8 @@ class Job(object):
                 state[u'job_state'] = 'canceled'
             state[u'cell_id'] = self.cell_id
             state[u'run_id'] = self.run_id
-            return state
+            self._last_state = state
+            return dict(state)
         except Exception as e:
             raise Exception("Unable to fetch info for job {} - {}".format(self.job_id, e))
 
@@ -147,7 +157,7 @@ class Job(object):
 
     def _get_output_info(self, state):
         spec = self.app_spec()
-        return map_outputs_from_state(state, map_inputs_from_job(self.parameters()[0]['params'], spec), spec)
+        return map_outputs_from_state(state, map_inputs_from_job(self.parameters(), spec), spec)
 
     def log(self, first_line=0, num_lines=None):
         """
@@ -161,10 +171,11 @@ class Job(object):
         Parameters:
         -----------
         first_line - int
-            First line of log to return (0-indexed). If < 0, starts at the beginning. If > total lines,
-            returns an empty list.
+            First line of log to return (0-indexed). If < 0, starts at the beginning. If > total
+            lines, returns an empty list.
         num_lines - int or None
-            Limit on the number of lines to return (if None, return everything). If <= 0, returns no lines.
+            Limit on the number of lines to return (if None, return everything). If <= 0,
+            returns no lines.
         Usage:
         ------
         The parameters are kwargs, so the following cases can be true:
@@ -186,15 +197,15 @@ class Job(object):
             return (num_available_lines, list())
         return (num_available_lines, self._job_logs[first_line:first_line+num_lines])
 
-
     def _update_log(self):
-        log_update = self._njs.get_job_logs({'job_id': self.job_id, 'skip_lines': len(self._job_logs)})
+        log_update = self._njs.get_job_logs({'job_id': self.job_id,
+                                             'skip_lines': len(self._job_logs)})
         if log_update['lines']:
             self._job_logs = self._job_logs + log_update['lines']
 
     def is_finished(self):
         """
-        Returns True if the job is finished (in any state, including errors or cancelled),
+        Returns True if the job is finished (in any state, including errors or canceled),
         False if its running/queued.
         """
         status = self.status()
@@ -208,12 +219,20 @@ class Job(object):
         element.html("<div id='{{elem_id}}' class='kb-vis-area'></div>");
 
         require(['jquery', 'kbaseNarrativeJobStatus'], function($, KBaseNarrativeJobStatus) {
-            var w = new KBaseNarrativeJobStatus($('#{{elem_id}}'), {'jobId': '{{job_id}}', 'state': {{state}}, 'info': {{info}}});
+            var w = new KBaseNarrativeJobStatus($('#{{elem_id}}'), {'jobId': '{{job_id}}', 'state': {{state}}, 'info': {{info}}, 'outputWidgetInfo': {{output_widget_info}}});
         });
         """
+        output_widget_info = None
         try:
             state = self.state()
             spec = self.app_spec()
+            if (state.get('job_state', '') == 'completed'):
+                (output_widget, widget_params) = self._get_output_info(state)
+                output_widget_info = {
+                    'name': output_widget,
+                    'params': widget_params
+                }
+
             info = {
                 'app_id': spec['info']['id'],
                 'version': spec['info'].get('ver', None),
@@ -226,4 +245,8 @@ class Job(object):
                 'version': None,
                 'name': 'Unknown App'
             }
-        return Template(tmpl).render(job_id=self.job_id, elem_id='kb-job-{}-{}'.format(self.job_id, uuid.uuid4()), state=json.dumps(state), info=json.dumps(info))
+        return Template(tmpl).render(job_id=self.job_id,
+                                     elem_id='kb-job-{}-{}'.format(self.job_id, uuid.uuid4()),
+                                     state=json.dumps(state),
+                                     info=json.dumps(info),
+                                     output_widget_info=json.dumps(output_widget_info))

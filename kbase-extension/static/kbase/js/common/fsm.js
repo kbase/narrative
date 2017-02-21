@@ -9,18 +9,29 @@
  */
 
 define([
-    './unodep'
-], function (utils) {
+    './unodep',
+    'common/runtime'
+], function(
+    utils,
+    Runtime
+    ) {
     'use strict';
 
 
     function factory(config) {
         var allStates = config.states,
             initialState = config.initialState,
+            fallbackState = config.fallbackState,
             currentState,
             api,
-            timer, newStateHandler = config.onNewState,
-            bus = config.bus;
+            timer, newStateHandler = config.onNewState;
+
+        var runtime = Runtime.make();
+
+        // We get our own bus for emitting state-change events
+        // on. This lets us cleanly disengage when we are done.
+        var busConnection = runtime.bus().connect(),
+            bus = busConnection.channel(null);
 
         /*
          * Validate the state machine configuration 'states'.
@@ -38,7 +49,7 @@ define([
             if (timer) {
                 return;
             }
-            timer = window.setTimeout(function () {
+            timer = window.setTimeout(function() {
                 try {
                     timer = null;
                     newStateHandler(api);
@@ -49,7 +60,7 @@ define([
         }
 
         function findState(stateToFind) {
-            var foundStates = allStates.filter(function (stateDef) {
+            var foundStates = allStates.filter(function(stateDef) {
                 if (utils.isEqual(stateToFind, stateDef.state)) {
                     return true;
                 }
@@ -63,11 +74,12 @@ define([
             }
 
         }
+
         function doMessages(changeType) {
             var state = currentState;
-            if (state.on && state.on[changeType] ) {
+            if (state.on && state.on[changeType]) {
                 if (state.on[changeType].messages) {
-                    state.on[changeType].messages.forEach(function (msg) {
+                    state.on[changeType].messages.forEach(function(msg) {
                         if (msg.emit) {
                             bus.emit(msg.emit, msg.message);
                         } else if (msg.send) {
@@ -90,25 +102,8 @@ define([
             doMessages('leave');
         }
 
-
-        function start(startingState) {
-            // find initial state
-            if (!startingState) {
-                startingState = initialState;
-            }
-            var state = findState(startingState);
-            if (!state) {
-                throw new Error('Cannot find initial state');
-            }
-
-            // make it the current state
-            currentState = state;
-
-            doResumeState();
-        }
-
         function findNextState(stateList, stateToFind) {
-            var foundStates = stateList.filter(function (state) {
+            var foundStates = stateList.filter(function(state) {
                 if (utils.isEqual(state, stateToFind)) {
                     return true;
                 }
@@ -148,23 +143,59 @@ define([
             run();
         }
 
+        function updateState(nextState) {
+            var updatedState = JSON.parse(JSON.stringify(currentState.state));
+            Object.keys(nextState).forEach(function(key) {
+                updatedState[key] = nextState[key];
+            });
+            newState(updatedState);
+        }
+
         function getCurrentState() {
             return currentState;
         }
 
-        api = {
+        // LIFECYCLE
+
+        function start(startingState) {
+            // find initial state
+            if (!startingState) {
+                startingState = initialState;
+            }
+            var state = findState(startingState);
+            if (!state) {
+                console.error('FSM: initial state could not be found', startingState);
+                throw new Error('Cannot find initial state');
+            }
+
+            // make it the current state
+            currentState = state;
+
+            doResumeState();
+        }
+
+        function stop() {
+
+        }
+
+        // API
+
+        api = Object.freeze({
             start: start,
+            stop: stop,
             newState: newState,
+            updateState: updateState,
             getCurrentState: getCurrentState,
-            findState: findState
-        };
+            findState: findState,
+            bus: bus
+        });
 
         return api;
     }
 
 
     return {
-        make: function (config) {
+        make: function(config) {
             return factory(config);
         }
     };

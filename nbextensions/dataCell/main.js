@@ -12,6 +12,7 @@ define([
     'common/cellUtils',
     'common/pythonInterop',
     'common/ui',
+    'common/jupyter',
     'kb_common/html',
     './widgets/dataCell'
 ], function (
@@ -25,13 +26,14 @@ define([
     cellUtils,
     PythonInterop,
     UI,
+    jupyter,
     html,
     DataCell
     ) {
     'use strict';
 
     var t = html.tag, div = t('div');
-    
+
     function specializeCell(cell) {
         cell.minimize = function () {
             var inputArea = this.input.find('.input_area'),
@@ -54,7 +56,7 @@ define([
             }
             outputArea.removeClass('hidden');
         };
-        
+
         /*
          * The data cell icon is derived by looking up the type in the 
          * narrative configuration.
@@ -62,7 +64,7 @@ define([
         cell.renderIcon = function () {
             var inputPrompt = this.element[0].querySelector('[data-element="icon"]'),
                 type = Props.getDataItem(cell.metadata, 'kbase.dataCell.objectInfo.type');
-            
+
             if (inputPrompt) {
                 inputPrompt.innerHTML = div({
                     style: {textAlign: 'center'}
@@ -71,25 +73,17 @@ define([
                 ]);
             }
         };
-        cell.hidePrompts = function () {
-            // Hide the code input area.
-            this.input.find('.input_area').addClass('hidden');
-            utils.setCellMeta(this, 'kbase.dataCell.user-settings.showCodeInputArea', false);
-
-            // And add our own!
-            var prompt = document.createElement('div');
-            prompt.innerHTML = div({dataElement: 'icon', class: 'prompt'});
-            cell.input.find('.input_prompt').after($(prompt));
-
-
-            // Hide the prompt...
-            this.input.find('.input_prompt').hide();
-            utils.horribleHackToHideElement(this, '.output_prompt', 10);
+        cell.getIcon = function () {
+            var type = Props.getDataItem(cell.metadata, 'kbase.dataCell.objectInfo.type'),
+                icon = AppUtils.makeToolbarTypeIcon(type);
+            return icon;
         };
-        cell.toggleCodeInputArea = function() {
+        cell.toggleCodeInputArea = function () {
             var codeInputArea = this.input.find('.input_area')[0];
             if (codeInputArea) {
                 codeInputArea.classList.toggle('hidden');
+                // NB purely for side effect - toolbar refresh
+                cell.metadata = cell.metadata;
             }
         };
     }
@@ -114,30 +108,30 @@ define([
 
         // Update metadata.
         utils.setMeta(cell, 'attributes', 'lastLoaded', (new Date()).toUTCString());
-        
+
         // Create our own input area for interaction with the user.
         var cellInputNode = cell.input[0],
             kbaseNode,
             ui = UI.make({node: cellInputNode});
-        
+
         kbaseNode = ui.createNode(div({
             dataSubareaType: 'data-cell-input'
         }));
-        
+
         cellInputNode.appendChild(kbaseNode);
-        
+
         var dataCell = DataCell.make({
             cell: cell
         });
         dataCell.bus.emit('run', {
             node: kbaseNode
         });
-        
+
         // The output cell just needs to inhibit the input area.
         // The input code and associated output (a widget) is already
         // to be found in this cell (during insertion).
 
-        cell.hidePrompts();
+        jupyter.disableKeyListenersForCell(cell);
         cell.renderMinMax();
         cell.renderIcon();
     }
@@ -170,7 +164,17 @@ define([
             // We just need to generate, set, and execute the output
             // the first time (for now).
 
-            var cellText = PythonInterop.buildDataWidgetRunner('kbaseNarrativeDataCell', cellId, data.objectInfo);
+            var tag = Jupyter.narrative.sidePanel.$methodsWidget.currentTag;
+            if (!tag) {
+                tag = "release";
+            }
+            var objInfo = data.objectInfo;
+            var ref = objInfo.ref_path;
+            if (!ref) {
+                ref = objInfo.ws_id + '/' + objInfo.id + '/' + objInfo.version;
+            }
+            var title = (objInfo && objInfo.name) ? objInfo.name : 'Data Viewer';
+            var cellText = PythonInterop.buildDataWidgetRunner(ref, cellId, title, tag);
 
             cell.set_text(cellText);
             cell.execute();
@@ -178,14 +182,10 @@ define([
             // all we do for now is set up the input area
             cell.input.find('.input_area').addClass('hidden');
             utils.setCellMeta(cell, 'kbase.dataCell.user-settings.showCodeInputArea', false);
-
-            // Get the title of the app which generated this output...
-            parentTitle = cellUtils.getTitle(Props.getDataItem(cell.metadata, 'kbase.dataCell.parentCellId'));
-            if (parentTitle) {
-                Props.setDataItem(cell.metadata, 'kbase.attributes.title', data.objectInfo.name);
-            }
             
-            // console.log('OBJ INF', data.objectInfo);
+            utils.setCellMeta(cell, 'kbase.attributes.title', data.objectInfo.name);
+            var subtitle = 'v' + String(data.objectInfo.version) + ' - ' + data.objectInfo.type;
+            utils.setCellMeta(cell, 'kbase.attributes.subtitle', subtitle, true);
 
             setupCell(cell);
         });
@@ -193,7 +193,6 @@ define([
 
     function load() {
         $([Jupyter.events]).on('inserted.Cell', function (event, data) {
-          console.log('inserted!', data);
             if (data.kbase && data.kbase.type === 'data') {
                 upgradeCell(data)
                     .catch(function (err) {

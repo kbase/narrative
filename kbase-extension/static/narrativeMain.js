@@ -24,7 +24,7 @@
  * @class narrativeMain
  * @static
  */
-require(['narrative_paths'], function (paths) {
+require(['./narrative_paths'], function (paths) {
     require([
         'jquery',
         'bluebird',

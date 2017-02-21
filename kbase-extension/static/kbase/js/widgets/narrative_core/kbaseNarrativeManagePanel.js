@@ -1,26 +1,37 @@
+/* global define */
+/* eslint-env browser */
 /**
  * Widget for displaying a list of Narratives and basic narrative management (copy, delete, share)
  * @author Michael Sneddon <mwsneddon@lbl.gov>
  * @public
  */
-define(['jquery',
-        'base/js/namespace',
-        'narrativeConfig',
-        'narrativeManager',
-        'util/display',
-        'bluebird',
-        'kbwidget',
-        'kbaseNarrativeControlPanel',
-        'api/NewWorkspace'],
-function($,
-         Jupyter,
-         Config,
-         NarrativeManager,
-         DisplayUtil,
-         Promise,
-         KBWidget,
-         ControlPanel,
-         NewWorkspace) {
+define([
+    'jquery',
+    'base/js/namespace',
+    'narrativeConfig',
+    'narrativeManager',
+    'util/display',
+    'bluebird',
+    'kbwidget',
+    'kbaseNarrativeControlPanel',
+    'kbaseNarrativeSharePanel',
+    'api/NewWorkspace',
+    'kbase-generic-client-api',
+    'util/timeFormat'
+], function (
+    $,
+    Jupyter,
+    Config,
+    NarrativeManager,
+    DisplayUtil,
+    Promise,
+    KBWidget,
+    ControlPanel,
+    kbaseNarrativeSharePanel,
+    NewWorkspace,
+    GenericClient,
+    TimeFormat
+) {
     'use strict';
     return new KBWidget({
         name: "kbaseNarrativeManagePanel",
@@ -47,6 +58,7 @@ function($,
         },
         ws: null,
         manager: null,
+        serviceClient: null,
         ws_name: null,
         nar_name: null,
         $mainPanel: null,
@@ -67,9 +79,7 @@ function($,
 
             $(document).on(
                 'copyThis.Narrative', function (e, panel, active, jump) {
-                    console.debug("CopyThisNarrative triggered, params=",
-                        {panel: panel, active: active, jump: jump});
-                    this.copyThisNarrative(panel, active, jump)
+                    this.copyThisNarrative(panel, active, jump);
                 }.bind(this)
             );
 
@@ -88,8 +98,9 @@ function($,
         my_user_id: null,
         loggedInCallback: function (event, auth) {
             this.ws = new Workspace(this.options.ws_url, auth);
-
             this.manager = new NarrativeManager({ws_url: this.options.ws_url, nms_url: this.options.nms_url}, auth);
+            this.serviceClient = new GenericClient(Config.url('service_wizard'), auth);
+
             this.my_user_id = auth.user_id;
             this.refresh();
             return this;
@@ -129,9 +140,7 @@ function($,
              *    a. One to fetch all object info for those Narratives (assuming it's under 10000, that'll get fixed if it gets larger)
              *    b. One for each batch of 1000 workspaces to get permissions for
              */
-            var wsInfoProm = Promise.resolve(this.ws.list_workspace_info({excludeGlobal: 1}));
-
-            var narDataProm = wsInfoProm
+            Promise.resolve(this.ws.list_workspace_info({excludeGlobal: 1}))
             .then(function (wsList) {
                 this.narData = {
                     mine: [],
@@ -275,20 +284,22 @@ function($,
         },
 
         renderHeader: function () {
-            var self = this;
-            if (self.$mainPanel) {
-                self.$mainPanel.empty();
+            if (this.$mainPanel) {
+                this.$mainPanel.empty();
 
                 var $msgPanel = $("<div>").css({'margin': '10px', 'text-align': 'center'});
-                self.$copyThisNarrBtn = self.makeCopyThisNarrativeBtn($msgPanel);
-                self.$mainPanel.append(
-                    $('<div>').css({'margin': '10px', 'text-align': 'center'})
-                    .append(self.makeNewNarrativeBtn())
-                    .append(self.$copyThisNarrBtn)
-                    .append($msgPanel));
-
-                self.$narPanel = $('<div>');
-                self.$mainPanel.append(self.$narPanel);
+                var $newNarrPanel = $("<div>").css({'margin': '10px', 'text-align': 'center'});
+                this.$copyThisNarrBtn = this.makeCopyThisNarrativeBtn($msgPanel);
+                this.$mainPanel.append(
+                    $('<div>')
+                    .css({'margin': '10px', 'text-align': 'center'})
+                    .append(this.makeNewNarrativeBtn($newNarrPanel))
+                    .append(this.$copyThisNarrBtn)
+                    .append($msgPanel)
+                    .append($newNarrPanel)
+                );
+                this.$narPanel = $('<div>');
+                this.$mainPanel.append(this.$narPanel);
             }
         },
 
@@ -358,22 +369,33 @@ function($,
                     }));
                 self.$narPanel.append($advancedDiv);
 
-
-                var $selectWsContainer = $('<select id="setPrimaryNarSelectWs">').addClass('form-control');
-                var $selectNarContainer = $('<select id="setPrimaryNarSelectNar">').addClass('form-control').hide();
-                var $setBtn = $('<button>').addClass('btn btn-default').append('Set this Narrative').hide();
+                var $selectWsContainer = $('<select id="setPrimaryNarSelectWs">')
+                                         .addClass('form-control');
+                var $selectNarContainer = $('<select id="setPrimaryNarSelectNar">')
+                                          .addClass('form-control')
+                                          .hide();
+                var $setBtn = $('<button>')
+                              .addClass('btn btn-default')
+                              .append('Set this Narrative')
+                              .hide();
                 var $setPrimary = $('<div>').append(
-                    $('<div>').addClass('form-group').css({'text-align': 'center'})
-                    .append($('<label for="setPrimaryNarSelectWs">').append("Set Active Narrative for Workspace"))
-                    .append($selectWsContainer)
-                    .append($selectNarContainer)
-                    .append($setBtn));
+                        $('<div>')
+                        .addClass('form-group')
+                        .css({'text-align': 'center'})
+                        .append($('<label for="setPrimaryNarSelectWs">')
+                                .append("Set Active Narrative for Workspace"))
+                        .append($selectWsContainer)
+                        .append($selectNarContainer)
+                        .append($setBtn)
+                    );
 
                 self.narData.allWs.sort(function (a, b) {
-                    if (a.ws_info[1].toLowerCase() > b.ws_info[1].toLowerCase())
-                        return 1; // sort by name
-                    if (a.ws_info[1].toLowerCase() < b.ws_info[1].toLowerCase())
-                        return -1;  // sort by name
+                    var aName = a.ws_info[1].toLowerCase();
+                    var bName = b.ws_info[1].toLowerCase();
+                    if (aName > bName)
+                        return 1;
+                    if (bName < aName)
+                        return -1;
                     return 0;
                 });
 
@@ -381,51 +403,58 @@ function($,
                     var info = self.narData.allWs[k].ws_info;
                     $selectWsContainer.append($('<option value="' + info[1] + '">').append(info[1] + ' (id=' + info[0] + ')'));
                 }
+
                 $selectWsContainer.on('change',
                     function () {
                         $selectNarContainer.empty();
-                        self.ws.list_objects({
-                            workspaces: [$selectWsContainer.val()],
-                            type: "KBaseNarrative.Narrative",
-                            includeMetadata: 1
-                        },
-                            function (objList) {
-                                if (objList.length == 0) {
-                                    $selectNarContainer.append($('<option value="none">').append('No Narratives'));
-                                    $setBtn.prop('disabled', true);
-                                    $selectNarContainer.prop('disabled', true);
-                                    return;
-                                }
-                                $setBtn.prop('disabled', false);
-                                $selectNarContainer.prop('disabled', false);
+                        Promise.resolve(self.serviceClient.sync_call(
+                            "NarrativeService.list_objects_with_sets",
+                            [{
+                                types: ['KBaseNarrative.Narrative'],
+                                workspaces: [$selectWsContainer.val()]
+                            }]
+                        ))
+                        .then(function(objList) {
+                            objList = objList[0].data;
+                            if (objList.length === 0) {
+                                $selectNarContainer.append($('<option value="none">').append('No Narratives'));
+                                $setBtn.prop('disabled', true);
+                                $selectNarContainer.prop('disabled', true);
+                                return;
+                            }
+                            $setBtn.prop('disabled', false);
+                            $selectNarContainer.prop('disabled', false);
 
-                                // sort by date
-                                objList.sort(function (a, b) {
-                                    if (a[3] > b[3])
-                                        return -1; // sort by date
-                                    if (a[3] < b[3])
-                                        return 1;  // sort by date
-                                    return 0;
-                                });
-                                self.advancedSetNarLookup = {};
-                                // add the list to the select
-                                for (var i = 0; i < objList.length; i++) {
-                                    var narDispName = objList[i][1];
-                                    if (objList[i][10].name) {
-                                        narDispName = objList[i][10].name;
-                                    }
-                                    self.advancedSetNarLookup[objList[i][0]] = narDispName;
-                                    $selectNarContainer.append($('<option value="' + objList[i][0] + '">')
-                                        .append(narDispName + ' (id=' + objList[i][0] + ')'));
-                                }
-                            },
-                            function (error) {
-                                console.error(error);
+                            // sort by date
+                            objList.sort(function (a, b) {
+                                var aDate = a.object_info[3];
+                                var bDate = b.object_info[3];
+                                if (aDate > bDate)
+                                    return -1; // sort by date
+                                if (aDate < bDate)
+                                    return 1;  // sort by date
+                                return 0;
                             });
-
+                            self.advancedSetNarLookup = {};
+                            // add the list to the select
+                            for (var i = 0; i < objList.length; i++) {
+                                var info = objList[i].object_info;
+                                var narDispName = info[1];
+                                if (info[10] && info[10].name) {
+                                    narDispName = info[10].name;
+                                }
+                                self.advancedSetNarLookup[info[0]] = narDispName;
+                                $selectNarContainer.append($('<option value="' + info[0] + '">')
+                                                   .append(narDispName + ' (id=' + info[0] + ')'));
+                            }
+                        })
+                        .catch(function(error) {
+                            console.error(error);
+                        });
                         $selectNarContainer.show();
                         $setBtn.show();
-                    });
+                    }
+                );
                 $selectWsContainer.change();
                 $setBtn.on('click',
                     function () {
@@ -578,7 +607,7 @@ function($,
                                         }
                                         $tbl.append($('<tr>')
                                             .append($('<td>').append($revertBtn))
-                                            .append($('<td>').append(self.getTimeStampStr(history[k][3]) + ' by ' + history[k][5] + summary))
+                                            .append($('<td>').append(TimeFormat.getTimeStampStr(history[k][3], true) + ' by ' + history[k][5] + summary))
                                             .append($('<td>').append($('<span>').css({margin: '4px'}).addClass('fa fa-info pull-right'))
                                                 .tooltip({title: history[k][2] + '<br>' + history[k][10].name + '<br>' + history[k][8] + '<br>' + history[k][9] + ' bytes', container: 'body', html: true, placement: 'bottom'}))
                                             );
@@ -586,7 +615,11 @@ function($,
                                     self.setInteractionPanel($interactionPanel, 'Version History', $tbl);
                                 },
                                 function (error) {
-                                    var errorMessage = "Error! " + error.error.message;
+                                    var msg = 'An unknown error occurred';
+                                    if (error.error && error.error.message) {
+                                        msg = error.error.message;
+                                    }
+                                    var errorMessage = "Error! " + msg;
                                     console.log(errorMessage);
                                     console.error(error);
                                     self.setInteractionError($interactionPanel, errorMessage);
@@ -637,87 +670,14 @@ function($,
                                     .append('Copy')
                                     .click(function () {
                                         $(this).prop("disabled", true);
-                                        var newMeta = ws_info[8];
-                                        newMeta['narrative_nice_name'] = $newNameInput.val();
-
-                                        var id = new Date().getTime();
-                                        var ws_name = self.my_user_id + ":" + id;
-
-                                        Promise.resolve(self.ws.clone_workspace({
-                                            wsi: {id: ws_info[0]},
-                                            workspace: ws_name,
-                                            meta: newMeta
-                                        }))
-                                        .then(function(newWsInfo) {
-                                            var newNarrativeRef = newWsInfo[0] + '/' + objectInfo[1];
-
-
-                                        }.bind(this))
-
-                                        self.ws.clone_workspace({
-                                            wsi: {id: ws_info[0]},
-                                            workspace: ws_name,
-                                            meta: newMeta
-                                        },
-                                            function (new_ws_info) {
-                                                // we have to match based on names because when cloning, the object id is not preserved!!! arg!
-                                                var new_narrative_ref = new_ws_info[0] + "/" + object_info[1]; //new_ws_info[8].narrative;
-                                                // ok, a lot of work just to update the narrative name in the metadata
-                                                self.ws.get_objects([{ref: new_narrative_ref}],
-                                                    function (data) {
-                                                        data = data[0]; // only one thing should be returned
-                                                        var new_nar_metadata = data.info[10];
-                                                        new_nar_metadata.name = newMeta['narrative_nice_name'];
-                                                        data.data.metadata.name = newMeta['narrative_nice_name'];
-
-                                                        // set workspace metadata to point to the correct object id since they can change on clone!!
-                                                        self.ws.alter_workspace_metadata({
-                                                            wsi: {id: new_ws_info[0]},
-                                                            new : {'narrative': String(data.info[0])}
-                                                        },
-                                                        function () {
-                                                            // so much work just to update this name!
-                                                            self.ws.save_objects({id: new_ws_info[0], objects: [
-                                                                    {
-                                                                        type: data.info[2],
-                                                                        data: data.data,
-                                                                        provenance: data.provenance,
-                                                                        name: data.info[1],
-                                                                        meta: new_nar_metadata
-                                                                    }
-                                                                ]},
-                                                                function (info) {
-                                                                    console.log('copying complete', info);
-                                                                    self.refresh();
-                                                                },
-                                                                function (error) {
-                                                                    var errorMessage = "Error! Copied successfully, but error on rename." + error.error.message;
-                                                                    console.log(errorMessage);
-                                                                    console.error(error);
-                                                                    self.setInteractionError($interactionPanel, errorMessage);
-                                                                });
-
-                                                            },
-                                                            function (error) {
-                                                                console.log('Error when setting ws metadata!');
-                                                                console.log(error);
-                                                            });
-
-
-                                                    },
-                                                    function (error) {
-                                                        var errorMessage = "Error! Copied successfully, but error on rename." + error.error.message;
-                                                        console.log(errorMessage);
-                                                        console.error(error);
-                                                        self.setInteractionError($interactionPanel, errorMessage);
-                                                    })
-                                            },
-                                            function (error) {
-                                                var errorMessage = "Error! " + error.error.message;
-                                                console.log(errorMessage);
-                                                console.error(error);
-                                                self.setInteractionError($interactionPanel, errorMessage);
-                                            });
+                                        self.copyThisNarrative($newNameInput.val())
+                                        .then(function() {
+                                            self.refresh();
+                                        })
+                                        .catch(function(error) {
+                                            self.setInteractionError($interactionPanel, "Sorry, an error occurred while copying!");
+                                            console.error(error);
+                                        });
                                     }))
                                 .append($('<button>').addClass('kb-data-list-cancel-btn')
                                     .append('Cancel')
@@ -894,7 +854,7 @@ function($,
                             })*/
                         .append('<br>'));
                 }
-                $dataCol.append($('<span>').addClass('kb-data-list-type').append(this.getTimeStampStr(data.nar_info[3])));
+                $dataCol.append($('<span>').addClass('kb-data-list-type').append(TimeFormat.getTimeStampStr(data.nar_info[3], true)));
 
 
                 // Render the share toolbar layout.
@@ -979,8 +939,6 @@ function($,
                         .append($dataCol)
                         .append($ctrCol)))
                 .append($interactionPanel);
-            //.append($alertContainer)
-            //.append($shareContainer);
 
             var $narDivContainer = $('<div>')
                 .append($narDiv);
@@ -1138,119 +1096,78 @@ function($,
                 return Promise.reject(preCheckError);
             }
             // name of the narrative object in the workspace. used for closure.
-            var narObjName;
-            var newWsName = this.my_user_id + ':' + new Date().getTime();
-            var newWsMeta = {
-                is_temporary: 'false',
-                narrative_nice_name: newName
-                // add the 'narrative' field later.
-            };
-            var newWsId;
-            var newNarId;
-            var currentNarrative;
 
-            // start with getting the existing narrative object.
-            return Promise.resolve(this.ws.get_objects([{ref: this.workspaceRef}]))
-            .then(function(narrativeObject) {
-                // stash the object in a variable with scope external to the Promise.
-                currentNarrative = narrativeObject[0];
-                // next clone the workspace EXCEPT for this object.
-                return Promise.resolve(this.ws.clone_workspace({
-                    wsi: { id: this.workspaceId },
-                    workspace: newWsName,
-                    meta: newWsMeta,
-                    exclude: [{ objid: currentNarrative.info[0] }]
-                }));
-            }.bind(this))
-            .then(function(newWsInfo) {
-                // pop the newWsId into a variable available by closure in the next step.
-                newWsId = newWsInfo[0];
-                // update the ref inside the narrative object and the new workspace metadata.
-                var newNarMetadata = currentNarrative.info[10];
-                newNarMetadata.name = newName;
-                newNarMetadata.ws_name = newWsName;
-                newNarMetadata.job_info = JSON.stringify({queue_time: 0, running: 0, completed: 0, run_time: 0, error: 0});
-
-                currentNarrative.data.metadata.name = newName;
-                currentNarrative.data.metadata.ws_name = newWsName;
-                currentNarrative.data.metadata.job_ids = {
-                    apps: [],
-                    methods: [],
-                    job_usage: {
-                        queue_time: 0,
-                        run_time: 0
-                    }
-                };
-                // save the shiny new Narrative so it's at version 1
-                return Promise.resolve(this.ws.save_objects({
-                    id: newWsId,
-                    objects: [{
-                        type: currentNarrative.info[2],
-                        data: currentNarrative.data,
-                        provenance: currentNarrative.provenance,
-                        name: currentNarrative.info[1],
-                        meta: newNarMetadata
-                    }]
-                }));
-            }.bind(this))
-            .then(function(newNarInfo) {
-                // now, just update the workspace metadata to point
-                // to the new narrative object
-                newNarId = newNarInfo[0][0];
-                return Promise.resolve(this.ws.alter_workspace_metadata({
-                    wsi: { id: newWsId },
-                    new: { narrative: String(newNarId) }
-                }));
-            }.bind(this))
-            .then(function(results) {
+            return Promise.resolve(this.serviceClient.sync_call(
+                'NarrativeService.copy_narrative',
+                [{
+                    workspaceRef: this.workspaceRef,
+                    newName: newName
+                }]
+            ))
+            .then(function(result) {
+                result = result[0];
                 return {
                     status: 'success',
-                    url: window.location.origin + '/narrative/ws.' + newWsId + '.obj.' + newNarId
+                    url: [window.location.origin,
+                          '/narrative/ws.',
+                          result.newWsId,
+                          '.obj.',
+                          result.newNarId].join('')
                 };
-            })
-            .catch(function(error) {
-                console.error(error);
-                var errMessage = "Sorry, an error occurred while copying.";
-                if (error.error && error.error.message) {
-                    //try to parse...
-                    // search for function that failed in error.
-                    if (error.error.error) {
-                        var trace = error.error.error;
-                        // in order:
-                        if (trace.search('getObjectInfoNew') > -1) {
-
-                        }
-                    }
-                    var msg = error.error.message;
-                }
-                // if it got to the point that it made a copy,
-                // delete it so it's out of the way - it's broken
-                // if it got here without finishing.
-                if (newWsId) {
-                    console.log('Deleting new incomplete copy - ' + newWsId);
-                    return Promise.resolve(this.ws.delete_workspace({id: newWsId}))
-                    .then(function() {
-                        return Promise.reject(error);
-                    });
-                }
-                return Promise.reject(error);
-                // throw error;
-            }.bind(this));
+            });
         },
 
-        makeNewNarrativeBtn: function () {
-            var self = this;
-            var active = '<span class="fa fa-plus"></span> New Narrative';
-            var $working = $('<span>').append("Building Narrative...");
+        makeNewNarrativeBtn: function ($msgPanel) {
+            var activeStr = '<span class="fa fa-plus"></span> New Narrative',
+                workingStr = 'Building...',
+                doneStr = 'Link below',
+                errorStr = 'Error!';
             var $btn =
-                $('<button>').addClass('kb-primary-btn').append(active)
+                $('<button>').addClass('kb-primary-btn').append(activeStr)
                 .on('click', function () {
-                    // just open the link, don't do the work here...
-                    window.open(self.options.new_narrative_link);
-                });
-
+                    $btn.prop('disabled', true)
+                        .empty()
+                        .append(workingStr);
+                    Promise.resolve(this.serviceClient.sync_call(
+                        "NarrativeService.create_new_narrative",
+                        [{ includeIntroCell: 1 }]
+                    ))
+                    .then(function(results) {
+                        $btn.empty().append(doneStr);
+                        var url = "/narrative/" + results[0].narrativeInfo.obj_id;
+                        var $newNarrLink = $('<a>')
+                            .attr('href', url)
+                            .attr('target', '_blank')
+                            .append('Click here to open your new temporary Narrative.')
+                            .click(function() {
+                                $msgPanel.slideUp();
+                                $btn.empty().append(activeStr).prop('disabled', false);
+                            }.bind(this));
+                        $msgPanel.empty()
+                                 .append($newNarrLink)
+                                 .slideDown();
+                    }.bind(this))
+                    .catch(function(error) {
+                        console.error(error);
+                        var $errorAlert = $('<div>')
+                                         .addClass('alert alert-danger')
+                                         .attr('role', 'alert');
+                        var $dismissBtn = $('<button type="button" class="close" aria-label="Close">')
+                                         .append('<span aria-hidden="true">&times;</span>')
+                                         .click(function() {
+                                             $errorAlert.remove();
+                                             $msgPanel.slideUp();
+                                             $btn.empty().append(activeStr).prop('disabled', false);
+                                         });
+                        $errorAlert.append($dismissBtn)
+                                   .append('Sorry, an error occurred while creating your new Narrative. Please try again.');
+                        $btn.empty().append(errorStr);
+                        $msgPanel.empty().append($errorAlert).slideDown();
+                    });
+                }.bind(this));
             return $btn;
         },
+
         getNarSummary: function (nar_info) {
             var summary = '';
             if (nar_info[10].methods) {
@@ -1380,32 +1297,6 @@ function($,
                     }]);
             }
             return $container;
-        },
-
-        // edited from: http://stackoverflow.com/questions/3177836/how-to-format-time-since-xxx-e-g-4-minutes-ago-similar-to-stack-exchange-site
-        getTimeStampStr: function (objInfoTimeStamp) {
-            var date = new Date(objInfoTimeStamp);
-            var seconds = Math.floor((new Date() - date) / 1000);
-
-            // f-ing safari, need to add extra ':' delimiter to parse the timestamp
-            if (isNaN(seconds)) {
-                var tokens = objInfoTimeStamp.split('+');  // this is just the date without the GMT offset
-                var newTimestamp = tokens[0] + '+' + tokens[0].substr(0, 2) + ":" + tokens[1].substr(2, 2);
-                date = new Date(newTimestamp);
-                seconds = Math.floor((new Date() - date) / 1000);
-                if (isNaN(seconds)) {
-                    // just in case that didn't work either, then parse without the timezone offset, but
-                    // then just show the day and forget the fancy stuff...
-                    date = new Date(tokens[0]);
-                    return this.monthLookup[date.getMonth()] + " " + date.getDate() + ", " + date.getFullYear();
-                }
-            }
-
-            // keep it simple, just give a date
-            return this.monthLookup[date.getMonth()] + " " + date.getDate() + ", " + date.getFullYear();
-        },
-        monthLookup: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
-        /* we really need to stop all this copy pasting */
-
+        }
     });
 });

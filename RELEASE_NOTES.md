@@ -3,6 +3,163 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v4.2.1 (more notes will follow).
 
+### Version 3.1.11
+__Changes__
+- Fixed a problem where the job log in app cells would continue to poll after the job had finished, or after a user had clicked onto a different tab.
+- Fixed a problem with the Hisat viewer widget not working properly.
+- Grouped parameters in apps should now group in the proper order.
+- Minor adjustments to the ordering of buttons in dialog boxes (cancel buttons go on the left, active actions go on the right).
+- Change text of copy button in view only mode.
+- Adjust workflow of Narrative copying in view only mode to make more sense and prevent multi-clicking the copy button.
+
+### Version 3.1.10
+__Changes__
+- Fixed broken Import tab in the data slideout.
+- Adjusted text in staging area tour.
+- Fixed issue in App cells where the tab buttons could crowd each other out.
+- Adjusted behavior of slider buttons in volcano plot widget to be more performant.
+
+### Version 3.1.9
+__Changes__
+- Expanded the reach of the front end code compiler.
+- Adjusted the logic of job polling to only poll jobs that are currently attached to Narrative cells and running.
+- Changed what publicly available data is visible.
+- Fixed data panel timestamps in Safari.
+- Fixed sharing user lookup input field in Safari.
+- Made many visual improvements to the app cell.
+
+### Version 3.1.8
+__Changes__
+- JIRA TASK-434 Made improvements to speed up loading and (hopefully) improve stability.
+- JIRA TASK-439 Fixed a problem with adding inputs to subselected parameters in apps.
+- JIRA TASK-440 Advanced dropdowns should now have the right horizontal size when un-hidden.
+- Made a change to publically available data - Phytozome genomes are now just part of the genomes list.
+- Fixed issue with viewer cells not rendering properly.
+- Enable a tab that displays which output objects were created in a report viewer.
+
+### Version 3.1.7
+__Changes__
+- Fixed an issue where if looking up any job status fails, all job statuses fail to update.
+- Fixed problems with viewing RNA seq object viewers.
+- Fixed a problem with displaying output widgets for many apps.
+
+### Version 3.1.6
+__Changes__
+- Created a help menu with some options migrated from the hamburger menu.
+- Fixed staging area uploader configuration to keep up with uploader app changes.
+- JIRA TASK-378 Fixed issue with app parameters not always enforcing "required" constraint.
+- Fix label display in app report viewer.
+- Fix import job panel not updating job status.
+- Minor tweaks to labels in volcano plot viewer.
+
+### Version 3.1.5
+__Changes__
+- Added staging area uploaders for Genbank files, and SRA reads.
+- Fixed (other) problems with backend job lookup.
+- Changed group parameters toggle look and feel.
+- Fixed minor UI problems with volcano plot.
+- Fixed potential problem with Cummerbund output viewer.
+
+### Version 3.1.4
+__Changes__
+- Linked the new reads uploaders to the staging panel.
+- Wired the staging panel to include the subpath (not the username, just any subdirectories) in the input to uploaders.
+- Linked the staging panel to get its uploader specs from a source that includes the currently selected version tag.
+- Added configuration for several data panel properties (max number of items to fetch, etc.).
+- Added a semaphore lock that prevents any backend job lookup calls from being made before the channel is ready.
+
+### Version 3.1.3
+__Changes__
+- Fixed bug where read-only Narratives were still interactive (apps had run and reset buttons)
+- Fixed bug where copying a read-only Narrative created a bad forwarding URL.
+
+### Version 3.1.2
+__Changes__
+- Do an autosave after starting an import job.
+- Hide the code area for the 'Job Status' widget, whenever that widget gets instantiated.
+- Remove 'Object Details...' button from data viewers (it's just hidden for now).
+- In the App Cell Report tab, remove 'Summary' or 'Report' areas if either of those are missing.
+
+### Version 3.1.1
+__Changes__
+- Optimized how job status polling works.
+
+### Version 3.1.0
+__Changes__
+- Release of ReadsSet viewer and Reads viewer.
+- Release of support for data palettes (currently disabled in the service)
+- Data now gets fetched from a Narrative Service to support data palettes.
+- Support for an FTP-based data file staging area (currently disabled until import apps catch up).
+- Fixed issue where an undefined app_type field would cause a crash while instantiating an app cell.
+
+### Version 3.1.0-alpha-4
+__Changes__
+- Adjust visuals in Reads viewer.
+- Adjust tooltip for objects from other Narratives.
+- Changed functionality of object copying in data slideout.
+
+### Version 3.1.0-alpha-3
+__Changes__
+- Updated ReadsSet viewer and Reads viewer.
+- Modified icons for elements from an external Narrative.
+- Improved usability for set editors.
+- Fixed missing upload functions bug.
+- Fixed issues with Narrative copying (from the Narratives panel)
+
+### Version 3.1.0-alpha-2
+__Changes__
+- Fixes problem with data hierarchy when sub-elements are from a different Narrative.
+- Puts a visual label on things from another Narrative.
+
+### Version 3.1.0-alpha-1
+__Changes__
+- Introduces the concept of data sets with hierarchical manipulation.
+- Sets objects should be able to expand and contract, showing sub objects.
+- Adds Apps that can manipulate data sets (currently only Reads Sets).
+- Rewires all data manipulation code to use a different service.
+
+### Version 3.0.2
+__Changes__
+- Fixed bug preventing the "Annotate Microbial Genome" app (and others that make use of randomized input strings) from launching.
+- Fixed another bug with CSS files.
+
+### Version 3.0.1
+__Changes__
+- Fixed bug with path to some CSS files.
+- Fixed error where an update to old viewer cells would just produce code that would crash.
+- Fixed error where updated app cells containing Apps made with the KBase SDK weren't updated properly.
+
+### Version 3.0.0
+__Changes__
+- Final 3.0.0 release!
+- Adjust data import user experience.
+
+### Version 3.0.0-alpha-23
+__Changes__
+- Major updates to the App Cell UI
+    - Restructured so each view is a separate tab.
+    - Added a status icon for each App state.
+    - Adjusted failure modes to be more descriptive.
+    - Integrated Report view under Results tab.
+    - Moved many of the sprawling toolbar buttons into a dropdown menu.
+    - Added a modal Info dialog for each app (in toolbar menu).
+    - Remove Jupyter's prompt area... which might cause more problems.
+- Fixed various problems with Jupyter's command-mode shortcuts (again).
+- Import panel should disappear and scroll to running import Job on Import.
+- Changes to improve performance and visibility of Genome Viewer widget.
+- Added an interactive tour for the Narrative (in the hamburger menu).
+- Cells should now all be deleteable in all cases.
+- Updated Ontology view widgets to use tabs.
+- Fixed automated front end test apparatus.
+
+### Version 3.0.0-alpha-22
+__Changes__
+- First pass at an inline clickable interface tour.
+- Fixed problems with Jupyter's command-mode shortcuts overriding whatever they wanted to.
+- Updated front end tests so they should function more seamlessly.
+- Add GenomeAnnotation support to genome, pangenome, and proteome comparison viewers.
+- Add warning for out of date apps.
+
 ### Version 3.0.0-alpha-21
 __Changes__
 - Applied module release version to that module's method specs.

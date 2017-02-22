@@ -6,19 +6,18 @@
  * the login widget, and wires the environment together.
  * @author Bill Riehl wjriehl@lbl.gov
  */
-define (
-    [
-        'jquery',
-        'kbaseLogin',
-        'kbapi',
-        'base/js/utils'
-    ], function(
-        $,
-        KBaseLogin,
-        kbapi,
-        JupyterUtils
-    ) {
-    "use strict";
+define ([
+    'jquery',
+    'kbaseLogin',
+    'kbapi',
+    'base/js/utils'
+], function(
+    $,
+    KBaseLogin,
+    kbapi,
+    JupyterUtils
+) {
+    'use strict';
     var baseUrl = JupyterUtils.get_body_data('baseUrl');
     var loginWidget;
 
@@ -52,7 +51,7 @@ define (
                 // console.err(err);
             }
         );
-        window.location.href = "/";
+        window.location.href = '/';
     };
 
     var init = function($elem) {

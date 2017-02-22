@@ -2,35 +2,35 @@
 /*jslint white:true,browser:true*/
 
 /*
- 
+
  KBase Bootstrap plugin to handle all login/session related stuff.
- 
+
  Set up a container on your HTML page. It can be whatever you'd like. For example.
- 
+
  <div id = 'fizzlefazzle'></div>
- 
+
  You don't need to give it that ID. I just populated it with junk because I don't want to
  encourage people to use something generic like 'login', since there's no need. You don't need
  an ID at all, just some way to select it.
- 
+
  Later, in your jquery initialization, do this:
- 
+
  $(function() {
  ...
- 
+
  $(#"fizzlefaszzle").login();
- 
+
  }
- 
+
  And that, my friends, is Jenga. You're done. Sit back and enjoy the fruits of your labor.
- 
+
  There are a couple of useful things to know about. You can extract the user_id and kbase_sessionid:
- 
+
  $(#"fizzlefazzle").login('session', 'user_id');
  $(#"fizzlefazzle").login('session', 'kbase_sessionid');
- 
+
  When you're setting it up, you have a few options:
- 
+
  $('#fizzlefazzle').login(
  {
  style : (button|slim|micro|hidden) // try 'em all out! button is the default.
@@ -41,14 +41,14 @@
  user_id : a string with which to pre-populate the user_id on the forms.
  }
  );
- 
+
  You can also completely inline it.
- 
+
  var $login_doodad = $('<span></span>').login({style : 'hidden'});
  $login_doodad.login('login', 'username', 'password', function (args) {
  console.log("Tried to log in and got back: "); console.log(args);
  });
- 
+
  */
 
 define([

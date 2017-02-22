@@ -43,8 +43,8 @@ define([
             this.filePathTmpl = Handlebars.compile(FilePathHtml);
             this.ftpUrl = Config.url('ftp_api_url');
             this.updatePathFn = options.updatePathFn || this.setPath;
-            this.setPath(options.path);
             this.uploaders = Config.get('uploaders');
+            this.setPath(options.path);
 
             return this;
         },

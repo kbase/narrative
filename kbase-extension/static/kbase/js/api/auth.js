@@ -42,6 +42,17 @@ define([
 
         }
 
+        function searchUserNames(token, prefix, options) {
+            var operation = '/users/search/' + prefix;
+            if (options) {
+                operation += '/?fields=' + options.join(',');
+            }
+            return makeAuthCall(token, {
+                operation: operation,
+                method: 'GET'
+            });
+        }
+
         /* does a GET request to fetch a token's introspection. If no token is given,
          * it tries to use the currently logged in token. If that's null, too, throws an error.
          */
@@ -70,10 +81,11 @@ define([
 
             return Promise.resolve($.ajax({
                 url: callString,
-                method: callParams.method || 'GET',
+                method: callParams.method,
                 dataType: 'json',
                 headers: {
-                    'Authorization': token
+                    'Authorization': token,
+                    'Content-Type': 'application/json'
                 }
             }));
         }
@@ -84,7 +96,8 @@ define([
             getAuthToken: getAuthToken,
             setAuthToken: setAuthToken,
             getTokenInfo: getTokenInfo,
-            getUserNames: getUserNames
+            getUserNames: getUserNames,
+            searchUserNames: searchUserNames
         };
 
     }

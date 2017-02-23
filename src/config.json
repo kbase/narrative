@@ -65,6 +65,7 @@
         "ws_browser": "https://appdev.kbase.us/#ws"
     },
     "ci": {
+        "auth": "https://ci.kbase.us/auth",
         "ftp_api_url": "https://ci.kbase.us/services/kb-ftp-api/v0",
         "ftp_api_root": "/data/bulk",
         "awe": "https://ci.kbase.us/services/awe-api",

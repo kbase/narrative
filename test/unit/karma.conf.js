@@ -39,6 +39,13 @@ module.exports = function (config) {
         browsers: ['PhantomJS'],
         // Continuous Integration mode
         // if true, Karma captures browsers, runs the tests and exits
+        phantomjsLauncher: {
+            options: {
+                settings: {
+                    webSecurityEnabled: false
+                }
+            }
+        },
         singleRun: true,
         proxies: {
             '/narrative/static/': 'http://localhost:9999/narrative/static/',

@@ -99,7 +99,7 @@ define (
             }
             this.sessionId(newAuth.kbase_sessionid);
             this.authToken(newAuth.token);
-            this.user_id(newAuth.user_id);
+            this.user_id(newAuth.user);
         },
 
         loggedInQueryCallback : function(args) {

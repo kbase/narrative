@@ -220,10 +220,6 @@ define([
             $("#kb-kernel-icon").removeClass().addClass('fa fa-circle');
         });
 
-        // $([Jupyter.events]).on('create.Cell', function(event, data) {
-        //     // this.showJupyterCellToolbar(data.cell);
-        // }.bind(this));
-
         $([Jupyter.events]).on('delete.Cell', function () {
             // this.enableKeyboardManager();
         }.bind(this));
@@ -663,8 +659,8 @@ define([
         // NAR-271 - Firefox needs to be told where the top of the page is. :P
         window.scrollTo(0, 0);
 
-        this.authToken = NarrativeLogin.loginWidget($('#signin-button')).token();
-        this.userId = NarrativeLogin.loginWidget($('#signin-button')).userId();
+        this.authToken = NarrativeLogin.sessionInfo.token; //.loginWidget($('#signin-button')).token();
+        this.userId = NarrativeLogin.sessionInfo.user; //loginWidget($('#signin-button')).userId();
 
         /* Clever extension to $.event from StackOverflow
          * Lets us watch DOM nodes and catch when a widget's node gets nuked.
@@ -752,7 +748,7 @@ define([
      * If it can't, or if this is being run locally, it pops up an alert saying so.
      */
     Narrative.prototype.updateVersion = function () {
-        var user = NarrativeLogin.loginWidget($('#signin-button')).session('user_id');
+        var user = NarrativeLogin.sessionInfo.user; //.loginWidget($('#signin-button')).session('user_id');
         Promise.resolve($.ajax({
             contentType: 'application/json',
             url: '/narrative_shutdown/' + user,

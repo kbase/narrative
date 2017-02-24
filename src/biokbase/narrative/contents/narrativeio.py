@@ -8,7 +8,6 @@ import biokbase.narrative.clients
 import biokbase.narrative.common.service as service
 from biokbase.narrative.common import util
 import biokbase.workspace
-from biokbase.workspace import client as WorkspaceClient
 from biokbase.workspace.baseclient import ServerError
 from tornado.web import HTTPError
 from notebook.utils import (
@@ -21,6 +20,9 @@ from traitlets import (
     Bool,
     List,
     TraitError
+)
+from biokbase.narrative.common.kblogging import (
+    get_logger, log_event
 )
 import re
 import json
@@ -39,6 +41,9 @@ obj_ref_regex = re.compile('^(?P<wsid>\d+)\/(?P<objid>\d+)(\/(?P<ver>\d+))?$')
 MAX_METADATA_STRING_BYTES = 900
 MAX_METADATA_SIZE_BYTES = 16000
 WORKSPACE_TIMEOUT = 30  # seconds
+
+g_log = get_logger("biokbase.narrative")
+
 
 class PermissionsError(ServerError):
     """Raised if user does not have permission to
@@ -77,7 +82,6 @@ class KBaseWSManagerMixin(object):
 
     def ws_client(self):
         return biokbase.narrative.clients.get('workspace')
-        # return WorkspaceClient.Workspace(self.ws_uri, timeout=WORKSPACE_TIMEOUT)
 
     def _test_obj_ref(self, obj_ref):
         m = obj_ref_regex.match(obj_ref)
@@ -99,6 +103,7 @@ class KBaseWSManagerMixin(object):
             raise self._ws_err_to_perm_err(err)
 
     def _parse_obj_ref(self, obj_ref):
+        log_event(g_log, '_parse_obj_ref', {'ref': obj_ref})
         m = obj_ref_regex.match(obj_ref)
         if m is None:
             return None
@@ -118,7 +123,7 @@ class KBaseWSManagerMixin(object):
             return self.read_narrative(obj_ref, content=False, include_metadata=False) is not None
         except PermissionsError:
             raise
-        except ServerError, err:
+        except ServerError:
             return False
 
     def read_narrative(self, obj_ref, content=True, include_metadata=True):
@@ -145,8 +150,9 @@ class KBaseWSManagerMixin(object):
                     nar['data'] = update_narrative(nar['data'])
                     return nar
             else:
+                log_event(g_log, 'read_narrative testing existence', {'ref': obj_ref})
                 nar_data = self.ws_client().get_object_info_new({
-                    u'objects':[{'ref':obj_ref}],
+                    u'objects': [{'ref': obj_ref}],
                     u'includeMetadata': 1 if include_metadata else 0
                 })
                 if nar_data:
@@ -462,6 +468,7 @@ class KBaseWSManagerMixin(object):
         Raises: PermissionsError, if access is denied; ValueError is ws_id is not
         numeric.
         """
+        log_event(g_log, 'list_narratives start', {'ws_id': ws_id})
         list_obj_params = {'type': self.nar_type,
                            'includeMetadata': 1}
         if ws_id:
@@ -472,7 +479,12 @@ class KBaseWSManagerMixin(object):
                 raise
 
         try:
-            res = self.ws_client().list_objects(list_obj_params)
+            ws = self.ws_client()
+            log_event(g_log, 'list_narratives', {'url': ws._client.url, 'token': json.dumps(ws._client._headers)})
+            res = ws.list_objects(list_obj_params)
+            log_event(g_log, 'list_narratives list', {'num_nars': len(res)})
+            import os
+            log_event(g_log, 'list_narratives env', {'token?': os.environ['KB_AUTH_TOKEN']})
         except ServerError, err:
             raise self._ws_err_to_perm_err(err)
         my_narratives = [dict(zip(list_objects_fields, obj)) for obj in res]

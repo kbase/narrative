@@ -10,11 +10,14 @@ __clients = dict()
 
 
 def get(client_name):
-    if client_name in __clients:
-        return __clients[client_name]
+    # if client_name in __clients:
+    #     return __clients[client_name]
+    # else:
+    return __init_client(client_name)
 
-    else:
-        return __init_client(client_name)
+
+def reset():
+    __clients = dict()
 
 
 def __init_client(client_name):

@@ -42,9 +42,11 @@ require(['./narrative_paths'], function (paths) {
         Config.updateConfig()
             .then(function (config) {
                 require(['kbaseNarrative'], function (Narrative) {
-                    Login.init($('#signin-button'));
-                    console.log('Starting Jupyter main');
-                    require(['notebook/js/main']);
+                    Login.init($('#signin-button'))
+                    .then(function() {
+                        console.log('Starting Jupyter main');
+                        require(['notebook/js/main']);
+                    });
                 });
             });
     });

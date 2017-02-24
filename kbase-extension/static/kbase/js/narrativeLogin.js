@@ -84,12 +84,12 @@ define ([
          * 3. events to trigger: loggedIn, loggedInFailure, loggedOut
          * 4. Set up user widget thing on #signin-button
          */
-
         var sessionToken = $.cookie(cookieName);
-        authClient.getTokenInfo(sessionToken)
+        return authClient.getTokenInfo(sessionToken)
         .then(function(tokenInfo) {
-            this.tokenInfo = tokenInfo;
-            this.tokenInfo.token = sessionToken;
+            this.sessionInfo = tokenInfo;
+            this.sessionInfo.token = sessionToken;
+            this.sessionInfo.kbase_sessionid = this.sessionInfo.id;
             initEvents();
             initUserWidget($elem);
             ipythonLogin(sessionToken);
@@ -127,6 +127,7 @@ define ([
 
     return {
         init: init,
+        sessionInfo: sessionInfo
         // loginWidget: getLoginWidget
     };
 });

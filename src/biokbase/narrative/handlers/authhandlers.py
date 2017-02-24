@@ -7,15 +7,14 @@ from biokbase.narrative.common.kblogging import (
     get_logger, log_event
 )
 from biokbase.narrative.common.util import kbase_env
-import biokbase.auth
 import tornado.log
-import re
 import os
 import urllib
 import logging
-from util import (
-    get_auth_info,
-    init_session_env
+from biokbase.auth import (
+    get_user_info,
+    init_session_env,
+    set_environ_token
 )
 
 """
@@ -60,7 +59,7 @@ class KBaseLoginHandler(LoginHandler):
             token = urllib.unquote(auth_cookie.value)
             auth_info = dict()
             try:
-                auth_info = get_auth_info(token)
+                auth_info = get_user_info(token)
             except Exception as e:
                 app_log.error("Unable to get user information from authentication token!")
 
@@ -74,6 +73,7 @@ class KBaseLoginHandler(LoginHandler):
             log_event(g_log, 'session_start', {'user': kbase_env.user, 'user_agent': ua})
 
         app_log.info("KBaseLoginHandler.get(): user={}".format(kbase_env.user))
+        app_log.info("KBaseLoginHandler.get(): token={}".format(kbase_env.auth_token))
 
         if self.current_user:
             self.redirect(self.get_argument('next', default=self.base_url))
@@ -118,7 +118,7 @@ class KBaseLogoutHandler(LogoutHandler):
         kbase_env.user = 'anonymous'
         kbase_env.workspace = 'none'
 
-        biokbase.auth.set_environ_token(None)
+        set_environ_token(None)
 
         app_log.info('Successfully logged out')
         log_event(g_log, 'session_close', {'user': user, 'user_agent': ua})

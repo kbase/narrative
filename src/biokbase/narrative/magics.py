@@ -58,22 +58,22 @@ def user_msg(s):
     sys.stderr.write(s + "\n")
 
 
-def do_login(user, password):
-    """Actually performs the login with username and password
-    """
-    global user_id, token, user_profile
-    try:
-        t = biokbase.auth.Token(user_id=user, password=password)
-        if t.token:
-            set_token(t.token)
-        else:
-            raise biokbase.auth.AuthFail("Could not get token with username and password given")
-    except biokbase.auth.AuthFail, a:
-        user_msg("Failed to login with username password provided. "
-                     "Please try again.")
-        token = None
-    if token is not None:
-        user_msg("Logged in as {}".format(user_id))
+# def do_login(user, password):
+#     """Actually performs the login with username and password
+#     """
+#     global user_id, token, user_profile
+#     try:
+#         t = biokbase.auth.Token(user_id=user, password=password)
+#         if t.token:
+#             set_token(t.token)
+#         else:
+#             raise biokbase.auth.AuthFail("Could not get token with username and password given")
+#     except biokbase.auth.AuthFail, a:
+#         user_msg("Failed to login with username password provided. "
+#                      "Please try again.")
+#         token = None
+#     if token is not None:
+#         user_msg("Logged in as {}".format(user_id))
 
 
 def set_token(newtoken):
@@ -159,7 +159,7 @@ class kbasemagics(Magics):
         # Call the clear_token method
         clear_token()
         return
-        
+
     # @line_magic
     # def uploader(self, line):
     #     """
@@ -168,7 +168,7 @@ class kbasemagics(Magics):
     #     Note that this is a demonstration prototype!
     #     """
     #     return HTML(biokbase.narrative.upload_handler.HTML_EXAMPLE)
-        
+
     # @line_magic
     # def jquploader(self, line):
     #     """
@@ -176,7 +176,7 @@ class kbasemagics(Magics):
     #     Note that this is a demonstration prototype!
     #     """
     #     return HTML(biokbase.narrative.upload_handler.JQUERY_UI_EXAMPLE)
-        
+
     # @line_magic
     # def inv_session(self, line=None):
     #     """Return the current invocation session id, create one if necessary.
@@ -202,7 +202,7 @@ class kbasemagics(Magics):
     #             user_msg("Error initializing a new invocation service "
     #                          "client: %s" % e)
     #     return inv_session
-                
+
     # @line_cell_magic
     # def inv_run(self, line, cell=None):
     #     """
@@ -254,7 +254,7 @@ class kbasemagics(Magics):
     #         line_params = line[len(first_token):].strip()
 
     #         # Now, test the first token for convenience commands, and pass them along as necessary:
-    #         # ls 
+    #         # ls
     #         # cwd or pwd
     #         # mkdir
     #         # rmdir
@@ -560,84 +560,84 @@ class kbasemagics(Magics):
 
 # Grab the ipython object and the config object if available
 #
-try:
-    # XXX: Where are these defined/imported?
-    ip = get_ipython()
-    conf = get_config()
-except NameError:
-    # Wasn't running within an ipython instance, skip
-    pass
-except:
-    # Hmmm, bad, rethrow it
-    raise
-if ip is None:
-    user_msg("Cannot fetch IPython instance")
-else:
-    ip.register_magics(kbasemagics)
-    # If we have a browser, have it set the have_browser flag
-    # Try to bring in a token to the environment
-    t = biokbase.auth.Token()
-    if t.token is not None:
-        user_id = t.user_id
-        token = t.token
-        # XXX: This isn't actually used anywhere! But it does trigger a poke at globusonline...
-        user_profile = None
-#        user_profile = biokbase.auth.User(token=token)
-        user_msg("Logged in automatically as %s from environment defaults"
-                 % user_id)
-    else:
-        user_msg("You are not currently logged in. Access to kbase will be "
-                 "unauthenticated (where allowed).\n"
-                 "Please login with kblogin for personal access.")
-    user_msg("KBase narrative module loaded.\n"
-             "Use 'kblogin {username}' and "
-             "'kblogout' to acquire and dispose of KBase credentials.\n"
-             "IPython magics defined for invocation service access are "
-             "prefixed with inv_*")
-
-    # build a bunch of helper functions under the "invoker" namespace
-    # that simply run the various commands available from "valid_command"
-    # Dynamically create the module, and sub-modules based on command categories
-    # and then import it.
-    # based heavily on method here:
-    # http://dietbuddha.blogspot.com/2012/11/python-metaprogramming-dynamic-module.html
-
-    # icmd = types.ModuleType('icmd', "Top level module for invocation command "
-    #                                 "helper functions")
-    # sys.modules['icmd'] = icmd
-
-    # def mkfn(script):
-    #     def fn(*args):
-    #         args2 = [script]
-    #         args2 += list(args)
-    #         if inv_client is None:
-    #             ip.magic("inv_session")
-    #         stdout, stderr = inv_client.run_pipeline(inv_session," ".join(args2),[],200,'/')
-    #         if stderr:
-    #             user_msg("\n".join(stderr))
-    #         return stdout
-    #     return fn
-
-    # # initialize an invocation session
-    # ip.magic("inv_session")
-    # cmds = inv_client.valid_commands()
-    # for category in cmds:
-    #     catname = str(category['name']).replace('-','_')
-    #     m = types.ModuleType(catname,category['title'])
-    #     setattr(icmd,catname, m)
-    #     sys.modules['icmd.%s' % catname] = m
-    #     for item in category['items']:
-    #         script = str(item['cmd']).replace('-','_')
-    #         fn = mkfn(str(item['cmd']))
-    #         fn.__name__ = script
-    #         fn.__doc__ = "Runs the %s script via invocation service" % item['cmd']
-    #         setattr(m, script, fn)
-    # ip.ex('import icmd')
-    try:
-        os.makedirs(workdir)
-    except OSError as exception:
-        if exception.errno != errno.EEXIST:
-            raise
-    os.chdir(workdir)
-    user_msg("Invocation service script helper functions have been loaded "
-             "under the icmd.* namespace")
+# try:
+#     # XXX: Where are these defined/imported?
+#     ip = get_ipython()
+#     conf = get_config()
+# except NameError:
+#     # Wasn't running within an ipython instance, skip
+#     pass
+# except:
+#     # Hmmm, bad, rethrow it
+#     raise
+# if ip is None:
+#     user_msg("Cannot fetch IPython instance")
+# else:
+#     ip.register_magics(kbasemagics)
+#     # If we have a browser, have it set the have_browser flag
+#     # Try to bring in a token to the environment
+#     t = biokbase.auth.Token()
+#     if t.token is not None:
+#         user_id = t.user_id
+#         token = t.token
+#         # XXX: This isn't actually used anywhere! But it does trigger a poke at globusonline...
+#         user_profile = None
+# #        user_profile = biokbase.auth.User(token=token)
+#         user_msg("Logged in automatically as %s from environment defaults"
+#                  % user_id)
+#     else:
+#         user_msg("You are not currently logged in. Access to kbase will be "
+#                  "unauthenticated (where allowed).\n"
+#                  "Please login with kblogin for personal access.")
+#     user_msg("KBase narrative module loaded.\n"
+#              "Use 'kblogin {username}' and "
+#              "'kblogout' to acquire and dispose of KBase credentials.\n"
+#              "IPython magics defined for invocation service access are "
+#              "prefixed with inv_*")
+#
+#     # build a bunch of helper functions under the "invoker" namespace
+#     # that simply run the various commands available from "valid_command"
+#     # Dynamically create the module, and sub-modules based on command categories
+#     # and then import it.
+#     # based heavily on method here:
+#     # http://dietbuddha.blogspot.com/2012/11/python-metaprogramming-dynamic-module.html
+#
+#     # icmd = types.ModuleType('icmd', "Top level module for invocation command "
+#     #                                 "helper functions")
+#     # sys.modules['icmd'] = icmd
+#
+#     # def mkfn(script):
+#     #     def fn(*args):
+#     #         args2 = [script]
+#     #         args2 += list(args)
+#     #         if inv_client is None:
+#     #             ip.magic("inv_session")
+#     #         stdout, stderr = inv_client.run_pipeline(inv_session," ".join(args2),[],200,'/')
+#     #         if stderr:
+#     #             user_msg("\n".join(stderr))
+#     #         return stdout
+#     #     return fn
+#
+#     # # initialize an invocation session
+#     # ip.magic("inv_session")
+#     # cmds = inv_client.valid_commands()
+#     # for category in cmds:
+#     #     catname = str(category['name']).replace('-','_')
+#     #     m = types.ModuleType(catname,category['title'])
+#     #     setattr(icmd,catname, m)
+#     #     sys.modules['icmd.%s' % catname] = m
+#     #     for item in category['items']:
+#     #         script = str(item['cmd']).replace('-','_')
+#     #         fn = mkfn(str(item['cmd']))
+#     #         fn.__name__ = script
+#     #         fn.__doc__ = "Runs the %s script via invocation service" % item['cmd']
+#     #         setattr(m, script, fn)
+#     # ip.ex('import icmd')
+#     try:
+#         os.makedirs(workdir)
+#     except OSError as exception:
+#         if exception.errno != errno.EEXIST:
+#             raise
+#     os.chdir(workdir)
+#     user_msg("Invocation service script helper functions have been loaded "
+#              "under the icmd.* namespace")

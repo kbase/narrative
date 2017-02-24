@@ -63,9 +63,12 @@ define ([
     }
 
     function initEvents() {
-        $(document).on('loggedInQuery.kbase', function() {
-            return sessionInfo;
+        $(document).on('loggedInQuery.kbase', function(e, callback) {
+            if (callback) {
+                callback(sessionInfo);
+            }
         });
+
         $(document).on('logout.kbase', function() {
             // redirect.
             ipythonLogout();
@@ -87,13 +90,15 @@ define ([
         var sessionToken = $.cookie(cookieName);
         return authClient.getTokenInfo(sessionToken)
         .then(function(tokenInfo) {
+            sessionInfo = tokenInfo;
             this.sessionInfo = tokenInfo;
             this.sessionInfo.token = sessionToken;
             this.sessionInfo.kbase_sessionid = this.sessionInfo.id;
             initEvents();
             initUserWidget($elem);
             ipythonLogin(sessionToken);
-            $(document).trigger('loggedIn');
+            $(document).trigger('loggedIn', this.sessionInfo);
+            $(document).trigger('loggedIn.kbase', this.sessionInfo);
         }.bind(this))
         .catch(function(error) {
             alert(JSON.stringify(error));

@@ -4,6 +4,7 @@ Implements the KBaseWSManagerMixin class.
 """
 
 import biokbase.auth
+import biokbase.narrative.clients
 import biokbase.narrative.common.service as service
 from biokbase.narrative.common import util
 import biokbase.workspace
@@ -75,7 +76,8 @@ class KBaseWSManagerMixin(object):
             raise HTTPError(500, u'Unable to connect to workspace service at {}: {}'.format(self.ws_uri, e))
 
     def ws_client(self):
-        return WorkspaceClient.Workspace(self.ws_uri, timeout=WORKSPACE_TIMEOUT)
+        return biokbase.narrative.clients.get('workspace')
+        # return WorkspaceClient.Workspace(self.ws_uri, timeout=WORKSPACE_TIMEOUT)
 
     def _test_obj_ref(self, obj_ref):
         m = obj_ref_regex.match(obj_ref)
@@ -344,13 +346,13 @@ class KBaseWSManagerMixin(object):
                     id = app.get('id', 'UnknownApp')
                     commit_hash = app.get('gitCommitHash', 'unknown')
                     method_info[u'method.' + id + '/' + commit_hash] += 1
-                    num_methods += 1                    
+                    num_methods += 1
                 elif kbase_type == 'view':
                     app = meta['kbase'].get('viewCell', {}).get('app', {})
                     id = app.get('id', 'UnknownApp')
                     commit_hash = app.get('gitCommitHash', 'unknown')
                     method_info[u'method.' + id + '/' + commit_hash] += 1
-                    num_methods += 1                    
+                    num_methods += 1
             else:
                 cell_info['jupyter.' + cell.get('cell_type', 'code')] += 1
 

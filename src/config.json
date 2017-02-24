@@ -103,7 +103,7 @@
         "user_and_job_state": "https://ci.kbase.us/services/userandjobstate",
         "user_profile": "https://ci.kbase.us/services/user_profile/rpc",
         "version_check": "/narrative_version",
-        "workspace": "https://ci.kbase.us/services/ws",
+        "workspace": "https://ci.kbase.us/auth2services/ws",
         "ws_browser": "https://narrative.kbase.us/#ws"
     },
     "dev": {

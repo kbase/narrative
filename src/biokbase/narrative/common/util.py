@@ -33,7 +33,7 @@ class _KBaseEnv(object):
     env_session    = "KB_SESSION"
     env_client_ip  = "KB_CLIENT_IP"
     env_workspace  = "KB_WORKSPACE_ID"
-    env_user       = None
+    env_user       = "KB_USER_ID"
 
     _defaults = {'auth_token': 'none',
                  'narrative': 'none',
@@ -45,19 +45,15 @@ class _KBaseEnv(object):
     def __getattr__(self, name):
         ename = "env_" + name
         if ename in _KBaseEnv.__dict__:
-            if ename == 'env_user':
-                return self._user()
-            else:
-                return os.environ.get(getattr(self.__class__, ename),
-                                      self._defaults[name])
+            return os.environ.get(getattr(self.__class__, ename),
+                                  self._defaults[name])
         else:
             raise KeyError("kbase_env:{}".format(name))
 
     def __setattr__(self, name, value):
         ename = "env_" + name
         if ename in _KBaseEnv.__dict__:
-            if ename != 'env_user':
-                os.environ[getattr(self.__class__, ename)] = value
+            os.environ[getattr(self.__class__, ename)] = value
 
     # Dict emulation
 

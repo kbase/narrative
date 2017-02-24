@@ -14,7 +14,7 @@ define ([
     'use strict';
 
     var authClient;
-    var token = '';
+    var token = 'C7IB2GLDHMN4YQICFXLD27BFQPCIK552';
     document.cookie='kbase_session=' + token;
 
     beforeEach(function() {

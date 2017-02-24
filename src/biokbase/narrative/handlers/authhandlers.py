@@ -3,18 +3,20 @@ from notebook.base.handlers import IPythonHandler
 from traitlets.config import Application
 from notebook.auth.login import LoginHandler
 from notebook.auth.logout import LogoutHandler
-
 from biokbase.narrative.common.kblogging import (
     get_logger, log_event
 )
 from biokbase.narrative.common.util import kbase_env
 import biokbase.auth
-
 import tornado.log
 import re
 import os
 import urllib
 import logging
+from util import (
+    get_auth_info,
+    init_session_env
+)
 
 """
 KBase handlers for authentication in the Jupyter notebook.
@@ -46,8 +48,7 @@ class KBaseLoginHandler(LoginHandler):
         Initializes the KBase session from the cookie passed into it.
         """
 
-        cookie_regex = re.compile('([^ =|]+)=([^\|]*)')
-
+        # cookie_regex = re.compile('([^ =|]+)=([^\|]*)')
         client_ip = self.request.remote_ip
         http_headers = self.request.headers
         ua = http_headers.get('User-Agent', 'unknown')
@@ -56,24 +57,21 @@ class KBaseLoginHandler(LoginHandler):
 
         auth_cookie = self.cookies.get(auth_cookie_name, None)
         if auth_cookie:
-            # Push the cookie
-            cookie_val = urllib.unquote(auth_cookie.value)
-            cookie_obj = {
-                k: v.replace('EQUALSSIGN', '=').replace('PIPESIGN', '|')
-                for k, v in cookie_regex.findall(cookie_val)
-            }
+            token = urllib.unquote(auth_cookie.value)
+            auth_info = dict()
+            try:
+                auth_info = get_auth_info(token)
+            except Exception as e:
+                app_log.error("Unable to get user information from authentication token!")
+
             if app_log.isEnabledFor(logging.DEBUG):
                 app_log.debug("kbase cookie = {}".format(cookie_val))
                 app_log.debug("KBaseLoginHandler.get: user_id={uid} token={tok}"
-                    .format(uid=sess.get('token', 'none'),
-                            tok=sess.get('token', 'none')))
-
-            biokbase.auth.set_environ_token(cookie_obj.get('token', None))
-            kbase_env.session = cookie_obj.get('kbase_sessionid', '')
-            kbase_env.client_ip = client_ip
-            kbase_env.user = cookie_obj.get('user_id', '')
-            log_event(g_log, 'session_start', {'user': kbase_env.user, 'user_agent': ua})
+                              .format(uid=auth_info.get('user', 'none'),
+                                      tok=token))
+            init_session_env(auth_info, client_ip)
             self.current_user = kbase_env.user
+            log_event(g_log, 'session_start', {'user': kbase_env.user, 'user_agent': ua})
 
         app_log.info("KBaseLoginHandler.get(): user={}".format(kbase_env.user))
 

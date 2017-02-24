@@ -8,23 +8,27 @@
  */
 define ([
     'jquery',
-    'kbaseLogin',
     'kbapi',
-    'base/js/utils'
+    'base/js/utils',
+    'narrativeConfig',
+    'api/auth'
 ], function(
     $,
-    KBaseLogin,
     kbapi,
-    JupyterUtils
+    JupyterUtils,
+    Config,
+    Auth
 ) {
     'use strict';
-    var baseUrl = JupyterUtils.get_body_data('baseUrl');
-    var loginWidget;
+    var baseUrl = JupyterUtils.get_body_data('baseUrl'),
+        cookieName = Config.get('auth_cookie'),
+        authClient = Auth.make({url: Config.url('auth')}),
+        sessionInfo = null;
 
     /* set the auth token by calling the kernel execute method on a function in
      * the magics module
      */
-    var ipythonLogin = function(token) {
+    function ipythonLogin(token) {
         window.kb = new KBCacheClient(token);
         $.ajax({
             url: JupyterUtils.url_join_encode(baseUrl, 'login')
@@ -37,9 +41,9 @@ define ([
                 // console.err(err);
             }
         );
-    };
+    }
 
-    var ipythonLogout = function() {
+    function ipythonLogout() {
         $.ajax({
             url: JupyterUtils.url_join_encode(baseUrl, 'logout')
         }).then(
@@ -52,56 +56,77 @@ define ([
             }
         );
         window.location.href = '/';
-    };
+    }
 
-    var init = function($elem) {
-        /**
-         * Initialize the login widget and bind login/logout callbacks
+    function showNotLoggedInDialog() {
+        alert('You ain\'t logged in!');
+    }
+
+    function initEvents() {
+        $(document).on('loggedInQuery.kbase', function() {
+            return sessionInfo;
+        });
+        $(document).on('logout.kbase', function() {
+            // redirect.
+            ipythonLogout();
+            alert('heading to logout page');
+        });
+    }
+
+    function initUserWidget($elem) {
+        $elem.append($('<div>thingy</div>').click(function() { $(document).trigger('logout.kbase'); }));
+    }
+
+    function init($elem) {
+        /* Flow.
+         * 1. Get cookie. If present and valid, yay. If not, dialog / redirect to login page.
+         * 2. Setup event triggers. need loggedInQuery.kbase, promptForLogin.kbase, logout.kbase,
+         * 3. events to trigger: loggedIn, loggedInFailure, loggedOut
+         * 4. Set up user widget thing on #signin-button
          */
-        loginWidget = new KBaseLogin($elem, {
-            /* If the notebook kernel's initialized, tell it to set the token.
-             * This really only gets called when the user does a login on the Narrative page.
-             * And since the user needs to be logged in already to get to the Narrative (in production),
-             * This shouldn't get called, pretty much ever.
-             * So having it fail if no IPython.notebook is present is okay here.
-             */
-            login_callback: function(args) {
-                ipythonLogin(args.token);
-            },
 
-            /* If the notebook is present, tell it to clear the token and environment vars,
-             * Then redirect to the root page.
-             */
-            logout_callback: function(args) {
-                ipythonLogout();
-            },
-
-            /* This is the main path to starting up. Since the user should be coming in already logged
-             * in, this will get invoked. It sets up a single-use event that sets up the environment
-             * with KBase necessities once the Kernel itself is activated. It also waits 500ms
-             * before doing so, due to some lag in processing (hopefully fixed in a later version
-             * of IPython).
-             */
-            prior_login_callback: function(args) {
-                ipythonLogin(args.token);
-            }
+        var sessionToken = $.cookie(cookieName);
+        authClient.getTokenInfo(sessionToken)
+        .then(function(tokenInfo) {
+            this.tokenInfo = tokenInfo;
+            this.tokenInfo.token = sessionToken;
+            initEvents();
+            initUserWidget($elem);
+            ipythonLogin(sessionToken);
+            $(document).trigger('loggedIn');
+        }.bind(this))
+        .catch(function(error) {
+            alert(JSON.stringify(error));
+            showNotLoggedInDialog();
         });
 
-        if (loginWidget.token() === undefined) {
-            // include hiding div.
-            loginWidget.openDialog();
-        }
-    };
 
-    var getLoginWidget = function($elem) {
-        if (loginWidget === undefined && $elem !== undefined) {
-            init($elem);
-        }
-        return loginWidget;
-    };
+        // loginWidget = new KBaseLogin($elem, {
+        //     login_callback: function(args) {
+        //         ipythonLogin(args.token);
+        //     },
+        //     logout_callback: function(args) {
+        //         ipythonLogout();
+        //     },
+        //     prior_login_callback: function(args) {
+        //         ipythonLogin(args.token);
+        //     }
+        // });
+        //
+        // if (loginWidget.token() === undefined) {
+        //     loginWidget.openDialog();
+        // }
+    }
+    //
+    // var getLoginWidget = function($elem) {
+    //     if (loginWidget === undefined && $elem !== undefined) {
+    //         init($elem);
+    //     }
+    //     return loginWidget;
+    // };
 
     return {
         init: init,
-        loginWidget: getLoginWidget
+        // loginWidget: getLoginWidget
     };
 });

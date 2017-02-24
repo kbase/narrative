@@ -9,14 +9,36 @@ define([
         var url = config.url;
         var cookieName = 'kbase_session';
 
-        /* Does a GET request to get the profile of the currently logged in user */
-        function getCurrentProfile() {
-
+        /**
+         * Does a GET request to get the profile of the currently logged in user.
+         * Returns a json structure with these keys:
+         * created - millis since epoch - date user was created
+         * lastlogin - millis since epoch
+         * display - user's display name
+         * roles - list of strings
+         * customroles - list of strings
+         * user - kbase user id
+         * local - boolean, if true, it's a local account
+         * email - email address
+         * idents - list of identities tied to that account, if non local.
+         * a single ident looks like this:
+         * - provider = google or globus
+         * - id = some id for that provider/user?
+         * - username = for that provider
+         */
+        function getCurrentProfile(token) {
+            if (!token) {
+                token = getAuthToken();
+            }
+            return makeAuthCall(token, {
+                operation: '/me',
+                method: 'GET'
+            });
         }
 
         /* Does a PUT request to post/update the profile of the current user */
         function putCurrentProfile(profile) {
-
+            return null;
         }
 
         /* Returns the current auth token that's stuffed in a cookie.
@@ -33,17 +55,30 @@ define([
          * Does nothing if the token is null.
          */
         function setAuthToken(token) {
-
+            if (token) {
+                $.cookie(cookieName, token, {path: '/', domain: 'kbase.us', expires: 60});
+                $.cookie(cookieName, token, {path: '/', expires: 60});
+            }
         }
 
         /* Returns profile info for the given list of usernames.
          */
-        function getUserNames(users) {
-
+        function getUserNames(token, users) {
+            if (!token) {
+                token = getAuthToken();
+            }
+            var operation = '/users/?list=' + users.join(',');
+            return makeAuthCall(token, {
+                operation: operation,
+                method: 'GET'
+            });
         }
 
-        function searchUserNames(token, prefix, options) {
-            var operation = '/users/search/' + prefix;
+        function searchUserNames(token, query, options) {
+            if (!token) {
+                token = getAuthToken();
+            }
+            var operation = '/users/search/' + query;
             if (options) {
                 operation += '/?fields=' + options.join(',');
             }
@@ -53,8 +88,15 @@ define([
             });
         }
 
-        /* does a GET request to fetch a token's introspection. If no token is given,
-         * it tries to use the currently logged in token. If that's null, too, throws an error.
+        /* does a GET request to fetch a token's introspection.
+         * Returns a json doc with these keys:
+         * expires - millis since epoch
+         * created - millis since epoch
+         * name - if the token has a name
+         * id - a UUID for that token
+         * type - Login, etc.
+         * user - KBase user id
+         * cachefor - millis
          */
         function getTokenInfo(token) {
             return makeAuthCall(token ? token : getAuthToken(), {
@@ -93,6 +135,7 @@ define([
         return {
             putCurrentProfile: putCurrentProfile,
             getCurrentProfile: getCurrentProfile,
+            getUserProfile: getCurrentProfile,
             getAuthToken: getAuthToken,
             setAuthToken: setAuthToken,
             getTokenInfo: getTokenInfo,

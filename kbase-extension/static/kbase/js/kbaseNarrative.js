@@ -10,38 +10,37 @@
  * To set global variables, use: Jupyter.narrative.<name> = value
  */
 
-define(
-    [
-        'jquery',
-        'bluebird',
-        'handlebars',
-        'narrativeConfig',
-        'kbaseNarrativeSidePanel',
-        'kbaseNarrativeOutputCell',
-        'kbaseNarrativeWorkspace',
-        'kbaseNarrativeMethodCell',
-        'kbaseAccordion',
-        'kbaseLogin',
-        'kbaseNarrativeSharePanel',
-        'kbase-client-api',
-        'kbaseNarrativePrestart',
-        'ipythonCellMenu',
-        'base/js/namespace',
-        'base/js/events',
-        'base/js/keyboard',
-        'notebook/js/notebook',
-        'util/display',
-        'util/bootstrapDialog',
-        'text!kbase/templates/update_dialog_body.html',
-        'narrativeLogin',
-        'common/ui',
-        'common/html',
-        'narrativeTour',
+define([
+    'jquery',
+    'bluebird',
+    'handlebars',
+    'narrativeConfig',
+    'kbaseNarrativeSidePanel',
+    'kbaseNarrativeOutputCell',
+    'kbaseNarrativeWorkspace',
+    'kbaseNarrativeMethodCell',
+    'kbaseAccordion',
+    'kbaseLogin',
+    'kbaseNarrativeSharePanel',
+    'kbase-client-api',
+    'kbaseNarrativePrestart',
+    'ipythonCellMenu',
+    'base/js/namespace',
+    'base/js/events',
+    'base/js/keyboard',
+    'notebook/js/notebook',
+    'util/display',
+    'util/bootstrapDialog',
+    'text!kbase/templates/update_dialog_body.html',
+    'narrativeLogin',
+    'common/ui',
+    'common/html',
+    'narrativeTour',
 
-        // for effect
-        'bootstrap',
+    // for effect
+    'bootstrap',
 
-    ], function (
+], function (
     $,
     Promise,
     Handlebars,
@@ -67,7 +66,7 @@ define(
     UI,
     html,
     Tour
-    ) {
+) {
     'use strict';
 
     KBaseNarrativePrestart.loadDomEvents();
@@ -154,7 +153,7 @@ define(
             'z', 'd,d', 's', 'l', 'o', 'h',
             'i,i', '0,0', 'q', 'shift-j', 'shift-k',
             'shift-m', 'shift-o', 'shift-v'
-        ],
+            ],
             commandShortcuts = [],
             editShortcuts = [
                 // remove the command palette
@@ -191,25 +190,6 @@ define(
                 console.warn('Error removing shortcut "'  + shortcut +'"', ex);
             }
         });
-
-
-//        for (var i=0; i<killTheseShortcuts.length; i++) {
-//            var shortcut = killTheseShortcuts[i];
-//            try {
-//                Jupyter.keyboard_manager.command_shortcuts.remove_shortcut(shortcut);
-//                Jupyter.notebook.keyboard_manager.edit_shortcuts.remove_shortcut(shortcut);
-//            }
-//            catch (err) {
-//                //pass
-//            }
-//            try {
-//                Jupyter.notebook.keyboard_manager.command_shortcuts.remove_shortcut(shortcut);
-//                Jupyter.notebook.keyboard_manager.edit_shortcuts.remove_shortcut(shortcut);
-//            }
-//            catch (err) {
-//                //pass
-//            }
-//        }
     };
 
     Narrative.prototype.disableKeyboardManager = function () {

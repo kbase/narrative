@@ -58,7 +58,7 @@ define([
     'narrativeConfig',
     'kbase-client-api',
     'jqueryCookie',
-    'kbasePrompt'
+    'kbasePrompt',
 ], function (
     KBWidget,
     bootstrap,

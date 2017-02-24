@@ -1,8 +1,3 @@
-"""
-KBase handlers for authentication in the Jupyter notebook.
-"""
-__author__ = 'Bill Riehl <wjriehl@lbl.gov>'
-
 from tornado.escape import url_escape
 from notebook.base.handlers import IPythonHandler
 from traitlets.config import Application
@@ -21,6 +16,11 @@ import os
 import urllib
 import logging
 
+"""
+KBase handlers for authentication in the Jupyter notebook.
+"""
+__author__ = 'Bill Riehl <wjriehl@lbl.gov>'
+
 # Set logging up globally.
 g_log = get_logger("biokbase.narrative")
 
@@ -32,6 +32,7 @@ if os.environ.get('KBASE_DEBUG', False):
     app_log.setLevel(logging.DEBUG)
 
 auth_cookie_name = "kbase_session"
+
 
 class KBaseLoginHandler(LoginHandler):
     """KBase-specific login handler.
@@ -81,7 +82,6 @@ class KBaseLoginHandler(LoginHandler):
         else:
             self.write('This is a test?')
 
-
     def post(self):
         pass
 
@@ -105,6 +105,7 @@ class KBaseLoginHandler(LoginHandler):
     def login_available(cls, settings):
         """Whether this LoginHandler is needed - and therefore whether the login page should be displayed."""
         return True
+
 
 class KBaseLogoutHandler(LogoutHandler):
     def get(self):

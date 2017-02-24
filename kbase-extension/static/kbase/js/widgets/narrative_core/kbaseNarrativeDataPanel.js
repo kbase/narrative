@@ -366,7 +366,6 @@ define([
             var maxObjFetch = Config.get('data_panel').ws_max_objs_to_fetch || 30000;
 
             var user = Jupyter.narrative.userId;
-            //var user = $('#signin-button').kbaseLogin('session', 'user_id');
 
             if (!user) {
                 console.error("NarrativeDataPanel: user is not defined, parsing token instead...");

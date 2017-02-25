@@ -67,7 +67,7 @@
     },
     "ci": {
         "auth": "https://ci.kbase.us/auth",
-        "ftp_api_url": "https://ci.kbase.us/services/kb-ftp-api/v0",
+        "ftp_api_url": "https://ci.kbase.us/auth2services/kb-ftp-api/v0",
         "ftp_api_root": "/data/bulk",
         "awe": "https://ci.kbase.us/services/awe-api",
         "catalog": "https://ci.kbase.us/auth2services/catalog",
@@ -100,7 +100,7 @@
         "update_profile": "https://gologin.kbase.us/account/UpdateProfile",
         "uploader": "",
         "user_and_job_state": "https://ci.kbase.us/auth2services/userandjobstate",
-        "user_profile": "https://ci.kbase.us/services/user_profile/rpc",
+        "user_profile": "https://ci.kbase.us/auth2services/user_profile/rpc",
         "version_check": "/narrative_version",
         "workspace": "https://ci.kbase.us/auth2services/ws",
         "ws_browser": "https://narrative.kbase.us/#ws"

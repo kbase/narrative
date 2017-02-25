@@ -70,7 +70,6 @@ define ([
         });
 
         $(document).on('logout.kbase', function() {
-            // redirect.
             ipythonLogout();
             alert('heading to logout page');
         });
@@ -104,35 +103,10 @@ define ([
             alert(JSON.stringify(error));
             showNotLoggedInDialog();
         });
-
-
-        // loginWidget = new KBaseLogin($elem, {
-        //     login_callback: function(args) {
-        //         ipythonLogin(args.token);
-        //     },
-        //     logout_callback: function(args) {
-        //         ipythonLogout();
-        //     },
-        //     prior_login_callback: function(args) {
-        //         ipythonLogin(args.token);
-        //     }
-        // });
-        //
-        // if (loginWidget.token() === undefined) {
-        //     loginWidget.openDialog();
-        // }
     }
-    //
-    // var getLoginWidget = function($elem) {
-    //     if (loginWidget === undefined && $elem !== undefined) {
-    //         init($elem);
-    //     }
-    //     return loginWidget;
-    // };
 
     return {
         init: init,
         sessionInfo: sessionInfo
-        // loginWidget: getLoginWidget
     };
 });

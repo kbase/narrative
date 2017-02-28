@@ -107,12 +107,7 @@ define ([
         });
 
         $(document).on('logout.kbase', function(e, hideMessage) {
-            if (hideMessage) {
-                ipythonLogout();
-            }
-            else {
-                tokenTimeout();
-            }
+            tokenTimeout(!hideMessage);
         });
     }
 
@@ -143,15 +138,21 @@ define ([
         }
     }
 
-    function tokenTimeout() {
+    function tokenTimeout(showDialog) {
         if (tokenCheckTimer) {
             clearInterval(tokenCheckTimer);
         }
         if (tokenWarningTimer) {
             clearInterval(tokenWarningTimer);
         }
+        authClient.clearAuthToken();
         // show dialog - you're signed out!
-        showNotLoggedInDialog();
+        if (showDialog) {
+            showNotLoggedInDialog();
+        }
+        else {
+            ipythonLogout();
+        }
     }
 
     function init($elem) {

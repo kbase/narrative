@@ -8,16 +8,22 @@
  */
 define ([
     'jquery',
+    'bluebird',
     'kbapi',
     'base/js/utils',
     'narrativeConfig',
-    'api/auth'
+    'api/auth',
+    'userMenu',
+    'util/bootstrapDialog'
 ], function(
     $,
+    Promise,
     kbapi,
     JupyterUtils,
     Config,
-    Auth
+    Auth,
+    UserMenu,
+    BootstrapDialog
 ) {
     'use strict';
     var baseUrl = JupyterUtils.get_body_data('baseUrl'),
@@ -59,7 +65,16 @@ define ([
     }
 
     function showNotLoggedInDialog() {
-        alert('You ain\'t logged in!');
+        var dialog = new BootstrapDialog({
+            'title': 'Not Logged In',
+            'body': $('<div>').append('You are not logged in (or your session has expired), and you will be redirected to the sign in page shortly.'),
+            'buttons': [$('<a type="button" class="btn btn-default">')
+                        .append('OK')
+                        .click(function () {
+                            dialog.hide();
+                        })]
+        });
+        dialog.show();
     }
 
     function initEvents() {
@@ -70,13 +85,9 @@ define ([
         });
 
         $(document).on('logout.kbase', function() {
+            alert('Thanks for using KBase!');
             ipythonLogout();
-            alert('heading to logout page');
         });
-    }
-
-    function initUserWidget($elem) {
-        $elem.append($('<div>thingy</div>').click(function() { $(document).trigger('logout.kbase'); }));
     }
 
     function init($elem) {
@@ -87,22 +98,28 @@ define ([
          * 4. Set up user widget thing on #signin-button
          */
         var sessionToken = $.cookie(cookieName);
-        return authClient.getTokenInfo(sessionToken)
-        .then(function(tokenInfo) {
-            sessionInfo = tokenInfo;
-            this.sessionInfo = tokenInfo;
-            this.sessionInfo.token = sessionToken;
-            this.sessionInfo.kbase_sessionid = this.sessionInfo.id;
-            initEvents();
-            initUserWidget($elem);
-            ipythonLogin(sessionToken);
-            $(document).trigger('loggedIn', this.sessionInfo);
-            $(document).trigger('loggedIn.kbase', this.sessionInfo);
-        }.bind(this))
-        .catch(function(error) {
-            alert(JSON.stringify(error));
-            showNotLoggedInDialog();
-        });
+        return Promise.all([authClient.getTokenInfo(sessionToken), authClient.getUserProfile(sessionToken)])
+            .then(function(results) {
+                var tokenInfo = results[0];
+                sessionInfo = tokenInfo;
+                this.sessionInfo = tokenInfo;
+                this.sessionInfo.token = sessionToken;
+                this.sessionInfo.kbase_sessionid = this.sessionInfo.id;
+                initEvents();
+                UserMenu.make({
+                    target: $elem,
+                    token: sessionToken,
+                    userName: sessionInfo.user,
+                    email: results[1].email,
+                    displayName: results[1].display
+                });
+                ipythonLogin(sessionToken);
+                $(document).trigger('loggedIn', this.sessionInfo);
+                $(document).trigger('loggedIn.kbase', this.sessionInfo);
+            }.bind(this))
+            .catch(function(error) {
+                showNotLoggedInDialog();
+            });
     }
 
     return {

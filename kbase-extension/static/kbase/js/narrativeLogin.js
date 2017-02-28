@@ -77,6 +77,19 @@ define ([
         dialog.show();
     }
 
+    function showAboutToLogoutDialog() {
+        var dialog = new BootstrapDialog({
+            'title': 'Expiring session',
+            'body': $('<div>').append('Your authenticated KBase session will expire in approximately 5 minutes. To continue using KBase, we suggest you log out and back in.'),
+            'buttons': [$('<a type="button" class="btn btn-default">')
+                        .append('OK')
+                        .click(function () {
+                            dialog.hide();
+                        })]
+        });
+        dialog.show();
+    }
+
     function initEvents() {
         $(document).on('loggedInQuery.kbase', function(e, callback) {
             if (callback) {
@@ -97,6 +110,7 @@ define ([
          * 3. events to trigger: loggedIn, loggedInFailure, loggedOut
          * 4. Set up user widget thing on #signin-button
          */
+        showAboutToLogoutDialog();
         var sessionToken = $.cookie(cookieName);
         return Promise.all([authClient.getTokenInfo(sessionToken), authClient.getUserProfile(sessionToken)])
             .then(function(results) {

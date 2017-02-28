@@ -61,6 +61,12 @@ define([
             }
         }
 
+        /* Deletes the auth token cookie */
+        function clearAuthToken() {
+            $.removeCookie(cookieName, {path: '/'});
+            $.removeCookie(cookieName, {path: '/', domain: 'kbase.us'});
+        }
+
         /* Returns profile info for the given list of usernames.
          */
         function getUserNames(token, users) {
@@ -138,6 +144,7 @@ define([
             getUserProfile: getCurrentProfile,
             getAuthToken: getAuthToken,
             setAuthToken: setAuthToken,
+            clearAuthToken: clearAuthToken,
             getTokenInfo: getTokenInfo,
             getUserNames: getUserNames,
             searchUserNames: searchUserNames

@@ -27,9 +27,10 @@ define ([
 ) {
     'use strict';
     var baseUrl = JupyterUtils.get_body_data('baseUrl'),
-        cookieName = Config.get('auth_cookie'),
         authClient = Auth.make({url: Config.url('auth')}),
-        sessionInfo = null;
+        sessionInfo = null,
+        tokenCheckTimer = null,
+        tokenWarningTimer = null;
 
     /* set the auth token by calling the kernel execute method on a function in
      * the magics module
@@ -72,18 +73,26 @@ define ([
                         .append('OK')
                         .click(function () {
                             dialog.hide();
+                            ipythonLogout();
                         })]
         });
         dialog.show();
     }
 
-    function showAboutToLogoutDialog() {
+    function showAboutToLogoutDialog(tokenExpirationTime) {
         var dialog = new BootstrapDialog({
             'title': 'Expiring session',
             'body': $('<div>').append('Your authenticated KBase session will expire in approximately 5 minutes. To continue using KBase, we suggest you log out and back in.'),
             'buttons': [$('<a type="button" class="btn btn-default">')
                         .append('OK')
                         .click(function () {
+                            var remainingTime = tokenExpirationTime - new Date().getTime();
+                            if (remainingTime < 0) {
+                                remainingTime = 0;
+                            }
+                            tokenWarningTimer = setTimeout(function() {
+                                tokenTimeout();
+                            });
                             dialog.hide();
                         })]
         });
@@ -97,10 +106,52 @@ define ([
             }
         });
 
-        $(document).on('logout.kbase', function() {
-            alert('Thanks for using KBase!');
-            ipythonLogout();
+        $(document).on('logout.kbase', function(e, hideMessage) {
+            if (hideMessage) {
+                ipythonLogout();
+            }
+            else {
+                tokenTimeout();
+            }
         });
+    }
+
+    function initTokenTimer(tokenExpirationTime) {
+        /**
+         * First timer - check for token existence very second.
+         * trigger the logout behavior if it's not there.
+         */
+        tokenCheckTimer = setInterval(function() {
+            if (!authClient.getAuthToken()) {
+                tokenTimeout();
+            }
+        }, 1000);
+
+        var currentTime = new Date().getTime();
+        if (currentTime >= tokenExpirationTime) {
+            // already expired! logout!
+            tokenTimeout();
+        }
+        var timeToWarning = tokenExpirationTime - currentTime - (1000 * 60 * 5);
+        if (timeToWarning <= 0) {
+            timeToWarning = 0;
+        }
+        else {
+            tokenWarningTimer = setTimeout(function() {
+                showAboutToLogoutDialog(tokenExpirationTime);
+            }, timeToWarning);
+        }
+    }
+
+    function tokenTimeout() {
+        if (tokenCheckTimer) {
+            clearInterval(tokenCheckTimer);
+        }
+        if (tokenWarningTimer) {
+            clearInterval(tokenWarningTimer);
+        }
+        // show dialog - you're signed out!
+        showNotLoggedInDialog();
     }
 
     function init($elem) {
@@ -110,8 +161,7 @@ define ([
          * 3. events to trigger: loggedIn, loggedInFailure, loggedOut
          * 4. Set up user widget thing on #signin-button
          */
-        showAboutToLogoutDialog();
-        var sessionToken = $.cookie(cookieName);
+        var sessionToken = authClient.getAuthToken();
         return Promise.all([authClient.getTokenInfo(sessionToken), authClient.getUserProfile(sessionToken)])
             .then(function(results) {
                 var tokenInfo = results[0];
@@ -120,6 +170,7 @@ define ([
                 this.sessionInfo.token = sessionToken;
                 this.sessionInfo.kbase_sessionid = this.sessionInfo.id;
                 initEvents();
+                initTokenTimer(sessionInfo.expires);
                 UserMenu.make({
                     target: $elem,
                     token: sessionToken,

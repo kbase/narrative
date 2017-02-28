@@ -82,26 +82,39 @@ validate_and_cache_token = function(token)
     local token_lock = locklib:new(M.lock_name)
     elapsed, err = token_lock:lock(token)
 
-    local user_id = nil
-    d = {token=token, fields='user_id'}
-    local user_request = {
-        url = auth_url,
-        method = "POST",
-        body = "token="..token.."&fields=user_id"
-    }
+    local profile = fetch_token_info(token)
+    --
+    -- local user_id = nil
+    -- d = {token=token, fields='user_id'}
+    -- local user_request = {
+    --     url = auth_url,
+    --     method = "POST",
+    --     body = "token="..token.."&fields=user_id"
+    -- }
+    --
+    -- ngx.log(ngx.ERR, "Sending validation request: "..json.encode(user_request))
+    --
+    -- local ok,code,headers,status,body = httpclient:request(user_request)
+    -- if code >= 200 and code < 300 then
+    --     local profile = json.decode(body)
+    --     ngx.log(ngx.ERR, "Something? "..body)
+    --     if profile.user_id then
+    --         user_id = profile.user_id
+    --         token_cache:set(token, user_id, M.max_token_lifespan)
+    --     else
+    --         --error - missing user id from token lookup
+    --         ngx.log(ngx.ERR, "Error: auth token lookup doesn't return a user id")
+    --     end
+    -- else
 
-    ngx.log(ngx.ERR, "Sending validation request: "..json.encode(user_request))
 
-    local ok,code,headers,status,body = httpclient:request(user_request)
-    if code >= 200 and code < 300 then
-        local profile = json.decode(body)
-        ngx.log(ngx.ERR, "Something? "..body)
-        if profile.user_id then
-            user_id = profile.user_id
-            token_cache:set(token, user_id, M.max_token_lifespan)
+    if profile is not nil then
+        ngx.log(ngx.ERR, "Got token info "..json.encode(profile))
+        if profile.user then
+            user_id = profile.user
+            token_cache:set(token, user_id, profile.cachefor)
         else
-            --error - missing user id from token lookup
-            ngx.log(ngx.ERR, "Error: auth token lookup doesn't return a user id")
+            ngx.log(ngx.ERR, "Error: auth token lookup didn't return a user id!")
         end
     else
         ngx.log(ngx.ERR, "Error during token validation: "..status.." "..body)
@@ -148,6 +161,33 @@ parse_cookie = function(cookie)
     return nil
 end
 
+interpret_cookie = function(cookie)
+    local token = url_decode(cookie)
+    token_info = fetch_token_info(token)
+end
+
+fetch_token_info = function(token)
+    ok, code, headers, status, body = auth_server_request("/api/V2/token", "GET", token)
+    if ok then
+        return json.decode(body)
+    else
+        ngx.log(ngx.ERR, "Failed to fetch token information"..status.." "..body)
+        return nil
+end
+
+auth_server_request = function(operation, method, token)
+    local request = {
+        url = auth_url,
+        method = method,
+        headers = { "Authorization": token }
+    }
+
+    ngx.log(ngx.ERR, "Sending validation request: "..json.encode(request))
+
+    local ok,code,headers,status,body = httpclient:request(request)
+    return [ok, code, headers, status, body]
+end
+
 --
 -- simple URL decode function
 url_decode = function(str)
@@ -166,10 +206,11 @@ test_auth = function(self)
     local token_dict = {}
     local token = nil
     if cheader then
-        local session = string.match(cheader, auth_cookie_name.."=([%S]+);?")
-        if session then
-            token = parse_cookie(session)
-        end
+        token = session
+        -- local session = string.match(cheader, auth_cookie_name.."=([%S]+);?")
+        -- if session then
+        --     token = parse_cookie(session)
+        -- end
     end
 
     user = get_user(self, token)

@@ -146,6 +146,7 @@ define ([
             clearInterval(tokenWarningTimer);
         }
         authClient.clearAuthToken();
+        authClient.revokeAuthToken(sessionInfo.token, sessionInfo.id);
         // show dialog - you're signed out!
         if (showDialog) {
             showNotLoggedInDialog();

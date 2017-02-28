@@ -67,6 +67,14 @@ define([
             $.removeCookie(cookieName, {path: '/', domain: 'kbase.us'});
         }
 
+        function revokeAuthToken(token, id) {
+            var operation = '/tokens/revoke/' + id;
+            return makeAuthCall(token, {
+                operation: operation,
+                method: 'DELETE'
+            });
+        }
+
         /* Returns profile info for the given list of usernames.
          */
         function getUserNames(token, users) {
@@ -145,6 +153,7 @@ define([
             getAuthToken: getAuthToken,
             setAuthToken: setAuthToken,
             clearAuthToken: clearAuthToken,
+            revokeAuthToken: revokeAuthToken,
             getTokenInfo: getTokenInfo,
             getUserNames: getUserNames,
             searchUserNames: searchUserNames

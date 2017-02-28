@@ -1,10 +1,10 @@
 {
     "ci": {
         "publicData": {
-            "genomes": {
-                "name": "Genomes",
+            "GenomeFeatues_ci": {
+                "name": "Reference Genomes",
                 "type": "KBaseGenomes.Genome",
-                "ws": "KBasePublicGenomesV5",
+                "ws": "ReferenceDataManager",
                 "search": true
             },
             "plant_genomes": {

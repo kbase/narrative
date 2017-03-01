@@ -17,7 +17,7 @@ local max_token_lifespan = 5 * 60
 -- Non-blocking resty http requests can't deal with https.
 -- This routes through a proxy to KBase auth.
 -- Note that a server stanza must be set up to proxy this.
-local auth_url = 'http://127.0.0.1:65001'
+local auth_url = 'http://127.0.0.1:65002'
 
 -- Variable prototypes
 local initialize
@@ -83,32 +83,8 @@ validate_and_cache_token = function(token)
     elapsed, err = token_lock:lock(token)
 
     local profile = fetch_token_info(token)
-    --
-    -- local user_id = nil
-    -- d = {token=token, fields='user_id'}
-    -- local user_request = {
-    --     url = auth_url,
-    --     method = "POST",
-    --     body = "token="..token.."&fields=user_id"
-    -- }
-    --
-    -- ngx.log(ngx.ERR, "Sending validation request: "..json.encode(user_request))
-    --
-    -- local ok,code,headers,status,body = httpclient:request(user_request)
-    -- if code >= 200 and code < 300 then
-    --     local profile = json.decode(body)
-    --     ngx.log(ngx.ERR, "Something? "..body)
-    --     if profile.user_id then
-    --         user_id = profile.user_id
-    --         token_cache:set(token, user_id, M.max_token_lifespan)
-    --     else
-    --         --error - missing user id from token lookup
-    --         ngx.log(ngx.ERR, "Error: auth token lookup doesn't return a user id")
-    --     end
-    -- else
 
-
-    if profile is not nil then
+    if profile ~= nil then
         ngx.log(ngx.ERR, "Got token info "..json.encode(profile))
         if profile.user then
             user_id = profile.user
@@ -161,11 +137,6 @@ parse_cookie = function(cookie)
     return nil
 end
 
-interpret_cookie = function(cookie)
-    local token = url_decode(cookie)
-    token_info = fetch_token_info(token)
-end
-
 fetch_token_info = function(token)
     ok, code, headers, status, body = auth_server_request("/api/V2/token", "GET", token)
     if ok then
@@ -173,19 +144,19 @@ fetch_token_info = function(token)
     else
         ngx.log(ngx.ERR, "Failed to fetch token information"..status.." "..body)
         return nil
+    end
 end
 
 auth_server_request = function(operation, method, token)
     local request = {
-        url = auth_url,
+        url = auth_url .. operation,
         method = method,
-        headers = { "Authorization": token }
+        headers = { Authorization = token }
     }
 
     ngx.log(ngx.ERR, "Sending validation request: "..json.encode(request))
 
-    local ok,code,headers,status,body = httpclient:request(request)
-    return [ok, code, headers, status, body]
+    return httpclient:request(request)
 end
 
 --
@@ -206,11 +177,8 @@ test_auth = function(self)
     local token_dict = {}
     local token = nil
     if cheader then
+        local session = string.match(cheader, auth_cookie_name.."=([%S]+);?")
         token = session
-        -- local session = string.match(cheader, auth_cookie_name.."=([%S]+);?")
-        -- if session then
-        --     token = parse_cookie(session)
-        -- end
     end
 
     user = get_user(self, token)

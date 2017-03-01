@@ -164,7 +164,7 @@ define(
     function createError(title, error, stackTrace) {
         var $errorPanel = $('<div>')
                           .addClass('alert alert-danger')
-                          .append('<b>' + title + '</b><br>Please contact the KBase team at <a href="mailto:help@kbase.us?subject=Narrative%20function%20loading%20error">help@kbase.us</a> with the information below.');
+                          .append('<b>' + title + '</b><br>Please contact the KBase team at <a href="http://kbase.us/contact-us/">http://kbase.us/contact-us/</a> with the information below.');
 
         $errorPanel.append('<br><br>');
 

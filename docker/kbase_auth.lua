@@ -24,7 +24,6 @@ local initialize
 local get_user_from_cache
 local validate_and_cache_token
 local get_user
-local parse_cookie
 local url_decode
 local test_auth
 
@@ -85,7 +84,6 @@ validate_and_cache_token = function(token)
     local profile = fetch_token_info(token)
 
     if profile ~= nil then
-        ngx.log(ngx.ERR, "Got token info "..json.encode(profile))
         if profile.user then
             user_id = profile.user
             token_cache:set(token, user_id, profile.cachefor)
@@ -105,36 +103,14 @@ end
 -- If the token is invalid, return nil.
 get_user = function(self, token)
     if token then
-        ngx.log(ngx.ERR, "Looking up a token")
         user = get_user_from_cache(token)
         if user then
-            ngx.log(ngx.ERR, "Found user! "..user)
             return user
         else
-            ngx.log(ngx.ERR, "Didn't find user, validating token...")
             user = validate_and_cache_token(token)
             return user
         end
     end
-end
-
--- TEMPORARY - rewrite when we change the token structure.
--- This parses the expected cookie string and extracts the
--- token out of it.
-parse_cookie = function(cookie)
-    local token_dict = {}
-    local cookie = string.gsub(cookie, ";$", "")
-    cookie = url_decode(cookie)
-    for k, v in string.gmatch(cookie, "([%w_]+)=([^|]+);?") do
-        token_dict[k] = v
-    end
-    if token_dict['token'] then
-        token_dict['token'] = string.gsub(token_dict['token'], "PIPESIGN", "|")
-        token_dict['token'] = string.gsub(token_dict['token'], "EQUALSSIGN", "=")
-        -- ngx.log( ngx.DEBUG, string.format("token[token] = %s",token['token']))
-        return token_dict['token']
-    end
-    return nil
 end
 
 fetch_token_info = function(token)
@@ -153,9 +129,6 @@ auth_server_request = function(operation, method, token)
         method = method,
         headers = { Authorization = token }
     }
-
-    ngx.log(ngx.ERR, "Sending validation request: "..json.encode(request))
-
     return httpclient:request(request)
 end
 

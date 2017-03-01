@@ -115,12 +115,6 @@ local initialized = nil
 -- pure numeric form (no DNS or service name lookups)
 local NETSTAT = 'netstat -nt'
 
--- Base URL for Globus Online Nexus API
--- the non-clocking client library we are using, resty.http, doesn't
--- support https, so we depend on a locally configured Nginx
--- reverse proxy to actually perform the request
-nexus_url = 'http://127.0.0.1:65001/users/'
-
 -- name of shared dict for locking library
 M.lock_name = "lock_map"
 
@@ -761,12 +755,12 @@ end
 -- and only return a session id if the authentication is legit
 -- returns nil, err if a session cannot be found/created
 --
--- In the current implementation we take the token (if given) and
--- try to query Globus Online for the user profile, if it comes back
--- then the token is good and we put an entry in the token_cache
--- table for it
+-- Makes use of the separate kbase_auth client. It passes in an
+-- inscrutible auth token, and fetches a user id from it, if it's
+-- valid. If not, it gets nil.
 --
--- session identifier is parsed out of token from user name (un=) value
+-- We use the user id as the session id, since that's unique,
+-- and helps with tracing through logs.
 get_session = function()
     local headers = ngx.req.get_headers()
     local cheader = ngx.unescape_uri(headers['Cookie'])

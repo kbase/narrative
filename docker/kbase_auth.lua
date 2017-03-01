@@ -177,7 +177,7 @@ test_auth = function(self)
     local token_dict = {}
     local token = nil
     if cheader then
-        local session = string.match(cheader, auth_cookie_name.."=([%S]+);?")
+        local session = string.match(cheader, auth_cookie_name.."=([%S]+);")
         token = session
     end
 

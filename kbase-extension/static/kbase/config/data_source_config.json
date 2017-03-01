@@ -1,7 +1,7 @@
 {
     "ci": {
         "publicData": {
-            "GenomeFeatues_ci": {
+            "GenomeFeatures_ci": {
                 "name": "Reference Genomes",
                 "type": "KBaseGenomes.Genome",
                 "ws": "ReferenceDataManager",

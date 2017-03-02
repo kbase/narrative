@@ -3,6 +3,14 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v4.2.1 (more notes will follow).
 
+### Version 3.1.12
+__Changes__
+- Adjusted look and feel of group parameters in app cells.
+- Fixed problems with RNA-seq viewer widgets.
+- Added new categories to the Public data dropdown.
+- Data should now be downloadable in read-only mode.
+- Added a taxonomy viewer widget.
+
 ### Version 3.1.11
 __Changes__
 - Fixed a problem where the job log in app cells would continue to poll after the job had finished, or after a user had clicked onto a different tab.

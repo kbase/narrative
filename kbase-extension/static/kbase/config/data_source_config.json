@@ -1,7 +1,7 @@
 {
     "ci": {
         "publicData": {
-            "GenomeFeatures_ci": {
+            "GenomeFeatures": {
                 "name": "Reference Genomes",
                 "type": "KBaseGenomes.Genome",
                 "ws": "ReferenceDataManager",
@@ -54,6 +54,13 @@
                 "type": "KBaseOntology.OntologyTranslation",
                 "ws": "KBaseOntology",
                 "search": false
+            },
+            "jgi_gateway": {
+                "name": "JGI Public Data (TEST)",
+                "type": null,
+                "ws": null,
+                "search": false,
+                "source": "jgi_gateway"
             }
         },
         "exampleData": {

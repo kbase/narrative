@@ -5,33 +5,32 @@
  * @author Roman Sutormin <rsutormin@lbl.gov>
  * @public
  */
-define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery',
-		'bluebird',
-		'narrativeConfig',
-		'kbaseAuthenticatedWidget',
-        'base/js/namespace',
-        'kbase-generic-client-api',
-        'util/icon'
-	], function(
-		KBWidget,
-		bootstrap,
-		$,
-		Promise,
-		Config,
-		kbaseAuthenticatedWidget,
-        Jupyter,
-        GenericClient,
-        Icon
-	) {
+define ([
+    'kbwidget',
+    'bootstrap',
+    'jquery',
+    'bluebird',
+    'narrativeConfig',
+    'kbaseAuthenticatedWidget',
+    'base/js/namespace',
+    'kbase-generic-client-api',
+    'util/icon'
+], function (
+    KBWidget,
+    bootstrap,
+    $,
+    Promise,
+    Config,
+    kbaseAuthenticatedWidget,
+    Jupyter,
+    GenericClient,
+    Icon
+) {
     'use strict';
     return KBWidget({
-        name: "kbaseNarrativeSidePublicTab",
+        name: 'kbaseNarrativeSidePublicTab',
         parent : kbaseAuthenticatedWidget,
-        version: "1.0.0",
+        version: '1.0.0',
         options: {
             $importStatus:$('<div>'),
             addToNarrativeButton: null,
@@ -83,13 +82,15 @@ define (
 
             this.wsClient = new Workspace(this.wsUrl, {'token': this.token});
             this.serviceClient = new GenericClient(Config.url('service_wizard'), {'token': this.token});
-            var mrg = {'margin': '10px 0px 10px 0px'};
+
+            var mrg = {margin: '10px 0px 10px 0px'};
             var typeInput = $('<select class="form-control kb-import-filter">').css(mrg);
             for (var catPos in this.categories) {
                 var cat = this.categories[catPos];
                 var catName = this.categoryDescr[cat].name;
                 typeInput.append('<option value="'+cat+'">'+catName+'</option>');
             }
+
             var typeFilter = $('<div class="col-sm-3">').append(typeInput);
             var filterInput = $('<input type="text" class="form-control kb-import-search" placeholder="Search data...">').css(mrg);
             typeInput.change(function() {
@@ -149,141 +150,207 @@ define (
             self.renderMore();
         },
 
-        renderMore: function() {
-            var cat = this.categoryDescr[this.currentCategory];
-            if (!cat.search) {
-                if (this.currentPage > 0)
-                    return;
-                this.currentPage++;
-                var type = cat.type;
-                var ws = cat.ws;
+        renderFromWorkspace: function(cat) {
+            if (this.currentPage > 0)
+                return;
+            this.currentPage++;
+            var type = cat.type;
+            var ws = cat.ws;
 
-                var thisQuery = this.currentQuery;
-                Promise.resolve(this.serviceClient.sync_call(
-                    "NarrativeService.list_objects_with_sets",
-                    [{
-                        ws_name: ws,
-                        types: [type]
-                    }]
-                ))
-                .then(function(data) {
-                    data = data[0]['data'];
-                    if (thisQuery !== this.currentQuery)
-                        return;
-                    var query = this.currentQuery.replace(/[\*]/g,' ').trim().toLowerCase();
-                    for (var i=0; i<data.length; i++) {
-                        var info = data[i].object_info;
-                        // object_info:
-                        // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
-                        // [3] : timestamp save_date // [4] : int version // [5] : username saved_by
-                        // [6] : ws_id wsid // [7] : ws_name workspace // [8] : string chsum
-                        // [9] : int size // [10] : usermeta meta
-                        var name = info[1];
-                        var id = info[0];
-                        var metadata = {};
-                        var objectMeta = info[10] || {}
-                        if (this.currentCategory === 'plant_gnms') {
-                            if (objectMeta.Name) {
-                                metadata['ID'] = id;
-                                name = objectMeta.Name;
-                            }
-                            metadata['Source'] = objectMeta.Source;
-                            metadata['Genes'] = objectMeta['Number features'];
+            var thisQuery = this.currentQuery;
+            Promise.resolve(this.serviceClient.sync_call(
+                "NarrativeService.list_objects_with_sets",
+                [{
+                    ws_name: ws,
+                    types: [type]
+                }]
+            ))
+            .then(function(data) {
+                data = data[0]['data'];
+                if (thisQuery !== this.currentQuery)
+                    return;
+                var query = this.currentQuery.replace(/[\*]/g,' ').trim().toLowerCase();
+                for (var i=0; i<data.length; i++) {
+                    var info = data[i].object_info;
+                    // object_info:
+                    // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
+                    // [3] : timestamp save_date // [4] : int version // [5] : username saved_by
+                    // [6] : ws_id wsid // [7] : ws_name workspace // [8] : string chsum
+                    // [9] : int size // [10] : usermeta meta
+                    var name = info[1];
+                    var id = info[0];
+                    var metadata = {};
+                    var objectMeta = info[10] || {}
+                    if (this.currentCategory === 'plant_gnms') {
+                        if (objectMeta.Name) {
+                            metadata['ID'] = id;
+                            name = objectMeta.Name;
                         }
-                        if(query) {
-                            if (name.toLowerCase().indexOf(query) == -1)
-                                continue;
-                        }
+                        metadata['Source'] = objectMeta.Source;
+                        metadata['Genes'] = objectMeta['Number features'];
+                    }
+                    if(query) {
+                        if (name.toLowerCase().indexOf(query) == -1)
+                            continue;
+                    }
+                    this.objectList.push({
+                        $div: null,
+                        info: info,
+                        id: id,
+                        name: name,
+                        metadata: metadata,
+                        ws: cat.ws,
+                        type: cat.type,
+                        attached: false
+                    });
+                    this.attachRow(this.objectList.length - 1);
+                }
+                data.totalResults = this.objectList.length;
+                this.totalPanel.empty();
+                this.totalPanel.append($('<span>').addClass("kb-data-list-type")
+                        .append("Total results: " + data.totalResults));
+            }.bind(this))
+            .catch(function(error) {
+                console.error(error);
+                this.totalPanel.empty();
+                this.totalPanel.append($('<span>').addClass("kb-data-list-type").append("Total results: 0"));
+            }.bind(this));
+        },
+
+        renderFromSearch: function(cat) {
+            this.currentPage++;
+            this.search(this.currentCategory, this.currentQuery, this.itemsPerPage, this.currentPage, function(query, data) {
+                if (query !== this.currentQuery) {
+                    //console.log("Skip results for: " + query);
+                    return;
+                }
+                this.totalPanel.empty();
+                if (!this.totalResults) {
+                    this.totalResults = data.totalResults;
+                }
+                if (this.currentCategory === 'genomes') {
+                    for (var i in data.items) {
+                        var id = data.items[i].genome_id;
+                        var name = data.items[i].scientific_name;
+                        var domain = data.items[i].domain;
+                        var contigs = data.items[i].num_contigs
+                        var genes = data.items[i].num_cds
                         this.objectList.push({
                             $div: null,
-                            info: info,
+                            info: null,
                             id: id,
                             name: name,
-                            metadata: metadata,
+                            metadata: {'Domain': domain, 'Contigs': contigs, 'Genes': genes},
                             ws: cat.ws,
                             type: cat.type,
                             attached: false
                         });
                         this.attachRow(this.objectList.length - 1);
                     }
-                    data.totalResults = this.objectList.length;
-                    this.totalPanel.empty();
-                    this.totalPanel.append($('<span>').addClass("kb-data-list-type")
-                            .append("Total results: " + data.totalResults));
-                }.bind(this))
-                .catch(function(error) {
-                    console.error(error);
+                } else if (this.currentCategory === 'metagenomes') {
+                    for (var i in data.items) {
+                        var id = data.items[i].object_name;
+                        var name = data.items[i].metagenome_name;
+                        var sequence_type = data.items[i].sequence_type;
+                        var mix_biome = data.items[i].mix_biome;
+                        this.objectList.push({
+                            $div: null,
+                            info: null,
+                            id: id,
+                            name: name,
+                            metadata: {'Sequence Type': sequence_type, 'Biome': mix_biome},
+                            ws: cat.ws,
+                            type: cat.type,
+                            attached: false
+                        });
+                        this.attachRow(this.objectList.length - 1);
+                    }
+                }
+                this.totalPanel.append($('<span>').addClass("kb-data-list-type")
+                    .append("Total results: " + data.totalResults + " (" + this.objectList.length + " shown)"));
+            }.bind(this), function(error) {
+                //console.log(error);
+                if (this.objectList.length == 0) {
                     this.totalPanel.empty();
                     this.totalPanel.append($('<span>').addClass("kb-data-list-type").append("Total results: 0"));
-                }.bind(this));
-            } else {
-                this.currentPage++;
-                this.search(this.currentCategory, this.currentQuery, this.itemsPerPage, this.currentPage, function(query, data) {
-                    if (query !== this.currentQuery) {
-                        //console.log("Skip results for: " + query);
-                        return;
-                    }
-                    this.totalPanel.empty();
-                    if (!this.totalResults) {
-                        this.totalResults = data.totalResults;
-                    }
-                    if (this.currentCategory === 'genomes') {
-                        for (var i in data.items) {
-                            var id = data.items[i].genome_id;
-                            var name = data.items[i].scientific_name;
-                            var domain = data.items[i].domain;
-                            var contigs = data.items[i].num_contigs
-                            var genes = data.items[i].num_cds
-                            this.objectList.push({
-                                $div: null,
-                                info: null,
-                                id: id,
-                                name: name,
-                                metadata: {'Domain': domain, 'Contigs': contigs, 'Genes': genes},
-                                ws: cat.ws,
-                                type: cat.type,
-                                attached: false
-                            });
-                            this.attachRow(this.objectList.length - 1);
-                        }
-                    } else if (this.currentCategory === 'metagenomes') {
-                        for (var i in data.items) {
-                            var id = data.items[i].object_name;
-                            var name = data.items[i].metagenome_name;
-                            var sequence_type = data.items[i].sequence_type;
-                            var mix_biome = data.items[i].mix_biome;
-                            this.objectList.push({
-                                $div: null,
-                                info: null,
-                                id: id,
-                                name: name,
-                                metadata: {'Sequence Type': sequence_type, 'Biome': mix_biome},
-                                ws: cat.ws,
-                                type: cat.type,
-                                attached: false
-                            });
-                            this.attachRow(this.objectList.length - 1);
-                        }
-                    }
-                    this.totalPanel.append($('<span>').addClass("kb-data-list-type")
-                        .append("Total results: " + data.totalResults + " (" + this.objectList.length + " shown)"));
-                }.bind(this), function(error) {
-                    //console.log(error);
-                    if (this.objectList.length == 0) {
-                        this.totalPanel.empty();
-                        this.totalPanel.append($('<span>').addClass("kb-data-list-type").append("Total results: 0"));
-                    }
-                }.bind(this));
+                }
+            }.bind(this));
+        },
+
+
+        searchInService: function(query, service) {
+            if (service === 'jgi_gateway') {
+                return Promise.resolve(this.serviceClient.sync_call(
+                    'jgi_gateway.search_jgi',
+                    [query]
+                ))
+                .then(function(results) {
+                    return Promise.try(function() {
+                        return {
+                            query: query,
+                            results: results
+                        };
+                    });
+                });
             }
         },
 
-        attachRow: function(index) {
+        renderFromService: function(cat) {
+            // search from there.
+            if (this.currentQuery === this.currentServiceQuery) {
+                return;
+            }
+            this.currentServiceQuery = this.currentQuery;
+
+            this.searchInService(this.currentServiceQuery, cat.source)
+            .then(function(results) {
+                if (results.query !== this.currentQuery) {
+                    return;
+                }
+                var items = results.results[0];
+                console.log(results.results);
+                this.totalPanel.empty();
+                this.totalPanel.append($('<span>').addClass('kb-data-list-type')
+                    .append('Results: ' + items.hits.length + ' of ' + items.total));
+
+                for (var i=0; i<items.hits.length; i++) {
+                    var hit = items.hits[i];
+                    this.objectList.push({
+                        $div: null,
+                        info: null,
+                        id: hit._id,
+                        name: hit._source.file_name,
+                        metadata: {'File Type': hit._source.file_type[0], 'Project Id': hit._source.metadata.sequencing_project_id},
+                        ws: null,
+                        type: 'JGI.File',
+                        attached: false
+                    });
+                    this.attachRow(this.objectList.length - 1, true);
+                }
+            }.bind(this))
+            .catch(function(error) {
+                console.error(error);
+            });
+        },
+
+        renderMore: function() {
+            var cat = this.categoryDescr[this.currentCategory];
+            if (!cat.search && cat.ws) {
+                this.renderFromWorkspace(cat);
+            } else if (cat.search) {
+                this.renderFromSearch(cat);
+            } else {
+                this.renderFromService(cat);
+            }
+        },
+
+        attachRow: function(index, toStaging) {
             var obj = this.objectList[index];
             if (obj.attached) { return; }
             if (obj.$div) {
                 this.resultPanel.append(obj.$div);
             } else {
-                obj.$div = this.renderObjectRowDiv(obj);
+                obj.$div = this.renderObjectRowDiv(obj, toStaging);
                 this.resultPanel.append(obj.$div);
             }
             obj.attached = true;
@@ -291,7 +358,7 @@ define (
         },
 
         escapeSearchQuery: function(str) {
-            return str.replace(/[\%]/g, "").replace(/[\:\"\\]/g, "\\$&");
+            return str.replace(/[\%]/g, '').replace(/[\:\"\\]/g, '\\$&');
         },
 
         search: function (category, query, itemsPerPage, pageNum, ret, errorCallback) {
@@ -310,18 +377,19 @@ define (
                 });
         },
 
-        renderObjectRowDiv: function(object) {
+        renderObjectRowDiv: function(object, toStaging) {
             var self = this;
             var type_tokens = object.type.split('.')
             var type_module = type_tokens[0];
             var type = type_tokens[1].split('-')[0];
+            var copyText = toStaging ? ' Stage' : ' Add';
 
             var $addDiv =
                 $('<div>').append(
                     $('<button>').addClass('kb-primary-btn').css({'white-space':'nowrap', padding:'10px 15px'})
-                        .append($('<span>').addClass('fa fa-chevron-circle-left')).append(' Add')
+                        .append($('<span>').addClass('fa fa-chevron-circle-left')).append(copyText)
                         .on('click',function() { // probably should move action outside of render func, but oh well
-                            $(this).attr("disabled","disabled");
+                            $(this).attr('disabled', 'disabled');
                             $(this).html('<img src="'+self.loadingImage+'">');
 
                             var thisBtn = this;
@@ -339,11 +407,13 @@ define (
                 isShortened=true;
             }
             var landingPageLink = this.options.lp_url + object.ws + '/' + object.id;
-            var $name = $('<span>').addClass("kb-data-list-name").append('<a href="'+landingPageLink+'" target="_blank">' + shortName + '</a>');
+            var $name = $('<span>')
+                        .addClass('kb-data-list-name')
+                        .append('<a href="'+landingPageLink+'" target="_blank">' + shortName + '</a>');
             if (isShortened) { $name.tooltip({title:object.name, placement:'bottom'}); }
 
             var $btnToolbar = $('<span>').addClass('btn-toolbar pull-right').attr('role', 'toolbar').hide();
-            var btnClasses = "btn btn-xs btn-default";
+            var btnClasses = 'btn btn-xs btn-default';
             var css = {'color':'#888'};
             var $openLandingPage = $('<span>')
                                         // tooltips showing behind pullout, need to fix!
@@ -374,7 +444,9 @@ define (
                 var val = object.metadata[key];
                 if (!val)
                     val = '-';
-                var value = $('<span>').addClass("kb-data-list-type").append('&nbsp;&nbsp;' + key + ':&nbsp;' + val);
+                var value = $('<span>')
+                            .addClass('kb-data-list-type')
+                            .append('&nbsp;&nbsp;' + key + ':&nbsp;' + val);
                 titleElement.append('<br>').append(value);
                 hasMetadata = true;
             }
@@ -429,7 +501,7 @@ define (
             }
             var correctedTargetName = targetName;
             if (suffix) {
-                correctedTargetName += "_" + suffix;
+                correctedTargetName += '_' + suffix;
             } else {
                 suffix = 1;
             }
@@ -522,7 +594,6 @@ define (
         },
 
         showError: function(error) {
-            console.log(error);
             var errorMsg = error;
             if (error.error && error.error.message)
                 errorMsg = error.error.message;

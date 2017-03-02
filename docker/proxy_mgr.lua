@@ -766,7 +766,7 @@ get_session = function()
     local cheader = ngx.unescape_uri(headers['Cookie'])
     local user_id = nil
     if cheader then
-        local token = string.match(cheader, auth_cookie_name.."=([%S]+);")
+        local token = string.match(cheader, auth_cookie_name.."=([^;%s]+)")
         if token then
             user_id = authclient:get_user(token)
             if user_id == nil then

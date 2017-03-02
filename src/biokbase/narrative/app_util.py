@@ -637,12 +637,15 @@ def validate_param_value(param, value, workspace):
                     "Data object names can only include symbols: _ - . |")
 
     # Last, regex. not being used in any extant specs, but cover it anyway.
-    if 'regex_constraint' in param:
-        for regex in param['regex_constraint']:
-            if not re.match(regex, value):
-                return (ws_ref,
-                        'Value {} does not match required regex {}'.format(
-                            value, regex))
+    # Disabled for now - the regex string that works in javascript may not work 
+    # in python and vice versa
+    # if 'regex_constraint' in param:
+    #     for regex in param['regex_constraint']:
+    #         regex_string = regex.get('regex')
+    #         if not re.match(regex_string, value):
+    #             return (ws_ref,
+    #                     'Value {} does not match required regex {}'.format(
+    #                         value, regex))
 
     # Whew. Passed all filters!
     return (ws_ref, None)

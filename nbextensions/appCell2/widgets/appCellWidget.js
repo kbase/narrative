@@ -590,27 +590,27 @@ define([
             tabs: {
                 configure: {
                     label: 'Configure',
-                    xicon: 'pencil',
+                    // icon: 'pencil',
                     widget: configureWidget()
                 },
                 viewConfigure: {
                     label: 'Configure',
-                    xicon: 'pencil',
+                    // icon: 'pencil',
                     widget: viewConfigureWidget()
                 },
                 logs: {
                     label: 'Job Status',
-                    xicon: 'list',
+                    // icon: 'list',
                     widget: logTabWidget
                 },
                 results: {
                     label: 'Result',
-                    xicon: 'file',
+                    // icon: 'file',
                     widget: resultsTabWidget
                 },
                 error: {
                     label: 'Error',
-                    xicon: 'exclamation',
+                    // icon: 'exclamation',
                     type: 'danger',
                     widget: errorTabWidget
                 }
@@ -2005,7 +2005,7 @@ define([
 
             var message = span([
                 ui.loading({color: 'green'}),
-                ' Waiting in Queue - ',
+                ' Waiting - in Queue ',
                 span({dataElement: 'clock'})
             ]);
             ui.setContent('run-control-panel.status.execMessage', message);
@@ -2071,21 +2071,38 @@ define([
                 outputCellId = model.getItem(['output', 'byJob', jobId, 'cell', 'id']),
                 outputCell, notification;
 
+            // show either the clock, if < 24 hours, or the timestamp.
             var message = span([
                 'Finished with ',
                 niceState(jobState.job_state),
-                ' on ',
-                format.niceTime(jobState.finish_time),
-                ' (',
-                span({dataElement: 'clock'}),
-                ')'
+                ' ',
+                span({dataElement: 'clock'})
             ]);
-
             ui.setContent('run-control-panel.status.execMessage', message);
 
             // Show time since this app cell run finished.
             widgets.runClock = RunClock.make({
-                suffix: ' ago'
+                on: {
+                    tick: function (elapsed) {
+                        var clock;
+                        var day = 1000 * 60 * 60 * 24;
+                        if (elapsed > day) {
+                            clock = span([
+                                ' on ',
+                                format.niceTime(jobState.finish_time)
+                            ]);
+                            return {
+                                content: clock,
+                                stop: true
+                            };
+                        } else {
+                            clock = [config.prefix || '', format.niceDuration(elapsed), config.suffix || ''].join('');
+                            return {
+                                content: clock + ' ago'                        
+                            };
+                        }
+                    }
+                }                
             });
             widgets.runClock.start({
                 node: ui.getElement('run-control-panel.status.execMessage.clock'),
@@ -2354,25 +2371,7 @@ define([
                         bus.emit('reset-to-defaults');
                     }));
 
-
-                    // We need to listen for job-status messages is we are loading
-                    // a cell that has a running job.
-
-                    // TODO: inform the job manager that we are ready to receive
-                    // messages for this job?
-                    // At present the job manager will start doing this after it
-                    // loads the narrative and has inspected the jobs in its metadata.
-                    // But this is a race condition -- and it is probably better
-                    // if the cell invokes this response and then can receive either
-                    // the start of the job-status message stream or a response indicating
-                    // that the job has completed, after which we don't need to
-                    // listen any further.
-
-                    // get the status
-
-                    // if we are in a running state, start listening for jobs
                     var state = model.getItem('fsm.currentState');
-                    // var listeningForJobUpdates = false;
                     if (state) {
                         switch (state.mode) {
                         case 'editing':
@@ -2417,7 +2416,7 @@ define([
                         });
                     }));
 
-                    busEventManager.add(cellBus.on('delete-cell', function (message) {
+                    busEventManager.add(cellBus.on('delete-cell', function () {
                         doDeleteCell();
                     }));
 
@@ -2454,18 +2453,6 @@ define([
         }
 
         function exportParams() {
-
-            // For each param.
-
-            // if certain limited conditions apply
-
-            // transform the params from the fundamental types
-
-            // to something more suitable for the app params.
-
-            // This is necessary because some params, like subdata, have a
-            // natural storage as array, but are supposed to be provided as
-            // a string with comma separators
             var params = model.getItem('params'),
                 paramsToExport = {},
                 parameters = spec.getSpec().parameters;
@@ -2615,17 +2602,6 @@ define([
                         }
                     }
 
-                    // Create a map of parameters for easy access
-                    //                    var parameterMap = {};
-                    //                    env.parameters = model.getItem('app.spec.parameters').map(function (parameterSpec) {
-                    //                        // tee hee
-                    //                        var param = ParameterSpec.make({parameterSpec: parameterSpec});
-                    //                        parameterMap[param.id()] = param;
-                    //                        return param;
-                    //                    });
-                    //                    env.parameterMap = parameterMap;
-
-
                     var appRef = [model.getItem('app.id'), model.getItem('app.tag')].filter(toBoolean).join('/'),
                         url = '/#appcatalog/app/' + appRef;
                     utils.setCellMeta(cell, 'kbase.attributes.title', model.getItem('app.spec.info.name'));
@@ -2643,11 +2619,9 @@ define([
                 .then(function () {
                     // if we start out in 'new' state, then we need to promote to
                     // editing...
-
                     if (fsm.getCurrentState().state.mode === 'new') {
                         fsm.newState({ mode: 'editing', params: 'incomplete' });
                         evaluateAppState();
-                        //
                     } else {
                         renderUI();
                     }
@@ -2672,10 +2646,6 @@ define([
                     renderUI();
                 });
         }
-
-        /*
-         Grok a sensible error structure out of something returned by something.
-         */
 
         // INIT
 

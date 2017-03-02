@@ -219,12 +219,14 @@ define (
                       }
                     )
 
-                    $rna.dataset().parsed_read_samples = $.jqElem('table').addClass('display').css('width', '100%').css('border', '1px solid gray');
-                    var $tt = $rna.dataset().parsed_read_samples.DataTable({
+                    $rna.dataset().parsed_read_samples = $.jqElem('div');
+                    var $sample_table = $.jqElem('table').addClass('display').css('width', '100%').css('border', '1px solid gray');
+                    $rna.dataset().parsed_read_samples.append($sample_table);
+                    var $tt = $sample_table.DataTable({
                         columns: [
                             {title: 'Reads'},
                             {title: 'Treatment Labels'}
-                        ]
+                        ],
                     });
 
                     $tt.rows.add(sample_id_data).draw();

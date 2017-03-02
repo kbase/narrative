@@ -50,7 +50,7 @@ define([
                 data: {
                     items: []
                 },
-                onUpdate: function(props) {
+                onUpdate: function() {
                     doModelUpdated();
                 }
             }),
@@ -67,7 +67,6 @@ define([
             channel.emit('changed', {
                 newValue: exportModel()
             });
-            // autoValidate();
         }
 
         function setModelValue(value, index) {
@@ -280,7 +279,7 @@ define([
                 handler: function() {
                     addNewControl()
                     .then(function() {
-                        autoValidate();
+                        return autoValidate();
                     });
                 }
             };
@@ -292,7 +291,6 @@ define([
                 role: '',
                 style: {
                     border: '1px solid #ccc',
-                    //backgroundColor: '#eee',
                     padding: '6px',
                     textAlign: 'center'
                 }
@@ -355,11 +353,11 @@ define([
                     })
                     .then(function() {
                         events.attachEvents();
-                        // doModelUpdated();
                         return index;
                     })
                     .catch(function(err) {
-                        console.log('ERROR!!!', err);
+                        // TODO insert an Error Control placeholder
+                        console.error('Error adding new control', err);
                     });
             });
         }
@@ -379,7 +377,7 @@ define([
                     return addNewControl(value);
                 }))
                 .then(function () {
-                    autoValidate();
+                    return autoValidate();
                 });
             });
         }
@@ -423,7 +421,6 @@ define([
                         channel.on('refresh', function() {});
 
                         return autoValidate();
-                        // bus.emit('sync');
                     });
 
             });

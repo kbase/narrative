@@ -230,6 +230,7 @@ require.config({
         'kbaseContigBrowserButtons': 'kbase/js/widgets/genomes/kbaseContigBrowserButtons',
         'ContigBrowserPanel': 'kbase/js/widgets/function_output/contigBrowserPanel',
         'kbaseGenomeView': 'kbase/js/widgets/function_output/kbaseGenomeAnnotation',
+        'kbaseTaxonomyBrowser': 'kbase/js/widgets/function_output/kbaseTaxonomyBrowser',
         'kbaseGenomeAnnotationViewer': 'kbase/js/widgets/function_output/kbaseGenomeAnnotationViewer',
         'kbaseGenomeAnnotationAssembly': 'kbase/js/widgets/function_output/kbaseGenomeAnnotationAssembly',
 

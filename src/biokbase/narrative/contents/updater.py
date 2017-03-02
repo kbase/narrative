@@ -107,10 +107,7 @@ def update_method_cell(cell, format_ver):
     else:
         widget_state = {}
 
-    runtime_state = None
-    if 'state' in widget_state:
-        runtime_state = widget_state['state']
-
+    runtime_state = widget_state.get('state', {})
     method_params = runtime_state.get('params', None)
     if not method_params:
         method_params = {}

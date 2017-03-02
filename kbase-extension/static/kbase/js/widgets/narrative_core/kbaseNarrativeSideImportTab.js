@@ -355,10 +355,10 @@ define (
 
             var $buttons = $('<div style="margin: 0px 30px 0px 33px;">')
                            .addClass('buttons')
-                           .append($importButton)
+                           .append($backButton)
                            .append('&nbsp;')
                            .append('&nbsp;')
-                           .append($backButton);
+                           .append($importButton);
 
             self.widgetPanelCard2.append($buttons);
         },

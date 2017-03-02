@@ -171,6 +171,7 @@ define ([
                 this.sessionInfo = tokenInfo;
                 this.sessionInfo.token = sessionToken;
                 this.sessionInfo.kbase_sessionid = this.sessionInfo.id;
+                this.sessionInfo.user_id = this.sessionInfo.user;
                 initEvents();
                 initTokenTimer(sessionInfo.expires);
                 UserMenu.make({

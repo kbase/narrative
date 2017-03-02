@@ -117,9 +117,6 @@ define([
         //
         this.dataViewers = null;
 
-        // User Profile KBase client.
-        this.profileClient = new UserProfile(Config.url('user_profile'));
-
         // Used for mapping from user id -> user name without having to it
         // up again every time.
         this.cachedUserIds = {};

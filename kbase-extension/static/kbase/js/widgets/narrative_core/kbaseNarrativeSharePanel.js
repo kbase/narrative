@@ -5,31 +5,31 @@
  * @author Michael Sneddon <mwsneddon@lbl.gov>
  * @public
  */
-define (
-	[
-        'bluebird',
-        'kbwidget',
-        'bootstrap',
-        'jquery',
-        'narrativeConfig',
-        'kbaseAuthenticatedWidget',
-        'select2'
-	], function(
-        Promise,
-        KBWidget,
-        bootstrap,
-        $,
-        Config,
-        kbaseAuthenticatedWidget
-	) {
+define ([
+    'bluebird',
+    'kbwidget',
+    'bootstrap',
+    'jquery',
+    'narrativeConfig',
+    'kbaseAuthenticatedWidget',
+    'api/auth',
+    'select2'
+], function (
+    Promise,
+    KBWidget,
+    bootstrap,
+    $,
+    Config,
+    kbaseAuthenticatedWidget,
+    Auth
+) {
     'use strict';
     return KBWidget({
-        name: "kbaseNarrativeSharePanel",
+        name: 'kbaseNarrativeSharePanel',
         parent : kbaseAuthenticatedWidget,
-        version: "1.0.0",
+        version: '1.0.0',
         options: {
             ws_url: Config.url('workspace'),
-            user_profile_url: Config.url('user_profile'),
             loadingImage: Config.get('loading_gif'),
             user_page_link: Config.url('profile_page'),
             ws_name_or_id: null,
@@ -38,7 +38,6 @@ define (
             add_user_input_width: '200px'
         },
         ws: null, // workspace client
-        user_profile: null, //user_profile client
 
         $mainPanel: null,
         $notificationPanel: null,
@@ -62,14 +61,14 @@ define (
         my_user_id: null,
         loggedInCallback: function (event, auth) {
             this.ws = new Workspace(this.options.ws_url, auth);
-            this.user_profile = new UserProfile(this.options.user_profile_url, auth);
+            this.authClient = Auth.make({url: Config.url('auth')});
             this.my_user_id = auth.user_id;
             this.refresh();
             return this;
         },
         loggedOutCallback: function (event, auth) {
             this.ws = null;
-            this.user_profile = null;
+            this.authClient = null;
             this.my_user_id = null;
             this.refresh();
             return this;
@@ -99,25 +98,23 @@ define (
                                 self.user_data = {};
 
                                 var usernameList = [self.my_user_id];
-                                var usernames = self.my_user_id + ",";
                                 for (var u in perm) {
                                     if (perm.hasOwnProperty(u)) {
                                         if (u !== '*') {
                                             self.ws_permissions.push([u, perm[u]]);
-                                            usernames += u + ',';
                                             usernameList.push(u);
                                         }
                                     }
                                 }
-                                self.user_profile.lookup_globus_user(usernameList,
-                                    function (data) {
-                                        self.user_data = data;
-                                        self.render();
-                                    },
-                                    function (error) {
-                                        console.error(error);
-                                        self.render();
-                                    });
+                                self.authClient.getUserNames(self.authClient.getAuthToken(), usernameList)
+                                .then(function(usernames) {
+                                    self.user_data = usernames;
+                                    self.render();
+                                })
+                                .catch(function (error) {
+                                    console.error(error);
+                                    self.render();
+                                });
                             },
                             function (error) {
                                 self.reportError(error);
@@ -151,11 +148,11 @@ define (
                 self.$mainPanel.empty();
 
                 var globalReadStatus = '<strong><span class="fa fa-lock" style="margin-right:10px"></span>Private</strong>';
-                var globalReadClass = "alert alert-info";
+                var globalReadClass = 'alert alert-info';
                 self.isPrivate = true;
                 if (self.ws_info[6] === 'r') {
                     self.isPrivate = false;
-                    globalReadClass = "alert alert-success";
+                    globalReadClass = 'alert alert-success';
                     globalReadStatus = '<strong><span class="fa fa-unlock" style="margin-right:10px"></span>Public</strong>';
                 }
 
@@ -169,7 +166,7 @@ define (
                 if (self.isPrivate) {
                     $togglePublicPrivate.append($('<a>').append('make public?')
                         .on('click', function () {
-                            self.showWorking("updating permissions...");
+                            self.showWorking('updating permissions...');
                             self.ws.set_global_permission(
                                 {id: self.ws_info[0], new_permission: 'r'},
                                 function () {
@@ -184,7 +181,7 @@ define (
                 } else {
                     $togglePublicPrivate.append($('<a>').append('make private?')
                         .on('click', function () {
-                            self.showWorking("updating permissions...");
+                            self.showWorking('updating permissions...');
                             self.ws.set_global_permission(
                                 {id: self.ws_info[0], new_permission: 'n'},
                                 function () {
@@ -303,11 +300,13 @@ define (
                                     );
                                 }))));
 
-                    $addUsersDiv.append(
-                        $('<table>').css({'width': '100%'})
-                        .append($('<tr>')
-                            .append($('<td>').append($input))
-                            .append($('<td>').append($addAction))));
+                    $addUsersDiv.append($('<span>')
+                            .append($input.css({'width': '85%'}))
+                            .append($addAction));
+                        // $('<table>').css({'width': '100%'})
+                        // .append($('<tr>')
+                        //     .append($('<td>').css({'width': '90%'}).append($input))
+                        //     .append($('<td>').append($addAction))));
 
                     self.setupSelect2($input, 'share with...');
                     self.$mainPanel.append($addUsersDiv);
@@ -427,44 +426,16 @@ define (
                     var term = params.term || '';
                     term = term.trim();
                     if (term.length >= 2) {
-                        Promise.resolve(self.user_profile.filter_users({filter: term}))
+                        Promise.resolve(self.authClient.searchUserNames(null, term))
                         .then(function(users) {
                             var results = [];
-                            users.forEach(function(user) {
+                            Object.keys(users).forEach(function(user) {
                                 results.push({
-                                    id: user.username,
-                                    text: user.realname,
+                                    id: user,
+                                    text: users[user],
                                     found: true
-                                })
+                                });
                             });
-                            return Promise.try(function() { return results; });
-                        })
-                        .then(function(results) {
-                            if (results.length === 0) {
-                                term = term.toLowerCase();
-                                if (!/[^a-z0-9]/.test(term)) {
-                                    return Promise.resolve(self.user_profile.lookup_globus_user([term]))
-                                    .then(function(data) {
-                                        var res = {
-                                            id: term,
-                                            text: term,
-                                            found: false
-                                        };
-                                        if (data.hasOwnProperty(term)) {
-                                            res.text = data[term].fullName;
-                                        }
-                                        return Promise.try(function() { return results; });
-                                    });
-                                } else {
-                                    return Promise.try(function() {
-                                        return [];
-                                    });
-                                }
-                            } else {
-                                return Promise.try(function() { return results; });
-                            }
-                        })
-                        .then(function (results) {
                             if (results.length === 0) {
                                 results = [{
                                     id: term,
@@ -485,7 +456,7 @@ define (
                     placeholder: placeholder,
                     multiple: true,
                     dataAdapter: CustomData,
-                    dropdownAutoWidth: true,
+                    // dropdownAutoWidth: true,
                     language: {
                         noResults: function () {
                             return noMatchesFoundStr;
@@ -559,7 +530,7 @@ define (
             } else if (realName) {
                 userString = " " + realName + " (" + username + ")";
             } else if (this.user_data[username]) {
-                userString = " " + this.user_data[username].fullName + " (" + username + ")";
+                userString = " " + this.user_data[username] + " (" + username + ")";
             }
 
             var shortName = userString;

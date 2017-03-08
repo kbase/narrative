@@ -768,6 +768,11 @@ get_session = function()
     local cheader = ngx.unescape_uri(hdrs['Cookie'])
     local token = {}
     local session_id = nil; -- nil return value by default
+
+    if not cheader or cheader == '' then
+        cheader = ngx.unescape_uri(hdrs['Authorization'])
+    end
+
     if cheader then
         -- ngx.log( ngx.DEBUG, string.format("cookie = %s",cheader))
         local session = string.match(cheader, auth_cookie_name.."=([%S]+);?")

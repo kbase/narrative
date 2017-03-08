@@ -51,6 +51,371 @@ init_worker_by_lua '
     proxymgr:check_provisioner(0)
 ';
 
+    server {
+        listen 443;
+        server_name next.kbase.us localhost;
+
+        # this resolver is the internal rancher resolver
+        resolver 169.254.169.250;
+
+        # taken from next-www
+        client_max_body_size 100000m;
+        client_body_temp_path /tmp 1 2;
+        proxy_max_temp_file_size 0;
+        proxy_headers_hash_max_size 4096;
+        proxy_headers_hash_bucket_size 4096;
+        # added kkeller 30sep2015 for kbase-2777
+        proxy_request_buffering off;
+
+        ssl on;
+        # Letsencrypt generated certs
+        ssl_certificate /etc/letsencrypt/live/next.kbase.us/fullchain.pem;
+        ssl_certificate_key /etc/letsencrypt/live/next.kbase.us/privkey.pem;
+
+        ssl_session_timeout 5m;
+        #ssl_protocols TLSv1;
+        #ssl_ciphers ALL:!ADH:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv3:+EXP;
+        ssl_prefer_server_ciphers on;
+
+        root /kb/deployment;
+        index home.html home.shtml;
+
+    location /search  {
+               internal;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header Host $http_host;
+                proxy_set_header X-Forwarded-Proto $scheme;
+                add_header Access-Control-Allow-Origin "*";
+                # Limits on rows/start (by number of chars) to prevent deep paging craziness
+                if ($arg_start ~ ....+) {
+                        return 403;
+                }
+                if ($arg_rows ~ ....+) {
+                        return 403;
+                }
+
+        
+                #Explicitly list args to disallow
+                if ($arg_qt != "") {
+                        return 403;
+                }
+                
+                # Disallow specific params that begin with a pattern, ie stream.file stream.body etc
+                if ($args ~ [\&\?]stream.*?=(.*)) {
+                        return 403;
+                }
+               proxy_pass http://140.221.43.241:7077;
+               #proxy_pass http://wellner.org;
+       }
+
+       location /bad_request {
+               internal;
+               content_by_lua '
+               ngx.log(ngx.ERR, "badrequest")
+               ';
+
+               return 404;
+       }
+
+       location /solrauth {
+               default_type text/html;
+        #the below optimization will allow nginx to spend less time
+        #executing lua code for get requests as only certain IP
+        #ip addresses will be allowed. but the lua code is necessary 
+        #for other requests and doesn't get executed, returning a 405
+        #with this block and the lua code cannot reside in the block
+        #so for now, the lua code evaluates all requests
+        #this block also cannot contain rewrite
+                #limit_except GET {
+                #        allow 140.221.78.15;
+                #        allow 130.202.232.1;
+                #        allow 130.202.135.30;
+                #        allow 140.221.11.197;
+                #        allow 73.209.131.219;
+                #        allow 128.3.56.130;
+                #        allow 128.3.56.251;
+                #        allow 177.231.6.11;
+                #        deny all;
+        #}
+               content_by_lua '
+               local session_id, err = proxymgr:get_session()
+               local hdrs = ngx.req.get_headers()
+               local reqType = ngx.var.request_method
+               local token = {}
+               ngx.log(ngx.ERR, string.format("id = %s",session_id))
+               local capture = "/search" .. string.sub(ngx.var.uri, 10)
+               if ngx.var.QUERY_STRING ~= nil then
+                 capture = capture .. "?" .. ngx.var.QUERY_STRING
+               end
+               if reqType == "POST" or reqType == "DELETE"
+               then
+                       if (session_id == nil or (session_id ~= "rw2" and session_id ~= "dan")) then
+                               ngx.log(ngx.ERR, "no auth found")
+                               res = ngx.location.capture("/bad_request")
+                       else
+                               ngx.log(ngx.ERR, "auth found")
+                               ngx.req.read_body()
+                               if reqType == "POST" then
+                                 res = ngx.location.capture(capture, {body=ngx.var.request_body, method = ngx.HTTP_POST})
+                               else
+                                 res = ngx.location.capture(capture, {body=ngx.var.request_body, method = ngx.HTTP_DELETE})
+                               end
+                       end
+               else
+                       ngx.log(ngx.ERR, "get request")
+                       local capture = "/search" .. string.sub(ngx.var.uri, 10)
+                       if ngx.var.QUERY_STRING ~= nil then
+                         capture = capture .. "?" .. ngx.var.QUERY_STRING
+                       end
+                       ngx.log(ngx.ERR, capture)
+                       res = ngx.location.capture(capture)
+               end
+               ngx.say(res.body)
+               ';
+        }
+
+        location / {
+            root /kb/deployment/services/kbase-ui;
+            index index.html;
+            #ssi on;
+            ssi_silent_errors off;
+            allow all;
+
+        }
+
+        # add cdn location
+        location /cdn {
+            alias /data/cdn/;
+            autoindex on;
+            autoindex_format json;
+            types {
+                application/javascript js;
+                text/plain map;
+                text/css css;
+            }
+        }
+
+        location /auth/ {
+            proxy_pass http://auth2:8080/;
+            proxy_cookie_path /login /auth/login;
+            proxy_cookie_path /link /auth/link;
+            }
+        # Dynamic service rule.  This usees rancher DNS names to redirect
+        location ~ /dynserv/(.+) {
+            proxy_pass http://$1:5000/;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header Host $http_host;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+
+        # Dynamic proxy manager
+        location /proxy_map {
+            default_type 'application/json';
+            allow 127.0.0.1;
+            deny all;
+
+            set $uri_base '/proxy_map';
+            content_by_lua 'proxymgr:set_proxy()';
+
+        }
+        # Shutdown utility
+        location /narrative_shutdown {
+            default_type 'application/json';
+            allow 127.0.0.1;
+
+            set $uri_base '/narrative_shutdown';
+            content_by_lua 'proxymgr:narrative_shutdown()';
+
+        }
+        location /narrative/ws1 {
+            return  301 https://next.kbase.us/narrativelegacy/ws1;
+                }
+        location /narrative/ws.379.obj.1 {
+            return  301 https://next.kbase.us/narrativelegacy/ws.379.obj.1;
+                }
+
+        # Narrative redirect rule
+        location /narrative/ {
+            default_type 'text/plain';
+            error_page 401 /index.html;
+            set $target '';
+
+            access_by_lua '
+                    proxymgr:use_proxy()
+            ';
+            proxy_set_header X-Forwarded-Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-Server $host;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header Host $http_host;
+            proxy_set_header X-NginX-Proxy true;
+            proxy_pass http://$target;
+            proxy_redirect off;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_read_timeout 86400;
+        }
+        location /narrativelegacy/ {
+            default_type 'text/plain';
+            error_page 401 /index.html;
+            set $target '';
+
+            access_by_lua '
+                    proxymgr2:use_proxy()
+            ';
+            proxy_set_header X-Forwarded-Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-Server $host;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header Host $http_host;
+            proxy_set_header X-NginX-Proxy true;
+            proxy_pass http://$target;
+            proxy_redirect off;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_read_timeout 86400;
+        }
+
+        # Start of core service proxies
+        #
+#       location /services/authorization {
+#           # host and port to fastcgi server
+#           rewrite /services/authorization(.*) $1 break;
+#           fastcgi_pass authorization:7039;
+#           fastcgi_param PATH_INFO $fastcgi_script_name;
+#           fastcgi_param REQUEST_METHOD $request_method;
+#           fastcgi_param QUERY_STRING $query_string;
+#           fastcgi_param CONTENT_TYPE $content_type;
+#           fastcgi_param CONTENT_LENGTH $content_length;
+#           fastcgi_param SERVER_NAME $server_name;
+#           fastcgi_param SERVER_PORT $server_port;
+#           fastcgi_param SERVER_PROTOCOL $server_port;
+#           fastcgi_pass_header Authorization;
+#           fastcgi_intercept_errors off;
+#           fastcgi_param REMOTE_ADDR $remote_addr;
+#       }
+        # Use production auth for now
+        location /services/authorization {
+            proxy_pass https://kbase.us/services/authorization;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header Host $http_host;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+        location /services/shock-api {
+            proxy_pass http://shock:7044/;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header Host $http_host;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+        location /services/awe-api {
+            proxy_pass http://awe:7107/;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header Host $http_host;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+        location /services/userandjobstate {
+            proxy_pass http://ujs:7083/;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header Host $http_host;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+        location /services/ws {
+            proxy_pass http://ws:7058/;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header Host $http_host;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+        location /services/handlemngr {
+            proxy_pass http://handlemngr:9001/;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header Host $http_host;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+        location /services/handle_service {
+            proxy_pass http://handleservice:7109/;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header Host $http_host;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+        location /services/handleservice {
+            proxy_pass http://handleservice:7109/;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header Host $http_host;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+        location /services/narrative_method_store {
+            proxy_pass http://narrativemethodstore:7125/;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header Host $http_host;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+        location /services/catalog {
+            proxy_pass http://catalog:5000/;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header Host $http_host;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+        location /services/service_wizard {
+            proxy_pass http://servicewizard:5000/;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header Host $http_host;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+        location /services/narrativejobproxy {
+            allow 172.17.0.0/16;
+            deny all;
+            proxy_pass http://narrativejobproxy:7068/;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header Host $http_host;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+        location /services/njs_wrapper {
+            proxy_pass http://njswrapper:8200/;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header Host $http_host;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+        location /services/user_profile {
+            proxy_pass http://userprofile:7126/;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header Host $http_host;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+        location /services/data_import_export {
+            proxy_pass http://dataimportexport:8200/;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header Host $http_host;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+        location /services/kb-ftp-api/v0/ {
+            proxy_pass http://ftp.kbase.us:3001/;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header Host $http_host;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+    }
+    # End of https next server block
+
 server {
 	#listen   80; ## listen for ipv4; this line is default and implied
 	#listen   [::]:80 default ipv6only=on; ## listen for ipv6

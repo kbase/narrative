@@ -762,9 +762,12 @@ end
 -- We use the user id as the session id, since that's unique,
 -- and helps with tracing through logs.
 get_session = function()
+    local user_id = nil
     local headers = ngx.req.get_headers()
     local cheader = ngx.unescape_uri(headers['Cookie'])
-    local user_id = nil
+    if not cheader or cheader == '' then
+        cheader = ngx.unescape_uri(headers['Authorization'])
+    end
     if cheader then
         local token = string.match(cheader, auth_cookie_name.."=([^;%s]+)")
         if token then

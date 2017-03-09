@@ -10,38 +10,37 @@
  * To set global variables, use: Jupyter.narrative.<name> = value
  */
 
-define(
-    [
-        'jquery',
-        'bluebird',
-        'handlebars',
-        'narrativeConfig',
-        'kbaseNarrativeSidePanel',
-        'kbaseNarrativeOutputCell',
-        'kbaseNarrativeWorkspace',
-        'kbaseNarrativeMethodCell',
-        'kbaseAccordion',
-        'kbaseLogin',
-        'kbaseNarrativeSharePanel',
-        'kbase-client-api',
-        'kbaseNarrativePrestart',
-        'ipythonCellMenu',
-        'base/js/namespace',
-        'base/js/events',
-        'base/js/keyboard',
-        'notebook/js/notebook',
-        'util/display',
-        'util/bootstrapDialog',
-        'text!kbase/templates/update_dialog_body.html',
-        'narrativeLogin',
-        'common/ui',
-        'common/html',
-        'narrativeTour',
+define([
+    'jquery',
+    'bluebird',
+    'handlebars',
+    'narrativeConfig',
+    'kbaseNarrativeSidePanel',
+    'kbaseNarrativeOutputCell',
+    'kbaseNarrativeWorkspace',
+    'kbaseNarrativeMethodCell',
+    'kbaseAccordion',
+    'kbaseLogin',
+    'kbaseNarrativeSharePanel',
+    'kbase-client-api',
+    'kbaseNarrativePrestart',
+    'ipythonCellMenu',
+    'base/js/namespace',
+    'base/js/events',
+    'base/js/keyboard',
+    'notebook/js/notebook',
+    'util/display',
+    'util/bootstrapDialog',
+    'text!kbase/templates/update_dialog_body.html',
+    'narrativeLogin',
+    'common/ui',
+    'common/html',
+    'narrativeTour',
 
-        // for effect
-        'bootstrap',
+    // for effect
+    'bootstrap',
 
-    ], function (
+], function (
     $,
     Promise,
     Handlebars,
@@ -67,7 +66,7 @@ define(
     UI,
     html,
     Tour
-    ) {
+) {
     'use strict';
 
     KBaseNarrativePrestart.loadDomEvents();
@@ -118,9 +117,6 @@ define(
         //
         this.dataViewers = null;
 
-        // User Profile KBase client.
-        this.profileClient = new UserProfile(Config.url('user_profile'));
-
         // Used for mapping from user id -> user name without having to it
         // up again every time.
         this.cachedUserIds = {};
@@ -154,7 +150,7 @@ define(
             'z', 'd,d', 's', 'l', 'o', 'h',
             'i,i', '0,0', 'q', 'shift-j', 'shift-k',
             'shift-m', 'shift-o', 'shift-v'
-        ],
+            ],
             commandShortcuts = [],
             editShortcuts = [
                 // remove the command palette
@@ -191,25 +187,6 @@ define(
                 console.warn('Error removing shortcut "'  + shortcut +'"', ex);
             }
         });
-
-
-//        for (var i=0; i<killTheseShortcuts.length; i++) {
-//            var shortcut = killTheseShortcuts[i];
-//            try {
-//                Jupyter.keyboard_manager.command_shortcuts.remove_shortcut(shortcut);
-//                Jupyter.notebook.keyboard_manager.edit_shortcuts.remove_shortcut(shortcut);
-//            }
-//            catch (err) {
-//                //pass
-//            }
-//            try {
-//                Jupyter.notebook.keyboard_manager.command_shortcuts.remove_shortcut(shortcut);
-//                Jupyter.notebook.keyboard_manager.edit_shortcuts.remove_shortcut(shortcut);
-//            }
-//            catch (err) {
-//                //pass
-//            }
-//        }
     };
 
     Narrative.prototype.disableKeyboardManager = function () {
@@ -239,10 +216,6 @@ define(
         $([Jupyter.events]).on('kernel_busy.Kernel', function () {
             $("#kb-kernel-icon").removeClass().addClass('fa fa-circle');
         });
-
-        // $([Jupyter.events]).on('create.Cell', function(event, data) {
-        //     // this.showJupyterCellToolbar(data.cell);
-        // }.bind(this));
 
         $([Jupyter.events]).on('delete.Cell', function () {
             // this.enableKeyboardManager();
@@ -683,8 +656,8 @@ define(
         // NAR-271 - Firefox needs to be told where the top of the page is. :P
         window.scrollTo(0, 0);
 
-        this.authToken = NarrativeLogin.loginWidget($('#signin-button')).token();
-        this.userId = NarrativeLogin.loginWidget($('#signin-button')).userId();
+        this.authToken = NarrativeLogin.sessionInfo.token; //.loginWidget($('#signin-button')).token();
+        this.userId = NarrativeLogin.sessionInfo.user; //loginWidget($('#signin-button')).userId();
 
         /* Clever extension to $.event from StackOverflow
          * Lets us watch DOM nodes and catch when a widget's node gets nuked.
@@ -772,7 +745,7 @@ define(
      * If it can't, or if this is being run locally, it pops up an alert saying so.
      */
     Narrative.prototype.updateVersion = function () {
-        var user = NarrativeLogin.loginWidget($('#signin-button')).session('user_id');
+        var user = NarrativeLogin.sessionInfo.user; //.loginWidget($('#signin-button')).session('user_id');
         Promise.resolve($.ajax({
             contentType: 'application/json',
             url: '/narrative_shutdown/' + user,

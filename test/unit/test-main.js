@@ -23,9 +23,9 @@ requirejs.config({
         bootstrap: 'components/bootstrap/js/bootstrap.min'
     },
     map: {
-      '*':{
-        'jquery-ui': 'jqueryui'
-      }
+        '*': {
+            'jquery-ui': 'jqueryui'
+        }
     },
 
     deps: tests,

@@ -11,6 +11,7 @@ require.config({
         bloodhound: 'ext_components/corejs-typeahead/dist/bloodhound.min',
         // css: 'ext_components/require-css/css',
         d3: 'ext_components/d3/d3.min',
+        md5: 'ext_components/SparkMD5/spark-md5',
         domReady: 'ext_components/requirejs/domReady',
         dropzone: 'ext_components/dropzone/dist/dropzone-amd-module',
         handlebars: 'ext_components/handlebars/handlebars',
@@ -59,6 +60,7 @@ require.config({
         narrativeTreeMain: 'narrativeTreeMain',
         kbaseLogin: 'kbase/js/widgets/kbaseLoginFuncSite',
         narrativeLogin: 'kbase/js/narrativeLogin',
+        userMenu: 'kbase/js/userMenu',
         kbaseTabs: 'kbase/js/widgets/kbaseTabs',
         kbaseUploadWidget: 'kbase/js/widgets/kbaseUpload',
         kbasePrompt: 'kbase/js/widgets/kbasePromptNew',
@@ -230,6 +232,7 @@ require.config({
         'kbaseContigBrowserButtons': 'kbase/js/widgets/genomes/kbaseContigBrowserButtons',
         'ContigBrowserPanel': 'kbase/js/widgets/function_output/contigBrowserPanel',
         'kbaseGenomeView': 'kbase/js/widgets/function_output/kbaseGenomeAnnotation',
+        'kbaseTaxonomyBrowser': 'kbase/js/widgets/function_output/kbaseTaxonomyBrowser',
         'kbaseGenomeAnnotationViewer': 'kbase/js/widgets/function_output/kbaseGenomeAnnotationViewer',
         'kbaseGenomeAnnotationAssembly': 'kbase/js/widgets/function_output/kbaseGenomeAnnotationAssembly',
 

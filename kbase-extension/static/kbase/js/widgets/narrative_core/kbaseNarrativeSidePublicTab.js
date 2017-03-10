@@ -8,23 +8,29 @@
 define ([
     'kbwidget',
     'bootstrap',
+    'handlebars',
     'jquery',
     'bluebird',
     'narrativeConfig',
     'kbaseAuthenticatedWidget',
     'base/js/namespace',
     'kbase-generic-client-api',
-    'util/icon'
+    'util/icon',
+    'text!kbase/templates/data_slideout/object_row.html',
+    'text!kbase/templates/data_slideout/action_button_partial.html'
 ], function (
     KBWidget,
     bootstrap,
+    Handlebars,
     $,
     Promise,
     Config,
     kbaseAuthenticatedWidget,
     Jupyter,
     GenericClient,
-    Icon
+    Icon,
+    StagingRowHtml,
+    ActionButtonHtml
 ) {
     'use strict';
     return KBWidget({
@@ -64,8 +70,20 @@ define ([
             this.icon_colors = Config.get('icons').colors;
             this.wsName = Jupyter.narrative.getWorkspaceName();
             this.categoryDescr = Config.get('publicCategories');
+            if (Config.get('features').jgiPublicStaging) {
+                this.categoryDescr['jgi_gateway'] = {
+                    name: 'JGI Public Data (TEST)',
+                    type: null,
+                    ws: null,
+                    search: false,
+                    source: 'jgi_gateway'
+                };
+            }
             if (this.categoryDescr)
                 this.categories = Object.keys(this.categoryDescr);
+
+            Handlebars.registerPartial('actionPartial', ActionButtonHtml);
+            this.stagingRowTmpl = Handlebars.compile(StagingRowHtml);
 
             return this;
         },
@@ -76,7 +94,7 @@ define ([
             this.infoPanel = $('<div>');
             this.$elem.empty().append(this.infoPanel);
             if (!this.categories) {
-                this.showError("Unable to load public data configuration! Please refresh your page to try again. If this continues to happen, please <a href='https://kbase.us/contact-us/'>click here</a> to contact KBase with the problem.");
+                this.showError('Unable to load public data configuration! Please refresh your page to try again. If this continues to happen, please <a href="https://kbase.us/contact-us/">click here</a> to contact KBase with the problem.');
                 return;
             }
 
@@ -141,7 +159,7 @@ define ([
 
             self.totalPanel.empty();
             self.resultPanel.empty();
-            self.totalPanel.append($('<span>').addClass("kb-data-list-type").append('<img src="'+this.loadingImage+'"/> searching...'));
+            self.totalPanel.append($('<span>').addClass('kb-data-list-type').append('<img src="'+this.loadingImage+'"/> searching...'));
             self.objectList = [];
             self.currentCategory = category;
             self.currentQuery = query;
@@ -159,7 +177,7 @@ define ([
 
             var thisQuery = this.currentQuery;
             Promise.resolve(this.serviceClient.sync_call(
-                "NarrativeService.list_objects_with_sets",
+                'NarrativeService.list_objects_with_sets',
                 [{
                     ws_name: ws,
                     types: [type]
@@ -207,13 +225,14 @@ define ([
                 }
                 data.totalResults = this.objectList.length;
                 this.totalPanel.empty();
-                this.totalPanel.append($('<span>').addClass("kb-data-list-type")
-                        .append("Total results: " + data.totalResults));
+                this.totalPanel.append($('<span>').addClass('kb-data-list-type')
+                        .append('Total results: ' + data.totalResults));
             }.bind(this))
             .catch(function(error) {
                 console.error(error);
                 this.totalPanel.empty();
-                this.totalPanel.append($('<span>').addClass("kb-data-list-type").append("Total results: 0"));
+                this.totalPanel.append($('<span>').addClass('kb-data-list-type')
+                        .append('Total results: 0'));
             }.bind(this));
         },
 
@@ -233,8 +252,8 @@ define ([
                         var id = data.items[i].genome_id;
                         var name = data.items[i].scientific_name;
                         var domain = data.items[i].domain;
-                        var contigs = data.items[i].num_contigs
-                        var genes = data.items[i].num_cds
+                        var contigs = data.items[i].num_contigs;
+                        var genes = data.items[i].num_cds;
                         this.objectList.push({
                             $div: null,
                             info: null,
@@ -247,42 +266,30 @@ define ([
                         });
                         this.attachRow(this.objectList.length - 1);
                     }
-                } else if (this.currentCategory === 'metagenomes') {
-                    for (var i in data.items) {
-                        var id = data.items[i].object_name;
-                        var name = data.items[i].metagenome_name;
-                        var sequence_type = data.items[i].sequence_type;
-                        var mix_biome = data.items[i].mix_biome;
-                        this.objectList.push({
-                            $div: null,
-                            info: null,
-                            id: id,
-                            name: name,
-                            metadata: {'Sequence Type': sequence_type, 'Biome': mix_biome},
-                            ws: cat.ws,
-                            type: cat.type,
-                            attached: false
-                        });
-                        this.attachRow(this.objectList.length - 1);
-                    }
                 }
-                this.totalPanel.append($('<span>').addClass("kb-data-list-type")
-                    .append("Total results: " + data.totalResults + " (" + this.objectList.length + " shown)"));
-            }.bind(this), function(error) {
-                //console.log(error);
+                this.totalPanel.append($('<span>').addClass('kb-data-list-type')
+                    .append('Total results: ' + data.totalResults +
+                            ' (' + this.objectList.length + ' shown)'));
+            }.bind(this),
+            function(error) {
+                console.error(error);
                 if (this.objectList.length == 0) {
                     this.totalPanel.empty();
-                    this.totalPanel.append($('<span>').addClass("kb-data-list-type").append("Total results: 0"));
+                    this.totalPanel.append($('<span>').addClass('kb-data-list-type')
+                        .append('Total results: 0'));
                 }
             }.bind(this));
         },
 
-
-        searchInService: function(query, service) {
+        searchInService: function(query, page, service) {
             if (service === 'jgi_gateway') {
                 return Promise.resolve(this.serviceClient.sync_call(
                     'jgi_gateway.search_jgi',
-                    [query]
+                    [{
+                        search_string: query,
+                        limit: this.itemsPerPage,
+                        page: page-1
+                    }]
                 ))
                 .then(function(results) {
                     return Promise.try(function() {
@@ -295,23 +302,27 @@ define ([
             }
         },
 
-        renderFromService: function(cat) {
-            // search from there.
-            if (this.currentQuery === this.currentServiceQuery) {
-                return;
-            }
-            this.currentServiceQuery = this.currentQuery;
+        stageFile: function(source, id) {
+            return function() {
+                if (source === 'jgi') {
+                    return Promise.resolve(this.serviceClient.sync_call(
+                        'jgi_gateway.stage_objects',
+                        [{ ids: [id] }]
+                    ));
+                }
+            }.bind(this);
+        },
 
-            this.searchInService(this.currentServiceQuery, cat.source)
+        renderFromService: function(cat) {
+            this.currentServiceQuery = this.currentQuery;
+            this.currentPage++;
+            this.searchInService(this.currentServiceQuery, this.currentPage, cat.source)
             .then(function(results) {
                 if (results.query !== this.currentQuery) {
                     return;
                 }
                 var items = results.results[0];
                 console.log(results.results);
-                this.totalPanel.empty();
-                this.totalPanel.append($('<span>').addClass('kb-data-list-type')
-                    .append('Results: ' + items.hits.length + ' of ' + items.total));
 
                 for (var i=0; i<items.hits.length; i++) {
                     var hit = items.hits[i];
@@ -323,10 +334,15 @@ define ([
                         metadata: {'File Type': hit._source.file_type[0], 'Project Id': hit._source.metadata.sequencing_project_id},
                         ws: null,
                         type: 'JGI.File',
-                        attached: false
+                        attached: false,
+                        modDate: hit._source.file_date,
+                        copyAction: this.stageFile('jgi', hit._id)
                     });
                     this.attachRow(this.objectList.length - 1, true);
                 }
+                this.totalPanel.empty();
+                this.totalPanel.append($('<span>').addClass('kb-data-list-type')
+                    .append('Results: ' + this.objectList.length + ' of ' + items.total));
             }.bind(this))
             .catch(function(error) {
                 console.error(error);
@@ -346,11 +362,13 @@ define ([
 
         attachRow: function(index, toStaging) {
             var obj = this.objectList[index];
-            if (obj.attached) { return; }
+            if (obj.attached) {
+                return;
+            }
             if (obj.$div) {
                 this.resultPanel.append(obj.$div);
             } else {
-                obj.$div = this.renderObjectRowDiv(obj, toStaging);
+                obj.$div = toStaging ? this.renderStagingObjectRowDiv(obj) : this.renderObjectRowDiv(obj);
                 this.resultPanel.append(obj.$div);
             }
             obj.attached = true;
@@ -377,12 +395,12 @@ define ([
                 });
         },
 
-        renderObjectRowDiv: function(object, toStaging) {
+        renderObjectRowDiv: function(object) {
             var self = this;
-            var type_tokens = object.type.split('.')
-            var type_module = type_tokens[0];
+            var type_tokens = object.type.split('.');
+            // var type_module = type_tokens[0];
             var type = type_tokens[1].split('-')[0];
-            var copyText = toStaging ? ' Stage' : ' Add';
+            var copyText = ' Add';
 
             var $addDiv =
                 $('<div>').append(
@@ -494,6 +512,44 @@ define ([
             return $rowWithHr;
         },
 
+        renderStagingObjectRowDiv: function(object) {
+            // basic rendering
+            var $row = $(this.stagingRowTmpl({
+                displayName: object.name,
+                objModDate: object.modDate,
+                simpleMetadata: object.metadata,
+                buttonIcon: 'fa-chevron-circle-right',
+                buttonAction: 'Stage',
+                actionLeft: false
+            }));
+            Icon.buildDataIcon($row.find('#icon'), 'file');
+
+            // event binding
+            $row.mouseenter(function() {
+                $row.find('#action-button-div').show();
+                $row.find('.btn-toolbar').show();
+            })
+            .mouseleave(function() {
+                $row.find('#action-button-div').hide();
+                $row.find('.btn-toolbar').hide();
+            });
+
+            $row.find('#action-button-div button').click(function() {
+                $(this).attr('disabled', 'disabled');
+                $(this).html('<img src="' + Config.get('loading_gif') + '">');
+
+                object.copyAction().then(function(results) {
+                    console.log(results);
+                    $(this).html('Copied!');
+                }.bind(this))
+                .catch(function(error) {
+                    console.error(error);
+                    $(this).html('Error!');
+                }.bind(this));
+            });
+            return $row;
+        },
+
         copy: function(object, targetName, thisBtn, suffix) {
             if (suffix && suffix > this.maxAutoCopyCount) {
                 this.copyPrompt(object, targetName, thisBtn);
@@ -525,21 +581,21 @@ define ([
 
         copyPrompt: function(object, targetName, thisBtn, withError) {
             var self = this;
-            $(thisBtn).prop("disabled", false);
+            $(thisBtn).prop('disabled', false);
             $(thisBtn).html('<span class="fa fa-chevron-circle-left"/> Add');
             var $input = $('<input/>').attr('type','text').addClass('form-control').val(targetName);
-            var dialog = $('<div/>').append($("<p/>").addClass("rename-message")
+            var dialog = $('<div/>').append($('<p/>').addClass('rename-message')
                     .html('Enter target object name' +
                             (withError ? ':' : ' (or leave current one for overwriting):')))
-                            .append($("<br/>")).append($input);
+                            .append($('<br/>')).append($input);
             Jupyter.dialog.modal({
                 title: withError ? 'There are some problems checking object existence' :
                     'Object with this name already exists',
                 body: dialog,
                 buttons : {
-                    "Cancel": {},
-                    "OK": {
-                        class: "btn btn-primary",
+                    'Cancel': {},
+                    'OK': {
+                        class: 'btn btn-primary',
                         click: function () {
                             var newName = $(this).find('input').val();
                             self.copyFinal(object, newName, thisBtn);
@@ -550,7 +606,7 @@ define ([
                 open : function () {
                     var dlg = $(this);
                     // Upon ENTER, click the OK button.
-                    dlg.find('input[type="text"]').keydown(function (event, ui) {
+                    dlg.find('input[type="text"]').keydown(function (event) {
                         if (event.which === Jupyter.utils.keycodes.ENTER)
                             dlg.find('.btn-primary').first().click();
                     });
@@ -560,16 +616,15 @@ define ([
         },
 
         copyFinal: function(object, targetName, thisBtn) {
-            console.log("Copying " + object.ws + "/" + object.id + " -> " + this.wsName + "/" + targetName);
             Promise.resolve(this.serviceClient.sync_call(
-                "NarrativeService.copy_object",
+                'NarrativeService.copy_object',
                 [{
                     ref: object.ws + '/' + object.id,
                     target_ws_name: this.wsName
                 }]
             ))
             .then(function(info) {
-                $(thisBtn).prop("disabled", false);
+                $(thisBtn).prop('disabled', false);
                 $(thisBtn).html('<span class="fa fa-chevron-circle-left"/> Add');
                 this.trigger('updateDataList.Narrative');
             }.bind(this))
@@ -602,9 +657,9 @@ define ([
         },
 
         logoColorLookup:function(type) {
-          var code = 0;
-          for (var i=0; i < type.length; code += type.charCodeAt(i++));
-          return this.icon_colors[ code % this.icon_colors.length ];
+            var code = 0;
+            for (var i=0; i < type.length; code += type.charCodeAt(i++));
+            return this.icon_colors[ code % this.icon_colors.length ];
         },
 
         showInfo: function(message, spinner) {
@@ -622,6 +677,6 @@ define ([
         loggedOutCallback: function() {
             this.token = null;
             return this;
-        },
+        }
     });
 });

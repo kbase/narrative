@@ -335,8 +335,9 @@ define ([
                         ws: null,
                         type: 'JGI.File',
                         attached: false,
-                        modDate: hit._source.file_date,
-                        copyAction: this.stageFile('jgi', hit._id)
+                        modDate: hit._id,
+                        copyAction: this.stageFile('jgi', hit._id),
+                        hitMetadata: hit._source.metadata
                     });
                     this.attachRow(this.objectList.length - 1, true);
                 }
@@ -346,10 +347,13 @@ define ([
             }.bind(this))
             .catch(function(error) {
                 console.error(error);
-            });
+                this.showError('Unable to retrieve public data.');
+                this.totalPanel.empty();
+            }.bind(this));
         },
 
         renderMore: function() {
+            this.hideError();
             var cat = this.categoryDescr[this.currentCategory];
             if (!cat.search && cat.ws) {
                 this.renderFromWorkspace(cat);
@@ -520,7 +524,8 @@ define ([
                 simpleMetadata: object.metadata,
                 buttonIcon: 'fa-chevron-circle-right',
                 buttonAction: 'Stage',
-                actionLeft: false
+                actionLeft: false,
+                detailedMetadata: object.hitMetadata
             }));
             Icon.buildDataIcon($row.find('#icon'), 'file');
 
@@ -654,6 +659,10 @@ define ([
                 errorMsg = error.error.message;
             this.infoPanel.empty();
             this.infoPanel.append('<div class="alert alert-danger">Error: '+errorMsg+'</span>');
+        },
+
+        hideError: function() {
+            this.infoPanel.empty();
         },
 
         logoColorLookup:function(type) {

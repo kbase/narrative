@@ -862,7 +862,7 @@ define([
                     listeners: {
                         active: listeners.length
                     }
-                }
+                };
             }
 
             function genName() {

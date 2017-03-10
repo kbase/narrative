@@ -1,21 +1,37 @@
 /*global define */
 /*jslint white:true,browser:true*/
 define([
+    'jquery',
     'base/js/namespace',
     'narrativeConfig',
     'common/props',
+    'common/clock',
     './monoBus'
-], function(
+], function (
+    $,
     Jupyter,
     Config,
     Props,
-    Bus) {
+    Clock,
+    Bus
+) {
     'use strict';
     var narrativeConfig = Props.make({ data: Config.getConfig() });
 
     function factory(config) {
         function createRuntime() {
             var bus = Bus.make();
+
+            var clock = Clock.make({
+                bus: bus,
+                resolution: 1000
+            });
+            clock.start();
+
+            $(document).on('dataUpdated.Narrative', function () {
+                bus.emit('workspace-changed');
+            });
+
             return {
                 created: new Date(),
                 bus: bus,
@@ -45,24 +61,6 @@ define([
 
         function getConfig(key, defaultValue) {
             return narrativeConfig.getItem(key, defaultValue);
-
-            //            var path = key.split('.'),
-            //                root = path[0],
-            //                rest = path.slice(1),
-            //                configRoot = Config.get(root);
-            //            if (!configRoot) {
-            //                return defaultValue;
-            //            }
-            //            rest.forEach(function (pathElement) {
-            //                configRoot = configRoot[pathElement];
-            //                if (!configRoot) {
-            //                    return;
-            //                }
-            //            });
-            //            if (!configRoot) {
-            //                return defaultValue;
-            //            }
-            //            return configRoot;
         }
 
         function getUserSetting(settingKey, defaultValue) {
@@ -104,8 +102,6 @@ define([
             }
         }
 
-        // This is how the 
-
         return {
             authToken: authToken,
             config: getConfig,
@@ -118,7 +114,7 @@ define([
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
         }
     };

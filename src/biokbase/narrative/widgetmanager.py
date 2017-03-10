@@ -340,6 +340,68 @@ class WidgetManager(object):
                                              timestamp=int(round(time.time()*1000)))
         return Javascript(data=js, lib=None, css=None)
 
+    def show_advanced_viewer_widget(self, widget_name, params, output_state, tag="release", title="", type="method", cell_id=None, check_widget=False, **kwargs):
+        """
+        Renders a widget using the generic kbaseNarrativeOutputWidget container.
+
+        Parameters
+        ----------
+        widget_name : string
+            The name of the widget to print the widgets for.
+        params : dict
+            The dictionary of parameters that gets fed into the widget.
+        tag : string, default="release"
+            The version tag to use when looking up widget information.
+        type : string, default="method"
+            The type of output widget to show (options = method,app,viewer)
+        check_widget: boolean, default=True
+            If True, checks for the presense of the widget_name and get its known constants from
+            the various app specs that invoke it. Raises a ValueError if the widget isn't found.
+            If False, skip that step.
+        **kwargs:
+            These vary, based on the widget. Look up required variable names
+            with WidgetManager.print_widget_inputs()
+        """
+
+        input_data = dict()
+
+        if check_widget:
+            check_tag(tag, raise_exception=True)
+            if widget_name not in self.widget_info[tag]:
+                raise ValueError("Widget %s not found with %s tag!" % (widget_name, tag))
+            input_data = self.get_widget_constants(widget_name, tag)
+
+        # Let the kwargs override constants
+        input_data.update(params)
+
+        if cell_id is not None:
+            cell_id = "\"{}\"".format(cell_id)
+
+        input_template = """
+        element.html("<div id='{{input_id}}' class='kb-vis-area'></div>");
+        require(['widgets/custom/advancedViewerOutputWrapper'], function(wrapperWidget) {
+            wrapperWidget.launchWidget({
+                id: '{{input_id}}',
+                data: {{input_data}},
+                state: {{output_state}},
+                widget: '{{widget_name}}',
+                cellId: {{cell_id}},
+                title: '{{cell_title}}',
+                time: {{timestamp}}
+            });
+        });
+        """
+
+        js = Template(input_template).render(input_id=self._cell_id_prefix + str(uuid.uuid4()),
+                                             widget_name=widget_name,
+                                             input_data=json.dumps(input_data),
+                                             output_state=json.dumps(output_state),
+                                             cell_title=title,
+                                             cell_id=cell_id,
+                                             timestamp=int(round(time.time()*1000)))
+        return Javascript(data=js, lib=None, css=None)
+        
+
     def show_data_widget(self, ref, title="", cell_id=None, tag="release"):
         """
         Renders a widget using the generic kbaseNarrativeOutputWidget container.

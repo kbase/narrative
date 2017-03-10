@@ -177,7 +177,7 @@ def app_param(p):
             p_info['is_output'] = opts['is_output_name']
         if 'valid_ws_types' in opts and len(opts['valid_ws_types']) > 0:
             p_info['allowed_types'] = opts['valid_ws_types']
-        if 'validate_as' in opts and p_info['type'] != 'checkbox':
+        if 'validate_as' in opts and p_info['type'] != 'checkbox' and p_info['type'] != 'custom':
             p_info['type'] = opts['validate_as']
         if 'min_float' in opts:
             p_info['min_val'] = opts['min_float']
@@ -548,7 +548,7 @@ def validate_param_value(param, value, workspace):
                  isinstance(value, list)):
         return (ws_ref, "input value not supported for 'custom_textsubdata' type - "
                         "only str or list is supported")
-    elif param['type'] not in ['group', 'mapping', 'textsubdata', 'custom_textsubdata'] and \
+    elif param['type'] not in ['group', 'mapping', 'textsubdata', 'custom_textsubdata', 'custom'] and \
             not (isinstance(value, basestring) or
                  isinstance(value, int) or
                  isinstance(value, float)):

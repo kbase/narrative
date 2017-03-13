@@ -533,10 +533,16 @@ define ([
             $row.mouseenter(function() {
                 $row.find('#action-button-div').show();
                 $row.find('.btn-toolbar').show();
+                $row.find('#meta-toggle').show();
             })
             .mouseleave(function() {
                 $row.find('#action-button-div').hide();
                 $row.find('.btn-toolbar').hide();
+                $row.find('#meta-toggle').hide();
+            });
+
+            $row.find('#meta-toggle button').click(function() {
+                $row.find('#mo-betta-meta').toggle();
             });
 
             $row.find('#action-button-div button').click(function() {

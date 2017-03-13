@@ -7,13 +7,11 @@
                     {{#if actionLeft}}
                         {{> actionPartial}}
                     {{else}}
-                        <td style="width:90px"></td>
+                        <td style="width:30px">
+                        </td>
                     {{/if}}
                     <td style="width: 50px">
-                        {{#if detailedMetadata}}
-                        <span class="pull-right fa fa-chevron-right"></span>
-                        {{/if}}
-                        <span id="icon"></span>
+                        <span id="icon" style="vertical-align:top"></span>
                     </td>
                     <td>
                         <div class="kb-data-list-info" style="padding: 0; margin: 0">
@@ -51,8 +49,20 @@
                                     <br><span class="kb-data-list-type">{{@key}}: {{this}}</span>
                                 {{/each}}
                             {{/if}}
+                            {{#if detailedMetadata}}
+                                <div id="mo-betta-meta" style="display:none">behold my metadata.</div>
+                            {{/if}}
                         </div>
                     </td>
+                    {{#if detailedMetadata}}
+                        <td style="width: 20px">
+                            <span id="meta-toggle" class="kb-data-list-more" style="display:none">
+                                <button class="kb-default-btn">
+                                    <span class="fa fa-ellipsis-h" style="color: #888"></span>
+                                </button>
+                            </span>
+                        </td>
+                    {{/if}}
                     {{#unless actionLeft}}
                         {{> actionPartial}}
                     {{/unless}}

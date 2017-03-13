@@ -16,6 +16,7 @@ define ([
     'base/js/namespace',
     'kbase-generic-client-api',
     'util/icon',
+    'util/string',
     'text!kbase/templates/data_slideout/object_row.html',
     'text!kbase/templates/data_slideout/action_button_partial.html'
 ], function (
@@ -29,6 +30,7 @@ define ([
     Jupyter,
     GenericClient,
     Icon,
+    StringUtil,
     StagingRowHtml,
     ActionButtonHtml
 ) {
@@ -331,13 +333,17 @@ define ([
                         info: null,
                         id: hit._id,
                         name: hit._source.file_name,
-                        metadata: {'File Type': hit._source.file_type[0], 'Project Id': hit._source.metadata.sequencing_project_id},
                         ws: null,
                         type: 'JGI.File',
                         attached: false,
-                        modDate: hit._id,
+                        // modDate: hit._source.file_date,
                         copyAction: this.stageFile('jgi', hit._id),
-                        hitMetadata: hit._source.metadata
+                        hitMetadata: hit._source.metadata,
+                        metadata: {
+                            'File Id': hit._id,
+                            'File Type': hit._source.file_type[0],
+                            'Project Id': hit._source.metadata.sequencing_project_id
+                        }
                     });
                     this.attachRow(this.objectList.length - 1, true);
                 }
@@ -541,8 +547,9 @@ define ([
                 $row.find('#meta-toggle').hide();
             });
 
+            $row.find('#mo-betta-meta').empty().html('<pre>' + StringUtil.prettyPrintJSON(object.hitMetadata) + '</pre>');
             $row.find('#meta-toggle button').click(function() {
-                $row.find('#mo-betta-meta').toggle();
+                $row.find('#mo-betta-meta').slideToggle();
             });
 
             $row.find('#action-button-div button').click(function() {
@@ -654,11 +661,6 @@ define ([
             }.bind(this));
         },
 
-        isCustomIcon: function (icon_list) {
-            return (icon_list.length > 0 && icon_list[0].length > 4 &&
-            icon_list[0].substring(0, 4) == 'icon');
-        },
-
         showError: function(error) {
             var errorMsg = error;
             if (error.error && error.error.message)
@@ -669,19 +671,6 @@ define ([
 
         hideError: function() {
             this.infoPanel.empty();
-        },
-
-        logoColorLookup:function(type) {
-            var code = 0;
-            for (var i=0; i < type.length; code += type.charCodeAt(i++));
-            return this.icon_colors[ code % this.icon_colors.length ];
-        },
-
-        showInfo: function(message, spinner) {
-            if (spinner)
-                message = '<img src="'+this.loadingImage+'"/> ' + message;
-            this.infoPanel.empty();
-            this.infoPanel.append(message);
         },
 
         loggedInCallback: function(event, auth) {

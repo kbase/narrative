@@ -1,6 +1,5 @@
 /* eslint max-len: ["error", 100 ] */
 /* global describe, beforeEach, afterEach, it, expect */
-'use strict';
 
 describe('Selenium Tutorial', function() {
 

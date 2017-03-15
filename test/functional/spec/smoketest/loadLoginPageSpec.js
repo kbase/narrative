@@ -10,7 +10,7 @@ describe('Selenium Tutorial', function() {
     // Open the TECH.insight website in the browser before each test is run
     beforeEach(function(done) {
         this.driver = new selenium.Builder().
-            withCapabilities(selenium.Capabilities.firefox()).
+            withCapabilities(selenium.Capabilities.phantomjs()).
             build();
         this.driver.manage().timeouts().implicitlyWait(timeoutMilliSec);
         jasmine.DEFAULT_TIMEOUT_INTERVAL = timeoutMilliSec;

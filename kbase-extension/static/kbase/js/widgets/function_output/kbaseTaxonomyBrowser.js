@@ -39,7 +39,7 @@ define (
         init: function init(options) {
           this._super(options);
           var $self = this;
-
+          //console.log("INIT WITH OPTIONS", options);
           this.genericClient = new GenericClient(Config.url('service_wizard'), {
             token: Runtime.make().authToken()
           });
@@ -98,13 +98,15 @@ define (
             .then(function (data) {
 
               var taxaInfo = data[0].TaxaInfo;
+              var viewInfo = data[0].view_info;
 
               var tableData = {
-                name    : 'placeholder',//taxaInfo.scientific_name,
+                name    : viewInfo.scientific_name,
+                parent : viewInfo.parent_name,
                 //peers   :
-                genomes : 'placeholder',//data[0].lineage_count,
-                aliases : 'placeholder',//taxaInfo.aliases.join(', '),
-                domain  : 'Bacteria'
+                genomes : data[0].lineage_count,
+                aliases : viewInfo.aliases.join(', '),
+                domain  : viewInfo.domain
               };
 
               var genomeTableData = [];

@@ -2,6 +2,8 @@ sudo: false
 language: python
 python:
   - "2.7"
+env:
+  - TRAVIS_NODE_VERSION="6.6.0"
 cache:
   directories:
   - kbase-extension/static/ext_components
@@ -20,4 +22,5 @@ before_install:
   - npm install -g karma-cli
 install:
   - pip install -r src/requirements.txt
+  - nvm install $TRAVIS_NODE_VERSION
 script: make build-travis-narrative && make test

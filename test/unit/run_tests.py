@@ -69,7 +69,7 @@ thread.setDaemon(True)
 thread.start()
 # time.sleep(15)
 
-test_command = ['grunt', 'test-browser']
+test_command = ['grunt', 'test']
 
 resp = 1
 try:

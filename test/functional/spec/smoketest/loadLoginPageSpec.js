@@ -14,7 +14,7 @@ describe('Selenium Tutorial', function() {
             build();
         this.driver.manage().timeouts().implicitlyWait(timeoutMilliSec);
         jasmine.DEFAULT_TIMEOUT_INTERVAL = timeoutMilliSec;
-        this.driver.get('https://narrative.kbase.us/').then(done);
+        this.driver.get('http://localhost:9999/narrative/').then(done);
     });
 
     // Close the website after each test is run (so that it is opened fresh each time)
@@ -23,8 +23,8 @@ describe('Selenium Tutorial', function() {
     });
 
     // Test to ensure we are on the home page by checking for username input
-    it('Should be on the login page', function(done) {
-        var element = this.driver.findElement(selenium.By.name('username'));
+    it('Should be on the narrative tree page', function(done) {
+        var element = this.driver.findElement(selenium.By.id('signin-button'));
         element.getAttribute('id').then(function(id) {
             expect(id).toBeDefined();
             done();

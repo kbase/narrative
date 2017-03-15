@@ -11,6 +11,7 @@ branches:
     - develop
     - staging
     - master
+    - travis-firefox
 
 before_install:
   - pip install virtualenv

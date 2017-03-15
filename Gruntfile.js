@@ -12,6 +12,7 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-regex-replace');
     grunt.loadNpmTasks('grunt-karma');
     grunt.loadNpmTasks('grunt-coveralls');
+    grunt.loadNpmTasks('grunt-jasmine-nodejs');
 
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
@@ -19,7 +20,7 @@ module.exports = function(grunt) {
         // Compile the requirejs stuff into a single, uglified file.
         // the options below are taken verbatim from a standard build.js file
         // used for r.js (if we were doing this outside of a grunt build)
-        requirejs: {
+        'requirejs': {
             compile: {
                 options: {
                     name: 'narrative_paths',
@@ -72,7 +73,7 @@ module.exports = function(grunt) {
                         search: 'narrativeMain.js',
 
                         replace: function(match) {
-                            return 'kbase-narrative-min.js'
+                            return 'kbase-narrative-min.js';
                         },
 
                         //     // do a little sneakiness here. we just did the filerev thing, so get that mapping
@@ -115,9 +116,53 @@ module.exports = function(grunt) {
                 autoWatch: true,
                 singleRun: false,
 
-            }
+            },
         },
 
+        'jasmine_nodejs': {
+            // task specific (default) options
+            options: {
+                useHelpers: true,
+                // global helpers, available to all task targets. accepts globs..
+                helpers: [],
+                random: false,
+                seed: null,
+                defaultTimeout: null, // defaults to 5000
+                stopOnFailure: false,
+                traceFatal: true,
+                // configure one or more built-in reporters
+                reporters: {
+                    console: {
+                        colors: true,        // (0|false)|(1|true)|2
+                        cleanStack: 1,       // (0|false)|(1|true)|2|3
+                        verbosity: 4,        // (0|false)|1|2|3|(4|true)
+                        listStyle: 'indent', // "flat"|"indent"
+                        activity: false
+                    },
+                    // junit: {
+                    //     savePath: "./reports",
+                    //     filePrefix: "junit-report",
+                    //     consolidate: true,
+                    //     useDotNotation: true
+                    // },
+                },
+                // add custom Jasmine reporter(s)
+                customReporters: []
+            },
+            functional: {
+                options: {
+                    useHelpers: true
+                },
+                // spec files
+                specs: [
+                    'test/functional/spec/**/*Spec.js'
+                ],
+                // target-specific helpers
+                helpers: [
+                    'test/functional/helpers/**/*.helper.js'
+                ]
+            },
+        },
         // Run coveralls and send the info.
         'coveralls': {
             options: {
@@ -150,9 +195,13 @@ module.exports = function(grunt) {
     // from travis-ci.
     grunt.registerTask('test-travis', [
         'karma:unit',
-        'coveralls'
+        'coveralls',
     ]);
 
+    // node (instead of karma) based jasmine tasks
+    grunt.registerTask('test-browser', [
+        'jasmine_nodejs'
+    ]);
     // Does an ongoing test run in a watching development
     // mode.
     grunt.registerTask('develop', [

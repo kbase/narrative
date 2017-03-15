@@ -2,6 +2,11 @@ sudo: false
 language: python
 python:
   - "2.7"
+addons:
+  firefox: "latest"
+  apt:
+    packages:
+      - oracle-java8-installer
 env:
   - TRAVIS_NODE_VERSION="6.6.0"
 cache:

@@ -2,7 +2,7 @@
 /* global describe, beforeEach, afterEach, it, expect */
 'use strict';
 
-describe('Selenium Tutorial', function() {
+describe('Narrative Smoketest', function() {
 
     var selenium = require('selenium-webdriver');
     var timeoutMilliSec = 10 * 1000;
@@ -10,7 +10,7 @@ describe('Selenium Tutorial', function() {
     // Open the TECH.insight website in the browser before each test is run
     beforeEach(function(done) {
         this.driver = new selenium.Builder().
-            withCapabilities(selenium.Capabilities.phantomjs()).
+            withCapabilities(selenium.Capabilities.firefox()).
             build();
         this.driver.manage().timeouts().implicitlyWait(timeoutMilliSec);
         jasmine.DEFAULT_TIMEOUT_INTERVAL = timeoutMilliSec;

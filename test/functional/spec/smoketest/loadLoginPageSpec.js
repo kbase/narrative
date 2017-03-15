@@ -5,12 +5,15 @@
 describe('Selenium Tutorial', function() {
 
     var selenium = require('selenium-webdriver');
+    var timeoutMilliSec = 10 * 1000;
 
     // Open the TECH.insight website in the browser before each test is run
     beforeEach(function(done) {
         this.driver = new selenium.Builder().
             withCapabilities(selenium.Capabilities.firefox()).
             build();
+        this.driver.manage().timeouts().implicitlyWait(timeoutMilliSec);
+        jasmine.DEFAULT_TIMEOUT_INTERVAL = timeoutMilliSec;
         this.driver.get('https://narrative.kbase.us/').then(done);
     });
 
@@ -21,7 +24,6 @@ describe('Selenium Tutorial', function() {
 
     // Test to ensure we are on the home page by checking for username input
     it('Should be on the login page', function(done) {
-        this.driver.manage().timeouts().implicitlyWait(5 * 1000);
         var element = this.driver.findElement(selenium.By.name('username'));
         element.getAttribute('id').then(function(id) {
             expect(id).toBeDefined();

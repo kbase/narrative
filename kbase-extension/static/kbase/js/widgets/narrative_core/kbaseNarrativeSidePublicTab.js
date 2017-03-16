@@ -242,7 +242,6 @@ define ([
             this.currentPage++;
             this.search(this.currentCategory, this.currentQuery, this.itemsPerPage, this.currentPage, function(query, data) {
                 if (query !== this.currentQuery) {
-                    //console.log("Skip results for: " + query);
                     return;
                 }
                 this.totalPanel.empty();
@@ -264,7 +263,48 @@ define ([
                             metadata: {'Domain': domain, 'Contigs': contigs, 'Genes': genes},
                             ws: cat.ws,
                             type: cat.type,
-                            attached: false
+                            attached: false,
+                            ws_ref:null
+                        });
+                        this.attachRow(this.objectList.length - 1);
+                    }
+                }
+                else if (this.currentCategory === 'reference_genomes') {
+                    for (var i in data.items) {
+                        var genome_record = data.items[i];
+                        var id = genome_record.genome_id;
+                        var source = genome_record.genome_source;
+                        var genome_source_id = '';
+                        if(genome_record['genome_source_id']) {
+                            genome_source_id = '- ' + String(genome_record['genome_source_id']);
+                        }
+                        var name = genome_record.scientific_name;
+                        var domain = genome_record.domain;
+                        var n_contigs = genome_record.num_contigs;
+                        var num_cds = genome_record.num_cds;
+                        var ws_ref = null;
+                        if(genome_record['ws_ref']){
+                            ws_ref = genome_record['ws_ref'];
+                        }
+                        var ws_name = cat.ws;
+                        if(genome_record['workspace_name']) {
+                            ws_name = genome_record['workspace_name'];
+                        }
+                        console.log(genome_record);
+                        this.objectList.push({
+                            $div: null,
+                            info: null,
+                            id: id,
+                            name: name,
+                            metadata: {
+                                'Domain': domain,
+                                'Source': id + ' (' + source + ') ' + genome_source_id, 
+                                'Contigs': String(n_contigs) + ', Genes: ' + String(num_cds)
+                            },
+                            ws: ws_name,
+                            type: cat.type,
+                            attached: false,
+                            ws_ref: ws_ref
                         });
                         this.attachRow(this.objectList.length - 1);
                     }
@@ -435,6 +475,11 @@ define ([
                 isShortened=true;
             }
             var landingPageLink = this.options.lp_url + object.ws + '/' + object.id;
+            var provenanceLink = '/#objgraphview/'+object.ws+'/'+object.id;
+            if(object['ws_ref']) {
+                landingPageLink = this.options.lp_url + object.ws_ref;
+                provenanceLink = '/#objgraphview/' + object.ws_ref;
+            }
             var $name = $('<span>')
                         .addClass('kb-data-list-name')
                         .append('<a href="'+landingPageLink+'" target="_blank">' + shortName + '</a>');
@@ -459,7 +504,7 @@ define ([
                                         .append($('<span>').addClass('fa fa-sitemap fa-rotate-90').css(css))
                                         .click(function(e) {
                                             e.stopPropagation();
-                                            window.open('/#objgraphview/'+object.ws+'/'+object.id);
+                                            window.open(provenanceLink);
                                         });
             $btnToolbar.append($openLandingPage).append($openProvenance);
 
@@ -634,6 +679,10 @@ define ([
         },
 
         copyFinal: function(object, targetName, thisBtn) {
+            var ref = object.ws + '/' + object.id;
+            if(object['ws_ref']) {
+                ref = object['ws_ref'];
+            }
             Promise.resolve(this.serviceClient.sync_call(
                 'NarrativeService.copy_object',
                 [{

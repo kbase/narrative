@@ -22,12 +22,9 @@ describe('Narrative Smoketest', function() {
         this.driver.quit().then(done);
     });
 
-    //var username = this.driver.findElement(selenium.By.name('user_id'));
-    //var password = this.driver.findElement(selenium.By.name('password'));
-
     // Test to ensure we are on the home page by checking for sign-in button
     it('The sign-in button is visible', function(done) {
-        var element = this.driver.findElement(selenium.By.css('[data-id="loginlink"]'));
+        var element = this.driver.findElement(selenium.By.id('signin-button'));
         element.getText().then( function(text){
             expect(text).toContain('Sign In');
             done();
@@ -35,7 +32,7 @@ describe('Narrative Smoketest', function() {
     });
 
     it('Clicking signin brings up modal dialog', function(done) {
-        var element = this.driver.findElement(selenium.By.css('[data-id="loginlink"]'));
+        var element = this.driver.findElement(selenium.By.id('signin-button'));
         element.click();
         var element2 = this.driver.findElement(selenium.By.css('[data-id="user_id"]'));
         element2.isDisplayed().then(function( displayed) {

@@ -1,8 +1,8 @@
 FROM kbase/narrprereq:1.1
 MAINTAINER William Riehl wjriehl@lbl.gov
 
-ENV JUPYTER_VERSION 4.4.0
-ENV IPYWIDGETS_VERSION 5.2.2
+ENV JUPYTER_VERSION 4.4.1
+ENV IPYWIDGETS_VERSION 6.0.0
 
 RUN mkdir -p /kb/installers
 

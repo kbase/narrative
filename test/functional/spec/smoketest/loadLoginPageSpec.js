@@ -7,7 +7,7 @@ describe('Narrative Smoketest', function() {
     var selenium = require('selenium-webdriver');
     var timeoutMilliSec = 10 * 1000;
 
-    // Open the TECH.insight website in the browser before each test is run
+    // Open up the local instance of the narrative from test/unit/run_tests.py
     beforeEach(function(done) {
         this.driver = new selenium.Builder().
             withCapabilities(selenium.Capabilities.firefox()).

@@ -1,5 +1,5 @@
 /* eslint max-len: ["error", 100 ] */
-/* global describe, beforeEach, afterEach, it, expect */
+/* global describe, beforeEach, afterEach, it, expect, jasmine */
 'use strict';
 
 describe('Narrative Smoketest', function() {
@@ -22,13 +22,26 @@ describe('Narrative Smoketest', function() {
         this.driver.quit().then(done);
     });
 
-    // Test to ensure we are on the home page by checking for username input
-    it('Should be on the narrative tree page', function(done) {
-        var element = this.driver.findElement(selenium.By.id('signin-button'));
-        element.getAttribute('id').then(function(id) {
-            expect(id).toBeDefined();
+    //var username = this.driver.findElement(selenium.By.name('user_id'));
+    //var password = this.driver.findElement(selenium.By.name('password'));
+
+    // Test to ensure we are on the home page by checking for sign-in button
+    it('The sign-in button is visible', function(done) {
+        var element = this.driver.findElement(selenium.By.css('[data-id="loginlink"]'));
+        element.getText().then( function(text){
+            expect(text).toContain('Sign In');
             done();
         });
     });
 
+    it('Clicking signin brings up modal dialog', function(done) {
+        var element = this.driver.findElement(selenium.By.css('[data-id="loginlink"]'));
+        element.click();
+        var element2 = this.driver.findElement(selenium.By.css('[data-id="user_id"]'));
+        element2.isDisplayed().then(function( displayed) {
+            expect(displayed).toBeTruthy();
+            done();
+        });
+
+    });
 });

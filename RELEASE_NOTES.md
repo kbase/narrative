@@ -8,6 +8,7 @@ __Changes__
 - Added a prototype Public Data option to fetch files from JGI and load them into a user's staging area.
 - Fixed problems with the Sharing popover having a very narrow text box.
 - Updated the Search area to retrieve data from the updated service.
+- Introduced a new Selenium-based browser testing harness.
 
 ### Version 3.1.12
 __Changes__

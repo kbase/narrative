@@ -86,6 +86,7 @@ define([
                 }
             }))
             .then(function(files) {
+                console.warn(files);
                 return Promise.try(function() {
                     files.forEach(function(file) {
                         if (file.isFolder) {
@@ -97,7 +98,7 @@ define([
                             objUrl: '/#dataview/123/objectName',
                             objName: 'myObject',
                             reportRef: 'reportRef'
-                        }
+                        };
                     });
                     return files;
                 });
@@ -139,7 +140,7 @@ define([
 
         renderFiles: function(files) {
             var $fileTable = $(this.ftpFileTableTmpl({files: files, uploaders: this.uploaders.dropdown_order}));
-            this.$elem.append($fileTable)
+            this.$elem.append($fileTable);
             this.$elem.find('table').dataTable({
                 dom: '<"file-path pull-left">frtip',
                 bAutoWidth: false,
@@ -149,10 +150,10 @@ define([
                     mRender: function(data, type, full) {
                         if (type === 'display') {
                             var isFolder = data === 'true' ? true : false;
-                            var icon = isFolder ? "folder" : "file-o";
-                            var disp = "<span><i class='fa fa-" + icon + "'></i></span>";
+                            var icon = isFolder ? 'folder' : 'file-o';
+                            var disp = '<span><i class="fa fa-' + icon + '"></i></span>';
                             if (isFolder) {
-                                disp = "<button data-name='" + full[1] + "' class='btn btn-xs btn-default'>" + disp + "</button>";
+                                disp = '<button data-name="' + full[1] + '" class="btn btn-xs btn-default">' + disp + '</button>';
                             }
                             return disp;
                         } else {
@@ -164,7 +165,7 @@ define([
                     sClass: 'staging-name',
                     mRender: function(data, type, full) {
                         if (type === 'display') {
-                            return "<div class='kb-data-staging-table-name'>" + data + "</div>";
+                            return '<div class="kb-data-staging-table-name">' + data + '</div>';
                         }
                         return data;
                     }
@@ -190,6 +191,14 @@ define([
                     sType: 'numeric'
                 }],
                 fnRowCallback: function(nRow, aData, iDisplayIndex, iDisplayIndexFull) {
+                    $('td:eq(1)', nRow).find('.kb-data-staging-table-name').tooltip({
+                        title: $('td:eq(1)', nRow).find('.kb-data-staging-table-name').text(),
+                        placement: 'top',
+                        delay: {
+                            show: Config.get('tooltip').showDelay,
+                            hide: Config.get('tooltip').hideDelay
+                        }
+                    });
                     $('td:eq(4)', nRow).find('select').select2({
                         placeholder: 'Select a format'
                     });
@@ -225,7 +234,7 @@ define([
                         if (this.subpath) {
                             fileParam = this.subpath + '/' + file;
                         }
-                        if (appInfo.app_input_param_type === "list") {
+                        if (appInfo.app_input_param_type === 'list') {
                             fileParam = [fileParam];
                         }
                         meta.kbase.appCell.params[appInfo.app_input_param] = fileParam;
@@ -241,8 +250,8 @@ define([
                     }.bind(this))
                     .catch(function(err) {
                         new BootstrapDialog({
-                            title: "Can't create uploader app!",
-                            body: "Sorry, unable to create App Cell to start your upload. You may need to set your Apps panel to 'dev' or 'beta'.",
+                            title: 'Can\'t create uploader app!',
+                            body: 'Sorry, unable to create App Cell to start your upload. You may need to set your Apps panel to \'dev\' or \'beta\'.',
                             buttons: [ $('<button class="btn btn-primary" data-dismiss="modal">OK</button>') ],
                             closeButton: true,
                             enterToTrigger: true

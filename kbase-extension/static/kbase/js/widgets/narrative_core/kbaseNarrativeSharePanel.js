@@ -303,11 +303,9 @@ define (
                                     );
                                 }))));
 
-                    $addUsersDiv.append(
-                        $('<table>').css({'width': '100%'})
-                        .append($('<tr>')
-                            .append($('<td>').append($input))
-                            .append($('<td>').append($addAction))));
+                    $addUsersDiv.append($('<span>')
+                        .append($input.css({'width': '85%'}))
+                        .append($addAction));
 
                     self.setupSelect2($input, 'share with...');
                     self.$mainPanel.append($addUsersDiv);
@@ -485,7 +483,6 @@ define (
                     placeholder: placeholder,
                     multiple: true,
                     dataAdapter: CustomData,
-                    dropdownAutoWidth: true,
                     language: {
                         noResults: function () {
                             return noMatchesFoundStr;

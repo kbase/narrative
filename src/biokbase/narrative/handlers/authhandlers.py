@@ -1,25 +1,26 @@
-"""
-KBase handlers for authentication in the Jupyter notebook.
-"""
-__author__ = 'Bill Riehl <wjriehl@lbl.gov>'
-
 from tornado.escape import url_escape
 from notebook.base.handlers import IPythonHandler
 from traitlets.config import Application
 from notebook.auth.login import LoginHandler
 from notebook.auth.logout import LogoutHandler
-
 from biokbase.narrative.common.kblogging import (
     get_logger, log_event
 )
 from biokbase.narrative.common.util import kbase_env
-import biokbase.auth
-
 import tornado.log
-import re
 import os
 import urllib
 import logging
+from biokbase.auth import (
+    get_user_info,
+    init_session_env,
+    set_environ_token
+)
+
+"""
+KBase handlers for authentication in the Jupyter notebook.
+"""
+__author__ = 'Bill Riehl <wjriehl@lbl.gov>'
 
 # Set logging up globally.
 g_log = get_logger("biokbase.narrative")
@@ -33,6 +34,7 @@ if os.environ.get('KBASE_DEBUG', False):
 
 auth_cookie_name = "kbase_session"
 
+
 class KBaseLoginHandler(LoginHandler):
     """KBase-specific login handler.
     This should get the cookie and put it where it belongs.
@@ -45,8 +47,7 @@ class KBaseLoginHandler(LoginHandler):
         Initializes the KBase session from the cookie passed into it.
         """
 
-        cookie_regex = re.compile('([^ =|]+)=([^\|]*)')
-
+        # cookie_regex = re.compile('([^ =|]+)=([^\|]*)')
         client_ip = self.request.remote_ip
         http_headers = self.request.headers
         ua = http_headers.get('User-Agent', 'unknown')
@@ -55,32 +56,29 @@ class KBaseLoginHandler(LoginHandler):
 
         auth_cookie = self.cookies.get(auth_cookie_name, None)
         if auth_cookie:
-            # Push the cookie
-            cookie_val = urllib.unquote(auth_cookie.value)
-            cookie_obj = {
-                k: v.replace('EQUALSSIGN', '=').replace('PIPESIGN', '|')
-                for k, v in cookie_regex.findall(cookie_val)
-            }
+            token = urllib.unquote(auth_cookie.value)
+            auth_info = dict()
+            try:
+                auth_info = get_user_info(token)
+            except Exception as e:
+                app_log.error("Unable to get user information from authentication token!")
+
             if app_log.isEnabledFor(logging.DEBUG):
                 app_log.debug("kbase cookie = {}".format(cookie_val))
                 app_log.debug("KBaseLoginHandler.get: user_id={uid} token={tok}"
-                    .format(uid=sess.get('token', 'none'),
-                            tok=sess.get('token', 'none')))
-
-            biokbase.auth.set_environ_token(cookie_obj.get('token', None))
-            kbase_env.session = cookie_obj.get('kbase_sessionid', '')
-            kbase_env.client_ip = client_ip
-            kbase_env.user = cookie_obj.get('user_id', '')
-            log_event(g_log, 'session_start', {'user': kbase_env.user, 'user_agent': ua})
+                              .format(uid=auth_info.get('user', 'none'),
+                                      tok=token))
+            init_session_env(auth_info, client_ip)
             self.current_user = kbase_env.user
+            log_event(g_log, 'session_start', {'user': kbase_env.user, 'user_agent': ua})
 
         app_log.info("KBaseLoginHandler.get(): user={}".format(kbase_env.user))
+        app_log.info("KBaseLoginHandler.get(): token={}".format(kbase_env.auth_token))
 
         if self.current_user:
             self.redirect(self.get_argument('next', default=self.base_url))
         else:
             self.write('This is a test?')
-
 
     def post(self):
         pass
@@ -106,6 +104,7 @@ class KBaseLoginHandler(LoginHandler):
         """Whether this LoginHandler is needed - and therefore whether the login page should be displayed."""
         return True
 
+
 class KBaseLogoutHandler(LogoutHandler):
     def get(self):
         client_ip = self.request.remote_ip
@@ -119,7 +118,7 @@ class KBaseLogoutHandler(LogoutHandler):
         kbase_env.user = 'anonymous'
         kbase_env.workspace = 'none'
 
-        biokbase.auth.set_environ_token(None)
+        set_environ_token(None)
 
         app_log.info('Successfully logged out')
         log_event(g_log, 'session_close', {'user': user, 'user_agent': ua})

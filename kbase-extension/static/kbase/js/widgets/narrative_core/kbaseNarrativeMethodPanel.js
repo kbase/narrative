@@ -399,7 +399,7 @@ define ([
             }
 
             this.methClient = new NarrativeMethodStore(this.options.methodStoreURL);
-            this.catalog = new Catalog(this.options.catalogURL, { token: this.auth().token });
+            this.catalog = new Catalog(this.options.catalogURL, { token: Jupyter.narrative.authToken });
 
             if (this.options.autopopulate === true) {
                 this.refresh();
@@ -534,7 +534,7 @@ define ([
 
             Promise.all(loadingCalls)
                 .then(function() {
-                    return Promise.resolve(self.catalog.list_favorites(self.auth().user_id))
+                    return Promise.resolve(self.catalog.list_favorites(Jupyter.narrative.userId))
                         .then(function(favs) {
                             for(var k=0; k<favs.length; k++) {
                                 var fav = favs[k];

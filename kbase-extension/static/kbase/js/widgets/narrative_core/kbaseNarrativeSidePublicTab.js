@@ -17,8 +17,11 @@ define ([
     'kbase-generic-client-api',
     'util/icon',
     'util/string',
+    'util/bootstrapDialog',
     'text!kbase/templates/data_slideout/object_row.html',
-    'text!kbase/templates/data_slideout/action_button_partial.html'
+    'text!kbase/templates/data_slideout/action_button_partial.html',
+    'text!kbase/templates/data_slideout/jgi_data_policy.html',
+    'text!kbase/templates/data_slideout/data_policy_panel.html'
 ], function (
     KBWidget,
     bootstrap,
@@ -31,8 +34,11 @@ define ([
     GenericClient,
     Icon,
     StringUtil,
+    BootstrapDialog,
     StagingRowHtml,
-    ActionButtonHtml
+    ActionButtonHtml,
+    JGIDataPolicyHtml,
+    DataPolicyPanelHtml
 ) {
     'use strict';
     return KBWidget({
@@ -94,7 +100,10 @@ define ([
             if ((!this.token) || (!this.wsName))
                 return;
             this.infoPanel = $('<div>');
-            this.$elem.empty().append(this.infoPanel);
+            this.dataPolicyPanel = $('<div>');
+            this.$elem.empty()
+                .append(this.infoPanel)
+                .append(this.dataPolicyPanel);
             if (!this.categories) {
                 this.showError('Unable to load public data configuration! Please refresh your page to try again. If this continues to happen, please <a href="https://kbase.us/contact-us/">click here</a> to contact KBase with the problem.');
                 return;
@@ -115,6 +124,15 @@ define ([
             var filterInput = $('<input type="text" class="form-control kb-import-search" placeholder="Search data...">').css(mrg);
             typeInput.change(function() {
                 this.searchAndRender(typeInput.val(), filterInput.val());
+                /** HACK TO SHOW DATA POLICY **/
+                if (!this.agreeDataPolicy && typeInput.val() === 'jgi_gateway') {
+                    this.dataPolicyPanel.show();
+                    this.showDataPolicy();
+                }
+                else {
+                    this.dataPolicyPanel.hide();
+                }
+                /** END DATA POLICY HACK **/
             }.bind(this));
             filterInput.keyup(function(e) {
                 this.searchAndRender(typeInput.val(), filterInput.val());
@@ -298,7 +316,7 @@ define ([
                             name: name,
                             metadata: {
                                 'Domain': domain,
-                                'Source': id + ' (' + source + ') ' + genome_source_id, 
+                                'Source': id + ' (' + source + ') ' + genome_source_id,
                                 'Contigs': String(n_contigs) + ', Genes: ' + String(num_cds)
                             },
                             ws: ws_name,
@@ -396,6 +414,37 @@ define ([
                 this.showError('Unable to retrieve public data.');
                 this.totalPanel.empty();
             }.bind(this));
+        },
+
+        showDataPolicy: function() {
+            var showPolicyModal = function() {
+                var policyDialog = new BootstrapDialog({
+                    title: 'JGI Data Usage and Download Policy (October 1, 2013)',
+                    body: JGIDataPolicyHtml,
+                    closeButton: true,
+                    enterToTrigger: true,
+                    buttons: [$('<button class="kb-primary-btn">OK</button>').click(function() {
+                        policyDialog.hide();
+                    })]
+                });
+                policyDialog.getElement().one('hidden.bs.modal', function() {
+                    policyDialog.destroy();
+                });
+                policyDialog.show();
+            };
+
+            var $dataPolicyAlert = $(Handlebars.compile(DataPolicyPanelHtml)());
+            $dataPolicyAlert.find('#view_policy_btn')
+                .click(function() {
+                    showPolicyModal();
+                });
+            $dataPolicyAlert.find('#agree_policy_btn')
+                .click(function() {
+                    this.agreeDataPolicy = true;
+                    $dataPolicyAlert.slideUp();
+                }.bind(this));
+
+            this.dataPolicyPanel.empty().append($dataPolicyAlert);
         },
 
         renderMore: function() {
@@ -592,12 +641,17 @@ define ([
                 $row.find('#meta-toggle').hide();
             });
 
-            $row.find('#mo-betta-meta').empty().html('<pre>' + StringUtil.prettyPrintJSON(object.hitMetadata) + '</pre>');
+            $row.find('#more-metadata').empty().html('<pre>' + StringUtil.prettyPrintJSON(object.hitMetadata) + '</pre>');
             $row.find('#meta-toggle button').click(function() {
-                $row.find('#mo-betta-meta').slideToggle();
+                $row.find('#more-metadata').slideToggle();
             });
 
+            var self = this;
             $row.find('#action-button-div button').click(function() {
+                if (!self.agreeDataPolicy) {
+                    alert('You must agree to the JGI Data Policy before copying.');
+                    return;
+                }
                 $(this).attr('disabled', 'disabled');
                 $(this).html('<img src="' + Config.get('loading_gif') + '">');
 

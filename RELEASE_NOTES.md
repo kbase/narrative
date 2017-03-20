@@ -3,6 +3,11 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v4.4.1 (more notes will follow).
 
+### Version 3.2.1
+__Changes__
+- Added JGI Data policy requirement to the JGI Public Data browser/stager.
+- Fixed a text problem with an FBA viewer tab.
+
 ### Version 3.2.0
 __Changes__
 - Added a prototype Public Data option to fetch files from JGI and load them into a user's staging area.

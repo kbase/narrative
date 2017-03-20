@@ -44,7 +44,7 @@ define (
         $notificationPanel: null,
         init: function (options) {
             this._super(options);
-
+            alert('initing share panel');
             this.$notificationPanel = $('<div>');
             this.$elem.append(this.$notificationPanel);
 
@@ -222,7 +222,7 @@ define (
 
                 if (isOwner) {
                     var $addUsersDiv = $('<div>').css({'margin-top': '10px'});
-                    var $input = $('<select>')
+                    var $input = $('<select multiple data-placeholder="Share with...">')
                         .addClass('kb-share-select');
 
                     var $addAction =
@@ -307,7 +307,7 @@ define (
                         .append($input.css({'width': '85%'}))
                         .append($addAction));
 
-                    self.setupSelect2($input, 'share with...');
+                    self.setupSelect2($input);
                     self.$mainPanel.append($addUsersDiv);
                 }
 
@@ -408,9 +408,9 @@ define (
             }
         },
         /* private method - note: if placeholder is empty, then users cannot cancel a selection*/
-        setupSelect2: function ($input, placeholder) {
+        setupSelect2: function ($input) {
             var self = this;
-            var noMatchesFoundStr = "Search by Name or Username";//"no users found";
+            var noMatchesFoundStr = 'Search by Name or Username';//"no users found";
 
             $.fn.select2.amd.require([
                 'select2/data/array',
@@ -433,7 +433,7 @@ define (
                                     id: user.username,
                                     text: user.realname,
                                     found: true
-                                })
+                                });
                             });
                             return Promise.try(function() { return results; });
                         })
@@ -476,13 +476,16 @@ define (
                     else {
                         callback({ results: [] });
                     }
-                }
+                };
 
                 $input.select2({
                     formatNoMatches: noMatchesFoundStr,
-                    placeholder: placeholder,
+                    placeholder: function() {
+                        return $(this).data('placeholder');
+                    },
                     multiple: true,
                     dataAdapter: CustomData,
+                    minimumResultsForSearch: 0,
                     language: {
                         noResults: function () {
                             return noMatchesFoundStr;
@@ -503,6 +506,7 @@ define (
                         return $('<b>' + object.text + '</b> (not found)');
                     }
                 });
+                $input.trigger('change');
             });
         },
         showWorking: function (message) {

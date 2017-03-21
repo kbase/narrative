@@ -37,8 +37,6 @@ define(
         'common/ui',
         'common/html',
         'narrativeTour',
-        'webuiPopover',
-
         // for effect
         'bootstrap',
 
@@ -265,7 +263,7 @@ define(
         var shareWidget = new KBaseNarrativeSharePanel(sharePanel, {
             ws_name_or_id: this.getWorkspaceName()
         });
-        $('#kb-share-btn').webuiPopover({
+        $('#kb-share-btn').popover({
             trigger: 'click',
             html: true,
             placement: 'bottom',
@@ -291,11 +289,11 @@ define(
         });
 
         $('#kb-ipy-menu').click(function() {
-            $('#kb-share-btn').webuiPopover('hide');
+            $('#kb-share-btn').popover('hide');
         });
 
         $('#kb-help-menu').click(function() {
-            $('#kb-share-btn').webuiPopover('hide');
+            $('#kb-share-btn').popover('hide');
         });
 
 

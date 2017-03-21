@@ -37,6 +37,7 @@ define(
         'common/ui',
         'common/html',
         'narrativeTour',
+        'webuiPopover',
 
         // for effect
         'bootstrap',
@@ -264,23 +265,40 @@ define(
         var shareWidget = new KBaseNarrativeSharePanel(sharePanel, {
             ws_name_or_id: this.getWorkspaceName()
         });
-        $('#kb-share-btn').popover({
+        $('#kb-share-btn').webuiPopover({
             trigger: 'click',
             html: true,
             placement: 'bottom',
+            width: 300,
+            height: 'auto',
+            cache: true,
             content: function () {
                 // we do not allow users to leave their narratives untitled
                 if (Jupyter.notebook) {
                     var narrName = Jupyter.notebook.notebook_name;
                     if (narrName.trim().toLowerCase() === 'untitled' || narrName.trim().length === 0) {
                         Jupyter.save_widget.rename_notebook({notebook: Jupyter.notebook});
-                        return "<br><br>Please name your Narrative before sharing.<br><br>";
+                        return '<br><br>Please name your Narrative before sharing.<br><br>';
                     }
                     this.disableKeyboardManager();
                 }
                 return sharePanel;
             }.bind(this)
         });
+        $('#kb-share-btn').click(function() {
+            $('#kb-ipy-menu').parent().removeClass('open');
+            $('#kb-help-menu').parent().removeClass('open');
+        });
+
+        $('#kb-ipy-menu').click(function() {
+            $('#kb-share-btn').webuiPopover('hide');
+        });
+
+        $('#kb-help-menu').click(function() {
+            $('#kb-share-btn').webuiPopover('hide');
+        });
+
+
     };
 
     /**

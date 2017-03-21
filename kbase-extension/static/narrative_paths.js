@@ -4,6 +4,7 @@ require.config({
     // Jupyter does some magic where it merges its /static/ directory
     // with this one (kbase-profile/static)
     paths: {
+        webuiPopover: 'ext_components/webui-popover/dist/jquery.webui-popover',
         bluebird: 'ext_components/bluebird/js/browser/bluebird.min',
         'bootstrap-slider': 'ext_components/bootstrap-slider/bootstrap-slider',
         'jquery-dataTables': 'ext_components/datatables/media/js/jquery.dataTables.min',

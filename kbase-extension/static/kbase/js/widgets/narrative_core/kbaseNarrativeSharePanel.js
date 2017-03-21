@@ -44,7 +44,6 @@ define (
         $notificationPanel: null,
         init: function (options) {
             this._super(options);
-            alert('initing share panel');
             this.$notificationPanel = $('<div>');
             this.$elem.append(this.$notificationPanel);
 

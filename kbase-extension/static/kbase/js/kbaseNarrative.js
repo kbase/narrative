@@ -259,44 +259,67 @@ define(
      * that show and hide it.
      */
     Narrative.prototype.initSharePanel = function () {
-        var sharePanel = $('<div>');
-        var shareWidget = new KBaseNarrativeSharePanel(sharePanel, {
-            ws_name_or_id: this.getWorkspaceName()
-        });
-        $('#kb-share-btn').popover({
-            trigger: 'click',
-            html: true,
-            placement: 'bottom',
-            width: 300,
-            height: 'auto',
-            cache: true,
-            content: function () {
-                // we do not allow users to leave their narratives untitled
-                if (Jupyter.notebook) {
-                    var narrName = Jupyter.notebook.notebook_name;
-                    if (narrName.trim().toLowerCase() === 'untitled' || narrName.trim().length === 0) {
-                        Jupyter.save_widget.rename_notebook({notebook: Jupyter.notebook});
-                        return '<br><br>Please name your Narrative before sharing.<br><br>';
-                    }
-                    this.disableKeyboardManager();
-                }
-                return sharePanel;
-            }.bind(this)
-        });
+        var sharePanel = $('<div>'),
+            shareWidget = null,
+            shareDialog = null;
+        var makeAndShowPanel = function () {
+            if (!shareWidget || !shareDialog) {
+                shareDialog = new BootstrapDialog({
+                    title: 'Change Share Settings',
+                    body: sharePanel,
+                    closeButton: true,
+                    buttons: [$('<button class="kb-primary-btn">Done</button>').click(function() { shareDialog.hide(); })]
+                });
+                shareWidget = new KBaseNarrativeSharePanel(sharePanel, {
+                    ws_name_or_id: this.getWorkspaceName()
+                });
+            }
+            shareDialog.show();
+        }.bind(this);
         $('#kb-share-btn').click(function() {
-            $('#kb-ipy-menu').parent().removeClass('open');
-            $('#kb-help-menu').parent().removeClass('open');
+            var narrName = Jupyter.notebook.notebook_name;
+            if (narrName.trim().toLowerCase() === 'untitled' || narrName.trim().length === 0) {
+                Jupyter.save_widget.rename_notebook({
+                    notebook: Jupyter.notebook,
+                    message: 'Please name your Narrative before sharing.',
+                    callback: makeAndShowPanel
+                });
+                return;
+            }
+            makeAndShowPanel();
         });
-
-        $('#kb-ipy-menu').click(function() {
-            $('#kb-share-btn').popover('hide');
-        });
-
-        $('#kb-help-menu').click(function() {
-            $('#kb-share-btn').popover('hide');
-        });
-
-
+        // $('#kb-share-btn').popover({
+        //     trigger: 'click',
+        //     html: true,
+        //     placement: 'bottom',
+        //     width: 300,
+        //     height: 'auto',
+        //     cache: true,
+        //     content: function () {
+        //         // we do not allow users to leave their narratives untitled
+        //         if (Jupyter.notebook) {
+        //             var narrName = Jupyter.notebook.notebook_name;
+        //             if (narrName.trim().toLowerCase() === 'untitled' || narrName.trim().length === 0) {
+        //                 Jupyter.save_widget.rename_notebook({notebook: Jupyter.notebook});
+        //                 return '<br><br>Please name your Narrative before sharing.<br><br>';
+        //             }
+        //             this.disableKeyboardManager();
+        //         }
+        //         return sharePanel;
+        //     }.bind(this)
+        // });
+        // $('#kb-share-btn').click(function() {
+        //     $('#kb-ipy-menu').parent().removeClass('open');
+        //     $('#kb-help-menu').parent().removeClass('open');
+        // });
+        //
+        // $('#kb-ipy-menu').click(function() {
+        //     $('#kb-share-btn').popover('hide');
+        // });
+        //
+        // $('#kb-help-menu').click(function() {
+        //     $('#kb-share-btn').popover('hide');
+        // });
     };
 
     /**

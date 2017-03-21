@@ -5,28 +5,27 @@
  * @author Michael Sneddon <mwsneddon@lbl.gov>
  * @public
  */
-define (
-	[
-        'bluebird',
-        'kbwidget',
-        'bootstrap',
-        'jquery',
-        'narrativeConfig',
-        'kbaseAuthenticatedWidget',
-        'select2'
-	], function(
+define ([
+    'bluebird',
+    'kbwidget',
+    'bootstrap',
+    'jquery',
+    'narrativeConfig',
+    'kbaseAuthenticatedWidget',
+    'select2'
+], function (
         Promise,
         KBWidget,
         bootstrap,
         $,
         Config,
         kbaseAuthenticatedWidget
-	) {
+) {
     'use strict';
     return KBWidget({
-        name: "kbaseNarrativeSharePanel",
+        name: 'kbaseNarrativeSharePanel',
         parent : kbaseAuthenticatedWidget,
-        version: "1.0.0",
+        version: '1.0.0',
         options: {
             ws_url: Config.url('workspace'),
             user_profile_url: Config.url('user_profile'),
@@ -78,55 +77,49 @@ define (
         user_data: {},
         all_users: null,
         getInfoAndRender: function () {
-            var self = this;
-            if (self.ws && self.options.ws_name_or_id) {
-                var wsIdentity = {};
-                if (this.options.ws_name_or_id) {
-                    if (/^[1-9]\d*$/.test(this.options.ws_name_or_id)) {
-                        wsIdentity.id = parseInt(this.options.ws_name_or_id);
-                    } else {
-                        wsIdentity.workspace = this.options.ws_name_or_id;
+            if (!this.ws || !this.options.ws_name_or_id) {
+                return;
+            }
+            var wsIdentity = {};
+            if (this.options.ws_name_or_id) {
+                if (/^[1-9]\d*$/.test(this.options.ws_name_or_id)) {
+                    wsIdentity.id = parseInt(this.options.ws_name_or_id);
+                } else {
+                    wsIdentity.workspace = this.options.ws_name_or_id;
+                }
+            }
+
+
+            // first get ws info
+            Promise.resolve(this.ws.get_workspace_info(wsIdentity))
+            .then(function (info) {
+                this.ws_info = info;
+                return Promise.resolve(this.ws.get_permissions(wsIdentity));
+            }.bind(this))
+            .then(function (perm) {
+                this.ws_permissions = [];
+                this.user_data = {};
+                var usernameList = [ this.my_user_id ];
+                for (var u in perm) {
+                    if (perm.hasOwnProperty(u)) {
+                        if (u !== '*') {
+                            this.ws_permissions.push([u, perm[u]]);
+                            usernameList.push(u);
+                        }
                     }
                 }
-                // first get ws info
-                self.ws.get_workspace_info(wsIdentity,
-                    function (info) {
-                        self.ws_info = info;
-                        self.ws.get_permissions(wsIdentity,
-                            function (perm) {
-                                self.ws_permissions = [];
-                                self.user_data = {};
-
-                                var usernameList = [self.my_user_id];
-                                var usernames = self.my_user_id + ",";
-                                for (var u in perm) {
-                                    if (perm.hasOwnProperty(u)) {
-                                        if (u !== '*') {
-                                            self.ws_permissions.push([u, perm[u]]);
-                                            usernames += u + ',';
-                                            usernameList.push(u);
-                                        }
-                                    }
-                                }
-                                self.user_profile.lookup_globus_user(usernameList,
-                                    function (data) {
-                                        self.user_data = data;
-                                        self.render();
-                                    },
-                                    function (error) {
-                                        console.error(error);
-                                        self.render();
-                                    });
-                            },
-                            function (error) {
-                                self.reportError(error);
-                            }
-                        );
-                    },
-                    function (error) {
-                        self.reportError(error);
-                    });
-            }
+                return Promise.resolve(this.user_profile.lookup_globus_user(usernameList));
+            }.bind(this))
+            .then(function (data) {
+                this.user_data = data;
+            }.bind(this))
+            .catch(function(error) {
+                console.error(error);
+                this.reportError(error);
+            })
+            .finally(function() {
+                this.render();
+            }.bind(this));
         },
         /*
 
@@ -146,265 +139,259 @@ define (
         isPrivate: true, // set if this ws is private or public
         render: function () {
             var self = this;
-            if (self.ws_info && self.ws_permissions) {
-                self.$mainPanel.empty();
-
-                var globalReadStatus = '<strong><span class="fa fa-lock" style="margin-right:10px"></span>Private</strong>';
-                var globalReadClass = "alert alert-info";
-                self.isPrivate = true;
-                if (self.ws_info[6] === 'r') {
-                    self.isPrivate = false;
-                    globalReadClass = "alert alert-success";
-                    globalReadStatus = '<strong><span class="fa fa-unlock" style="margin-right:10px"></span>Public</strong>';
-                }
-
-                var $topDiv = $('<div>')
-                    .addClass(globalReadClass)
-                    .css({'text-align': 'center', 'padding': '10px', 'margin': '5px'})
-                    .append(globalReadStatus);
-                self.$mainPanel.append($topDiv);
-
-                var $togglePublicPrivate = $('<div>').css({'text-align': 'center'}).hide();
-                if (self.isPrivate) {
-                    $togglePublicPrivate.append($('<a>').append('make public?')
-                        .on('click', function () {
-                            self.showWorking("updating permissions...");
-                            self.ws.set_global_permission(
-                                {id: self.ws_info[0], new_permission: 'r'},
-                                function () {
-                                    self.refresh();
-                                },
-                                function (error) {
-                                    console.log(error);
-                                    self.refresh();
-                                }
-                            );
-                        }));
-                } else {
-                    $togglePublicPrivate.append($('<a>').append('make private?')
-                        .on('click', function () {
-                            self.showWorking("updating permissions...");
-                            self.ws.set_global_permission(
-                                {id: self.ws_info[0], new_permission: 'n'},
-                                function () {
-                                    self.refresh();
-                                },
-                                function (error) {
-                                    self.reportError(error);
-                                    self.refresh();
-                                }
-                            );
-                        }));
-                }
-                self.$mainPanel.append($togglePublicPrivate);
-
-                var $meDiv = $('<div>').css({'margin': '5px', 'margin-top': '20px'});
-                var status = "You do not have access to this Narrative.";
-                var isOwner = false;
-                if (self.ws_info[2] === self.my_user_id) {
-                    status = "You own this Narrative. You can edit it and share it with other users.";
-                    isOwner = true;
-                    $togglePublicPrivate.show();
-                } else if (self.ws_info[5] === 'a') {
-                    status = "You can edit and share this Narrative.";
-                    isOwner = true;  // not really, but set this so we show sharing controls
-                    $togglePublicPrivate.show();
-                } else if (self.ws_info[5] === 'w') {
-                    status = "You can edit this Narrative, but you cannot share it.";
-                } else if (self.ws_info[5] === 'r' || self.ws_info[6] === 'r') { // either you can read it, or it is globally readable
-                    status = "You can view this Narrative, but you cannot edit or share it.";
-                }
-                var display = self.renderUserIconAndName(self.my_user_id, null, true);
-                $meDiv.append(display[0], display[1]);
-                $meDiv.append($('<div>').css({'margin-top': '10px'}).append(status));
-                self.$mainPanel.append($meDiv);
-
-                if (isOwner) {
-                    var $addUsersDiv = $('<div>').css({'margin-top': '10px'});
-                    var $input = $('<select multiple data-placeholder="Share with...">')
-                        .addClass('kb-share-select');
-
-                    var $addAction =
-                        $('<div>')
-                        .addClass('btn-group')
-                        .append($('<button>')
-                            .addClass('btn btn-default dropdown-toggle ')
-                            .attr('type', 'button')
-                            .attr('data-toggle', 'dropdown')
-                            .attr('aria-expanded', 'false')
-                            .append('<span class="fa fa-caret-down"></span>'))
-                        .append($('<ul>')
-                            .addClass('dropdown-menu pull-right')
-                            .attr('role', 'menu')
-                            // TODO: pull-right is deprecated, use dropdown-menu-right when bootstrap updates
-                            .append($('<li>').append(
-                                $('<a>').append('Add with view privileges')
-                                .on('click', function () {
-                                    var data = $input.select2("data");
-                                    self.showWorking("updating permissions...");
-                                    var users = [];
-                                    for (var i = 0; i < data.length; i++) {
-                                        if (data[i].id.trim() !== '') {
-                                            users.push(data[i].id.trim());
-                                        }
-                                    }
-                                    self.ws.set_permissions(
-                                        {id: self.ws_info[0], new_permission: 'r', users: users},
-                                        function () {
-                                            self.refresh();
-                                        },
-                                        function (error) {
-                                            self.reportError(error);
-                                            self.refresh();
-                                        }
-                                    );
-                                })))
-                            .append($('<li>').append($('<a>').append('Add with edit privileges')
-                                .on('click', function () {
-                                    var data = $input.select2("data");
-                                    self.showWorking("updating permissions...");
-                                    var users = [];
-                                    for (var i = 0; i < data.length; i++) {
-                                        if (data[i].id.trim() !== '') {
-                                            users.push(data[i].id.trim());
-                                        }
-                                    }
-                                    self.ws.set_permissions(
-                                        {id: self.ws_info[0], new_permission: 'w', users: users},
-                                        function () {
-                                            self.refresh();
-                                        },
-                                        function (error) {
-                                            self.reportError(error);
-                                            self.refresh();
-                                        }
-                                    );
-                                })))
-                            .append($('<li>').append($('<a>').append('Add with edit/share privileges')
-                                .on('click', function () {
-                                    var data = $input.select2("data");
-                                    self.showWorking("updating permissions...");
-                                    var users = [];
-                                    for (var i = 0; i < data.length; i++) {
-                                        if (data[i].id.trim() !== '') {
-                                            users.push(data[i].id.trim());
-                                        }
-                                    }
-                                    self.ws.set_permissions(
-                                        {id: self.ws_info[0], new_permission: 'a', users: users},
-                                        function () {
-                                            self.refresh();
-                                        },
-                                        function (error) {
-                                            self.reportError(error);
-                                            self.refresh();
-                                        }
-                                    );
-                                }))));
-
-                    $addUsersDiv.append($('<span>')
-                        .append($input.css({'width': '85%'}))
-                        .append($addAction));
-
-                    self.setupSelect2($input);
-                    self.$mainPanel.append($addUsersDiv);
-                }
-
-                var $othersDiv = $('<div>').css({
-                    'margin-top': '15px',
-                    'max-height': self.options.max_list_height,
-                    'overflow-y': 'auto',
-                    'overflow-x': 'hidden'
-                });
-                var $tbl = $('<table>');
-                $othersDiv.append($tbl);
-
-                // sort
-                self.ws_permissions.sort(function (a, b) {
-                    if (a[1] !== b[1]) { // based on privilege first
-                        var aLevel = 0;
-                        var bLevel = 0;
-                        if (a[1] === 'a') {
-                            aLevel = 1;
-                        } else if (a[1] === 'w') {
-                            aLevel = 2;
-                        } else if (a[1] === 'r') {
-                            aLevel = 3;
-                        }
-                        if (b[1] === 'a') {
-                            bLevel = 1;
-                        } else if (b[1] === 'w') {
-                            bLevel = 2;
-                        } else if (b[1] === 'r') {
-                            bLevel = 3;
-                        }
-                        if (aLevel < bLevel)
-                            return -1;
-                        if (aLevel > bLevel)
-                            return 1;
-                    } // then on user name
-                    if (a[0] < b[0])
-                        return -1;
-                    if (a[0] > b[0])
-                        return 1;
-                    return 0;
-                });
-
-                // show all other users
-                for (var i = 0; i < self.ws_permissions.length; i++) {
-                    if (self.ws_permissions[i][0] !== self.my_user_id && self.ws_permissions[i][0] !== '*') {
-                        var $select;
-                        if (isOwner) {
-                            var thisUser = self.ws_permissions[i][0];
-                            // note that we can simply add a space since usernames cannot have spaces
-                            $select = $('<select>').addClass('form-control kb-share-user-permissions-dropdown')
-                                .append($('<option>').val(thisUser + ' ---r').append('can view'))
-                                .append($('<option>').val(thisUser + ' ---w').append('can edit'))
-                                .append($('<option>').val(thisUser + ' ---a').append('can edit/share'))
-                                .append($('<option>').val(thisUser + ' ---n').append('remove access'))
-                                .val(thisUser + ' ---' + self.ws_permissions[i][1])
-                                .on('change', function () {
-                                    self.showWorking("updating permissions...");
-                                    var tokens = $(this).val().split(' ---');
-                                    self.ws.set_permissions(
-                                        {
-                                            id: self.ws_info[0],
-                                            new_permission: tokens[1],
-                                            users: [tokens[0]]
-                                        },
-                                        function () {
-                                            self.refresh();
-                                        },
-                                        function (error) {
-                                            self.reportError(error);
-                                            self.refresh();
-                                        }
-                                    );
-
-                                });
-                        } else {
-                            $select = $('<div>').addClass('form-control kb-share-user-permissions-dropdown');
-                            if (self.ws_permissions[i][1] === 'r') {
-                                $select.append('can view');
-                            }
-                            if (self.ws_permissions[i][1] === 'w') {
-                                $select.append('can edit');
-                            }
-                            if (self.ws_permissions[i][1] === 'a') {
-                                $select.append('can edit/share');
-                            }
-                        }
-                        var user_display = self.renderUserIconAndName(self.ws_permissions[i][0], null, true);
-                        $tbl.append(
-                            $('<tr>')
-                            .append($('<td>')
-                                .append(user_display[0]))
-                            .append($('<td>').css({'padding': '4px', 'padding-top': '6px'})
-                                .append(user_display[1]).append($select)));
-                    }
-                }
-                self.$mainPanel.append($othersDiv);
+            if (!self.ws_info || !self.ws_permissions) {
+                return;
             }
+            self.$mainPanel.empty();
+
+            var globalReadStatus = '<strong><span class="fa fa-lock" style="margin-right:10px"></span>Private</strong>';
+            var globalReadClass = "alert alert-info";
+            self.isPrivate = true;
+            if (self.ws_info[6] === 'r') {
+                self.isPrivate = false;
+                globalReadClass = "alert alert-success";
+                globalReadStatus = '<strong><span class="fa fa-unlock" style="margin-right:10px"></span>Public</strong>';
+            }
+
+            var $topDiv = $('<div>')
+                .addClass(globalReadClass)
+                .css({'text-align': 'center', 'padding': '10px', 'margin': '5px'})
+                .append(globalReadStatus);
+            self.$mainPanel.append($topDiv);
+
+            var $togglePublicPrivate = $('<div>').css({'text-align': 'center'}).hide();
+            if (self.isPrivate) {
+                $togglePublicPrivate.append($('<a>').append('make public?')
+                    .on('click', function () {
+                        self.showWorking("updating permissions...");
+                        self.ws.set_global_permission(
+                            {id: self.ws_info[0], new_permission: 'r'},
+                            function () {
+                                self.refresh();
+                            },
+                            function (error) {
+                                console.log(error);
+                                self.refresh();
+                            }
+                        );
+                    }));
+            } else {
+                $togglePublicPrivate.append($('<a>').append('make private?')
+                    .on('click', function () {
+                        self.showWorking("updating permissions...");
+                        self.ws.set_global_permission(
+                            {id: self.ws_info[0], new_permission: 'n'},
+                            function () {
+                                self.refresh();
+                            },
+                            function (error) {
+                                self.reportError(error);
+                                self.refresh();
+                            }
+                        );
+                    }));
+            }
+            self.$mainPanel.append($togglePublicPrivate);
+
+            var $meDiv = $('<div>').css({'margin': '5px', 'margin-top': '20px'});
+            var status = "You do not have access to this Narrative.";
+            var isOwner = false;
+            if (self.ws_info[2] === self.my_user_id) {
+                status = "You own this Narrative. You can edit it and share it with other users.";
+                isOwner = true;
+                $togglePublicPrivate.show();
+            } else if (self.ws_info[5] === 'a') {
+                status = "You can edit and share this Narrative.";
+                isOwner = true;  // not really, but set this so we show sharing controls
+                $togglePublicPrivate.show();
+            } else if (self.ws_info[5] === 'w') {
+                status = "You can edit this Narrative, but you cannot share it.";
+            } else if (self.ws_info[5] === 'r' || self.ws_info[6] === 'r') { // either you can read it, or it is globally readable
+                status = "You can view this Narrative, but you cannot edit or share it.";
+            }
+            var display = self.renderUserIconAndName(self.my_user_id, null, true);
+            $meDiv.append(display[0], display[1]);
+            $meDiv.append($('<div>').css({'margin-top': '10px'}).append(status));
+            self.$mainPanel.append($meDiv);
+
+            if (isOwner) {
+                var $addUsersDiv = $('<div>').css({'margin-top': '10px'});
+                var $input = $('<select multiple data-placeholder="Share with...">')
+                    .addClass('kb-share-select');
+
+                var $addAction =
+                    $('<div>')
+                    .addClass('btn-group')
+                    .append($('<button>')
+                        .addClass('btn btn-default dropdown-toggle ')
+                        .attr('type', 'button')
+                        .attr('data-toggle', 'dropdown')
+                        .attr('aria-expanded', 'false')
+                        .append('<span class="fa fa-caret-down"></span>'))
+                    .append($('<ul>')
+                        .addClass('dropdown-menu pull-right')
+                        .attr('role', 'menu')
+                        // TODO: pull-right is deprecated, use dropdown-menu-right when bootstrap updates
+                        .append($('<li>').append(
+                            $('<a>').append('Add with view privileges')
+                            .on('click', function () {
+                                var data = $input.select2("data");
+                                self.showWorking("updating permissions...");
+                                var users = [];
+                                for (var i = 0; i < data.length; i++) {
+                                    if (data[i].id.trim() !== '') {
+                                        users.push(data[i].id.trim());
+                                    }
+                                }
+                                self.ws.set_permissions(
+                                    {id: self.ws_info[0], new_permission: 'r', users: users},
+                                    function () {
+                                        self.refresh();
+                                    },
+                                    function (error) {
+                                        self.reportError(error);
+                                        self.refresh();
+                                    }
+                                );
+                            })))
+                        .append($('<li>').append($('<a>').append('Add with edit privileges')
+                            .on('click', function () {
+                                var data = $input.select2("data");
+                                self.showWorking("updating permissions...");
+                                var users = [];
+                                for (var i = 0; i < data.length; i++) {
+                                    if (data[i].id.trim() !== '') {
+                                        users.push(data[i].id.trim());
+                                    }
+                                }
+                                self.ws.set_permissions(
+                                    {id: self.ws_info[0], new_permission: 'w', users: users},
+                                    function () {
+                                        self.refresh();
+                                    },
+                                    function (error) {
+                                        self.reportError(error);
+                                        self.refresh();
+                                    }
+                                );
+                            })))
+                        .append($('<li>').append($('<a>').append('Add with edit/share privileges')
+                            .on('click', function () {
+                                var data = $input.select2("data");
+                                self.showWorking("updating permissions...");
+                                var users = [];
+                                for (var i = 0; i < data.length; i++) {
+                                    if (data[i].id.trim() !== '') {
+                                        users.push(data[i].id.trim());
+                                    }
+                                }
+                                self.ws.set_permissions(
+                                    {id: self.ws_info[0], new_permission: 'a', users: users},
+                                    function () {
+                                        self.refresh();
+                                    },
+                                    function (error) {
+                                        self.reportError(error);
+                                        self.refresh();
+                                    }
+                                );
+                            }))));
+
+                $addUsersDiv.append($('<div>')
+                    .append($input)
+                    .append($addAction));
+
+                self.setupSelect2($input);
+                self.$mainPanel.append($addUsersDiv);
+            }
+
+            var $othersDiv = $('<div>').css({
+                'margin-top': '15px',
+                'max-height': self.options.max_list_height,
+                'overflow-y': 'auto',
+                'overflow-x': 'hidden'
+            });
+            var $tbl = $('<table>');
+            $othersDiv.append($tbl);
+
+            // sort
+            self.ws_permissions.sort(function (a, b) {
+                var getPermLevel = function(perm) {
+                    switch (perm) {
+                        case 'a':
+                            return 1;
+                        case 'w':
+                            return 2;
+                        case 'r':
+                            return 3;
+                        default:
+                            return 0;
+                    }
+                };
+                if (a[1] !== b[1]) { // based on privilege first
+                    return getPermLevel(a[1]) - getPermLevel(b[1]);
+                } // then on user name
+                if (a[0] < b[0])
+                    return -1;
+                if (a[0] > b[0])
+                    return 1;
+                return 0;
+            });
+
+            // show all other users
+            for (var i = 0; i < self.ws_permissions.length; i++) {
+                if (self.ws_permissions[i][0] !== self.my_user_id && self.ws_permissions[i][0] !== '*') {
+                    var $select;
+                    if (isOwner) {
+                        var thisUser = self.ws_permissions[i][0];
+                        // note that we can simply add a space since usernames cannot have spaces
+                        $select = $('<select>').addClass('form-control kb-share-user-permissions-dropdown')
+                            .append($('<option>').val(thisUser + ' ---r').append('can view'))
+                            .append($('<option>').val(thisUser + ' ---w').append('can edit'))
+                            .append($('<option>').val(thisUser + ' ---a').append('can edit/share'))
+                            .append($('<option>').val(thisUser + ' ---n').append('remove access'))
+                            .val(thisUser + ' ---' + self.ws_permissions[i][1])
+                            .on('change', function () {
+                                self.showWorking("updating permissions...");
+                                var tokens = $(this).val().split(' ---');
+                                self.ws.set_permissions(
+                                    {
+                                        id: self.ws_info[0],
+                                        new_permission: tokens[1],
+                                        users: [tokens[0]]
+                                    },
+                                    function () {
+                                        self.refresh();
+                                    },
+                                    function (error) {
+                                        self.reportError(error);
+                                        self.refresh();
+                                    }
+                                );
+
+                            });
+                    } else {
+                        $select = $('<div>').addClass('form-control kb-share-user-permissions-dropdown');
+                        if (self.ws_permissions[i][1] === 'r') {
+                            $select.append('can view');
+                        }
+                        if (self.ws_permissions[i][1] === 'w') {
+                            $select.append('can edit');
+                        }
+                        if (self.ws_permissions[i][1] === 'a') {
+                            $select.append('can edit/share');
+                        }
+                    }
+                    var user_display = self.renderUserIconAndName(self.ws_permissions[i][0], null, true);
+                    $tbl.append(
+                        $('<tr>')
+                        .append($('<td>')
+                            .append(user_display[0]))
+                        .append($('<td>').css({'padding': '4px', 'padding-top': '6px'})
+                            .append(user_display[1]).append($select)));
+                }
+            }
+            self.$mainPanel.append($othersDiv);
         },
         /* private method - note: if placeholder is empty, then users cannot cancel a selection*/
         setupSelect2: function ($input) {
@@ -536,8 +523,6 @@ define (
             '#009688', //teal
             '#4CAF50', //green
             '#8BC34A', //lime green
-            // '#CDDC39', //lime
-            // '#FFEB3B', //yellow
             '#FFC107', //amber
             '#FF9800', //orange
             '#FF5722', //deep orange

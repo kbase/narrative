@@ -46,10 +46,9 @@ define ([
             this.$notificationPanel = $('<div>');
             this.$elem.append(this.$notificationPanel);
 
-            this.$mainPanel = $('<div>');
+            this.$mainPanel = $('<div style="text-align:center">');
             this.$elem.append(this.$mainPanel);
             this.showWorking("loading narrative information");
-            // this.getInfoAndRender();
 
             if (!this.options.ws_name_or_id) {
                 //fail!
@@ -161,8 +160,10 @@ define ([
 
             var $togglePublicPrivate = $('<div>').css({'text-align': 'center'}).hide();
             if (self.isPrivate) {
-                $togglePublicPrivate.append($('<a>').append('make public?')
-                    .on('click', function () {
+                $togglePublicPrivate.append($('<a href="#">').append('make public?')
+                    .on('click', function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
                         self.showWorking("updating permissions...");
                         self.ws.set_global_permission(
                             {id: self.ws_info[0], new_permission: 'r'},
@@ -176,8 +177,10 @@ define ([
                         );
                     }));
             } else {
-                $togglePublicPrivate.append($('<a>').append('make private?')
-                    .on('click', function () {
+                $togglePublicPrivate.append($('<a href="#">').append('make private?')
+                    .on('click', function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
                         self.showWorking("updating permissions...");
                         self.ws.set_global_permission(
                             {id: self.ws_info[0], new_permission: 'n'},
@@ -309,7 +312,9 @@ define ([
                 'margin-top': '15px',
                 'max-height': self.options.max_list_height,
                 'overflow-y': 'auto',
-                'overflow-x': 'hidden'
+                'overflow-x': 'hidden',
+                'display': 'flex',
+                'justify-content': 'center'
             });
             var $tbl = $('<table>');
             $othersDiv.append($tbl);
@@ -385,10 +390,11 @@ define ([
                     var user_display = self.renderUserIconAndName(self.ws_permissions[i][0], null, true);
                     $tbl.append(
                         $('<tr>')
-                        .append($('<td>')
+                        .append($('<td style="text-align:left">')
                             .append(user_display[0]))
-                        .append($('<td>').css({'padding': '4px', 'padding-top': '6px'})
-                            .append(user_display[1]).append($select)));
+                        .append($('<td style="text-align:left">').css({'padding': '4px', 'padding-top': '6px'})
+                            .append(user_display[1]))
+                        .append($('<td style="text-align:right">').append($select)));
                 }
             }
             self.$mainPanel.append($othersDiv);

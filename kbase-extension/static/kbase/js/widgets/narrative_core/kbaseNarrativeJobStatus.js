@@ -47,6 +47,128 @@ define([
     NewObjectsTemplate
 ) {
     'use strict';
+
+    function VirtualSlice(config) {
+        var maxSize = config.max  || 100;
+        var startPos;
+        var theSlice;
+        var trimEnd = config.trimEnd || 'auto';
+        
+        if (config.value) {
+            theSlice = config.value;
+            if (theSlice.length > maxSize) {
+                theSlice = theSlice.slice(0, maxSize);
+            }
+            startPos = config.start;
+        } else {
+            theSlice = [];
+            startPos = 0;
+        }
+
+        /*
+            Adds array items to the slice, starting at virtual position start.
+        */
+        function trim(thisTrimEnd) {
+            var chop = theSlice.length - maxSize;
+            if (chop <= 0) {
+                return;
+            }
+            if (trimEnd !== 'auto') {
+                thisTrimEnd = trimEnd;
+            }
+            if (thisTrimEnd === 'end') {
+                theSlice = theSlice.slice(0, theSlice.length - chop);
+            } else {
+                theSlice = theSlice.slice(chop);
+                startPos = startPos + chop;
+            }
+        }
+        function grow(log) {
+            // handle cases in which the new entires are discontiguous.
+            if (log.start + log.lines.length < startPos) {
+                replace(log);
+                return;
+            }
+            if (log.start > startPos + theSlice.length) {
+                replace(log);
+                return;
+            }
+            var growLength, growLines, growAtBegin = false, growAtEnd = false;
+            if (log.first < startPos) {
+                growLength = log.first + log.lines.length - startPos;
+                growLines = log.lines.slice(0, log.lines.length - growLength);
+                theSlice = growLines.concat(theSlice);
+                startPos = startPos - growLines.length;
+                growAtBegin = true;
+            }
+            if (log.first + log.lines.length > startPos + theSlice.length) {
+                growLength = startPos + theSlice.length - log.first;
+                growLines = log.lines.slice(growLength);
+                theSlice = theSlice.concat(growLines);
+                growAtEnd = true;
+            }
+            if (growAtBegin) {
+                if (growAtEnd) {
+                    trim();
+                } else {
+                    trim('end');
+                }
+            } else {
+                if (growAtEnd) {
+                    trim('begin');
+                } 
+            }
+        }
+
+        function replace(log) {
+            startPos = log.first;
+            theSlice = log.lines;
+            trim();
+        }
+        function update(log) {
+            if (log.first === null || log.first === undefined || !log.lines) {
+                return;
+            }
+
+            if (theSlice.length === 0) {
+                replace(log);
+                return;
+            }
+
+            grow(log);
+        }
+
+        function get() {
+            return {
+                start: startPos,
+                end: startPos + theSlice.length,
+                items: theSlice
+            };
+        }
+
+        function getStart() {
+            return startPos;
+        }
+        function getEnd() {
+            return startPos + theSlice.length;
+        }
+        function getLength() {
+            return theSlice.length;
+        }
+        function trimAt(newEnd) {
+            trimEnd = newEnd;
+        }
+
+        return {
+            trimAt: trimAt,
+            update: update,
+            get: get,
+            getStart: getStart,
+            getEnd: getEnd,
+            getLength: getLength
+        };
+    }
+
     return new KBWidget({
         name: 'kbaseNarrativeJobStatus',
         parent: KBaseAuthenticatedWidget,
@@ -56,14 +178,14 @@ define([
             jobInfo: null,
             statusText: null
         },
-        pendingLogRequest: false, // got a log request pending? (used for keeping log instances separate)
-        pendingLogStart: 0, // pending top line number we're expecting.
-        maxLineRequest: 100, // max number of lines to request
-        maxLogLine: 0, // max log lines available (as of last push)
-        currentLogStart: 0, // current first line in viewer
-        currentLogLength: 0, // current number of lines
+        // CONFIG (const)
         maxLogLines: 200, // num lines before we start trimming
+        maxLineRequest: 100, // max number of lines to request
         autoplayInterval: 2000, // when on autoplay, how long to pause before the next log request
+        // VARIABLES
+        pendingLogStart: 0, // pending top line number we're expecting.
+        pendingLogRequest: false, // got a log request pending? (used for keeping log instances separate)
+        maxLogLine: 0, // max log lines available (as of last push)
 
         init: function (options) {
             this._super(options);
@@ -73,6 +195,10 @@ define([
             // expects:
             // name, id, version for appInfo
             this.appInfo = this.options.info;
+
+            this.virtualLog = VirtualSlice({
+                max: this.maxLogLines
+            });
 
             var cellNode = this.$elem.closest('.cell').get(0);
 
@@ -461,7 +587,7 @@ define([
                 // this.busConnection.stop();
                 break;
             case 'queued':
-                this.showLogMessage('<p>The job is queued. When it has started running, the log will be displayed below.</p>');
+                this.showLogMessage('The job is queued. When it has started running, the log will be displayed below.');
                 if (this.firstTime) {
                     this.logView.find('#kblog-play').trigger('click');
                 }
@@ -472,7 +598,6 @@ define([
                 break;
             case 'in-progress':
                 // If the user has not used the navigation yet, should go into "play" mode;
-                this.showLogMessage('');
                 this.requestedUpdates = true;
                 this.channel.emit('request-job-status', {
                     jobId: this.jobId
@@ -579,12 +704,12 @@ define([
             }.bind(this));
             $logPanel.find('#kblog-back').click(function () {
                 // go back a chunk.
-                this.sendLogRequest(Math.max(this.currentLogStart - this.maxLineRequest, 0));
+                this.sendLogRequest(Math.max(this.virtualLog.getStart() - this.maxLineRequest, 0));
                 this.userEngaged = true;
             }.bind(this));
             $logPanel.find('#kblog-forward').click(function () {
                 // go forward a chunk.
-                this.sendLogRequest(this.currentLogStart + this.currentLogLength);
+                this.sendLogRequest(this.virtualLog.getEnd());
                 this.userEngaged = true;
             }.bind(this));
             $logPanel.find('#kblog-bottom').click(function () {
@@ -608,7 +733,7 @@ define([
             this.logView.find('#kblog-spinner').show();
             this.pendingLogRequest = true;
             this.pendingLogLine = firstLine;
-            if (typeof firstLine === 'string' && firstLine === 'latest') {
+            if (firstLine === 'latest') {
                 this.runtime.bus().emit('request-latest-job-log', {
                     jobId: this.jobId,
                     options: {
@@ -630,44 +755,45 @@ define([
             this.logView.find('#kblog-msg').html(message);
         },
 
+        logButton: function(name) {
+            return this.logView.find('#kblog-' + name);
+        },
+
         updateLog: function (log) {
             this.pendingLogRequest = false;
-            if (log.max_lines > this.maxLogLines) {
-                this.showLogMessage('Showing lines ' + (log.first + 1) + ' to ' + (log.first + log.lines.length) + ' of ' + log.max_lines);
-            }
-            if (log.first === null || log.first === undefined || !log.lines) {
+            this.logView.find('#kblog-spinner').hide();
+
+            if (log.lines.length === 0) {
                 return;
             }
 
-            this.logView.find('#kblog-panel').empty();
-
-            if (typeof this.currentLogLines === 'undefined') {
-                this.currentLogStart = log.first;
-                this.currentLogLength = log.lines.length;
-                this.currentLogLines = log.lines;
-            } else {
-                // first get the expanse of the logs from the
-                // current first to the end created by appending 
-                // the new log entries, then truncate it.
-                var diff = (this.currentLogStart + this.currentLogLength - log.first);
-                var newlines = log.lines.slice(Math.min(diff, log.lines.length));
-                var newLog = this.currentLogLines.concat(newlines);
-                if (newLog.length > this.maxLogLines) {
-                    newLog = newLog.slice(newLog.length - this.maxLogLines);
-                }
-                this.currentLogLines = newLog;
-                this.currentLogLength = this.currentLogLines.length;
-                this.currentLogStart = (this.currentLogStart + this.currentLogLength) - Math.min(this.currentLogLength, this.maxLogLines);
+            if (log.latest) {
+                this.virtualLog.trimAt('begin');
             }
+            this.virtualLog.update(log);
+            this.virtualLog.trimAt('auto');
 
-            this.currentLogLines.forEach(function (line, index) {
+            var vl = this.virtualLog.get();
+            this.showLogMessage('Showing lines ' + (vl.start + 1) + ' to ' + (vl.start + vl.items.length) + ' of ' + log.max_lines);
+
+            // render them;
+            this.logView.find('#kblog-panel').empty();
+            vl.items.forEach(function (line, index) {
                 this.logView.find('#kblog-panel').append($(this.logLineTmpl({
-                    lineNum: (this.currentLogStart + index + 1),
+                    lineNum: (vl.start + index + 1),
                     log: line
                 })));
             }.bind(this));
 
-            this.logView.find('#kblog-spinner').hide();
+            // Twiddle the buttons based on where we are in the log view.
+            if (vl.start === 0) {
+                this.logButton('top').prop('disabled', true);
+                this.logButton('back').prop('disabled', true);
+            } else {
+                this.logButton('top').prop('disabled', false);
+                this.logButton('back').prop('disabled', false);
+            }
+
             if (this.doLogLoop) {
                 // don't bother looping if we're complete.
                 if (this.state.job_state === 'suspend' || this.state.job_state === 'completed' || this.state.job_state === 'canceled') {

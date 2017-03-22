@@ -174,8 +174,6 @@ define ([
             } else if (self.ws_info[5] === 'r' || self.ws_info[6] === 'r') { // either you can read it, or it is globally readable
                 status = "You can view this Narrative, but you cannot edit or share it.";
             }
-            var display = self.renderUserIconAndName(self.my_user_id, null, true);
-            $meDiv.append(display[0], display[1]);
             $meDiv.append($('<div>').css({'margin-top': '10px'}).append(status));
             self.$mainPanel.append($meDiv);
 
@@ -384,11 +382,13 @@ define ([
                         .then(function(users) {
                             var results = [];
                             users.forEach(function(user) {
-                                results.push({
-                                    id: user.username,
-                                    text: user.realname,
-                                    found: true
-                                });
+                                if (user.username !== self.my_user_id) {
+                                    results.push({
+                                        id: user.username,
+                                        text: user.realname,
+                                        found: true
+                                    });
+                                }
                             });
                             return Promise.try(function() { return results; });
                         })

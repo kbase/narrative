@@ -190,25 +190,6 @@ define(
                 console.warn('Error removing shortcut "'  + shortcut +'"', ex);
             }
         });
-
-
-//        for (var i=0; i<killTheseShortcuts.length; i++) {
-//            var shortcut = killTheseShortcuts[i];
-//            try {
-//                Jupyter.keyboard_manager.command_shortcuts.remove_shortcut(shortcut);
-//                Jupyter.notebook.keyboard_manager.edit_shortcuts.remove_shortcut(shortcut);
-//            }
-//            catch (err) {
-//                //pass
-//            }
-//            try {
-//                Jupyter.notebook.keyboard_manager.command_shortcuts.remove_shortcut(shortcut);
-//                Jupyter.notebook.keyboard_manager.edit_shortcuts.remove_shortcut(shortcut);
-//            }
-//            catch (err) {
-//                //pass
-//            }
-//        }
     };
 
     Narrative.prototype.disableKeyboardManager = function () {
@@ -238,11 +219,6 @@ define(
         $([Jupyter.events]).on('kernel_busy.Kernel', function () {
             $("#kb-kernel-icon").removeClass().addClass('fa fa-circle');
         });
-
-        // $([Jupyter.events]).on('create.Cell', function(event, data) {
-        //     // this.showJupyterCellToolbar(data.cell);
-        // }.bind(this));
-
         $([Jupyter.events]).on('delete.Cell', function () {
             // this.enableKeyboardManager();
         }.bind(this));
@@ -288,38 +264,6 @@ define(
             }
             makeAndShowPanel();
         });
-        // $('#kb-share-btn').popover({
-        //     trigger: 'click',
-        //     html: true,
-        //     placement: 'bottom',
-        //     width: 300,
-        //     height: 'auto',
-        //     cache: true,
-        //     content: function () {
-        //         // we do not allow users to leave their narratives untitled
-        //         if (Jupyter.notebook) {
-        //             var narrName = Jupyter.notebook.notebook_name;
-        //             if (narrName.trim().toLowerCase() === 'untitled' || narrName.trim().length === 0) {
-        //                 Jupyter.save_widget.rename_notebook({notebook: Jupyter.notebook});
-        //                 return '<br><br>Please name your Narrative before sharing.<br><br>';
-        //             }
-        //             this.disableKeyboardManager();
-        //         }
-        //         return sharePanel;
-        //     }.bind(this)
-        // });
-        // $('#kb-share-btn').click(function() {
-        //     $('#kb-ipy-menu').parent().removeClass('open');
-        //     $('#kb-help-menu').parent().removeClass('open');
-        // });
-        //
-        // $('#kb-ipy-menu').click(function() {
-        //     $('#kb-share-btn').popover('hide');
-        // });
-        //
-        // $('#kb-help-menu').click(function() {
-        //     $('#kb-share-btn').popover('hide');
-        // });
     };
 
     /**

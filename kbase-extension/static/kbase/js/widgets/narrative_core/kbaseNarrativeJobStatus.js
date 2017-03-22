@@ -63,6 +63,7 @@ define([
         currentLogStart: 0, // current first line in viewer
         currentLogLength: 0, // current number of lines
         maxLogLines: 200, // num lines before we start trimming
+        autoplayInterval: 2000, // when on autoplay, how long to pause before the next log request
 
         init: function (options) {
             this._super(options);
@@ -74,6 +75,10 @@ define([
             this.appInfo = this.options.info;
 
             var cellNode = this.$elem.closest('.cell').get(0);
+
+            // Flag to support initialization logic for job status 
+            // messages.
+            this.firstTime = true;
 
             function findCell() {
                 var cells = Jupyter.notebook.get_cell_elements().toArray().filter(function (element) {
@@ -92,7 +97,7 @@ define([
             this.cell = findCell();
             this.cell.element.trigger('hideCodeArea.cell');
             if (!this.jobId) {
-                this.showError("No Job id provided!");
+                this.showError('No Job id provided!');
                 return this;
             }
             this.runtime = Runtime.make();
@@ -111,6 +116,18 @@ define([
 
             this.busConnection = this.runtime.bus().connect();
             this.channel = this.busConnection.channel();
+
+           
+            // TODO: can we introduce a stop method for kbwidget?
+            // We need to disconnect these listeners when this widget is removed.
+
+            // render up the panel's view layer.
+            this.initializeView();
+            this.updateView();
+
+            //The job has not started yet. When it has started running, the log will be displayed in this area.
+
+            this.showLogMessage('Loading the log viewer...');
 
             Semaphore.make().when('comm', 'ready', Config.get('comm_wait_timeout'))
                 .then(function () {
@@ -134,7 +151,7 @@ define([
                             type: 'job-logs'
                         },
                         handle: function (message) {
-                            this.handleJobLogs(message);
+                            this.handleJobLog(message);
                         }.bind(this)
                     });
 
@@ -150,7 +167,7 @@ define([
                         }.bind(this)
                     });
 
-                    this.channel.emit('request-job-update', {
+                    this.channel.emit('request-job-status', {
                         jobId: this.jobId
                     });
                 }.bind(this))
@@ -158,12 +175,6 @@ define([
                     console.error('Jobs Comm channel not available', err);
                 });
 
-            // TODO: can we introduce a stop method for kbwidget?
-            // We need to disconnect these listeners when this widget is removed.
-
-            // render up the panel's view layer.
-            this.initializeView();
-            this.updateView();
 
             return this;
         },
@@ -184,19 +195,19 @@ define([
                 statusPanel: statusPanel,
                 body: body
             };
-            this.logsView = this.makeLogsPanel();
+            this.logView = this.makeLogPanel();
             this.reportView = this.makeReportPanel();
             this.newDataView = this.makeNewDataView();
             var $tabDiv = $('<div>');
             this.tabController = new KBaseTabs($tabDiv, {
                 tabs: [{
-                        tab: 'Status',
-                        content: body,
-                    },
-                    {
-                        tab: 'Logs',
-                        content: this.logsView
-                    }
+                    tab: 'Status',
+                    content: body,
+                },
+                {
+                    tab: 'Log',
+                    content: this.logView
+                }
                     // {
                     //     tab: 'Report',
                     //     content: this.reportView
@@ -421,29 +432,68 @@ define([
         },
 
         handleJobStatus: function (message) {
-            // stop listeneing for job state if completed...
-            if (message.jobState.job_state === 'completed') {
-                this.channel.emit('request-job-completion', {
-                    jobId: this.jobId
-                });
+            /* Main states:
+               1. initial - first job state message received. For any queued issue message, 
+                  in progress start auto fetch loop, otherwise show the end of the log
+               2. autoplay - if the play button has been pressed or the user has not interacted
+                  with the buttons (this.userEngaged), play the log when in-progress.
+               3. userEngaged - if at end of log, same as autoplay?
+            */
+            switch (message.jobState.job_state) {
+            case 'canceled':
+            case 'suspend':
+            case 'completed':
+                this.showLogMessage('');
+                if (this.requestedUpdates) {
+                    this.requestedUpdates = false;
+                    this.channel.emit('request-job-completion', {
+                        jobId: this.jobId
+                    });
+                }
+                this.logView.find('#kblog-play').prop('disabled', true);
+                if (this.firstTime) {
+                    this.logView.find('#kblog-bottom').trigger('click');
+                }
                 // TODO: we need to remove all of the job listeners at this point, but 
                 // the busConnection also has the job log listeners, which may be used at any time.
                 // What we need to do is move these into separate widgets which can be stopped and started
                 // as the tabs are activated, and control their own bus connections.
                 // this.busConnection.stop();
+                break;
+            case 'queued':
+                this.showLogMessage('<p>The job is queued. When it has started running, the log will be displayed below.</p>');
+                if (this.firstTime) {
+                    this.logView.find('#kblog-play').trigger('click');
+                }
+                this.requestedUpdates = true;
+                this.channel.emit('request-job-status', {
+                    jobId: this.jobId
+                });
+                break;
+            case 'in-progress':
+                // If the user has not used the navigation yet, should go into "play" mode;
+                this.showLogMessage('');
+                this.requestedUpdates = true;
+                this.channel.emit('request-job-status', {
+                    jobId: this.jobId
+                });
+                if (this.firstTime) {
+                    this.logView.find('#kblog-play').trigger('click');
+                }
             }
+            this.firstTime = false;
             this.state = message.jobState;
             this.outputWidgetInfo = message.outputWidgetInfo;
             this.setCellState();
             this.updateView();
         },
 
-        handleJobLogs: function (message) {
+        handleJobLog: function (message) {
             if (this.pendingLogRequest &&
                 (this.pendingLogLine === message.logs.first ||
                     this.pendingLogLine === 'latest' &&
                     message.logs.latest)) {
-                this.updateLogs(message.logs);
+                this.updateLog(message.logs);
             }
         },
 
@@ -502,54 +552,60 @@ define([
             return this.updateJobStatusPanel();
         },
 
-        makeLogsPanel: function () {
-            var logsPanelTmpl = Handlebars.compile(LogPanelTemplate);
+        makeLogPanel: function () {
+            var logPanelTmpl = Handlebars.compile(LogPanelTemplate);
             this.logLineTmpl = Handlebars.compile(LogLineTemplate);
-            var $logsPanel = $(logsPanelTmpl());
-            $logsPanel.find('#kblog-play').click(function () {
+            var $logPanel = $(logPanelTmpl());
+            $logPanel.find('#kblog-play').click(function () {
                 this.sendLogRequest('latest');
-                $logsPanel.find('button[id!="kblog-stop"]').prop('disabled', true);
-                $logsPanel.find('#kblog-stop').prop('disabled', false);
+                $logPanel.find('button[id!="kblog-stop"]').prop('disabled', true);
+                $logPanel.find('#kblog-stop').prop('disabled', false);
                 this.doLogLoop = true;
+                this.userEngaged = false;
             }.bind(this));
-            $logsPanel.find('#kblog-stop').click(function () {
+            $logPanel.find('#kblog-stop').click(function () {
                 if (this.looper)
                     clearTimeout(this.looper);
-                $logsPanel.find('button[id!="kblog-stop"]').prop('disabled', false);
-                $logsPanel.find('#kblog-stop').prop('disabled', true);
-                this.logsView.find('#kblog-spinner').hide();
+                $logPanel.find('button[id!="kblog-stop"]').prop('disabled', false);
+                $logPanel.find('#kblog-stop').prop('disabled', true);
+                this.logView.find('#kblog-spinner').hide();
                 this.doLogLoop = false;
+                this.userEngaged = true;
             }.bind(this));
-            $logsPanel.find('#kblog-top').click(function () {
+            $logPanel.find('#kblog-top').click(function () {
                 // go to beginning.
+                this.userEngaged = true;
                 this.sendLogRequest(0);
             }.bind(this));
-            $logsPanel.find('#kblog-back').click(function () {
+            $logPanel.find('#kblog-back').click(function () {
                 // go back a chunk.
                 this.sendLogRequest(Math.max(this.currentLogStart - this.maxLineRequest, 0));
+                this.userEngaged = true;
             }.bind(this));
-            $logsPanel.find('#kblog-forward').click(function () {
+            $logPanel.find('#kblog-forward').click(function () {
                 // go forward a chunk.
                 this.sendLogRequest(this.currentLogStart + this.currentLogLength);
+                this.userEngaged = true;
             }.bind(this));
-            $logsPanel.find('#kblog-bottom').click(function () {
+            $logPanel.find('#kblog-bottom').click(function () {
                 // go to end.
                 this.sendLogRequest('latest');
+                this.userEngaged = true;
             }.bind(this));
-            $logsPanel.find('#kblog-spinner').hide();
-            // $logsPanel.find('#kblog-panel').scroll(function(e) {
+            $logPanel.find('#kblog-spinner').hide();
+            // $logPanel.find('#kblog-panel').scroll(function(e) {
             //     console.log('scrolling happened!');
             // });
-            $logsPanel.find("#kblog-header")
+            $logPanel.find('#kblog-header')
                 .children()
                 .tooltip()
                 .on('click', function (e) { 
                     $(e.currentTarget).tooltip('hide'); });
-            return $logsPanel;
+            return $logPanel;
         },
 
         sendLogRequest: function (firstLine) {
-            this.logsView.find('#kblog-spinner').show();
+            this.logView.find('#kblog-spinner').show();
             this.pendingLogRequest = true;
             this.pendingLogLine = firstLine;
             if (typeof firstLine === 'string' && firstLine === 'latest') {
@@ -571,37 +627,59 @@ define([
         },
 
         showLogMessage: function (message) {
-            this.logsView.find("#kblog-msg").html(message);
+            this.logView.find('#kblog-msg').html(message);
         },
 
-        updateLogs: function (logs) {
+        updateLog: function (log) {
             this.pendingLogRequest = false;
-            if (logs.max_lines > this.maxLogLines) {
-                this.showLogMessage("Showing lines " + (logs.first + 1) + " to " + (logs.first + logs.lines.length) + " of " + logs.max_lines);
+            if (log.max_lines > this.maxLogLines) {
+                this.showLogMessage('Showing lines ' + (log.first + 1) + ' to ' + (log.first + log.lines.length) + ' of ' + log.max_lines);
             }
-            if (logs.first === null || logs.first === undefined || !logs.lines) {
+            if (log.first === null || log.first === undefined || !log.lines) {
                 return;
             }
-            this.logsView.find('#kblog-panel').empty();
-            var firstLine = logs.first;
-            for (var i = 0; i < logs.lines.length; i++) {
-                // logs.lines[i].line = logs.lines[i].line.trim().replace('\n', '');
-                this.logsView.find('#kblog-panel').append($(this.logLineTmpl({ lineNum: (firstLine + i + 1), log: logs.lines[i] })));
+
+            this.logView.find('#kblog-panel').empty();
+
+            if (typeof this.currentLogLines === 'undefined') {
+                this.currentLogStart = log.first;
+                this.currentLogLength = log.lines.length;
+                this.currentLogLines = log.lines;
+            } else {
+                // first get the expanse of the logs from the
+                // current first to the end created by appending 
+                // the new log entries, then truncate it.
+                var diff = (this.currentLogStart + this.currentLogLength - log.first);
+                var newlines = log.lines.slice(Math.min(diff, log.lines.length));
+                var newLog = this.currentLogLines.concat(newlines);
+                if (newLog.length > this.maxLogLines) {
+                    newLog = newLog.slice(newLog.length - this.maxLogLines);
+                }
+                this.currentLogLines = newLog;
+                this.currentLogLength = this.currentLogLines.length;
+                this.currentLogStart = (this.currentLogStart + this.currentLogLength) - Math.min(this.currentLogLength, this.maxLogLines);
             }
-            this.maxLogLine = logs.maxLines;
-            this.currentLogStart = logs.first;
-            this.currentLogLength = logs.lines.length;
-            this.logsView.find('#kblog-spinner').hide();
+
+            this.currentLogLines.forEach(function (line, index) {
+                this.logView.find('#kblog-panel').append($(this.logLineTmpl({
+                    lineNum: (this.currentLogStart + index + 1),
+                    log: line
+                })));
+            }.bind(this));
+
+            this.logView.find('#kblog-spinner').hide();
             if (this.doLogLoop) {
                 // don't bother looping if we're complete.
-                if (this.state.job_state === 'suspend' || this.state.job_state === 'completed') {
-                    this.logsView.find('#kblog-stop').click();
+                if (this.state.job_state === 'suspend' || this.state.job_state === 'completed' || this.state.job_state === 'canceled') {
+                    this.logView.find('#kblog-stop').click();
+                    this.logView.find('#kblog-play').prop('disabled', true);
+                    this.logView.find('#kblog-stop').prop('disabled', true);
                 } else {
-                    this.looper = setTimeout(function () { this.sendLogRequest('latest', true); }.bind(this), 2000);
+                    this.looper = window.setTimeout(function () { 
+                        this.sendLogRequest('latest', true); 
+                    }.bind(this), this.autoplayInterval);
                 }
             }
-            // var lastPos = this.logsView.find('#kblog-panel').children().last().
-            // this.logsView.find('#kblog-panel').children().last().scrollTop=0;
         }
     });
 });

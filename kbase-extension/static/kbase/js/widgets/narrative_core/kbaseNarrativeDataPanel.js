@@ -152,8 +152,6 @@ define([
                 }.bind(this)
             );
 
-            $(document).on()
-
             this.$slideoutBtn = $('<button>')
                 .addClass('btn btn-xs btn-default')
                 .tooltip({

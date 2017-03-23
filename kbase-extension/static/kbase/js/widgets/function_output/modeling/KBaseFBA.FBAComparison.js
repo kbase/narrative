@@ -32,6 +32,7 @@ function KBaseFBA_FBAComparison(modeltabs) {
 		"x":"Peroxisome",
 		"v":"Vacuole",
 		"w":"Cell wall",
+		"j":"Mitochondrial Intermembrane Space",
 	};
 
     this.tabList = [{

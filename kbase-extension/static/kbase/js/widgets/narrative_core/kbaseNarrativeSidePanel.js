@@ -203,8 +203,6 @@ define (
             }
 
             $header.find('div[kb-data-id]').click($.proxy(function(event) {
-                event.preventDefault();
-                event.stopPropagation();
                 var $headerDiv = $(event.currentTarget);
 
                 if (!$headerDiv.hasClass('active')) {

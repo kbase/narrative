@@ -187,7 +187,12 @@ define([
 
             checkAndRepairCell(cell);
 
+            // Attach methods to the cell
             specializeCell(cell);
+
+            // Add custom styles to the cell.
+            cell.element[0].classList.add('kb-advanced-view-cell');
+
 
             // The kbase property is only used for managing runtime state of the cell
             // for kbase. Anything to be persistent should be on the metadata.

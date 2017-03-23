@@ -2,6 +2,7 @@
 /*jslint white:true,browser:true*/
 define([
     'bluebird',
+    'require',
     'kb_common/html',
     '../validators/text',
     'common/events',
@@ -9,25 +10,23 @@ define([
     'common/props',
     'common/runtime',
     '../inputUtils',
-    './customInputs/petInput',
 
     'bootstrap',
     'css!font-awesome'
 ], function (
     Promise,
+    require,
     html,
     Validation,
     Events,
     UI,
     Props,
     Runtime,
-    inputUtils,
-    PetInput
+    inputUtils
 ) {
     'use strict';
 
     var t = html.tag,
-        div = t('div'),
         input = t('input');
 
     function factory(config) {
@@ -35,6 +34,7 @@ define([
             runtime = Runtime.make(),
             busConnection = runtime.bus().connect(),
             channel = busConnection.channel(config.channelName),
+            subtype = spec.data.constraints.type,
             parent,
             container,
             ui,
@@ -172,32 +172,39 @@ define([
             };
         }
 
-        function makeInputControl(events) {
-            return input({
-                id: events.addEvents({
-                    events: [handleTouched(), handleChanged()]
-                }),
-                class: 'form-control',
-                dataElement: 'input'
+        function prequire(module) {
+            return new Promise(function (resolve, reject) {
+                require([module], function (Module) {
+                    resolve(Module);
+                }, function (err) {
+                    reject(err);
+                });
             });
         }
 
         function render(node, arg) {
-            inputWidget = PetInput.make({
-                runtime: runtime
-            });
 
-            inputWidget.channel.on('changed', function (message) {
-                model.setItem('value', message.newValue);
-                channel.emit('changed', {
-                    newValue: message.newValue
+            // For now all custom inputs live in the 
+            // customInputs directory of the input collection directory
+            // and are named like <type>Input.js
+            return prequire('./customInputs/' + subtype + 'Input')
+            .then(function (Module) {
+                inputWidget = Module.make({
+                    runtime: runtime
                 });
-            });
 
-            return inputWidget.attach(node)
-                .then(function () {
-                    inputWidget.start(arg);
+                inputWidget.channel.on('changed', function (message) {
+                    model.setItem('value', message.newValue);
+                    channel.emit('changed', {
+                        newValue: message.newValue
+                    });
                 });
+
+                return inputWidget.attach(node);
+            })
+            .then(function () {
+                inputWidget.start(arg);
+            });
         }
 
         // EVENT HANDLERS
@@ -243,6 +250,15 @@ define([
                         // channel.emit('sync');
                     })
                     .catch(function (err) {
+                        UI.showErrorDialog({
+                            title: 'Error',
+                            error: {
+                                name: 'Error',
+                                message: err.message,
+                                detail: 'detail here',
+                                resolution: 'how to resolve here.'
+                            }
+                        });
                         console.error('ERROR', err);
                     });
             });

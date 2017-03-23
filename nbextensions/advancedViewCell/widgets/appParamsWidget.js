@@ -12,7 +12,6 @@ define([
     'common/props',
     // Wrapper for inputs
     './inputWrapperWidget',
-    'widgets/appWidgets2/fieldWidgetCompact',
     'widgets/appWidgets2/paramResolver',
 
     'common/runtime'
@@ -27,7 +26,6 @@ define([
     Props,
     //Wrappers
     RowWidget,
-    FieldWidget,
     ParamResolver,
     Runtime
 
@@ -37,7 +35,6 @@ define([
 
     var t = html.tag,
         form = t('form'),
-        span = t('span'),
         div = t('div');
 
     function factory(config) {
@@ -65,9 +62,26 @@ define([
         - intercepts messages in order to display status.
         */
 
+        function prequire(module) {
+            return new Promise(function (resolve, reject) {
+                require([module], function (Module) {
+                    resolve(Module);
+                }, function (err) {
+                    reject(err);
+                });
+            });
+        }
+
         function makeFieldWidget(appSpec, parameterSpec, value) {
-            return paramResolver.loadInputControl(parameterSpec)
-                .then(function (inputWidget) {
+
+            // 'widgets/appWidgets2/fieldWidgetBare',
+            var fieldWidgetModule = 'fieldWidgetBare';
+
+            return Promise.all([
+                paramResolver.loadInputControl(parameterSpec),
+                prequire('widgets/appWidgets2/' + fieldWidgetModule)
+            ])
+                .spread(function (inputWidget, FieldWidget) {
                     var fieldWidget = FieldWidget.make({
                         inputControlFactory: inputWidget,
                         showHint: true,
@@ -261,14 +275,22 @@ define([
         function renderLayout() {
             var events = Events.make(),
                 content = form({ dataElement: 'input-widget-form' }, [
+                    // ui.buildPanel({
+                    //     title: span(['Input Objects', span({ dataElement: 'advanced-hidden-message', style: { marginLeft: '6px', fontStyle: 'italic' } })]),
+                    //     name: 'input-objects-area',
+                    //     body: div({ dataElement: 'input-fields' }),
+                    //     classes: ['kb-panel-light']
+                    // }),
+
+                    // div({
+                    //     dataElement: 'parameters-area',                        
+                    // }, [
+                    //     div({
+                    //         dataElement: 'parameter-fields'
+                    //     })
+                    // ])
+
                     ui.buildPanel({
-                        title: span(['Input Objects', span({ dataElement: 'advanced-hidden-message', style: { marginLeft: '6px', fontStyle: 'italic' } })]),
-                        name: 'input-objects-area',
-                        body: div({ dataElement: 'input-fields' }),
-                        classes: ['kb-panel-light']
-                    }),
-                    ui.buildPanel({
-                        title: span(['Parameters', span({ dataElement: 'advanced-hidden-message', style: { marginLeft: '6px', fontStyle: 'italic' } })]),
                         name: 'parameters-area',
                         body: div({ dataElement: 'parameter-fields' }),
                         classes: ['kb-panel-light']
@@ -293,7 +315,7 @@ define([
             container.innerHTML = layout.content;
             layout.events.attachEvents(container);
             places = {
-                inputFields: ui.getElement('input-fields'),
+                // inputFields: ui.getElement('input-fields'),
                 parameterFields: ui.getElement('parameter-fields'),
                 advancedParameterFields: ui.getElement('advanced-parameter-fields')
             };
@@ -307,11 +329,11 @@ define([
                     widget.bus.emit('reset-to-defaults');
                 });
             });
-            bus.on('toggle-advanced', function () {
-                settings.showAdvanced = !settings.showAdvanced;
-                renderAdvanced('input-objects');
-                renderAdvanced('parameters');
-            });
+            // bus.on('toggle-advanced', function () {
+            //     settings.showAdvanced = !settings.showAdvanced;
+            //     // renderAdvanced('input-objects');
+            //     renderAdvanced('parameters');
+            // });
             runtime.bus().on('workspace-changed', function () {
                 widgets.forEach(function (widget) {
                     widget.bus.emit('workspace-changed');
@@ -357,13 +379,13 @@ define([
 
             return Promise.try(function () {
                 var params = model.getItem('parameters'),
-                    inputParams = makeParamsLayout(
-                        params.layout.filter(function (id) {
-                            return (params.specs[id].ui.class === 'input');
-                        })
-                        .map(function (id) {
-                            return params.specs[id];
-                        })),
+                    // inputParams = makeParamsLayout(
+                    //     params.layout.filter(function (id) {
+                    //         return (params.specs[id].ui.class === 'input');
+                    //     })
+                    //     .map(function (id) {
+                    //         return params.specs[id];
+                    //     })),
                     parameterParams = makeParamsLayout(
                         params.layout.filter(function (id) {
                             return (params.specs[id].ui.class === 'parameter');
@@ -373,32 +395,32 @@ define([
                         }));
 
                 return Promise.resolve()
-                    .then(function () {
-                        if (inputParams.layout.length === 0) {
-                            ui.getElement('input-objects-area').classList.add('hidden');
-                        } else {
-                            places.inputFields.innerHTML = inputParams.content;
-                            return Promise.all(inputParams.layout.map(function (parameterId) {
-                                var spec = inputParams.paramMap[parameterId];
-                                try {
-                                    return makeFieldWidget(appSpec, spec, model.getItem(['params', spec.id]))
-                                        .then(function (widget) {
-                                            widgets.push(widget);
+                    // .then(function () {
+                    //     if (inputParams.layout.length === 0) {
+                    //         ui.getElement('input-objects-area').classList.add('hidden');
+                    //     } else {
+                    //         places.inputFields.innerHTML = inputParams.content;
+                    //         return Promise.all(inputParams.layout.map(function (parameterId) {
+                    //             var spec = inputParams.paramMap[parameterId];
+                    //             try {
+                    //                 return makeFieldWidget(appSpec, spec, model.getItem(['params', spec.id]))
+                    //                     .then(function (widget) {
+                    //                         widgets.push(widget);
 
-                                            return widget.start({
-                                                node: document.getElementById(inputParams.view[parameterId].id)
-                                            });
-                                        });
-                                } catch (ex) {
-                                    console.error('Error making input field widget', ex);
-                                    var errorDisplay = div({ style: { border: '1px red solid' } }, [
-                                        ex.message
-                                    ]);
-                                    document.getElementById(inputParams.view[parameterId].id).innerHTML = errorDisplay;
-                                }
-                            }));
-                        }
-                    })                   
+                    //                         return widget.start({
+                    //                             node: document.getElementById(inputParams.view[parameterId].id)
+                    //                         });
+                    //                     });
+                    //             } catch (ex) {
+                    //                 console.error('Error making input field widget', ex);
+                    //                 var errorDisplay = div({ style: { border: '1px red solid' } }, [
+                    //                     ex.message
+                    //                 ]);
+                    //                 document.getElementById(inputParams.view[parameterId].id).innerHTML = errorDisplay;
+                    //             }
+                    //         }));
+                    //     }
+                    // })                   
                     .then(function () {
                         if (parameterParams.layout.length === 0) {
                             ui.getElement('parameters-area').classList.add('hidden');

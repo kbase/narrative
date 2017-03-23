@@ -1,7 +1,26 @@
 ### OVERVIEW
 The Narrative Interface allows users to craft KBase Narratives using a combination of GUI-based commands, Python and R scripts, and graphical output elements.
 
-This is built on the Jupyter Notebook v4.2.1 (more notes will follow).
+This is built on the Jupyter Notebook v4.4.1 (more notes will follow).
+
+### Version 3.2.2
+__Changes__
+- Adjusted flow of job log viewing for data import jobs.
+- Changed Narrative sharing interface, fixed cross-browser incompatibilities.
+- Added new importer apps to the data staging panel.
+
+### Version 3.2.1
+__Changes__
+- Added JGI Data policy requirement to the JGI Public Data browser/stager.
+- Fixed a text problem with an FBA viewer tab.
+
+### Version 3.2.0
+__Changes__
+- Added a prototype Public Data option to fetch files from JGI and load them into a user's staging area.
+- Fixed problems with the Sharing popover having a very narrow text box.
+- Updated the Search area to retrieve data from the updated service.
+- Introduced a new Selenium-based browser testing harness.
+- Bumped version of Jupyter Notebook to 4.4.1, IPython to 5.3.0, and IPywidgets to 6.0.0.
 
 ### Version 3.1.12
 __Changes__

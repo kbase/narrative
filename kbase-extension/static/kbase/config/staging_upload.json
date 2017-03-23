@@ -15,6 +15,18 @@
         {
             "id": "genbank_genome",
             "name": "Genbank Genome"
+        },
+        {
+            "id": "expression_matrix",
+            "name": "Expression Matrix"
+        },
+        {
+            "id": "media",
+            "name": "Media"
+        },
+        {
+            "id": "assembly",
+            "name": "Assembly"
         }
     ],
     "app_info": {
@@ -37,8 +49,8 @@
             "multiselect": true
         },
         "sra_reads": {
-            "app_id": "genome_transform/sra_reads_to_library",
-            "app_input_param": "file_path",
+            "app_id": "kb_uploadmethods/import_sra_as_reads_from_staging",
+            "app_input_param": "staging_file_subdir_path",
             "app_input_param_type": "string",
             "app_static_params": {},
             "app_output_param": "name",
@@ -46,12 +58,39 @@
             "multiselect": false
         },
         "genbank_genome": {
-            "app_id": "genome_transform/genbank_to_genome_GFU",
-            "app_input_param": "file_path",
+            "app_id": "kb_uploadmethods/import_genbank_as_genome_from_staging",
+            "app_input_param": "staging_file_subdir_path",
             "app_input_param_type": "string",
             "app_static_params": {},
             "app_output_param": "genome_name",
             "app_output_suffix": "_genome",
+            "multiselect": false
+        },
+        "expression_matrix": {
+            "app_id": "kb_uploadmethods/import_tsv_as_expression_matrix_from_staging",
+            "app_input_param": "staging_file_subdir_path",
+            "app_input_param_type": "string",
+            "app_static_params": {},
+            "app_output_param": "matrix_name",
+            "app_output_suffix": "_matrix",
+            "multiselect": false
+        },
+        "media": {
+            "app_id": "kb_uploadmethods/import_tsv_excel_as_media_from_staging",
+            "app_input_param": "staging_file_subdir_path",
+            "app_input_param_type": "string",
+            "app_static_params": {},
+            "app_output_param": "media_name",
+            "app_output_suffix": "_media",
+            "multiselect": false
+        },
+        "assembly": {
+            "app_id": "kb_uploadmethods/import_fasta_as_assembly_from_staging",
+            "app_input_param": "staging_file_subdir_path",
+            "app_input_param_type": "string",
+            "app_static_params": {},
+            "app_output_param": "assembly_name",
+            "app_output_suffix": "_assembly",
             "multiselect": false
         }
     }

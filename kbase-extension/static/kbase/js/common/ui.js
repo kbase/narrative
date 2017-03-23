@@ -118,7 +118,7 @@ define([
                 td(error.detail)
             ]),
             tr([
-                th('Referenc'),
+                th('Reference'),
                 td(error.reference)
             ])
         ]);

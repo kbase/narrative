@@ -186,6 +186,8 @@ define([
             return 'struct';
         case 'autocomplete':
             return 'string';
+        case 'custom':
+            return 'custom';
         }
 
         /*
@@ -266,6 +268,13 @@ define([
         // a dropdown even though the field_type is 'text'.
 
         switch (dataType) {
+        case 'custom': 
+            constraints = {
+                type: Props.getDataItem(spec, 'text_options.validate_as')
+            };
+            // HACK
+            converted.ui.class = 'parameter';
+            break;
         case 'sequence':
             constraints = {};
             break;

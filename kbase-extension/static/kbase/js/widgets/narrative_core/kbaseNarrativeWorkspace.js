@@ -471,8 +471,10 @@ define([
                         return 'editor';
                     case 'app':
                         return 'app';
+                    case 'advanced_viewer':
+                        return 'advancedView';
                     default:
-                        console.warn('The app ' + spec.info.id + ' does not specifcy a valid spec.info.app_type - defaulting to "app"');
+                        console.warn('The app ' + spec.info.id + ' does not specify a valid spec.info.app_type "' + spec.info.app_type + '" - defaulting to "app"');
                         return 'app';
                 }
             }

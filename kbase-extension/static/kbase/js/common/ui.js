@@ -32,11 +32,15 @@ define([
         return span({ style: { fontStyle: 'italic', color: 'orange' } }, 'NA');
     }
 
-    function renderInfoDialog(title, content, okLabel) {
+    function renderInfoDialog(title, content, okLabel, type) {
+        var extraClass = '';
+        if (type) {
+            extraClass = ' bg-' + type;
+        }
         return div({ class: 'modal fade', tabindex: '-1', role: 'dialog' }, [
             div({ class: 'modal-dialog' }, [
                 div({ class: 'modal-content' }, [
-                    div({ class: 'modal-header' }, [
+                    div({ class: 'modal-header' + extraClass }, [
                         button({ type: 'button', class: 'close', dataDismiss: 'modal', ariaLabel: okLabel }, [
                             span({ ariaHidden: 'true' }, '&times;')
                         ]),
@@ -52,7 +56,6 @@ define([
             ])
         ]);
     }
-
 
     function showInfoDialog(arg) {
         var dialog = renderInfoDialog(arg.title, arg.body, arg.okLabel || 'OK'),
@@ -92,7 +95,75 @@ define([
                 resolve(false);
             });
         });
+    }
 
+    function buildError(error) {
+        return table({
+            class: 'table table-striped'
+        }, [
+            tr([
+                th('Name'),
+                td(error.name)
+            ]),
+            tr([
+                th('Code'),
+                td(error.code)
+            ]),            
+            tr([
+                th('Message'),
+                td(error.message)
+            ]),
+            tr([
+                th('Detail'),
+                td(error.detail)
+            ]),
+            tr([
+                th('Reference'),
+                td(error.reference)
+            ])
+        ]);
+    }
+
+    function showErrorDialog(arg) {
+        var body = buildError(arg.error);
+
+        var dialog = renderInfoDialog(arg.title, body, 'OK', 'danger'),
+            dialogId = html.genId(),
+            confirmNode = document.createElement('div'),
+            kbaseNode, modalNode, modalDialogNode;
+
+        confirmNode.id = dialogId;
+        confirmNode.innerHTML = dialog;
+
+        // top level element for kbase usage
+        kbaseNode = document.querySelector('[data-element="kbase"]');
+        if (!kbaseNode) {
+            kbaseNode = document.createElement('div');
+            kbaseNode.setAttribute('data-element', 'kbase');
+            document.body.appendChild(kbaseNode);
+        }
+
+        // a node upon which to place Bootstrap modals.
+        modalNode = kbaseNode.querySelector('[data-element="modal"]');
+        if (!modalNode) {
+            modalNode = document.createElement('div');
+            modalNode.setAttribute('data-element', 'modal');
+            kbaseNode.appendChild(modalNode);
+        }
+
+        modalNode.appendChild(confirmNode);
+
+        modalDialogNode = modalNode.querySelector('.modal');
+        $(modalDialogNode).modal('show');
+        return new Promise(function (resolve) {
+            modalDialogNode.querySelector('[data-element="ok"]').addEventListener('click', function () {
+                confirmNode.parentElement.removeChild(confirmNode);
+                resolve(false);
+            });
+            modalDialogNode.addEventListener('hide.bs.modal', function () {
+                resolve(false);
+            });
+        });
     }
 
     function renderDialog(title, content, cancelLabel, buttons, options) {
@@ -1235,6 +1306,7 @@ define([
         // "static" methods
         na: na,
         showInfoDialog: showInfoDialog,
-        showDialog: showDialog
+        showDialog: showDialog,
+        showErrorDialog: showErrorDialog
     };
 });

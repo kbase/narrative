@@ -104,7 +104,7 @@ define ([
                         }
                     }
                 }
-                return Promise.resolve(this.user_profile.lookup_globus_user(usernameList));
+                return this.authClient.getUserNames(this.authClient.getAuthToken(), usernameList);
             }.bind(this))
             .then(function (data) {
                 this.user_data = data;
@@ -381,11 +381,11 @@ define ([
                         Promise.resolve(self.authClient.searchUserNames(null, term))
                         .then(function(users) {
                             var results = [];
-                            users.forEach(function(user) {
-                                if (user.username !== self.my_user_id) {
+                            Object.keys(users).forEach(function(username) {
+                                if (username !== self.my_user_id) {
                                     results.push({
-                                        id: user.username,
-                                        text: user.realname,
+                                        id: username,
+                                        text: users[username],
                                         found: true
                                     });
                                 }

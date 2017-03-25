@@ -326,7 +326,8 @@ class AppManager(object):
                       tag=tag,
                       app_version=service_ver,
                       cell_id=cell_id,
-                      run_id=run_id)
+                      run_id=run_id,
+                      token_id=agent_token['id'])
 
         self._send_comm_message('run_status', {
             'event': 'launched_job',

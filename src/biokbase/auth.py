@@ -13,6 +13,9 @@ from biokbase.narrative.common.url_config import URLS
 from biokbase.narrative.common.util import kbase_env
 
 tokenenv = 'KB_AUTH_TOKEN'
+token_api_url = URLS.auth + "/api/V2"
+endpt_token = "/token"
+endpt_token_revoke = "/tokens/revoke"
 
 
 def set_environ_token(token):
@@ -25,7 +28,7 @@ def get_auth_token():
 
 def get_user_info(token):
     headers = {"Authorization": token}
-    r = requests.get(URLS.auth + "/api/V2/token", headers=headers)
+    r = requests.get(token_api_url + endpt_token, headers=headers)
     if r.status_code != requests.codes.ok:
         r.raise_for_status()
     auth_info = json.loads(r.content)
@@ -58,8 +61,21 @@ def get_agent_token(login_token, token_name="NarrativeAgent"):
     headers = {"Authorization": login_token,
                "Content-Type": "Application/json"}
     data = json.dumps({"tokenname": token_name})
-    r = requests.post(URLS.auth + "/api/V2/token", headers=headers, data=data)
+    r = requests.post(token_api_url + endpt_token, headers=headers, data=data)
     if r.status_code != requests.codes.ok:
         r.raise_for_status()
     agent_token_info = json.loads(r.content)
     return agent_token_info
+
+
+def revoke_token(auth_token, revoke_id):
+    """
+    Revokes and invalidates an auth token.
+    params:
+    auth_token - the token to use for authorization to revoke something.
+    revoke_id - the id of the token to invalidate
+    """
+    headers = {"Authorization": auth_token}
+    r = requests.delete(URLS.auth + endpt_token_revoke + "/" + revoke_id, headers=headers)
+    if r.status_code != requests.codes.ok:
+        r.raise_for_status()

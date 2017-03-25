@@ -70,7 +70,8 @@ def get_agent_token(login_token, token_name="NarrativeAgent"):
 
 def revoke_token(auth_token, revoke_id):
     """
-    Revokes and invalidates an auth token.
+    Revokes and invalidates an auth token, if it exists. If that token doesn't exist,
+    this throws a 404.
     params:
     auth_token - the token to use for authorization to revoke something.
     revoke_id - the id of the token to invalidate

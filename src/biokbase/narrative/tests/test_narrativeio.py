@@ -2,26 +2,23 @@
 Tests for Mixin class that handles IO between the
 Narrative and workspace service.
 """
-__author__ = 'Bill Riehl <wjriehl@lbl.gov>'
-
 import unittest
 from getpass import getpass
 from biokbase.narrative.contents.narrativeio import (
     KBaseWSManagerMixin,
     PermissionsError
 )
-from biokbase.workspace.client import Workspace
 from biokbase.workspace.baseclient import ServerError
 import biokbase.auth
-import os
-import re
 from tornado.web import HTTPError
-import ConfigParser
 import narrative_test_helper as test_util
+
+__author__ = 'Bill Riehl <wjriehl@lbl.gov>'
 
 metadata_fields = set(['objid', 'name', 'type', 'save_date', 'ver',
                        'saved_by', 'wsid', 'workspace', 'chsum',
                        'size', 'meta'])
+
 
 class NarrIOTestCase(unittest.TestCase):
     # Before test:
@@ -30,8 +27,7 @@ class NarrIOTestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
-        config = ConfigParser.ConfigParser()
-        config.read('test.cfg')
+        config = test_util.get_test_config()
 
         self.test_user = config.get('users', 'test_user')
         self.test_pwd = getpass('Password for {}: '.format(self.test_user))

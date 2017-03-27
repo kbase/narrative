@@ -1,15 +1,13 @@
+"""
+Test log proxy and kblogging
+"""
 import logging
 import os
 import time
 import unittest
-#
-#from biokbase.narrative.common.tests import util
 import util
 from biokbase.narrative.common import kblogging
 
-"""
-Test log proxy and kblogging
-"""
 __author__ = 'Dan Gunter <dkgunter@lbl.gov>'
 
 _cwd = os.path.realpath('.')

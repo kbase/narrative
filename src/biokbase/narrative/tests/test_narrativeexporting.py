@@ -1,21 +1,21 @@
 from __future__ import print_function
 from biokbase.narrative.contents.narrativeio import PermissionsError
 from biokbase.narrative.exporter.exporter import NarrativeExporter
-from biokbase.narrative.tests.util import read_json_file
+from biokbase.narrative.tests.narrative_test_helper import read_json_file
 import unittest
 import os
-import ConfigParser
 import mock
 import sys
 import json
+from narrative_test_helper import TestConfig
+
 """
 Some tests for narrative exporting.
 """
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
 output_file = "test.html"
-config = ConfigParser.ConfigParser()
-config.read('test.cfg')
+config = TestConfig()
 
 
 def mock_read_narrative(style):
@@ -31,7 +31,7 @@ def mock_read_narrative(style):
     style will raise a NarrativeIO.PermissionsError.
     """
     if style == test_narrative_ref:
-        return read_json_file(config.get('narrative_refs', 'narr_file'))
+        return config.get_json_file(config.get('narrative_refs', 'narr_file'))
     elif style == bad_narrative_ref:
         raise ValueError('Bad Narrative!')
     elif style == private_narrative_ref:
@@ -40,6 +40,7 @@ def mock_read_narrative(style):
 test_narrative_ref = config.get('narrative_refs', 'public')
 private_narrative_ref = config.get('narrative_refs', 'private')
 bad_narrative_ref = config.get('narrative_refs', 'bad')
+
 
 class NarrativeExportTesting(unittest.TestCase):
     @classmethod
@@ -60,11 +61,11 @@ class NarrativeExportTesting(unittest.TestCase):
         self.assertTrue(os.path.isfile(output_file))
 
     def test_export_bad(self):
-        with self.assertRaises(ValueError) as err:
+        with self.assertRaises(ValueError):
             self.exporter.export_narrative(bad_narrative_ref, output_file)
 
     def test_export_private(self):
-        with self.assertRaises(PermissionsError) as err:
+        with self.assertRaises(PermissionsError):
             self.exporter.export_narrative(private_narrative_ref, output_file)
 
 

@@ -5,17 +5,17 @@ from biokbase.narrative.contents.updater import (
     suggest_apps
 )
 import json
-from ConfigParser import ConfigParser
+from narrative_test_helper import get_test_config
 
 class TestKeyError(ValueError):
     def __init__(self, keyname, source):
         ValueError.__init__(self, "Key {} not found in {}".format(keyname, source))
 
+
 class UpdaterTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        config = ConfigParser()
-        config.read('test.cfg')
+        config = get_test_config
 
         # read in test file stuff from ./data/...
         f = open(config.get('narratives', 'updater_file'), 'r')

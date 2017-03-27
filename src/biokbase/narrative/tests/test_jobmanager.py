@@ -1,20 +1,20 @@
+"""
+Tests for job management
+"""
 import unittest
 import mock
 import biokbase.narrative.jobs.jobmanager
 from biokbase.narrative.jobs.job import Job
-import ConfigParser
+from narrative_test_helper import TestConfig
 import os
-from util import read_json_file
 from IPython.display import HTML
 from pprint import pprint
-"""
-Tests for job management
-"""
+
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
-config = ConfigParser.ConfigParser()
-config.read('test.cfg')
-job_info = read_json_file(config.get('jobs', 'job_info_file'))
+config = TestConfig()
+job_info = config.load_json_file(config.get('jobs', 'job_info_file'))
+# job_info = read_json_file(config.get('jobs', 'job_info_file'))
 
 
 class MockComm(object):
@@ -75,10 +75,12 @@ class MockAllClients(object):
         return ret
 
     def list_methods_spec(self, params):
-        return read_json_file(config.get('specs', 'app_specs_file'))
+        return config.load_json_file(config.get('specs', 'app_specs_file'))
+        # return read_json_file(config.get('specs', 'app_specs_file'))
 
     def list_categories(self, params):
-        return read_json_file(config.get('specs', 'type_specs_file'))
+        return config.load_json_file(config.get('specs', 'type_specs_file'))
+        # return read_json_file(config.get('specs', 'type_specs_file'))
 
 
 def get_mock_client(client_name):

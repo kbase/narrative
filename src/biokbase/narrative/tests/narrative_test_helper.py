@@ -11,6 +11,7 @@ import os
 from getpass import getpass
 import json
 import time
+import ConfigParser
 
 prod_ws = 'https://kbase.us/services/ws'
 ci_ws = 'https://ci.kbase.us/services/ws'
@@ -18,6 +19,32 @@ ws_metadata = {
     'is_temporary': False,
     'narrative_nice_name': None
 }
+_config_file = "test.cfg"
+
+
+class TestConfig(object):
+    def __init__(self):
+        self._path_prefix = os.path.join(os.environ["NARRATIVE_DIR"], "src", "biokbase",
+                                         "narrative", "tests")
+        config_file_path = os.path.join(self._path_prefix, _config_file)
+        print("GETTING CONFIG FILE")
+        print(config_file_path)
+        self._config = ConfigParser.ConfigParser()
+        self._config.read(config_file_path)
+
+    def get(self, *args, **kwargs):
+        return self._config.get(*args, **kwargs)
+
+    def get_file(self, filename):
+        pass
+
+    def load_json_file(self, filename):
+        json_file_path = os.path.join(self._path_prefix, filename)
+        with open(json_file_path, 'r') as f:
+            data = json.loads(f.read())
+            f.close()
+            return data
+
 
 def fetch_narrative(nar_id, auth_token, url=ci_ws, file_name=None):
     """
@@ -37,6 +64,7 @@ def fetch_narrative(nar_id, auth_token, url=ci_ws, file_name=None):
             f.close()
         return nar_json
     return {}
+
 
 def upload_narrative(nar_file, auth_token, url=ci_ws, set_public=False):
     """
@@ -92,6 +120,7 @@ def upload_narrative(nar_file, auth_token, url=ci_ws, set_public=False):
         'ref': '{}/{}'.format(ws_info[0], obj_info[0][0])
     }
 
+
 def delete_narrative(ws_id, auth_token, url=ci_ws):
     """
     Deletes a workspace with the given id. Throws a ServerError if the user given
@@ -100,10 +129,21 @@ def delete_narrative(ws_id, auth_token, url=ci_ws):
     ws_client = Workspace(url=url, token=auth_token.token)
     ws_client.delete_workspace({'id': ws_id})
 
+
+def read_json_file(path):
+    """
+    Generically reads in any JSON file and returns it as a dict.
+    Especially intended for reading a Narrative file.
+    """
+    with open(path, 'r') as f:
+        data = json.loads(f.read())
+        f.close()
+        return data
+
+
 if __name__ == '__main__':
     test_user_id = 'wjriehl'
     password = getpass('Password for {}: '.format(test_user_id))
     t = biokbase.auth.Token(user_id=test_user_id, password=password)
 
     fetch_narrative('8245/32', t.token, file_name='updater_test_poplar.json')
-

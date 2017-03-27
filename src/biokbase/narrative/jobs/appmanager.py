@@ -2,7 +2,6 @@
 A module for managing apps, specs, requirements, and for starting jobs.
 """
 import biokbase.auth as auth
-import time
 from biokbase.NarrativeJobService.Client import NarrativeJobService
 from biokbase.narrative.common.url_config import URLS
 from job import Job
@@ -280,12 +279,11 @@ class AppManager(object):
 
         # We're now almost ready to run the job. Last, we need an agent token.
         try:
-            token_name = 'KBApp_{}_{}'.format(app_id, int(time.time()))
+            token_name = 'KBApp_{}'.format(app_id)
             token_name = token_name[:self.__MAX_TOKEN_NAME_LEN]
             agent_token = auth.get_agent_token(auth.get_auth_token(), token_name=token_name)
         except Exception as e:
             raise
-            # raise Exception("Unable to create job running authorization credential!")
 
         job_meta['token_id'] = agent_token['id']
         # This is the input set for NJSW.run_job. Now we need the workspace id

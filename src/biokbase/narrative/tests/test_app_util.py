@@ -1,8 +1,6 @@
 """
 Tests for the app_util module
 """
-__author__ = 'Bill Riehl <wjriehl@lbl.gov>'
-
 import unittest
 from biokbase.narrative.app_util import (
     check_tag,
@@ -14,9 +12,13 @@ from biokbase.narrative.app_util import (
 import os
 import mock
 
+__author__ = 'Bill Riehl <wjriehl@lbl.gov>'
+
+
 class DummyWorkspace():
     def get_workspace_info(*args, **kwargs):
         return [12345]
+
 
 class AppUtilTestCase(unittest.TestCase):
     @classmethod
@@ -258,7 +260,6 @@ class AppUtilTestCase(unittest.TestCase):
         state = {}
         with self.assertRaises(ValueError) as e:
             map_outputs_from_state(state, params, app_spec)
-
 
 
 if __name__ == '__main__':

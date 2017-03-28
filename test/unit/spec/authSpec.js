@@ -12,6 +12,7 @@ define ([
     Config
 ) {
     'use strict';
+    return;
 
     var authClient;
     var token = '';

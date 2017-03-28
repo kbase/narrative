@@ -122,7 +122,7 @@ define([
             var inputArea = this.input.find('.input_area'),
                 outputArea = this.element.find('.output_wrapper'),
                 viewInputArea = this.element.find('[data-subarea-type="view-cell-input"]'),
-                showCode = utils.getCellMeta(cell, 'kbase.appCell.user-settings.showCodeInputArea');
+                showCode = utils.getCellMeta(cell, 'kbase.viewCell.user-settings.showCodeInputArea');
 
             if (showCode) {
                 inputArea.addClass('hidden');
@@ -135,7 +135,7 @@ define([
             var inputArea = this.input.find('.input_area'),
                 outputArea = this.element.find('.output_wrapper'),
                 viewInputArea = this.element.find('[data-subarea-type="view-cell-input"]'),
-                showCode = utils.getCellMeta(cell, 'kbase.appCell.user-settings.showCodeInputArea');
+                showCode = utils.getCellMeta(cell, 'kbase.viewCell.user-settings.showCodeInputArea');
 
             if (showCode) {
                 inputArea.removeClass('hidden');

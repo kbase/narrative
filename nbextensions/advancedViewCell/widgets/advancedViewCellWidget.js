@@ -23,7 +23,7 @@ define([
     './advancedViewCellWidget-fsm',
     'css!google-code-prettify/prettify.css',
     'css!font-awesome.css'
-], function(
+], function (
     $,
     Promise,
     Uuid,
@@ -41,7 +41,7 @@ define([
     Ui,
     Fsm,
     Spec,
-    PR, 
+    PR,
     appStates
 ) {
     'use strict';
@@ -125,10 +125,10 @@ define([
                 });
 
             return nms.get_method_spec(appRef)
-                .then(function(data) {
+                .then(function (data) {
                     if (!data[0]) {
                         throw new Error('App not found');
-                    }                    
+                    }
                 });
         }
 
@@ -152,7 +152,7 @@ define([
         }
 
         function validateModel() {
-            return spec.validateModel(model.getItem('params'));           
+            return spec.validateModel(model.getItem('params'));
         }
 
         // TODO: we need to determine the proper forms for a app identifier, and
@@ -162,28 +162,28 @@ define([
         // for a beta or release tag ...
         function fixApp(app) {
             switch (app.tag) {
-                case 'release':
-                    {
-                        return {
-                            id: app.id,
-                            tag: app.tag,
-                            version: app.version
-                        };
-                    }
-                case 'beta':
-                case 'dev':
+            case 'release':
+                {
                     return {
                         id: app.id,
-                        tag: app.tag
-                    }
-                default:
-                    throw new Error('Invalid tag for app ' + app.id);
+                        tag: app.tag,
+                        version: app.version
+                    };
+                }
+            case 'beta':
+            case 'dev':
+                return {
+                    id: app.id,
+                    tag: app.tag
+                }
+            default:
+                throw new Error('Invalid tag for app ' + app.id);
             }
         }
 
         function buildPython(cell, cellId, app, params) {
             var runId = new Uuid(4).format(),
-                app = fixApp(app),  
+                app = fixApp(app),
                 outputWidgetState = utils.getCellMeta(cell, 'viewCell.outputWidgetState') || null,
                 code = PythonInterop.buildAdvancedViewRunner(cellId, runId, app, params, outputWidgetState);
             // TODO: do something with the runId
@@ -210,7 +210,7 @@ define([
                 //xinitialState: {
                 //    mode: 'editing', params: 'incomplete'
                 //},
-                onNewState: function(fsm) {
+                onNewState: function (fsm) {
                     model.setItem('fsm.currentState', fsm.getCurrentState().state);
                     // save the narrative!
 
@@ -263,7 +263,7 @@ define([
         function renderNotifications() {
             var events = Events.make(),
                 notifications = model.getItem('notifications') || [],
-                content = notifications.map(function(notification, index) {
+                content = notifications.map(function (notification, index) {
                     return div({ class: 'row' }, [
                         div({ class: 'col-md-10' }, notification),
                         div({ class: 'col-md-2', style: { textAlign: 'right' } }, span({}, [
@@ -271,7 +271,7 @@ define([
                                 class: 'btn btn-default',
                                 id: events.addEvent({
                                     type: 'click',
-                                    handler: function() {
+                                    handler: function () {
                                         doRemoveNotification(index);
                                     }
                                 })
@@ -322,30 +322,38 @@ define([
             var state = fsm.getCurrentState();
 
             // Button state
-            state.ui.buttons.enabled.forEach(function(button) {
+            state.ui.buttons.enabled.forEach(function (button) {
                 ui.enableButton(button);
             });
-            state.ui.buttons.disabled.forEach(function(button) {
+            state.ui.buttons.disabled.forEach(function (button) {
                 ui.disableButton(button);
             });
 
 
             // Element state
-            state.ui.elements.show.forEach(function(element) {
+            state.ui.elements.show.forEach(function (element) {
                 ui.showElement(element);
             });
-            state.ui.elements.hide.forEach(function(element) {
+            state.ui.elements.hide.forEach(function (element) {
                 ui.hideElement(element);
             });
         }
 
         function renderLayout() {
+
             var readOnlyStyle = {};
             if (JupyterNamespace.narrative.readonly) {
                 readOnlyStyle.display = 'none';
             }
             var events = Events.make(),
-                content = div({ class: 'kbase-extension kb-app-cell', style: { display: 'flex', alignItems: 'stretch' } }, [
+                configureId = html.genId(),
+                content = div({
+                    class: 'kbase-extension kb-app-cell',
+                    style: {
+                        display: 'flex',
+                        alignItems: 'stretch'
+                    }
+                }, [
                     div({ class: 'prompt', dataElement: 'prompt', style: { display: 'flex', alignItems: 'stretch', flexDirection: 'column' } }, [
                         div({ dataElement: 'status' })
                     ]),
@@ -382,40 +390,45 @@ define([
                                     ]
                                 }),
                                 ui.buildCollapsiblePanel({
-                                    title: 'Input ' + span({ class: 'fa fa-arrow-right' }),
+                                    // title: 'Input ' + span({ class: 'fa fa-arrow-right' }),
+                                    id: configureId,
+                                    title: 'Configure ' + span({class: 'fa fa-cogs'}),
                                     name: 'parameters-group',
                                     hidden: false,
+                                    collapsed: utils.getCellMeta(cell, 'kbase.viewCell.user-settings.collapsedConfigurePanel', false),
                                     type: 'default',
                                     classes: ['kb-panel-container'],
-                                    body: div({ dataElement: 'widget' })
-                                }),
-                                ui.buildCollapsiblePanel({
-                                    title: 'Parameters Display',
-                                    name: 'parameters-display-group',
-                                    hidden: false,
-                                    type: 'default',
-                                    classes: ['kb-panel-container'],
-                                    body: div({ dataElement: 'widget' })
-                                }),
-                                div({
-                                    dataElement: 'availableActions',
-                                    style: readOnlyStyle,
-                                }, [
-                                    div({ class: 'btn-toolbar kb-btn-toolbar-cell-widget' }, [
-                                        div({ class: 'btn-group' }, [
-                                            ui.makeButton('View', 'run-app', { events: events, type: 'primary' })
+                                    body: div([
+                                        div({
+                                            dataElement: 'widget' 
+                                        }),
+
+                                        div({
+                                            dataElement: 'availableActions',
+                                            style: readOnlyStyle,
+                                        }, [
+                                            div({ class: 'btn-toolbar kb-btn-toolbar-cell-widget' }, [
+                                                div({ class: 'btn-group' }, [
+                                                    ui.makeButton('View', 'run-app', { events: events, type: 'primary' })
+                                                ])
+                                            ])
                                         ])
                                     ])
-                                ])
+                                })
                             ])
                         ])
                     ])
                 ]);
-            return {
-                content: content,
-                events: events
-            };
+            container.innerHTML = content;
+            events.attachEvents(container);
+            $('#' + configureId + ' .collapse').on('hidden.bs.collapse', function() {
+                utils.setCellMeta(cell, 'kbase.viewCell.user-settings.collapsedConfigurePanel', true);
+            });
+            $('#' + configureId + ' .collapse').on('shown.bs.collapse', function() {
+                utils.setCellMeta(cell, 'kbase.viewCell.user-settings.collapsedConfigurePanel', false);
+            });
         }
+
         function doDeleteCell() {
             var content = div([
                 p([
@@ -426,7 +439,7 @@ define([
                 p('Continue to delete this data cell?')
             ]);
             ui.showConfirmDialog({ title: 'Confirm Cell Deletion', body: content })
-                .then(function(confirmed) {
+                .then(function (confirmed) {
                     if (!confirmed) {
                         return;
                     }
@@ -445,7 +458,7 @@ define([
         // LIFECYCLE API
 
         function init() {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 initializeFSM();
                 initCodeInputArea();
                 return null;
@@ -453,7 +466,7 @@ define([
         }
 
         function attach(node) {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 container = node;
                 ui = Ui.make({
                     node: container,
@@ -469,45 +482,44 @@ define([
                     };
                 }
 
-                var layout = renderLayout();
-                container.innerHTML = layout.content;
-                layout.events.attachEvents(container);
+                renderLayout();
+
 
                 return null;
             });
         }
 
         function start() {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 /*
                  * listeners for the local input cell message bus
                  */
 
-                bus.on('toggle-code-view', function() {
+                bus.on('toggle-code-view', function () {
                     var showing = toggleCodeInputArea(),
                         label = showing ? 'Hide Code' : 'Show Code';
                     ui.setButtonLabel('toggle-code-view', label);
                 });
-                bus.on('show-notifications', function() {
+                bus.on('show-notifications', function () {
                     doShowNotifications();
                 });
-                bus.on('edit-cell-metadata', function() {
+                bus.on('edit-cell-metadata', function () {
                     doEditCellMetadata();
                 });
-                bus.on('edit-notebook-metadata', function() {
+                bus.on('edit-notebook-metadata', function () {
                     doEditNotebookMetadata();
                 });
-                bus.on('run-app', function() {
+                bus.on('run-app', function () {
                     doRun();
                 });
 
-                bus.on('sync-all-display-parameters', function() {
+                bus.on('sync-all-display-parameters', function () {
                     widgets.paramsDisplayWidget.bus.emit('sync-all-parameters');
                 });
 
                 // Events from widgets...
 
-                parentBus.on('reset-to-defaults', function() {
+                parentBus.on('reset-to-defaults', function () {
                     bus.emit('reset-to-defaults');
                 });
 
@@ -518,7 +530,7 @@ define([
                     description: 'A cell channel'
                 });
 
-                eventManager.add(cellBus.on('delete-cell', function() {
+                eventManager.add(cellBus.on('delete-cell', function () {
                     doDeleteCell();
                 }));
 
@@ -537,7 +549,7 @@ define([
                 paramsToExport = {},
                 parameters = spec.getSpec().parameters;
 
-            Object.keys(params).forEach(function(key) {
+            Object.keys(params).forEach(function (key) {
                 var value = params[key],
                     paramSpec = parameters.specs[key];
 
@@ -553,10 +565,10 @@ define([
         }
 
         function loadInputWidget() {
-            return new Promise(function(resolve, reject) {
+            return new Promise(function (resolve, reject) {
                 var selectedWidget = 'nbextensions/advancedViewCell/widgets/appParamsWidget';
 
-                require([selectedWidget], function(Widget) {
+                require([selectedWidget], function (Widget) {
                     // TODO: widget should make own bus.
                     var bus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for input widget' }),
                         widget = Widget.make({
@@ -569,7 +581,7 @@ define([
                         bus: bus,
                         instance: widget
                     };
-                    bus.on('parameter-sync', function(message) {
+                    bus.on('parameter-sync', function (message) {
                         var value = model.getItem(['params', message.parameter]);
                         bus.send({
                             parameter: message.parameter,
@@ -583,8 +595,8 @@ define([
                         });
                     });
 
-                    bus.on('sync-params', function(message) {
-                        message.parameters.forEach(function(paramId) {
+                    bus.on('sync-params', function (message) {
+                        message.parameters.forEach(function (paramId) {
                             bus.send({
                                 parameter: paramId,
                                 value: model.getItem(['params', message.parameter])
@@ -602,14 +614,14 @@ define([
                         key: {
                             type: 'get-parameter'
                         },
-                        handle: function(message) {
+                        handle: function (message) {
                             return {
                                 value: model.getItem(['params', message.parameterName])
                             };
                         }
                     });
 
-                    bus.on('parameter-changed', function(message) {
+                    bus.on('parameter-changed', function (message) {
                         // We simply store the new value for the parameter.
                         model.setItem(['params', message.parameter], message.newValue);
                         evaluateAppState();
@@ -620,10 +632,10 @@ define([
                             parameters: spec.getSpec().parameters,
                             params: model.getItem('params')
                         })
-                        .then(function() {
+                        .then(function () {
                             resolve();
                         });
-                }, function(err) {
+                }, function (err) {
                     console.log('ERROR', err);
                     reject(err);
                 });
@@ -656,7 +668,7 @@ define([
 
             function harvestErrors(validations) {
                 if (validations instanceof Array) {
-                    validations.forEach(function(result, index) {
+                    validations.forEach(function (result, index) {
                         if (!result.isValid) {
                             messages.push(String(index) + ':' + result.errorMessage);
                         }
@@ -665,7 +677,7 @@ define([
                         }
                     });
                 } else {
-                    Object.keys(validations).forEach(function(id) {
+                    Object.keys(validations).forEach(function (id) {
                         var result = validations[id];
                         if (!result.isValid) {
                             messages.push(id + ':' + result.errorMessage);
@@ -682,7 +694,7 @@ define([
 
         function evaluateAppState() {
             validateModel()
-                .then(function(result) {
+                .then(function (result) {
                     // we have a tree of validations, so we need to walk the tree to see if anything
                     // does not validate.
                     var messages = gatherValidationMessages(result);
@@ -697,7 +709,7 @@ define([
                         renderUI();
                     }
                 })
-                .catch(function(err) {
+                .catch(function (err) {
                     alert('internal error'),
                         console.error('INTERNAL ERROR', err);
                 });
@@ -707,7 +719,7 @@ define([
             // First get the app specs, which is stashed in the model,
             // with the parameters returned.
             return syncAppSpec(params.appId, params.appTag)
-                .then(function() {
+                .then(function () {
                     var appRef = [model.getItem('app.id'), model.getItem('app.tag')].filter(toBoolean).join('/'),
                         url = '/#appcatalog/app/' + appRef;
                     utils.setCellMeta(cell, 'kbase.attributes.title', model.getItem('app.spec.info.name'));
@@ -718,12 +730,12 @@ define([
                         loadInputWidget()
                     ]);
                 })
-                .then(function() {
+                .then(function () {
                     // this will not change, so we can just render it here.
                     PR.prettyPrint(null, container);
                     renderUI();
                 })
-                .then(function() {
+                .then(function () {
                     // if we start out in 'new' state, then we need to promote to
                     // editing...
                     if (fsm.getCurrentState().state.mode === 'new') {
@@ -732,7 +744,7 @@ define([
                     }
                     renderUI();
                 })
-                .catch(function(err) {
+                .catch(function (err) {
                     console.error('ERROR loading main widgets', err);
                     addNotification('Error loading main widgets: ' + err.message);
                     model.setItem('fatalError', {
@@ -749,7 +761,7 @@ define([
 
         model = Props.make({
             data: utils.getMeta(cell, 'viewCell'),
-            onUpdate: function(props) {
+            onUpdate: function (props) {
                 utils.setMeta(cell, 'viewCell', props.getRawObject());
                 // saveNarrative();
             }
@@ -768,10 +780,10 @@ define([
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
         }
     };
-}, function(err) {
+}, function (err) {
     console.error('ERROR loading viewCell viewCellWidget', err);
 });

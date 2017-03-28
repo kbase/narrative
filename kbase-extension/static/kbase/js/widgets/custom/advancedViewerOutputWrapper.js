@@ -49,7 +49,6 @@ define([
         return factory(config);
     }
 
-
     function launchWidget(arg) {
         var node = document.getElementById(arg.id);
         require([

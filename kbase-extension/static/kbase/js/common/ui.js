@@ -9,7 +9,15 @@ define([
     'google-code-prettify/prettify',
     'css!google-code-prettify/prettify.css',
     'bootstrap'
-], function ($, Promise, html, Jupyter, Runtime, Events, PR) {
+], function (
+    $,
+    Promise,
+    html,
+    Jupyter,
+    Runtime,
+    Events,
+    PR
+) {
     'use strict';
     var t = html.tag,
         div = t('div'),
@@ -108,7 +116,7 @@ define([
             tr([
                 th('Code'),
                 td(error.code)
-            ]),            
+            ]),
             tr([
                 th('Message'),
                 td(error.message)
@@ -625,12 +633,14 @@ define([
         }
 
         function buildCollapsiblePanel(args) {
-            var collapseId = html.genId(),
+            var panelId = args.id || html.genId(),
+                collapseId = html.genId(),
                 type = args.type || 'primary',
                 classes = ['panel', 'panel-' + type],
                 collapseClasses = ['panel-collapse collapse'],
                 toggleClasses = [],
                 icon;
+
             if (args.hidden) {
                 classes.push('hidden');
                 // style.display = 'none';
@@ -646,7 +656,11 @@ define([
             if (args.icon) {
                 icon = [' ', buildIcon(args.icon)];
             }
-            return div({ class: classes.join(' '), dataElement: args.name }, [
+            return div({ 
+                id: panelId,
+                class: classes.join(' '), 
+                dataElement: args.name 
+            }, [
                 div({ class: 'panel-heading' }, [
                     div({ class: 'panel-title' }, span({
                         dataElement: 'title',
@@ -672,11 +686,7 @@ define([
             var collapseToggle = node.querySelector('[data-toggle="collapse"]'),
                 targetSelector = collapseToggle.getAttribute('data-target'),
                 collapseTarget = node.querySelector(targetSelector);
-
-            collapseToggle.classList.add('collapsed');
-            collapseToggle.setAttribute('aria-expanded', 'false');
-            collapseTarget.classList.remove('in');
-            collapseTarget.setAttribute('aria-expanded', 'false');
+            $(collapseTarget).collapse('hide');
         }
 
         function expandPanel(path) {
@@ -687,11 +697,7 @@ define([
             var collapseToggle = node.querySelector('[data-toggle="collapse"]'),
                 targetSelector = collapseToggle.getAttribute('data-target'),
                 collapseTarget = node.querySelector(targetSelector);
-
-            collapseToggle.classList.remove('collapsed');
-            collapseToggle.setAttribute('aria-expanded', 'true');
-            collapseTarget.classList.add('in');
-            collapseTarget.setAttribute('aria-expanded', 'true');
+            $(collapseTarget).collapse('show');
         }
 
         function buildButtonToolbar(arg) {

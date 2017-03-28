@@ -5,7 +5,7 @@ import unittest
 import mock
 import biokbase.narrative.jobs.jobmanager
 from biokbase.narrative.jobs.job import Job
-from narrative_test_helper import TestConfig
+from util import TestConfig
 import os
 from IPython.display import HTML
 from pprint import pprint

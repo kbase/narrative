@@ -8,7 +8,7 @@ from IPython.display import HTML
 import unittest
 import mock
 import os
-from narrative_test_helper import TestConfig
+from util import TestConfig
 
 
 def mock_agent_token(*args, **kwargs):

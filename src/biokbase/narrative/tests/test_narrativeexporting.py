@@ -1,13 +1,10 @@
 from __future__ import print_function
 from biokbase.narrative.contents.narrativeio import PermissionsError
 from biokbase.narrative.exporter.exporter import NarrativeExporter
-from biokbase.narrative.tests.narrative_test_helper import read_json_file
 import unittest
 import os
 import mock
-import sys
-import json
-from narrative_test_helper import TestConfig
+from util import TestConfig
 
 """
 Some tests for narrative exporting.
@@ -31,7 +28,7 @@ def mock_read_narrative(style):
     style will raise a NarrativeIO.PermissionsError.
     """
     if style == test_narrative_ref:
-        return config.get_json_file(config.get('narrative_refs', 'narr_file'))
+        return config.load_json_file(config.get('narrative_refs', 'narr_file'))
     elif style == bad_narrative_ref:
         raise ValueError('Bad Narrative!')
     elif style == private_narrative_ref:

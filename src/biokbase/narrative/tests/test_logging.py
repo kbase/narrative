@@ -10,8 +10,6 @@ from biokbase.narrative.common import kblogging
 
 __author__ = 'Dan Gunter <dkgunter@lbl.gov>'
 
-_cwd = os.path.realpath('.')
-
 _log = util.test_logger('test_log_client')
 
 
@@ -21,10 +19,11 @@ class TestClient(unittest.TestCase):
     recv, recv_thread = None, None
 
     def setUp(self):
+        config = util.TestConfig()
         tlog = logging.getLogger("tornado.application")
         tlog.setLevel(logging.INFO)
         tlog.addHandler(logging.StreamHandler())
-        os.environ[kblogging.KBASE_PROXY_ENV] = _cwd + '/logproxy.conf'
+        os.environ[kblogging.KBASE_PROXY_ENV] = config.file_path('logproxy.conf')
 
     def start_receiver(self):
         proxy_config = kblogging.get_proxy_config()

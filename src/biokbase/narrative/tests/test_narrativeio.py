@@ -11,7 +11,7 @@ from biokbase.narrative.contents.narrativeio import (
 from biokbase.workspace.baseclient import ServerError
 import biokbase.auth
 from tornado.web import HTTPError
-import narrative_test_helper as test_util
+import util
 
 __author__ = 'Bill Riehl <wjriehl@lbl.gov>'
 
@@ -27,7 +27,7 @@ class NarrIOTestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
-        config = test_util.get_test_config()
+        config = util.TestConfig()
 
         self.test_user = config.get('users', 'test_user')
         self.test_pwd = getpass('Password for {}: '.format(self.test_user))
@@ -48,15 +48,15 @@ class NarrIOTestCase(unittest.TestCase):
         # To avoid cross-contamination (we're testing the new_narrative() code here,
         # so we shouldn't use it, right?) this will be done manually using the Workspace
         # client.
-        self.public_nar = test_util.upload_narrative(config.get('narratives', 'public_file'), self.test_token, set_public=True, url=self.ws_uri)
-        self.private_nar = test_util.upload_narrative(config.get('narratives', 'private_file'), self.test_token, url=self.ws_uri)
-        self.unauth_nar = test_util.upload_narrative(config.get('narratives', 'unauth_file'), self.private_token, url=self.ws_uri)
+        self.public_nar = util.upload_narrative(config.get('narratives', 'public_file'), self.test_token, set_public=True, url=self.ws_uri)
+        self.private_nar = util.upload_narrative(config.get('narratives', 'private_file'), self.test_token, url=self.ws_uri)
+        self.unauth_nar = util.upload_narrative(config.get('narratives', 'unauth_file'), self.private_token, url=self.ws_uri)
 
     @classmethod
     def tearDownClass(self):
-        test_util.delete_narrative(self.public_nar['ws'], self.test_token, url=self.ws_uri)
-        test_util.delete_narrative(self.private_nar['ws'], self.test_token, url=self.ws_uri)
-        test_util.delete_narrative(self.unauth_nar['ws'], self.private_token, url=self.ws_uri)
+        util.delete_narrative(self.public_nar['ws'], self.test_token, url=self.ws_uri)
+        util.delete_narrative(self.private_nar['ws'], self.test_token, url=self.ws_uri)
+        util.delete_narrative(self.unauth_nar['ws'], self.private_token, url=self.ws_uri)
 
     @classmethod
     def setUp(self):

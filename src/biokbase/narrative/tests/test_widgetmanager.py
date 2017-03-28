@@ -4,8 +4,7 @@ from biokbase.narrative.widgetmanager import WidgetManager
 import IPython
 import mock
 import os
-from util import read_json_file
-from narrative_test_helper import get_test_config
+from util import TestConfig
 
 """
 Tests for the WidgetManager class
@@ -17,9 +16,9 @@ class WidgetManagerTestCase(unittest.TestCase):
     @classmethod
     @mock.patch('biokbase.narrative.widgetmanager.SpecManager')
     def setUpClass(self, mock_sm):
-        config = get_test_config()
+        config = TestConfig()
         os.environ['KB_WORKSPACE_ID'] = '12345'  # That's the same workspace as my luggage!
-        specs_list = read_json_file(config.get('specs', 'app_specs_file'))
+        specs_list = config.load_json_file(config.get('specs', 'app_specs_file'))
         specs_dict = dict()
         for s in specs_list:
             specs_dict[s['info']['id']] = s

@@ -162,7 +162,6 @@ def read_token_file(path):
     Reads in a token file.
     A token file is just expected to have a single line in it - the token itself.
     """
-    return None
     if not os.path.isfile(path):
         return None
     else:

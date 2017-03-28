@@ -25,20 +25,28 @@ class NarrIOTestCase(unittest.TestCase):
     # Before test:
     # - Log in (for tests that need a valid login)
     # also sets the token in the environment variable.
+    test_token = None
+    private_token = None
+
+    def skipUnlessToken():
+        def deco(f):
+            def wrapper(self, *args, **kwargs):
+                if self.test_token is None:
+                    self.skipTest()
+                else:
+                    f(self, *args, **kwargs)
+            return wrapper
+        return deco
 
     @classmethod
     def setUpClass(self):
         config = util.TestConfig()
 
         self.test_user = config.get('users', 'test_user')
-        self.test_token = open(config.get_path('token_files', 'test_user'), 'r').read().strip()
-        # self.test_pwd = getpass('Password for {}: '.format(self.test_user))
-        # self.test_token = biokbase.auth.Token(user_id=self.test_user, password=self.test_pwd)
-
         self.private_user = config.get('users', 'private_user')
-        # self.private_pwd = getpass('Password for {}: '.format(self.private_user))
-        self.private_token = open(config.get_path('token_files', 'private_user'), 'r').read().strip()
-        # self.private_token = biokbase.auth.Token(user_id=self.private_user, password=self.private_pwd)
+
+        self.test_token = util.read_token_file(config.get_path('token_files', 'test_user'))
+        self.private_token = util.read_token_file(config.get_path('token_files', 'private_user'))
 
         self.ws_uri = URLS.workspace
 
@@ -47,24 +55,29 @@ class NarrIOTestCase(unittest.TestCase):
         self.invalid_ws_id = config.get('strings', 'invalid_ws_id')
         self.bad_ws_id = config.get('strings', 'bad_ws_id')
 
-        # Now we need to inject some data!
-        # To avoid cross-contamination (we're testing the new_narrative() code here,
-        # so we shouldn't use it, right?) this will be done manually using the Workspace
-        # client.
-        self.public_nar = util.upload_narrative(config.get_path('narratives', 'public_file'),
-                                                self.test_token, self.test_user, set_public=True,
-                                                url=self.ws_uri)
-        self.private_nar = util.upload_narrative(config.get_path('narratives', 'private_file'),
-                                                 self.test_token, self.test_user, url=self.ws_uri)
-        self.unauth_nar = util.upload_narrative(config.get_path('narratives', 'unauth_file'),
-                                                self.private_token, self.private_user,
-                                                url=self.ws_uri)
+        if self.test_token is not None:
+            # Now we need to inject some data!
+            # To avoid cross-contamination (we're testing the new_narrative() code here,
+            # so we shouldn't use it, right?) this will be done manually using the Workspace
+            # client.
+            self.public_nar = util.upload_narrative(
+                config.get_path('narratives', 'public_file'), self.test_token, self.test_user,
+                set_public=True, url=self.ws_uri)
+            self.private_nar = util.upload_narrative(
+                config.get_path('narratives', 'private_file'), self.test_token, self.test_user,
+                url=self.ws_uri)
+        if self.private_token is not None:
+            self.unauth_nar = util.upload_narrative(
+                config.get_path('narratives', 'unauth_file'), self.private_token, self.private_user,
+                url=self.ws_uri)
 
     @classmethod
     def tearDownClass(self):
-        util.delete_narrative(self.public_nar['ws'], self.test_token, url=self.ws_uri)
-        util.delete_narrative(self.private_nar['ws'], self.test_token, url=self.ws_uri)
-        util.delete_narrative(self.unauth_nar['ws'], self.private_token, url=self.ws_uri)
+        if self.test_token is not None:
+            util.delete_narrative(self.public_nar['ws'], self.test_token, url=self.ws_uri)
+            util.delete_narrative(self.private_nar['ws'], self.test_token, url=self.ws_uri)
+        if self.private_token is not None:
+            util.delete_narrative(self.unauth_nar['ws'], self.private_token, url=self.ws_uri)
 
     @classmethod
     def setUp(self):
@@ -85,12 +98,11 @@ class NarrIOTestCase(unittest.TestCase):
 
     # test we know what a narrative ref looks like with ws and obj ids
     def test_obj_ref_ws_obj(self):
-        self.mixin._test_obj_ref(self.public_nar['ref'])
+        self.mixin._test_obj_ref("123/456")
 
     # test as above, but include version
     def test_obj_ref_ws_obj_ver(self):
-        ref = self.public_nar['ref'] + '/1'
-        self.mixin._test_obj_ref(ref) # this can ONLY fail, has no return value
+        self.mixin._test_obj_ref("123/456/7")  # this can ONLY fail, has no return value
 
     # test as above, but make sure it fails right
     def test_obj_ref_fail(self):
@@ -98,9 +110,9 @@ class NarrIOTestCase(unittest.TestCase):
             self.mixin._test_obj_ref(self.bad_nar_ref)
         self.assertIsNotNone(err)
 
-
     ##### test KBaseWSManagerMixin.narrative_exists #####
 
+    @skipUnlessToken()
     def test_narrative_exists_valid(self):
         self.assertTrue(self.mixin.narrative_exists(self.public_nar['ref']))
 
@@ -112,6 +124,7 @@ class NarrIOTestCase(unittest.TestCase):
             self.mixin.narrative_exists(self.bad_nar_ref)
         self.assertIsNotNone(err)
 
+    @skipUnlessToken()
     def test_narrative_exists_noauth(self):
         with self.assertRaises(PermissionsError) as err:
             self.mixin.narrative_exists(self.private_nar['ref'])
@@ -158,27 +171,33 @@ class NarrIOTestCase(unittest.TestCase):
         """
         pass
 
+    @skipUnlessToken()
     def test_read_narrative_valid_content_metadata(self):
         nar = self.mixin.read_narrative(self.public_nar['ref'], content=True, include_metadata=False)
         self.assertIsNone(self.validate_narrative(nar, True, True))
 
+    @skipUnlessToken()
     def test_read_narrative_valid_content_no_metadata(self):
         nar = self.mixin.read_narrative(self.public_nar['ref'], content=True, include_metadata=True)
         self.assertIsNone(self.validate_narrative(nar, True, False))
 
+    @skipUnlessToken()
     def test_read_narrative_valid_no_content_metadata(self):
         nar = self.mixin.read_narrative(self.public_nar['ref'], content=False, include_metadata=True)
         self.assertIsNone(self.validate_narrative(nar, False, True))
 
+    @skipUnlessToken()
     def test_read_narrative_valid_no_content_no_metadata(self):
         nar = self.mixin.read_narrative(self.public_nar['ref'], content=False, include_metadata=False)
         self.assertIsNone(self.validate_narrative(nar, False, False))
 
+    @skipUnlessToken()
     def test_read_narrative_private_anon(self):
         with self.assertRaises(PermissionsError) as err:
             self.mixin.read_narrative(self.private_nar['ref'])
         self.assertIsNotNone(err)
 
+    @skipUnlessToken()
     def test_read_narrative_unauth_login(self):
         self.login()
         with self.assertRaises(PermissionsError) as err:
@@ -198,6 +217,7 @@ class NarrIOTestCase(unittest.TestCase):
 
     ##### test KBaseWSManagerMixin.write_narrative #####
 
+    @skipUnlessToken()
     def test_write_narrative_valid_auth(self):
         # fetch a narrative and just write it back again.
         # should return (nar, wsid, objid)
@@ -207,6 +227,7 @@ class NarrIOTestCase(unittest.TestCase):
         self.assertTrue(result[1] == self.private_nar['ws'] and result[2] == self.private_nar['obj'])
         self.logout()
 
+    @skipUnlessToken()
     def test_write_narrative_valid_anon(self):
         nar = self.mixin.read_narrative(self.public_nar['ref'])['data']
         with self.assertRaises(PermissionsError) as err:
@@ -216,6 +237,7 @@ class NarrIOTestCase(unittest.TestCase):
     def test_write_narrative_valid_unauth(self):
         pass
 
+    @skipUnlessToken()
     def test_write_narrative_invalid_ref(self):
         self.login()
         nar = self.mixin.read_narrative(self.public_nar['ref'])['data']
@@ -224,6 +246,8 @@ class NarrIOTestCase(unittest.TestCase):
         self.assertIsNotNone(err)
         self.logout()
 
+    # @unittest.skipIf(test_token is None, "No test user credentials available")
+    @skipUnlessToken()
     def test_write_narrative_bad_ref(self):
         self.login()
         nar = self.mixin.read_narrative(self.public_nar['ref'])['data']
@@ -232,6 +256,7 @@ class NarrIOTestCase(unittest.TestCase):
         self.assertEquals(err.exception.status_code, 500)
         self.logout()
 
+    @skipUnlessToken()
     def test_write_narrative_bad_file(self):
         self.login()
         with self.assertRaises(HTTPError) as err:
@@ -242,6 +267,7 @@ class NarrIOTestCase(unittest.TestCase):
 
     ##### test KBaseWSManagerMixin.rename_narrative #####
 
+    @skipUnlessToken()
     def test_rename_narrative_valid_auth(self):
         new_name = "new_narrative_name"
         self.login()
@@ -255,11 +281,13 @@ class NarrIOTestCase(unittest.TestCase):
         self.mixin.rename_narrative(self.private_nar['ref'], self.test_user, cur_name)
         self.logout()
 
+    @skipUnlessToken()
     def test_rename_narrative_valid_anon(self):
         with self.assertRaises(PermissionsError) as err:
             self.mixin.rename_narrative(self.public_nar['ref'], self.test_user, 'new_name')
         self.assertIsNotNone(err)
 
+    @skipUnlessToken()
     def test_rename_narrative_unauth(self):
         self.login()
         with self.assertRaises(PermissionsError) as err:
@@ -300,21 +328,25 @@ class NarrIOTestCase(unittest.TestCase):
         res = self.mixin.list_narratives()
         self.validate_narrative_list(res)
 
+    @skipUnlessToken()
     def test_list_all_narratives_auth(self):
         self.login()
         res = self.mixin.list_narratives()
         self.validate_narrative_list(res)
         self.logout()
 
+    @skipUnlessToken()
     def test_list_narrative_ws_valid_anon(self):
         res = self.mixin.list_narratives(ws_id=self.public_nar['ws'])
         self.validate_narrative_list(res)
 
+    @skipUnlessToken()
     def test_list_narrative_ws_valid_noperm_anon(self):
         with self.assertRaises(PermissionsError) as err:
             self.mixin.list_narratives(ws_id=self.private_nar['ws'])
         self.assertIsNotNone(err)
 
+    @skipUnlessToken()
     def test_list_narrative_ws_valid_login(self):
         self.login()
         res = self.mixin.list_narratives(ws_id=self.private_nar['ws'])
@@ -326,6 +358,7 @@ class NarrIOTestCase(unittest.TestCase):
             self.mixin.list_narratives(ws_id=self.invalid_ws_id)
         self.assertIsNotNone(err)
 
+    @skipUnlessToken()
     def test_list_narrative_ws_valid_noperm_auth(self):
         self.login()
         with self.assertRaises(PermissionsError) as err:
@@ -345,22 +378,26 @@ class NarrIOTestCase(unittest.TestCase):
     # user:
     #    None, specific
     # login state
+    @skipUnlessToken()
     def test_narrative_permissions_anon(self):
         ret = self.mixin.narrative_permissions(self.public_nar['ref'])
         self.assertTrue(isinstance(ret, dict) and ret['*'] == 'r')
 
+    @skipUnlessToken()
     def test_narrative_permissions_valid_login(self):
         self.login()
         ret = self.mixin.narrative_permissions(self.public_nar['ref'])
         self.assertTrue(isinstance(ret, dict) and ret['*'] == 'r')
         self.logout()
 
+    @skipUnlessToken()
     def test_narrative_permissions_invalid_login(self):
         self.login()
         with self.assertRaises(ServerError) as err:
             self.mixin.narrative_permissions(self.invalid_nar_ref)
         self.logout()
 
+    @skipUnlessToken()
     def test_narrative_permissions_inaccessible_login(self):
         self.login()
         ret = self.mixin.narrative_permissions(self.unauth_nar['ref'])
@@ -375,10 +412,12 @@ class NarrIOTestCase(unittest.TestCase):
 
     ##### test KBaseWSManagerMixin.narrative_writable #####
 
+    @skipUnlessToken()
     def test_narrative_writable_anon(self):
         ret = self.mixin.narrative_writable(self.public_nar['ref'], self.test_user)
         self.assertFalse(ret)
 
+    @skipUnlessToken()
     def test_narrative_writable_valid_login_nouser(self):
         self.login()
         with self.assertRaises(ValueError) as err:
@@ -386,12 +425,14 @@ class NarrIOTestCase(unittest.TestCase):
         self.assertIsNotNone(err)
         self.logout()
 
+    @skipUnlessToken()
     def test_narrative_writable_valid_login_user(self):
         self.login()
         ret = self.mixin.narrative_writable(self.public_nar['ref'], self.test_user)
         self.assertTrue(ret)
         self.logout()
 
+    @skipUnlessToken()
     def test_narrative_writable_invalid_login_user(self):
         self.login()
         with self.assertRaises(ServerError) as err:
@@ -399,12 +440,14 @@ class NarrIOTestCase(unittest.TestCase):
         self.assertIsNotNone(err)
         self.logout()
 
+    @skipUnlessToken()
     def test_narrative_writable_inaccessible_login_user(self):
         self.login()
         ret = self.mixin.narrative_writable(self.unauth_nar['ref'], self.test_user)
         self.assertFalse(ret)
         self.logout()
 
+    @skipUnlessToken()
     def test_narrative_writable_bad_login_user(self):
         self.login()
         with self.assertRaises(ValueError) as err:

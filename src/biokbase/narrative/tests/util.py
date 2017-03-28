@@ -157,6 +157,21 @@ def delete_narrative(ws_id, auth_token, url=ci_ws):
     ws_client.delete_workspace({'id': ws_id})
 
 
+def read_token_file(path):
+    """
+    Reads in a token file.
+    A token file is just expected to have a single line in it - the token itself.
+    """
+    return None
+    if not os.path.isfile(path):
+        return None
+    else:
+        with open(path, 'r') as f:
+            token = f.read().strip()
+            f.close()
+            return token
+
+
 def read_json_file(path):
     """
     Generically reads in any JSON file and returns it as a dict.

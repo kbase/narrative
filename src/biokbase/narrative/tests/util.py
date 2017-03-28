@@ -49,6 +49,10 @@ class TestConfig(object):
     def get(self, *args, **kwargs):
         return self._config.get(*args, **kwargs)
 
+    def get_path(self, *args, **kwargs):
+        val = self.get(*args, **kwargs)
+        return self.file_path(val)
+
     def load_json_file(self, filename):
         """
         Reads, parses, and returns as a dict, a JSON file.
@@ -89,7 +93,7 @@ def fetch_narrative(nar_id, auth_token, url=ci_ws, file_name=None):
     return {}
 
 
-def upload_narrative(nar_file, auth_token, url=ci_ws, set_public=False):
+def upload_narrative(nar_file, auth_token, user_id, url=ci_ws, set_public=False):
     """
     Uploads a Narrative from a downloaded object file.
     This file needs to be in JSON format, and it expects all
@@ -110,11 +114,11 @@ def upload_narrative(nar_file, auth_token, url=ci_ws, set_public=False):
     # do some setup.
     current_nar_metadata = ws_metadata
     current_nar_metadata['narrative_nice_name'] = nar['data']['metadata']['name']
-    ws_client = Workspace(url=url, token=auth_token.token)
+    ws_client = Workspace(url=url, token=auth_token)
 
     # create the new workspace for the narrative
     ws_info = ws_client.create_workspace({
-        'workspace': '{}:{}'.format(auth_token.user_id, str(time.time()).replace('.', '')),
+        'workspace': '{}:{}'.format(user_id, str(time.time()).replace('.', '')),
         'meta': current_nar_metadata,
         'globalread': 'r' if set_public else 'n'
     })
@@ -149,7 +153,7 @@ def delete_narrative(ws_id, auth_token, url=ci_ws):
     Deletes a workspace with the given id. Throws a ServerError if the user given
     by auth_token isn't allowed to do so.
     """
-    ws_client = Workspace(url=url, token=auth_token.token)
+    ws_client = Workspace(url=url, token=auth_token)
     ws_client.delete_workspace({'id': ws_id})
 
 

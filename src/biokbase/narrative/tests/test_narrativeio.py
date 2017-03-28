@@ -12,6 +12,7 @@ from biokbase.workspace.baseclient import ServerError
 import biokbase.auth
 from tornado.web import HTTPError
 import util
+from biokbase.narrative.common.url_config import URLS
 
 __author__ = 'Bill Riehl <wjriehl@lbl.gov>'
 
@@ -30,14 +31,16 @@ class NarrIOTestCase(unittest.TestCase):
         config = util.TestConfig()
 
         self.test_user = config.get('users', 'test_user')
-        self.test_pwd = getpass('Password for {}: '.format(self.test_user))
-        self.test_token = biokbase.auth.Token(user_id=self.test_user, password=self.test_pwd)
+        self.test_token = open(config.get_path('token_files', 'test_user'), 'r').read().strip()
+        # self.test_pwd = getpass('Password for {}: '.format(self.test_user))
+        # self.test_token = biokbase.auth.Token(user_id=self.test_user, password=self.test_pwd)
 
         self.private_user = config.get('users', 'private_user')
-        self.private_pwd = getpass('Password for {}: '.format(self.private_user))
-        self.private_token = biokbase.auth.Token(user_id=self.private_user, password=self.private_pwd)
+        # self.private_pwd = getpass('Password for {}: '.format(self.private_user))
+        self.private_token = open(config.get_path('token_files', 'private_user'), 'r').read().strip()
+        # self.private_token = biokbase.auth.Token(user_id=self.private_user, password=self.private_pwd)
 
-        self.ws_uri = config.get('urls', 'workspace')
+        self.ws_uri = URLS.workspace
 
         self.invalid_nar_ref = config.get('strings', 'invalid_nar_ref')
         self.bad_nar_ref = config.get('strings', 'bad_nar_ref')
@@ -48,9 +51,14 @@ class NarrIOTestCase(unittest.TestCase):
         # To avoid cross-contamination (we're testing the new_narrative() code here,
         # so we shouldn't use it, right?) this will be done manually using the Workspace
         # client.
-        self.public_nar = util.upload_narrative(config.get('narratives', 'public_file'), self.test_token, set_public=True, url=self.ws_uri)
-        self.private_nar = util.upload_narrative(config.get('narratives', 'private_file'), self.test_token, url=self.ws_uri)
-        self.unauth_nar = util.upload_narrative(config.get('narratives', 'unauth_file'), self.private_token, url=self.ws_uri)
+        self.public_nar = util.upload_narrative(config.get_path('narratives', 'public_file'),
+                                                self.test_token, self.test_user, set_public=True,
+                                                url=self.ws_uri)
+        self.private_nar = util.upload_narrative(config.get_path('narratives', 'private_file'),
+                                                 self.test_token, self.test_user, url=self.ws_uri)
+        self.unauth_nar = util.upload_narrative(config.get_path('narratives', 'unauth_file'),
+                                                self.private_token, self.private_user,
+                                                url=self.ws_uri)
 
     @classmethod
     def tearDownClass(self):
@@ -66,7 +74,7 @@ class NarrIOTestCase(unittest.TestCase):
 
     @classmethod
     def login(self):
-        biokbase.auth.set_environ_token(self.test_token.token)
+        biokbase.auth.set_environ_token(self.test_token)
 
     @classmethod
     def logout(self):
@@ -74,22 +82,6 @@ class NarrIOTestCase(unittest.TestCase):
 
     def test_mixin_instantiated(self):
         self.assertIsInstance(self.mixin, biokbase.narrative.contents.narrativeio.KBaseWSManagerMixin)
-
-    # # test we can get a workspace client while logged out, and it's anonymous
-    # def test_get_wsclient_anon(self):
-    #     ws_client = self.mixin.ws_client()
-    #     # it's anon if the header doesn't have an AUTHORIZATION field, or
-    #     # that has a None value
-    #     self.assertTrue('AUTHORIZATION' not in ws_client._headers or
-    #                     ws_client._headers['AUTHORIZATION'] is None)
-
-    # # test we get a ws client when logged in, and it's authorized
-    # def test_get_wsclient_auth(self):
-    #     self.login()
-    #     ws_client = self.mixin.ws_client()
-    #     self.assertTrue('AUTHORIZATION' in ws_client._headers and
-    #                     ws_client._headers['AUTHORIZATION'] is not None)
-    #     self.logout()
 
     # test we know what a narrative ref looks like with ws and obj ids
     def test_obj_ref_ws_obj(self):

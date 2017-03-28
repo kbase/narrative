@@ -6,17 +6,35 @@ define([
     Promise,
     html
 ) {
+    // This is a functional html composition and generation library.
     var t = html.tag,
         div = t('div'),
         input = t('input'),
         label = t('label');
 
     function factory(config) {
-        var hostNode, container;
-        var runtime = config.runtime;
-        var busConnection = runtime.bus().connect();
-        var channel = busConnection.channel(config.channelName);
+        // The node provided by the invoker of this widget.
+        var hostNode;
+        
+        // A node created and owned by this widget. It is typically 
+        // simply the only child of the host node.
+        var container;
 
+        // The runtime is provided by the caller, but may also be created
+        // directly from the runtime module.
+        var runtime = config.runtime;
+
+        // This creates a bus "connection", which basically keeps any 
+        // listener ids created by "on" or "listen" calls on 
+        // channels it provides, the benefit being that they will all 
+        // be closed when the connection is closed
+        var busConnection = runtime.bus().connect();
+
+        // This creates a new channel with a randomized (uuid) name.
+        var channel = busConnection.channel();
+
+        // This is NOT required for a widget. It is only a simple 
+        // structure this widget uses for association DOM and state.
         var vm = {
             layout: {
                 id: html.genId(),
@@ -104,6 +122,7 @@ define([
 
         function doChanged() {
             var value = exportVm(vm.inputControl);
+            console.log('chnaged 1', value, channel);
             channel.emit('changed', {
                 newValue: value
             });
@@ -157,29 +176,22 @@ define([
 
         // LIFECYCLE API
 
-        function attach(node) {
+        function start(arg) {
             return Promise.try(function () {
-                hostNode = node;
+                hostNode = arg.node;
                 container = hostNode.appendChild(document.createElement('div'));
                 renderLayout();
-            });
-        }
-
-        function start(params) {
-            return Promise.try(function () {
                 renderControl();
-                setValue(params.initialValue);
+                setValue(arg.initialValue);
             });
         }
 
         function stop() {
             return Promise.try(function () {
-
+                if (hostNode && container) {
+                    hostNode.removeChild(container);
+                }
             });
-        }
-
-        function detach() {
-            return Promise.try(function () {});
         }
 
         return {
@@ -187,10 +199,8 @@ define([
             channel: channel,
 
             // lifecycle api
-            attach: attach,
             start: start,
-            stop: stop,
-            detach: detach
+            stop: stop
         };
     }
 

@@ -96,16 +96,21 @@ define([
             // and a framework would make this easier...
             // Assume the data structure mirrors the vm -- that is the point
             // after all.. otherwise could of course be hand coded.
+
             if (vm.vm) {
-                Object.keys(data).forEach(function (key) {
-                    updateVm(vm.vm[key], data[key]);
-                });
+                if (typeof data === 'object' && data !== null) {
+                    Object.keys(data).forEach(function (key) {
+                        updateVm(vm.vm[key], data[key]);
+                    });
+                }
             } else {
                 vm.rawValue = data;
                 // might transform
                 vm.value = data;
                 // might use a function to update the control
-                vm.node.value = data;
+                if (vm.node) {
+                    vm.node.value = data;
+                }
             }
         }
 
@@ -122,7 +127,6 @@ define([
 
         function doChanged() {
             var value = exportVm(vm.inputControl);
-            console.log('chnaged 1', value, channel);
             channel.emit('changed', {
                 newValue: value
             });

@@ -78,6 +78,9 @@ define ([
             this.icon_colors = Config.get('icons').colors;
             this.wsName = Jupyter.narrative.getWorkspaceName();
             this.categoryDescr = Config.get('publicCategories');
+            if (!this.categoryDescr) {
+                this.categoryDescr = {};
+            }
             if (Config.get('features').jgiPublicStaging) {
                 this.categoryDescr['jgi_gateway'] = {
                     name: 'JGI Public Data (TEST)',

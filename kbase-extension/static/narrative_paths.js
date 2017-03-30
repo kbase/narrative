@@ -330,6 +330,9 @@ require.config({
     },
 
     shim: {
+        select2: {
+            deps: ['jquery']
+        },
         bloodhound: {
             deps: ['jquery'],
             exports: 'Bloodhound'
@@ -437,13 +440,6 @@ require.config({
                 'd3'
             ]
         },
-        // 'kbaseTabTableTabs' : {
-        //     'deps' : ['jquery',
-        //               'jqueryui',
-        //               'jquery-dataTables',
-        //               'jquery-dataTables-bootstrap',
-        //               'bootstrap']
-        // },
         kbapi: {
             deps: ['jquery', 'bootstrap', 'kbase-client-api']
         },

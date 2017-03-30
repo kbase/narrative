@@ -12,7 +12,7 @@ This is the repository for the KBase Narrative Interface.
 
 ## About
 
-The KBase Narrative Interface builds on the [IPython Notebook](http://ipython.org) and contains elements to interact with various KBase tools and data stores.
+The KBase Narrative Interface builds on the [Jupyter Notebook](http://jupyter.org) and contains elements to interact with various KBase tools and data stores.
 
 This document contains links to various documentation in the [docs](/docs) directory, with a brief description of each.
 
@@ -20,7 +20,7 @@ This document contains links to various documentation in the [docs](/docs) direc
 
 ### In progress!
 
-The Narrative sits on top of the IPython Notebook, so most of its architecture is a mirror of that. However, the Narrative's interaction with other KBase elements - namely the data stores and job running services - merits its own description. This will be ongoing (and evolving!), but a brief description of how a job gets run and registered is available here:
+The Narrative sits on top of the Jupyter Notebook, so most of its architecture is a mirror of that. However, the Narrative's interaction with other KBase elements - namely the data stores and job running services - merits its own description. This will be ongoing (and evolving!), but a brief description of how a job gets run and registered is available here:
 
 [Narrative App/Method Running](/docs/developer/narrative_app_error_states.md)
 
@@ -30,7 +30,7 @@ When deployed in production, the Narrative Interface is compiled into a [Docker]
 
 Developing in the Narrative is easiest to do on either your local system or a local VM environment, not a fully deployed server. Instructions for setting up a local development environment are available here:
 
-[Local Narrative setup/deployment](/docs/install/developer.md)
+[Local Narrative setup/deployment](/docs/install/local_install.md)
 
 ## Server installation (for administrators)
 

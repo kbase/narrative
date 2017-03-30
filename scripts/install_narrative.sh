@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # given a virtual environment, install jupyter notebook, and the KBase goodies on top
 # 1. source into virtualenv
 # > virtualenv narrative-jupyter

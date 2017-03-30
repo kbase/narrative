@@ -86,7 +86,6 @@ define([
                 }
             }))
             .then(function(files) {
-                console.warn(files);
                 return Promise.try(function() {
                     files.forEach(function(file) {
                         if (file.isFolder) {

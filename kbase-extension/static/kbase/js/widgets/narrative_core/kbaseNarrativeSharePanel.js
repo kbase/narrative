@@ -211,12 +211,12 @@ define ([
                                 self.updateUserPermissions($input.select2('data'), 'a');
                             }))));
 
-                $addUsersDiv.append($('<div>')
+                $addUsersDiv.append($('<div style="width:100% !important">')
                     .append($input)
                     .append($addAction));
+                self.$mainPanel.append($addUsersDiv);
 
                 self.setupSelect2($input);
-                self.$mainPanel.append($addUsersDiv);
             }
 
             var $othersDiv = $('<div>').css({
@@ -410,7 +410,8 @@ define ([
                     placeholder: function() {
                         return $(this).data('placeholder');
                     },
-                    multiple: true,
+                    delay: 250,
+                    width: '40%',
                     dataAdapter: CustomData,
                     minimumResultsForSearch: 0,
                     language: {

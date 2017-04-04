@@ -83,7 +83,7 @@ def get_agent_token(login_token, token_name="NarrativeAgent"):
     """
     headers = {"Authorization": login_token,
                "Content-Type": "Application/json"}
-    data = json.dumps({"tokenname": token_name})
+    data = json.dumps({"name": token_name})
     r = requests.post(token_api_url + endpt_token, headers=headers, data=data)
     if r.status_code != requests.codes.ok:
         r.raise_for_status()

@@ -143,7 +143,7 @@ M.container_max = 5000
 -- Image to use for notebooks
 M.image = "kbase/narrative:latest"
 
-M.load_redirect = "/loading.html?n=%s"
+M.load_redirect = "/load-narrative.html?n=%s&check=true"
 --
 -- Function that runs a netstat and returns a table of foreign IP:PORT
 -- combinations and the number of observed ESTABLISHED connetions (at
@@ -1095,9 +1095,12 @@ use_proxy = function(self)
             -- route to the "loading" page which will wait until the container
             -- is ready before loading the narrative.
             local scheme = ngx.var.src_scheme and ngx.var.src_scheme or 'http'
-            local returnurl = string.format("%s://%s%s", scheme, ngx.var.http_host, ngx.var.request_uri)            
-            return ngx.redirect(string.format(M.load_redirect, ngx.escape_uri(ngx.var.request_uri)))
-        end
+            local returnurl = string.format("%s://%s%s", scheme, ngx.var.http_host, ngx.var.request_uri)
+            local g = string.gmatch(ngx.var.request_uri, "(%w+)/(%S+)")
+            local prefix, narrative_id = g()
+            -- handle nil
+            return ngx.redirect(string.format(M.load_redirect, ngx.escape_uri(narrative_id)))
+         end
         session_lock:unlock()
     end
     -- if we got here, we will have successfully pulled a container from the
@@ -1136,6 +1139,35 @@ check_proxy = function(self)
     check_provisioner()
     check_marker()
 
+
+    -- TESTING start
+
+    if true then
+
+        -- use this line to simulate slow responses from the Narrative server
+        -- if it exceeds the timeout interval in the narrativeLoader.js, 
+        -- a timeout error should be generated.
+        -- ngx.sleep(2);
+
+        -- use this line to simulate the Narrative session (docker container)
+        -- either taking a long time to start or being in continuous error state.
+        -- return ngx.exit(ngx.HTTP_BAD_GATEWAY)
+
+        -- return ngx.exit(ngx.HTTP_UNAUTHORIZED)
+
+        -- ngx.status = ngx.HTTP_REQUEST_TIMEOUT
+        -- ngx.say(string.format("Error obtaining key %s", err))
+        -- return ngx.exit(ngx.HTTP_OK)
+
+        -- return ngx.exit(ngx.HTTP_SERVICE_UNAVAILABLE)
+
+        -- return ngx.exit(ngx.HTTP_CREATED)
+
+        -- return ngx.exit(ngx.HTTP_NOT_FOUND)
+    end
+
+    -- TESTING end
+
     -- get session
     -- If if fails for any reason (there are several possible) redirect to
     -- an end point which can authenticate and hopefully send them back here
@@ -1144,9 +1176,7 @@ check_proxy = function(self)
     -- function.
     local username = get_session()
     if not username then
-        ngx.status = ngx.HTTP_UNAUTHORIZED
-        return ngx.exit(ngx.HTTP_OK)
-        -- return auth_redirect()
+        return ngx.exit(ngx.HTTP_UNAUTHORIZED)
     end
 
     -- get proxy target
@@ -1226,7 +1256,7 @@ check_proxy = function(self)
         -- I really don't even see how this condition is possible, or likely
         -- the session should either be found, created, or if it can't be created
         -- an error condition reported.
-        return(ngx.exit(ngx.HTTP_NOT_FOUND))
+        return ngx.exit(ngx.HTTP_NOT_FOUND)
     end
 end
 

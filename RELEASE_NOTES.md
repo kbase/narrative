@@ -3,6 +3,17 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v4.4.1 (more notes will follow).
 
+### Version 3.2.3
+__Changes__
+- Fixed problems that can occur on initial load (the page with the flashing KBase icons)
+- Further improvements to the sharing interface.
+
+### Version 3.2.2
+__Changes__
+- Adjusted flow of job log viewing for data import jobs.
+- Changed Narrative sharing interface, fixed cross-browser incompatibilities.
+- Added new importer apps to the data staging panel.
+
 ### Version 3.2.1
 __Changes__
 - Added JGI Data policy requirement to the JGI Public Data browser/stager.

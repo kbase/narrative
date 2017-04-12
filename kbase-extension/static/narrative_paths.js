@@ -180,6 +180,7 @@ require.config({
         /***
          * CUSTOM OUTPUT AND VIEWER WIDGETS
          ***/
+        kbaseBinnedContigs: 'kbase/js/widgets/function_output/kbaseBinnedContigs',
         'kbaseReadsViewer': 'kbase/js/widgets/function_output/kbaseReadsViewer',
         'kbaseReadsSetView': 'kbase/js/widgets/function_output/kbaseReadsSetView',
         'kbaseMatrix2DAbstract': 'kbase/js/widgets/function_output/kbaseMatrix2DAbstract',

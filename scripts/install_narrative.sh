@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # given a virtual environment, install jupyter notebook, and the KBase goodies on top
 # 1. source into virtualenv
 # > virtualenv narrative-jupyter
@@ -30,6 +32,8 @@
 # > cp jupyter-narrative.sh narrative-jupyter/bin
 #
 # 8. Done!
+
+IPYTHON_VERSION=5.3.0
 
 JUPYTER_NOTEBOOK_INSTALL_DIR=jupyter_notebook
 JUPYTER_NOTEBOOK_REPO=https://github.com/jupyter/notebook
@@ -133,6 +137,11 @@ then
     npm install >> ${logfile} 2>&1
     bower install --allow-root --config.interactive=false >> ${logfile} 2>&1
 
+    # Install IPython version 5.3.0 (anything higher comes naturally, and requires Python > 3.0)
+    # This needs to be here, not in requirements,
+    # -----------------------
+    pip install ipython==$IPYTHON_VERSION
+
     cd $VIRTUAL_ENV
     # Install Jupyter code
     # --------------------
@@ -170,16 +179,6 @@ cd $NARRATIVE_ROOT_DIR
 
 if [ ! $update_only -eq 1 ]
 then
-    # Install KBase data_api package
-    # ------------------------------
-    # git clone https://github.com/kbase/data_api -b develop
-    # cd data_api
-    # pip install -r requirements.txt
-    # $PYTHON setup.py install >> ${logfile} 2>&1
-    # cd ..
-    # rm -rf data_api
-
-
     # Setup jupyter_narrative script
     # ------------------------------
     console "Installing scripts"

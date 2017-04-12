@@ -138,7 +138,7 @@ M.container_max = 5000
 -- Image to use for notebooks
 M.image = "kbase/narrative:latest"
 
-M.load_redirect = "/loading.html?n=%s"
+M.load_redirect = "/load-narrative.html?n=%s&check=true"
 --
 -- Function that runs a netstat and returns a table of foreign IP:PORT
 -- combinations and the number of observed ESTABLISHED connetions (at
@@ -1019,7 +1019,7 @@ use_proxy = function(self)
             -- can not assign a new one / bad state
             if target == nil then
                 ngx.log(ngx.ERR, "No available docker containers!")
-                return(ngx.exit(ngx.HTTP_SERVICE_UNAVAILABLE))
+                return ngx.exit(ngx.HTTP_SERVICE_UNAVAILABLE)
             end
 
             -- if a container is assigned, enqueue another
@@ -1029,7 +1029,9 @@ use_proxy = function(self)
             -- is ready before loading the narrative.
             local scheme = ngx.var.src_scheme and ngx.var.src_scheme or 'http'
             local returnurl = string.format("%s://%s%s", scheme, ngx.var.http_host, ngx.var.request_uri)
-            return ngx.redirect(string.format(M.load_redirect, ngx.escape_uri(ngx.var.request_uri)))
+            local g = string.gmatch(ngx.var.request_uri, "(%w+)/(%S+)")
+            local prefix, narrative_id = g()
+            return ngx.redirect(string.format(M.load_redirect, ngx.escape_uri(narrative_id)))
         end
         session_lock:unlock()
     end
@@ -1056,7 +1058,7 @@ use_proxy = function(self)
         -- I really don't even see how this condition is possible, or likely
         -- the session should either be found, created, or if it can't be created
         -- an error condition reported.
-        return(ngx.exit(ngx.HTTP_NOT_FOUND))
+        return ngx.exit(ngx.HTTP_NOT_FOUND)
     end
 end
 
@@ -1077,9 +1079,7 @@ check_proxy = function(self)
     -- function.
     local username = get_session()
     if not username then
-        ngx.status = ngx.HTTP_UNAUTHORIZED
-        return ngx.exit(ngx.HTTP_OK)
-        -- return auth_redirect()
+        return ngx.exit(ngx.HTTP_UNAUTHORIZED)
     end
 
     -- get proxy target
@@ -1159,7 +1159,7 @@ check_proxy = function(self)
         -- I really don't even see how this condition is possible, or likely
         -- the session should either be found, created, or if it can't be created
         -- an error condition reported.
-        return(ngx.exit(ngx.HTTP_NOT_FOUND))
+        return ngx.exit(ngx.HTTP_NOT_FOUND)
     end
 end
 

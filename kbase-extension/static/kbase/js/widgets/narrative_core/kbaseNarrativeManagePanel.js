@@ -15,7 +15,8 @@ define([
     'kbwidget',
     'kbaseNarrativeControlPanel',
     'kbaseNarrativeSharePanel',
-    'api/NewWorkspace',
+    //'api/NewWorkspace',
+    'kbase-client-api',
     'kbase-generic-client-api',
     'util/timeFormat'
 ], function (
@@ -28,7 +29,8 @@ define([
     KBWidget,
     ControlPanel,
     kbaseNarrativeSharePanel,
-    NewWorkspace,
+    //NewWorkspace,
+    KBaseClientAPI,
     GenericClient,
     TimeFormat
 ) {

@@ -328,11 +328,11 @@ define (
                   ws_params = { ref : this.options.ws_sample_id };
                 }
 
-                ws.get_objects([ws_params]).then(function (d) {
-                  $pie.options.output = d[0].data;
+                ws.get_objects2({objects : [ws_params]}).then(function (d) {
+                  $pie.options.output = d.data[0].data;
 
                   $pie.appendUI($pie.$elem);
-                  if (d[0].data.alignment_stats != undefined) {
+                  if (d.data[0].data.alignment_stats != undefined) {
                     $pie.data('container').removeTab('Overview');
                     //this.data('container').removeTab('Pie chart');
                           $pie.data('container').addTab(
@@ -341,10 +341,10 @@ define (
                                   content : 'Loading...',
                               }
                           );
-                    $pie.setDataset(d[0].data);
+                    $pie.setDataset(d.data[0].data);
                   }
                   else {
-                    $pie.loadAlignment(d[0].data.sample_alignments[0]);
+                    $pie.loadAlignment(d.data[0].data.sample_alignments[0]);
                   }
                 })
                 .fail(function(d) {
@@ -388,8 +388,8 @@ define (
                     ref : ref
                 };
 
-                ws.get_objects([ws_params]).then(function (d) {
-                    $pie.setDataset(d[0].data);
+                ws.get_objects2({objects : [ws_params]}).then(function (d) {
+                    $pie.setDataset(d.data[0].data);
                 })
                 .fail(function(d) {
 
@@ -427,18 +427,19 @@ define (
                 this.options.output.read_sample_ids,
                 function (i,v) {
                   promises.push(
-                    ws.get_object_info([{ref : sampleToAlignmentMap[v]}])
+                    ws.get_object_info3({objects : [{ref : sampleToAlignmentMap[v]}]})
                   );
                 }
               );
 
               $.when.apply($, promises).then(function () {
                 var args = arguments;
+
                 $.each(
                   arguments,
                   function (i, v) {
 
-                    hackedIDMap[$rnaseq.options.output.read_sample_ids[i]] = v[0][1];
+                    hackedIDMap[$rnaseq.options.output.read_sample_ids[i]] = v.infos[0][1];
                   }
                 );
 

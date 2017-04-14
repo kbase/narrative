@@ -1,36 +1,34 @@
-
-define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery',
-        'kbase-client-api',
-		'jquery-dataTables',
-		'kbaseAuthenticatedWidget',
-		'kbaseTable',
-        'kbaseTabs',
-        'AssemblyAPI-client-api',
-        'narrativeConfig',
-        'bluebird'
-	], function(
-		KBWidget,
-		bootstrap,
-		$,
-        kbase_client_api,
-		jquery_dataTables,
-		kbaseAuthenticatedWidget,
-		kbaseTable,
-        kbaseTabs,
-        AssemblyAPI_client_api,
-        Config,
-        Promise
-	) {
+define ([
+    'kbwidget',
+    'bootstrap',
+    'jquery',
+    'kbase-client-api',
+    'jquery-dataTables',
+    'kbaseAuthenticatedWidget',
+    'kbaseTable',
+    'kbaseTabs',
+    'AssemblyAPI-client-api',
+    'narrativeConfig',
+    'bluebird'
+], function(
+	KBWidget,
+	bootstrap,
+	$,
+    kbase_client_api,
+	jquery_dataTables,
+	kbaseAuthenticatedWidget,
+	kbaseTable,
+    kbaseTabs,
+    AssemblyAPI_client_api,
+    Config,
+    Promise
+) {
     'use strict';
 
     return KBWidget({
-        name: "kbaseGenomeAnnotationAssembly",
-        parent : kbaseAuthenticatedWidget,
-        version: "1.0.0",
+        name: 'kbaseGenomeAnnotationAssembly',
+        parent: kbaseAuthenticatedWidget,
+        version: '1.0.0',
         options: {
 
 
@@ -51,7 +49,7 @@ define (
 
             $self.assembly = new AssemblyAPI(Config.url('service_wizard'),{'token':$self.authToken()});
             $self.ws = new Workspace(Config.url('workspace'),{'token':$self.authToken()});
-            
+
             $self.$elem.append($('<div>').attr('align', 'center').append($('<i class="fa fa-spinner fa-spin fa-2x">')));
 
             // 1) get stats, and show the panel
@@ -69,7 +67,7 @@ define (
                         }));
             Promise.all(basicInfoCalls)
                 .then(function() {
-                   $self.renderBasicTable();
+                    $self.renderBasicTable();
                 })
                 .catch(function(err) {
                     $self.$elem.empty();
@@ -126,27 +124,27 @@ define (
             $overviewTable.append(get_table_row('Number of Contigs', $self.assembly_stats['num_contigs'] ));
             $overviewTable.append(get_table_row('Total GC Content',  String(($self.assembly_stats['gc_content']*100).toFixed(2)) + '%' ));
             $overviewTable.append(get_table_row('Total Length',      String($self.numberWithCommas($self.assembly_stats['dna_size']))+' bp'  )  );
-            
+
 
             // Build the tabs
-            var $tabs =  new kbaseTabs($tabPane, {
-                    tabPosition : 'top',
-                    canDelete : true, //whether or not the tab can be removed.
-                    tabs : [
-                        {
-                            tab : 'Assembly Summary',                               //name of the tab
-                            content : $('<div>').css('margin-top','15px').append($overviewTable),  //jquery object to stuff into the content
-                            canDelete : false,                             //override the canDelete param on a per tab basis
-                            show : true,      
-                        }, {
-                            tab : 'Contigs',
-                            canDelete : false,
-                            showContentCallback: function() { return $self.addContigList(); } // if you don't want to show the content right away, add a callback method that returns the content...
-                        },
-                    ],
-                }
-            );
-
+            var $tabs = new kbaseTabs($tabPane, {
+                tabPosition : 'top',
+                canDelete : true, //whether or not the tab can be removed.
+                tabs : [
+                    {
+                        tab : 'Assembly Summary',   //name of the tab
+                        content : $('<div>').css('margin-top','15px').append($overviewTable),  //jquery object to stuff into the content
+                        canDelete : false, //override the canDelete param on a per tab basis
+                        show : true,
+                    }, {
+                        tab : 'Contigs',
+                        canDelete : false,
+                        showContentCallback: function() {
+                            return $self.addContigList();
+                        }
+                    },
+                ],
+            });
         },
 
         addContigList: function() {
@@ -154,9 +152,7 @@ define (
             var $content = $('<div>');
             $self.$contigTablePanel = $content;
 
-
             // Get contig lengths and gc, render the table
-            
             $self.assembly_stats = {};
             $self.contig_lengths = [];
             $self.contig_gc = [];
@@ -170,8 +166,8 @@ define (
             loadingCalls.push(
                 $self.assembly.get_contig_gc_content(this.obj_ref, null)
                     .done(function(gc) {
-                                $self.contig_gc = gc;
-                            }));
+                        $self.contig_gc = gc;
+                    }));
 
             Promise.all(loadingCalls)
                 .then(function() {
@@ -180,7 +176,7 @@ define (
                     // sort extension for length- is there a better way?
                     if(!$.fn.dataTableExt.oSort['genome-annotation-assembly-hidden-number-stats-pre']) {
                         $.extend( $.fn.dataTableExt.oSort, {
-                            "genome-annotation-assembly-hidden-number-stats-pre": function ( a ) {
+                            'genome-annotation-assembly-hidden-number-stats-pre': function ( a ) {
                                 // extract out the first comment if it exists, then parse as number
                                 var t = a.split('-->');
                                 if(t.length>1) {
@@ -191,10 +187,10 @@ define (
                                 }
                                 return Number(a);
                             },
-                            "genome-annotation-assembly-hidden-number-stats-asc": function( a, b ) {
+                            'genome-annotation-assembly-hidden-number-stats-asc': function( a, b ) {
                                 return ((a < b) ? -1 : ((a > b) ? 1 : 0));
                             },
-                            "genome-annotation-assembly-hidden-number-stats-desc": function(a,b) {
+                            'genome-annotation-assembly-hidden-number-stats-desc': function(a,b) {
                                 return ((a < b) ? 1 : ((a > b) ? -1 : 0));
                             }
                         } );
@@ -214,7 +210,7 @@ define (
                         "sPaginationType": "full_numbers",
                         "iDisplayLength": contigsPerPage,
                         "aaSorting": [[ 1, "desc" ]],
-                        
+
                         "sDom": sDom,
 
                         "columns": [
@@ -245,19 +241,12 @@ define (
                     console.err($self);
                     console.err(err);
                 });
-            
+
             return $content.append('<br>').append($('<div>').attr('align', 'center').append($('<i class="fa fa-spinner fa-spin fa-2x">')));
         },
 
-        appendUI: function appendUI($elem) {
-          $elem.append("One day, there will be a widget here.")
-        },
-
         numberWithCommas: function(x) {
-            //var parts = x.toString().split(".");
-            //parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-            //return parts.join(".");
-            return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
         }
 
     });

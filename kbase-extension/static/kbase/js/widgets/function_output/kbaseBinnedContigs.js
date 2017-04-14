@@ -172,7 +172,6 @@ define([
 
         createBinTab: function(binId) {
             var $content = $('<div style="margin-top:15px">');
-            alert('looking up bin ' + binId);
             Promise.resolve(this.serviceClient.sync_call('MetagenomeAPI.search_contigs_in_bin', [{
                 ref: this.options.objRef,
                 bin_id: binId,

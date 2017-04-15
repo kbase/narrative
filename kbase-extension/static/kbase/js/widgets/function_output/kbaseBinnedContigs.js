@@ -2,6 +2,8 @@ define([
     'jquery',
     'kbwidget',
     'kbaseAuthenticatedWidget',
+    'widgets/dynamicTable',
+    'kbaseTable',
     'kbaseTabs',
     'bluebird',
     'bootstrap',
@@ -14,6 +16,8 @@ define([
     $,
     KBWidget,
     KBaseAuthenticatedWidget,
+    DynamicTable,
+    KBaseTable,
     KBaseTabs,
     Promise,
     Bootstrap,
@@ -170,24 +174,105 @@ define([
             this.tabs.showTab(binId);
         },
 
-        createBinTab: function(binId) {
-            var $content = $('<div style="margin-top:15px">');
-            Promise.resolve(this.serviceClient.sync_call('MetagenomeAPI.search_contigs_in_bin', [{
+        getSortedBinData: function(binId, start, limit, query, sortBy) {
+            return Promise.resolve(this.serviceClient.sync_call('MetagenomeAPI.search_contigs_in_bin', [{
                 ref: this.options.objRef,
                 bin_id: binId,
-                start: 0,
-                query: null,
-
+                start: start,
+                query: query,
+                limit: limit,
+                sort_by: sortBy
             }]))
-            .then(function(contigs) {
-                contigs = contigs[0];
+            .then(function(results) {
+                results = results[0];
+                var dataRows = [];
+                results.contigs.forEach(function(c) {
+                    dataRows.push([
+                        c.contig_id,
+                        c.cov,
+                        c.gc,
+                        c.len
+                    ]);
+                });
+                return {
+                    rows: dataRows,
+                    total: results.num_found,
+                    query: results.query,
+                    start: results.start
+                }
+            });
+        },
+
+        createBinTab: function(binId) {
+            var self = this;
+            var $content = $('<div style="margin-top:15px">');
+            self.getSortedBinData(binId, 0, null, null, null)
+            .then(function(results) {
+                console.log(results);
+
+            // })
+            // Promise.resolve(this.serviceClient.sync_call('MetagenomeAPI.search_contigs_in_bin', [{
+            //     ref: this.options.objRef,
+            //     bin_id: binId,
+            //     start: 0,
+            //     query: null,
+            //
+            // }]))
+            // .then(function(contigs) {
+            //     contigs = contigs[0];
+            //     console.log(contigs);
+            //     var dataRows = [];
+            //     contigs.contigs.forEach(function(c) {
+            //         dataRows.push([
+            //             c.contig_id,
+            //             c.cov,
+            //             c.gc,
+            //             c.len
+            //         ]);
+            //     });
+                $content.empty();
+                new DynamicTable($content, {
+                    headers: [{
+                        text: 'Contig Id',
+                        sortable: true,
+                        sortFunction: function(dir) {
+                            return self.getSortedBinData(binId, 0, null, null, [['id', dir === 1]]);
+                        }
+                    }, {
+                        text: 'Coverage',
+                        sortable: true,
+                        sortFunction: function(dir) {
+                            return self.getSortedBinData(binId, 0, null, null, [['cov', dir === 1]]);
+                        }
+                    }, {
+                        text: 'GC Content',
+                        sortable: true,
+                        sortFunction: function(dir) {
+                            return self.getSortedBinData(binId, 0, null, null, [['gc', dir === 1]]);
+                        }
+                    }, {
+                        text: 'Contig Length',
+                        sortable: true,
+                        sortFunction: function(dir) {
+                            return self.getSortedBinData(binId, 0, null, null, [['len', dir === 1]]);
+                        }
+                    }],
+                    decoration: [{
+                        col: 0,
+                        type: 'link',
+                        clickFunction: function(contig_id) {
+                            alert('Clicked on ' + contig_id);
+                        }
+                    }],
+                    data: results
+                });
             })
             .catch(function(error) {
                 console.error(error);
                 $content.empty().append(Display.createError('Error while fetching bin info', error.error.error));
             });
 
-            return $content.append(this.loadingElement());
+            return $content.append(self.loadingElement());
         },
 
         /**

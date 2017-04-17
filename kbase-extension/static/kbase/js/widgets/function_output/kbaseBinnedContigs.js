@@ -134,7 +134,6 @@ define([
                 }]))
                 .then(function(results) {
                     results = results[0];
-                    console.log(results);
                     $binTable.empty().append($binHeader);
                     results.bins.forEach(function(bin) {
                         var $row = self.tableRow(['<a style="cursor:pointer">'+bin.bin_id+'</a>', bin.cov, bin.gc, bin.n_contigs, bin.sum_contig_len])
@@ -185,6 +184,7 @@ define([
             }]))
             .then(function(results) {
                 results = results[0];
+                console.log(results);
                 var dataRows = [];
                 results.contigs.forEach(function(c) {
                     dataRows.push([
@@ -205,57 +205,27 @@ define([
 
         createBinTab: function(binId) {
             var self = this;
-            var $content = $('<div style="margin-top:15px">');
-            self.getSortedBinData(binId, 0, null, null, null)
+            var $content = $('<div>');
+            self.getSortedBinData(binId, 0, self.options.binLimit, null, null)
             .then(function(results) {
-                console.log(results);
-
-            // })
-            // Promise.resolve(this.serviceClient.sync_call('MetagenomeAPI.search_contigs_in_bin', [{
-            //     ref: this.options.objRef,
-            //     bin_id: binId,
-            //     start: 0,
-            //     query: null,
-            //
-            // }]))
-            // .then(function(contigs) {
-            //     contigs = contigs[0];
-            //     console.log(contigs);
-            //     var dataRows = [];
-            //     contigs.contigs.forEach(function(c) {
-            //         dataRows.push([
-            //             c.contig_id,
-            //             c.cov,
-            //             c.gc,
-            //             c.len
-            //         ]);
-            //     });
                 $content.empty();
                 new DynamicTable($content, {
                     headers: [{
+                        id: 'id',
                         text: 'Contig Id',
-                        sortable: true,
-                        sortFunction: function(dir) {
-                            return self.getSortedBinData(binId, 0, null, null, [['id', dir === 1]]);
-                        }
+                        isSortable: true,
                     }, {
+                        id: 'cov',
                         text: 'Coverage',
-                        sortable: true,
-                        sortFunction: function(dir) {
-                            return self.getSortedBinData(binId, 0, null, null, [['cov', dir === 1]]);
-                        }
+                        isSortable: true,
                     }, {
+                        id: 'gc',
                         text: 'GC Content',
-                        sortable: true,
-                        sortFunction: function(dir) {
-                            return self.getSortedBinData(binId, 0, null, null, [['gc', dir === 1]]);
-                        }
+                        isSortable: true,
                     }, {
+                        id: 'len',
                         text: 'Contig Length',
-                        sortable: true,
-                        sortFunction: function(dir) {
-                            return self.getSortedBinData(binId, 0, null, null, [['len', dir === 1]]);
-                        }
+                        isSortable: true,
                     }],
                     decoration: [{
                         col: 0,
@@ -264,7 +234,16 @@ define([
                             alert('Clicked on ' + contig_id);
                         }
                     }],
-                    data: results
+                    updateFunction: function(pageNum, query, sortColId, sortColDir) {
+                        var sortBy = [];
+                        if (sortColId && sortColDir !== 0) {
+                            sortBy.push([ sortColId, sortColDir === 1 ? 1 : 0 ]);
+                        }
+                        return self.getSortedBinData(binId, (pageNum * self.options.binLimit) + 1, self.options.binLimit, query, sortBy);
+                    },
+                    data: results,
+                    rowsPerPage: self.options.binLimit,
+                    searchPlaceholder: 'Search contigs in bin'
                 });
             })
             .catch(function(error) {

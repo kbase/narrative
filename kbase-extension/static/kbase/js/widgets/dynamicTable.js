@@ -15,6 +15,7 @@ define([
     var DynamicTable = function (elem, options) {
         // options = {
         //     headers: [{
+        //         id: string,
         //         text: string,
         //         sortable: true/false,
         //         sortFunction: function -- should return sorted data
@@ -32,21 +33,34 @@ define([
         //     class: str (like jquery add class for whole widget)
         //     style: { key1: value1, key2: value2} (css for whole widget)
         // }
-        this.options = options;
-        if (!this.options.class) {
-            this.options.class = '';
-        }
-        if (!this.options.style) {
-            this.options.style = {};
-        }
+        this.options = {
+            class: '',
+            style: {},
+            searchPlaceholder: 'Search',
+            rowsPerPage: 10,
+            headers: [],
+            decoration: [],
+            data: []
+        };
+        $.extend(true, this.options, options);
+
+        this.currentSort = {
+            id: null,
+            dir: null
+        };
+        this.currentPage = 0;
+        this.sortCol = null;
+        this.sortDir = null;
+        this.rowsPerPage = options.rowsPerPage;
+        this.total = 0;
+        this.start = 0;
+        this.end = 0;
+
         this.headers = options.headers;
-        this.decoration = options.decoration || [];
+        this.decoration = options.decoration;
 
         this.initialize(elem);
         this.update(options.data);
-        this.page = 0;
-        this.total = 0;
-        this.start = 0;
     };
 
     DynamicTable.prototype.initialize = function(elem) {
@@ -54,6 +68,7 @@ define([
         this.$container.css(this.options.style);
 
         this.$container.append(this.makeWidgetHeader());
+
         this.$table = $('<table id="dynamic_table" class="table table-striped table-bordered table-hover">');
         this.$tHeader = $('<tr>');
         this.headers.forEach(function (h) {
@@ -63,21 +78,108 @@ define([
         this.$tBody = $('<tbody>');
         this.$table.append(this.$tBody);
 
-        this.$container.append($('<div class="row">').append($('<div class="col-md-12">').append(this.$table)));
+        this.$container
+            .append($('<div class="row">').append($('<div class="col-md-12">').append(this.$table)))
+            .append(this.makeWidgetFooter());
         $(elem).append(this.$container);
     };
 
-    DynamicTable.prototype.makeWidgetHeader = function() {
-        return $('<div>');
+    DynamicTable.prototype.makeWidgetFooter = function() {
+        this.$shownText = $('<span></span>');
+        var $footer = $('<div class="row">')
+                      .append($('<div class="col-md-12">')
+                              .append(this.$shownText));
+        return $footer;
     };
 
+    DynamicTable.prototype.makeWidgetHeader = function() {
+        var self = this;
+        var $leftBtn = simpleButton('btn-md', 'fa fa-caret-left')
+                       .click(function() {
+                           var curP = self.currentPage;
+                           if (self.getPrevPage() !== curP) {
+                               self.getNewData();
+                           }
+                       });
+        var $rightBtn = simpleButton('btn-md', 'fa fa-caret-right')
+                        .click(function() {
+                            var curP = self.currentPage;
+                            if (self.getNextPage() !== curP) {
+                                self.getNewData();
+                            }
+                        });
+        var $pageBtns = $('<div class="col-md-4">')
+                        .append($leftBtn)
+                        .append($rightBtn);
+
+        self.$loadingElement = $('<div>')
+                               .attr('align', 'center')
+                               .append($('<i>').addClass('fa fa-spinner fa-spin fa-2x'))
+                               .hide();
+        var $loadingDiv = $('<div class="col-md-4">').append(self.$loadingElement);
+
+        var $searchElement = $('<input>')
+                             .attr('type', 'text')
+                             .addClass('form-control')
+                             .attr('placeholder', self.options.searchPlaceholder)
+                             .on('keyup', function() {
+                                 self.currentQuery = $.trim($searchElement.val());
+                                 self.getNewData();
+                             });
+        var $searchDiv = $('<div class="col-md-4 pull-right">').append($searchElement);
+
+        return $('<div class="row" style="margin: 5px 0">')
+                .append($pageBtns)
+                .append($loadingDiv)
+                .append($searchDiv);
+    };
+
+    DynamicTable.prototype.getPrevPage = function() {
+        this.currentPage--;
+        if (this.currentPage < 0) {
+            this.currentPage = 0;
+        }
+        return this.currentPage;
+    };
+
+    DynamicTable.prototype.getNextPage = function() {
+        this.currentPage++;
+        if ((this.currentPage + 1) * this.rowsPerPage >= this.total) {
+            this.currentPage--;
+        }
+        return this.currentPage;
+    };
+
+    var simpleButton = function(sizeClass, iconClass) {
+        return $('<button>')
+               .addClass('btn btn-default ' + sizeClass)
+               .append($('<span>').addClass(iconClass));
+    };
+
+    DynamicTable.prototype.getNewData = function() {
+        this.$loadingElement.show();
+        this.options.updateFunction(this.currentPage,
+                                    this.currentQuery,
+                                    this.currentSort.id,
+                                    this.currentSort.sortState)
+            .then(function(data) {
+                this.update(data);
+            }.bind(this))
+            .catch(function(error) {
+                alert('error!');
+                console.error(error);
+            })
+            .finally(function() {
+                this.$loadingElement.hide();
+            }.bind(this));
+    };
 
     DynamicTable.prototype.makeTableHeader = function(header) {
         var $header = $('<th>').append($('<b>').append(header.text));
         header.sortState = 0;
-        if (header.sortFunction) {
+        if (header.isSortable) {
             // add sorting.
-            var $sortBtn = makeSortButton();
+            var $sortBtn = simpleButton('btn-xs', 'fa fa-sort text-muted').addClass('pull-right');
             $sortBtn.click(function() {
                 // reset all other sort buttons
                 var curState = header.sortState;
@@ -91,16 +193,8 @@ define([
                 else {
                     header.sortState = -1;
                 }
-                Promise.try(function() {
-                    return header.sortFunction(header.sortState);
-                })
-                .then(function(data) {
-                    this.update(data);
-                }.bind(this))
-                .catch(function(error) {
-                    alert('error!');
-                    console.error(error);
-                });
+                this.currentSort = header;
+                this.getNewData();
             }.bind(this));
             $header.append($sortBtn);
         }
@@ -141,7 +235,7 @@ define([
     DynamicTable.prototype.update = function(data) {
         // update header sort buttons
         this.headers.forEach(function(h, idx) {
-            if (h.sortable) {
+            if (h.isSortable) {
                 var newClass = 'fa-sort text-muted';
                 if (h.sortState == 1) {
                     newClass = 'fa-sort-up';
@@ -157,13 +251,11 @@ define([
         }.bind(this));
         // update data
         this.setData(data.rows);
-    };
-
-    var makeSortButton = function() {
-        return $('<button>')
-               .addClass('btn btn-default btn-xs pull-right')
-               .append($('<span>')
-                       .addClass('fa fa-sort text-muted'));
+        this.start = data.start;
+        this.end = data.start + data.rows.length;
+        this.total = data.total;
+        this.$shownText.text('Showing ' + this.start + ' to ' + this.end + ' of ' + this.total);
+        //  + ' on page ' + this.currentPage);
     };
 
     /**
@@ -177,12 +269,13 @@ define([
      * </tr>
      * as a jQuery node
      */
-    var tableRow = function(data, isHeader) {
+    var tableRow = function(data) {
         var elem = 'td';
-        if (isHeader) {
-            elem = 'th';
-        }
-        return $('<tr>').append(data.map(function(d) { return '<' + elem + '>' + d + '</' + elem + '>'; }).join());
+        return $('<tr>').append(
+            data.map(function(d) {
+                return '<' + elem + '>' + d + '</' + elem + '>';
+            }).join()
+        );
     };
 
     return DynamicTable;

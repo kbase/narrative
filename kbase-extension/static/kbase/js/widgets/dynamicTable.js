@@ -12,10 +12,6 @@ define([
     Config
 ) {
 
-    /**
-     * }
-     */
-
     var DynamicTable = function (elem, options) {
         // options = {
         //     headers: [{
@@ -32,10 +28,20 @@ define([
         //         rows: Array of Arrays (same order as headers)
         //         total: total number of rows from query
         //     },
-        //     pagingFunction: function(pageNum, itemsPerPage, sortInfo)
+        //     pagingFunction: function(pageNum, itemsPerPage, sortInfo),
+        //     class: str (like jquery add class for whole widget)
+        //     style: { key1: value1, key2: value2} (css for whole widget)
         // }
+        this.options = options;
+        if (!this.options.class) {
+            this.options.class = '';
+        }
+        if (!this.options.style) {
+            this.options.style = {};
+        }
         this.headers = options.headers;
         this.decoration = options.decoration || [];
+
         this.initialize(elem);
         this.update(options.data);
         this.page = 0;
@@ -44,7 +50,10 @@ define([
     };
 
     DynamicTable.prototype.initialize = function(elem) {
-        this.$header = this.makeHeader()
+        this.$container = $('<div>').addClass('container-fluid ' + this.options.class);
+        this.$container.css(this.options.style);
+
+        this.$container.append(this.makeWidgetHeader());
         this.$table = $('<table id="dynamic_table" class="table table-striped table-bordered table-hover">');
         this.$tHeader = $('<tr>');
         this.headers.forEach(function (h) {
@@ -53,12 +62,15 @@ define([
         this.$table.append($('<thead>').append(this.$tHeader));
         this.$tBody = $('<tbody>');
         this.$table.append(this.$tBody);
-        $(elem).append(this.$table);
+
+        this.$container.append($('<div class="row">').append($('<div class="col-md-12">').append(this.$table)));
+        $(elem).append(this.$container);
     };
 
-    DynamicTable.prototype.makeHeader = function() {
-
+    DynamicTable.prototype.makeWidgetHeader = function() {
+        return $('<div>');
     };
+
 
     DynamicTable.prototype.makeTableHeader = function(header) {
         var $header = $('<th>').append($('<b>').append(header.text));

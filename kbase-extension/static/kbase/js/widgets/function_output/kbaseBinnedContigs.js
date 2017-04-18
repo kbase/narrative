@@ -115,45 +115,66 @@ define([
          * Shows the list of bins.
          */
         showBinList: function () {
-            var $header = $('<div>').hide();
-            var $binTable = $('<table class="table table-striped table-bordered table-hover">').hide();
-            var $binHeader = this.tableRow(['Bin Name', 'Read Coverage', 'GC Content', 'Number of Contigs', 'Total Contig Length'], true);
-            var $content = $('<div style="margin-top=15px">')
-                            .append(this.loadingElement())
-                            .append($header)
-                            .append($binTable);
-
-            // init binDiv controls, etc.
-            var searchAndUpdateBins = function(query, start, limit) {
-                var self = this;
-                return Promise.resolve(this.serviceClient.sync_call('MetagenomeAPI.search_binned_contigs', [{
-                    ref: this.options.objRef,
-                    query: query,
-                    start: start,
-                    limit: limit,
-                }]))
-                .then(function(results) {
-                    results = results[0];
-                    $binTable.empty().append($binHeader);
-                    results.bins.forEach(function(bin) {
-                        var $row = self.tableRow(['<a style="cursor:pointer">'+bin.bin_id+'</a>', bin.cov, bin.gc, bin.n_contigs, bin.sum_contig_len])
-                        $row.find('td:first-child a').click(function(e) {
-                            self.showBinTab($(this).text());
+            var $content = $('<div>');
+            new DynamicTable($content, {
+                headers: [{
+                    id: 'bin_id',
+                    text: 'Bin Name',
+                    isSortable: true
+                }, {
+                    id: 'cov',
+                    text: 'Read Coverage',
+                    isSortable: true
+                }, {
+                    id: 'gc',
+                    text: 'GC Content',
+                    isSortable: true
+                }, {
+                    id: 'n_contigs',
+                    text: 'Number of Contigs',
+                    isSortable: true
+                }, {
+                    id: 'sum_contig_len',
+                    text: 'Total Contig Length',
+                    isSortable: true
+                }],
+                decoration: [{
+                    col: 0,
+                    type: 'link',
+                    clickFunction: function(binId) {
+                        this.showBinTab(binId);
+                    }.bind(this)
+                }],
+                searchPlaceholder: 'Search contig bins',
+                style: {'margin-top': '5px'},
+                updateFunction: function(pageNum, query, sortColId, sortColDir) {
+                    var sortBy = [];
+                    if (sortColId && sortColDir !== 0) {
+                        sortBy.push([sortColId, sortColDir === 1 ? 1 : 0]);
+                    }
+                    return Promise.resolve(this.serviceClient.sync_call('MetagenomeAPI.search_binned_contigs', [{
+                        ref: this.options.objRef,
+                        query: query,
+                        start: (pageNum * this.options.binLimit),
+                        limit: this.options.binLimit,
+                        sort_by: sortBy
+                    }]))
+                    .then(function(results) {
+                        results = results[0];
+                        var rows = [];
+                        results.bins.forEach(function(bin) {
+                            rows.push([bin.bin_id, bin.cov, bin.gc, bin.n_contigs, bin.sum_contig_len]);
                         });
-                        $binTable.append($row);
-                    });
-                })
-                .catch(function(error) {
-                    console.error(error);
-                });
-            }.bind(this);
-
-            searchAndUpdateBins(null, 0, this.options.binLimit)
-            .then(function() {
-                $content.find('#loading').hide();
-                $header.show();
-                $binTable.show();
+                        return {
+                            rows: rows,
+                            start: results.start,
+                            query: results.query,
+                            total: results.num_found,
+                        };
+                    })
+                }.bind(this)
             });
+
             return $content;
         },
 
@@ -184,7 +205,6 @@ define([
             }]))
             .then(function(results) {
                 results = results[0];
-                console.log(results);
                 var dataRows = [];
                 results.contigs.forEach(function(c) {
                     dataRows.push([
@@ -206,52 +226,43 @@ define([
         createBinTab: function(binId) {
             var self = this;
             var $content = $('<div>');
-            self.getSortedBinData(binId, 0, self.options.binLimit, null, null)
-            .then(function(results) {
-                $content.empty();
-                new DynamicTable($content, {
-                    headers: [{
-                        id: 'id',
-                        text: 'Contig Id',
-                        isSortable: true,
-                    }, {
-                        id: 'cov',
-                        text: 'Coverage',
-                        isSortable: true,
-                    }, {
-                        id: 'gc',
-                        text: 'GC Content',
-                        isSortable: true,
-                    }, {
-                        id: 'len',
-                        text: 'Contig Length',
-                        isSortable: true,
-                    }],
-                    decoration: [{
-                        col: 0,
-                        type: 'link',
-                        clickFunction: function(contig_id) {
-                            alert('Clicked on ' + contig_id);
-                        }
-                    }],
-                    updateFunction: function(pageNum, query, sortColId, sortColDir) {
-                        var sortBy = [];
-                        if (sortColId && sortColDir !== 0) {
-                            sortBy.push([ sortColId, sortColDir === 1 ? 1 : 0 ]);
-                        }
-                        return self.getSortedBinData(binId, (pageNum * self.options.binLimit) + 1, self.options.binLimit, query, sortBy);
-                    },
-                    data: results,
-                    rowsPerPage: self.options.binLimit,
-                    searchPlaceholder: 'Search contigs in bin'
-                });
-            })
-            .catch(function(error) {
-                console.error(error);
-                $content.empty().append(Display.createError('Error while fetching bin info', error.error.error));
+            new DynamicTable($content, {
+                headers: [{
+                    id: 'id',
+                    text: 'Contig Id',
+                    isSortable: true,
+                }, {
+                    id: 'cov',
+                    text: 'Coverage',
+                    isSortable: true,
+                }, {
+                    id: 'gc',
+                    text: 'GC Content',
+                    isSortable: true,
+                }, {
+                    id: 'len',
+                    text: 'Contig Length',
+                    isSortable: true,
+                }],
+                decoration: [{
+                    col: 0,
+                    type: 'link',
+                    clickFunction: function(contig_id) {
+                        alert('Clicked on ' + contig_id);
+                    }
+                }],
+                updateFunction: function(pageNum, query, sortColId, sortColDir) {
+                    var sortBy = [];
+                    if (sortColId && sortColDir !== 0) {
+                        sortBy.push([ sortColId, sortColDir === 1 ? 1 : 0 ]);
+                    }
+                    return self.getSortedBinData(binId, pageNum * self.options.binLimit, self.options.binLimit, query, sortBy);
+                },
+                rowsPerPage: self.options.binLimit,
+                searchPlaceholder: 'Search contigs in bin',
+                style: {'margin-top': '5px'}
             });
-
-            return $content.append(self.loadingElement());
+            return $content;
         },
 
         /**

@@ -1,3 +1,38 @@
+/**
+ * A DynamicTable widget.
+ * This is a very very lightweight table that uses a callback to set its data based on user actions.
+ * Make it like this:
+ *
+ * var targetDiv = '<div>';
+ * var myTable = new DynamicTable(targetDiv, {
+ *   headers: [{
+ *       id: 'col1',
+ *       text: 'First Col',
+ *       isSortable: false,
+ *   }, {
+ *       id: 'col2',
+ *       text: 'Second Col',
+ *       isSortable: true
+ *   }],
+ *   decoration: [{
+ *       col: 'col1',
+ *       type: 'link',
+ *       clickFunction: function(text) { do stuff with text }
+ *   }],
+ *   updateFunction: function(pageNum, query, sortColId, sortColDir) {
+ *       return {
+ *           rows: [['row1,col1', 'row1,col2'],
+ *                  ['row2,col1', 'row2,col2']],
+ *           start: 0,
+ *           total: 1000,
+ *           query: ''
+ *       }
+ *   }
+ *   rowsPerPage: 10,
+ *   searchPlaceholder: 'Search for data',
+ *   class: 'css classes to apply to outer container',
+ *   style: 'css style to apply to outer container'
+ */
 define([
     'jquery',
     'bootstrap',
@@ -13,26 +48,6 @@ define([
 ) {
 
     var DynamicTable = function (elem, options) {
-        // options = {
-        //     headers: [{
-        //         id: string,
-        //         text: string,
-        //         sortable: true/false,
-        //         sortFunction: function -- should return sorted data
-        //     }],
-        //     decoration: [{
-        //         col: int 0>n,
-        //         type: str (link, button, etc),
-        //         clickFunction: function
-        //     }],
-        //     data: {
-        //         rows: Array of Arrays (same order as headers)
-        //         total: total number of rows from query
-        //     },
-        //     pagingFunction: function(pageNum, itemsPerPage, sortInfo),
-        //     class: str (like jquery add class for whole widget)
-        //     style: { key1: value1, key2: value2} (css for whole widget)
-        // }
         this.options = {
             class: '',
             style: {},
@@ -60,9 +75,16 @@ define([
         this.decoration = options.decoration;
 
         this.initialize(elem);
-        this.update(options.data);
+        this.getNewData();
     };
 
+    /**
+     * Initialize the whole shebang with the given options.
+     * Starts with creating a container for all the elements to live in,
+     * then builds the header, table, and footer.
+     * This doesn't actually set the data or anything, it just inits the various
+     * DOM elements and events.
+     */
     DynamicTable.prototype.initialize = function(elem) {
         this.$container = $('<div>').addClass('container-fluid ' + this.options.class);
         this.$container.css(this.options.style);
@@ -84,6 +106,10 @@ define([
         $(elem).append(this.$container);
     };
 
+    /**
+     * Builds the footer for the whole widget, sits below the table.
+     * Just shows what rows are visible right now.
+     */
     DynamicTable.prototype.makeWidgetFooter = function() {
         this.$shownText = $('<span></span>');
         var $footer = $('<div class="row">')
@@ -92,6 +118,11 @@ define([
         return $footer;
     };
 
+    /**
+     * Makes the header for the whole table widget.
+     * This includes L/R buttons for table pagination, a hideable spinner for loading,
+     * and a search element.
+     */
     DynamicTable.prototype.makeWidgetHeader = function() {
         var self = this;
         var $leftBtn = simpleButton('btn-md', 'fa fa-caret-left')
@@ -124,16 +155,20 @@ define([
                              .attr('placeholder', self.options.searchPlaceholder)
                              .on('keyup', function() {
                                  self.currentQuery = $.trim($searchElement.val());
+                                 self.currentPage = 0;
                                  self.getNewData();
                              });
         var $searchDiv = $('<div class="col-md-4 pull-right">').append($searchElement);
 
-        return $('<div class="row" style="margin: 5px 0">')
+        return $('<div class="row" style="margin-bottom: 5px">')
                 .append($pageBtns)
                 .append($loadingDiv)
                 .append($searchDiv);
     };
 
+    /**
+     * Updates the current page to the previous one, as long as it's >= 0.
+     */
     DynamicTable.prototype.getPrevPage = function() {
         this.currentPage--;
         if (this.currentPage < 0) {
@@ -142,20 +177,22 @@ define([
         return this.currentPage;
     };
 
+    /**
+     * Updates the current page to the next one, if available.
+     * If not, nothing changes.
+     */
     DynamicTable.prototype.getNextPage = function() {
         this.currentPage++;
-        if ((this.currentPage + 1) * this.rowsPerPage >= this.total) {
+        if (this.currentPage * this.rowsPerPage >= this.total) {
             this.currentPage--;
         }
         return this.currentPage;
     };
 
-    var simpleButton = function(sizeClass, iconClass) {
-        return $('<button>')
-               .addClass('btn btn-default ' + sizeClass)
-               .append($('<span>').addClass(iconClass));
-    };
-
+    /**
+     * This fetches a new set of data, by firing the updateFunction
+     * with the current table state, including page, etc.
+     */
     DynamicTable.prototype.getNewData = function() {
         this.$loadingElement.show();
         this.options.updateFunction(this.currentPage,
@@ -174,6 +211,11 @@ define([
             }.bind(this));
     };
 
+    /**
+     * Build the header row for the table.
+     * This makes each th element bold (with the given header.text value), and adds a sort
+     * button if necessary.
+     */
     DynamicTable.prototype.makeTableHeader = function(header) {
         var $header = $('<th>').append($('<b>').append(header.text));
         header.sortState = 0;
@@ -204,6 +246,13 @@ define([
         return $header;
     };
 
+    /*
+     * Sets the actual data into the table.
+     * This empties out the current table body, and replaces the contents with the values in data.
+     * Data is expected to be a list of lists.
+     * If this DynamicTable was initialized with a decoration on each column, those columns have
+     * their decoration applied to them as well, and linked to the clickFunction.
+     */
     DynamicTable.prototype.setData = function(data) {
         // list of lists. Empty it out, then put it in place in the given order.
         this.$tBody.empty();
@@ -223,7 +272,7 @@ define([
             this.decoration.forEach(function(dec) {
                 if (dec.clickFunction) {
                     var $clickElem = $newRow.find('td:eq(' + dec.col + ') > :eq(0)');
-                    $clickElem.click(function(e) {
+                    $clickElem.click(function() {
                         dec.clickFunction($clickElem.text());
                     });
                 }
@@ -232,6 +281,13 @@ define([
         }.bind(this));
     };
 
+    /**
+     * Updates the table based on the given data.
+     * Data should have the following keys:
+     * rows = list of lists, contains the actual data
+     * start = int, the index of the first value, compared to the total available data
+     * total = int, the total available rows (not just in this view)
+     */
     DynamicTable.prototype.update = function(data) {
         // update header sort buttons
         this.headers.forEach(function(h, idx) {
@@ -254,20 +310,18 @@ define([
         this.start = data.start;
         this.end = data.start + data.rows.length;
         this.total = data.total;
-        this.$shownText.text('Showing ' + this.start + ' to ' + this.end + ' of ' + this.total);
+        this.$shownText.text('Showing ' + (this.start+1) + ' to ' + this.end + ' of ' + this.total);
         //  + ' on page ' + this.currentPage);
     };
 
     /**
      * Converts an array to a table row.
-     * e.g., if the array is ['abc', '123', 'xyz']
+     * e.g., if the array is ['abc', '123']
      * this returns:
      * <tr>
      *     <td>abc</td>
      *     <td>123</td>
-     *     <td>xyz</td>
      * </tr>
-     * as a jQuery node
      */
     var tableRow = function(data) {
         var elem = 'td';
@@ -277,6 +331,19 @@ define([
             }).join()
         );
     };
+
+    /**
+     * A helper function that makes a simple button with an icon in it.
+     * sizeClass is expected to be a bootstrap btn size (btn-xs, btn-md, etc)
+     * iconClass is expected to be a space-delimited string ('fa fa-spinner fa-spin fa-2x', etc.)
+     */
+    var simpleButton = function(sizeClass, iconClass) {
+        return $('<button>')
+               .addClass('btn btn-default ' + sizeClass)
+               .append($('<span>').addClass(iconClass));
+    };
+
+
 
     return DynamicTable;
 });

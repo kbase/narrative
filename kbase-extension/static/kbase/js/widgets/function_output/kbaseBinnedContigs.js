@@ -244,13 +244,13 @@ define([
                     text: 'Contig Length',
                     isSortable: true,
                 }],
-                decoration: [{
-                    col: 0,
-                    type: 'link',
-                    clickFunction: function(contig_id) {
-                        alert('Clicked on ' + contig_id);
-                    }
-                }],
+                // decoration: [{
+                //     col: 0,
+                //     type: 'link',
+                //     clickFunction: function(contig_id) {
+                //         alert('Clicked on ' + contig_id);
+                //     }
+                // }],
                 updateFunction: function(pageNum, query, sortColId, sortColDir) {
                     var sortBy = [];
                     if (sortColId && sortColDir !== 0) {

@@ -66,13 +66,13 @@ define([
         this.currentPage = 0;
         this.sortCol = null;
         this.sortDir = null;
-        this.rowsPerPage = options.rowsPerPage;
+        this.rowsPerPage = this.options.rowsPerPage;
         this.total = 0;
         this.start = 0;
         this.end = 0;
 
-        this.headers = options.headers;
-        this.decoration = options.decoration;
+        this.headers = this.options.headers;
+        this.decoration = this.options.decoration;
 
         this.initialize(elem);
         this.getNewData();
@@ -258,7 +258,7 @@ define([
         this.$tBody.empty();
         data.forEach(function(row) {
             // decorate each row element as necessary
-            this.decoration.forEach(function(dec) {
+            this.options.decoration.forEach(function(dec) {
                 if (dec.type == 'link') {
                     row[dec.col] = '<a style="cursor:pointer">' + row[dec.col] + '</a>';
                 }
@@ -269,7 +269,7 @@ define([
             // build the table row elem
             var $newRow = tableRow(row);
             // add click bindings to decorated elements
-            this.decoration.forEach(function(dec) {
+            this.options.decoration.forEach(function(dec) {
                 if (dec.clickFunction) {
                     var $clickElem = $newRow.find('td:eq(' + dec.col + ') > :eq(0)');
                     $clickElem.click(function() {

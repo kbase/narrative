@@ -9,9 +9,9 @@ describe('Narrative Smoketest', function() {
 
     // Open up the local instance of the narrative from test/unit/run_tests.py
     beforeEach(function(done) {
-        this.driver = new selenium.Builder().
-            withCapabilities(selenium.Capabilities.firefox()).
-            build();
+        this.driver = new selenium.Builder()
+            .withCapabilities(selenium.Capabilities.firefox())
+            .build();
         this.driver.manage().timeouts().implicitlyWait(timeoutMilliSec);
         jasmine.DEFAULT_TIMEOUT_INTERVAL = timeoutMilliSec;
         this.driver.get('http://localhost:9999/narrative/').then(done);

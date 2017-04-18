@@ -3,7 +3,7 @@
   "description": "Core components for the KBase Narrative Interface",
   "version": "3.2.3",
   "private": true,
-  "repository": "git.kbase.us/ui-common.git",
+  "repository": "github.com/kbase/narrative",
   "devDependencies": {
     "bower": "1.7.9",
     "geckodriver": "^1.4.0",
@@ -26,9 +26,9 @@
     "karma-phantomjs-launcher": "1.0.1",
     "karma-requirejs": "1.0.0",
     "karma-safari-launcher": "1.0.0",
-    "phantomjs-prebuilt": "2.1.8",
+    "phantomjs-prebuilt": "2.1.14",
     "requirejs": "2.2.0",
-    "selenium-standalone": "^6.0.1",
+    "selenium-standalone": "^6.2.0",
     "selenium-webdriver": "^3.3.0"
   },
   "scripts": {

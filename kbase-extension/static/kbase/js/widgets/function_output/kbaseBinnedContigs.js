@@ -179,19 +179,34 @@ define([
         },
 
         showBinTab: function(binId) {
-            if (!this.tabs.hasTab(binId)) {
-                this.tabs.addTab({
+            var self = this;
+            if (!self.tabs.hasTab(binId)) {
+                self.tabs.addTab({
                     tab: binId,
                     showContentCallback: function() {
-                        return this.createBinTab(binId);
-                    }.bind(this),
+                        return self.createBinTab(binId);
+                    },
                     deleteCallback: function(name) {
-                        this.tabs.removeTab(name);
-                        this.tabs.showTab(this.tabs.activeTab());
-                    }.bind(this)
+                        self.tabs.removeTab(name);
+                        self.tabs.showTab(self.tabs.activeTab());
+                    }
+                });
+                self.tabs.addTab({
+                    tab: binId + '-plot',
+                    showContentCallback: function() {
+                        return self.plotBin(binId);
+                    },
+                    deleteCallback: function(name) {
+                        self.tabs.removeTab(name);
+                        self.tabs.showTab(self.tabs.activeTab());
+                    }
                 });
             }
-            this.tabs.showTab(binId);
+            self.tabs.showTab(binId);
+        },
+
+        plotBin: function(binId) {
+
         },
 
         getSortedBinData: function(binId, start, limit, query, sortBy) {

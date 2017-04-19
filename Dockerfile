@@ -20,6 +20,7 @@ EXPOSE 8888
 RUN DEBIAN_FRONTEND=noninteractive apt-get remove -y python-tornado
 
 # TEMPORARY!
+# Update bs4 and pandas to resolve inability to run them
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python-dev libffi-dev libssl-dev \
     && pip install pyopenssl ndg-httpsclient pyasn1 \
     && pip install requests --upgrade \

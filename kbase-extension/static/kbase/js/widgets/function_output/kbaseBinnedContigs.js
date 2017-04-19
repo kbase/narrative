@@ -206,7 +206,58 @@ define([
         },
 
         plotBin: function(binId) {
+            var $content = $('<div>').css({'margin-top': '15px'}).append(this.loadingElement());
 
+            Promise.resolve(this.serviceClient.sync_call('MetagenomeAPI.search_contigs_in_bin', [{
+                ref: this.options.objRef,
+                bin_id: binId,
+                start: 0,
+                limit: 10000,
+                sort_by: [['len', 0]]
+            }]))
+            .then(function(results) {
+                results = results[0];
+                console.log(results);
+                var labels = [];
+                var gcs = [];
+                var lengths = [];
+                results.contigs.forEach(function(contig) {
+                    labels.push(contig.contig_id);
+                    gcs.push(contig.gc);
+                    lengths.push(contig.len);
+                });
+                $content.empty();
+                Plotly.newPlot($content[0], [{
+                    x: labels,
+                    y: gcs,
+                    type: 'bar',
+                    name: 'GC Content'
+                }, {
+                    x: labels,
+                    y: lengths,
+                    type: 'bar',
+                    name: 'Contig Length',
+                    yaxis: 'y2'
+                }], {
+                    name: 'Bin Info',
+                    xaxis: {
+                        tickangle: -45,
+                    },
+                    yaxis: {
+                        title: 'GC Content',
+                        range: [0, 1]
+                    },
+                    yaxis2: {
+                        title: 'Contig Length',
+                        overlaying: 'y',
+                        side: 'right'
+                    },
+                    barmode: 'group'
+                });
+                // Plotly.newPlot($content[0], [{x: [1, 2, 3, 4], y: [10, 15, 13, 17], type: 'scatter'}, {x: [1, 2, 3, 4], y: [5, 1, 20, 13], type: 'scatter'}]);
+            });
+
+            return $content;
         },
 
         getSortedBinData: function(binId, start, limit, query, sortBy) {

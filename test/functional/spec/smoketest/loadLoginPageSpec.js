@@ -23,7 +23,7 @@ describe('Narrative Smoketest', function() {
     });
 
     // Test to ensure we are on the home page by checking for sign-in button
-    it('The sign-in button is visible', function(done) {
+    it('The sign-in button is visible', function() {
         var element = this.driver.findElement(selenium.By.id('signin-button'));
         expect(element).not.toBeNull();
         // element.getText().then( function(text){

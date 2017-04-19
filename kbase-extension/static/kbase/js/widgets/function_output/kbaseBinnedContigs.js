@@ -171,8 +171,12 @@ define([
                             query: results.query,
                             total: results.num_found,
                         };
-                    })
-                }.bind(this)
+                    });
+                }.bind(this),
+                rowFunction: function($row, rowValues) {
+                    $row.find('td:eq(0)').append('<span class="pull-right">' + rowValues[0] + '</span>');
+                    return $row;
+                }
             });
 
             return $content;
@@ -231,24 +235,25 @@ define([
                     x: labels,
                     y: gcs,
                     type: 'bar',
-                    name: 'GC Content'
+                    name: 'GC'
                 }, {
                     x: labels,
                     y: lengths,
                     type: 'bar',
-                    name: 'Contig Length',
-                    yaxis: 'y2'
+                    name: 'Length',
+                    yaxis: 'y2',
+                    opacity: 0.75
                 }], {
                     name: 'Bin Info',
                     xaxis: {
                         tickangle: -45,
                     },
                     yaxis: {
-                        title: 'GC Content',
+                        title: 'GC Content (%)',
                         range: [0, 1]
                     },
                     yaxis2: {
-                        title: 'Contig Length',
+                        title: 'Contig Length (bp)',
                         overlaying: 'y',
                         side: 'right'
                     },

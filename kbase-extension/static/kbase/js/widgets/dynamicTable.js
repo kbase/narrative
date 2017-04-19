@@ -31,7 +31,10 @@
  *   rowsPerPage: 10,
  *   searchPlaceholder: 'Search for data',
  *   class: 'css classes to apply to outer container',
- *   style: 'css style to apply to outer container'
+ *   style: 'css style to apply to outer container',
+ *   rowFunction: function($row) {
+ *      return $row; (after doing whatever to it)
+ *   }
  */
 define([
     'jquery',
@@ -277,6 +280,9 @@ define([
                     });
                 }
             });
+            if (this.options.rowFunction) {
+                $newRow = this.options.rowFunction($newRow, row);
+            }
             this.$tBody.append($newRow);
         }.bind(this));
     };

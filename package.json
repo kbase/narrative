@@ -1,9 +1,9 @@
 {
   "name": "kbase-narrative-core",
   "description": "Core components for the KBase Narrative Interface",
-  "version": "3.2.3",
+  "version": "3.2.4",
   "private": true,
-  "repository": "git.kbase.us/ui-common.git",
+  "repository": "github.com/kbase/narrative",
   "devDependencies": {
     "bower": "1.7.9",
     "geckodriver": "1.4.0",

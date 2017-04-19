@@ -31,14 +31,14 @@ describe('Narrative Smoketest', function() {
         });
     });
 
-    it('Clicking signin brings up modal dialog', function(done) {
-        var element = this.driver.findElement(selenium.By.id('signin-button'));
-        element.click();
-        var element2 = this.driver.findElement(selenium.By.css('[data-id="user_id"]'));
-        element2.isDisplayed().then(function( displayed) {
-            expect(displayed).toBeTruthy();
-            done();
-        });
-
-    });
+    // it('Clicking signin brings up modal dialog', function(done) {
+    //     var element = this.driver.findElement(selenium.By.id('signin-button'));
+    //     element.click();
+    //     var element2 = this.driver.findElement(selenium.By.css('[data-id="user_id"]'));
+    //     element2.isDisplayed().then(function( displayed) {
+    //         expect(displayed).toBeTruthy();
+    //         done();
+    //     });
+    //
+    // });
 });

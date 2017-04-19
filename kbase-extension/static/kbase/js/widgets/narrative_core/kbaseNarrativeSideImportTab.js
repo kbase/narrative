@@ -124,6 +124,7 @@ define (
             this.widgetPanel.append(this.widgetPanelCard1);
             this.widgetPanelCard1.append("<div class='kb-cell-run'><h2 class='collapse in'>" +
                     "Import data from your local computer or another data source. First, select the type of data you wish to import." +
+		    "<br>To import data using the bulk import tool click <a href="/bulk-ui/" target="_blank"> here</a>.<br>" +
                     "</h2></div><hr>");
 
             var $nameDiv = $('<div>')

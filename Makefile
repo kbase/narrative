@@ -52,7 +52,7 @@ build-narrative-container:
 build-travis-narrative:
 	bower install && \
 	npm install && \
-	bash $(INSTALLER) --no-venv && \
+	bash $(INSTALLER) --no-venv --travis && \
 	jupyter notebook --version
 
 test: test-backend test-frontend-unit test-frontend-e2e

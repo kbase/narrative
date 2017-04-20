@@ -147,7 +147,7 @@ then
     # Install Jupyter code
     # --------------------
     # 1. Setup Jupyter Notebook inside virtualenv
-    log "Installing Jupyter notebook using $PYTHON"
+    log "Installing Jupyter notebook using $PYTHON and pip"
     console "Installing Jupyter notebook from directory '$JUPYTER_NOTEBOOK_INSTALL_DIR'"
 
     # This will clone the specified tag or branch in single-branch mode

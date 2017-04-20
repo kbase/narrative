@@ -55,7 +55,7 @@ cat /dev/null > $logfile
 
 function log () {
     now=`date '+%Y-%m-%d %H:%M:%S'`
-    echo "$now [install_narrative] $1" >> $logfile
+    echo "$now [install_narrative] $1" | tee -a $logfile
 }
 
 function console () {
@@ -134,13 +134,14 @@ then
     # Install external JavaScript code
     # --------------------
     cd $NARRATIVE_ROOT_DIR
-    npm install >> ${logfile} 2>&1
-    bower install --allow-root --config.interactive=false >> ${logfile} 2>&1
+    npm install 2>&1 | tee -a ${logfile}
+    bower install -V --allow-root --config.interactive=false 2>&1 | tee -a ${logfile}
 
     # Install IPython version 5.3.0 (anything higher comes naturally, and requires Python > 3.0)
     # This needs to be here, not in requirements,
     # -----------------------
-    pip install ipython==$IPYTHON_VERSION
+    log "Installing IPython version $IPYTHON_VERSION"
+    pip install ipython==$IPYTHON_VERSION 2>&1 | tee -a ${logfile}
 
     cd $VIRTUAL_ENV
     # Install Jupyter code
@@ -150,16 +151,16 @@ then
     console "Installing Jupyter notebook from directory '$JUPYTER_NOTEBOOK_INSTALL_DIR'"
 
     # This will clone the specified tag or branch in single-branch mode
-    git clone --branch $JUPYTER_NOTEBOOK_TAG --single-branch $JUPYTER_NOTEBOOK_REPO $JUPYTER_NOTEBOOK_INSTALL_DIR
+    git clone --branch $JUPYTER_NOTEBOOK_TAG --single-branch $JUPYTER_NOTEBOOK_REPO $JUPYTER_NOTEBOOK_INSTALL_DIR 2>&1 | tee -a ${logfile}
     cd $JUPYTER_NOTEBOOK_INSTALL_DIR
     # git checkout tags/$JUPYTER_NOTEBOOK_TAG
-    pip install --pre -e . >> ${logfile} 2>&1
+    pip install --pre -e . 2>&1 | tee -a ${logfile}
     cd ..
 
     # Setup ipywidgets addon
     log "Installing ipywidgets using $PYTHON"
     console "Installing ipywidgets from directory 'ipywidgets'"
-    pip install ipywidgets==$IPYWIDGETS_VERSION >> ${logfile} 2>&1
+    pip install ipywidgets==$IPYWIDGETS_VERSION 2>&1 | tee -a ${logfile}
 fi
 
 # Install Narrative code
@@ -167,13 +168,13 @@ fi
 console "Installing biokbase modules"
 log "Installing requirements from src/requirements.txt with 'pip'"
 cd $NARRATIVE_ROOT_DIR/src
-pip install -r requirements.txt >> ${logfile} 2>&1
+pip install -r requirements.txt 2>&1 | tee -a ${logfile}
 if [ $? -ne 0 ]; then
     console "pip install for biokbase requirements failed: please examine $logfile"
     exit 1
 fi
 log "Running local 'setup.py'"
-${PYTHON} setup.py install >> ${logfile} 2>&1
+${PYTHON} setup.py install 2>&1 | tee -a ${logfile}
 log "Done installing biokbase."
 cd $NARRATIVE_ROOT_DIR
 

@@ -151,11 +151,12 @@ then
     console "Installing Jupyter notebook from directory '$JUPYTER_NOTEBOOK_INSTALL_DIR'"
 
     # This will clone the specified tag or branch in single-branch mode
-    git clone --branch $JUPYTER_NOTEBOOK_TAG --single-branch $JUPYTER_NOTEBOOK_REPO $JUPYTER_NOTEBOOK_INSTALL_DIR 2>&1 | tee -a ${logfile}
-    cd $JUPYTER_NOTEBOOK_INSTALL_DIR
+#    git clone --branch $JUPYTER_NOTEBOOK_TAG --single-branch $JUPYTER_NOTEBOOK_REPO $JUPYTER_NOTEBOOK_INSTALL_DIR 2>&1 | tee -a ${logfile}
+#    cd $JUPYTER_NOTEBOOK_INSTALL_DIR
     # git checkout tags/$JUPYTER_NOTEBOOK_TAG
-    pip install --pre -e . 2>&1 | tee -a ${logfile}
-    cd ..
+#    pip install --pre -e . 2>&1 | tee -a ${logfile}
+#    cd ..
+    pip install notebook==$JUPYTER_NOTEBOOK_TAG
 
     # Setup ipywidgets addon
     log "Installing ipywidgets using $PYTHON"

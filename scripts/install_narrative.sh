@@ -95,6 +95,7 @@ function make_activate_venv () {
 
 no_venv=0
 update_only=0
+travis=0
 while [ $# -gt 0 ]; do
     case $1 in
         -h | --help | -\?)
@@ -111,6 +112,10 @@ while [ $# -gt 0 ]; do
             ;;
         -u | --update)
             update_only=1
+            shift
+            ;;
+        --travis)
+            travis=1
             shift
             ;;
     esac
@@ -151,12 +156,15 @@ then
     console "Installing Jupyter notebook from directory '$JUPYTER_NOTEBOOK_INSTALL_DIR'"
 
     # This will clone the specified tag or branch in single-branch mode
-#    git clone --branch $JUPYTER_NOTEBOOK_TAG --single-branch $JUPYTER_NOTEBOOK_REPO $JUPYTER_NOTEBOOK_INSTALL_DIR 2>&1 | tee -a ${logfile}
-#    cd $JUPYTER_NOTEBOOK_INSTALL_DIR
-    # git checkout tags/$JUPYTER_NOTEBOOK_TAG
-#    pip install --pre -e . 2>&1 | tee -a ${logfile}
-#    cd ..
-    pip install notebook==$JUPYTER_NOTEBOOK_TAG
+    if [ $travis -eq 1 ]
+    then
+        pip install notebook==$JUPYTER_NOTEBOOK_TAG
+    else
+        git clone --branch $JUPYTER_NOTEBOOK_TAG --single-branch $JUPYTER_NOTEBOOK_REPO $JUPYTER_NOTEBOOK_INSTALL_DIR 2>&1 | tee -a ${logfile}
+        cd $JUPYTER_NOTEBOOK_INSTALL_DIR
+        pip install --pre -e . 2>&1 | tee -a ${logfile}
+        cd ..
+    fi
 
     # Setup ipywidgets addon
     log "Installing ipywidgets using $PYTHON"

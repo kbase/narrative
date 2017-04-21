@@ -32,7 +32,8 @@ define([
         parent: KBaseAuthenticatedWidget,
         options: {
             objRef: null,
-            binLimit: 10
+            binLimit: 10,
+            plotContigLimit: 500,
         },
         token: null,
 
@@ -139,13 +140,6 @@ define([
                     text: 'Total Contig Length',
                     isSortable: true
                 }],
-                decoration: [{
-                    col: 0,
-                    type: 'link',
-                    clickFunction: function(binId) {
-                        self.showBinTab(binId);
-                    }
-                }],
                 searchPlaceholder: 'Search contig bins',
                 style: {'margin-top': '5px'},
                 updateFunction: function(pageNum, query, sortColId, sortColDir) {
@@ -175,11 +169,11 @@ define([
                     });
                 },
                 rowFunction: function($row, rowValues) {
-                    var $listBtn = Display.simpleButton('btn-xs', 'fa fa-list')
+                    var $listBtn = Display.simpleButton('btn-sm', 'fa fa-list')
                         .click(function() {
                             self.showBinTab(rowValues[0]);
                         });
-                    var $plotBtn = Display.simpleButton('btn-xs', 'fa fa-bar-chart')
+                    var $plotBtn = Display.simpleButton('btn-sm', 'fa fa-bar-chart')
                         .click(function() {
                             self.showPlotTab(rowValues[0]);
                         });
@@ -231,17 +225,21 @@ define([
         },
 
         plotBin: function(binId) {
-            var $content = $('<div>').css({'margin-top': '15px'}).append(this.loadingElement());
+            var $content = $('<div>').css({'margin-top': '15px', 'width': '100%'}).append(this.loadingElement());
 
             Promise.resolve(this.serviceClient.sync_call('MetagenomeAPI.search_contigs_in_bin', [{
                 ref: this.options.objRef,
                 bin_id: binId,
                 start: 0,
-                limit: 10000,
+                limit: this.options.plotContigLimit,
                 sort_by: [['len', 0]]
             }]))
             .then(function(results) {
                 results = results[0];
+                var title = binId + ' Lengths and GC %';
+                if (results.num_found > this.options.plotContigLimit) {
+                    title += ' (longest ' + this.options.plotContigLimit + ')';
+                }
                 console.log(results);
                 var labels = [];
                 var gcs = [];
@@ -265,29 +263,30 @@ define([
 
                 Plotly.newPlot(gd, [{
                     x: labels,
-                    y: gcs,
-                    type: 'bar',
-                    name: 'GC'
-                }, {
-                    x: labels,
                     y: lengths,
                     type: 'bar',
                     name: 'Length',
+                }, {
+                    x: labels,
+                    y: gcs,
+                    type: 'bar',
+                    name: 'GC',
                     yaxis: 'y2',
-                    opacity: 0.75
+                    opacity: 0.5
                 }], {
                     name: 'Bin Info',
+                    title: title,
                     xaxis: {
                         tickangle: -45,
                     },
                     yaxis: {
-                        title: 'GC Content (%)',
-                        range: [0, 1]
+                        title: 'Contig Length (bp)',
                     },
                     yaxis2: {
-                        title: 'Contig Length (bp)',
+                        title: 'GC Content (%)',
+                        range: [0, 1],
+                        side: 'right',
                         overlaying: 'y',
-                        side: 'right'
                     },
                     barmode: 'group'
                 });
@@ -296,6 +295,9 @@ define([
                     Plotly.Plots.resize(gd);
                 };
                 Plotly.Plots.resize(gd);
+            }.bind(this))
+            .catch(function(error) {
+                console.error(error);
             });
 
             return $content;
@@ -351,13 +353,6 @@ define([
                     text: 'Contig Length',
                     isSortable: true,
                 }],
-                // decoration: [{
-                //     col: 0,
-                //     type: 'link',
-                //     clickFunction: function(contig_id) {
-                //         alert('Clicked on ' + contig_id);
-                //     }
-                // }],
                 updateFunction: function(pageNum, query, sortColId, sortColDir) {
                     var sortBy = [];
                     if (sortColId && sortColDir !== 0) {

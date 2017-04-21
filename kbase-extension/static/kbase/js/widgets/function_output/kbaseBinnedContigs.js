@@ -115,6 +115,7 @@ define([
          * Shows the list of bins.
          */
         showBinList: function () {
+            var self = this;
             var $content = $('<div>');
             new DynamicTable($content, {
                 headers: [{
@@ -142,8 +143,8 @@ define([
                     col: 0,
                     type: 'link',
                     clickFunction: function(binId) {
-                        this.showBinTab(binId);
-                    }.bind(this)
+                        self.showBinTab(binId);
+                    }
                 }],
                 searchPlaceholder: 'Search contig bins',
                 style: {'margin-top': '5px'},
@@ -152,11 +153,11 @@ define([
                     if (sortColId && sortColDir !== 0) {
                         sortBy.push([sortColId, sortColDir === 1 ? 1 : 0]);
                     }
-                    return Promise.resolve(this.serviceClient.sync_call('MetagenomeAPI.search_binned_contigs', [{
-                        ref: this.options.objRef,
+                    return Promise.resolve(self.serviceClient.sync_call('MetagenomeAPI.search_binned_contigs', [{
+                        ref: self.options.objRef,
                         query: query,
-                        start: (pageNum * this.options.binLimit),
-                        limit: this.options.binLimit,
+                        start: (pageNum * self.options.binLimit),
+                        limit: self.options.binLimit,
                         sort_by: sortBy
                     }]))
                     .then(function(results) {
@@ -172,14 +173,44 @@ define([
                             total: results.num_found,
                         };
                     });
-                }.bind(this),
+                },
                 rowFunction: function($row, rowValues) {
-                    $row.find('td:eq(0)').append('<span class="pull-right">' + rowValues[0] + '</span>');
+                    var $listBtn = Display.simpleButton('btn-xs', 'fa fa-list')
+                        .click(function() {
+                            self.showBinTab(rowValues[0]);
+                        });
+                    var $plotBtn = Display.simpleButton('btn-xs', 'fa fa-bar-chart')
+                        .click(function() {
+                            self.showPlotTab(rowValues[0]);
+                        });
+
+                    $row.find('td:eq(0)').append(
+                        $('<span class="pull-right">')
+                        .append($listBtn)
+                        .append($plotBtn)
+                    );
                     return $row;
                 }
             });
 
             return $content;
+        },
+
+        showPlotTab: function(binId) {
+            var self = this;
+            if (!self.tabs.hasTab(binId + '-plot')) {
+                self.tabs.addTab({
+                    tab: binId + '-plot',
+                    showContentCallback: function() {
+                        return self.plotBin(binId);
+                    },
+                    deleteCallback: function(name) {
+                        self.tabs.removeTab(name);
+                        self.tabs.showTab(self.tabs.activeTab());
+                    }
+                });
+            }
+            this.tabs.showTab(binId + '-plot');
         },
 
         showBinTab: function(binId) {
@@ -189,16 +220,6 @@ define([
                     tab: binId,
                     showContentCallback: function() {
                         return self.createBinTab(binId);
-                    },
-                    deleteCallback: function(name) {
-                        self.tabs.removeTab(name);
-                        self.tabs.showTab(self.tabs.activeTab());
-                    }
-                });
-                self.tabs.addTab({
-                    tab: binId + '-plot',
-                    showContentCallback: function() {
-                        return self.plotBin(binId);
                     },
                     deleteCallback: function(name) {
                         self.tabs.removeTab(name);
@@ -231,7 +252,18 @@ define([
                     lengths.push(contig.len);
                 });
                 $content.empty();
-                Plotly.newPlot($content[0], [{
+
+                var d3 = Plotly.d3;
+                var WIDTH_IN_PERCENT_OF_PARENT = 100;
+                var HEIGHT_IN_PERCENT_OF_PARENT = 50;
+                var gd3 = d3.select($content.get(0))
+                    .style({
+                        width: WIDTH_IN_PERCENT_OF_PARENT + '%',
+                        height: HEIGHT_IN_PERCENT_OF_PARENT + 'vh',
+                    });
+                var gd = gd3.node();
+
+                Plotly.newPlot(gd, [{
                     x: labels,
                     y: gcs,
                     type: 'bar',
@@ -259,7 +291,11 @@ define([
                     },
                     barmode: 'group'
                 });
-                // Plotly.newPlot($content[0], [{x: [1, 2, 3, 4], y: [10, 15, 13, 17], type: 'scatter'}, {x: [1, 2, 3, 4], y: [5, 1, 20, 13], type: 'scatter'}]);
+
+                window.onresize = function() {
+                    Plotly.Plots.resize(gd);
+                };
+                Plotly.Plots.resize(gd);
             });
 
             return $content;

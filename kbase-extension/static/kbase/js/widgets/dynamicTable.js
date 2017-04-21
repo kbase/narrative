@@ -41,13 +41,13 @@ define([
     'bootstrap',
     'bluebird',
     'kbase-generic-client-api',
-    'narrativeConfig'
+    'util/display'
 ], function(
     $,
     Bootstrap,
     Promise,
     GenericClient,
-    Config
+    DisplayUtil
 ) {
 
     var DynamicTable = function (elem, options) {
@@ -128,14 +128,14 @@ define([
      */
     DynamicTable.prototype.makeWidgetHeader = function() {
         var self = this;
-        var $leftBtn = simpleButton('btn-md', 'fa fa-caret-left')
+        var $leftBtn = DisplayUtil.simpleButton('btn-md', 'fa fa-caret-left')
                        .click(function() {
                            var curP = self.currentPage;
                            if (self.getPrevPage() !== curP) {
                                self.getNewData();
                            }
                        });
-        var $rightBtn = simpleButton('btn-md', 'fa fa-caret-right')
+        var $rightBtn = DisplayUtil.simpleButton('btn-md', 'fa fa-caret-right')
                         .click(function() {
                             var curP = self.currentPage;
                             if (self.getNextPage() !== curP) {
@@ -224,7 +224,7 @@ define([
         header.sortState = 0;
         if (header.isSortable) {
             // add sorting.
-            var $sortBtn = simpleButton('btn-xs', 'fa fa-sort text-muted').addClass('pull-right');
+            var $sortBtn = DisplayUtil.simpleButton('btn-xs', 'fa fa-sort text-muted').addClass('pull-right');
             $sortBtn.click(function() {
                 // reset all other sort buttons
                 var curState = header.sortState;
@@ -261,16 +261,17 @@ define([
         this.$tBody.empty();
         data.forEach(function(row) {
             // decorate each row element as necessary
+            var renderedRow = row.slice(); // make a copy by value
             this.options.decoration.forEach(function(dec) {
                 if (dec.type == 'link') {
-                    row[dec.col] = '<a style="cursor:pointer">' + row[dec.col] + '</a>';
+                    renderedRow[dec.col] = '<a style="cursor:pointer">' + renderedRow[dec.col] + '</a>';
                 }
                 else if (dec.type == 'button') {
-                    row[dec.col] = '<button class="btn btn-default btn-sm">' + row[dec.col] + '</button>';
+                    renderedRow[dec.col] = '<button class="btn btn-default btn-sm">' + renderedRow[dec.col] + '</button>';
                 }
             });
             // build the table row elem
-            var $newRow = tableRow(row);
+            var $newRow = tableRow(renderedRow);
             // add click bindings to decorated elements
             this.options.decoration.forEach(function(dec) {
                 if (dec.clickFunction) {
@@ -337,19 +338,6 @@ define([
             }).join()
         );
     };
-
-    /**
-     * A helper function that makes a simple button with an icon in it.
-     * sizeClass is expected to be a bootstrap btn size (btn-xs, btn-md, etc)
-     * iconClass is expected to be a space-delimited string ('fa fa-spinner fa-spin fa-2x', etc.)
-     */
-    var simpleButton = function(sizeClass, iconClass) {
-        return $('<button>')
-               .addClass('btn btn-default ' + sizeClass)
-               .append($('<span>').addClass(iconClass));
-    };
-
-
 
     return DynamicTable;
 });

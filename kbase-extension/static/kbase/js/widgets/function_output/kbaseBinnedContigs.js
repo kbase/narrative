@@ -206,7 +206,7 @@ define([
                     }
                 });
             }
-            self.tabs.showTab(binId);
+            this.tabs.showTab(binId);
         },
 
         plotBin: function(binId) {

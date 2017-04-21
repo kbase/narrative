@@ -1071,6 +1071,35 @@ check_proxy = function(self)
     check_provisioner()
     check_marker()
 
+
+    -- TESTING start
+
+    if true then
+
+        -- use this line to simulate slow responses from the Narrative server
+        -- if it exceeds the timeout interval in the narrativeLoader.js, 
+        -- a timeout error should be generated.
+        -- ngx.sleep(2);
+
+        -- use this line to simulate the Narrative session (docker container)
+        -- either taking a long time to start or being in continuous error state.
+        -- return ngx.exit(ngx.HTTP_BAD_GATEWAY)
+
+        -- return ngx.exit(ngx.HTTP_UNAUTHORIZED)
+
+        -- ngx.status = ngx.HTTP_REQUEST_TIMEOUT
+        -- ngx.say(string.format("Error obtaining key %s", err))
+        -- return ngx.exit(ngx.HTTP_OK)
+
+        -- return ngx.exit(ngx.HTTP_SERVICE_UNAVAILABLE)
+
+        -- return ngx.exit(ngx.HTTP_CREATED)
+
+        -- return ngx.exit(ngx.HTTP_NOT_FOUND)
+    end
+
+    -- TESTING end
+
     -- get session
     -- If if fails for any reason (there are several possible) redirect to
     -- an end point which can authenticate and hopefully send them back here

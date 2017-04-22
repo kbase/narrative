@@ -34,23 +34,30 @@
  *   style: 'css style to apply to outer container',
  *   rowFunction: function($row) {
  *      return $row; (after doing whatever to it)
- *   }
+ *   },
+ *   enableDownload: true/false,
+ *   downloadFileName: string,
  */
 define([
     'jquery',
     'bootstrap',
     'bluebird',
     'kbase-generic-client-api',
-    'util/display'
+    'util/display',
+    'util/string',
+    'fileSaver'
 ], function(
     $,
     Bootstrap,
     Promise,
     GenericClient,
-    DisplayUtil
+    Display,
+    StringUtil,
+    FileSaver  //enables the saveAs function.
 ) {
 
     var DynamicTable = function (elem, options) {
+        console.log(FileSaver);
         this.options = {
             class: '',
             style: {},
@@ -58,10 +65,13 @@ define([
             rowsPerPage: 10,
             headers: [],
             decoration: [],
-            data: []
+            data: [],
+            enableDownload: false,
+            downloadFileName: 'table_data.csv'
         };
         $.extend(true, this.options, options);
 
+        this.currentData = [];
         this.currentSort = {
             id: null,
             dir: null
@@ -114,10 +124,40 @@ define([
      * Just shows what rows are visible right now.
      */
     DynamicTable.prototype.makeWidgetFooter = function() {
+        // var dropdownId = 'dtable-' + StringUtil.uuid();
         this.$shownText = $('<span></span>');
         var $footer = $('<div class="row">')
-                      .append($('<div class="col-md-12">')
+                      .append($('<div class="col-md-6">')
                               .append(this.$shownText));
+
+        if (this.options.enableDownload) {
+            var self = this;
+            var csvRows = function(data) {
+                var headerNames = [];
+                self.headers.forEach(function(h) {
+                    headerNames.push(h.text);
+                });
+                data.unshift(headerNames);
+                return data.map(function(row) {
+                    return row.join(',') + '\n';
+                });
+            };
+            var $dlBtn = Display.simpleButton('btn-md btn-default dropdown-toggle', 'fa fa-download')
+                .click(function() {
+                    saveAs(new Blob(csvRows(self.currentData)), self.options.downloadFileName);
+                });
+            var $dlAllBtn = Display.simpleButton('btn-md btn-default dropdown-toggle', 'fa fa-cloud-download')
+                .click(function() {
+                    self.options.downloadAllDataFunction(self.currentSort.id, self.currentSort.sortState)
+                    .then(function(data) {
+                        saveAs(new Blob(csvRows(data)), self.options.downloadFileName);
+                    });
+                });
+            $footer.append($('<div class="col-md-6">')
+                           .append($('<div class="pull-right">')
+                                   .append($dlBtn)
+                                   .append($dlAllBtn)));
+        }
         return $footer;
     };
 
@@ -128,14 +168,14 @@ define([
      */
     DynamicTable.prototype.makeWidgetHeader = function() {
         var self = this;
-        var $leftBtn = DisplayUtil.simpleButton('btn-md', 'fa fa-caret-left')
+        var $leftBtn = Display.simpleButton('btn-md', 'fa fa-caret-left')
                        .click(function() {
                            var curP = self.currentPage;
                            if (self.getPrevPage() !== curP) {
                                self.getNewData();
                            }
                        });
-        var $rightBtn = DisplayUtil.simpleButton('btn-md', 'fa fa-caret-right')
+        var $rightBtn = Display.simpleButton('btn-md', 'fa fa-caret-right')
                         .click(function() {
                             var curP = self.currentPage;
                             if (self.getNextPage() !== curP) {
@@ -224,7 +264,7 @@ define([
         header.sortState = 0;
         if (header.isSortable) {
             // add sorting.
-            var $sortBtn = DisplayUtil.simpleButton('btn-xs', 'fa fa-sort text-muted').addClass('pull-right');
+            var $sortBtn = Display.simpleButton('btn-xs', 'fa fa-sort text-muted').addClass('pull-right');
             $sortBtn.click(function() {
                 // reset all other sort buttons
                 var curState = header.sortState;
@@ -258,6 +298,7 @@ define([
      */
     DynamicTable.prototype.setData = function(data) {
         // list of lists. Empty it out, then put it in place in the given order.
+        this.currentData = data;
         this.$tBody.empty();
         data.forEach(function(row) {
             // decorate each row element as necessary

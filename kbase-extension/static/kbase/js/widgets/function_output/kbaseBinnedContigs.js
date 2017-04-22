@@ -98,9 +98,10 @@ define([
             Promise.resolve(this.wsClient.get_object_info3({objects: [{ref: this.options.objRef}], includeMetadata: 1}))
             .then(function(data) {
                 var info = data.infos[0];
+                this.objectName = info[1];
                 var $infoTable = $('<table class="table table-striped table-bordered table-hover">')
                     .append($('<colgroup>').append($('<col span=1>').css('width','25%')))
-                    .append(this.tableRow(['<b>KBase Object Name</b>', info[1]]))
+                    .append(this.tableRow(['<b>KBase Object Name</b>', this.objectName]))
                     .append(this.tableRow(['<b>Number of Bins</b>', info[10].n_bins]))
                     .append(this.tableRow(['<b>Total Contig Nucleotides</b>', info[10].total_contig_len]));
                 $content.empty().append($infoTable);
@@ -169,11 +170,11 @@ define([
                     });
                 },
                 rowFunction: function($row, rowValues) {
-                    var $listBtn = Display.simpleButton('btn-sm', 'fa fa-list')
+                    var $listBtn = Display.simpleButton('btn-xs', 'fa fa-list')
                         .click(function() {
                             self.showBinTab(rowValues[0]);
                         });
-                    var $plotBtn = Display.simpleButton('btn-sm', 'fa fa-bar-chart')
+                    var $plotBtn = Display.simpleButton('btn-xs', 'fa fa-bar-chart')
                         .click(function() {
                             self.showPlotTab(rowValues[0]);
                         });
@@ -184,6 +185,35 @@ define([
                         .append($plotBtn)
                     );
                     return $row;
+                },
+                enableDownload: true,
+                downloadFileName: this.objectName + '-bins.csv',
+                downloadAllDataFunction: function(sortColId, sortColDir) {
+                    // 1. poke the object to get the number of bins.
+                    return Promise.resolve(self.serviceClient.sync_call('MetagenomeAPI.search_binned_contigs', [{
+                        ref: self.options.objRef,
+                        limit: 1
+                    }]))
+                    .then(function(results) {
+                        var total = results[0].num_found;
+                        var sortBy = [];
+                        if (sortColId && sortColDir !== 0) {
+                            sortBy.push([sortColId, sortColDir === 1 ? 1 : 0]);
+                        }
+                        return Promise.resolve(self.serviceClient.sync_call('MetagenomeAPI.search_binned_contigs', [{
+                            ref: self.options.objRef,
+                            start: 0,
+                            limit: total,
+                            sort_by: sortBy
+                        }]))
+                    })
+                    .then(function(results) {
+                        var rows = [];
+                        results[0].bins.forEach(function(bin) {
+                            rows.push([bin.bin_id, bin.cov, bin.gc, bin.n_contigs, bin.sum_contig_len]);
+                        });
+                        return rows;
+                    });
                 }
             });
 
@@ -362,7 +392,28 @@ define([
                 },
                 rowsPerPage: self.options.binLimit,
                 searchPlaceholder: 'Search contigs in bin',
-                style: {'margin-top': '5px'}
+                style: {'margin-top': '5px'},
+                enableDownload: true,
+                downloadFileName: this.objectName + '-bin-' + binId + '.csv',
+                downloadAllDataFunction: function(sortColId, sortColDir) {
+                    // 1. poke the object to get the number of bins.
+                    return Promise.resolve(self.serviceClient.sync_call('MetagenomeAPI.search_contigs_in_bin', [{
+                        ref: self.options.objRef,
+                        bin_id: binId,
+                        limit: 1
+                    }]))
+                    .then(function(results) {
+                        var total = results[0].num_found;
+                        var sortBy = [];
+                        if (sortColId && sortColDir !== 0) {
+                            sortBy.push([sortColId, sortColDir === 1 ? 1 : 0]);
+                        }
+                        return self.getSortedBinData(binId, 0, total, '', sortBy);
+                    })
+                    .then(function(results) {
+                        return results.rows;
+                    });
+                }
             });
             return $content;
         },

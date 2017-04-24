@@ -32,7 +32,8 @@ define([
         parent: KBaseAuthenticatedWidget,
         options: {
             objRef: null,
-            binLimit: 10
+            binLimit: 10,
+            plotContigLimit: 500,
         },
         token: null,
 
@@ -97,9 +98,10 @@ define([
             Promise.resolve(this.wsClient.get_object_info3({objects: [{ref: this.options.objRef}], includeMetadata: 1}))
             .then(function(data) {
                 var info = data.infos[0];
+                this.objectName = info[1];
                 var $infoTable = $('<table class="table table-striped table-bordered table-hover">')
                     .append($('<colgroup>').append($('<col span=1>').css('width','25%')))
-                    .append(this.tableRow(['<b>KBase Object Name</b>', info[1]]))
+                    .append(this.tableRow(['<b>KBase Object Name</b>', this.objectName]))
                     .append(this.tableRow(['<b>Number of Bins</b>', info[10].n_bins]))
                     .append(this.tableRow(['<b>Total Contig Nucleotides</b>', info[10].total_contig_len]));
                 $content.empty().append($infoTable);
@@ -115,6 +117,7 @@ define([
          * Shows the list of bins.
          */
         showBinList: function () {
+            var self = this;
             var $content = $('<div>');
             new DynamicTable($content, {
                 headers: [{
@@ -138,13 +141,6 @@ define([
                     text: 'Total Contig Length',
                     isSortable: true
                 }],
-                decoration: [{
-                    col: 0,
-                    type: 'link',
-                    clickFunction: function(binId) {
-                        this.showBinTab(binId);
-                    }.bind(this)
-                }],
                 searchPlaceholder: 'Search contig bins',
                 style: {'margin-top': '5px'},
                 updateFunction: function(pageNum, query, sortColId, sortColDir) {
@@ -152,11 +148,11 @@ define([
                     if (sortColId && sortColDir !== 0) {
                         sortBy.push([sortColId, sortColDir === 1 ? 1 : 0]);
                     }
-                    return Promise.resolve(this.serviceClient.sync_call('MetagenomeAPI.search_binned_contigs', [{
-                        ref: this.options.objRef,
+                    return Promise.resolve(self.serviceClient.sync_call('MetagenomeAPI.search_binned_contigs', [{
+                        ref: self.options.objRef,
                         query: query,
-                        start: (pageNum * this.options.binLimit),
-                        limit: this.options.binLimit,
+                        start: (pageNum * self.options.binLimit),
+                        limit: self.options.binLimit,
                         sort_by: sortBy
                     }]))
                     .then(function(results) {
@@ -171,27 +167,170 @@ define([
                             query: results.query,
                             total: results.num_found,
                         };
+                    });
+                },
+                rowFunction: function($row, rowValues) {
+                    var $listBtn = Display.simpleButton('btn-xs', 'fa fa-list')
+                        .click(function() {
+                            self.showBinTab(rowValues[0]);
+                        });
+                    var $plotBtn = Display.simpleButton('btn-xs', 'fa fa-bar-chart')
+                        .click(function() {
+                            self.showPlotTab(rowValues[0]);
+                        });
+
+                    $row.find('td:eq(0)').append(
+                        $('<span class="pull-right">')
+                        .append($listBtn)
+                        .append($plotBtn)
+                    );
+                    return $row;
+                },
+                enableDownload: true,
+                downloadFileName: this.objectName + '-bins.csv',
+                downloadAllDataFunction: function(sortColId, sortColDir) {
+                    // 1. poke the object to get the number of bins.
+                    return Promise.resolve(self.serviceClient.sync_call('MetagenomeAPI.search_binned_contigs', [{
+                        ref: self.options.objRef,
+                        limit: 1
+                    }]))
+                    .then(function(results) {
+                        var total = results[0].num_found;
+                        var sortBy = [];
+                        if (sortColId && sortColDir !== 0) {
+                            sortBy.push([sortColId, sortColDir === 1 ? 1 : 0]);
+                        }
+                        return Promise.resolve(self.serviceClient.sync_call('MetagenomeAPI.search_binned_contigs', [{
+                            ref: self.options.objRef,
+                            start: 0,
+                            limit: total,
+                            sort_by: sortBy
+                        }]))
                     })
-                }.bind(this)
+                    .then(function(results) {
+                        var rows = [];
+                        results[0].bins.forEach(function(bin) {
+                            rows.push([bin.bin_id, bin.cov, bin.gc, bin.n_contigs, bin.sum_contig_len]);
+                        });
+                        return rows;
+                    });
+                }
             });
 
             return $content;
         },
 
+        showPlotTab: function(binId) {
+            var self = this;
+            if (!self.tabs.hasTab(binId + '-plot')) {
+                self.tabs.addTab({
+                    tab: binId + '-plot',
+                    showContentCallback: function() {
+                        return self.plotBin(binId);
+                    },
+                    deleteCallback: function(name) {
+                        self.tabs.removeTab(name);
+                        self.tabs.showTab(self.tabs.activeTab());
+                    }
+                });
+            }
+            this.tabs.showTab(binId + '-plot');
+        },
+
         showBinTab: function(binId) {
-            if (!this.tabs.hasTab(binId)) {
-                this.tabs.addTab({
+            var self = this;
+            if (!self.tabs.hasTab(binId)) {
+                self.tabs.addTab({
                     tab: binId,
                     showContentCallback: function() {
-                        return this.createBinTab(binId);
-                    }.bind(this),
+                        return self.createBinTab(binId);
+                    },
                     deleteCallback: function(name) {
-                        this.tabs.removeTab(name);
-                        this.tabs.showTab(this.tabs.activeTab());
-                    }.bind(this)
+                        self.tabs.removeTab(name);
+                        self.tabs.showTab(self.tabs.activeTab());
+                    }
                 });
             }
             this.tabs.showTab(binId);
+        },
+
+        plotBin: function(binId) {
+            var $content = $('<div>').css({'margin-top': '15px', 'width': '100%'}).append(this.loadingElement());
+
+            Promise.resolve(this.serviceClient.sync_call('MetagenomeAPI.search_contigs_in_bin', [{
+                ref: this.options.objRef,
+                bin_id: binId,
+                start: 0,
+                limit: this.options.plotContigLimit,
+                sort_by: [['len', 0]]
+            }]))
+            .then(function(results) {
+                results = results[0];
+                var title = binId + ' Lengths and GC %';
+                if (results.num_found > this.options.plotContigLimit) {
+                    title += ' (longest ' + this.options.plotContigLimit + ')';
+                }
+                console.log(results);
+                var labels = [];
+                var gcs = [];
+                var lengths = [];
+                results.contigs.forEach(function(contig) {
+                    labels.push(contig.contig_id);
+                    gcs.push(contig.gc);
+                    lengths.push(contig.len);
+                });
+                $content.empty();
+
+                var d3 = Plotly.d3;
+                var WIDTH_IN_PERCENT_OF_PARENT = 100;
+                var HEIGHT_IN_PERCENT_OF_PARENT = 50;
+                var gd3 = d3.select($content.get(0))
+                    .style({
+                        width: WIDTH_IN_PERCENT_OF_PARENT + '%',
+                        height: HEIGHT_IN_PERCENT_OF_PARENT + 'vh',
+                    });
+                var gd = gd3.node();
+
+                Plotly.newPlot(gd, [{
+                    x: labels,
+                    y: lengths,
+                    type: 'bar',
+                    name: 'Length',
+                }, {
+                    x: labels,
+                    y: gcs,
+                    type: 'bar',
+                    name: 'GC',
+                    yaxis: 'y2',
+                    opacity: 0.5
+                }], {
+                    name: 'Bin Info',
+                    title: title,
+                    xaxis: {
+                        tickangle: -45,
+                    },
+                    yaxis: {
+                        title: 'Contig Length (bp)',
+                    },
+                    yaxis2: {
+                        title: 'GC Content (%)',
+                        range: [0, 1],
+                        side: 'right',
+                        overlaying: 'y',
+                    },
+                    barmode: 'group'
+                });
+
+                window.onresize = function() {
+                    Plotly.Plots.resize(gd);
+                };
+                Plotly.Plots.resize(gd);
+            }.bind(this))
+            .catch(function(error) {
+                console.error(error);
+            });
+
+            return $content;
         },
 
         getSortedBinData: function(binId, start, limit, query, sortBy) {
@@ -244,13 +383,6 @@ define([
                     text: 'Contig Length',
                     isSortable: true,
                 }],
-                // decoration: [{
-                //     col: 0,
-                //     type: 'link',
-                //     clickFunction: function(contig_id) {
-                //         alert('Clicked on ' + contig_id);
-                //     }
-                // }],
                 updateFunction: function(pageNum, query, sortColId, sortColDir) {
                     var sortBy = [];
                     if (sortColId && sortColDir !== 0) {
@@ -260,7 +392,28 @@ define([
                 },
                 rowsPerPage: self.options.binLimit,
                 searchPlaceholder: 'Search contigs in bin',
-                style: {'margin-top': '5px'}
+                style: {'margin-top': '5px'},
+                enableDownload: true,
+                downloadFileName: this.objectName + '-bin-' + binId + '.csv',
+                downloadAllDataFunction: function(sortColId, sortColDir) {
+                    // 1. poke the object to get the number of bins.
+                    return Promise.resolve(self.serviceClient.sync_call('MetagenomeAPI.search_contigs_in_bin', [{
+                        ref: self.options.objRef,
+                        bin_id: binId,
+                        limit: 1
+                    }]))
+                    .then(function(results) {
+                        var total = results[0].num_found;
+                        var sortBy = [];
+                        if (sortColId && sortColDir !== 0) {
+                            sortBy.push([sortColId, sortColDir === 1 ? 1 : 0]);
+                        }
+                        return self.getSortedBinData(binId, 0, total, '', sortBy);
+                    })
+                    .then(function(results) {
+                        return results.rows;
+                    });
+                }
             });
             return $content;
         },

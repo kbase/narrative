@@ -197,11 +197,23 @@ define(
         return $errorPanel;
     }
 
+    /**
+     * A helper function that makes a simple button with an icon in it.
+     * sizeClass is expected to be a bootstrap btn size (btn-xs, btn-md, etc)
+     * iconClass is expected to be a space-delimited string ('fa fa-spinner fa-spin fa-2x', etc.)
+     */
+    function simpleButton(sizeClass, iconClass) {
+        return $('<button>')
+               .addClass('btn btn-default ' + sizeClass)
+               .append($('<span>').addClass(iconClass));
+    }
+
     return {
         lookupUserProfile: lookupUserProfile,
         displayRealName: displayRealName,
         loadingDiv: loadingDiv,
         getAppIcon: getAppIcon,
-        createError: createError
+        createError: createError,
+        simpleButton: simpleButton
     };
 });

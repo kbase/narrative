@@ -6,7 +6,7 @@
 define([
     'jquery',
     'bluebird',
-    'dynamicTable'
+    'widgets/dynamicTable'
 ], function($, Promise, DynamicTable) {
     'use strict';
     var dummyRows = [

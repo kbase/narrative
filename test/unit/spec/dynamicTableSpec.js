@@ -29,20 +29,22 @@ define([
         $dummyDiv = $('<div>'),
         dummyTable;
 
-    beforeEach(function() {
-        dummyTable = new DynamicTable($dummyDiv, {
-            headers: dummyHeaders,
-            updateFunction: function(pageNum, query, sortColId, sortColDir) {
-                return {
-                    start: 0,
-                    total: dummyRows.length,
-                    rows: dummyRows
-                };
-            }
-        });
-    });
-
     describe('Test the DynamicTable widget', function() {
+        beforeEach(function() {
+            dummyTable = new DynamicTable($dummyDiv, {
+                headers: dummyHeaders,
+                updateFunction: function(pageNum, query, sortColId, sortColDir) {
+                    return Promise.try(function() {
+                        return {
+                            start: 0,
+                            total: dummyRows.length,
+                            rows: dummyRows
+                        };
+                    });
+                }
+            });
+        });
+
         it('Should instantiate with essentially empty data', function() {
             var $container = $('<div>');
             var dt = new DynamicTable($container, {

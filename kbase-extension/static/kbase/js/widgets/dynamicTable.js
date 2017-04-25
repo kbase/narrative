@@ -55,6 +55,7 @@ define([
     StringUtil,
     FileSaver  //enables the saveAs function.
 ) {
+
     var DynamicTable = function (elem, options) {
         console.log(FileSaver);
         this.options = {
@@ -73,7 +74,8 @@ define([
         this.currentData = [];
         this.currentSort = {
             id: null,
-            dir: null
+            dir: null,
+            sortState: null
         };
         this.currentPage = 0;
         this.sortCol = null;

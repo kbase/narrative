@@ -3,6 +3,12 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v4.4.1 (more notes will follow).
 
+### Version 3.2.5
+__Changes__
+- Fix problems preventing job logs from being scrolled in apps that are in an error state.
+- Update widgets for viewing Binned Contigs, and the underlying table.
+- Add tests for the above.
+
 ### Version 3.2.4
 __Changes__
 - Added a viewer widget for Binned Contig objects.

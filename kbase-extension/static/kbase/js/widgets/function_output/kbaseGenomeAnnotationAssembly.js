@@ -174,7 +174,7 @@ define ([
                         query: query,
                         sort_by: sortBy,
                         start: pageNum * self.options.pageLimit
-                    }], null, null, 'dev'))
+                    }]))
                     .then(function(results) {
                         results = results[0];
                         var rows = [];

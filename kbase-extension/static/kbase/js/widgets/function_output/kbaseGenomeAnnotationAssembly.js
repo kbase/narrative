@@ -53,7 +53,7 @@ define ([
             // 1) get stats, and show the panel
             var basicInfoCalls = [];
             basicInfoCalls.push(
-                Promise.resolve(self.client.sync_call('AssemblyAPI.get_stats', [this.obj_ref], null, null, 'dev'))
+                Promise.resolve(self.client.sync_call('AssemblyAPI.get_stats', [this.obj_ref]))
                     .then(function(stats) {
                         self.assembly_stats = stats[0];
                     }));
@@ -174,7 +174,7 @@ define ([
                         query: query,
                         sort_by: sortBy,
                         start: pageNum * self.options.pageLimit
-                    }], null, null, 'dev'))
+                    }]))
                     .then(function(results) {
                         results = results[0];
                         var rows = [];

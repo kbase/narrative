@@ -55,7 +55,6 @@ define([
     StringUtil,
     FileSaver  //enables the saveAs function.
 ) {
-
     var DynamicTable = function (elem, options) {
         console.log(FileSaver);
         this.options = {

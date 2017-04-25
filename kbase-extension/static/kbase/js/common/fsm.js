@@ -117,8 +117,7 @@ define([
         }
 
         function newState(nextState) {
-            var nextStateList = currentState.next;
-            if (!nextStateList) {
+            if (!currentState.next) {
                 // If there's no next states, then we're in a terminal state and shouldn't try
                 // to transition. Or someone is missing something.
                 return;

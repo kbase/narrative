@@ -39,7 +39,7 @@ define([
                     rows: dummyRows
                 };
             }
-        })
+        });
     });
 
     describe('Test the DynamicTable widget', function() {

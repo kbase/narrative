@@ -111,7 +111,7 @@ require.config({
         'kbaseNarrativeDataList': 'kbase/js/widgets/narrative_core/kbaseNarrativeDataList',
         'kbaseNarrativeSidePanel': 'kbase/js/widgets/narrative_core/kbaseNarrativeSidePanel',
         'kbaseNarrativeJobsPanel': 'kbase/js/widgets/narrative_core/kbaseNarrativeJobsPanel',
-        'kbaseNarrativeMethodPanel': 'kbase/js/widgets/narrative_core/kbaseNarrativeMethodPanel',
+        'kbaseNarrativeAppPanel': 'kbase/js/widgets/narrative_core/kbaseNarrativeAppPanel',
         'kbaseNarrativeManagePanel': 'kbase/js/widgets/narrative_core/kbaseNarrativeManagePanel',
         'kbaseNarrativeDownloadPanel': 'kbase/js/widgets/narrative_core/kbaseNarrativeDownloadPanel',
         'kbaseNarrativeSharePanel': 'kbase/js/widgets/narrative_core/kbaseNarrativeSharePanel',

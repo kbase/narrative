@@ -24,11 +24,12 @@ define ([
     'kb_service/client/narrativeMethodStore',
     'uuid',
     'narrative_core/catalog/kbaseCatalogBrowser',
+    'kbaseAccordion',
     'kbaseNarrative',
     'catalog-client-api',
     'kbase-client-api',
     'bootstrap'
-], function(
+], function (
     KBWidget,
     $,
     Promise,
@@ -43,7 +44,8 @@ define ([
     Jupyter,
     NarrativeMethodStore,
     Uuid,
-    KBaseCatalogBrowser
+    KBaseCatalogBrowser,
+    KBaseAccordion
 ) {
     'use strict';
     return KBWidget({
@@ -84,6 +86,7 @@ define ([
          * @private
          */
         init: function(options) {
+            var self = this;
             this._super(options);
             // DOM structure setup here.
             // After this, just need to update the function list
@@ -225,6 +228,44 @@ define ([
                     }
                 }, this)
             );
+
+            this.currentPanelStyle = 'a-z';
+            this.$filterLabel = $('<span>').append(this.currentPanelStyle);
+            var $filterMenu = $('<ul>')
+                .addClass('dropdown-menu dropdown-menu-right')
+                .css({
+                    'margin-top': '20px'
+                })
+                .attr('aria-labeledby', 'kb-app-panel-filter')
+                .append($('<li>')
+                        .append('<a style="cursor:pointer" data-filter="a-z">Name A-Z</a>'))
+                .append($('<li>')
+                        .append('<a style="cursor:pointer" data-filter="z-a">Name Z-A</a>'))
+                .append($('<li>')
+                        .append('<a style="cursor:pointer" data-filter="category">Category</a>'))
+                .append($('<li>')
+                        .append('<a style="cursor:pointer" data-filter="input">Input Types</a>'))
+                .append($('<li>')
+                        .append('<a style="cursor:pointer" data-filter="output">Output Types</a>'));
+            $filterMenu.find('li a').click(function() {
+                self.currentPanelStyle = $(this).data('filter');
+                self.$filterLabel.text(self.currentPanelStyle);
+                self.refreshPanel();
+            });
+
+            this.addButton($('<span class="dropdown">')
+                .append($('<button>')
+                        .addClass('btn btn-xs btn-default dropdown-toggle')
+                        .attr({
+                            type: 'button',
+                            id: 'kb-app-panel-filter',
+                            'data-toggle': 'dropdown',
+                            'aria-haspopup': true,
+                            'aria-expanded': true
+                        })
+                        .append(this.$filterLabel)
+                        .append('<span class="fa fa-filter"></span>'))
+                .append($filterMenu));
 
             // Search button
             this.addButton($('<button>')
@@ -388,10 +429,6 @@ define ([
             this.methClient = new NarrativeMethodStore(this.options.methodStoreURL);
             this.catalog = new Catalog(this.options.catalogURL, { token: Jupyter.narrative.authToken });
 
-            if (this.options.autopopulate === true) {
-                this.refresh();
-            }
-
             return this;
         },
 
@@ -399,7 +436,8 @@ define ([
             try {
                 Jupyter.notebook.kernel.execute(
                     'from biokbase.narrative.jobs.specmanager import SpecManager\n' +
-                    'SpecManager().reload()');
+                    'SpecManager().reload()'
+                );
             }
             catch (e) {
                 alert(e);
@@ -419,6 +457,8 @@ define ([
         },
 
         filterList: function() {
+            return;
+
             var txt = this.$searchInput.val().trim().toLowerCase();
             if (txt.indexOf('type:') === 0) {
                 this.visualFilter(this.objectTypeFilter, txt.substring(5));
@@ -433,8 +473,6 @@ define ([
                 this.visualFilter(this.textFilter, txt);
             }
         },
-
-
 
         initMethodTooltip: function() {
             this.help = {};
@@ -530,7 +568,7 @@ define ([
                                 var fav = favs[k];
                                 var lookup = fav.id;
                                 if(fav.module_name_lc !== 'nms.legacy') {
-                                    lookup = fav.module_name_lc + '/' + lookup
+                                    lookup = fav.module_name_lc + '/' + lookup;
                                 }
                                 if(self.methodSpecs[lookup]) {
                                     self.methodSpecs[lookup]['favorite'] = fav.timestamp; // this is when this was added as a favorite
@@ -552,8 +590,9 @@ define ([
                 });
         },
 
-        parseMethods: function(catSet, methSet) {
-            var self = this;
+
+        refreshPanel: function() {
+            console.log('APP PANEL: refreshPanel start');
             var triggerMethod = function(method) {
                 if(!method['spec']) {
                     self.methClient.get_method_spec({ids:[method.info.id], tag:self.currentTag})
@@ -575,57 +614,132 @@ define ([
                 }
             };
 
-            var generatePanel = function(catSet, fnSet, icon, callback) {
-                var $fnPanel = $('<div>');
-                var fnList = [];
-                var id2Elem = {};
-                for (var fn in fnSet) {
-                    var ignoreFlag = false;
-                    for (var i=0; i<fnSet[fn].info.categories.length; i++) {
-                        if (self.ignoreCategories[fnSet[fn].info.categories[i]]) {
-                            ignoreFlag = true;
-                        }
-                    }
+            var appRender = this.generatePanel(this.currentPanelStyle, '', this.catSet, this.renderedApps, triggerMethod);
+            this.id2Elem['method'] = appRender[1];
+            this.$methodList.empty().append(appRender[0]);
+        },
 
-                    if (ignoreFlag)
-                        delete fnSet[fn];
-                    else
-                        fnList.push(fnSet[fn]);
+        parseMethods: function(catSet, appSet) {
+            var self = this;
+
+            this.catSet = catSet;
+            this.renderedApps = {};
+            for (var app in appSet) {
+                if (!appSet.hasOwnProperty(app)) {
+                    continue;
                 }
-                fnList.sort(function(a, b) {
+                var ignoreFlag = false;
+                for (var i=0; i<appSet[app].info.categories.length; i++) {
+                    if (self.ignoreCategories[appSet[app].info.categories[i]]) {
+                        ignoreFlag = true;
+                    }
+                }
+                if (!ignoreFlag) {
+                    this.renderedApps[app] = appSet[app];
+                }
+            }
+
+            this.refreshPanel();
+        },
+
+        categorizeApps: function(style, appSet) {
+            var allCategories = {};
+            Object.keys(appSet).forEach(function(appId) {
+                var appCats = appSet[appId].info.categories;
+                appCats.forEach(function(cat) {
+                    if (!allCategories[cat]) {
+                        allCategories[cat] = [];
+                    }
+                    allCategories[cat].push(appId);
+                });
+            });
+            return allCategories;
+        },
+
+        /**
+         * Steps:
+         * 1. Make all app rows (buildMethod)
+         * 2. Based on panelStyle, assemble together
+         */
+        generatePanel: function(panelStyle, filterString, catSet, appSet, callback) {
+            var self = this;
+            var $appPanel = $('<div>');
+            var id2Elem = {};
+
+            var buildFlatPanel = function(ascending) {
+                var appList = Object.keys(appSet);
+                appList.sort(function(a, b) {
+                    a = appSet[a];
+                    b = appSet[b];
                     if(a.favorite && b.favorite) {
-                        if(a.favorite<b.favorite) return 1;
-                        if(a.favorite>b.favorite) return -1;
+                        if (ascending) {
+                            return a.info.name.localeCompare(b.info.name);
+                        }
+                        else {
+                            return b.info.name.localeCompare(a.info.name);
+                        }
+                        // if(a.favorite < b.favorite) return 1;
+                        // if(a.favorite > b.favorite) return -1;
                     }
                     if(a.favorite) return -1;
                     if(b.favorite) return 1;
 
-                    return a.info.name.localeCompare(b.info.name);
-                });
-                for (var i=0; i<fnList.length; i++) {
-                    // need the module name IDs to be lower case in the lookup table
-                    var id = fnList[i].info.id;
-                    if(fnList[i].info.module_name) {
-                        var idTokens = fnList[i].info.id.split('/');
-                        id = idTokens[0].toLowerCase() + '/' + idTokens[1];
-
-                        if (self.moduleVersions[fnList[i].info.module_name]) {
-                            fnList[i].info.ver = self.moduleVersions[fnList[i].info.module_name];
-                        }
+                    if (ascending) {
+                        return a.info.name.localeCompare(b.info.name);
                     }
-                    var $fnElem = self.buildMethod(icon, fnList[i], callback);
-                    id2Elem[id] = $fnElem;
-                    $fnPanel.append($fnElem);
+                    else {
+                        return b.info.name.localeCompare(a.info.name);
+                    }
+                });
+                for (var i=0; i<appList.length; i++) {
+                    $appPanel.append(id2Elem[appList[i]]);
                 }
-                return [$fnPanel, id2Elem];
             };
 
-            this.methodSet = {};
-            var methodRender = generatePanel(catSet, methSet, 'M', triggerMethod);
-            var $methodPanel = methodRender[0];
-            this.id2Elem['method'] = methodRender[1];
+            var buildAccordionPanel = function(style) {
+                /* first, get elements in order like this:
+                 * { category1: [ appId1, appId2, appId3, ...]}
+                 */
+                var categorySet = self.categorizeApps(style, appSet);
+                var accordionList = [];
+                Object.keys(categorySet).sort().forEach(function(cat) {
+                    var $accordionBody = $('<div>');
+                    categorySet[cat].sort().forEach(function(appId) {
+                        $accordionBody.append(id2Elem[appId]);
+                    });
+                    accordionList.push({
+                        title: cat,
+                        body: $accordionBody
+                    });
+                });
+                new KBaseAccordion($appPanel, {elements: accordionList});
+            };
 
-            this.$methodList.empty().append($methodPanel); //.append($appPanel);
+            // 1. Go through filterString and keep those that pass the filter (not yet).
+            // appSet = this.filterApps(filterString, appSet)
+
+            // 2. Build all app row thingies and associate them as a list.
+            for (var app in appSet) {
+                id2Elem[app] = this.buildMethod(appSet[app], callback);
+            }
+
+            // 2. Switch over panelStyle and build the view based on that.
+            switch(panelStyle) {
+            case 'a-z':
+                buildFlatPanel(true);
+                break;
+            case 'z-a':
+                buildFlatPanel(false);
+                break;
+            case 'category':
+            case 'input':
+            case 'output':
+                buildAccordionPanel(panelStyle);
+                break;
+            default:
+                break;
+            }
+            return [$appPanel, id2Elem];
         },
 
         /**
@@ -639,81 +753,75 @@ define ([
          * @param {object} method - the method object returned from the kernel.
          * @private
          */
-        buildMethod: function(icon, method, triggerFn) {
+        buildMethod: function(method, triggerFn) {
             var self = this;
             // add icon (logo)
             var $logo = $('<div>');
 
-            if(icon === 'A') {
-                $logo.append( DisplayUtil.getAppIcon({ isApp: true , cursor: 'pointer', setColor:true }) );
+            if (method.info.icon && method.info.icon.url) {
+                var url = this.options.methodStoreURL.slice(0, -3) + method.info.icon.url;
+                $logo.append( DisplayUtil.getAppIcon({ url: url , cursor: 'pointer' , setColor:true, size:'50px'}) )
+                    .css('padding', '3px');
             } else {
-                if(method.info.icon && method.info.icon.url) {
-                    var url = this.options.methodStoreURL.slice(0, -3) + method.info.icon.url;
-                    $logo.append( DisplayUtil.getAppIcon({ url: url , cursor: 'pointer' , setColor:true, size:'50px'}) )
-                        .css('padding', '3px');
-                } else {
-                    $logo.append( DisplayUtil.getAppIcon({ cursor: 'pointer' , setColor:true}) );
-                }
+                $logo.append( DisplayUtil.getAppIcon({ cursor: 'pointer' , setColor:true}) );
             }
             // add behavior
-            $logo.click($.proxy(
-                function(e) {
-                    e.stopPropagation();
-                    triggerFn(method);
-                }, this));
+            $logo.click(function(e) {
+                e.stopPropagation();
+                triggerFn(method);
+            });
 
             var $star = $('<i>');
-            if(icon === 'M') {
-                if(method.favorite) {
-                    $star.addClass('fa fa-star kbcb-star-favorite').append('&nbsp;');
-                } else {
-                    $star.addClass('fa fa-star kbcb-star-nonfavorite').append('&nbsp;');
-                }
-                $star.on('click', function(event) {
-                    event.stopPropagation();
-                    var params = {};
-                    if(method.info.module_name) {
-                        params['module_name'] = method.info.module_name;
-                        params['id'] = method.info.id.split('/')[1];
-                    } else {
-                        params['id'] = method.info.id;
-                    }
-
-                    if(method.favorite) {
-                        // remove favorite
-                        self.catalog.remove_favorite(params)
-                            .then(function() {
-                                $star.removeClass('kbcb-star-favorite').addClass('kbcb-star-nonfavorite');
-                                method.favorite = null; // important to set this if we don't refresh the panel
-                            });
-                    } else {
-                        // add favorite
-                        self.catalog.add_favorite(params)
-                            .then(function() {
-                                $star.removeClass('kbcb-star-nonfavorite').addClass('kbcb-star-favorite');
-                                method.favorite =  new Date().getTime(); // important to set this if we don't refresh the panel
-                            });
-                    }
-                })
-                .tooltip({
-                    title: 'Add or remove from your favorites',
-                    container: 'body',
-                    placement: 'bottom',
-                    delay: {
-                        show: Config.get('tooltip').showDelay,
-                        hide: Config.get('tooltip').hideDelay
-                    }
-                });
+            if(method.favorite) {
+                $star.addClass('fa fa-star kbcb-star-favorite').append('&nbsp;');
+            } else {
+                $star.addClass('fa fa-star kbcb-star-nonfavorite').append('&nbsp;');
             }
+            $star.on('click', function(event) {
+                event.stopPropagation();
+                var params = {};
+                if(method.info.module_name) {
+                    params['module_name'] = method.info.module_name;
+                    params['id'] = method.info.id.split('/')[1];
+                } else {
+                    params['id'] = method.info.id;
+                }
+
+                if(method.favorite) {
+                    // remove favorite
+                    self.catalog.remove_favorite(params)
+                        .then(function() {
+                            $star.removeClass('kbcb-star-favorite').addClass('kbcb-star-nonfavorite');
+                            method.favorite = null; // important to set this if we don't refresh the panel
+                        });
+                } else {
+                    // add favorite
+                    self.catalog.add_favorite(params)
+                        .then(function() {
+                            $star.removeClass('kbcb-star-nonfavorite').addClass('kbcb-star-favorite');
+                            method.favorite =  new Date().getTime(); // important to set this if we don't refresh the panel
+                        });
+                }
+            })
+            .tooltip({
+                title: 'Add or remove from your favorites',
+                container: 'body',
+                placement: 'bottom',
+                delay: {
+                    show: Config.get('tooltip').showDelay,
+                    hide: Config.get('tooltip').hideDelay
+                }
+            });
 
             var $name = $('<div>')
                         .addClass('kb-data-list-name')
                         .css({'white-space':'normal', 'cursor':'pointer'})
-                        .append($('<a>').append(method.info.name)
-                                    .click($.proxy(function(e) {
-                                        e.stopPropagation();
-                                        triggerFn(method);
-                                    }, this)));
+                        .append($('<a>')
+                                .append(method.info.name)
+                                .click(function(e) {
+                                    e.stopPropagation();
+                                    triggerFn(method);
+                                }));
             var versionStr = 'v'+method.info.ver; // note that method versions are meaningless right now; need to update!
             if (method.info.module_name) {
                 versionStr = '<a href="'+this.options.moduleLink+'/'+method.info.module_name+'" target="_blank">' +
@@ -722,14 +830,10 @@ define ([
             var $version = $('<span>').addClass('kb-data-list-type').append($star).append(versionStr); // use type because it is a new line
 
             var moreLink = '';
-            if(icon==='M') {
-                if(method.info.module_name) {
-                    moreLink = this.options.methodHelpLink + method.info.id + '/' + this.currentTag;
-                } else {
-                    moreLink = this.options.methodHelpLink + 'l.m/' + method.info.id;
-                }
-            } else if(icon==='A') {
-                moreLink = this.options.appHelpLink + method.info.id;
+            if(method.info.module_name) {
+                moreLink = this.options.methodHelpLink + method.info.id + '/' + this.currentTag;
+            } else {
+                moreLink = this.options.methodHelpLink + 'l.m/' + method.info.id;
             }
             var $more = $('<div>')
                         .addClass('kb-method-list-more-div');
@@ -1017,7 +1121,6 @@ define ([
             var self = this;
             filterFn = $.proxy(filterFn, this);
             var filterSet = function(set, type) {
-
                 var numHidden = 0;
                 for (var id in set) {
                     // have to make sure module names are in LC, annoying, I know!
@@ -1052,11 +1155,6 @@ define ([
         },
 
         toggleHiddenMethods: function(show) {
-            /* 2 cases
-             * show is truthy -> show()
-             * show is falsy -> hide()
-             */
-
             if (show) {
                 this.$functionPanel.find('.kb-function-dim').show();
             }
@@ -1066,7 +1164,6 @@ define ([
             }
         },
 
-        // Temporary pass-through for Jim's gallery widget
         toggleOverlay: function() {
             this.trigger('toggleSidePanelOverlay.Narrative');
         }

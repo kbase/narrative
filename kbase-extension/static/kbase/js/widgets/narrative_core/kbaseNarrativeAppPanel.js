@@ -592,6 +592,7 @@ define ([
 
 
         refreshPanel: function() {
+            var self = this;
             console.log('APP PANEL: refreshPanel start');
             var triggerMethod = function(method) {
                 if(!method['spec']) {
@@ -614,9 +615,9 @@ define ([
                 }
             };
 
-            var appRender = this.generatePanel(this.currentPanelStyle, '', this.catSet, this.renderedApps, triggerMethod);
-            this.id2Elem['method'] = appRender[1];
-            this.$methodList.empty().append(appRender[0]);
+            var appRender = self.generatePanel(self.currentPanelStyle, '', self.catSet, self.renderedApps, triggerMethod);
+            self.id2Elem['method'] = appRender[1];
+            self.$methodList.empty().append(appRender[0]);
         },
 
         parseMethods: function(catSet, appSet) {
@@ -643,14 +644,43 @@ define ([
         },
 
         categorizeApps: function(style, appSet) {
-            var allCategories = {};
+            var allCategories = { Favorites: [] };
             Object.keys(appSet).forEach(function(appId) {
-                var appCats = appSet[appId].info.categories;
-                appCats.forEach(function(cat) {
+                var categoryList = [];
+                switch(style) {
+                default:
+                case 'category':
+                    categoryList = appSet[appId].info.categories;
+                    break;
+                case 'input':
+                    categoryList = appSet[appId].info.input_types.map(function(input) {
+                        return input.split('.')[1];
+                    });
+                    break;
+                case 'output':
+                    categoryList = appSet[appId].info.output_types.map(function(output) {
+                        return output.split('.')[1];
+                    });
+                    break;
+                }
+                categoryList.forEach(function(cat) {
                     if (!allCategories[cat]) {
                         allCategories[cat] = [];
                     }
                     allCategories[cat].push(appId);
+                });
+                if (appSet[appId].favorite) {
+                    allCategories.Favorites.push(appId);
+                }
+            });
+            Object.keys(allCategories).forEach(function(cat) {
+                allCategories[cat] = allCategories[cat].filter(function(el, index, arr) {
+                    return index === arr.indexOf(el);
+                });
+                allCategories[cat].sort(function(a, b) {
+                    a = appSet[a],
+                    b = appSet[b];
+                    return a.info.name.localeCompare(b.info.name);
                 });
             });
             return allCategories;
@@ -692,7 +722,7 @@ define ([
                     }
                 });
                 for (var i=0; i<appList.length; i++) {
-                    $appPanel.append(id2Elem[appList[i]]);
+                    $appPanel.append(self.buildMethod(appSet[appList[i]], callback));
                 }
             };
 
@@ -704,24 +734,24 @@ define ([
                 var accordionList = [];
                 Object.keys(categorySet).sort().forEach(function(cat) {
                     var $accordionBody = $('<div>');
-                    categorySet[cat].sort().forEach(function(appId) {
-                        $accordionBody.append(id2Elem[appId]);
+                    categorySet[cat].forEach(function(appId) {
+                        $accordionBody.append(self.buildMethod(appSet[appId], callback));
                     });
                     accordionList.push({
-                        title: cat,
+                        title: cat + ' <span class="badge">' + categorySet[cat].length + '</span>',
                         body: $accordionBody
                     });
                 });
-                new KBaseAccordion($appPanel, {elements: accordionList});
+                new KBaseAccordion($appPanel, { elements: accordionList });
             };
 
             // 1. Go through filterString and keep those that pass the filter (not yet).
             // appSet = this.filterApps(filterString, appSet)
 
             // 2. Build all app row thingies and associate them as a list.
-            for (var app in appSet) {
-                id2Elem[app] = this.buildMethod(appSet[app], callback);
-            }
+            // for (var app in appSet) {
+            //     id2Elem[app] = this.buildMethod(appSet[app], callback);
+            // }
 
             // 2. Switch over panelStyle and build the view based on that.
             switch(panelStyle) {

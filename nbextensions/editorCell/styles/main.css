@@ -415,5 +415,5 @@ warning: orange
 
 .parameter-panel .info-panel {
     padding-top: 4px;
-    background-color: #FFF;
+    background: transparent;
 }

@@ -801,7 +801,7 @@ define([
      */
     Narrative.prototype.createAndRunMethod = function (method_id, parameters) {
         //first make a request to get the method spec of a particular method
-        //getFunctionSpecs.Narrative is implemented in kbaseNarrativeMethodPanel
+        //getFunctionSpecs.Narrative is implemented in kbaseNarrativeAppPanel
         var request = {methods: [method_id]};
         var self = this;
         self.narrController.trigger('getFunctionSpecs.Narrative', [request,
@@ -820,7 +820,7 @@ define([
                     console.error(errorMsg);
                     return;
                 }
-                // put the method in the narrative by simulating a method clicked in kbaseNarrativeMethodPanel
+                // put the method in the narrative by simulating a method clicked in kbaseNarrativeAppPanel
                 self.narrController.trigger('methodClicked.Narrative', specs.methods[method_id]);
 
                 // the method initializes an internal method input widget, but rendering and initializing is

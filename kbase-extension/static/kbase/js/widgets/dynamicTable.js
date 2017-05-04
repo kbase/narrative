@@ -74,7 +74,8 @@ define([
         this.currentData = [];
         this.currentSort = {
             id: null,
-            dir: null
+            dir: null,
+            sortState: null
         };
         this.currentPage = 0;
         this.sortCol = null;

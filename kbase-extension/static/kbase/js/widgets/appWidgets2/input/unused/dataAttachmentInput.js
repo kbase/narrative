@@ -256,8 +256,8 @@ define([
 //                });
 //            });
 
-            preButton = div({class: 'input-group-addon', style: {width: '5ex', padding: '0'}}, String(index + 1) + '.');
-            postButton = div({class: 'input-group-addon', style: {padding: '0'}}, button({
+            preButton = div({class: 'input-group-addon kb-input-group-addon', style: {width: '5ex', padding: '0'}}, String(index + 1) + '.');
+            postButton = div({class: 'input-group-addon kb-input-group-addon', style: {padding: '0'}}, button({
                 class: 'btn btn-danger btn-link btn-xs',
                 type: 'button',
                 style: {width: '4ex'},
@@ -356,8 +356,8 @@ define([
 //                });inputBus
 //            });
 
-            preButton = div({class: 'input-group-addon', style: {width: '5ex', padding: '0'}}, '');
-            postButton = div({class: 'input-group-addon', style: {padding: '0'}}, button({
+            preButton = div({class: 'input-group-addon kb-input-group-addon', style: {width: '5ex', padding: '0'}}, '');
+            postButton = div({class: 'input-group-addon kb-input-group-addon', style: {padding: '0'}}, button({
                 class: 'btn btn-primary btn-link btn-xs',
                 type: 'button',
                 style: {width: '4ex'},

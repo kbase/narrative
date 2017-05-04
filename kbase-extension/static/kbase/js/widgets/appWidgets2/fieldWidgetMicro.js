@@ -190,12 +190,12 @@ define([
         }
 
         function feedbackRequired() {
-            places.feedbackIndicator.className = 'kb-app-parameter-required-glyph fa fa-arrow-left';
+            places.feedbackIndicator.className = 'kb-app-parameter-right-error-bar';
             places.feedbackIndicator.setAttribute('title', 'required field');
         }
 
         function feedbackError() {
-            places.feedbackIndicator.className = 'kb-app-parameter-required-glyph fa fa-ban';
+            places.feedbackIndicator.className = 'kb-app-parameter-right-error-bar';
         }
 
         function rawSpec(spec) {
@@ -298,6 +298,13 @@ define([
             } else {
                 advanced = '';
             }
+            var infoTipText;
+            if (spec.ui.description && spec.ui.hint !== spec.ui.description) {
+                infoTipText = spec.ui.description;
+            } else {
+                infoTipText = spec.ui.hint || spec.ui.description;
+            }
+
             var content = div({
                 class: ['form-horizontal', 'xkb-app-parameter-row', 'parameter-panel', advanced].join(' '),
                 dataAdvancedParameter: spec.ui.advanced,
@@ -330,8 +337,21 @@ define([
                         if (config.showLabel === false) {
                             return '';
                         }
-                        return label({ class: 'col-md-3 xcontrol-label kb-app-parameter-name control-label' }, [
-                            spec.ui.label || spec.ui.id
+                        return div({class: 'col-md-3' }, [
+                            label({
+                                    class: 'xcontrol-label kb-app-parameter-name control-label',
+                                    title: infoTipText,
+                                    style: {cursor: 'help'},
+                                    id: events.addEvent({
+                                        type: 'click',
+                                            handler: function () {
+                                                places.infoPanel.querySelector('[data-element="big-tip"]').classList.toggle('hidden');
+                                            }
+                                        })
+                                },
+                                [
+                                    spec.ui.label || spec.ui.id
+                                ])
                         ]);
                     }()),
                     div({ class: ['input-group', config.showLabel == false ? 'col-md-12' : 'col-md-9'].join(' ') }, [
@@ -341,24 +361,28 @@ define([
                         }),
                         div({
                             id: ids.feedback,
-                            class: 'input-group-addon',
+                            class: 'input-group-addon kb-input-group-addon kb-app-field-feedback',
                             dataElement: 'feedback',
                             style: {
-                                width: '30px',
-                                padding: '0'
+                                width: '3px',
+                                height: '100%',
+                                'margin-left': '4px'
                             }
-                        }, [
+                        } , [
                             div({
                                 id: ids.feedbackIndicator,
-                                dataElement: 'indicator'
+                                dataElement: 'indicator',
+                                style: {
+                                    width: '3px'
+                                }
                             })
                         ]),
-                        (function () {
+                        /* (function () {
                             if (config.showInfo === false) {
                                 return '';
                             }
                             return div({
-                                class: 'input-group-addon',
+                                class: 'input-group-addon kb-input-group-addon',
                                 style: {
                                     width: '30px',
                                     padding: '0'
@@ -376,7 +400,7 @@ define([
                                     })
                                 }, span({ class: 'fa fa-info-circle' })))
                             ]);
-                        }())
+                        }()) */
                     ])
                 ]),
                 div({

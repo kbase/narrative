@@ -189,7 +189,7 @@ define([
                     });
 
                     preButton = div({
-                        class: 'input-group-addon',
+                        class: 'input-group-addon kb-input-group-addon',
                         dataElement: 'index-label',
                         style: {
                             width: '5ex',
@@ -199,12 +199,12 @@ define([
                         span({ dataElement: 'index' }, String(control.index + 1)), '.'
                     ]);
                     postButton = div({
-                        class: 'input-group-addon',
+                        class: 'input-group-addon kb-input-group-addon',
                         style: {
                             padding: '0'
                         }
                     }, button({
-                        class: 'btn btn-danger btn-link btn-xs',
+                        class: 'btn btn-link btn-xs',
                         type: 'button',
                         style: { width: '4ex' },
                         dataIndex: String(control.index),
@@ -215,17 +215,17 @@ define([
                             }
                         })
                     }, ui.buildIcon({
-                        name: 'trash'
+                        name: 'close'
                     })));
                     var content = div({
                         dataElement: 'input-row',
                         dataIndex: String(control.index),
                         style: {
-                            width: '100%'
+                            width: '100%',
+                            padding: '2px'
                         }
                     }, [
                         div({ class: 'input-group' }, [
-                            preButton,
                             div({ id: widgetId }),
                             postButton
                         ])
@@ -267,23 +267,22 @@ define([
                 class: '',
                 role: '',
                 style: {
-                    border: '1px solid #ccc',
-                    //backgroundColor: '#eee',
-                    padding: '6px',
-                    textAlign: 'center'
+                    padding: '6px'
                 }
             }, [
                 div({
                     style: {
-                        textAlign: 'center',
-                        display: 'inline-block'
+                        textAlign: 'left'
                     }
                 }, [
                     button({
                         type: 'button',
                         class: 'btn btn-default',
                         style: {
-                            color: '#666'
+                            color: '#666',
+                            width: '100px',
+                            border: '1',
+                            'text-align': 'center'
                         },
                         id: events.addEvents({ events: [doAddNew()] })
                     }, ui.buildIcon({

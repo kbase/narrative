@@ -347,10 +347,10 @@ define([
                     ]),
                     div({ class: 'input-group col-md-9', style: { xwidth: '100%' } }, [
                         div({ dataElement: 'input-control' }),
-                        div({ class: 'input-group-addon', dataElement: 'feedback', style: { width: '30px', padding: '0' } }, [
+                        div({ class: 'input-group-addon kb-input-group-addon kb-app-field-feedback', dataElement: 'feedback', style: { width: '30px', padding: '0' } }, [
                             div({ dataElement: 'indicator' })
-                        ]),
-                        div({ class: 'input-group-addon', style: { width: '30px', padding: '0' } }, [
+                        ]), /*
+                        div({ class: 'input-group-addon kb-input-group-addon', style: { width: '30px', padding: '0' } }, [
                             div({ dataElement: 'info' }, button({
                                     class: 'btn btn-link btn-xs',
                                     type: 'button',
@@ -364,7 +364,7 @@ define([
                                 },
                                 span({ class: 'fa fa-info-circle' })
                             ))
-                        ])
+                        ])*/
                     ])
                 ]),
                 div({ class: 'message-panel hidden', dataElement: 'message-panel' }, [

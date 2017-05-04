@@ -616,7 +616,6 @@ define([
         // so that errors are caught early.
 
 
-
         return {
             id: id,
             spec: spec,

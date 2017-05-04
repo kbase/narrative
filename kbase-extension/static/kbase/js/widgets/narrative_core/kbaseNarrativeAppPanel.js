@@ -24,7 +24,6 @@ define ([
     'kb_service/client/narrativeMethodStore',
     'uuid',
     'narrative_core/catalog/kbaseCatalogBrowser',
-    'kbaseAccordion',
     'kbaseNarrative',
     'catalog-client-api',
     'kbase-client-api',
@@ -44,8 +43,7 @@ define ([
     Jupyter,
     NarrativeMethodStore,
     Uuid,
-    KBaseCatalogBrowser,
-    KBaseAccordion
+    KBaseCatalogBrowser
 ) {
     'use strict';
     return KBWidget({
@@ -103,16 +101,14 @@ define ([
             this.$searchInput = $('<input type="text">')
                                 .addClass('form-control')
                                 .attr('Placeholder', 'Search apps')
-                                .on('input',
-                                    $.proxy(function() {
-                                        this.filterList();
-                                    }, this)
-                                );
-            this.$searchInput.on('keyup', function (e) {
-                if (e.keyCode === 27) {
-                    this.$searchDiv.toggle({effect: 'blind', duration: 'fast'});
-                }
-            }.bind(this));
+                                .on('input', function() {
+                                    self.refreshPanel(this);
+                                })
+                                .on('keyup', function (e) {
+                                    if (e.keyCode === 27) {
+                                        self.$searchDiv.toggle({effect: 'blind', duration: 'fast'});
+                                    }
+                                });
 
             this.$numHiddenSpan = $('<span>0</span>');
             this.$showHideSpan = $('<span>show</span>');
@@ -456,24 +452,6 @@ define ([
             }
         },
 
-        filterList: function() {
-            return;
-
-            var txt = this.$searchInput.val().trim().toLowerCase();
-            if (txt.indexOf('type:') === 0) {
-                this.visualFilter(this.objectTypeFilter, txt.substring(5));
-            }
-            else if (txt.indexOf('in_type:') === 0) {
-                this.visualFilter(this.inputTypeFilter, txt.substring(8));
-            }
-            else if (txt.indexOf('out_type:') === 0) {
-                this.visualFilter(this.outputTypeFilter, txt.substring(9));
-            }
-            else {
-                this.visualFilter(this.textFilter, txt);
-            }
-        },
-
         initMethodTooltip: function() {
             this.help = {};
 
@@ -576,13 +554,14 @@ define ([
                             }
                             self.parseMethods(self.categories, self.methodSpecs);
                             self.showFunctionPanel();
-                            self.filterList(); // keep the filters
+                            // self.filterList(); // keep the filters
                         })
                          // For some reason this is throwing a Bluebird error to include this error handler, but I don't know why right now -mike
                         .catch(function(error) {
+                            console.error(error);
                             self.parseMethods(self.categories, self.methodSpecs);
                             self.showFunctionPanel();
-                            self.filterList(); // keep the filters
+                            // self.filterList(); // keep the filters
                         });
                 })
                 .catch(function(error) {
@@ -591,32 +570,25 @@ define ([
         },
 
 
-        refreshPanel: function() {
-            var self = this;
-            var triggerMethod = function(method) {
-                if(!method['spec']) {
-                    self.methClient.get_method_spec({ids:[method.info.id], tag:self.currentTag})
-                        .then(function(spec) {
-                            // todo: cache this spec into the methods list
-                            spec = spec[0];
-                            if (self.moduleVersions[spec.info.module_name]) {
-                                spec.info.ver = self.moduleVersions[spec.info.module_name];
-                            }
-                            self.trigger('methodClicked.Narrative', [spec, self.currentTag]);
-                        })
-                        .catch(function (err) {
-                            var errorId = new Uuid(4).format();
-                            console.error('Error getting method spec #' + errorId, err, method, self.currentTag);
-                            alert('Error getting method spec, see console for error info #' + errorId);
-                        });
-                } else {
-                    self.trigger('methodClicked.Narrative', [method, self.currentTag]);
-                }
-            };
-
-            var appRender = self.generatePanel(self.currentPanelStyle, '', self.catSet, self.renderedApps, triggerMethod);
-            self.id2Elem['method'] = appRender[1];
-            self.$methodList.empty().append(appRender[0]);
+        triggerMethod: function(method) {
+            if(!method['spec']) {
+                self.methClient.get_method_spec({ids:[method.info.id], tag:self.currentTag})
+                    .then(function(spec) {
+                        // todo: cache this spec into the methods list
+                        spec = spec[0];
+                        if (self.moduleVersions[spec.info.module_name]) {
+                            spec.info.ver = self.moduleVersions[spec.info.module_name];
+                        }
+                        self.trigger('methodClicked.Narrative', [spec, self.currentTag]);
+                    })
+                    .catch(function (err) {
+                        var errorId = new Uuid(4).format();
+                        console.error('Error getting method spec #' + errorId, err, method, self.currentTag);
+                        alert('Error getting method spec, see console for error info #' + errorId);
+                    });
+            } else {
+                self.trigger('methodClicked.Narrative', [method, self.currentTag]);
+            }
         },
 
         parseMethods: function(catSet, appSet) {
@@ -638,7 +610,6 @@ define ([
                     this.renderedApps[app] = appSet[app];
                 }
             }
-
             this.refreshPanel();
         },
 
@@ -701,15 +672,12 @@ define ([
             return allCategories;
         },
 
-        /**
-         * Steps:
-         * 1. Make all app rows (buildMethod)
-         * 2. Based on panelStyle, assemble together
-         */
-        generatePanel: function(panelStyle, filterString, catSet, appSet, callback) {
-            var self = this;
-            var $appPanel = $('<div>');
-            var id2Elem = {};
+        refreshPanel: function() {
+            var panelStyle = this.currentPanelStyle,
+                filterString = this.$searchInput.val(),
+                appSet = this.renderedApps,
+                self = this,
+                $appPanel = $('<div>');
 
             var buildFlatPanel = function(ascending) {
                 var appList = Object.keys(appSet);
@@ -735,14 +703,14 @@ define ([
                     }
                 });
                 for (var i=0; i<appList.length; i++) {
-                    $appPanel.append(self.buildMethod(appSet[appList[i]], callback));
+                    $appPanel.append(self.buildMethod(appSet[appList[i]]));
                 }
             };
 
             var buildSingleAccordion = function(category, appList) {
                 var $accordionBody = $('<div>');
                 appList.forEach(function(appId) {
-                    $accordionBody.append(self.buildMethod(appSet[appId], callback));
+                    $accordionBody.append(self.buildMethod(appSet[appId]));
                 });
                 var categoryTitle = category.replace('_', ' ')
                     .replace(/\w\S*/g, function(txt) {
@@ -807,12 +775,8 @@ define ([
             };
 
             // 1. Go through filterString and keep those that pass the filter (not yet).
-            // appSet = this.filterApps(filterString, appSet)
 
-            // 2. Build all app row thingies and associate them as a list.
-            // for (var app in appSet) {
-            //     id2Elem[app] = this.buildMethod(appSet[app], callback);
-            // }
+            appSet = this.filterApps(filterString, appSet);
 
             // 2. Switch over panelStyle and build the view based on that.
             switch(panelStyle) {
@@ -830,7 +794,46 @@ define ([
             default:
                 break;
             }
-            return [$appPanel, id2Elem];
+            this.$methodList.empty().append($appPanel);
+        },
+
+        /**
+         * Using the filterString, this returns only those apps that pass the filter.
+         * The string is applied to app names (to start)
+         * filterString - just a string. includes prefixes in_type:, out_type:
+         * appSet - keys=appIds, values=appSpecs
+         */
+        filterApps: function(filterString, appSet) {
+            if (!filterString) {
+                return appSet;
+            }
+            var filterType = 'name';
+            filterString = filterString.toLowerCase();
+            var filter = filterString.split(':');
+            if (filter.length === 2) {
+                if (filter[0] === 'in_type' || filter[1] === 'out_type') {
+                    filterType = filter[0];
+                    filterString = filter[1];
+                }
+            }
+            var filteredIds = Object.keys(appSet);
+            filteredIds = Object.keys(appSet).filter(function(id) {
+                switch(filterType) {
+                case 'in_type':
+                    var inputTypes = appSet[id].info.input_types;
+                    return inputTypes.join().toLowerCase().indexOf(filterString) !== -1;
+                case 'out_type':
+                    var outputTypes = appSet[id].info.output_types;
+                    return outputTypes.join().toLowerCase().indexOf(filterString) !== -1;
+                default:
+                    return appSet[id].info.name.toLowerCase().indexOf(filterString) !== -1;
+                }
+            });
+            var filteredSet = {};
+            filteredIds.forEach(function(id) {
+                filteredSet[id] = appSet[id];
+            });
+            return filteredSet;
         },
 
         /**
@@ -844,7 +847,7 @@ define ([
          * @param {object} method - the method object returned from the kernel.
          * @private
          */
-        buildMethod: function(method, triggerFn) {
+        buildMethod: function(method) {
             var self = this;
             // add icon (logo)
             var $logo = $('<div>');
@@ -859,7 +862,7 @@ define ([
             // add behavior
             $logo.click(function(e) {
                 e.stopPropagation();
-                triggerFn(method);
+                self.triggerMethod(method);
             });
 
             var $star = $('<i>');
@@ -911,7 +914,7 @@ define ([
                                 .append(method.info.name)
                                 .click(function(e) {
                                     e.stopPropagation();
-                                    triggerFn(method);
+                                    self.triggerMethod(method);
                                 }));
             var versionStr = 'v'+method.info.ver; // note that method versions are meaningless right now; need to update!
             if (method.info.module_name) {
@@ -1066,193 +1069,6 @@ define ([
             this.$loadingPanel.hide();
             this.$errorPanel.show();
             return;
-        },
-
-        /**
-         * A simple filter based on whether the given pattern string is present in the
-         * method's name.
-         * Returns true if so, false if not.
-         * Doesn't care if its a method or an app, since they both have name fields at their root.
-         */
-        textFilter: function(pattern, method) {
-            var lcName = method.info.name.toLowerCase();
-            var module_name = '';
-            if (method.info.module_name) {
-                module_name = method.info.module_name.toLowerCase();
-            }
-            // match any token in the query, not the full string
-            var tokens = pattern.toLowerCase().split(' ');
-            for(var k=0; k<tokens.length; k++) {
-                if(lcName.indexOf(tokens[k]) < 0 &&
-                   module_name.indexOf(tokens[k]) < 0) {
-                    // token not found, so we return false
-                    return false;
-                }
-            }
-            // returns true only if all tokens were found
-            return true;
-        },
-
-        /**
-         * Returns true if the type is available as in input to the method, false otherwise, assumes
-         * only the first token in 'type' is the type name
-         *
-         * 'style' should be one of three values:
-         * "object" = the type appears in either ins or outs of the method
-         * "input" = the type only appears in input fields
-         * "output" = the type only appears in output fields
-         */
-        typeFilter: function(type, spec, style) {
-            style = style.toLowerCase();
-
-            var tokens = type.split(' ');
-            type = tokens[0];
-            tokens.shift();
-            // first check that other tokens match the method/app name
-            if (!this.textFilter(tokens.join(' '), spec)) {
-                return false;
-            }
-
-            var methodFilter = function(type, spec) {
-                if(!spec.parameters) return false;
-                for (var i=0; i<spec.parameters.length; i++) {
-                    var p = spec.parameters[i];
-
-                    if (p.text_options && p.text_options.valid_ws_types && p.text_options.valid_ws_types.length > 0) {
-                        // outputs have "is_output_name" in text_options
-                        var isOutput = p.text_options.is_output_name; // 0 or 1
-                        var checkThisParam = true;
-                        switch (style) {
-                        case 'input':
-                            if (isOutput) {
-                                checkThisParam = false;
-                            }
-                            break;
-                        case 'output':
-                            if (!isOutput) {
-                                checkThisParam = false;
-                            }
-                            break;
-                        case 'object': // always check
-                        default:
-                            break;
-                        }
-
-                        if (!checkThisParam)
-                            continue;
-                        var validTypes = p.text_options.valid_ws_types;
-                        for (var j=0; j<validTypes.length; j++) {
-                            if (validTypes[j].toLowerCase().indexOf(type) !== -1)
-                                return true;
-                        }
-                    }
-                }
-            };
-            if (spec.steps) {
-                // ignoring apps right now
-                for (var i=0; i<spec.steps.length; i++) {
-                    var methodSpec = this.methodSpecs[spec.steps[i].method_id]; // don't need to make module LC, because this is for
-                                                                                // apps only so specs cannot be in an SDK module
-                    if (!methodSpec || methodSpec === undefined || methodSpec === null) {
-                    }
-                    else if (methodFilter(type, methodSpec))
-                        return true;
-                }
-                return false;
-            } else {
-                // this is a method-- things are easy now because this info is returned by the NMS!
-                // if style==object => check both input and output
-                if(style === 'input' || style === 'object') {
-                    if(spec.info.input_types) {
-                        for(var k=0; k<spec.info.input_types.length; k++) {
-                            if(spec.info.input_types[k].toLowerCase().indexOf(type) >=0) {
-                                return true;
-                            }
-                        }
-                    }
-                } else if (style === 'output' || style === 'object') {
-                    if(spec.info.output_types) {
-                        for(var k=0; k<spec.info.output_types.length; k++) {
-                            if(spec.info.output_types[k].toLowerCase().indexOf(type) >=0) {
-                                return true;
-                            }
-                        }
-                    }
-                }
-                // not found
-                return false;
-            }
-        },
-
-        objectTypeFilter: function(type, spec) {
-            return this.typeFilter(type, spec, 'object');
-        },
-
-        inputTypeFilter: function(type, spec) {
-            return this.typeFilter(type, spec, 'input');
-        },
-
-        outputTypeFilter: function(type, spec) {
-            return this.typeFilter(type, spec, 'output');
-        },
-
-        /**
-         * @method
-         * @public
-         * Expects this.methodSet to be an associative array, like this:
-         * {
-         *     <methodId> : {
-         *         $elem : rendered element as jQuery node,
-         *         rest of method spec
-         *     }
-         * }
-         */
-        visualFilter: function(filterFn, fnInput) {
-            var numHidden = 0;
-            var self = this;
-            filterFn = $.proxy(filterFn, this);
-            var filterSet = function(set, type) {
-                var numHidden = 0;
-                for (var id in set) {
-                    // have to make sure module names are in LC, annoying, I know!
-                    var idTokens = id.split('/');
-                    if(idTokens.length === 2) { // has a module name
-                        id = idTokens[0].toLowerCase() + '/' + idTokens[1];
-                    }
-                    if (!filterFn(fnInput, set[id])) {
-                        self.id2Elem[type][id].hide();
-                        self.id2Elem[type][id].addClass('kb-function-dim');
-                        numHidden++;
-                    }
-                    else {
-                        self.id2Elem[type][id].removeClass('kb-function-dim');
-                        self.id2Elem[type][id].show();
-                    }
-                }
-                return numHidden;
-            };
-
-            numHidden += filterSet(this.methodSpecs, 'method');
-
-            if (numHidden > 0) {
-                this.$numHiddenSpan.text(numHidden);
-                this.$toggleHiddenDiv.show();
-                this.toggleHiddenMethods(this.$showHideSpan.text() !== 'show');
-            }
-            else {
-                this.$toggleHiddenDiv.hide();
-                this.toggleHiddenMethods(true);
-            }
-        },
-
-        toggleHiddenMethods: function(show) {
-            if (show) {
-                this.$functionPanel.find('.kb-function-dim').show();
-            }
-            else {
-                this.$functionPanel.find('.kb-function-dim').hide();
-
-            }
         },
 
         toggleOverlay: function() {

@@ -241,7 +241,7 @@ define([
             }
 
             this.busConnection = this.runtime.bus().connect();
-            this.channel = this.busConnection.channel();
+            this.channel = this.busConnection.channel('default');
 
            
             // TODO: can we introduce a stop method for kbwidget?

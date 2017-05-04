@@ -36,19 +36,17 @@ require(['./narrative_paths'], function (paths) {
         Config,
         ClientApi,
         Login) {
-        "use strict";
+        'use strict';
         console.log('Loading KBase Narrative setup routine.');
 
-        // Config.loadConfig()
-        //     .then(function () {
-        //         return Config.updateConfig();
-        //     })
         Config.updateConfig()
             .then(function (config) {
                 require(['kbaseNarrative'], function (Narrative) {
-                    Login.init($('#signin-button'));
-                    console.log('Starting Jupyter main');
-                    require(['notebook/js/main']);
+                    Login.init($('#signin-button'))
+                    .then(function() {
+                        console.log('Starting Jupyter main');
+                        require(['notebook/js/main']);
+                    });
                 });
             });
     });

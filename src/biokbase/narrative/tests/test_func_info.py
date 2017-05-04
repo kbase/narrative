@@ -1,11 +1,11 @@
 """
 Tests for function info parsing.
 """
-__author__ = 'dang'
-
 import unittest
 from biokbase.narrative.common.service import get_func_info, get_func_desc
 from biokbase.narrative.common import kbtypes
+
+__author__ = 'dang'
 
 
 class FakeFunction(object):

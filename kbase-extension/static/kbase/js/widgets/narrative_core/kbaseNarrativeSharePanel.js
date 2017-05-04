@@ -12,14 +12,16 @@ define ([
     'jquery',
     'narrativeConfig',
     'kbaseAuthenticatedWidget',
+    'api/auth',
     'select2'
 ], function (
-        Promise,
-        KBWidget,
-        bootstrap,
-        $,
-        Config,
-        kbaseAuthenticatedWidget
+    Promise,
+    KBWidget,
+    bootstrap,
+    $,
+    Config,
+    kbaseAuthenticatedWidget,
+    Auth
 ) {
     'use strict';
     return KBWidget({
@@ -28,7 +30,6 @@ define ([
         version: '1.0.0',
         options: {
             ws_url: Config.url('workspace'),
-            user_profile_url: Config.url('user_profile'),
             loadingImage: Config.get('loading_gif'),
             user_page_link: Config.url('profile_page'),
             ws_name_or_id: null,
@@ -37,7 +38,6 @@ define ([
             add_user_input_width: '200px'
         },
         ws: null, // workspace client
-        user_profile: null, //user_profile client
 
         $mainPanel: null,
         $notificationPanel: null,
@@ -58,14 +58,14 @@ define ([
         my_user_id: null,
         loggedInCallback: function (event, auth) {
             this.ws = new Workspace(this.options.ws_url, auth);
-            this.user_profile = new UserProfile(this.options.user_profile_url, auth);
+            this.authClient = Auth.make({url: Config.url('auth')});
             this.my_user_id = auth.user_id;
             this.refresh();
             return this;
         },
         loggedOutCallback: function (event, auth) {
             this.ws = null;
-            this.user_profile = null;
+            this.authClient = null;
             this.my_user_id = null;
             this.refresh();
             return this;
@@ -104,7 +104,7 @@ define ([
                         }
                     }
                 }
-                return Promise.resolve(this.user_profile.lookup_globus_user(usernameList));
+                return this.authClient.getUserNames(this.authClient.getAuthToken(), usernameList);
             }.bind(this))
             .then(function (data) {
                 this.user_data = data;
@@ -211,12 +211,12 @@ define ([
                                 self.updateUserPermissions($input.select2('data'), 'a');
                             }))));
 
-                $addUsersDiv.append($('<div>')
+                $addUsersDiv.append($('<div style="width:100% !important">')
                     .append($input)
                     .append($addAction));
+                self.$mainPanel.append($addUsersDiv);
 
                 self.setupSelect2($input);
-                self.$mainPanel.append($addUsersDiv);
             }
 
             var $othersDiv = $('<div>').css({
@@ -378,46 +378,18 @@ define ([
                     var term = params.term || '';
                     term = term.trim();
                     if (term.length >= 2) {
-                        Promise.resolve(self.user_profile.filter_users({filter: term}))
+                        Promise.resolve(self.authClient.searchUserNames(null, term))
                         .then(function(users) {
                             var results = [];
-                            users.forEach(function(user) {
-                                if (user.username !== self.my_user_id) {
+                            Object.keys(users).forEach(function(username) {
+                                if (username !== self.my_user_id) {
                                     results.push({
-                                        id: user.username,
-                                        text: user.realname,
+                                        id: username,
+                                        text: users[username],
                                         found: true
                                     });
                                 }
                             });
-                            return Promise.try(function() { return results; });
-                        })
-                        .then(function(results) {
-                            if (results.length === 0) {
-                                term = term.toLowerCase();
-                                if (!/[^a-z0-9]/.test(term)) {
-                                    return Promise.resolve(self.user_profile.lookup_globus_user([term]))
-                                    .then(function(data) {
-                                        var res = {
-                                            id: term,
-                                            text: term,
-                                            found: false
-                                        };
-                                        if (data.hasOwnProperty(term)) {
-                                            res.text = data[term].fullName;
-                                        }
-                                        return Promise.try(function() { return results; });
-                                    });
-                                } else {
-                                    return Promise.try(function() {
-                                        return [];
-                                    });
-                                }
-                            } else {
-                                return Promise.try(function() { return results; });
-                            }
-                        })
-                        .then(function (results) {
                             if (results.length === 0) {
                                 results = [{
                                     id: term,
@@ -438,7 +410,8 @@ define ([
                     placeholder: function() {
                         return $(this).data('placeholder');
                     },
-                    multiple: true,
+                    delay: 250,
+                    width: '40%',
                     dataAdapter: CustomData,
                     minimumResultsForSearch: 0,
                     language: {
@@ -513,7 +486,7 @@ define ([
             } else if (realName) {
                 userString = " " + realName + " (" + username + ")";
             } else if (this.user_data[username]) {
-                userString = " " + this.user_data[username].fullName + " (" + username + ")";
+                userString = " " + this.user_data[username] + " (" + username + ")";
             }
 
             var shortName = userString;

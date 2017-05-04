@@ -143,11 +143,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
     def get_userid(self):
         """Return the current user id (if logged in), or None
         """
-        t = biokbase.auth.Token()
-        if (t is not None):
-            return self.kbase_session.get(u'user_id', t.user_id)
-        else:
-            return self.kbase_session.get(u'user_id', None)
+        return util.kbase_env.user
 
     def _clean_id(self, id):
         """Clean any whitespace out of the given id"""
@@ -263,11 +259,13 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
 
         if not path or type == 'directory':
             #if it's the empty string, look up all narratives, treat them as a dir
+            self.log.info(u'Getting narrative list')
             model['type'] = type
             model['format'] = u'json'
             if content:
                 contents = []
                 nar_list = self.list_narratives()
+                self.log.info('Found {} narratives'.format(len(nar_list)))
                 for nar in nar_list:
                     contents.append(self._wsobj_to_model(nar, content=False))
                 model['content'] = contents
@@ -281,7 +279,6 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         prior to writing any data.
         """
         path = path.strip('/')
-        match = self.ws_regex.match(path)
 
         if 'type' not in model:
             raise HTTPError(400, u'No IPython model type provided')

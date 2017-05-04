@@ -298,6 +298,13 @@ define([
             } else {
                 advanced = '';
             }
+            var infoTipText;
+            if (spec.ui.description && spec.ui.hint !== spec.ui.description) {
+                infoTipText = spec.ui.description;
+            } else {
+                infoTipText = spec.ui.hint || spec.ui.description;
+            }
+
             var content = div({
                 class: ['form-horizontal', 'xkb-app-parameter-row', 'parameter-panel', advanced].join(' '),
                 dataAdvancedParameter: spec.ui.advanced,
@@ -331,9 +338,20 @@ define([
                             return '';
                         }
                         return div({class: 'col-md-3' }, [
-                            label({ class: 'xcontrol-label kb-app-parameter-name control-label' }, [
-                                spec.ui.label || spec.ui.id
-                            ])
+                            label({
+                                    class: 'xcontrol-label kb-app-parameter-name control-label',
+                                    title: infoTipText,
+                                    style: {cursor: 'help'},
+                                    id: events.addEvent({
+                                        type: 'click',
+                                            handler: function () {
+                                                places.infoPanel.querySelector('[data-element="big-tip"]').classList.toggle('hidden');
+                                            }
+                                        })
+                                },
+                                [
+                                    spec.ui.label || spec.ui.id
+                                ])
                         ]);
                     }()),
                     div({ class: ['input-group', config.showLabel == false ? 'col-md-12' : 'col-md-9'].join(' ') }, [

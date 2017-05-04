@@ -593,7 +593,6 @@ define ([
 
         refreshPanel: function() {
             var self = this;
-            console.log('APP PANEL: refreshPanel start');
             var triggerMethod = function(method) {
                 if(!method['spec']) {
                     self.methClient.get_method_spec({ids:[method.info.id], tag:self.currentTag})
@@ -644,13 +643,20 @@ define ([
         },
 
         categorizeApps: function(style, appSet) {
-            var allCategories = { Favorites: [] };
+            var allCategories = {
+                favorites: [],
+                uncategorized: []
+            };
             Object.keys(appSet).forEach(function(appId) {
                 var categoryList = [];
                 switch(style) {
                 default:
                 case 'category':
                     categoryList = appSet[appId].info.categories;
+                    var activeIndex = categoryList.indexOf('active');
+                    if (activeIndex !== -1) {
+                        categoryList.splice(activeIndex, 1);
+                    }
                     break;
                 case 'input':
                     categoryList = appSet[appId].info.input_types.map(function(input) {
@@ -663,6 +669,9 @@ define ([
                     });
                     break;
                 }
+                if (categoryList.length === 0) {
+                    allCategories.uncategorized.push(appId);
+                }
                 categoryList.forEach(function(cat) {
                     if (!allCategories[cat]) {
                         allCategories[cat] = [];
@@ -670,7 +679,7 @@ define ([
                     allCategories[cat].push(appId);
                 });
                 if (appSet[appId].favorite) {
-                    allCategories.Favorites.push(appId);
+                    allCategories.favorites.push(appId);
                 }
             });
             Object.keys(allCategories).forEach(function(cat) {
@@ -683,6 +692,12 @@ define ([
                     return a.info.name.localeCompare(b.info.name);
                 });
             });
+            if (allCategories.favorites.length === 0) {
+                delete allCategories['favorites'];
+            }
+            if (allCategories.uncategorized.length === 0) {
+                delete allCategories['uncategorized'];
+            }
             return allCategories;
         },
 
@@ -708,8 +723,6 @@ define ([
                         else {
                             return b.info.name.localeCompare(a.info.name);
                         }
-                        // if(a.favorite < b.favorite) return 1;
-                        // if(a.favorite > b.favorite) return -1;
                     }
                     if(a.favorite) return -1;
                     if(b.favorite) return 1;
@@ -726,6 +739,53 @@ define ([
                 }
             };
 
+            var buildSingleAccordion = function(category, appList) {
+                var $accordionBody = $('<div>');
+                appList.forEach(function(appId) {
+                    $accordionBody.append(self.buildMethod(appSet[appId], callback));
+                });
+                var categoryTitle = category.replace('_', ' ')
+                    .replace(/\w\S*/g, function(txt) {
+                        return txt.charAt(0).toUpperCase() + txt.substr(1);
+                    });
+                return {
+                    title: categoryTitle + ' <span class="label label-info pull-right" style="padding-top:0.4em">' + appList.length + '</span>',
+                    body: $accordionBody
+                };
+            };
+
+            var assembleAccordion = function(accordion) {
+                var $body = accordion.body;
+                var $toggle = $('<span class="glyphicon glyphicon-chevron-right">')
+                    .css({
+                        'padding-right': '3px'
+                    });
+                var $header = $('<div class="row">')
+                    .css({
+                        cursor: 'pointer',
+                        'font-size': '1.1em',
+                        'font-weight': 'bold',
+                        padding: '3px 0',
+                        'border-bottom': '1px solid #eee'
+                    })
+                    .append($toggle)
+                    .append(accordion.title)
+                    .click(function() {
+                        if ($toggle.hasClass('glyphicon-chevron-right')) {
+                            $body.slideDown('fast', function() {
+                                $toggle.removeClass('glyphicon-chevron-right')
+                                       .addClass('glyphicon-chevron-down');
+                            });
+                        } else {
+                            $body.slideUp('fast', function() {
+                                $toggle.removeClass('glyphicon-chevron-down')
+                                       .addClass('glyphicon-chevron-right');
+                            });
+                        }
+                    });
+                return $('<div>').append($header).append($body.hide());
+            };
+
             var buildAccordionPanel = function(style) {
                 /* first, get elements in order like this:
                  * { category1: [ appId1, appId2, appId3, ...]}
@@ -733,16 +793,17 @@ define ([
                 var categorySet = self.categorizeApps(style, appSet);
                 var accordionList = [];
                 Object.keys(categorySet).sort().forEach(function(cat) {
-                    var $accordionBody = $('<div>');
-                    categorySet[cat].forEach(function(appId) {
-                        $accordionBody.append(self.buildMethod(appSet[appId], callback));
-                    });
-                    accordionList.push({
-                        title: cat + ' <span class="badge">' + categorySet[cat].length + '</span>',
-                        body: $accordionBody
-                    });
+                    if (cat === 'favorites') {
+                        return;
+                    }
+                    accordionList.push(buildSingleAccordion(cat, categorySet[cat]));
                 });
-                new KBaseAccordion($appPanel, { elements: accordionList });
+                if (categorySet.favorites) {
+                    accordionList.unshift(buildSingleAccordion('favorites', categorySet.favorites));
+                }
+                accordionList.forEach(function(accordion) {
+                    $appPanel.append(assembleAccordion(accordion));
+                });
             };
 
             // 1. Go through filterString and keep those that pass the filter (not yet).

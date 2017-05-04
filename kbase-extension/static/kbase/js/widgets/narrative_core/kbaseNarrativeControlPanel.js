@@ -5,10 +5,10 @@
  * option to minimize or restore the panel.
  *
  * This is a base class widget for any sidebar widgets that want its behavior.
- * Those sidebars should just include a title option. 
- * Usage: 
-  new kbaseNarrativeControlPanel(* $('#my-element'), { 
- *     title : 'My Controls', 
+ * Those sidebars should just include a title option.
+ * Usage:
+  new kbaseNarrativeControlPanel(* $('#my-element'), {
+ *     title : 'My Controls',
  *     collapsible : true,
  *     buttons: [],
  * });
@@ -16,20 +16,20 @@
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @public
  */
-define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery',
-		'kbaseAuthenticatedWidget'
-	], function(
-		KBWidget,
-		bootstrap,
-		$,
-		kbaseAuthenticatedWidget
-	) {
+define ([
+    'kbwidget',
+    'bootstrap',
+    'jquery',
+    'kbaseAuthenticatedWidget'
+], function(
+    KBWidget,
+    bootstrap,
+    $,
+    kbaseAuthenticatedWidget
+) {
+    'use strict';
     return KBWidget({
-        name: 'kbaseNarrativeControlPanel', 
+        name: 'kbaseNarrativeControlPanel',
         parent : kbaseAuthenticatedWidget,
         version: '0.0.1',
         options: {
@@ -91,7 +91,7 @@ define (
 
             var $titleSpan = $('<span>');
             if(this.options.showTitle) {
-              $titleSpan
+                $titleSpan
                 .append($('<span>')
                   .css({'cursor' : 'pointer'})
                   .click(
@@ -116,7 +116,7 @@ define (
                   )
                   .append($('<span>')
                           .addClass('glyphicon glyphicon-chevron-down kb-narr-panel-toggle'))
-                  .append(this.options.title))
+                  .append(this.options.title));
             }
             $titleSpan.append(this.$buttonPanel);
 
@@ -140,12 +140,12 @@ define (
          * @public
          */
         isMinimized: function() {
-          return this.isMin;
+            return this.isMin;
         },
 
         // allows the height of the entire panel to be dynamically set
         setHeight: function(height) {
-          this.$elem.css({height:height});
+            this.$elem.css({height : height});
         },
 
         /**

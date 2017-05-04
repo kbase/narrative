@@ -975,7 +975,9 @@ p span.notification{
 }
 
 .btn-default {
-    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.2);
+    /** not sure why this is here, but it makes buttons look fuzzy.
+        commenting out until answers come around. - WJR **/
+    /*text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.2);*/
 }
 
 #menus {
@@ -1498,22 +1500,14 @@ div#notebook_panel {
     vertical-align: middle;
 }
 
-.kb-cell-params thead>tr>th, .kb-cell-params  tbody>tr>th, .kb-cell-params  tfoot>tr>th, .kb-cell-params  thead>tr>td, .kb-cell-params  tbody>tr>td, .kb-cell-params  tfoot>tr>td {
+.kb-cell-params thead>tr>th,
+.kb-cell-params tbody>tr>th,
+.kb-cell-params tfoot>tr>th,
+.kb-cell-params thead>tr>td,
+.kb-cell-params tbody>tr>td,
+.kb-cell-params tfoot>tr>td {
     padding: 2px 4px;
 }
-
-.kb-cell-params input {
-   /* margin-left: 5px;
-    margin-top: 5px; */
-}
-/*.kb-cell-params tr:nth-child(odd) {
-    background-color: #eee;
-    border-bottom: 1px solid #ddd;
-}
-.kb-cell-params tr:nth-child(even) {
-    background-color: #fff;
-    border-bottom: 1px solid #ddd;
-}*/
 
 .kb-cell-params tr:hover td, .kb-cell-params tr:hover th {
     background:#eee;
@@ -2264,6 +2258,11 @@ button.kb-data-obj {
     box-shadow: 1px 1px 1px 1px #fff;
     -webkit-box-shadow: 1px 1px 1px 1px #fff;
     moz-box-shadow: 1px 1px 1px 1px #fff;
+}
+
+.kb-function-dim .kb-data-list-obj-row {
+    border-left-color: #eee;
+
 }
 
 .kb-data-list-obj-row:hover {

@@ -4,9 +4,9 @@
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
 define([
-    'kbaseNarrativeMethodPanel'
+    'kbaseNarrativeAppPanel'
 ], function(Widget) {
-    describe('Test the kbaseNarrativeMethodPanel widget', function() {
+    describe('Test the kbaseNarrativeAppPanel widget', function() {
         it('Should do things', function() {
 
         });

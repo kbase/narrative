@@ -571,6 +571,7 @@ define ([
 
 
         triggerMethod: function(method) {
+            var self = this;
             if(!method['spec']) {
                 self.methClient.get_method_spec({ids:[method.info.id], tag:self.currentTag})
                     .then(function(spec) {
@@ -590,7 +591,6 @@ define ([
                 self.trigger('methodClicked.Narrative', [method, self.currentTag]);
             }
         },
-
 
         parseMethods: function(catSet, appSet) {
             var self = this;
@@ -776,6 +776,7 @@ define ([
             };
 
             // 1. Go through filterString and keep those that pass the filter (not yet).
+
             appSet = this.filterApps(filterString, appSet);
 
             // 2. Switch over panelStyle and build the view based on that.

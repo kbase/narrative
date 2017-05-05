@@ -571,6 +571,7 @@ define ([
 
 
         triggerMethod: function(method) {
+            var self = this;
             if(!method['spec']) {
                 self.methClient.get_method_spec({ids:[method.info.id], tag:self.currentTag})
                     .then(function(spec) {

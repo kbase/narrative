@@ -19,7 +19,7 @@ require.config({
         json: 'ext_components/requirejs-plugins/src/json',
         'jquery-nearest': 'ext_components/jquery-nearest/src/jquery.nearest.min',
         plotly: 'ext_components/plotly.js/dist/plotly.min',
-        kb_common: 'ext_components/kbase-common-js/dist/kb/common/',
+        kb_common: 'ext_components/kbase-common-js/dist/kb_common/',
         kb_service: 'ext_components/kbase-service-clients-js/dist/kb_service/',
         kb_sdk_clients: 'ext_components/kbase-sdk-clients-js/dist/amd/kb_sdk_clients/',
         numeral: 'ext_components/numeral/numeral',

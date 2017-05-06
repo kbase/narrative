@@ -416,7 +416,7 @@ define (
 
         render: function() {
             this.initOverlay();
-            this.$methodsWidget.refreshFromService();
+            // this.$methodsWidget.refreshFromService();
         }
 
     })

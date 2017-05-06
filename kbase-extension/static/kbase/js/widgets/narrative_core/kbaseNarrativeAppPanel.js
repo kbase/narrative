@@ -423,8 +423,8 @@ define ([
             }
 
             this.methClient = new NarrativeMethodStore(this.options.methodStoreURL);
-            this.catalog = new Catalog(this.options.catalogURL, { token: Jupyter.narrative.authToken });
-
+            this.catalog = new Catalog(this.options.catalogURL);
+            this.refreshFromService();
             return this;
         },
 
@@ -489,6 +489,9 @@ define ([
             $('body').append(this.help.$helpPanel);
         },
 
+        /**
+         * Returns a promise that resolves when the app is done refreshing itself.
+         */
         refreshFromService: function(versionTag) {
             var self = this;
             this.showLoadingMessage('Loading available Apps...');
@@ -538,7 +541,7 @@ define ([
                 );
             }
 
-            Promise.all(loadingCalls)
+            return Promise.all(loadingCalls)
                 .then(function() {
                     return Promise.resolve(self.catalog.list_favorites(Jupyter.narrative.userId))
                         .then(function(favs) {

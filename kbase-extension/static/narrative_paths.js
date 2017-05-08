@@ -313,6 +313,9 @@ require.config({
         'kbaseReportView': 'kbase/js/widgets/function_output/kbaseReportView',
         'kbaseExpressionVolcanoPlot': 'kbase/js/widgets/function_output/kbaseExpressionVolcanoPlot',
 
+        'kbaseRESKESearchResultDemo': 'kbase/js/widgets/function_output/kbaseRESKESearchResultDemo',
+
+
         /***
          * END CUSTOM OUTPUT WIDGETS
          ***/

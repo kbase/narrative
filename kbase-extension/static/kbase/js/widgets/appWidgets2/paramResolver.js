@@ -130,6 +130,11 @@ define([
                     input: 'structInput',
                     view: 'structView'
                 };
+            case 'custom':
+                return {
+                    input: 'customInput',
+                    view: 'customView'
+                };
             default:
                 console.error('ERROR could not detremine control modules for this spec', spec);
                 throw new Error('Could not determine control modules for this spec');

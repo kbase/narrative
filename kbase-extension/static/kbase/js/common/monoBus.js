@@ -776,10 +776,8 @@ define([
             function channel(channelName) {
 
                 // Without a channel name, we use the main bus.
-                if (channelName === null) {
+                if (!channelName) {
                     channelName = new Uuid(4).format();
-                } else if (channelName === undefined) {
-                    channelName = 'default';
                 }
 
                 var localChannel = makeChannelBus({
@@ -862,7 +860,7 @@ define([
                     listeners: {
                         active: listeners.length
                     }
-                }
+                };
             }
 
             function genName() {

@@ -137,6 +137,27 @@ define([], function () {
         return pythonCode;
     }
 
+    function buildAdvancedViewRunner(cellId, runId, app, params, outputState) {
+        var positionalArgs = [
+                pythonifyValue(app.id),
+                pythonifyValue(params, { autoIndent: true }),
+                pythonifyValue(outputState, { autoIndent: true })
+            ],
+            namedArgs = objectToNamedArgs({
+                tag: app.tag,
+                version: app.version,
+                cell_id: cellId,
+                run_id: runId
+            }),
+            args = positionalArgs.concat(namedArgs),
+            pythonCode = [
+                'from biokbase.narrative.jobs.appmanager import AppManager',
+                'AppManager().run_local_app_advanced(' + buildNiceArgsList(args) + ')'
+            ].join('\n');
+
+        return pythonCode;
+    }
+
     function buildOutputRunner(jqueryWidgetName, widgetTag, cellId, params) {
         var positionalArgs = [
                 pythonifyValue(jqueryWidgetName),
@@ -197,6 +218,7 @@ define([], function () {
         buildAppRunner: buildAppRunner,
         buildEditorRunner: buildEditorRunner,
         buildViewRunner: buildViewRunner,
+        buildAdvancedViewRunner: buildAdvancedViewRunner,
         buildOutputRunner: buildOutputRunner,
         buildCustomWidgetRunner: buildCustomWidgetRunner,
         buildDataWidgetRunner: buildDataWidgetRunner

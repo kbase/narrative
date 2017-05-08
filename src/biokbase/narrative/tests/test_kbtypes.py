@@ -1,18 +1,21 @@
 """
 Unit tests for kbtypes module.
 """
-__author__ = "Dan Gunter <dkgunter@lbl.gov>"
-__date__ = "2013-12-09"
-
 import unittest
 import argparse
 import StringIO
 import os
+import re
 from biokbase.narrative.common import kbtypes
 from traitlets import HasTraits
 
+__author__ = "Dan Gunter <dkgunter@lbl.gov>"
+__date__ = "2013-12-09"
+
+
 class HasVersion(HasTraits):
     ver = kbtypes.VersionNumber('0.0.0')
+
 
 def skipUnlessCreds(fn):
     def wrapper(*a, **k):
@@ -21,6 +24,7 @@ def skipUnlessCreds(fn):
         else:
             raise unittest.SkipTest("Environment doesn't have KBASE_CREDS=<user>:<pass>")
     return wrapper
+
 
 class TestKbaseTypes(unittest.TestCase):
     """Test basic behavior of KBase types.

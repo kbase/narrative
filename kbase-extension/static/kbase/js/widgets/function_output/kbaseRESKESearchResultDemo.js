@@ -3,23 +3,15 @@
 		'kbwidget',
 		'bootstrap',
 		'jquery',
-		'plotly',
 		'narrativeConfig',        
 		'kbaseAuthenticatedWidget',
-		'kbaseTabs',
-		'jquery-dataTables',
-		'jquery-dataTables-bootstrap',
         'kbase-generic-client-api'        
 	], function(
 		KBWidget,
 		bootstrap,
 		$,
-		Plotly,
         Config,
 		kbaseAuthenticatedWidget,
-		kbaseTabs,
-		jquery_dataTables,
-		bootstrap,
         GenericClient
 	) {
     var loadingImage = Config.get('loading_gif');

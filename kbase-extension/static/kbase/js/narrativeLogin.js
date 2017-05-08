@@ -65,6 +65,26 @@ define ([
         window.location.href = '/';
     }
 
+    function showTokenInjectionDialog() {
+        var $inputField = $('<input type="text" class="form-control">');
+        var $body = $('<div>')
+                    .append('You appear to be working on a local development environment of the Narrative Interface, but you don\'t have an auth token. You can paste one in below.<br>')
+                    .append($inputField);
+        var dialog = new BootstrapDialog({
+            'title': 'Insert an authentication token?',
+            'body': $body,
+            'buttons': [$('<a type="button" class="btn btn-default">')
+                        .append('OK')
+                        .click(function () {
+                            dialog.hide();
+                            var newToken = $inputField.val();
+                            authClient.setAuthToken(newToken);
+                            location.reload();
+                        })]
+        });
+        dialog.show();
+    }
+
     function showNotLoggedInDialog() {
         var dialog = new BootstrapDialog({
             'title': 'Not Logged In',
@@ -186,7 +206,13 @@ define ([
                 $(document).trigger('loggedIn.kbase', this.sessionInfo);
             }.bind(this))
             .catch(function(error) {
-                showNotLoggedInDialog();
+                if (document.location.hostname.indexOf('localhost') !== -1 ||
+                    document.location.hostname.indexOf('0.0.0.0') !== -1) {
+                    showTokenInjectionDialog();
+                }
+                else {
+                    showNotLoggedInDialog();
+                }
             });
     }
 

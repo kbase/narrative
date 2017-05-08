@@ -53,7 +53,11 @@ class _KBaseEnv(object):
     def __setattr__(self, name, value):
         ename = "env_" + name
         if ename in _KBaseEnv.__dict__:
-            os.environ[getattr(self.__class__, ename)] = value
+            env_var = getattr(self.__class__, ename)
+            if value is None and env_var in os.environ:
+                del os.environ[env_var]
+            elif value is not None:
+                os.environ[getattr(self.__class__, ename)] = value
 
     # Dict emulation
 

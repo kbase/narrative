@@ -4,10 +4,10 @@
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
 define([
-    'kbaseNarrativeMethodPanel'
+    'kbaseBinnedContigs'
 ], function(Widget) {
-    describe('Test the kbaseNarrativeMethodPanel widget', function() {
-        it('Should do things', function() {
+    describe('Test the KBaseBinnedContigs widget', function() {
+        it('Should instantiate', function() {
 
         });
     });

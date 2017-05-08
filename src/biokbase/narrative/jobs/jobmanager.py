@@ -97,7 +97,6 @@ class JobManager(object):
             user_info = info[1]
             job_meta = info[10]
             try:
-
                 if job_id in job_param_info:
                     job_info = job_param_info[job_id]
 
@@ -107,7 +106,8 @@ class JobManager(object):
                                          app_id=job_info.get('app_id'),
                                          tag=job_meta.get('tag', 'release'),
                                          cell_id=job_meta.get('cell_id', None),
-                                         run_id=job_meta.get('run_id', None))
+                                         run_id=job_meta.get('run_id', None),
+                                         token_id=job_meta.get('token_id', None))
 
                     # Note that when jobs for this narrative are initially loaded,
                     # they are set to not be refreshed. Rather, if a client requests

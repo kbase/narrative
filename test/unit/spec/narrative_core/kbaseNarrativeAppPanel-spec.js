@@ -3,16 +3,10 @@
 /*global jasmine*/
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
-
-define (
-    [
-        'narrativeConfig',
-        'kbaseNarrative'
-    ], function(
-        Config,
-        Narrative
-    ) {
-    describe('Test the kbaseNarrative module', function() {
+define([
+    'kbaseNarrativeAppPanel'
+], function(Widget) {
+    describe('Test the kbaseNarrativeAppPanel widget', function() {
         it('Should do things', function() {
 
         });

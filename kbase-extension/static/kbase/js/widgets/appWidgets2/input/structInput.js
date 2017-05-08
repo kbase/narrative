@@ -223,6 +223,7 @@ define([
                             paramsChannelName: config.paramsChannelName
                         });
 
+
                     // set up listeners for the input
                     fieldWidget.bus.on('sync', function () {
                         var value = viewModel.data[fieldSpec.id];
@@ -298,8 +299,9 @@ define([
         function renderStruct(events) {
             var layout = div({
                 style: {
-                    border: '1px silver solid',
-                    padding: '4px'
+                    'border-left': '5px silver solid',
+                    padding: '2px',
+                    margin: '6px'
                 }
             }, [
                 (function () {

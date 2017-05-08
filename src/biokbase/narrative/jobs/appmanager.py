@@ -1,7 +1,9 @@
 """
 A module for managing apps, specs, requirements, and for starting jobs.
 """
-
+import biokbase.auth as auth
+from biokbase.NarrativeJobService.Client import NarrativeJobService
+from biokbase.narrative.common.url_config import URLS
 from job import Job
 from jobmanager import JobManager
 from specmanager import SpecManager
@@ -52,9 +54,9 @@ class AppManager(object):
     __instance = None
 
     nms = clients.get('narrative_method_store')
-    njs = clients.get('job_service')
     ws_client = clients.get('workspace')
     service_client = clients.get('service')
+    __MAX_TOKEN_NAME_LEN = 30
 
     spec_manager = SpecManager()
     _log = kblogging.get_logger(__name__)
@@ -248,11 +250,6 @@ class AppManager(object):
 
         ws_input_refs = extract_ws_refs(app_id, tag, spec_params, params)
 
-        #(params, ws_input_refs) = self._validate_parameters(app_id,
-        #                                                    tag,
-        #                                                    spec_params,
-        #                                                    params)
-
         ws_id = system_variable('workspace_id')
         if ws_id is None:
             raise ValueError('Unable to retrive current ' +
@@ -266,7 +263,6 @@ class AppManager(object):
         service_method = spec['behavior']['kb_service_method']
         service_name = spec['behavior']['kb_service_name']
         service_ver = spec['behavior'].get('kb_service_version', None)
-        # service_url = spec['behavior']['kb_service_url']
 
         # Let the given version override the spec's version.
         if version is not None:
@@ -281,7 +277,16 @@ class AppManager(object):
         if run_id is not None:
             job_meta['run_id'] = run_id
 
-        # This is the input set for NJSW.run_job. Now we need the worksapce id
+        # We're now almost ready to run the job. Last, we need an agent token.
+        try:
+            token_name = 'KBApp_{}'.format(app_id)
+            token_name = token_name[:self.__MAX_TOKEN_NAME_LEN]
+            agent_token = auth.get_agent_token(auth.get_auth_token(), token_name=token_name)
+        except Exception as e:
+            raise
+
+        job_meta['token_id'] = agent_token['id']
+        # This is the input set for NJSW.run_job. Now we need the workspace id
         # and whatever fits in the metadata.
         job_runner_inputs = {
             'method': function_name,
@@ -305,7 +310,8 @@ class AppManager(object):
         kblogging.log_event(self._log, "run_app", log_info)
 
         try:
-            job_id = self.njs.run_job(job_runner_inputs)
+            njs = NarrativeJobService(url=URLS.job_service, token=agent_token['token'])
+            job_id = njs.run_job(job_runner_inputs)
         except Exception as e:
             log_info.update({'err': str(e)})
             kblogging.log_event(self._log, "run_app_error", log_info)
@@ -318,7 +324,8 @@ class AppManager(object):
                       tag=tag,
                       app_version=service_ver,
                       cell_id=cell_id,
-                      run_id=run_id)
+                      run_id=run_id,
+                      token_id=agent_token['id'])
 
         self._send_comm_message('run_status', {
             'event': 'launched_job',
@@ -507,7 +514,7 @@ class AppManager(object):
             })
             # raise
             print("Error while trying to start your app (run_local_app_advanced)!\n" +
-                  "-------------------------------------\n" + str(e) + 
+                  "-------------------------------------\n" + str(e) +
                   "\n-------------------------------------\n" +  e_trace)
 
     def _run_local_app_advanced_internal(self, app_id, params, widget_state, tag, version,
@@ -577,7 +584,7 @@ class AppManager(object):
         return WidgetManager().show_advanced_viewer_widget(output_widget,
                                                             widget_params,
                                                             widget_state,
-                                                            cell_id=cell_id, tag=tag)                                                  
+                                                            cell_id=cell_id, tag=tag)
 
     def run_dynamic_service(self, app_id, params, tag="release", version=None,
                             cell_id=None, run_id=None, **kwargs):

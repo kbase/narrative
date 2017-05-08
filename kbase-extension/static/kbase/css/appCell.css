@@ -23,6 +23,35 @@
     padding:5px;
     border-radius:5px;
 }
+.kb-app-cell .kb-app-parameter-row:hover {
+    background-color:rgba(0, 0, 0, 0.03);
+}
+
+
+.kb-app-row-close-btn-addon {
+    background: transparent;
+    border: 0;
+
+}
+.kb-app-row-close-btn {
+    height: 100%;
+    margin-left:1px;
+    border-left: 3px solid transparent;
+    border-right: 0;
+    border-top: 0;
+    border-bottom: 0;
+}
+.kb-app-row-close-btn:hover {
+    border-left: 3px solid #337ab7; /* this is the bootstrap link color to match to close icon */
+}
+
+.kb-app-parameter-right-error-bar {
+    height: 100%;
+    background: red;
+}
+
+
+
 /* for some reason, the css :hover doesn't work right on this div, so we use jquery to toggle this class */
 .kb-app-cell .kb-app-parameter-row-hover {
     background:#F9F9F9;
@@ -61,6 +90,21 @@
 .kb-app-cell .kb-app-parameter-input select.form-control {
     margin: 0;
 }
+
+
+.kb-app-field-feedback {
+    background: transparent;
+    border: 0;
+}
+
+.kb-input-group-addon {
+    background: transparent;
+    border: 0;
+    padding: 0px 4px 0px 4px;
+}
+
+
+
 
 /*
 This set of styles is a to accomodate the required/satisfied icon which appears
@@ -395,7 +439,7 @@ warning: orange
 
 .parameter-panel .info-panel {
     padding-top: 4px;
-    background-color: #FFF;
+    background: transparent;
 }
 
 .tt-input,

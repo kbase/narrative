@@ -8,7 +8,7 @@ define (
 		'narrativeConfig',
 		'jqueryui',
 		'kbaseNarrativeDataPanel',
-		'kbaseNarrativeMethodPanel',
+		'kbaseNarrativeAppPanel',
 		'kbaseNarrativeManagePanel',
 		'kbaseNarrativeJobsPanel',
 		'kbaseNarrative'
@@ -19,7 +19,7 @@ define (
 		Config,
 		jqueryui,
 		kbaseNarrativeDataPanel,
-		kbaseNarrativeMethodPanel,
+		kbaseNarrativeAppPanel,
 		kbaseNarrativeManagePanel,
 		kbaseNarrativeJobsPanel,
 		kbaseNarrative
@@ -65,7 +65,7 @@ define (
                     }
                 },
                 {
-                    name : 'kbaseNarrativeMethodPanel',
+                    name : 'kbaseNarrativeAppPanel',
                     params : {
                         autopopulate: false ,
                         collapseCallback: $.proxy(function(isMinimized) {
@@ -76,7 +76,7 @@ define (
                 }
             ]);
             this.$dataWidget = analysisWidgets['kbaseNarrativeDataPanel'];
-            this.$methodsWidget = analysisWidgets['kbaseNarrativeMethodPanel'];
+            this.$methodsWidget = analysisWidgets['kbaseNarrativeAppPanel'];
 
             var $analysisPanel = analysisWidgets['panelSet'];
 
@@ -339,7 +339,7 @@ define (
 
                 var constructor_mapping = {
                     'kbaseNarrativeDataPanel' : kbaseNarrativeDataPanel,
-                    'kbaseNarrativeMethodPanel' : kbaseNarrativeMethodPanel,
+                    'kbaseNarrativeAppPanel' : kbaseNarrativeAppPanel,
                     'kbaseNarrativeManagePanel' : kbaseNarrativeManagePanel,
                     'kbaseNarrativeJobsPanel' : kbaseNarrativeJobsPanel,
                 };

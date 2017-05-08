@@ -4,6 +4,7 @@ require.config({
     // Jupyter does some magic where it merges its /static/ directory
     // with this one (kbase-profile/static)
     paths: {
+        fileSaver: 'ext_components/file-saver/FileSaver.min',
         bluebird: 'ext_components/bluebird/js/browser/bluebird.min',
         'bootstrap-slider': 'ext_components/bootstrap-slider/bootstrap-slider',
         'jquery-dataTables': 'ext_components/datatables/media/js/jquery.dataTables.min',
@@ -110,7 +111,7 @@ require.config({
         'kbaseNarrativeDataList': 'kbase/js/widgets/narrative_core/kbaseNarrativeDataList',
         'kbaseNarrativeSidePanel': 'kbase/js/widgets/narrative_core/kbaseNarrativeSidePanel',
         'kbaseNarrativeJobsPanel': 'kbase/js/widgets/narrative_core/kbaseNarrativeJobsPanel',
-        'kbaseNarrativeMethodPanel': 'kbase/js/widgets/narrative_core/kbaseNarrativeMethodPanel',
+        'kbaseNarrativeAppPanel': 'kbase/js/widgets/narrative_core/kbaseNarrativeAppPanel',
         'kbaseNarrativeManagePanel': 'kbase/js/widgets/narrative_core/kbaseNarrativeManagePanel',
         'kbaseNarrativeDownloadPanel': 'kbase/js/widgets/narrative_core/kbaseNarrativeDownloadPanel',
         'kbaseNarrativeSharePanel': 'kbase/js/widgets/narrative_core/kbaseNarrativeSharePanel',
@@ -180,6 +181,7 @@ require.config({
         /***
          * CUSTOM OUTPUT AND VIEWER WIDGETS
          ***/
+        kbaseBinnedContigs: 'kbase/js/widgets/function_output/kbaseBinnedContigs',
         'kbaseReadsViewer': 'kbase/js/widgets/function_output/kbaseReadsViewer',
         'kbaseReadsSetView': 'kbase/js/widgets/function_output/kbaseReadsSetView',
         'kbaseMatrix2DAbstract': 'kbase/js/widgets/function_output/kbaseMatrix2DAbstract',
@@ -333,6 +335,9 @@ require.config({
     },
 
     shim: {
+        select2: {
+            deps: ['jquery']
+        },
         bloodhound: {
             deps: ['jquery'],
             exports: 'Bloodhound'
@@ -440,13 +445,6 @@ require.config({
                 'd3'
             ]
         },
-        // 'kbaseTabTableTabs' : {
-        //     'deps' : ['jquery',
-        //               'jqueryui',
-        //               'jquery-dataTables',
-        //               'jquery-dataTables-bootstrap',
-        //               'bootstrap']
-        // },
         kbapi: {
             deps: ['jquery', 'bootstrap', 'kbase-client-api']
         },

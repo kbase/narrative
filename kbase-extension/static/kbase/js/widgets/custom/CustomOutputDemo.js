@@ -62,7 +62,6 @@ define([
         }
 
         function render(stuff) {
-            // console.log('config', config);
             places.main.node.innerHTML = div({}, [
                 div({}, [
                     'Param1: ' + config.data.param1
@@ -72,9 +71,9 @@ define([
                     div({},
                         [
                             div({
-                            }, 'Name:' + config.data.param2.name),
+                            }, 'Name: ' + config.data.param2.name),
                             div({
-                            }, 'Disposition:' + config.data.param2.disposition),
+                            }, 'Disposition: ' + config.data.param2.disposition),
                         ]
                     )
                 ]),
@@ -107,8 +106,6 @@ define([
                     if (state && typeof state === 'object') {
                         places.input.node.value = state.input;
                     }
-                    //  config.cellApi.saveState('hi');
-                    // console.log('get state', config.cellApi.getState());
                 })
                 .catch(function (err) {
                     places.error.node.innerHTML = 'Oops: ' + err.message;

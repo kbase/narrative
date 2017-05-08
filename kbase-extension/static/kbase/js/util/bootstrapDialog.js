@@ -21,7 +21,7 @@ define (
      * }
      */
     var BootstrapDialog = function (options) {
-        this.$modal = $('<div class="modal fade" tabindex="-1", role="dialog">');
+        this.$modal = $('<div class="modal fade" role="dialog">');
         this.$dialog = $('<div class="modal-dialog">');
         this.$dialogContent = $('<div class="modal-content">');
         this.$header = $('<div class="modal-header">');

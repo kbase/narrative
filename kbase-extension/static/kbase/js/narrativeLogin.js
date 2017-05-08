@@ -68,8 +68,9 @@ define ([
     function showTokenInjectionDialog() {
         var $inputField = $('<input type="text" class="form-control">');
         var $body = $('<div>')
-                    .append('You appear to be working on a local development environment of the Narrative Interface, but you don\'t have an auth token. You can paste one in below.<br>')
-                    .append($inputField);
+                    .append('<div>You appear to be working on a local development environment of the Narrative Interface, but you don\'t have a valid auth token. You can paste one in below.</div>')
+                    .append('<div><b>You are operating in the ' + Config.get('environment') + ' environment.')
+                    .append($('<div>').append($inputField));
         var dialog = new BootstrapDialog({
             'title': 'Insert an authentication token?',
             'body': $body,

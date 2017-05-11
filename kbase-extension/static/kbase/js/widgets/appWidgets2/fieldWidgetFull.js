@@ -324,24 +324,30 @@ define([
             }, [
                 div({ class: 'form-group kb-app-parameter-input field-panel', dataElement: 'field-panel', style: { marginBottom: '0' } }, [
                     label({
-                        class: 'xcontrol-label kb-app-parameter-name control-label',
-                        title: infoTipText,
-                        style: {cursor: 'help'},
-                        id: events.addEvent({
-                            type: 'click',
-                            handler: function () {
-                                places.infoPanel.querySelector('[data-element="big-tip"]').classList.toggle('hidden');
-                            }
-                        })
-                    }, [
-                        spec.ui.label || spec.ui.id
-                    ])
-                ]),
-                div({ class: 'input-group col-md-10', style: { xwidth: '100%' } }, [
-                    div({ dataElement: 'input-control' }),
-                    div({ class: 'input-group-addon kb-input-group-addon kb-app-field-feedback', dataElement: 'feedback', style: { width: '30px', padding: '0' } }, [
-                        div({ dataElement: 'indicator' })
-                    ])/*,
+                                    class: 'xcontrol-label kb-app-parameter-name control-label',
+                                    title: infoTipText,
+                                    style: {cursor: 'help'},
+                                    id: events.addEvent({
+                                        type: 'click',
+                                            handler: function () {
+                                                places.infoPanel.querySelector('[data-element="big-tip"]').classList.toggle('hidden');
+                                            }
+                                        })
+                                },
+                                [
+                                    spec.ui.label || spec.ui.id
+                                ])
+                    ]),
+                    div({ class: 'input-group col-md-10', style: { xwidth: '100%' } }, [
+                        div({ dataElement: 'input-control' }),
+                        div({ class: 'input-group-addon kb-input-group-addon kb-app-field-feedback',
+                              dataElement: 'feedback',
+                              style: {
+                                  width: '30px',
+                                  padding: '0' }
+                            }, [
+                                div({ dataElement: 'indicator' })
+                            ])/*,
                         div({ class: 'input-group-addon kb-input-group-addon', style: { width: '30px', padding: '0' } }, [
                             div({ dataElement: 'info' }, button({
                                     class: 'btn btn-link btn-xs',
@@ -356,8 +362,8 @@ define([
                                 span({ class: 'fa fa-info-circle' })
                             ))
                         ]*/
-                ])
-            ],
+                    ]),
+                // ]),
                 div({ class: 'message-panel hidden', dataElement: 'message-panel' }, [
                     div({ class: 'col-md-3' }),
                     div({ class: 'col-md-9' }, div({

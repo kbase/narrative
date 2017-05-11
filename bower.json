@@ -15,9 +15,9 @@
     "handlebars": "^4.0.5",
     "jquery-nearest": "~1.3.1",
     "jquery.tipsy": "*",
-    "kbase-common-js": "1.9.0",
-    "kbase-service-clients-js": "3.0.0",
-    "kbase-sdk-clients-js": "0.5.0",
+    "kbase-common-js": "2.5.0",
+    "kbase-service-clients-js": "3.3.4",
+    "kbase-sdk-clients-js": "0.5.1",
     "numeral": "~1.5.0",
     "plotly.js": "git://github.com/plotly/plotly.js/#1.5.1",
     "pure-uuid": "1.4.2",
@@ -29,10 +29,10 @@
     "select2": "4.0.3",
     "select2-bootstrap-theme": "^0.1.0-beta.9",
     "underscore": "1.8.3",
-    "file-saver": "^1.3.3"
+    "file-saver": "^1.3.3",
+    "SparkMD5": "spark-md5#^3.0.0"
   },
   "resolutions": {
-    "kbase-common-js": "^2.5.0",
-    "SparkMD5": "^3.0.0"
+    "kbase-common-js": "^2.5.0"
   }
 }

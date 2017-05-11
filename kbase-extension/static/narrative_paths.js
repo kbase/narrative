@@ -12,7 +12,7 @@ require.config({
         bloodhound: 'ext_components/corejs-typeahead/dist/bloodhound.min',
         // css: 'ext_components/require-css/css',
         d3: 'ext_components/d3/d3.min',
-        md5: 'ext_components/SparkMD5/spark-md5',
+        md5: 'ext_components/spark-md5/spark-md5',
         domReady: 'ext_components/requirejs/domReady',
         dropzone: 'ext_components/dropzone/dist/dropzone-amd-module',
         handlebars: 'ext_components/handlebars/handlebars',

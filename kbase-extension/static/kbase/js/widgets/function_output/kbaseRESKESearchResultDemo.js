@@ -25,7 +25,7 @@
             query: null
         },
 
-        searchEngineURL: "http://dev01.kbase.lbl.gov:29999/",
+        searchEngineURL: "https://ci.kbase.us/services/relationengine/",
         // searchEngineURL: "http://192.168.99.100:29999/",
         srvVersion:"",
         genericClient: null,

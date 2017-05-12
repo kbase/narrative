@@ -225,7 +225,7 @@ define ([
                 }, this)
             );
 
-            this.currentPanelStyle = 'a-z';
+            this.currentPanelStyle = 'category';
             this.$filterLabel = $('<span>').append(this.currentPanelStyle);
             var $filterMenu = $('<ul>')
                 .addClass('dropdown-menu dropdown-menu-right')
@@ -234,15 +234,15 @@ define ([
                 })
                 .attr('aria-labeledby', 'kb-app-panel-filter')
                 .append($('<li>')
-                        .append('<a style="cursor:pointer" data-filter="a-z">Name A-Z</a>'))
-                .append($('<li>')
-                        .append('<a style="cursor:pointer" data-filter="z-a">Name Z-A</a>'))
-                .append($('<li>')
                         .append('<a style="cursor:pointer" data-filter="category">Category</a>'))
                 .append($('<li>')
                         .append('<a style="cursor:pointer" data-filter="input">Input Types</a>'))
                 .append($('<li>')
-                        .append('<a style="cursor:pointer" data-filter="output">Output Types</a>'));
+                        .append('<a style="cursor:pointer" data-filter="output">Output Types</a>'))
+                .append($('<li>')
+                        .append('<a style="cursor:pointer" data-filter="a-z">Name A-Z</a>'))
+                .append($('<li>')
+                        .append('<a style="cursor:pointer" data-filter="z-a">Name Z-A</a>'));
             $filterMenu.find('li a').click(function() {
                 self.currentPanelStyle = $(this).data('filter');
                 self.$filterLabel.text(self.currentPanelStyle);
@@ -771,7 +771,7 @@ define ([
                     accordionList.push(buildSingleAccordion(cat, categorySet[cat]));
                 });
                 if (categorySet.favorites) {
-                    accordionList.unshift(buildSingleAccordion('favorites', categorySet.favorites));
+                    accordionList.unshift(buildSingleAccordion('my favorites', categorySet.favorites));
                 }
                 accordionList.forEach(function(accordion) {
                     $appPanel.append(assembleAccordion(accordion));

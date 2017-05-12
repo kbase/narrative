@@ -225,7 +225,7 @@ define ([
                 }, this)
             );
 
-            this.currentPanelStyle = 'a-z';
+            this.currentPanelStyle = 'category';
             this.$filterLabel = $('<span>').append(this.currentPanelStyle);
             var $filterMenu = $('<ul>')
                 .addClass('dropdown-menu dropdown-menu-right')
@@ -234,15 +234,15 @@ define ([
                 })
                 .attr('aria-labeledby', 'kb-app-panel-filter')
                 .append($('<li>')
-                        .append('<a style="cursor:pointer" data-filter="a-z">Name A-Z</a>'))
-                .append($('<li>')
-                        .append('<a style="cursor:pointer" data-filter="z-a">Name Z-A</a>'))
-                .append($('<li>')
                         .append('<a style="cursor:pointer" data-filter="category">Category</a>'))
                 .append($('<li>')
                         .append('<a style="cursor:pointer" data-filter="input">Input Types</a>'))
                 .append($('<li>')
-                        .append('<a style="cursor:pointer" data-filter="output">Output Types</a>'));
+                        .append('<a style="cursor:pointer" data-filter="output">Output Types</a>'))
+                .append($('<li>')
+                        .append('<a style="cursor:pointer" data-filter="a-z">Name A-Z</a>'))
+                .append($('<li>')
+                        .append('<a style="cursor:pointer" data-filter="z-a">Name Z-A</a>'));
             $filterMenu.find('li a').click(function() {
                 self.currentPanelStyle = $(this).data('filter');
                 self.$filterLabel.text(self.currentPanelStyle);
@@ -423,8 +423,8 @@ define ([
             }
 
             this.methClient = new NarrativeMethodStore(this.options.methodStoreURL);
-            this.catalog = new Catalog(this.options.catalogURL, { token: Jupyter.narrative.authToken });
-
+            this.catalog = new Catalog(this.options.catalogURL);
+            this.refreshFromService();
             return this;
         },
 
@@ -489,6 +489,9 @@ define ([
             $('body').append(this.help.$helpPanel);
         },
 
+        /**
+         * Returns a promise that resolves when the app is done refreshing itself.
+         */
         refreshFromService: function(versionTag) {
             var self = this;
             this.showLoadingMessage('Loading available Apps...');
@@ -538,7 +541,7 @@ define ([
                 );
             }
 
-            Promise.all(loadingCalls)
+            return Promise.all(loadingCalls)
                 .then(function() {
                     return Promise.resolve(self.catalog.list_favorites(Jupyter.narrative.userId))
                         .then(function(favs) {
@@ -768,7 +771,7 @@ define ([
                     accordionList.push(buildSingleAccordion(cat, categorySet[cat]));
                 });
                 if (categorySet.favorites) {
-                    accordionList.unshift(buildSingleAccordion('favorites', categorySet.favorites));
+                    accordionList.unshift(buildSingleAccordion('my favorites', categorySet.favorites));
                 }
                 accordionList.forEach(function(accordion) {
                     $appPanel.append(assembleAccordion(accordion));

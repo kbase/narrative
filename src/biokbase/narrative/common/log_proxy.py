@@ -478,7 +478,8 @@ class DBRecord(object):
         # not needed at all
         for k in ('msg', 'threadName', 'thread', 'pathname', 'msecs',
                   'levelno', 'asctime', 'relativeCreated', 'filename',
-                  'processName', 'process', 'module', 'lineno', 'funcName'):
+                  'processName', 'process', 'module', 'lineno', 'funcName',
+                  'auth_token'):
             if k in rec:
                 del rec[k]
         # rename

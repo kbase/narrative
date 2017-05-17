@@ -79,7 +79,7 @@ define([
     function loadingDiv(caption) {
         var $caption = $('<span>');
         var $loader = $('<div>').addClass('kb-data-loading')
-            .append('<img src="' + Config.get('loading_gif') + '">')
+            .append('<img src="' + Config.get('loading_gif') + '" style="margin:auto">')
             .append('<br>')
             .append($caption);
         if (caption)

@@ -29,7 +29,8 @@ define([
             ws: null,
             name: null,
             loadingImage: Config.get('loading_gif'),
-            withExport: false
+            withExport: false,
+            pFamsPerPage: 10
         },
         token: null,
 
@@ -146,7 +147,7 @@ define([
             var $homologDiv = $('<div>').append(Display.loadingDiv().div);
             self.dataPromise.then(function(data) {
                 data = data[0];
-                var genomeList = Object.keys(data.genomes);
+                var genomeList = Object.keys(data.genomes).sort();
                 var numGenomes = genomeList.length;
                 var numberTable = [];
                 var header = [];
@@ -178,7 +179,69 @@ define([
         },
 
         showProteinFamilies: function() {
-            var $pfDiv = $('<div>').append(Display.loadingDiv().div);
+            var $pfDiv = $('<div>');
+            new DynamicTable($pfDiv, {
+                headers: [{
+                    id: 'function',
+                    text: 'Function',
+                    isSortable: true
+                }, {
+                    id: 'id',
+                    text: 'ID',
+                    isSortable: true
+                }, {
+                    id: 'pcgCount',
+                    text: 'Protein Coding Gene Count',
+                    isSortable: false
+                }, {
+                    id: 'gCount',
+                    text: 'Genome Count',
+                    isSortable: false
+                }],
+                rowsPerPage: this.options.pFamsPerPage,
+                searchPlaceholder: 'Search Families',
+                style: {'margin-top': '5px'},
+                enableDownload: false,
+                downloadFileName: this.options.name + '.csv',
+                updateFunction: function(pageNum, query, sortColId, sortColDir) {
+                    var sortBy = [];
+                    if (sortColId && sortColDir !== 0) {
+                        sortBy.push([ sortColId, sortColDir === 1 ? 1 : 0 ]);
+                    }
+                    return Promise.resolve(this.serviceClient.sync_call('PanGenomeAPI.search_orthologs_from_pangenome', [{
+                        pangenome_ref: this.objRef,
+                        query: query,
+                        sort_by: sortBy,
+                        start: pageNum * this.options.pFamsPerPage,
+                        limit: this.options.pFamsPerPage
+                    }]))
+                    .then(function(results) {
+                        results = results[0];
+                        var rows = [];
+                        results.orthologs.forEach(function(info) {
+                            var orthoGenomes = {};
+                            info.orthologs.forEach(function(ortholog) {
+                                orthoGenomes[ortholog[2]] = 1;
+                            });
+                            rows.push([
+                                info.function || '',
+                                info.id,
+                                info.orthologs.length,
+                                Object.keys(orthoGenomes).length
+                            ]);
+                        });
+                        return {
+                            rows: rows,
+                            query: results.query,
+                            start: results.start,
+                            total: results.num_found
+                        };
+                    })
+                    .catch(function(error) {
+                        alert(error);
+                    });
+                }.bind(this)
+            });
 
             return $pfDiv;
         },

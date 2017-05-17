@@ -63,17 +63,17 @@ class KBaseLoginHandler(LoginHandler):
             except Exception as e:
                 app_log.error("Unable to get user information from authentication token!")
 
-            if app_log.isEnabledFor(logging.DEBUG):
-                app_log.debug("kbase cookie = {}".format(cookie_val))
-                app_log.debug("KBaseLoginHandler.get: user_id={uid} token={tok}"
-                              .format(uid=auth_info.get('user', 'none'),
-                                      tok=token))
+            # re-enable if token logging info is needed.
+            # if app_log.isEnabledFor(logging.DEBUG):
+            #     app_log.debug("kbase cookie = {}".format(cookie_val))
+            #     app_log.debug("KBaseLoginHandler.get: user_id={uid} token={tok}"
+            #                   .format(uid=auth_info.get('user', 'none'),
+            #                           tok=token))
             init_session_env(auth_info, client_ip)
             self.current_user = kbase_env.user
             log_event(g_log, 'session_start', {'user': kbase_env.user, 'user_agent': ua})
 
         app_log.info("KBaseLoginHandler.get(): user={}".format(kbase_env.user))
-        app_log.info("KBaseLoginHandler.get(): token={}".format(kbase_env.auth_token))
 
         if self.current_user:
             self.redirect(self.get_argument('next', default=self.base_url))

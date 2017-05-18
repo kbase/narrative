@@ -20,14 +20,15 @@
  *       clickFunction: function(text) { do stuff with text }
  *   }],
  *   updateFunction: function(pageNum, query, sortColId, sortColDir) {
- *       return {
- *           rows: [['row1,col1', 'row1,col2'],
- *                  ['row2,col1', 'row2,col2']],
- *           start: 0,
- *           total: 1000,
- *           query: ''
- *       }
- *   }
+ *       return Promise.try(function() {
+ *           return {
+ *               rows: [['row1,col1', 'row1,col2'],
+ *                      ['row2,col1', 'row2,col2']],
+ *               start: 0,
+ *               total: 1000,
+ *               query: ''
+ *           }
+ *       });
  *   rowsPerPage: 10,
  *   searchPlaceholder: 'Search for data',
  *   class: 'css classes to apply to outer container',
@@ -37,6 +38,16 @@
  *   },
  *   enableDownload: true/false,
  *   downloadFileName: string,
+ */
+/**
+ * Some further notes:
+ * The updateFunction should return a Promise that ultimately returns the data.
+ * That data should be an object with the following attributes:
+ *   rows - an array of row data (an array of arrays) with each 'row' being an array of data
+ *          in the correct column order.
+ *   start - the index of the first row returned
+ *   total - the total number of rows available in the table, NOT just in the current data slice.
+ *   query - the query used to fetch that data.
  */
 define([
     'jquery',
@@ -55,9 +66,7 @@ define([
     StringUtil,
     FileSaver  //enables the saveAs function.
 ) {
-
     var DynamicTable = function (elem, options) {
-        console.log(FileSaver);
         this.options = {
             class: '',
             style: {},

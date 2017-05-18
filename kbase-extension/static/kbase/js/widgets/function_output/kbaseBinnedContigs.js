@@ -10,6 +10,7 @@ define([
     'plotly',
     'narrativeConfig',
     'util/display',
+    'util/kbaseApiUtil',
     'kbase-generic-client-api',
     'kbase-client-api'
 ], function(
@@ -24,6 +25,7 @@ define([
     Plotly,
     Config,
     Display,
+    ApiUtil,
     GenericClient
 ) {
     'use strict';
@@ -40,7 +42,7 @@ define([
         init: function(options) {
             this._super(options);
 
-            if (!this.checkObject()) {
+            if (!ApiUtil.checkObjectRef(this.options.objRef)) {
                 this.$elem.append(Display.createError('Bad object.', 'Binned Contigs Object Unavailable.'));
                 this.isError = true;
             }
@@ -68,29 +70,6 @@ define([
                 }]
             });
             return this;
-        },
-
-        /**
-         * Checks that a given object reference is valid.
-         * I.e., ensures that the string has the right format, so we can fail very early
-         * if not.
-         */
-        checkObject: function() {
-            // return true if this.options.objRef = a reference or reference path
-            // return false otherwise
-            var ref = this.options.objRef;
-            if (!ref) {
-                return false;
-            }
-            var refRegex = /^\d+\/\d+(\/\d+)?$/;
-            var refList = ref.split(';');
-            var validRef = true;
-            refList.forEach(function(r) {
-                if (!refRegex.exec(r)) {
-                    validRef = false;
-                }
-            });
-            return validRef;
         },
 
         showBinSummary: function () {

@@ -208,42 +208,167 @@ define([
                     if (sortColId && sortColDir !== 0) {
                         sortBy.push([ sortColId, sortColDir === 1 ? 1 : 0 ]);
                     }
-                    return Promise.resolve(this.serviceClient.sync_call('PanGenomeAPI.search_orthologs_from_pangenome', [{
-                        pangenome_ref: this.objRef,
-                        query: query,
-                        sort_by: sortBy,
-                        start: pageNum * this.options.pFamsPerPage,
-                        limit: this.options.pFamsPerPage
-                    }]))
-                    .then(function(results) {
-                        results = results[0];
-                        var rows = [];
-                        results.orthologs.forEach(function(info) {
-                            var orthoGenomes = {};
-                            info.orthologs.forEach(function(ortholog) {
-                                orthoGenomes[ortholog[2]] = 1;
-                            });
-                            rows.push([
-                                info.function || '',
-                                info.id,
-                                info.orthologs.length,
-                                Object.keys(orthoGenomes).length
-                            ]);
-                        });
-                        return {
-                            rows: rows,
-                            query: results.query,
-                            start: results.start,
-                            total: results.num_found
-                        };
-                    })
-                    .catch(function(error) {
-                        alert(error);
-                    });
-                }.bind(this)
+                    return this.searchAndCacheOrthologs(query, sortBy, pageNum * this.options.pFamsPerPage, this.options.pFamsPerPage);
+                }.bind(this),
+                decoration: [{
+                    col: 1,
+                    type: 'link',
+                    clickFunction: function(id) {
+                        this.addFamilyTab(this.dataCache[id]);
+                    }.bind(this)
+                }]
             });
-
             return $pfDiv;
+        },
+
+        addFamilyTab: function(fam) {
+            var self = this;
+            if (self.tabs.hasTab(fam.id)) {
+                self.tabs.showTab(fam.id);
+            } else {
+                self.tabs.addTab({
+                    tab: fam.id,
+                    deleteCallback: function(name) {
+                        self.tabs.removeTab(name);
+                        self.tabs.showTab(self.tabs.activeTab());
+                    },
+                    showContentCallback: function() {
+                        return self.createProteinFamilyTab(fam);
+                    }
+                });
+                self.tabs.showTab(fam.id);
+            }
+        },
+
+        createProteinFamilyTab: function(fam) {
+            var self = this;
+            var $div = $('<div>').append(Display.loadingDiv().div);
+
+            var colMap = {
+                genome: 0,
+                feature: 1,
+                function: 2,
+                len: 3
+            };
+            var getFamData = function(start, query, sortColId, sortDir, genomeRefMap) {
+                var rows = [];
+                query = query.toLocaleLowerCase();
+                return Promise.try(function() {
+                    fam.orthologs.forEach(function(ortho) {
+                        // first filter so we only get the rows we want.
+                        var row = [
+                            genomeRefMap[ortho[2]],
+                            ortho[0],
+                            'some function',
+                            ortho[1]
+                        ];
+                        var pass = false;
+                        row.forEach(function(elem) {
+                            if (String(elem).toLocaleLowerCase().indexOf(query) !== -1) {
+                                pass = true;
+                            }
+                        });
+                        if (pass) {
+                            rows.push(row);
+                        }
+                    });
+                    // now we sort and return.
+                    if (sortColId && sortDir) {
+                        rows = rows.sort(function(a, b) {
+                            var aVal = a[colMap[sortColId]];
+                            var bVal = b[colMap[sortColId]];
+                            if ($.isNumeric(aVal) && $.isNumeric(bVal)) {
+                                if (sortDir > 0) {
+                                    return aVal > bVal ? 1 : -1;
+                                }
+                                return bVal > aVal ? 1 : -1;
+                            }
+                            else {
+                                if (sortDir > 0) {
+                                    return String(aVal).localeCompare(bVal);
+                                }
+                                return String(bVal).localeCompare(aVal);
+                            }
+                        });
+                    }
+                    return {
+                        rows: rows.slice(start, start + self.options.pFamsPerPage + 1),
+                        query: query,
+                        start: start,
+                        total: fam.orthologs.length
+                    };
+                });
+            };
+
+            self.dataPromise.then(function(results) {
+                results = results[0];
+                $div.empty();
+                new DynamicTable($div, {
+                    headers: [{
+                        id: 'genome',
+                        text: 'Genome Name',
+                        isSortable: true
+                    }, {
+                        id: 'feature',
+                        text: 'Feature Id',
+                        isSortable: true
+                    }, {
+                        id: 'function',
+                        text: 'Function',
+                        isSortable: true
+                    }, {
+                        id: 'len',
+                        text: 'Longest Protein Sortable Length',
+                        isSortable: true
+                    }],
+                    updateFunction: function(pageNum, query, sortColId, sortColDir) {
+                        if (query === null || query === undefined) {
+                            query = '';
+                        }
+                        return getFamData(pageNum * self.options.pFamsPerPage, query, sortColId, sortColDir, results.genome_ref_name_map);
+                    },
+                    rowsPerPage: self.options.pFamsPerPage
+                });
+            });
+            return $div;
+        },
+
+        searchAndCacheOrthologs: function(query, sortBy, start, limit) {
+            var self = this;
+            return Promise.resolve(this.serviceClient.sync_call('PanGenomeAPI.search_orthologs_from_pangenome', [{
+                pangenome_ref: this.objRef,
+                query: query,
+                sort_by: sortBy,
+                start: start,
+                limit: limit
+            }]))
+            .then(function(results) {
+                results = results[0];
+                var rows = [];
+                self.dataCache = {};
+                results.orthologs.forEach(function(info) {
+                    self.dataCache[info.id] = info;
+                    var orthoGenomes = {};
+                    info.orthologs.forEach(function(ortholog) {
+                        orthoGenomes[ortholog[2]] = 1;
+                    });
+                    rows.push([
+                        info.function || '',
+                        info.id,
+                        info.orthologs.length,
+                        Object.keys(orthoGenomes).length
+                    ]);
+                });
+                return {
+                    rows: rows,
+                    query: results.query,
+                    start: results.start,
+                    total: results.num_found
+                };
+            })
+            .catch(function(error) {
+                alert(error);
+            });
         },
 
         showVennDiagram: function() {

@@ -298,7 +298,7 @@ define([
                     fam.orthologs.forEach(function(ortho) {
                         // first filter so we only get the rows we want.
                         var row = [
-                            genomeRefMap[ortho[2]],
+                            '<span kb-gid="' + ortho[2] + '">' + genomeRefMap[ortho[2]] + '</span>',
                             ortho[0],
                             geneFunctionMap[ortho[2]][ortho[0]],
                             // ortho[1]
@@ -374,7 +374,22 @@ define([
                             return getFamData(pageNum * self.options.pFamsPerPage, query, sortColId, sortColDir, results.genome_ref_name_map, names);
                         },
                         rowsPerPage: self.options.pFamsPerPage,
-                        style: {'margin-top': '5px'}
+                        style: {'margin-top': '5px'},
+                        rowFunction: function($row) {
+                            var genomeRef = $row.find('td:eq(0) span').attr('kb-gid');
+                            $row.find('td:eq(0)').html($('<a>')
+                                .attr('href', '/#dataview/' + genomeRef)
+                                .attr('target', '_blank')
+                                .append($row.find('td:eq(0) span')));
+
+                            var featureRef = $row.find('td:eq(1)').text();
+                            $row.find('td:eq(1)').html($('<a>')
+                                .attr('href', '/#dataview/' + genomeRef + '?sub=Feature&subid=' + featureRef)
+                                .attr('target', '_blank')
+                                .append(featureRef));
+
+                            return $row;
+                        },
                     });
                 });
             });

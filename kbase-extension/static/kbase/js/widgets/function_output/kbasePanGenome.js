@@ -67,11 +67,13 @@ define([
                     tab: 'Protein families',
                     canDelete: false,
                     showContentCallback: this.showProteinFamilies.bind(this)
-                }, {
-                    tab: 'Venn diagram',
-                    canDelete: false,
-                    showContentCallback: this.showVennDiagram.bind(this)
-                }]
+                },
+                // {
+                //     tab: 'Venn diagram',
+                //     canDelete: false,
+                //     showContentCallback: this.showVennDiagram.bind(this)
+                // }
+                ]
             });
             return this;
         },
@@ -250,7 +252,46 @@ define([
                 function: 2,
                 len: 3
             };
-            var getFamData = function(start, query, sortColId, sortDir, genomeRefMap) {
+
+            var getFamilyFunctionNames = function(orthologs) {
+                // prep calls
+                var genomeToGenes = {};
+                orthologs.forEach(function(ortho) {
+                    var genome = ortho[2];
+                    var feature = ortho[0];
+                    if (!genomeToGenes[genome]) {
+                        genomeToGenes[genome] = [];
+                    }
+                    genomeToGenes[genome].push(feature);
+                });
+                var promises = [];
+                Object.keys(genomeToGenes).forEach(function(genome) {
+                    promises.push(Promise.resolve(self.serviceClient.sync_call(
+                        'GenomeAnnotationAPI.get_feature_functions',
+                        [{
+                            ref: genome,
+                            feature_id_list: genomeToGenes[genome]
+                        }]
+                    ))
+                    .then(function(names) {
+                        return Promise.try(function() {
+                            return {
+                                genome: genome,
+                                features: names[0]
+                            };
+                        });
+                    }));
+                });
+                return Promise.all(promises).then(function(nameSets) {
+                    var res = {};
+                    nameSets.forEach(function(nameSet) {
+                        res[nameSet.genome] = nameSet.features;
+                    });
+                    return res;
+                });
+            };
+
+            var getFamData = function(start, query, sortColId, sortDir, genomeRefMap, geneFunctionMap) {
                 var rows = [];
                 query = query.toLocaleLowerCase();
                 return Promise.try(function() {
@@ -259,8 +300,8 @@ define([
                         var row = [
                             genomeRefMap[ortho[2]],
                             ortho[0],
-                            'some function',
-                            ortho[1]
+                            geneFunctionMap[ortho[2]][ortho[0]],
+                            // ortho[1]
                         ];
                         var pass = false;
                         row.forEach(function(elem) {
@@ -302,32 +343,39 @@ define([
 
             self.dataPromise.then(function(results) {
                 results = results[0];
-                $div.empty();
-                new DynamicTable($div, {
-                    headers: [{
-                        id: 'genome',
-                        text: 'Genome Name',
-                        isSortable: true
-                    }, {
-                        id: 'feature',
-                        text: 'Feature Id',
-                        isSortable: true
-                    }, {
-                        id: 'function',
-                        text: 'Function',
-                        isSortable: true
-                    }, {
-                        id: 'len',
-                        text: 'Longest Protein Sortable Length',
-                        isSortable: true
-                    }],
-                    updateFunction: function(pageNum, query, sortColId, sortColDir) {
-                        if (query === null || query === undefined) {
-                            query = '';
-                        }
-                        return getFamData(pageNum * self.options.pFamsPerPage, query, sortColId, sortColDir, results.genome_ref_name_map);
-                    },
-                    rowsPerPage: self.options.pFamsPerPage
+                getFamilyFunctionNames(fam.orthologs)
+                .then(function(names) {
+                    console.log(names);
+                    $div.empty();
+                    new DynamicTable($div, {
+                        headers: [{
+                            id: 'genome',
+                            text: 'Genome Name',
+                            isSortable: true
+                        }, {
+                            id: 'feature',
+                            text: 'Feature Id',
+                            isSortable: true
+                        }, {
+                            id: 'function',
+                            text: 'Function',
+                            isSortable: true
+                        },
+                        // {
+                        //     id: 'len',
+                        //     text: 'Longest Protein Sortable Length',
+                        //     isSortable: true
+                        // }
+                        ],
+                        updateFunction: function(pageNum, query, sortColId, sortColDir) {
+                            if (query === null || query === undefined) {
+                                query = '';
+                            }
+                            return getFamData(pageNum * self.options.pFamsPerPage, query, sortColId, sortColDir, results.genome_ref_name_map, names);
+                        },
+                        rowsPerPage: self.options.pFamsPerPage,
+                        style: {'margin-top': '5px'}
+                    });
                 });
             });
             return $div;

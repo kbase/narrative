@@ -1,7 +1,7 @@
 {
     "config": "ci",
     "name": "KBase Narrative",
-    "version": "3.2.5",
+    "version": "3.3.0",
     "dev_mode": true,
     "auth_cookie": "kbase_session",
     "git_commit_hash": "60e2219",

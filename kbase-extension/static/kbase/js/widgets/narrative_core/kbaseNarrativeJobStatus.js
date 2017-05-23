@@ -47,6 +47,128 @@ define([
     NewObjectsTemplate
 ) {
     'use strict';
+
+    function VirtualSlice(config) {
+        var maxSize = config.max  || 100;
+        var startPos;
+        var theSlice;
+        var trimEnd = config.trimEnd || 'auto';
+        
+        if (config.value) {
+            theSlice = config.value;
+            if (theSlice.length > maxSize) {
+                theSlice = theSlice.slice(0, maxSize);
+            }
+            startPos = config.start;
+        } else {
+            theSlice = [];
+            startPos = 0;
+        }
+
+        /*
+            Adds array items to the slice, starting at virtual position start.
+        */
+        function trim(thisTrimEnd) {
+            var chop = theSlice.length - maxSize;
+            if (chop <= 0) {
+                return;
+            }
+            if (trimEnd !== 'auto') {
+                thisTrimEnd = trimEnd;
+            }
+            if (thisTrimEnd === 'end') {
+                theSlice = theSlice.slice(0, theSlice.length - chop);
+            } else {
+                theSlice = theSlice.slice(chop);
+                startPos = startPos + chop;
+            }
+        }
+        function grow(log) {
+            // handle cases in which the new entires are discontiguous.
+            if (log.start + log.lines.length < startPos) {
+                replace(log);
+                return;
+            }
+            if (log.start > startPos + theSlice.length) {
+                replace(log);
+                return;
+            }
+            var growLength, growLines, growAtBegin = false, growAtEnd = false;
+            if (log.first < startPos) {
+                growLength = log.first + log.lines.length - startPos;
+                growLines = log.lines.slice(0, log.lines.length - growLength);
+                theSlice = growLines.concat(theSlice);
+                startPos = startPos - growLines.length;
+                growAtBegin = true;
+            }
+            if (log.first + log.lines.length > startPos + theSlice.length) {
+                growLength = startPos + theSlice.length - log.first;
+                growLines = log.lines.slice(growLength);
+                theSlice = theSlice.concat(growLines);
+                growAtEnd = true;
+            }
+            if (growAtBegin) {
+                if (growAtEnd) {
+                    trim();
+                } else {
+                    trim('end');
+                }
+            } else {
+                if (growAtEnd) {
+                    trim('begin');
+                } 
+            }
+        }
+
+        function replace(log) {
+            startPos = log.first;
+            theSlice = log.lines;
+            trim();
+        }
+        function update(log) {
+            if (log.first === null || log.first === undefined || !log.lines) {
+                return;
+            }
+
+            if (theSlice.length === 0) {
+                replace(log);
+                return;
+            }
+
+            grow(log);
+        }
+
+        function get() {
+            return {
+                start: startPos,
+                end: startPos + theSlice.length,
+                items: theSlice
+            };
+        }
+
+        function getStart() {
+            return startPos;
+        }
+        function getEnd() {
+            return startPos + theSlice.length;
+        }
+        function getLength() {
+            return theSlice.length;
+        }
+        function trimAt(newEnd) {
+            trimEnd = newEnd;
+        }
+
+        return {
+            trimAt: trimAt,
+            update: update,
+            get: get,
+            getStart: getStart,
+            getEnd: getEnd,
+            getLength: getLength
+        };
+    }
+
     return new KBWidget({
         name: 'kbaseNarrativeJobStatus',
         parent: KBaseAuthenticatedWidget,
@@ -56,13 +178,14 @@ define([
             jobInfo: null,
             statusText: null
         },
-        pendingLogRequest: false, // got a log request pending? (used for keeping log instances separate)
-        pendingLogStart: 0, // pending top line number we're expecting.
-        maxLineRequest: 100, // max number of lines to request
-        maxLogLine: 0, // max log lines available (as of last push)
-        currentLogStart: 0, // current first line in viewer
-        currentLogLength: 0, // current number of lines
+        // CONFIG (const)
         maxLogLines: 200, // num lines before we start trimming
+        maxLineRequest: 100, // max number of lines to request
+        autoplayInterval: 2000, // when on autoplay, how long to pause before the next log request
+        // VARIABLES
+        pendingLogStart: 0, // pending top line number we're expecting.
+        pendingLogRequest: false, // got a log request pending? (used for keeping log instances separate)
+        maxLogLine: 0, // max log lines available (as of last push)
 
         init: function (options) {
             this._super(options);
@@ -73,7 +196,15 @@ define([
             // name, id, version for appInfo
             this.appInfo = this.options.info;
 
+            this.virtualLog = VirtualSlice({
+                max: this.maxLogLines
+            });
+
             var cellNode = this.$elem.closest('.cell').get(0);
+
+            // Flag to support initialization logic for job status 
+            // messages.
+            this.firstTime = true;
 
             function findCell() {
                 var cells = Jupyter.notebook.get_cell_elements().toArray().filter(function (element) {
@@ -92,7 +223,7 @@ define([
             this.cell = findCell();
             this.cell.element.trigger('hideCodeArea.cell');
             if (!this.jobId) {
-                this.showError("No Job id provided!");
+                this.showError('No Job id provided!');
                 return this;
             }
             this.runtime = Runtime.make();
@@ -110,7 +241,19 @@ define([
             }
 
             this.busConnection = this.runtime.bus().connect();
-            this.channel = this.busConnection.channel();
+            this.channel = this.busConnection.channel('default');
+
+           
+            // TODO: can we introduce a stop method for kbwidget?
+            // We need to disconnect these listeners when this widget is removed.
+
+            // render up the panel's view layer.
+            this.initializeView();
+            this.updateView();
+
+            //The job has not started yet. When it has started running, the log will be displayed in this area.
+
+            this.showLogMessage('Loading the log viewer...');
 
             Semaphore.make().when('comm', 'ready', Config.get('comm_wait_timeout'))
                 .then(function () {
@@ -134,7 +277,7 @@ define([
                             type: 'job-logs'
                         },
                         handle: function (message) {
-                            this.handleJobLogs(message);
+                            this.handleJobLog(message);
                         }.bind(this)
                     });
 
@@ -150,7 +293,7 @@ define([
                         }.bind(this)
                     });
 
-                    this.channel.emit('request-job-update', {
+                    this.channel.emit('request-job-status', {
                         jobId: this.jobId
                     });
                 }.bind(this))
@@ -158,12 +301,6 @@ define([
                     console.error('Jobs Comm channel not available', err);
                 });
 
-            // TODO: can we introduce a stop method for kbwidget?
-            // We need to disconnect these listeners when this widget is removed.
-
-            // render up the panel's view layer.
-            this.initializeView();
-            this.updateView();
 
             return this;
         },
@@ -184,19 +321,19 @@ define([
                 statusPanel: statusPanel,
                 body: body
             };
-            this.logsView = this.makeLogsPanel();
+            this.logView = this.makeLogPanel();
             this.reportView = this.makeReportPanel();
             this.newDataView = this.makeNewDataView();
             var $tabDiv = $('<div>');
             this.tabController = new KBaseTabs($tabDiv, {
                 tabs: [{
-                        tab: 'Status',
-                        content: body,
-                    },
-                    {
-                        tab: 'Logs',
-                        content: this.logsView
-                    }
+                    tab: 'Status',
+                    content: body,
+                },
+                {
+                    tab: 'Log',
+                    content: this.logView
+                }
                     // {
                     //     tab: 'Report',
                     //     content: this.reportView
@@ -421,29 +558,67 @@ define([
         },
 
         handleJobStatus: function (message) {
-            // stop listeneing for job state if completed...
-            if (message.jobState.job_state === 'completed') {
-                this.channel.emit('request-job-completion', {
-                    jobId: this.jobId
-                });
+            /* Main states:
+               1. initial - first job state message received. For any queued issue message, 
+                  in progress start auto fetch loop, otherwise show the end of the log
+               2. autoplay - if the play button has been pressed or the user has not interacted
+                  with the buttons (this.userEngaged), play the log when in-progress.
+               3. userEngaged - if at end of log, same as autoplay?
+            */
+            switch (message.jobState.job_state) {
+            case 'canceled':
+            case 'suspend':
+            case 'completed':
+                this.showLogMessage('');
+                if (this.requestedUpdates) {
+                    this.requestedUpdates = false;
+                    this.channel.emit('request-job-completion', {
+                        jobId: this.jobId
+                    });
+                }
+                this.logView.find('#kblog-play').prop('disabled', true);
+                if (this.firstTime) {
+                    this.logView.find('#kblog-bottom').trigger('click');
+                }
                 // TODO: we need to remove all of the job listeners at this point, but 
                 // the busConnection also has the job log listeners, which may be used at any time.
                 // What we need to do is move these into separate widgets which can be stopped and started
                 // as the tabs are activated, and control their own bus connections.
                 // this.busConnection.stop();
+                break;
+            case 'queued':
+                this.showLogMessage('The job is queued. When it has started running, the log will be displayed below.');
+                if (this.firstTime) {
+                    this.logView.find('#kblog-play').trigger('click');
+                }
+                this.requestedUpdates = true;
+                this.channel.emit('request-job-status', {
+                    jobId: this.jobId
+                });
+                break;
+            case 'in-progress':
+                // If the user has not used the navigation yet, should go into "play" mode;
+                this.requestedUpdates = true;
+                this.channel.emit('request-job-status', {
+                    jobId: this.jobId
+                });
+                if (this.firstTime) {
+                    this.logView.find('#kblog-play').trigger('click');
+                }
             }
+            this.firstTime = false;
             this.state = message.jobState;
             this.outputWidgetInfo = message.outputWidgetInfo;
             this.setCellState();
             this.updateView();
         },
 
-        handleJobLogs: function (message) {
+        handleJobLog: function (message) {
             if (this.pendingLogRequest &&
                 (this.pendingLogLine === message.logs.first ||
                     this.pendingLogLine === 'latest' &&
                     message.logs.latest)) {
-                this.updateLogs(message.logs);
+                this.updateLog(message.logs);
             }
         },
 
@@ -502,57 +677,63 @@ define([
             return this.updateJobStatusPanel();
         },
 
-        makeLogsPanel: function () {
-            var logsPanelTmpl = Handlebars.compile(LogPanelTemplate);
+        makeLogPanel: function () {
+            var logPanelTmpl = Handlebars.compile(LogPanelTemplate);
             this.logLineTmpl = Handlebars.compile(LogLineTemplate);
-            var $logsPanel = $(logsPanelTmpl());
-            $logsPanel.find('#kblog-play').click(function () {
+            var $logPanel = $(logPanelTmpl());
+            $logPanel.find('#kblog-play').click(function () {
                 this.sendLogRequest('latest');
-                $logsPanel.find('button[id!="kblog-stop"]').prop('disabled', true);
-                $logsPanel.find('#kblog-stop').prop('disabled', false);
+                $logPanel.find('button[id!="kblog-stop"]').prop('disabled', true);
+                $logPanel.find('#kblog-stop').prop('disabled', false);
                 this.doLogLoop = true;
+                this.userEngaged = false;
             }.bind(this));
-            $logsPanel.find('#kblog-stop').click(function () {
+            $logPanel.find('#kblog-stop').click(function () {
                 if (this.looper)
                     clearTimeout(this.looper);
-                $logsPanel.find('button[id!="kblog-stop"]').prop('disabled', false);
-                $logsPanel.find('#kblog-stop').prop('disabled', true);
-                this.logsView.find('#kblog-spinner').hide();
+                $logPanel.find('button[id!="kblog-stop"]').prop('disabled', false);
+                $logPanel.find('#kblog-stop').prop('disabled', true);
+                this.logView.find('#kblog-spinner').hide();
                 this.doLogLoop = false;
+                this.userEngaged = true;
             }.bind(this));
-            $logsPanel.find('#kblog-top').click(function () {
+            $logPanel.find('#kblog-top').click(function () {
                 // go to beginning.
+                this.userEngaged = true;
                 this.sendLogRequest(0);
             }.bind(this));
-            $logsPanel.find('#kblog-back').click(function () {
+            $logPanel.find('#kblog-back').click(function () {
                 // go back a chunk.
-                this.sendLogRequest(Math.max(this.currentLogStart - this.maxLineRequest, 0));
+                this.sendLogRequest(Math.max(this.virtualLog.getStart() - this.maxLineRequest, 0));
+                this.userEngaged = true;
             }.bind(this));
-            $logsPanel.find('#kblog-forward').click(function () {
+            $logPanel.find('#kblog-forward').click(function () {
                 // go forward a chunk.
-                this.sendLogRequest(this.currentLogStart + this.currentLogLength);
+                this.sendLogRequest(this.virtualLog.getEnd());
+                this.userEngaged = true;
             }.bind(this));
-            $logsPanel.find('#kblog-bottom').click(function () {
+            $logPanel.find('#kblog-bottom').click(function () {
                 // go to end.
                 this.sendLogRequest('latest');
+                this.userEngaged = true;
             }.bind(this));
-            $logsPanel.find('#kblog-spinner').hide();
-            // $logsPanel.find('#kblog-panel').scroll(function(e) {
+            $logPanel.find('#kblog-spinner').hide();
+            // $logPanel.find('#kblog-panel').scroll(function(e) {
             //     console.log('scrolling happened!');
             // });
-            $logsPanel.find("#kblog-header")
+            $logPanel.find('#kblog-header')
                 .children()
                 .tooltip()
                 .on('click', function (e) { 
                     $(e.currentTarget).tooltip('hide'); });
-            return $logsPanel;
+            return $logPanel;
         },
 
         sendLogRequest: function (firstLine) {
-            this.logsView.find('#kblog-spinner').show();
+            this.logView.find('#kblog-spinner').show();
             this.pendingLogRequest = true;
             this.pendingLogLine = firstLine;
-            if (typeof firstLine === 'string' && firstLine === 'latest') {
+            if (firstLine === 'latest') {
                 this.runtime.bus().emit('request-latest-job-log', {
                     jobId: this.jobId,
                     options: {
@@ -571,37 +752,60 @@ define([
         },
 
         showLogMessage: function (message) {
-            this.logsView.find("#kblog-msg").html(message);
+            this.logView.find('#kblog-msg').html(message);
         },
 
-        updateLogs: function (logs) {
+        logButton: function(name) {
+            return this.logView.find('#kblog-' + name);
+        },
+
+        updateLog: function (log) {
             this.pendingLogRequest = false;
-            if (logs.max_lines > this.maxLogLines) {
-                this.showLogMessage("Showing lines " + (logs.first + 1) + " to " + (logs.first + logs.lines.length) + " of " + logs.max_lines);
-            }
-            if (logs.first === null || logs.first === undefined || !logs.lines) {
+            this.logView.find('#kblog-spinner').hide();
+
+            if (log.lines.length === 0) {
                 return;
             }
-            this.logsView.find('#kblog-panel').empty();
-            var firstLine = logs.first;
-            for (var i = 0; i < logs.lines.length; i++) {
-                // logs.lines[i].line = logs.lines[i].line.trim().replace('\n', '');
-                this.logsView.find('#kblog-panel').append($(this.logLineTmpl({ lineNum: (firstLine + i + 1), log: logs.lines[i] })));
+
+            if (log.latest) {
+                this.virtualLog.trimAt('begin');
             }
-            this.maxLogLine = logs.maxLines;
-            this.currentLogStart = logs.first;
-            this.currentLogLength = logs.lines.length;
-            this.logsView.find('#kblog-spinner').hide();
+            this.virtualLog.update(log);
+            this.virtualLog.trimAt('auto');
+
+            var vl = this.virtualLog.get();
+            this.showLogMessage('Showing lines ' + (vl.start + 1) + ' to ' + (vl.start + vl.items.length) + ' of ' + log.max_lines);
+
+            // render them;
+            this.logView.find('#kblog-panel').empty();
+            vl.items.forEach(function (line, index) {
+                this.logView.find('#kblog-panel').append($(this.logLineTmpl({
+                    lineNum: (vl.start + index + 1),
+                    log: line
+                })));
+            }.bind(this));
+
+            // Twiddle the buttons based on where we are in the log view.
+            if (vl.start === 0) {
+                this.logButton('top').prop('disabled', true);
+                this.logButton('back').prop('disabled', true);
+            } else {
+                this.logButton('top').prop('disabled', false);
+                this.logButton('back').prop('disabled', false);
+            }
+
             if (this.doLogLoop) {
                 // don't bother looping if we're complete.
-                if (this.state.job_state === 'suspend' || this.state.job_state === 'completed') {
-                    this.logsView.find('#kblog-stop').click();
+                if (this.state.job_state === 'suspend' || this.state.job_state === 'completed' || this.state.job_state === 'canceled') {
+                    this.logView.find('#kblog-stop').click();
+                    this.logView.find('#kblog-play').prop('disabled', true);
+                    this.logView.find('#kblog-stop').prop('disabled', true);
                 } else {
-                    this.looper = setTimeout(function () { this.sendLogRequest('latest', true); }.bind(this), 2000);
+                    this.looper = window.setTimeout(function () { 
+                        this.sendLogRequest('latest', true); 
+                    }.bind(this), this.autoplayInterval);
                 }
             }
-            // var lastPos = this.logsView.find('#kblog-panel').children().last().
-            // this.logsView.find('#kblog-panel').children().last().scrollTop=0;
         }
     });
 });

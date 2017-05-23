@@ -44,9 +44,32 @@ define([
         return Promise.resolve(nms.get_method_spec({ids: idList, tag: tag}));
     }
 
+    /**
+     * Checks that a given object reference is valid. Returns true if the reference
+     * is of the form xx/yy or xx/yy/zz or xx/yy/zz;aa/bb/cc, or combinations.
+     * Basically, if it's a reference or reference path, this returns true.
+     */
+    function checkObjectRef (ref) {
+        // return true if this.options.objRef = a reference or reference path
+        // return false otherwise
+        if (!ref) {
+            return false;
+        }
+        var refRegex = /^\S+\/\S+(\/\d+)?$/;
+        var refList = ref.split(';');
+        var validRef = true;
+        refList.forEach(function(r) {
+            if (!refRegex.exec(r)) {
+                validRef = false;
+            }
+        });
+        return validRef;
+    }
+
     return {
         getAppSpec: getAppSpec,
         getAppSpecs: getAppSpecs,
-        getAppVersionTag: getAppVersionTag
+        getAppVersionTag: getAppVersionTag,
+        checkObjectRef: checkObjectRef
     };
 });

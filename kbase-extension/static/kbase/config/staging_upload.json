@@ -1,12 +1,8 @@
 {
     "dropdown_order": [
         {
-            "id": "se_reads",
-            "name": "Single-End Reads"
-        },
-        {
-            "id": "pe_reads",
-            "name": "Paired-End Reads"
+            "id": "fastq_reads",
+            "name": "FASTQ Reads"
         },
         {
             "id": "sra_reads",
@@ -15,43 +11,86 @@
         {
             "id": "genbank_genome",
             "name": "Genbank Genome"
+        },
+        {
+            "id": "gff_genome",
+            "name": "GFF Genome"
+        },
+        {
+            "id": "expression_matrix",
+            "name": "Expression Matrix"
+        },
+        {
+            "id": "media",
+            "name": "Media"
+        },
+        {
+            "id": "assembly",
+            "name": "Assembly"
         }
     ],
     "app_info": {
-        "se_reads": {
-            "app_id": "kb_uploadmethods/load_single_end_reads_from_file",
-            "app_input_param": "fwd_staging_file_name",
+        "fastq_reads": {
+            "app_id": "kb_uploadmethods/import_fastq_sra_as_reads_from_staging",
+            "app_input_param": "fastq_fwd_staging_file_name",
             "app_input_param_type": "string",
-            "app_static_params": {},
+            "app_static_params": {"import_type": "FASTQ/FASTA"},
             "app_output_param": "name",
             "app_output_suffix": "_reads",
             "multiselect": false
         },
-        "pe_reads": {
-            "app_id": "kb_uploadmethods/load_paired_end_reads_from_file",
-            "app_input_param": "fwd_staging_file_name",
-            "app_input_param_type": "string",
-            "app_static_params": {},
-            "app_output_param": "name",
-            "app_output_suffix": "_reads",
-            "multiselect": true
-        },
         "sra_reads": {
-            "app_id": "genome_transform/sra_reads_to_library",
-            "app_input_param": "file_path",
+            "app_id": "kb_uploadmethods/import_fastq_sra_as_reads_from_staging",
+            "app_input_param": "sra_staging_file_name",
             "app_input_param_type": "string",
-            "app_static_params": {},
+            "app_static_params": {"import_type": "SRA"},
             "app_output_param": "name",
             "app_output_suffix": "_reads",
             "multiselect": false
         },
         "genbank_genome": {
-            "app_id": "genome_transform/genbank_to_genome_GFU",
-            "app_input_param": "file_path",
+            "app_id": "kb_uploadmethods/import_genbank_as_genome_from_staging",
+            "app_input_param": "staging_file_subdir_path",
             "app_input_param_type": "string",
             "app_static_params": {},
             "app_output_param": "genome_name",
             "app_output_suffix": "_genome",
+            "multiselect": false
+        },
+        "gff_genome": {
+            "app_id": "kb_uploadmethods/import_gff_fasta_as_genome_from_staging",
+            "app_input_param": "gff_file",
+            "app_input_param_type": "string",
+            "app_static_params": {},
+            "app_output_param": "genome_name",
+            "app_output_suffix": "_genome",
+            "multiselect": false
+        },
+        "expression_matrix": {
+            "app_id": "kb_uploadmethods/import_tsv_as_expression_matrix_from_staging",
+            "app_input_param": "staging_file_subdir_path",
+            "app_input_param_type": "string",
+            "app_static_params": {},
+            "app_output_param": "matrix_name",
+            "app_output_suffix": "_matrix",
+            "multiselect": false
+        },
+        "media": {
+            "app_id": "kb_uploadmethods/import_tsv_excel_as_media_from_staging",
+            "app_input_param": "staging_file_subdir_path",
+            "app_input_param_type": "string",
+            "app_static_params": {},
+            "app_output_param": "media_name",
+            "app_output_suffix": "_media",
+            "multiselect": false
+        },
+        "assembly": {
+            "app_id": "kb_uploadmethods/import_fasta_as_assembly_from_staging",
+            "app_input_param": "staging_file_subdir_path",
+            "app_input_param_type": "string",
+            "app_static_params": {},
+            "app_output_param": "assembly_name",
+            "app_output_suffix": "_assembly",
             "multiselect": false
         }
     }

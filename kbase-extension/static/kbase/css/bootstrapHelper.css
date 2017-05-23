@@ -34,6 +34,7 @@
 
 .panel.kb-panel-light {
     border: none;
+    margin-bottom: 10px;
 }
 /* colors copied shamelessly from peeking at bootstrap
    http://getbootstrap.com/css/

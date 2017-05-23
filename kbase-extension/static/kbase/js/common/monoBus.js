@@ -30,9 +30,9 @@ define([
         return instanceId;
     }
 
-    function factory(config) {
+    function factory(cfg) {
         var api,
-            config = config || {},
+            config = cfg || {},
             listenerRegistry = {},
             verbose = config.verbose || false,
             chatty = config.chatty || false,
@@ -771,13 +771,14 @@ define([
         */
 
         function connect() {
-
             var listeners = [];
 
             function channel(channelName) {
 
                 // Without a channel name, we use the main bus.
-                channelName = channelName || 'default';
+                if (!channelName) {
+                    channelName = new Uuid(4).format();
+                }
 
                 var localChannel = makeChannelBus({
                     name: channelName
@@ -859,7 +860,7 @@ define([
                     listeners: {
                         active: listeners.length
                     }
-                }
+                };
             }
 
             function genName() {

@@ -1,7 +1,9 @@
 """
 A module for managing apps, specs, requirements, and for starting jobs.
 """
-
+import biokbase.auth as auth
+from biokbase.NarrativeJobService.Client import NarrativeJobService
+from biokbase.narrative.common.url_config import URLS
 from job import Job
 from jobmanager import JobManager
 from specmanager import SpecManager
@@ -52,9 +54,9 @@ class AppManager(object):
     __instance = None
 
     nms = clients.get('narrative_method_store')
-    njs = clients.get('job_service')
     ws_client = clients.get('workspace')
     service_client = clients.get('service')
+    __MAX_TOKEN_NAME_LEN = 30
 
     spec_manager = SpecManager()
     _log = kblogging.get_logger(__name__)
@@ -248,11 +250,6 @@ class AppManager(object):
 
         ws_input_refs = extract_ws_refs(app_id, tag, spec_params, params)
 
-        #(params, ws_input_refs) = self._validate_parameters(app_id,
-        #                                                    tag,
-        #                                                    spec_params,
-        #                                                    params)
-
         ws_id = system_variable('workspace_id')
         if ws_id is None:
             raise ValueError('Unable to retrive current ' +
@@ -266,7 +263,6 @@ class AppManager(object):
         service_method = spec['behavior']['kb_service_method']
         service_name = spec['behavior']['kb_service_name']
         service_ver = spec['behavior'].get('kb_service_version', None)
-        # service_url = spec['behavior']['kb_service_url']
 
         # Let the given version override the spec's version.
         if version is not None:
@@ -281,7 +277,16 @@ class AppManager(object):
         if run_id is not None:
             job_meta['run_id'] = run_id
 
-        # This is the input set for NJSW.run_job. Now we need the worksapce id
+        # We're now almost ready to run the job. Last, we need an agent token.
+        try:
+            token_name = 'KBApp_{}'.format(app_id)
+            token_name = token_name[:self.__MAX_TOKEN_NAME_LEN]
+            agent_token = auth.get_agent_token(auth.get_auth_token(), token_name=token_name)
+        except Exception as e:
+            raise
+
+        job_meta['token_id'] = agent_token['id']
+        # This is the input set for NJSW.run_job. Now we need the workspace id
         # and whatever fits in the metadata.
         job_runner_inputs = {
             'method': function_name,
@@ -305,7 +310,8 @@ class AppManager(object):
         kblogging.log_event(self._log, "run_app", log_info)
 
         try:
-            job_id = self.njs.run_job(job_runner_inputs)
+            njs = NarrativeJobService(url=URLS.job_service, token=agent_token['token'])
+            job_id = njs.run_job(job_runner_inputs)
         except Exception as e:
             log_info.update({'err': str(e)})
             kblogging.log_event(self._log, "run_app_error", log_info)
@@ -318,7 +324,8 @@ class AppManager(object):
                       tag=tag,
                       app_version=service_ver,
                       cell_id=cell_id,
-                      run_id=run_id)
+                      run_id=run_id,
+                      token_id=agent_token['id'])
 
         self._send_comm_message('run_status', {
             'event': 'launched_job',
@@ -454,6 +461,130 @@ class AppManager(object):
         return WidgetManager().show_output_widget(output_widget,
                                                   widget_params,
                                                   cell_id=cell_id, tag=tag)
+
+    def run_local_app_advanced(self, app_id, params, widget_state, tag="release", version=None,
+                      cell_id=None, run_id=None, **kwargs):
+        """
+        Attempts to run a local app. These do not return a Job object, but just
+        the result of the app. In most cases, this will be a Javascript display
+        of the result, but could be anything.
+
+        If the app_spec looks like it makes a service call, then this raises a
+        ValueError. Otherwise, it validates each parameter in **kwargs against
+        the app spec, executes it, and returns the result.
+
+        Parameters:
+        -----------
+        app_id - should be from the app spec, e.g. 'view_expression_profile'
+        params - the dictionary of parameters for the app. Should be key-value
+                 pairs where they keys are strings. If any non-optional
+                 parameters are missing, an informative string will be printed.
+        tag - optional, one of [release|beta|dev] (default=release)
+        version - optional, a semantic version string. Only released modules
+                  have versions, so if the tag is not 'release', and a version
+                  is given, a ValueError will be raised.
+        **kwargs - these are the set of parameters to be used with the app.
+                   They can be found by using the app_usage function. If any
+                   non-optional apps are missing, a ValueError will be raised.
+
+        Example:
+        run_local_app('NarrativeViewers/view_expression_profile',
+                      version='0.0.1',
+                      input_expression_matrix="MyMatrix",
+                      input_gene_ids="1234")
+        """
+        try:
+            if params is None:
+                params = dict()
+            return self._run_local_app_advanced_internal(app_id, params, widget_state, tag, version,
+                                                cell_id, run_id, **kwargs)
+        except Exception as e:
+            e_type = type(e).__name__
+            e_message = str(e).replace('<', '&lt;').replace('>', '&gt;')
+            e_trace = traceback.format_exc()
+            e_trace = e_trace.replace('<', '&lt;').replace('>', '&gt;')
+            self._send_comm_message('run_status', {
+                'event': 'error',
+                'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
+                'cell_id': cell_id,
+                'run_id': run_id,
+                'error_message': e_message,
+                'error_type': e_type,
+                'error_stacktrace': e_trace
+            })
+            # raise
+            print("Error while trying to start your app (run_local_app_advanced)!\n" +
+                  "-------------------------------------\n" + str(e) +
+                  "\n-------------------------------------\n" +  e_trace)
+
+    def _run_local_app_advanced_internal(self, app_id, params, widget_state, tag, version,
+                                cell_id, run_id, **kwargs):
+        self._send_comm_message('run_status', {
+            'event': 'validating_app',
+            'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
+            'cell_id': cell_id,
+            'run_id': run_id
+        })
+
+        # Intro tests:
+        self.spec_manager.check_app(app_id, tag, raise_exception=True)
+
+        if version is not None and tag != "release":
+            raise ValueError("App versions only apply to released modules!")
+
+        # Get the spec & params
+        spec = self.spec_manager.get_spec(app_id, tag)
+
+        if 'behavior' not in spec:
+            raise ValueError("This app appears invalid - " +
+                             "it has no defined behavior")
+
+        behavior = spec['behavior']
+
+        if 'script_module' in behavior or 'script_name' in behavior:
+            # It's an old NJS script. These don't work anymore.
+            raise ValueError('This app relies on a service that is now ' +
+                             'obsolete. Please contact the administrator.')
+
+        # Here, we just deal with two behaviors:
+        # 1. None of the above - it's a viewer.
+        # 2. ***TODO*** python_class / python_function.
+        #    Import and exec the python code.
+
+        # for now, just map the inputs to outputs.
+        # First, validate.
+        # Preflight check the params - all required ones are present, all
+        # values are the right type, all numerical values are in given ranges
+        spec_params = self.spec_manager.app_params(spec)
+        (params, ws_refs) = self._validate_parameters(app_id, tag,
+                                                      spec_params, params)
+
+        # Log that we're trying to run a job...
+        log_info = {
+            'app_id': app_id,
+            'tag': tag,
+            'username': system_variable('user_id'),
+            'ws': system_variable('workspace')
+        }
+        kblogging.log_event(self._log, "run_local_app", log_info)
+
+        self._send_comm_message('run_status', {
+            'event': 'success',
+            'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
+            'cell_id': cell_id,
+            'run_id': run_id
+        })
+
+        (output_widget, widget_params) = map_outputs_from_state([],
+                                                                params,
+                                                                spec)
+
+        # All a local app does is route the inputs to outputs through the
+        # spec's mapping, and then feed that into the specified output widget.
+        return WidgetManager().show_advanced_viewer_widget(output_widget,
+                                                            widget_params,
+                                                            widget_state,
+                                                            cell_id=cell_id, tag=tag)
 
     def run_dynamic_service(self, app_id, params, tag="release", version=None,
                             cell_id=None, run_id=None, **kwargs):

@@ -40,6 +40,11 @@ define (
         required: true,
         rowDivs: null,
 
+        init: function(options) {
+            this._super(options);
+            return this;
+        },
+
         render: function() {
             var self = this;
             var spec = self.spec;
@@ -212,7 +217,7 @@ define (
             if (!self.enabled) {
                 return { isValid: true, errormssgs:[]}; // do not validate if disabled
             }
-            var p= self.getParameterValue();
+            var p = self.getParameterValue();
             var errorDetected = false;
             var errorMessages = [];
             if(p instanceof Array) {
@@ -220,25 +225,25 @@ define (
             } else {
                 if (p) {
                     p = p.trim();
-                    // if it is a required selection and is empty, keep the required icon around but we have an error
-                    if (p==='' && self.required) {
-                        self.rowDivs[0].$row.removeClass("kb-method-parameter-row-error");
-                        self.rowDivs[0].$feedback.removeClass().addClass('kb-method-parameter-required-glyph glyphicon glyphicon-arrow-left').prop("title","required field");
-                        self.rowDivs[0].$feedback.show();
-                        self.rowDivs[0].$error.hide();
-                        errorDetected = true;
-                        errorMessages.push("required field "+self.spec.ui_name+" missing.");
-                    }
+                }
+                // if it is a required selection and is empty, keep the required icon around but we have an error
+                if (!p && self.required) {
+                    self.rowDivs[0].$row.removeClass("kb-method-parameter-row-error");
+                    self.rowDivs[0].$feedback.removeClass().addClass('kb-method-parameter-required-glyph glyphicon glyphicon-arrow-left').prop("title","required field");
+                    self.rowDivs[0].$feedback.show();
+                    self.rowDivs[0].$error.hide();
+                    errorDetected = true;
+                    errorMessages.push("required field "+self.spec.ui_name+" missing.");
+                }
 
-                    // no error, so we hide the error if any, and show the "accepted" icon if it is not empty
-                    if (!errorDetected) {
-                        if (self.rowDivs[0]) {
-                            self.rowDivs[0].$row.removeClass("kb-method-parameter-row-error");
-                            self.rowDivs[0].$error.hide();
-                            self.rowDivs[0].$feedback.removeClass();
-                            if (p!=='') {
-                                self.rowDivs[0].$feedback.removeClass().addClass('kb-method-parameter-accepted-glyph glyphicon glyphicon-ok');
-                            }
+                // no error, so we hide the error if any, and show the "accepted" icon if it is not empty
+                if (!errorDetected) {
+                    if (self.rowDivs[0]) {
+                        self.rowDivs[0].$row.removeClass("kb-method-parameter-row-error");
+                        self.rowDivs[0].$error.hide();
+                        self.rowDivs[0].$feedback.removeClass();
+                        if (p!=='') {
+                            self.rowDivs[0].$feedback.removeClass().addClass('kb-method-parameter-accepted-glyph glyphicon glyphicon-ok');
                         }
                     }
                 } else {

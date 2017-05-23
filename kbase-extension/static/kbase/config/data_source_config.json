@@ -1,22 +1,28 @@
 {
     "ci": {
         "publicData": {
-            "genomes": {
-                "name": "Genomes",
+            "reference_genomes": {
+                "name": "Reference Genomes",
                 "type": "KBaseGenomes.Genome",
-                "ws": "KBasePublicGenomesV5",
+                "ws": "ReferenceDataManager",
                 "search": true
             },
-            "refseq_genomes": {
-                "name": "RefSeq Genomes",
-                "type": "KBaseGenomeAnnotations.GenomeAnnotation",
-                "ws": "RefSeq_Genomes",
+            "legacy_genomes": {
+                "name": "Legacy Genomes",
+                "type": "KBaseGenomes.Genome",
+                "ws": "KBasePublicGenomesV5",
                 "search": false
             },
-            "ensembl_genomes": {
-                "name": "Ensembl Genomes",
-                "type": "KBaseGenomeAnnotations.GenomeAnnotation",
-                "ws": "ReferenceEnsemblPlantGenomeAnnotations",
+            "plant_genomes": {
+                "name": "Plant Genomes",
+                "type": "KBaseGenomes.Genome",
+                "ws": "Phytozome_Genomes",
+                "search": false
+            },
+            "pubSEED_genomes": {
+                "name": "Public SEED Genomes",
+                "type": "KBaseGenomes.Genome",
+                "ws": "pubSEEDGenomes",
                 "search": false
             },
             "media": {
@@ -109,24 +115,35 @@
                     ],
                     "displayName": "Example ExpressionMatrix",
                     "header": "Gene expression data in a gene vs. condition matrix"
-                },
-                {
-                    "name": [
-                        "TranscriptomeHack"
-                    ],
-                    "displayName": "Example Sorghum Transcriptomes",
-                    "header": "Sorghum bicolor transcriptome data in response to ABA and osmotic stress"
                 }
             ]
         }
     },
     "next": {
         "publicData": {
-            "genomes": {
-                "name": "Genomes",
+            "reference_genomes": {
+                "name": "Reference Genomes",
+                "type": "KBaseGenomes.Genome",
+                "ws": "ReferenceDataManager",
+                "search": true
+            },
+            "legacy_genomes": {
+                "name": "Legacy Genomes",
                 "type": "KBaseGenomes.Genome",
                 "ws": "KBasePublicGenomesV5",
-                "search": true
+                "search": false
+            },
+            "plant_genomes": {
+                "name": "Plant Genomes",
+                "type": "KBaseGenomes.Genome",
+                "ws": "Phytozome_Genomes",
+                "search": false
+            },
+            "pubSEED_genomes": {
+                "name": "Public SEED Genomes",
+                "type": "KBaseGenomes.Genome",
+                "ws": "pubSEEDGenomes",
+                "search": false
             },
             "media": {
                 "name": "Media",
@@ -206,24 +223,35 @@
                     ],
                     "displayName": "Example ExpressionMatrix",
                     "header": "Gene expression data in a gene vs. condition matrix"
-                },
-                {
-                    "name": [
-                        "TranscriptomeHack"
-                    ],
-                    "displayName": "Example Sorghum Transcriptomes",
-                    "header": "Sorghum bicolor transcriptome data in response to ABA and osmotic stress"
                 }
             ]
         }
     },
     "prod": {
         "publicData": {
-            "genomes": {
-                "name": "Genomes",
+            "reference_genomes": {
+                "name": "Reference Genomes",
+                "type": "KBaseGenomes.Genome",
+                "ws": "ReferenceDataManager",
+                "search": true
+            },
+            "legacy_genomes": {
+                "name": "Legacy Genomes",
                 "type": "KBaseGenomes.Genome",
                 "ws": "KBasePublicGenomesV5",
-                "search": true
+                "search": false
+            },
+            "plant_genomes": {
+                "name": "Plant Genomes",
+                "type": "KBaseGenomes.Genome",
+                "ws": "Phytozome_Genomes",
+                "search": false
+            },
+            "pubSEED_genomes": {
+                "name": "Public SEED Genomes",
+                "type": "KBaseGenomes.Genome",
+                "ws": "pubSEEDGenomes",
+                "search": false
             },
             "media": {
                 "name": "Media",
@@ -270,11 +298,10 @@
                 },
                 {
                     "name": [
-                        "ContigSet",
-                        "Assembly"
+                        "ContigSet"
                     ],
-                    "displayName": "Example Assemblies",
-                    "header": "Assembled DNA sequences"
+                    "displayName": "Example Contig Sets",
+                    "header": "A set of DNA sequences"
                 },
                 {
                     "name": [
@@ -303,13 +330,6 @@
                     ],
                     "displayName": "Example ExpressionMatrix",
                     "header": "Gene expression data in a gene vs. condition matrix"
-                },
-                {
-                    "name": [
-                        "TranscriptomeHack"
-                    ],
-                    "displayName": "Example Sorghum Transcriptomes",
-                    "header": "Sorghum bicolor transcriptome data in response to ABA and osmotic stress"
                 }
             ]
         }
@@ -321,6 +341,12 @@
                 "type": "KBaseGenomes.Genome",
                 "ws": "KBasePublicGenomesV5",
                 "search": true
+            },
+            "plant_genomes": {
+                "name": "Plant Genomes",
+                "type": "KBaseGenomes.Genome",
+                "ws": "Phytozome_Genomes",
+                "search": false
             },
             "media": {
                 "name": "Media",

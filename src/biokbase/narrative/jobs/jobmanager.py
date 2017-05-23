@@ -6,6 +6,7 @@ from biokbase.narrative.common import kblogging
 from IPython.display import HTML
 from jinja2 import Template
 import datetime
+import time
 from biokbase.narrative.app_util import system_variable
 from biokbase.narrative.exception_util import (
     transform_job_exception
@@ -60,6 +61,10 @@ class JobManager(object):
         4. start the status lookup loop.
         """
 
+        the_time = int(round(time.time() * 1000))
+
+        self._send_comm_message('start', {'time': the_time})
+
         ws_id = system_variable('workspace_id')
         try:
             nar_jobs = clients.get('user_and_job_state').list_jobs2({
@@ -101,14 +106,15 @@ class JobManager(object):
                                          app_id=job_info.get('app_id'),
                                          tag=job_meta.get('tag', 'release'),
                                          cell_id=job_meta.get('cell_id', None),
-                                         run_id=job_meta.get('run_id', None))
+                                         run_id=job_meta.get('run_id', None),
+                                         token_id=job_meta.get('token_id', None))
 
                     # Note that when jobs for this narrative are initially loaded,
                     # they are set to not be refreshed. Rather, if a client requests
                     # updates via the start_job_update message, the refresh flag will
                     # be set to True.
                     self._running_jobs[job_id] = {
-                        'refresh': False,
+                        'refresh': 0,
                         'job': job
                     }
                 elif job_id in job_check_error:
@@ -372,7 +378,8 @@ class JobManager(object):
         return {'state': state,
                 'spec': app_spec,
                 'widget_info': widget_info,
-                'owner': job.owner}
+                'owner': job.owner,
+                'listener_count': self._running_jobs[job.job_id]['refresh']}
 
     def _construct_job_status_set(self, job_ids):
         job_states = self._get_all_job_states(job_ids)
@@ -404,10 +411,12 @@ class JobManager(object):
         jobs_to_lookup = list()
         # grab the list of running job ids, so we don't run into update-while-iterating problems.
         for job_id in self._running_jobs.keys():
-            if self._running_jobs[job_id]['refresh'] or ignore_refresh_flag:
+            if self._running_jobs[job_id]['refresh'] > 0 or ignore_refresh_flag:
                 jobs_to_lookup.append(job_id)
-        status_set = self._construct_job_status_set(jobs_to_lookup)
-        self._send_comm_message('job_status_all', status_set)
+
+        if len(jobs_to_lookup) > 0:
+            status_set = self._construct_job_status_set(jobs_to_lookup)
+            self._send_comm_message('job_status_all', status_set)
 
         return len(jobs_to_lookup)
 
@@ -450,7 +459,7 @@ class JobManager(object):
         job : biokbase.narrative.jobs.job.Job object
             The new Job that was started.
         """
-        self._running_jobs[job.job_id] = {'job': job, 'refresh': True}
+        self._running_jobs[job.job_id] = {'job': job, 'refresh': 0}
         # push it forward! create a new_job message.
         self._lookup_job_status(job.job_id)
         self._send_comm_message('new_job', {
@@ -519,11 +528,12 @@ class JobManager(object):
 
             elif r_type == 'stop_job_update':
                 if job_id is not None:
-                    self._running_jobs[job_id]['refresh'] = False
+                    if self._running_jobs[job_id]['refresh'] > 0:
+                        self._running_jobs[job_id]['refresh'] -= 1
 
             elif r_type == 'start_job_update':
                 if job_id is not None:
-                    self._running_jobs[job_id]['refresh'] = True
+                    self._running_jobs[job_id]['refresh'] += 1
                     self._start_job_status_loop()
 
             elif r_type == 'delete_job':
@@ -551,7 +561,15 @@ class JobManager(object):
             elif r_type == 'job_logs_latest':
                 if job_id is not None:
                     num_lines = msg['content']['data'].get('num_lines', None)
-                    self._get_latest_job_logs(job_id, num_lines=num_lines)
+                    try:
+                        self._get_latest_job_logs(job_id, num_lines=num_lines)
+                    except Exception as e:
+                        self._send_comm_message('job_comm_error', {
+                            'job_id': job_id,
+                            'message': str(e),
+                            'request_type': r_type})
+                else:
+                    raise ValueError('Need a job id to fetch jobs!')
 
             else:
                 self._send_comm_message('job_comm_error', {'message': 'Unknown message', 'request_type': r_type})
@@ -568,7 +586,12 @@ class JobManager(object):
         if num_lines is not None and max_lines > num_lines:
             first_line = max_lines - num_lines
             logs = logs[first_line:]
-        self._send_comm_message('job_logs', {'job_id': job_id, 'first': first_line, 'max_lines': max_lines, 'lines': logs, 'latest': True})
+        self._send_comm_message('job_logs', {
+            'job_id': job_id,
+            'first': first_line,
+            'max_lines': max_lines,
+            'lines': logs,
+            'latest': True})
 
     def _get_job_logs(self, job_id, first_line=0, num_lines=None):
         job = self.get_job(job_id)
@@ -630,8 +653,8 @@ class JobManager(object):
 
         # Stop updating the job status while we try to cancel.
         # Also, set it to have a special state of 'canceling' while we're doing the cancel
-        is_refreshing = self._running_jobs[job_id].get('refresh', False)
-        self._running_jobs[job_id]['refresh'] = False
+        is_refreshing = self._running_jobs[job_id].get('refresh', 0)
+        self._running_jobs[job_id]['refresh'] = 0
         self._running_jobs[job_id]['canceling'] = True
         try:
             clients.get('job_service').cancel_job({'job_id': job_id})
@@ -684,7 +707,7 @@ class JobManager(object):
         jobs_to_lookup = list()
         for job_id in job_ids:
             if job_id in self._completed_job_states:
-                job_states[job_id] = self._completed_job_states[job_id]
+                job_states[job_id] = dict(self._completed_job_states[job_id])
             else:
                 jobs_to_lookup.append(job_id)
         # 3. Lookup those jobs what need it. Cache 'em as we go, if finished.
@@ -702,7 +725,7 @@ class JobManager(object):
                 state['cell_id'] = self._running_jobs[job_id]['job'].cell_id
                 state['run_id'] = self._running_jobs[job_id]['job'].run_id
                 if state.get('finished', 0) == 1:
-                    self._completed_job_states[state['job_id']] = state
+                    self._completed_job_states[state['job_id']] = dict(state)
                 job_states[state['job_id']] = state
             elif job_id in error_states:
                 error = error_states[job_id]
@@ -714,8 +737,8 @@ class JobManager(object):
         if job_id is None or job_id not in self._running_jobs:
             raise ValueError('job_id {} not found'.format(job_id))
         if job_id in self._completed_job_states:
-            return self._completed_job_states[job_id]
+            return dict(self._completed_job_states[job_id])
         state = self._running_jobs[job_id]['job'].state()
         if state.get('finished', 0) == 1:
-            self._completed_job_states[job_id] = state
-        return state
+            self._completed_job_states[job_id] = dict(state)
+        return dict(state)

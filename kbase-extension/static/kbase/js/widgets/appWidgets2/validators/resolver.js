@@ -15,8 +15,9 @@ define([
         workspaceObjectName: 'workspaceObjectName',
         workspaceObjectRef: 'workspaceObjectRef',
         subdata: 'subdata',
-        customSubdata: 'customSubdata'
-    }
+        customSubdata: 'customSubdata',
+        custom: 'custom'
+    };
 
     function getValidatorModule(fieldSpec) {
         var moduleName = typeToValidatorModule[fieldSpec.data.type];

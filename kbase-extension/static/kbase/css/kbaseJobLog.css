@@ -13,10 +13,20 @@
     vertical-align: top;
 }
 
+.kblog-header {
+    display: flex;
+    font-family: monospace;
+    font-size: 85%;  
+}
+
 .kblog-line {
     display: flex;
     font-family: monospace;
     font-size: 85%;
+}
+
+.kblog-line:hover {
+    background-color: #DDD;
 }
 
 .kblog-num-wrapper {

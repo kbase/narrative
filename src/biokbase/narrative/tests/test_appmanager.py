@@ -1,3 +1,6 @@
+"""
+Tests for the app manager.
+"""
 from biokbase.narrative.jobs.appmanager import AppManager
 from biokbase.narrative.jobs.specmanager import SpecManager
 from biokbase.narrative.jobs.job import Job
@@ -5,18 +8,25 @@ from IPython.display import HTML
 import unittest
 import mock
 import os
-import ConfigParser
+from util import TestConfig
 
-"""
-Tests for the app manager.
-"""
+
+def mock_agent_token(*args, **kwargs):
+    return dict({
+        "user": "testuser",
+        "id": "12345",
+        "token": "abcde"
+    })
+
+
+def mock_run_job(*args, **kwargs):
+    return "new_job_id"
 
 
 class AppManagerTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        config = ConfigParser.ConfigParser()
-        config.read('test.cfg')
+        config = TestConfig()
         self.am = AppManager()
         self.good_app_id = config.get('app_tests', 'good_app_id')
         self.good_tag = config.get('app_tests', 'good_app_tag')
@@ -71,12 +81,11 @@ class AppManagerTestCase(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.am.available_apps(self.bad_tag)
 
-    @mock.patch('biokbase.narrative.jobs.appmanager.clients.NarrativeJobService')
+    @mock.patch('biokbase.narrative.jobs.appmanager.NarrativeJobService.run_job', side_effect=mock_run_job)
     @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')
-    def test_run_app_good_inputs(self, m, njs):
+    @mock.patch('biokbase.narrative.jobs.appmanager.auth.get_agent_token', side_effect=mock_agent_token)
+    def test_run_app_good_inputs(self, m, njs, auth):
         m.return_value._send_comm_message.return_value = None
-        njs.run_job.return_value = self.test_job_id
-        self.am.njs = njs
         os.environ['KB_WORKSPACE_ID'] = self.public_ws
         new_job = self.am.run_app(
             self.test_app_id,
@@ -89,16 +98,12 @@ class AppManagerTestCase(unittest.TestCase):
         self.assertEquals(new_job.tag, self.test_tag)
         self.assertIsNone(new_job.cell_id)
 
-        job_run_input, kwargs = njs.run_job.call_args
-        self.assertTrue(job_run_input[0]['wsid'] == self.ws_id)
-        self.assertTrue(job_run_input[0]['source_ws_objects'] == [self.app_input_ref])
-
-    @mock.patch('biokbase.narrative.jobs.appmanager.clients.NarrativeJobService')
+    @mock.patch('biokbase.narrative.jobs.appmanager.NarrativeJobService')
     @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')
-    def test_run_app_from_gui_cell(self, m, njs):
+    @mock.patch('biokbase.narrative.jobs.appmanager.auth.get_agent_token', side_effect=mock_agent_token)
+    def test_run_app_from_gui_cell(self, m, njs, auth):
         m.return_value._send_comm_message.return_value = None
         njs.run_job.return_value = self.test_job_id
-        self.am.njs = njs
         os.environ['KB_WORKSPACE_ID'] = self.public_ws
         self.assertIsNone(self.am.run_app(
             self.test_app_id,
@@ -106,10 +111,6 @@ class AppManagerTestCase(unittest.TestCase):
             tag=self.test_tag,
             cell_id="12345"
         ))
-        job_run_input, kwargs = njs.run_job.call_args
-        self.assertTrue(job_run_input[0]['meta']['cell_id'] == "12345")
-        self.assertTrue(job_run_input[0]['wsid'] == self.ws_id)
-        self.assertTrue(job_run_input[0]['source_ws_objects'] == [self.app_input_ref])
 
     @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')
     def test_run_app_bad_id(self, m):
@@ -134,9 +135,12 @@ class AppManagerTestCase(unittest.TestCase):
 
     # Running an app with missing inputs is now allowed. The app can
     # crash if it wants to, it can leave its process behind.
+    @mock.patch('biokbase.narrative.jobs.appmanager.NarrativeJobService')
     @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')
-    def test_run_app_missing_inputs(self, m):
+    @mock.patch('biokbase.narrative.jobs.appmanager.auth.get_agent_token', side_effect=mock_agent_token)
+    def test_run_app_missing_inputs(self, m, njs, auth):
         m.return_value._send_comm_message.return_value = None
+        njs.run_job.return_value = self.test_job_id
         self.assertIsNotNone(self.am.run_app(self.good_app_id,
                                              None,
                                              tag=self.good_tag))

@@ -3,6 +3,7 @@
 
 define([
     'bluebird',
+    'jquery',
     // CDN
     'kb_common/html',
     // LOCAL
@@ -19,6 +20,7 @@ define([
 
 ], function (
     Promise,
+    $,
     html,
     UI,
     Events,
@@ -219,7 +221,6 @@ define([
         }
 
         function renderAdvanced(area) {
-
             // area is either "input" or "parameter"
 
             var areaElement = area + '-area',
@@ -228,11 +229,8 @@ define([
 
             if (advancedInputs.length === 0) {
                 ui.setContent([areaElement, 'advanced-hidden-message'], '');
-                // ui.disableButton('toggle-advanced');
                 return;
             }
-
-            //            ui.enableButton('toggle-advanced');
 
             var removeClass = (settings.showAdvanced ? 'advanced-parameter-hidden' : 'advanced-parameter-showing'),
                 addClass = (settings.showAdvanced ? 'advanced-parameter-showing' : 'advanced-parameter-hidden');
@@ -240,25 +238,25 @@ define([
                 var input = advancedInputs[i];
                 input.classList.remove(removeClass);
                 input.classList.add(addClass);
+                                
+                var actualInput = input.querySelector('[data-element="input"]');
+                if (actualInput) {
+                    $(actualInput).trigger('advanced-shown.kbase');
+                }
             }
-            //
-            //            // How many advanaced?
-            //
-            //            // Also update the button
-            //            var button = container.querySelector('[data-button="toggle-advanced"]');
-            //            button.innerHTML = (settings.showAdvanced ? 'Hide Advanced' : 'Show Advanced (' + advancedInputs.length + ' hidden)');
 
             // Also update the count in the paramters.
             var events = Events.make({ node: container });
 
             var message;
+            var showAdvancedButton;
             if (settings.showAdvanced) {
                 if (advancedInputs.length > 1) {
                     message = String(advancedInputs.length) + ' advanced parameters showing';
                 } else {
                     message = String(advancedInputs.length) + ' advanced parameter showing';
                 }
-                var showAdvancedButton = ui.buildButton({
+                showAdvancedButton = ui.buildButton({
                     label: 'hide advanced',
                     type: 'link',
                     name: 'advanced-parameters-toggler',
@@ -275,7 +273,7 @@ define([
                 } else {
                     message = String(advancedInputs.length) + ' advanced parameter hidden';
                 }
-                var showAdvancedButton = ui.buildButton({
+                showAdvancedButton = ui.buildButton({
                     label: 'show advanced',
                     type: 'link',
                     name: 'advanced-parameters-toggler',
@@ -295,7 +293,15 @@ define([
             var events = Events.make(),
                 content = form({ dataElement: 'input-widget-form' }, [                    
                     ui.buildPanel({
-                        title: span(['Input Objects', span({ dataElement: 'advanced-hidden-message', style: { marginLeft: '6px', fontStyle: 'italic' } })]),
+                        title: span([
+                            'Input Objects', 
+                            span({ 
+                                dataElement: 'advanced-hidden-message', 
+                                style: { 
+                                    marginLeft: '6px', 
+                                    fontStyle: 'italic' 
+                                } 
+                            })]),
                         name: 'input-objects-area',
                         body: div({ dataElement: 'input-fields' }),
                         classes: ['kb-panel-light']
@@ -429,22 +435,15 @@ define([
                             return params.specs[id];
                         }));
 
-                // new params format is a map with an accompanying ordering layout
-
-                // here is what we do:
-
-                // based on the param ordering (layout), render the html layout, 
-                // with an id mapped per parameter in this set
-
-
                 return Promise.resolve()
                     .then(function () {
                         if (inputParams.layout.length === 0) {
-                            places.inputFields.innerHTML = span({
-                                style: {
-                                    fontStyle: 'italic'
-                                }
-                            }, 'This app does not have input objects');
+                            ui.getElement('input-objects-area').classList.add('hidden');
+                            // places.inputFields.innerHTML = span({
+                            //     style: {
+                            //         fontStyle: 'italic'
+                            //     }
+                            // }, 'This app does not have input objects');
                         } else {
                             places.inputFields.innerHTML = inputParams.content;
                             return Promise.all(inputParams.layout.map(function (parameterId) {
@@ -474,7 +473,8 @@ define([
                     })
                     .then(function () {
                         if (outputParams.layout.length === 0) {
-                            places.outputFields.innerHTML = span({ style: { fontStyle: 'italic' } }, 'This app does not create any named output objects');
+                            ui.getElement('output-objects-area').classList.add('hidden');
+                            // places.outputFields.innerHTML = span({ style: { fontStyle: 'italic' } }, 'This app does not create any named output objects');
                         } else {
                             places.outputFields.innerHTML = outputParams.content;
                             return Promise.all(outputParams.layout.map(function (parameterId) {
@@ -501,7 +501,8 @@ define([
                     .then(function () {
                         if (parameterParams.layout.length === 0) {
                             // TODO: should be own node
-                            places.parameterFields.innerHTML = span({ style: { fontStyle: 'italic' } }, 'No parameters for this app');
+                            ui.getElement('parameters-area').classList.add('hidden');
+                            // places.parameterFields.innerHTML = span({ style: { fontStyle: 'italic' } }, 'No parameters for this app');
                         } else {
                             places.parameterFields.innerHTML = parameterParams.content;
 
@@ -526,22 +527,6 @@ define([
                             }));
                         }
                     })
-                    // .then(function () {
-                    //     console.log('advance-ing...');
-                    //     return Promise.all(widgets.map(function (widget) {
-                    //         return widget.widget.start()
-                    //             .catch(function (err) {
-                    //                 console.error('error', err, widget);
-                    //                 throw err;
-                    //             })
-                    //     }));
-                    // })
-                    // .then(function () {
-                    //     console.log('advance-ing2...');
-                    //     return Promise.all(widgets.map(function (widget) {
-                    //         return widget.widget.run(params);
-                    //     }));
-                    // })
                     .then(function () {
                         renderAdvanced('input-objects');
                         renderAdvanced('parameters');
@@ -549,30 +534,14 @@ define([
             });
         }
 
-        function start() {
+        function start(arg) {
             return Promise.try(function () {
                 // send parent the ready message
-                paramsBus.emit('ready');
 
-                // parent will send us our initial parameters
-                paramsBus.on('run', function (message) {
-                    doAttach(message.node);
+                doAttach(arg.node);
 
-                    model.setItem('appSpec', message.appSpec);
-                    model.setItem('parameters', message.parameters);
-                    model.setItem('converted', message.converted);
-
-                    // we then create our widgets
-                    renderParameters()
-                        .then(function () {
-                            // do something after success
-                            attachEvents();
-                        })
-                        .catch(function (err) {
-                            // do somethig with the error.
-                            console.error('ERROR in start', err);
-                        });
-                });
+                model.setItem('appSpec', arg.appSpec);
+                model.setItem('parameters', arg.parameters);
 
                 paramsBus.on('parameter-changed', function (message) {
                     // Also, tell each of our inputs that a param has changed.
@@ -588,6 +557,16 @@ define([
                         // bus.emit('parameter-changed', message);
                     });
                 });
+                // we then create our widgets
+                return renderParameters()
+                    .then(function () {
+                        // do something after success
+                        attachEvents();
+                    })
+                    .catch(function (err) {
+                        // do somethig with the error.
+                        console.error('ERROR in start', err);
+                    });
             });
         }
 

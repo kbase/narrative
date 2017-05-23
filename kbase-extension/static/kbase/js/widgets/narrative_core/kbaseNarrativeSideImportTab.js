@@ -7,19 +7,19 @@
  * @public
  */
 define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery',
-		'narrativeConfig',
-		'kbaseAuthenticatedWidget',
-		'select2',
-		'util/string',
+    [
+        'kbwidget',
+        'bootstrap',
+        'jquery',
+        'narrativeConfig',
+        'kbaseAuthenticatedWidget',
+        'select2',
+        'util/string',
         'base/js/namespace',
         'common/pythonInterop',
         'util/kbaseApiUtil',
         'kbase-client-api'
-	], function(
+    ], function(
         KBWidget,
         bootstrap,
         $,
@@ -33,9 +33,9 @@ define (
 	) {
     'use strict';
     return KBWidget({
-        name: "kbaseNarrativeSideImportTab",
+        name: 'kbaseNarrativeSideImportTab',
         parent : kbaseAuthenticatedWidget,
-        version: "1.0.0",
+        version: '1.0.0',
         options: {
             ws_name: null
         },
@@ -355,10 +355,10 @@ define (
 
             var $buttons = $('<div style="margin: 0px 30px 0px 33px;">')
                            .addClass('buttons')
-                           .append($importButton)
+                           .append($backButton)
                            .append('&nbsp;')
                            .append('&nbsp;')
-                           .append($backButton);
+                           .append($importButton);
 
             self.widgetPanelCard2.append($buttons);
         },
@@ -372,7 +372,7 @@ define (
                 return;
             var inputWidgetName = methodSpec.widgets.input;
             if (!inputWidgetName || inputWidgetName === 'null')
-                inputWidgetName = "kbaseNarrativeMethodInput";
+                inputWidgetName = 'kbaseNarrativeMethodInput';
             var methodJson = JSON.stringify(methodSpec);
 
             var $inputDiv = $('<div>');
@@ -381,21 +381,21 @@ define (
             // var buttonLabel = 'details';
             var methodTitle = methodSpec.info.tooltip.trim();
             var methodDescr = methodFullInfo[methodId].description.trim();
-            var $overviewSwitch = $("<a/>").html('more...');
+            var $overviewSwitch = $('<a/>').html('more...');
             var $methodInfo = $('<div>')
                     .addClass('kb-func-desc')
                     .css({'margin' : '25px 0px 0px 15px'})
                     .append($('<h2>')
                     .attr('id', methodUuid)
                     .addClass('collapse in')
-                    .append(methodTitle).append("&nbsp;&nbsp&nbsp").append($overviewSwitch));
+                    .append(methodTitle).append('&nbsp;&nbsp&nbsp').append($overviewSwitch));
 
             var $methodDescrPanel = $('<div/>')
                     .addClass('kb-func-desc')
                     .css({'margin' : '20px 0px 0px 20px', 'display' : 'none'})
                     .append(methodDescr);
             if (methodDescr && methodDescr != '' && methodDescr != 'none' &&
-                    methodDescr != methodTitle && (methodDescr + ".") != methodTitle) {
+                    methodDescr != methodTitle && (methodDescr + '.') != methodTitle) {
                 $overviewSwitch.click(function(){
                     $methodDescrPanel.toggle();
                 });
@@ -407,7 +407,7 @@ define (
                     .append($('<div>')
                     .addClass('kb-func-panel kb-cell-run')
                     .append($methodInfo).append($methodDescrPanel))
-                    .append($('<div>').css({'margin' : '25px 0px 0px 15px'}).append("<hr>"))
+                    .append($('<div>').css({'margin' : '25px 0px 0px 15px'}).append('<hr>'))
                     .append($('<div>')
                     .append($inputDiv))
                     .append($('<div>')
@@ -429,7 +429,7 @@ define (
                 $header.append(tabHeader);
                 var tabContent = $('<div>')
                     .addClass('kb-side-tab3')
-                    .css("display", "none")
+                    .css('display', 'none')
                     .append(params.content);
                 $body.append(tabContent);
                 if (params.show) {
@@ -449,27 +449,32 @@ define (
                     }
                 }, this));
             }
-            var wig = $inputDiv[inputWidgetName]({ method: methodJson, isInSidePanel: true });
-            this.inputWidget[methodId] = wig;
+            require([inputWidgetName], function(InputWidget) {
+                // var wig = $inputDiv[inputWidgetName]({ method: methodJson, isInSidePanel: true });
+                var wig = new InputWidget($inputDiv, {method: methodJson, isInSidePanel: true});
+                self.inputWidget[methodId] = wig;
 
-            var onChange = function() {
-                var w = self.getInputWidget();
-                if (self.timer)
-                    return;
-                var v = w.isValid();
-                if (v.isValid) {
-                    self.showInfo('All parameters are valid and you can start "Import" now');
-                } else {
-                    self.showInfo('You can start "Import" when all parameters are ready (marked by green check)');
+                var onChange = function() {
+                    var w = self.getInputWidget();
+                    if (self.timer)
+                        return;
+                    var v = w.isValid();
+                    if (v.isValid) {
+                        self.showInfo('All parameters are valid and you can start "Import" now');
+                    } else {
+                        self.showInfo('You can start "Import" when all parameters are ready (marked by green check)');
+                    }
+                };
+                var paramValues = wig.getAllParameterValues();
+                for (var paramPos in paramValues) {
+                    var paramId = paramValues[paramPos].id;
+                    wig.addInputListener(paramId, onChange);
                 }
-            };
-            var paramValues = wig.getAllParameterValues();
-            for (var paramPos in paramValues) {
-                var paramId = paramValues[paramPos].id;
-                wig.addInputListener(paramId, onChange);
-            }
 
-            this.tabs[methodId] = tab;
+                self.tabs[methodId] = tab;
+            }, function(error) {
+                alert(error);
+            });
         },
 
         getSelectedTabId: function() {

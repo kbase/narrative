@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # given a virtual environment, install jupyter notebook, and the KBase goodies on top
 # 1. source into virtualenv
 # > virtualenv narrative-jupyter
@@ -31,15 +33,13 @@
 #
 # 8. Done!
 
+IPYTHON_VERSION=5.3.0
+
 JUPYTER_NOTEBOOK_INSTALL_DIR=jupyter_notebook
-# JUPYTER_NOTEBOOK_REPO=https://github.com/eapearson/notebook
-# JUPYTER_NOTEBOOK_TAG=4.2.0-kbase
-
 JUPYTER_NOTEBOOK_REPO=https://github.com/jupyter/notebook
-JUPYTER_NOTEBOOK_TAG=4.2.1
+JUPYTER_NOTEBOOK_TAG=4.4.1
 
-# IPYWIDGETS_INSTALL_DIR=ipywidgets
-# IPYWIDGETS_TAG=5.0.0
+IPYWIDGETS_VERSION=6.0.0
 
 PYTHON=python2.7
 
@@ -55,7 +55,7 @@ cat /dev/null > $logfile
 
 function log () {
     now=`date '+%Y-%m-%d %H:%M:%S'`
-    echo "$now [install_narrative] $1" >> $logfile
+    echo "$now [install_narrative] $1" | tee -a $logfile
 }
 
 function console () {
@@ -95,6 +95,7 @@ function make_activate_venv () {
 
 no_venv=0
 update_only=0
+travis=0
 while [ $# -gt 0 ]; do
     case $1 in
         -h | --help | -\?)
@@ -111,6 +112,10 @@ while [ $# -gt 0 ]; do
             ;;
         -u | --update)
             update_only=1
+            shift
+            ;;
+        --travis)
+            travis=1
             shift
             ;;
     esac
@@ -134,32 +139,36 @@ then
     # Install external JavaScript code
     # --------------------
     cd $NARRATIVE_ROOT_DIR
-    npm install >> ${logfile} 2>&1
-    bower install --allow-root --config.interactive=false >> ${logfile} 2>&1
+    npm install 2>&1 | tee -a ${logfile}
+    bower install -V --allow-root --config.interactive=false 2>&1 | tee -a ${logfile}
+
+    # Install IPython version 5.3.0 (anything higher comes naturally, and requires Python > 3.0)
+    # This needs to be here, not in requirements,
+    # -----------------------
+    log "Installing IPython version $IPYTHON_VERSION"
+    pip install ipython==$IPYTHON_VERSION 2>&1 | tee -a ${logfile}
 
     cd $VIRTUAL_ENV
     # Install Jupyter code
     # --------------------
     # 1. Setup Jupyter Notebook inside virtualenv
-    log "Installing Jupyter notebook using $PYTHON"
-    console "Installing Jupyter notebook from directory '$JUPYTER_NOTEBOOK_INSTALL_DIR'"
-
     # This will clone the specified tag or branch in single-branch mode
-    git clone --branch $JUPYTER_NOTEBOOK_TAG --single-branch $JUPYTER_NOTEBOOK_REPO $JUPYTER_NOTEBOOK_INSTALL_DIR
-    cd $JUPYTER_NOTEBOOK_INSTALL_DIR
-    # git checkout tags/$JUPYTER_NOTEBOOK_TAG
-    pip install --pre -e . >> ${logfile} 2>&1
-    cd ..
+    if [ $travis -eq 1 ]
+    then
+        log "Installing Jupyter notebook using $PYTHON and pip"
+        pip install notebook==$JUPYTER_NOTEBOOK_TAG 2>&1 | tee ${logfile}
+    else
+        log "Installing Jupyter notebook from directory '$JUPYTER_NOTEBOOK_INSTALL_DIR'"
+        git clone --branch $JUPYTER_NOTEBOOK_TAG --single-branch $JUPYTER_NOTEBOOK_REPO $JUPYTER_NOTEBOOK_INSTALL_DIR 2>&1 | tee -a ${logfile}
+        cd $JUPYTER_NOTEBOOK_INSTALL_DIR
+        pip install --pre -e . 2>&1 | tee -a ${logfile}
+        cd ..
+    fi
 
     # Setup ipywidgets addon
     log "Installing ipywidgets using $PYTHON"
     console "Installing ipywidgets from directory 'ipywidgets'"
-    # git clone https://github.com/ipython/ipywidgets
-    # cd ipywidgets
-    # git checkout tags/$IPYWIDGETS_TAG
-    # pip install ipywidgets==$IPYWIDGETS_TAG >> ${logfile} 2>&1
-    pip install ipywidgets >> ${logfile} 2>&1
-    # pip install -e . >> ${logfile} 2>&1
+    pip install ipywidgets==$IPYWIDGETS_VERSION 2>&1 | tee -a ${logfile}
 fi
 
 # Install Narrative code
@@ -167,28 +176,18 @@ fi
 console "Installing biokbase modules"
 log "Installing requirements from src/requirements.txt with 'pip'"
 cd $NARRATIVE_ROOT_DIR/src
-pip install -r requirements.txt >> ${logfile} 2>&1
+pip install -r requirements.txt 2>&1 | tee -a ${logfile}
 if [ $? -ne 0 ]; then
     console "pip install for biokbase requirements failed: please examine $logfile"
     exit 1
 fi
 log "Running local 'setup.py'"
-${PYTHON} setup.py install >> ${logfile} 2>&1
+${PYTHON} setup.py install 2>&1 | tee -a ${logfile}
 log "Done installing biokbase."
 cd $NARRATIVE_ROOT_DIR
 
 if [ ! $update_only -eq 1 ]
 then
-    # Install KBase data_api package
-    # ------------------------------
-    # git clone https://github.com/kbase/data_api -b develop
-    # cd data_api
-    # pip install -r requirements.txt
-    # $PYTHON setup.py install >> ${logfile} 2>&1
-    # cd ..
-    # rm -rf data_api
-
-
     # Setup jupyter_narrative script
     # ------------------------------
     console "Installing scripts"

@@ -190,12 +190,12 @@ define([
         }
 
         function feedbackRequired() {
-            places.feedbackIndicator.className = 'kb-app-parameter-required-glyph fa fa-arrow-left';
+            places.feedbackIndicator.className = 'kb-app-parameter-right-error-bar';
             places.feedbackIndicator.setAttribute('title', 'required field');
         }
 
         function feedbackError() {
-            places.feedbackIndicator.className = 'kb-app-parameter-required-glyph fa fa-ban';
+            places.feedbackIndicator.className = 'kb-app-parameter-right-error-bar';
         }
 
         function rawSpec(spec) {
@@ -306,6 +306,14 @@ define([
             } else {
                 advanced = '';
             }
+
+            var infoTipText;
+            if (spec.ui.description && spec.ui.hint !== spec.ui.description) {
+                infoTipText = spec.ui.description;
+            } else {
+                infoTipText = spec.ui.hint || spec.ui.description;
+            }
+
             var content = div({
                 class: ['form-horizontal', 'kb-app-parameter-row', 'parameter-panel', advanced].join(' '),
                 dataAdvancedParameter: spec.ui.advanced,
@@ -334,8 +342,21 @@ define([
                         marginBottom: '0'
                     }
                 }, [
-                    label({ class: 'col-md-3 xcontrol-label kb-app-parameter-name control-label' }, [
-                        spec.ui.label || spec.ui.id
+                    div({class: 'col-md-3' }, [
+                            label({
+                                    class: 'xcontrol-label kb-app-parameter-name control-label',
+                                    title: infoTipText,
+                                    style: {cursor: 'help'},
+                                    id: events.addEvent({
+                                        type: 'click',
+                                            handler: function () {
+                                                places.infoPanel.querySelector('[data-element="big-tip"]').classList.toggle('hidden');
+                                            }
+                                        })
+                                },
+                                [
+                                    spec.ui.label || spec.ui.id
+                                ])
                     ]),
                     div({ class: 'input-group col-md-9' }, [
                         div({
@@ -344,20 +365,24 @@ define([
                         }),
                         div({
                             id: ids.feedback,
-                            class: 'input-group-addon',
+                            class: 'input-group-addon kb-input-group-addon kb-app-field-feedback',
                             dataElement: 'feedback',
                             style: {
-                                width: '30px',
-                                padding: '0'
+                                width: '3px',
+                                height: '100%',
+                                'margin-left': '4px'
                             }
                         }, [
                             div({
                                 id: ids.feedbackIndicator,
-                                dataElement: 'indicator'
+                                dataElement: 'indicator',
+                                style: {
+                                    width: '3px'
+                                }
                             })
                         ]),
-                        div({
-                            class: 'input-group-addon',
+                        /*div({
+                            class: 'input-group-addon kb-input-group-addon',
                             style: {
                                 width: '30px',
                                 padding: '0'
@@ -375,7 +400,7 @@ define([
                                     }
                                 })
                             }, span({ class: 'fa fa-info-circle' })))
-                        ])
+                        ])*/
                     ])
                 ]),
                 div({
@@ -445,7 +470,7 @@ define([
         }
 
         function start(arg) {
-            attach(arg.node)
+            return attach(arg.node)
                 .then(function () {
                     bus.on('validation', function (message) {
                         switch (message.diagnosis) {

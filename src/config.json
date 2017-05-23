@@ -81,7 +81,7 @@
         "invocation": "",
         "job_service": "https://ci.kbase.us/services/njs_wrapper",
         "landing_pages": "/#dataview/",
-        "log_proxy_host": "172.17.42.1",
+        "log_proxy_host": "172.17.0.1",
         "log_proxy_port": 32001,
         "login": "https://ci.kbase.us/services/authorization/Sessions/Login",
         "narrative_method_store": "https://ci.kbase.us/services/narrative_method_store/rpc",

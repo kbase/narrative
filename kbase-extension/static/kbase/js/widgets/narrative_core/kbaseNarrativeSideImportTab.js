@@ -456,6 +456,8 @@ define (
 
                 var onChange = function() {
                     var w = self.getInputWidget();
+                    if (!w) { return };
+
                     if (self.timer)
                         return;
                     var v = w.isValid();

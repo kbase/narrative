@@ -16,6 +16,9 @@ define (
 		'jquery-dataTables',
 		'jquery-dataTables-bootstrap',
 		'kbaseTreechart',
+		'kbaseExpressionSparkline',
+		'kbaseExpressionHeatmap',
+		'kbaseExpressionPairwiseCorrelation',
 		'knhx',
 		// 'jquery-dataScroller'
 	], function(
@@ -29,6 +32,9 @@ define (
 		jquery_dataTables,
 		jquery_dataTables_bootstrap,
 		kbaseTreechart,
+		kbaseExpressionSparkline,
+		kbaseExpressionHeatmap,
+		kbaseExpressionPairwiseCorrelation,
 		knhx
 		// jquery_dataScroller
 	) {
@@ -223,7 +229,7 @@ define (
 			} );
 
             function events() {
-				self.registerActionButtonClick();
+				self.registerActionButtonClick(tabWidget);
 				updateClusterLinks("clusters");
             }
 
@@ -287,7 +293,7 @@ define (
 		    return ret;
 		},
 
-		registerActionButtonClick : function(){
+		registerActionButtonClick : function( tabWidget ){
 			var self = this;
 			var pref = self.pref;
 			$('.' + pref + 'action_button').on('click', function(e){
@@ -314,27 +320,50 @@ define (
                         var rowIndex = $invokedOn[0].getAttribute('rowIndex');
                         var methodInput = $selectedMenu[0].getAttribute('methodInput');
 
-                        var geneIds = self.getClusterGeneIds(rowIndex);
 
-                        if(methodInput==='build_feature_set') {
-							IPython.narrative.createAndRunMethod(methodInput,
-								{
-									'input_genome':self.genomeID,
-									'input_feature_ids': geneIds.join(","),
-									'output_feature_set': self.options.clusterSetID + "_Cluster"+rowIndex+"_Features",
-									'description': 'Features were selected from Cluster ' + rowIndex + ' of a FeatureClusters data object '+
-													'named ' + self.options.clusterSetID + '.'
-								}
-							);
-						} else {
-							IPython.narrative.createAndRunMethod(methodInput,
-								{
-									'input_expression_matrix':self.expMatrixName,
-									'input_gene_ids': geneIds.join(",")
-								}
-							);
-						}
+			                  if (methodInput === 'build_feature_set') {
+			                    /* exercise left for the reader */
+                          /* IPython.narrative.createAndRunMethod(methodInput,
+                            {
+                              'input_genome':self.genomeID,
+                              'input_feature_ids': geneIds.join(","),
+                              'output_feature_set': self.options.clusterSetID + "_Cluster"+rowIndex+"_Features",
+                              'description': 'Features were selected from Cluster ' + rowIndex + ' of a FeatureClusters data object '+
+                                      'named ' + self.options.clusterSetID + '.'
+                            }
+                          ); */
+			                  }
+			                  else {
+
+                          var nameMap = {
+                            view_expression_profile : 'Expression profile',
+                            view_expression_pairwise_correlation : 'Pairwise correlation',
+                            view_expression_heatmap : 'Heatmap'
+                          };
+
+                          var tabName = nameMap[methodInput] + ' for cluster_' + rowIndex;
+
+                          var geneIds = self.getClusterGeneIds(rowIndex);
+
+                          var $contentDiv = $('<div></div>');
+
+                          tabWidget.addTab({tab: tabName, content: $contentDiv, canDelete : true, show: true});
+
+                          var methodMap = {
+                              view_expression_profile : kbaseExpressionSparkline,
+                              view_expression_pairwise_correlation : kbaseExpressionPairwiseCorrelation,
+                              view_expression_heatmap : kbaseExpressionHeatmap
+                            };
+
+                          new methodMap[methodInput]($contentDiv, {
+                            geneIds : geneIds.join(','),
+                            expressionMatrixID : self.expMatrixName,
+                            workspaceID : self.options.workspaceID
+                          });
+                        }
+
                     });
+
 			});
 		},
 
@@ -375,8 +404,6 @@ define (
 				    <li><a tabindex="-1" href="#" methodInput="view_expression_profile">View expression profile</a></li> \
 				    <li><a tabindex="-1" href="#" methodInput="view_expression_pairwise_correlation">View pairwise correlation</a></li> \
 				    <li><a tabindex="-1" href="#" methodInput="view_expression_heatmap">View in sortable condition heatmap</a></li> \
-				    <li class="divider"></li> \
-				    <li><a tabindex="-1" href="#" methodInput="build_feature_set">Save as a FeatureSet</a></li> \
 				</ul> \
 			');
 

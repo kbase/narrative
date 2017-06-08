@@ -1,8 +1,9 @@
 {
     "config": "ci",
     "name": "KBase Narrative",
-    "version": "3.1.7",
+    "version": "3.3.0",
     "dev_mode": true,
+    "auth_cookie": "kbase_session",
     "git_commit_hash": "60e2219",
     "git_commit_time": "Thu Mar 3 15:44:21 2016 -0800",
     "release_notes": "https://github.com/kbase/narrative/blob/staging/RELEASE_NOTES.md",
@@ -43,6 +44,7 @@
         "login": "https://appdev.kbase.us/services/authorization/Sessions/Login",
         "narrative_job_proxy": "https://appdev.kbase.us/services/narrativejobproxy/",
         "narrative_method_store": "https://appdev.kbase.us/services/narrative_method_store/rpc",
+        "narrative_method_store_image": "https://appdev.kbase.us/services/narrative_method_store/",
         "narrative_method_store_types": "https://next.kbase.us/services/narrative_method_store/rpc",
         "profile_page": "/#people/",
         "protein_info": "",
@@ -64,6 +66,7 @@
         "ws_browser": "https://appdev.kbase.us/#ws"
     },
     "ci": {
+        "auth": "https://ci.kbase.us/services/auth",
         "ftp_api_url": "https://ci.kbase.us/services/kb-ftp-api/v0",
         "ftp_api_root": "/data/bulk",
         "awe": "https://ci.kbase.us/services/awe-api",
@@ -78,10 +81,9 @@
         "invocation": "",
         "job_service": "https://ci.kbase.us/services/njs_wrapper",
         "landing_pages": "/#dataview/",
-        "log_proxy_host": "172.17.42.1",
+        "log_proxy_host": "172.17.0.1",
         "log_proxy_port": 32001,
         "login": "https://ci.kbase.us/services/authorization/Sessions/Login",
-        "narrative_job_proxy": "http://narrative-ci.kbase.us:7068",
         "narrative_method_store": "https://ci.kbase.us/services/narrative_method_store/rpc",
         "narrative_method_store_image": "https://ci.kbase.us/services/narrative_method_store/",
         "profile_page": "/#people/",

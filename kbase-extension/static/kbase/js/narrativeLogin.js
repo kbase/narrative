@@ -6,26 +6,36 @@
  * the login widget, and wires the environment together.
  * @author Bill Riehl wjriehl@lbl.gov
  */
-define (
-    [
-        'jquery',
-        'kbaseLogin',
-        'kbapi',
-        'base/js/utils'
-    ], function(
-        $,
-        KBaseLogin,
-        kbapi,
-        JupyterUtils
-    ) {
-    "use strict";
-    var baseUrl = JupyterUtils.get_body_data('baseUrl');
-    var loginWidget;
+define ([
+    'jquery',
+    'bluebird',
+    'kbapi',
+    'base/js/utils',
+    'narrativeConfig',
+    'api/auth',
+    'userMenu',
+    'util/bootstrapDialog'
+], function(
+    $,
+    Promise,
+    kbapi,
+    JupyterUtils,
+    Config,
+    Auth,
+    UserMenu,
+    BootstrapDialog
+) {
+    'use strict';
+    var baseUrl = JupyterUtils.get_body_data('baseUrl'),
+        authClient = Auth.make({url: Config.url('auth')}),
+        sessionInfo = null,
+        tokenCheckTimer = null,
+        tokenWarningTimer = null;
 
     /* set the auth token by calling the kernel execute method on a function in
      * the magics module
      */
-    var ipythonLogin = function(token) {
+    function ipythonLogin(token) {
         window.kb = new KBCacheClient(token);
         $.ajax({
             url: JupyterUtils.url_join_encode(baseUrl, 'login')
@@ -38,9 +48,9 @@ define (
                 // console.err(err);
             }
         );
-    };
+    }
 
-    var ipythonLogout = function() {
+    function ipythonLogout() {
         $.ajax({
             url: JupyterUtils.url_join_encode(baseUrl, 'logout')
         }).then(
@@ -52,57 +62,163 @@ define (
                 // console.err(err);
             }
         );
-        window.location.href = "/";
-    };
+        window.location.href = '/';
+    }
 
-    var init = function($elem) {
-        /**
-         * Initialize the login widget and bind login/logout callbacks
-         */
-        loginWidget = new KBaseLogin($elem, {
-            /* If the notebook kernel's initialized, tell it to set the token.
-             * This really only gets called when the user does a login on the Narrative page.
-             * And since the user needs to be logged in already to get to the Narrative (in production),
-             * This shouldn't get called, pretty much ever.
-             * So having it fail if no IPython.notebook is present is okay here.
-             */
-            login_callback: function(args) {
-                ipythonLogin(args.token);
-            },
+    function showTokenInjectionDialog() {
+        var $inputField = $('<input type="text" class="form-control">');
+        var $body = $('<div>')
+                    .append('<div>You appear to be working on a local development environment of the Narrative Interface, but you don\'t have a valid auth token. You can paste one in below.</div>')
+                    .append('<div><b>You are operating in the ' + Config.get('environment') + ' environment.')
+                    .append($('<div>').append($inputField));
+        var dialog = new BootstrapDialog({
+            'title': 'Insert an authentication token?',
+            'body': $body,
+            'buttons': [$('<a type="button" class="btn btn-default">')
+                        .append('OK')
+                        .click(function () {
+                            dialog.hide();
+                            var newToken = $inputField.val();
+                            authClient.setAuthToken(newToken);
+                            location.reload();
+                        })]
+        });
+        dialog.show();
+    }
 
-            /* If the notebook is present, tell it to clear the token and environment vars,
-             * Then redirect to the root page.
-             */
-            logout_callback: function(args) {
-                ipythonLogout();
-            },
+    function showNotLoggedInDialog() {
+        var dialog = new BootstrapDialog({
+            'title': 'Not Logged In',
+            'body': $('<div>').append('You are not logged in (or your session has expired), and you will be redirected to the sign in page shortly.'),
+            'buttons': [$('<a type="button" class="btn btn-default">')
+                        .append('OK')
+                        .click(function () {
+                            dialog.hide();
+                            ipythonLogout();
+                        })]
+        });
+        dialog.show();
+    }
 
-            /* This is the main path to starting up. Since the user should be coming in already logged
-             * in, this will get invoked. It sets up a single-use event that sets up the environment
-             * with KBase necessities once the Kernel itself is activated. It also waits 500ms
-             * before doing so, due to some lag in processing (hopefully fixed in a later version
-             * of IPython).
-             */
-            prior_login_callback: function(args) {
-                ipythonLogin(args.token);
+    function showAboutToLogoutDialog(tokenExpirationTime) {
+        var dialog = new BootstrapDialog({
+            'title': 'Expiring session',
+            'body': $('<div>').append('Your authenticated KBase session will expire in approximately 5 minutes. To continue using KBase, we suggest you log out and back in.'),
+            'buttons': [$('<a type="button" class="btn btn-default">')
+                        .append('OK')
+                        .click(function () {
+                            var remainingTime = tokenExpirationTime - new Date().getTime();
+                            if (remainingTime < 0) {
+                                remainingTime = 0;
+                            }
+                            tokenWarningTimer = setTimeout(function() {
+                                tokenTimeout();
+                            });
+                            dialog.hide();
+                        })]
+        });
+        dialog.show();
+    }
+
+    function initEvents() {
+        $(document).on('loggedInQuery.kbase', function(e, callback) {
+            if (callback) {
+                callback(sessionInfo);
             }
         });
 
-        if (loginWidget.token() === undefined) {
-            // include hiding div.
-            loginWidget.openDialog();
-        }
-    };
+        $(document).on('logout.kbase', function(e, hideMessage) {
+            tokenTimeout(!hideMessage);
+        });
+    }
 
-    var getLoginWidget = function($elem) {
-        if (loginWidget === undefined && $elem !== undefined) {
-            init($elem);
+    function initTokenTimer(tokenExpirationTime) {
+        /**
+         * First timer - check for token existence very second.
+         * trigger the logout behavior if it's not there.
+         */
+        tokenCheckTimer = setInterval(function() {
+            if (!authClient.getAuthToken()) {
+                tokenTimeout();
+            }
+        }, 1000);
+
+        var currentTime = new Date().getTime();
+        if (currentTime >= tokenExpirationTime) {
+            // already expired! logout!
+            tokenTimeout();
         }
-        return loginWidget;
-    };
+        var timeToWarning = tokenExpirationTime - currentTime - (1000 * 60 * 5);
+        if (timeToWarning <= 0) {
+            timeToWarning = 0;
+        }
+        else {
+            tokenWarningTimer = setTimeout(function() {
+                showAboutToLogoutDialog(tokenExpirationTime);
+            }, timeToWarning);
+        }
+    }
+
+    function tokenTimeout(showDialog) {
+        if (tokenCheckTimer) {
+            clearInterval(tokenCheckTimer);
+        }
+        if (tokenWarningTimer) {
+            clearInterval(tokenWarningTimer);
+        }
+        authClient.clearAuthToken();
+        authClient.revokeAuthToken(sessionInfo.token, sessionInfo.id);
+        // show dialog - you're signed out!
+        if (showDialog) {
+            showNotLoggedInDialog();
+        }
+        else {
+            ipythonLogout();
+        }
+    }
+
+    function init($elem) {
+        /* Flow.
+         * 1. Get cookie. If present and valid, yay. If not, dialog / redirect to login page.
+         * 2. Setup event triggers. need loggedInQuery.kbase, promptForLogin.kbase, logout.kbase,
+         * 3. events to trigger: loggedIn, loggedInFailure, loggedOut
+         * 4. Set up user widget thing on #signin-button
+         */
+        var sessionToken = authClient.getAuthToken();
+        return Promise.all([authClient.getTokenInfo(sessionToken), authClient.getUserProfile(sessionToken)])
+            .then(function(results) {
+                var tokenInfo = results[0];
+                sessionInfo = tokenInfo;
+                this.sessionInfo = tokenInfo;
+                this.sessionInfo.token = sessionToken;
+                this.sessionInfo.kbase_sessionid = this.sessionInfo.id;
+                this.sessionInfo.user_id = this.sessionInfo.user;
+                initEvents();
+                initTokenTimer(sessionInfo.expires);
+                UserMenu.make({
+                    target: $elem,
+                    token: sessionToken,
+                    userName: sessionInfo.user,
+                    email: results[1].email,
+                    displayName: results[1].display
+                });
+                ipythonLogin(sessionToken);
+                $(document).trigger('loggedIn', this.sessionInfo);
+                $(document).trigger('loggedIn.kbase', this.sessionInfo);
+            }.bind(this))
+            .catch(function(error) {
+                if (document.location.hostname.indexOf('localhost') !== -1 ||
+                    document.location.hostname.indexOf('0.0.0.0') !== -1) {
+                    showTokenInjectionDialog();
+                }
+                else {
+                    showNotLoggedInDialog();
+                }
+            });
+    }
 
     return {
         init: init,
-        loginWidget: getLoginWidget
+        sessionInfo: sessionInfo
     };
 });

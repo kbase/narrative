@@ -10,10 +10,11 @@ define([
     'common/dom',
     'common/appUtils',
     'common/jupyter',
+    'common/ui',
     './widgets/appInfoDialog',
     './widgets/appCellWidget',
     'common/spec'
-], function(
+], function (
     Promise,
     Uuid,
     utils,
@@ -22,6 +23,7 @@ define([
     Dom,
     AppUtils,
     jupyter,
+    UI,
     appInfoDialog,
     AppCellWidget,
     Spec
@@ -29,7 +31,8 @@ define([
     'use strict';
 
     var t = html.tag,
-        div = t('div');
+        div = t('div'),
+        p = t('p');
 
     function isAppCell(cell) {
         if (cell.cell_type !== 'code') {
@@ -51,7 +54,7 @@ define([
             spec;
 
         function specializeCell() {
-            cell.minimize = function() {
+            cell.minimize = function () {
                 var inputArea = this.input.find('.input_area'),
                     outputArea = this.element.find('.output_wrapper'),
                     viewInputArea = this.element.find('[data-subarea-type="app-cell-input"]'),
@@ -64,7 +67,7 @@ define([
                 viewInputArea.addClass('hidden');
             };
 
-            cell.maximize = function() {
+            cell.maximize = function () {
                 var inputArea = this.input.find('.input_area'),
                     outputArea = this.element.find('.output_wrapper'),
                     viewInputArea = this.element.find('[data-subarea-type="app-cell-input"]'),
@@ -76,16 +79,16 @@ define([
                 outputArea.removeClass('hidden');
                 viewInputArea.removeClass('hidden');
             };
-            cell.getIcon = function() {
+            cell.getIcon = function () {
                 return AppUtils.makeToolbarAppIcon(utils.getCellMeta(cell, 'kbase.appCell.app.spec'));
             };
-            cell.renderIcon = function() {
+            cell.renderIcon = function () {
                 var iconNode = this.element[0].querySelector('.celltoolbar [data-element="icon"]');
                 if (iconNode) {
                     iconNode.innerHTML = AppUtils.makeToolbarAppIcon(utils.getCellMeta(cell, 'kbase.appCell.app.spec'));
                 }
             };
-            cell.showInfo = function() {
+            cell.showInfo = function () {
                 var app = utils.getCellMeta(cell, 'kbase.appCell.app');
                 appInfoDialog.show({
                     id: app.spec.info.id,
@@ -96,8 +99,10 @@ define([
             };
         }
 
+        
+
         function setupCell() {
-            return Promise.try(function() {
+            return Promise.try(function () {
                 // Only handle kbase cells.
                 if (!isAppCell(cell)) {
                     return;
@@ -145,18 +150,18 @@ define([
                 // cell.kbase.$node = $(kbaseNode);
 
                 return appCellWidget.init()
-                    .then(function() {
+                    .then(function () {
                         return appCellWidget.attach(kbaseNode);
                     })
-                    .then(function() {
+                    .then(function () {
                         return appCellWidget.start();
                     })
-                    .then(function() {
+                    .then(function () {
                         return appCellWidget.run({
                             authToken: runtime.authToken()
                         });
                     })
-                    .then(function() {
+                    .then(function () {
                         cell.renderMinMax();
 
                         return {
@@ -164,15 +169,59 @@ define([
                             bus: cellBus
                         };
                     })
-                    .catch(function(err) {
+                    .catch(function (err) {
                         console.error('ERROR starting app cell', err);
-                        alert('Error starting app cell: ' + err.message);
+                        // var ui = UI.make({
+                        //     node: document.body
+                        // });
+                        // return ui.showInfoDialog({
+                        //     title: 'Error Starting App Cell',
+                        //     body: div({
+                        //         class: 'alert alert-danger'
+                        //     }, [
+                        //         p('There was an error starting the app cell.'),
+                        //         p('The error is:'),
+                        //         p(err.message)
+                        //     ])
+                        // });
+                        // TODO:
+                        return appCellWidget.stop()
+                            .then(function () {
+                                return appCellWidget.detach();
+                            })
+                            .catch(function (err) {
+                                console.log('ERR in ERR', err);
+                            })
+                            .finally(function () {
+                                var ui = UI.make({
+                                    node: document.body
+                                });
+                                kbaseNode.innerHTML = div({
+                                    style: {
+                                        margin: '10px'
+                                    }
+                                }, [
+                                    ui.buildPanel({
+                                        title: 'Error Starting App Cell',
+                                        type: 'danger',
+                                        body: ui.buildErrorTabs({
+                                            preamble: p('There was an error starting the app cell.'),
+                                            error: err
+                                        })
+                                    })
+                                ]);
+
+                            });
+
+                        // Replace app cell node with an error message!!!
+
+                        // alert('Error starting app cell: ' + err.message);
                     });
             });
         }
 
         function upgradeToAppCell(appSpec, appTag) {
-            return Promise.try(function() {
+            return Promise.try(function () {
                     // Create base app cell
 
                     // TODO: this should capture the entire app spec, so don't need
@@ -213,7 +262,7 @@ define([
                     // Complete the cell setup.
                     return setupCell();
                 })
-                .then(function(cellStuff) {
+                .then(function (cellStuff) {
                     // Initialize the cell to its default state.
                     // cellStuff.bus.emit('reset-to-defaults');
                 });
@@ -227,7 +276,7 @@ define([
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
         },
         isAppCell: isAppCell

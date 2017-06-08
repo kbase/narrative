@@ -1,6 +1,3 @@
-/*global define*/
-/*jslint browser:true,white:true,single:true*/
-
 define([
     'common/props'
 ], function (
@@ -146,12 +143,7 @@ define([
         }
 
         // Singular item?
-        //if (!spec.allow_multiple) {
         return defaultToNative(converted, defaultValues[0]);
-        //}
-        //return defaultValues.map(function(defaultValue) {
-        //    return defaultToNative(converted, defaultValue);
-        //});
     }
 
     function updateDefaultValue(converted, spec) {
@@ -174,22 +166,9 @@ define([
             return 'string';
         case 'dropdown':
             return 'string';
-            // if (spec.allow_multiple) {
-            //     return '[]string';
-            // } else {
-            //     return 'string';
-            // }
         case 'textsubdata':
             return 'subdata';
         case 'custom_textsubdata':
-            //if (spec.allow_multiple) {
-            //    return '[]string';
-            //}
-            // return 'string';
-            //var custom = customTextSubdata();
-            //if (custom) {
-            //    return custom;
-            //}
             return 'customSubdata';
         case 'custom_button':
             switch (spec.id) {
@@ -205,10 +184,10 @@ define([
             break;
         case 'group':
             return 'struct';
-            // case 'reads_group_editor':
-            //     return 'reads_group_editor';
         case 'autocomplete':
             return 'string';
+        case 'custom':
+            return 'custom';
         }
 
         /*
@@ -259,8 +238,6 @@ define([
 
     function updateUI(converted, spec) {
         var dataType = converted.data.type;
-        var fieldType = converted.ui.type;
-        var paramClass = converted.ui.class;
 
         switch (dataType) {
         case 'subdata':
@@ -268,11 +245,13 @@ define([
             converted.ui.showSourceObject = spec.textsubdata_options.show_src_obj ? true : false;
             break;
         case 'customSubdata':
-            converted.ui.multiSelection = spec.textsubdata_options.multiselection ? true : false;
-            // converted.ui.showSourceObject = spec.textsubdata_options.show_src_obj ? true : false;
+            if (spec.textsubdata) {
+                converted.ui.multiSelection = spec.textsubdata_options.multiselection ? true : false;
+            } else {
+                converted.ui.multiSelection = false;
+            }
             break;
         }
-
     }
 
     /*
@@ -281,7 +260,6 @@ define([
     function updateConstraints(converted, spec) {
         var dataType = converted.data.type;
         var fieldType = converted.ui.type;
-        var paramClass = converted.ui.class;
         var constraints;
 
         // NOTE:
@@ -290,6 +268,13 @@ define([
         // a dropdown even though the field_type is 'text'.
 
         switch (dataType) {
+        case 'custom': 
+            constraints = {
+                type: Props.getDataItem(spec, 'text_options.validate_as')
+            };
+            // HACK
+            converted.ui.class = 'parameter';
+            break;
         case 'sequence':
             constraints = {};
             break;
@@ -300,6 +285,7 @@ define([
                 constraints = {
                     min: Props.getDataItem(spec, 'text_options.min_length'),
                     max: Props.getDataItem(spec, 'text_options.max_length'),
+                    regexp: Props.getDataItem(spec, 'text_options.regex_constraint'),
                     validate: Props.getDataItem(spec, 'text_options.validate_as')
                 };
                 break;
@@ -367,28 +353,9 @@ define([
             }
             break;
         case 'subdata':
-
             constraints = {
                 multiple: false,
                 subdataSelection: spec.textsubdata_options.subdata_selection
-
-                //     // The parameter containing the object name we derive data from
-                //     referredParameter: spec.textsubdata_options.subdata_selection.parameter_id,
-                //     // The "included" parameter to for the workspace call
-                //     subdataIncluded: spec.textsubdata_options.subdata_selection.subdata_included,
-                //     // These are for navigating the results.
-
-                //     // This is the property path to the part of the subdata
-                //     // we want to deal with.
-                //     path: spec.textsubdata_options.subdata_selection.path_to_subdata,
-                //     // This is used to pluck a value off of the leaf array
-                //     // items, object properties (if object), object values (if 'value'),
-                //     // or otherwise just use the property key. This becomes the "id"
-                //     // of the subdata item.
-                //     selectionId: spec.textsubdata_options.subdata_selection.selection_id,
-                //     // Used to generate a description for each item. Becomes the "desc".
-                //     displayTemplate: spec.textsubdata_options.subdata_selection.description_template
-                // }
             };
             break;
         case 'customSubdata':
@@ -483,7 +450,7 @@ define([
             case 'tab':
                 break;
             default:
-                console.log('ERROR unspecified field type', converted, spec)
+                console.error('ERROR unspecified field type', converted, spec)
                 throw new Error('Unknown unspecified field type');
             }
             break;
@@ -531,7 +498,9 @@ define([
                 class: spec.ui_class,
                 type: spec.field_type,
                 control: spec.field_type,
-                advanced: spec.advanced ? true : false
+                // If embedded in an advanced sequence control,
+                // the subcontrol does not need the advanced flag.
+                advanced: false
             },
             data: {
                 type: dataType,
@@ -577,8 +546,6 @@ define([
             }
         };
 
-        // updateNullValue(converted, spec);
-        // updateDefaultValue(converted, spec);
         updateConstraints(converted, spec);
         updateUI(converted, spec);
         updateData(converted, spec);
@@ -633,50 +600,7 @@ define([
         return converted;
     }
 
-    function convertGroupList(group, params) {
-        var defaultValue = [];
-        var nullValue = [];
-        var itemSpec = convertGroupToStruct(group, params);
-        // A list-embedded struct is always required.
-        itemSpec.data.constraints.required = true;
-        var structSpec = {
-            id: group.id,
-            multipleItems: true,
-            ui: {
-                label: group.ui_name,
-                description: group.description,
-                hint: group.short_hint,
-                class: group.ui_class || 'parameter',
-                control: '',
-                layout: group.parameter_ids
-            },
-            data: {
-                type: '[]struct',
-                constraints: {
-                    required: (function () {
-                        if (group.optional === 1) {
-                            return false;
-                        }
-                        return true;
-                    })
-                },
-                defaultValue: defaultValue,
-                nullValue: nullValue
-            },
-            // may not need this, but it is consistent with struct.
-            parameters: {
-                layout: ['item'],
-                specs: {
-                    item: itemSpec
-                }
-            }
-        };
-        params[group.id] = structSpec;
-
-        return structSpec;
-    }
-
-    function convertGroupToStruct(group, params, options) {
+    function convertGroupToStruct(group, params) {
         // Collect params into group and remove from original params collection.
         var groupParams = {};
         group.parameter_ids.forEach(function (id) {
@@ -686,43 +610,16 @@ define([
             // TODO: figure out what to do with advanced params within groups
             groupParams[id].ui.advanced = false;
         });
-        var required;
-        if (group.optional === 1) {
-            required = false;
-        } else {
-            required = true;
-        }
+        var required = group.optional ? false : true;
 
         var defaultValue;
         var nullValue;
         var zeroValue;
-        // if (required) {
-        //     // Default value is a struct of default values of the
-        //     // struct members. Note that this is fundamentally different
-        //     // from a list of structs/ groups.
-        //     defaultValue = {};
-        //     nullValue = {};
-        //     Object.keys(groupParams).forEach(function(id) {
-        //         defaultValue[id] = groupParams[id].data.defaultValue;
-        //         nullValue[id] = groupParams[id].data.nullValue;
-        //     });
-        //     zeroValue = defaultValue;
-        // } else {
-        //     defaultValue = null;
-        //     nullValue = null;
-        //     zeroValue = {};
-        //     // TODO: use the initial or "0" value for each paramter as well.
-        //     Object.keys(groupParams).forEach(function(id) {
-        //         zeroValue[id] = groupParams[id].data.defaultValue;
-        //     });
-        // }
-
 
         nullValue = null;
         defaultValue = {};
         Object.keys(groupParams).forEach(function (id) {
             defaultValue[id] = groupParams[id].data.defaultValue;
-            //  nullValue[id] = groupParams[id].data.nullValue;
         });
         zeroValue = defaultValue;
 
@@ -762,7 +659,12 @@ define([
 
         // in the context of a sequence, a struct is always "required",
         // no matter what the spec says.
-        itemSpec.data.constraints.required = true;
+        // itemSpec.data.constraints.required = true;
+
+        // Okay, we can no longer piggy back the feature which allows a user
+        // to collapse a struct with the optional/required constraint.
+        // We introduce a new "disableable" - http://www.urbandictionary.com/define.php?term=disableable
+        itemSpec.data.constraints.disableable = false;
 
         var required = (spec.optional ? false : true);
         var converted = {
@@ -774,8 +676,6 @@ define([
                 hint: spec.short_hint,
                 description: spec.description,
                 class: 'parameter',
-                // type: spec.field_type,
-                // control: spec.field_type,
                 advanced: spec.advanced ? true : false
             },
             data: {
@@ -794,8 +694,6 @@ define([
             }
         };
 
-        // updateNullValue(converted, spec);
-        // updateDefaultValue(converted, spec);
         updateConstraints(converted, spec);
         updateUI(converted, spec);
         updateData(converted, spec);
@@ -804,17 +702,28 @@ define([
     }
 
     function convertGroup(group, params) {
+        var structSpec = convertGroupToStruct(group, params);
+
+        // Skip groups with no parameters.
+        // A spec which defines a group with no members should probably not
+        // validate locally or when registering in the catalog.
+        // Skipping them here because it is not worth coding around this case
+        if (structSpec.parameters.layout.length === 0) {
+            throw new Error('Empty parameter group not allowed in ' + group.id);
+        }
+        
         if (group.allow_multiple === 1) {
-            var structSpec = convertGroupToStruct(group, params);
             params[group.id] = makeGroupSequence(group, structSpec);
         } else {
-            params[group.id] = convertGroupToStruct(group, params);
+            params[group.id] = structSpec;
         }
+
+        // The first parameter defines the position of the group within the parameter layout.
+        params[group.id]._position = structSpec.parameters.specs[structSpec.parameters.layout[0]]._position;
     }
 
     function convertAppSpec(sdkAppSpec) {
         // Parameters
-
         var parameterSpecs = {},
             parameterLayout;
 
@@ -824,8 +733,9 @@ define([
         // and populate it with the specified parameters, removing them from
         // the top level of parameters.
 
-        sdkAppSpec.parameters.forEach(function (parameter) {
+        sdkAppSpec.parameters.forEach(function (parameter, index) {
             parameterSpecs[parameter.id] = convertParameter(parameter);
+            parameterSpecs[parameter.id]._position = index;
         });
 
         var groups = [];
@@ -835,7 +745,7 @@ define([
                 convertGroup(group, parameterSpecs);
                 // don't know how the group is ordered in the spec ... so just append it later.
             });
-        }
+        }      
 
         // first filter out the paramters which have been moved into groups,
         // and then add the groups in.
@@ -847,43 +757,47 @@ define([
                 return false;
             })
             .map(function (parameter) {
-                return parameter.id;
+                return {
+                    position: parameterSpecs[parameter.id]._position,
+                    id: parameter.id
+                };
             })
-            .concat(groups.map(function (group) {
-                return group.id;
-            }));
+            .concat(groups
+                // first filter out any groups which were not added to the parameters.
+                // This includes ones with no parameters specified
+                .filter(function (group) {
+                    if (parameterSpecs[group.id]) {
+                        return true;
+                    }
+                    return false;
+                })
+                .map(function (group) {
+                    return {
+                        position: parameterSpecs[group.id]._position,
+                        id: group.id
+                    };
+                }));
+
+        var sortedLayout = parameterLayout
+            .sort(function (a, b) {
+                if (a.position < b.position) {
+                    return -1;
+                } else if (a.position === b.position) {
+                    return 0;
+                }
+                return 1;
+
+            })
+            .map(function (item) {
+                return item.id;
+            });
 
         return {
             parameters: {
-                layout: parameterLayout,
+                layout: sortedLayout,
                 specs: parameterSpecs
             }
         };
-
-        // wrap the rest of the app?
-
-
-        //        return  {
-        //            id: 'name',
-        //
-        //            multipleItems: false,
-        //
-        //            ui: {
-        //                label: 'Reads Set Name',
-        //                description: 'Name of the reads set',
-        //                hint: 'The name of the set of sequence reads',
-        //                class: 'parameter',
-        //                control: null
-        //            },
-        //            data: {
-        //                type: 'string',
-        //                constraints: {
-        //                    required: true,
-        //                    rule: 'WorkspaceObjectName' // ws data_type
-        //                },
-        //                defaultValue: ''
-        //            }
-        //        };
     }
 
     return {

@@ -28,11 +28,7 @@ define (
 
         version: "1.0.0",
         options: {
-            //tableColumns : ['Experiment name', 'Title', 'Experiment Description', 'Experiment design', 'Platform', 'Library type',
-            //                'Genome name', 'Genome annotation', 'Number of samples', 'Reads Label', 'Number of replicates', 'Tissue', 'Condition',
-            //                'Domain', 'Source', 'Publication Details']
             tableColumns : [ 'RNA-seq Sample Set','Sampleset Description', 'Platform', 'Library type', 'Reads', 'Domain', 'Source', 'Publication Details']
-
         },
 
 
@@ -42,36 +38,12 @@ define (
         ],
 
 
-        /*setDataset : function setDataset(newDataset) {
-
-                var $table =  new kbaseTable($tableElem, {
-                        structure : {
-                            keys : keys,
-                            rows : overViewValues
-                        }
-
-                    }
-                );
-
-            this.data('loader').hide();
-            this.data('tableElem').show();
-
-            this.setValueForKey('dataset', newDataset);
-
-        },
-
-        setBarchartDataset : function setBarchartDataset(bars, xLabel, yLabel) {
-
-        },*/
 
         loadAnalysis : function(ws, analysis) {
 
             var $rna = this;
 
-            var all_promises = [
-//                ws.get_objects([{ ref : analysis.annotation_id}]),
-//                ws.get_objects([{ ref : analysis.genome_id}])
-            ];
+            var all_promises = [ ];
 
             var external_ids = {};
             var num_sample_ids = 0;
@@ -85,99 +57,26 @@ define (
 
                         if (v.match(/\//)) {
                           all_promises.push(
-                              ws.get_object_info([
+                              ws.get_object_info3({ objects : [
                                 {ref : v}
-                              ])
+                              ]})
                           )
                         }
                         else {
 
                           all_promises.push(
-                              ws.get_object_info([
+                              ws.get_object_info3({ objects : [
                                 //{ref : v}
                                 {
                                   workspace : $rna.options.workspace,
                                   name : v
                                 }
-                              ])
+                              ]})
                           )
                         }
                     }
                 );
             }
-
-
-            /*if (analysis.alignments) {
-
-                this.options.tableColumns.push('Alignments');
-                var alignment_ids = [];
-                $.each(
-                    analysis.alignments,
-                    function (k,v) {
-
-                        if (external_ids[k] == undefined) {
-
-                            alignment_ids.push(k);
-                            all_promises.push(
-                                ws.get_object_info([{ref : k}])
-                            )
-                            external_ids[k] = 1;
-                        }
-
-                        if (external_ids[v] == undefined) {
-
-                            alignment_ids.push(v);
-                            all_promises.push(
-                                ws.get_object_info([{ref : v}])
-                            )
-                            external_ids[v] = 1;
-                        }
-                    }
-                );
-
-
-            }
-
-            if (analysis.expression_values) {
-
-                this.options.tableColumns.push('Expression Values');
-                var ev_ids = [];
-                $.each(
-                    analysis.expression_values,
-                    function (k,v) {
-                        if (external_ids[k] == undefined) {
-                            ev_ids.push(k);
-                            all_promises.push(
-                                ws.get_object_info([{ref : k}])
-                            )
-                            external_ids[k] = 1;
-                        }
-
-                        if (external_ids[v] == undefined) {
-                            ev_ids.push(v);
-                            all_promises.push(
-                                ws.get_object_info([{ref : v}])
-                            )
-                            external_ids[v] = 1;
-                        }
-                    }
-                );
-
-            }
-
-            if (analysis.transcriptome_id) {
-                this.options.tableColumns.push('Cuffmerge Output');
-                all_promises.push(
-                    ws.get_object_info([{ref : analysis.transcriptome_id}])
-                );
-            }
-
-            if (analysis.cuffdiff_diff_exp_id) {
-                this.options.tableColumns.push('Cuffdiff Output');
-                all_promises.push(
-                    ws.get_object_info([{ref : analysis.cuffdiff_diff_exp_id}])
-                );
-            }*/
 
             $.when.apply($, all_promises).then(function () {
 
@@ -188,7 +87,7 @@ define (
                 var ref_map = {};
                 var ref_map_by_id = {};
                 $.each(
-                    extra_args,
+                    extra_args.infos,
                     function(i, v) {
 
                         var info_obj = {};
@@ -219,12 +118,14 @@ define (
                       }
                     )
 
-                    $rna.dataset().parsed_read_samples = $.jqElem('table').addClass('display').css('width', '100%').css('border', '1px solid gray');
-                    var $tt = $rna.dataset().parsed_read_samples.DataTable({
+                    $rna.dataset().parsed_read_samples = $.jqElem('div');
+                    var $sample_table = $.jqElem('table').addClass('display').css('width', '100%').css('border', '1px solid gray');
+                    $rna.dataset().parsed_read_samples.append($sample_table);
+                    var $tt = $sample_table.DataTable({
                         columns: [
                             {title: 'Reads'},
                             {title: 'Treatment Labels'}
-                        ]
+                        ],
                     });
 
                     $tt.rows.add(sample_id_data).draw();
@@ -345,14 +246,16 @@ define (
                 this.loadAnalysis(ws, this.options.SetupRNASeqAnalysis);
             }
             else {
-                ws.get_objects(
-                    [{
+
+                ws.get_objects2(
+                    {objects : [{
                         workspace : this.options.workspace,
                         name : this.options.output
-                    }]
+                    }]}
                 ).then(function(d) {
 
-                    $rna.setDataset(d[0].data);
+
+                    $rna.setDataset(d.data[0].data);
                     if ($rna.dataset().tool_used) {
 
                       var promises = [];
@@ -362,7 +265,7 @@ define (
                         keys,
                         function (i,v) {
                           promises.push(
-                            ws.get_object_info([{ref : $rna.dataset()[v]}])
+                            ws.get_object_info3({ objects : [{ref : $rna.dataset()[v]}] })
                           );
                         }
                       );
@@ -384,7 +287,7 @@ define (
 
                     }
                     else {
-                      $rna.loadAnalysis(ws, d[0].data);
+                      $rna.loadAnalysis(ws, d.data[0].data);
                     }
                 })
                 .fail(function(d) {

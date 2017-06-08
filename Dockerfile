@@ -11,7 +11,7 @@
 # Made available under the KBase Open Source License
 #
 
-FROM kbase/narrbase:4.5
+FROM kbase/narrbase:4.6
 MAINTAINER Bill Riehl wjriehl@lbl.gov
 
 EXPOSE 8888
@@ -20,10 +20,13 @@ EXPOSE 8888
 RUN DEBIAN_FRONTEND=noninteractive apt-get remove -y python-tornado
 
 # TEMPORARY!
+# Update bs4 and pandas to resolve inability to run them
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python-dev libffi-dev libssl-dev \
     && pip install pyopenssl ndg-httpsclient pyasn1 \
     && pip install requests --upgrade \
-    && pip install 'requests[security]' --upgrade
+    && pip install 'requests[security]' --upgrade \
+    && pip install 'beautifulsoup4' --upgrade \
+    && pip install 'html5lib' --upgrade
 
 # Copy in the narrative repo
 ADD ./ /kb/dev_container/narrative
@@ -40,6 +43,8 @@ RUN npm install && bower install --allow-root --config.interactive=false
 # (commented out for now)
 # RUN cd kbase-extension/
 # src/notebook/ipython_profiles/profile_narrative/kbase_templates && npm install && grunt build
+RUN grunt minify
+
 
 # Add Tini. Tini operates as a process subreaper for jupyter. This prevents
 # kernel crashes. See Jupyter Notebook known issues here:

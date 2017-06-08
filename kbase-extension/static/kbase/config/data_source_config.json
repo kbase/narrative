@@ -109,13 +109,6 @@
                     ],
                     "displayName": "Example ExpressionMatrix",
                     "header": "Gene expression data in a gene vs. condition matrix"
-                },
-                {
-                    "name": [
-                        "TranscriptomeHack"
-                    ],
-                    "displayName": "Example Sorghum Transcriptomes",
-                    "header": "Sorghum bicolor transcriptome data in response to ABA and osmotic stress"
                 }
             ]
         }
@@ -125,19 +118,31 @@
             "genomes": {
                 "name": "Legacy Genomes",
                 "type": "KBaseGenomes.Genome",
-                "ws": "KBasePublicGenomesV5",
+                "ws": "ReferenceDataManager",
                 "search": true
+            },
+            "legacy_genomes": {
+                "name": "Legacy Genomes",
+                "type": "KBaseGenomes.Genome",
+                "ws": "KBasePublicGenomesV5",
+                "search": false
+            },
+            "plant_genomes": {
+                "name": "Plant Genomes",
+                "type": "KBaseGenomes.Genome",
+                "ws": "Phytozome_Genomes",
+                "search": false
+            },
+            "pubSEED_genomes": {
+                "name": "Public SEED Genomes",
+                "type": "KBaseGenomes.Genome",
+                "ws": "pubSEEDGenomes",
+                "search": false
             },
             "media": {
                 "name": "Media",
                 "type": "KBaseBiochem.Media",
                 "ws": "KBaseMedia",
-                "search": false
-            },
-            "phytozome_genomes": {
-                "name": "Phytozome Genomes",
-                "type": "KBaseGenomes.Genome",
-                "ws": "Phytozome_Genomes",
                 "search": false
             },
             "se_reads": {
@@ -212,13 +217,6 @@
                     ],
                     "displayName": "Example ExpressionMatrix",
                     "header": "Gene expression data in a gene vs. condition matrix"
-                },
-                {
-                    "name": [
-                        "TranscriptomeHack"
-                    ],
-                    "displayName": "Example Sorghum Transcriptomes",
-                    "header": "Sorghum bicolor transcriptome data in response to ABA and osmotic stress"
                 }
             ]
         }
@@ -232,6 +230,125 @@
                 "search": true
             },
              "plant_genomes": {
+                "name": "Plant Genomes",
+                "type": "KBaseGenomes.Genome",
+                "ws": "Phytozome_Genomes",
+                "search": false
+            },
+            "media": {
+                "name": "Media",
+                "type": "KBaseBiochem.Media",
+                "ws": "KBaseMedia",
+                "search": false
+            },
+            "legacy_genomes": {
+                "name": "Legacy Genomes",
+                "type": "KBaseGenomes.Genome",
+                "ws": "KBasePublicGenomesV5",
+                "search": false
+            },
+            "plant_genomes": {
+                "name": "Plant Genomes",
+                "type": "KBaseGenomes.Genome",
+                "ws": "Phytozome_Genomes",
+                "search": false
+            },
+            "pubSEED_genomes": {
+                "name": "Public SEED Genomes",
+                "type": "KBaseGenomes.Genome",
+                "ws": "pubSEEDGenomes",
+                "search": false
+            },
+            "media": {
+                "name": "Media",
+                "type": "KBaseBiochem.Media",
+                "ws": "KBaseMedia",
+                "search": false
+            },
+            "se_reads": {
+                "name": "RNA-seq Reads (single-end)",
+                "type": "KBaseAssembly.SingleEndLibrary",
+                "ws": "PlantCSGenomes",
+                "search": false
+            },
+            "pe_reads": {
+                "name": "RNA-seq Reads (paired-end)",
+                "type": "KBaseAssembly.PairedEndLibrary",
+                "ws": "PlantCSGenomes",
+                "search": false
+            },
+            "plant_rnaseq_anno": {
+                "name": "Plant RNA-seq Annotations",
+                "type": "KBaseRNASeq.ReferenceAnnotation",
+                "ws": "PlantCSGenomes",
+                "search": false
+            },
+            "plant_bowtie2_idx": {
+                "name": "Plant Bowtie2 Indexes",
+                "type": "KBaseRNASeq.Bowtie2Indexes",
+                "ws": "PlantCSGenomes",
+                "search": false
+            }
+        },
+        "exampleData": {
+            "ws": "KBaseExampleData",
+            "data_types": [
+                {
+                    "name": [
+                        "SingleEndLibrary",
+                        "PairedEndLibrary",
+                        "ReferenceAssembly"
+                    ],
+                    "displayName": "Example Sequence Assembly Inputs",
+                    "header": "Various types of read data configured for sequence assembly."
+                },
+                {
+                    "name": [
+                        "ContigSet"
+                    ],
+                    "displayName": "Example Contig Sets",
+                    "header": "A set of DNA sequences"
+                },
+                {
+                    "name": [
+                        "Genome"
+                    ],
+                    "displayName": "Example Genomes",
+                    "header": "Genomic sequence generally with attached functional annotations"
+                },
+                {
+                    "name": [
+                        "FBAModel"
+                    ],
+                    "displayName": "Example FBAModels",
+                    "header": "A metabolic model of an organism"
+                },
+                {
+                    "name": [
+                        "Media"
+                    ],
+                    "displayName": "Example Media",
+                    "header": "Specification of an environmental condition"
+                },
+                {
+                    "name": [
+                        "ExpressionMatrix"
+                    ],
+                    "displayName": "Example ExpressionMatrix",
+                    "header": "Gene expression data in a gene vs. condition matrix"
+                }
+            ]
+        }
+    },
+    "appdev": {
+        "publicData": {
+            "genomes": {
+                "name": "Legacy Genomes",
+                "type": "KBaseGenomes.Genome",
+                "ws": "KBasePublicGenomesV5",
+                "search": true
+            },
+            "plant_genomes": {
                 "name": "Plant Genomes",
                 "type": "KBaseGenomes.Genome",
                 "ws": "Phytozome_Genomes",
@@ -315,116 +432,6 @@
                     ],
                     "displayName": "Example ExpressionMatrix",
                     "header": "Gene expression data in a gene vs. condition matrix"
-                },
-                {
-                    "name": [
-                        "TranscriptomeHack"
-                    ],
-                    "displayName": "Example Sorghum Transcriptomes",
-                    "header": "Sorghum bicolor transcriptome data in response to ABA and osmotic stress"
-                }
-            ]
-        }
-    },
-    "appdev": {
-        "publicData": {
-            "genomes": {
-                "name": "Legacy Genomes",
-                "type": "KBaseGenomes.Genome",
-                "ws": "KBasePublicGenomesV5",
-                "search": true
-            },
-            "media": {
-                "name": "Media",
-                "type": "KBaseBiochem.Media",
-                "ws": "KBaseMedia",
-                "search": false
-            },
-            "phytozome_genomes": {
-                "name": "Phytozome Genomes",
-                "type": "KBaseGenomes.Genome",
-                "ws": "Phytozome_Genomes",
-                "search": false
-            },
-            "se_reads": {
-                "name": "RNA-seq Reads (single-end)",
-                "type": "KBaseAssembly.SingleEndLibrary",
-                "ws": "PlantCSGenomes",
-                "search": false
-            },
-            "pe_reads": {
-                "name": "RNA-seq Reads (paired-end)",
-                "type": "KBaseAssembly.PairedEndLibrary",
-                "ws": "PlantCSGenomes",
-                "search": false
-            },
-            "plant_rnaseq_anno": {
-                "name": "Plant RNA-seq Annotations",
-                "type": "KBaseRNASeq.ReferenceAnnotation",
-                "ws": "PlantCSGenomes",
-                "search": false
-            },
-            "plant_bowtie2_idx": {
-                "name": "Plant Bowtie2 Indexes",
-                "type": "KBaseRNASeq.Bowtie2Indexes",
-                "ws": "PlantCSGenomes",
-                "search": false
-            }
-        },
-        "exampleData": {
-            "ws": "KBaseExampleData",
-            "data_types": [
-                {
-                    "name": [
-                        "SingleEndLibrary",
-                        "PairedEndLibrary",
-                        "ReferenceAssembly"
-                    ],
-                    "displayName": "Example Sequence Assembly Inputs",
-                    "header": "Various types of read data configured for sequence assembly."
-                },
-                {
-                    "name": [
-                        "ContigSet",
-                        "Assembly"
-                    ],
-                    "displayName": "Example Assemblies",
-                    "header": "Assembled DNA sequences"
-                },
-                {
-                    "name": [
-                        "Genome"
-                    ],
-                    "displayName": "Example Genomes",
-                    "header": "Genomic sequence generally with attached functional annotations"
-                },
-                {
-                    "name": [
-                        "FBAModel"
-                    ],
-                    "displayName": "Example FBAModels",
-                    "header": "A metabolic model of an organism"
-                },
-                {
-                    "name": [
-                        "Media"
-                    ],
-                    "displayName": "Example Media",
-                    "header": "Specification of an environmental condition"
-                },
-                {
-                    "name": [
-                        "ExpressionMatrix"
-                    ],
-                    "displayName": "Example ExpressionMatrix",
-                    "header": "Gene expression data in a gene vs. condition matrix"
-                },
-                {
-                    "name": [
-                        "TranscriptomeHack"
-                    ],
-                    "displayName": "Example Sorghum Transcriptomes",
-                    "header": "Sorghum bicolor transcriptome data in response to ABA and osmotic stress"
                 }
             ]
         }

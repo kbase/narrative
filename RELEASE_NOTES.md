@@ -1,7 +1,92 @@
 ### OVERVIEW
 The Narrative Interface allows users to craft KBase Narratives using a combination of GUI-based commands, Python and R scripts, and graphical output elements.
 
-This is built on the Jupyter Notebook v4.2.1 (more notes will follow).
+This is built on the Jupyter Notebook v4.4.1 (more notes will follow).
+
+### Version 3.3.0
+__Changes__
+- Modified how to select an App from the App Panel, now you can sort and group by category, inputs, outputs, and alphabetically.
+- Update a widget for viewing Pan-Genomes, and the underlying table to show data.
+- Fix a bug that added unnecessary data to logs.
+- Fixed several installation problems and technical dependency issues.
+- Updated front end tests.
+
+### Version 3.2.5
+__Changes__
+- Fix problems preventing job logs from being scrolled in apps that are in an error state.
+- Update widgets for viewing Binned Contigs, and the underlying table.
+- Add tests for the above.
+
+### Version 3.2.4
+__Changes__
+- Added a viewer widget for Binned Contig objects.
+- Updated the Assembly viewer to improve performance for large Assemblies.
+
+### Version 3.2.3
+__Changes__
+- Fixed problems that can occur on initial load (the page with the flashing KBase icons)
+- Further improvements to the sharing interface.
+
+### Version 3.2.2
+__Changes__
+- Adjusted flow of job log viewing for data import jobs.
+- Changed Narrative sharing interface, fixed cross-browser incompatibilities.
+- Added new importer apps to the data staging panel.
+
+### Version 3.2.1
+__Changes__
+- Added JGI Data policy requirement to the JGI Public Data browser/stager.
+- Fixed a text problem with an FBA viewer tab.
+
+### Version 3.2.0
+__Changes__
+- Added a prototype Public Data option to fetch files from JGI and load them into a user's staging area.
+- Fixed problems with the Sharing popover having a very narrow text box.
+- Updated the Search area to retrieve data from the updated service.
+- Introduced a new Selenium-based browser testing harness.
+- Bumped version of Jupyter Notebook to 4.4.1, IPython to 5.3.0, and IPywidgets to 6.0.0.
+
+### Version 3.1.12
+__Changes__
+- Adjusted look and feel of group parameters in app cells.
+- Fixed problems with RNA-seq viewer widgets.
+- Added new categories to the Public data dropdown.
+- Data should now be downloadable in read-only mode.
+- Added a taxonomy viewer widget.
+
+### Version 3.1.11
+__Changes__
+- Fixed a problem where the job log in app cells would continue to poll after the job had finished, or after a user had clicked onto a different tab.
+- Fixed a problem with the Hisat viewer widget not working properly.
+- Grouped parameters in apps should now group in the proper order.
+- Minor adjustments to the ordering of buttons in dialog boxes (cancel buttons go on the left, active actions go on the right).
+- Change text of copy button in view only mode.
+- Adjust workflow of Narrative copying in view only mode to make more sense and prevent multi-clicking the copy button.
+
+### Version 3.1.10
+__Changes__
+- Fixed broken Import tab in the data slideout.
+- Adjusted text in staging area tour.
+- Fixed issue in App cells where the tab buttons could crowd each other out.
+- Adjusted behavior of slider buttons in volcano plot widget to be more performant.
+
+### Version 3.1.9
+__Changes__
+- Expanded the reach of the front end code compiler.
+- Adjusted the logic of job polling to only poll jobs that are currently attached to Narrative cells and running.
+- Changed what publicly available data is visible.
+- Fixed data panel timestamps in Safari.
+- Fixed sharing user lookup input field in Safari.
+- Made many visual improvements to the app cell.
+
+### Version 3.1.8
+__Changes__
+- JIRA TASK-434 Made improvements to speed up loading and (hopefully) improve stability.
+- JIRA TASK-439 Fixed a problem with adding inputs to subselected parameters in apps.
+- JIRA TASK-440 Advanced dropdowns should now have the right horizontal size when un-hidden.
+- Made a change to publically available data - Phytozome genomes are now just part of the genomes list.
+- Fixed issue with viewer cells not rendering properly.
+- Enable a tab that displays which output objects were created in a report viewer.
 
 ### Version 3.1.7
 __Changes__

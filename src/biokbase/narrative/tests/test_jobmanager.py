@@ -1,20 +1,20 @@
+"""
+Tests for job management
+"""
 import unittest
 import mock
 import biokbase.narrative.jobs.jobmanager
 from biokbase.narrative.jobs.job import Job
-import ConfigParser
+from util import TestConfig
 import os
-from util import read_json_file
 from IPython.display import HTML
 from pprint import pprint
-"""
-Tests for job management
-"""
+
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
-config = ConfigParser.ConfigParser()
-config.read('test.cfg')
-job_info = read_json_file(config.get('jobs', 'job_info_file'))
+config = TestConfig()
+job_info = config.load_json_file(config.get('jobs', 'job_info_file'))
+# job_info = read_json_file(config.get('jobs', 'job_info_file'))
 
 
 class MockComm(object):
@@ -34,6 +34,9 @@ class MockComm(object):
     def send(self, data=None, content=None):
         """Mock sending a msg"""
         self.last_message = {"data": data, "content": content}
+
+    def clear_message_cache(self):
+        self.last_message = None
 
 
 class MockAllClients(object):
@@ -72,10 +75,12 @@ class MockAllClients(object):
         return ret
 
     def list_methods_spec(self, params):
-        return read_json_file(config.get('specs', 'app_specs_file'))
+        return config.load_json_file(config.get('specs', 'app_specs_file'))
+        # return read_json_file(config.get('specs', 'app_specs_file'))
 
     def list_categories(self, params):
-        return read_json_file(config.get('specs', 'type_specs_file'))
+        return config.load_json_file(config.get('specs', 'type_specs_file'))
+        # return read_json_file(config.get('specs', 'type_specs_file'))
 
 
 def get_mock_client(client_name):
@@ -129,6 +134,7 @@ class JobManagerTest(unittest.TestCase):
         self.jm._send_comm_message('foo', 'bar')
         msg = self.jm._comm.last_message
         self.assertDictEqual(msg, {'content': None, 'data': {'content': 'bar', 'msg_type': 'foo'}})
+        self.jm._comm.clear_message_cache()
 
     def test_get_job_good(self):
         job_id = self.job_ids[0]
@@ -175,6 +181,7 @@ class JobManagerTest(unittest.TestCase):
         self.assertItemsEqual(job_ids, jobs_to_lookup)
         for job_id in job_ids:
             self.assertTrue(self.validate_status_message(job_data[job_id]))
+        self.jm._comm.clear_message_cache()
 
     @mock.patch('biokbase.narrative.jobs.jobmanager.clients.get', get_mock_client)
     def test_single_job_status_fetch(self):
@@ -185,6 +192,7 @@ class JobManagerTest(unittest.TestCase):
         self.assertEquals(msg['data']['msg_type'], "job_status")
         self.assertTrue(self.validate_status_message(msg['data']['content']))
         self.jm.delete_job(new_job.job_id)
+        self.jm._comm.clear_message_cache()
 
     # Should "fail" based on sent message.
     def test_job_message_bad_id(self):
@@ -201,13 +209,19 @@ class JobManagerTest(unittest.TestCase):
         new_job = phony_job()
         phony_id = new_job.job_id
         self.jm.register_new_job(new_job)
-        self.jm._handle_comm_message(create_jm_message("all_status"))
+        self.jm._handle_comm_message(create_jm_message("start_job_update", job_id=phony_id))
+        self.jm._handle_comm_message(create_jm_message("stop_update_loop"))
+
+        self.jm._lookup_all_job_status()
         msg = self.jm._comm.last_message
         self.assertTrue(phony_id in msg['data']['content'])
+        self.assertEquals(msg['data']['content'][phony_id].get('listener_count', 0), 1)
+        self.jm._comm.clear_message_cache()
         self.jm._handle_comm_message(create_jm_message("stop_job_update", job_id=phony_id))
         self.jm._lookup_all_job_status()
         msg = self.jm._comm.last_message
-        self.assertTrue(phony_id not in msg['data']['content'])
+        self.assertTrue(self.jm._running_jobs[phony_id]['refresh'] == 0)
+        self.assertIsNone(msg)
 
 
 if __name__ == "__main__":

@@ -4,20 +4,22 @@ require.config({
     // Jupyter does some magic where it merges its /static/ directory
     // with this one (kbase-profile/static)
     paths: {
+        fileSaver: 'ext_components/file-saver/FileSaver.min',
         bluebird: 'ext_components/bluebird/js/browser/bluebird.min',
         'bootstrap-slider': 'ext_components/bootstrap-slider/bootstrap-slider',
         'jquery-dataTables': 'ext_components/datatables/media/js/jquery.dataTables.min',
         'jquery-dataTables-bootstrap': 'ext_components/datatables/media/js/dataTables.bootstrap.min',
         bloodhound: 'ext_components/corejs-typeahead/dist/bloodhound.min',
-        css: 'ext_components/require-css/css',
+        // css: 'ext_components/require-css/css',
         d3: 'ext_components/d3/d3.min',
+        md5: 'ext_components/spark-md5/spark-md5',
         domReady: 'ext_components/requirejs/domReady',
         dropzone: 'ext_components/dropzone/dist/dropzone-amd-module',
         handlebars: 'ext_components/handlebars/handlebars',
         json: 'ext_components/requirejs-plugins/src/json',
         'jquery-nearest': 'ext_components/jquery-nearest/src/jquery.nearest.min',
         plotly: 'ext_components/plotly.js/dist/plotly.min',
-        kb_common: 'ext_components/kbase-common-js/dist/kb/common/',
+        kb_common: 'ext_components/kbase-common-js/dist/kb_common/',
         kb_service: 'ext_components/kbase-service-clients-js/dist/kb_service/',
         kb_sdk_clients: 'ext_components/kbase-sdk-clients-js/dist/amd/kb_sdk_clients/',
         numeral: 'ext_components/numeral/numeral',
@@ -45,11 +47,11 @@ require.config({
         narrativeTour: 'kbase/js/tour',
         kbaseInputTest: 'kbase/js/widgets/function_input/kbaseInputTest',
         api: 'kbase/js/api',
-        util: 'kbase/js/util/',
+        util: 'kbase/js/util',
         narrative_core: 'kbase/js/widgets/narrative_core',
         configPath: 'kbase',
         narrativeViewers: 'kbase/js/widgets/narrative_core/narrativeViewers',
-        jquery: 'components/jquery/jquery.min',
+        jquery: 'ext_components/jquery/dist/jquery.min',
         jqueryui: 'components/jquery-ui/ui/minified/jquery-ui.min',
         bootstrap: 'components/bootstrap/js/bootstrap.min',
         // 'css'                                   : 'ext_components/require-css/css.min',
@@ -59,6 +61,7 @@ require.config({
         narrativeTreeMain: 'narrativeTreeMain',
         kbaseLogin: 'kbase/js/widgets/kbaseLoginFuncSite',
         narrativeLogin: 'kbase/js/narrativeLogin',
+        userMenu: 'kbase/js/userMenu',
         kbaseTabs: 'kbase/js/widgets/kbaseTabs',
         kbaseUploadWidget: 'kbase/js/widgets/kbaseUpload',
         kbasePrompt: 'kbase/js/widgets/kbasePromptNew',
@@ -92,9 +95,9 @@ require.config({
         widgetService2: 'kbase/js/widgetApi/widgetService2',
 
 
-        common: 'kbase/js/common/',
-        // kb_sdk_clients: 'kbase/js/kb_sdk_clients',
+        common: 'kbase/js/common',
         widgets: 'kbase/js/widgets',
+        appWidgets: 'kbase/js/widgets/appWidgets2',
 
 
         /***
@@ -108,7 +111,7 @@ require.config({
         'kbaseNarrativeDataList': 'kbase/js/widgets/narrative_core/kbaseNarrativeDataList',
         'kbaseNarrativeSidePanel': 'kbase/js/widgets/narrative_core/kbaseNarrativeSidePanel',
         'kbaseNarrativeJobsPanel': 'kbase/js/widgets/narrative_core/kbaseNarrativeJobsPanel',
-        'kbaseNarrativeMethodPanel': 'kbase/js/widgets/narrative_core/kbaseNarrativeMethodPanel',
+        'kbaseNarrativeAppPanel': 'kbase/js/widgets/narrative_core/kbaseNarrativeAppPanel',
         'kbaseNarrativeManagePanel': 'kbase/js/widgets/narrative_core/kbaseNarrativeManagePanel',
         'kbaseNarrativeDownloadPanel': 'kbase/js/widgets/narrative_core/kbaseNarrativeDownloadPanel',
         'kbaseNarrativeSharePanel': 'kbase/js/widgets/narrative_core/kbaseNarrativeSharePanel',
@@ -178,6 +181,7 @@ require.config({
         /***
          * CUSTOM OUTPUT AND VIEWER WIDGETS
          ***/
+        kbaseBinnedContigs: 'kbase/js/widgets/function_output/kbaseBinnedContigs',
         'kbaseReadsViewer': 'kbase/js/widgets/function_output/kbaseReadsViewer',
         'kbaseReadsSetView': 'kbase/js/widgets/function_output/kbaseReadsSetView',
         'kbaseMatrix2DAbstract': 'kbase/js/widgets/function_output/kbaseMatrix2DAbstract',
@@ -230,6 +234,7 @@ require.config({
         'kbaseContigBrowserButtons': 'kbase/js/widgets/genomes/kbaseContigBrowserButtons',
         'ContigBrowserPanel': 'kbase/js/widgets/function_output/contigBrowserPanel',
         'kbaseGenomeView': 'kbase/js/widgets/function_output/kbaseGenomeAnnotation',
+        'kbaseTaxonomyBrowser': 'kbase/js/widgets/function_output/kbaseTaxonomyBrowser',
         'kbaseGenomeAnnotationViewer': 'kbase/js/widgets/function_output/kbaseGenomeAnnotationViewer',
         'kbaseGenomeAnnotationAssembly': 'kbase/js/widgets/function_output/kbaseGenomeAnnotationAssembly',
 
@@ -308,6 +313,9 @@ require.config({
         'kbaseReportView': 'kbase/js/widgets/function_output/kbaseReportView',
         'kbaseExpressionVolcanoPlot': 'kbase/js/widgets/function_output/kbaseExpressionVolcanoPlot',
 
+        'kbaseRESKESearchResultDemo': 'kbase/js/widgets/function_output/kbaseRESKESearchResultDemo',
+
+
         /***
          * END CUSTOM OUTPUT WIDGETS
          ***/
@@ -320,7 +328,16 @@ require.config({
         'kbaseDeletePrompt': 'kbase/js/widgets/kbaseDeletePrompt'
 
     },
+    map: {
+        '*': {
+            'css': 'ext_components/require-css/css'
+        }
+    },
+
     shim: {
+        select2: {
+            deps: ['jquery']
+        },
         bloodhound: {
             deps: ['jquery'],
             exports: 'Bloodhound'
@@ -428,13 +445,6 @@ require.config({
                 'd3'
             ]
         },
-        // 'kbaseTabTableTabs' : {
-        //     'deps' : ['jquery',
-        //               'jqueryui',
-        //               'jquery-dataTables',
-        //               'jquery-dataTables-bootstrap',
-        //               'bootstrap']
-        // },
         kbapi: {
             deps: ['jquery', 'bootstrap', 'kbase-client-api']
         },

@@ -107,7 +107,8 @@ define([
             // CONTROL
             var selectElem = select({
                 class: 'form-control',
-                dataElement: 'input'
+                dataElement: 'input',
+                id: html.genId()
             }, [option({ value: '' }, '')].concat(selectOptions));
 
             return selectElem;
@@ -284,6 +285,8 @@ define([
                     }
                 }).on('change', function() {
                     doChange();
+                }).on('advanced-shown.kbase', function (e) {
+                    $(e.target).select2({width: 'resolve'});
                 });
                 events.attachEvents(container);
 

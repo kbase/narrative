@@ -263,61 +263,69 @@ define ([
 
             // show all other users
             for (var i = 0; i < self.ws_permissions.length; i++) {
-                if (self.ws_permissions[i][0] !== self.my_user_id && self.ws_permissions[i][0] !== '*') {
-                    var $select;
-                    if (isOwner) {
-                        var thisUser = self.ws_permissions[i][0];
-                        // note that we can simply add a space since usernames cannot have spaces
-                        $select = $('<select>').addClass('form-control kb-share-user-permissions-dropdown')
-                            .append($('<option>').val(thisUser + ' ---r').append('can view'))
-                            .append($('<option>').val(thisUser + ' ---w').append('can edit'))
-                            .append($('<option>').val(thisUser + ' ---a').append('can edit/share'))
-                            .append($('<option>').val(thisUser + ' ---n').append('remove access'))
-                            .val(thisUser + ' ---' + self.ws_permissions[i][1])
-                            .on('change', function () {
-                                self.showWorking('updating permissions...');
-                                var tokens = $(this).val().split(' ---');
-                                self.ws.set_permissions(
-                                    {
-                                        id: self.ws_info[0],
-                                        new_permission: tokens[1],
-                                        users: [tokens[0]]
-                                    },
-                                    function () {
-                                        self.refresh();
-                                    },
-                                    function (error) {
-                                        self.reportError(error);
-                                        self.refresh();
-                                    }
-                                );
-
-                            });
-                    } else {
-                        $select = $('<div>').addClass('form-control kb-share-user-permissions-dropdown');
-                        if (self.ws_permissions[i][1] === 'r') {
-                            $select.append('can view');
-                        }
-                        if (self.ws_permissions[i][1] === 'w') {
-                            $select.append('can edit');
-                        }
-                        if (self.ws_permissions[i][1] === 'a') {
-                            $select.append('can edit/share');
-                        }
-                    }
-                    var user_display = self.renderUserIconAndName(self.ws_permissions[i][0], null, true);
-                    $tbl.append(
-                        $('<tr>')
-                        .append($('<td style="text-align:left">')
-                            .append(user_display[0]))
-                        .append($('<td style="text-align:left">').css({'padding': '4px', 'padding-top': '6px'})
-                            .append(user_display[1]))
-                        .append($('<td style="text-align:right">').append($select)));
+                if (self.ws_permissions[i][0] === self.my_user_id || self.ws_permissions[i][0] === '*') {
+                    continue;
                 }
+                var $select;
+                var $removeBtn = null;
+                if (isOwner) {
+                    var thisUser = self.ws_permissions[i][0];
+                    // note that we can simply add a space since usernames cannot have spaces
+
+                    $select = $('<select>')
+                        .addClass('form-control kb-share-user-permissions-dropdown')
+                        .attr('user', thisUser)
+                        .append($('<option>').val('r').append('can view'))
+                        .append($('<option>').val('w').append('can edit'))
+                        .append($('<option>').val('a').append('can edit/share'))
+                        .val(self.ws_permissions[i][1])
+                        .on('change', function () {
+                            self.showWorking('updating permissions...');
+                            self.updateUserPermissions([{id: $(this).attr('user')}], $(this).val());
+                        });
+                    $removeBtn = $('<span>')
+                        .attr('user', thisUser)
+                        .addClass('btn btn-xs btn-danger')
+                        .append($('<span>')
+                                .addClass('fa fa-times'))
+                        .click(function() {
+                            self.updateUserPermissions([{id: $(this).attr('user')}], 'n');
+                        });
+                } else {
+                    $select = $('<div>').addClass('form-control kb-share-user-permissions-dropdown');
+                    if (self.ws_permissions[i][1] === 'r') {
+                        $select.append('can view');
+                    }
+                    if (self.ws_permissions[i][1] === 'w') {
+                        $select.append('can edit');
+                    }
+                    if (self.ws_permissions[i][1] === 'a') {
+                        $select.append('can edit/share');
+                    }
+                }
+                var user_display = self.renderUserIconAndName(self.ws_permissions[i][0], null, true);
+                var $userRow =
+                    $('<tr>')
+                    .append($('<td style="text-align:left">')
+                        .append(user_display[0]))
+                    .append($('<td style="text-align:left">').css({'padding': '4px', 'padding-top': '6px'})
+                        .append(user_display[1]))
+                    .append($('<td style="text-align:right">').append($select));
+                if ($removeBtn) {
+                    $userRow.append($('<td style="text-align:left">').append($removeBtn));
+                }
+                $tbl.append($userRow);
             }
             self.$mainPanel.append($othersDiv);
         },
 
+        /**
+         * Updates user permissions to the current Narrative.
+         * userData: list of objects. This typically comes from Select2, so it has some baggage.
+         *           We just need the 'id' property.
+         * newPerm: string, one of [a (all), w (write), r (read), n (none)].
+         *          Gets applied to all users.
+         */
         updateUserPermissions: function(userData, newPerm) {
             var users = [];
             for (var i = 0; i < userData.length; i++) {

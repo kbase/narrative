@@ -224,6 +224,8 @@ define ([
                 // Silly Select2 has different height rules for multiple and single select.
                 $addUsersDiv.find('span.select2-selection--single')
                             .css({'min-height': '32px'});
+                $addUsersDiv.find('.select2-container')
+                            .css({'margin-left': '5px', 'margin-right': '5px'});
             }
 
             var $othersDiv = $('<div>').css({
@@ -270,8 +272,6 @@ define ([
                 var $removeBtn = null;
                 if (isOwner) {
                     var thisUser = self.ws_permissions[i][0];
-                    // note that we can simply add a space since usernames cannot have spaces
-
                     $select = $('<select>')
                         .addClass('form-control kb-share-user-permissions-dropdown')
                         .attr('user', thisUser)

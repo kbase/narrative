@@ -56,9 +56,7 @@ define (
         if (options.body) {
             this.setBody(options.body);
         }
-        if (options.buttons) {
-            this.setButtons(options.buttons);
-        }
+        this.setButtons(options.buttons);
         this.$modal.append(
             this.$dialog.append(
                 this.$dialogContent.append(this.$header.append(this.$headerTitle))
@@ -76,6 +74,13 @@ define (
 
     BootstrapDialog.prototype.setButtons = function (buttonList) {
         this.$footer.empty();
+        if (!buttonList || buttonList.length === 0) {
+            this.$footer.css({'border-top': 0});
+            return;
+        }
+        else {
+            this.$footer.css({'border-top': ''});
+        }
         for (var i=0; i<buttonList.length; i++) {
             var $btn = buttonList[i];
             this.$footer.append($btn);

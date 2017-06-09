@@ -250,8 +250,8 @@ define([
             shareDialog = new BootstrapDialog({
                 title: 'Change Share Settings',
                 body: sharePanel,
-                closeButton: true,
-                buttons: [$('<button class="kb-primary-btn">Done</button>').click(function() { shareDialog.hide(); })]
+                closeButton: true
+                // buttons: null //[$('<button class="kb-primary-btn">Done</button>').click(function() { shareDialog.hide(); })]
             });
         shareDialog.getElement().one('shown.bs.modal', function() {
             shareWidget = new KBaseNarrativeSharePanel(sharePanel.empty(), {

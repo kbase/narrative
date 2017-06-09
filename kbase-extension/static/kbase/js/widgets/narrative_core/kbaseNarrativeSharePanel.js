@@ -196,17 +196,17 @@ define ([
                         .css({'width': '25%', 'display': 'inline-block'})
                         // TODO: pull-right is deprecated, use dropdown-menu-right when bootstrap updates
                         .append($('<option>').append(
-                            $('<a>').append('Add with view privileges')
+                            $('<a>').append('View only')
                             .on('click', function () {
                                 self.updateUserPermissions($input.select2('data'), 'r');
                             })))
                         .append($('<option>').append(
-                            $('<a>').append('Add with edit privileges')
+                            $('<a>').append('Edit and save')
                             .on('click', function () {
                                 self.updateUserPermissions($input.select2('data'), 'w');
                             })))
                         .append($('<option>').append(
-                            $('<a>').append('Add with edit/share privileges')
+                            $('<a>').append('Edit, save, and share')
                             .on('click', function () {
                                 self.updateUserPermissions($input.select2('data'), 'a');
                             })));

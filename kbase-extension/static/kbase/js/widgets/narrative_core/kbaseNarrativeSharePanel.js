@@ -183,43 +183,47 @@ define ([
                 var $input = $('<select multiple data-placeholder="Share with...">')
                     .addClass('form-control kb-share-select');
 
-                var $addAction =
-                    // .addClass('btn-group')
-                    // .append($('<button>')
-                    //     .addClass('btn btn-default dropdown-toggle ')
-                    //     .attr('type', 'button')
-                    //     .attr('data-toggle', 'dropdown')
-                    //     .attr('aria-expanded', 'false')
-                    //     .append('<span class="fa fa-caret-down"></span>'))
+                var $permSelect =
                     $('<select>')
-                    // .append($('<select>')
                         .css({'width': '25%', 'display': 'inline-block'})
                         // TODO: pull-right is deprecated, use dropdown-menu-right when bootstrap updates
-                        .append($('<option>').append(
-                            $('<a>').append('View only')
-                            .on('click', function () {
-                                self.updateUserPermissions($input.select2('data'), 'r');
-                            })))
-                        .append($('<option>').append(
-                            $('<a>').append('Edit and save')
-                            .on('click', function () {
-                                self.updateUserPermissions($input.select2('data'), 'w');
-                            })))
-                        .append($('<option>').append(
-                            $('<a>').append('Edit, save, and share')
-                            .on('click', function () {
-                                self.updateUserPermissions($input.select2('data'), 'a');
-                            })));
+                        .append($('<option value="r">').append('View only'))
+                        .append($('<option value="w">').append('Edit and save'))
+                        .append($('<option value="a">').append('Edit, save, and share'));
 
-                $addUsersDiv.append($('<div>')
-                    .append($input)
-                    .append($addAction));
+                var $applyBtn = $('<button>')
+                                .addClass('btn btn-primary disabled')
+                                .append('Apply')
+                                .click(function() {
+                                    if (!$(this).hasClass('disabled')) {
+                                        var users = $input.select2('data');
+                                        var perm = $permSelect.val();
+                                        self.updateUserPermissions(users, perm);
+                                    }
+                                });
+
+                $addUsersDiv.append($input)
+                            .append($permSelect)
+                            .append($applyBtn);
                 self.$mainPanel.append($addUsersDiv);
 
                 self.setupSelect2($input);
-                $addAction.select2();
+                $permSelect.select2({
+                    minimumResultsForSearch: Infinity
+                });
+                $input.on('select2:select', function() {
+                    if ($input.select2('data').length > 0) {
+                        $applyBtn.removeClass('disabled');
+                    }
+                });
+                $input.on('select2:unselect', function() {
+                    if ($input.select2('data').length === 0) {
+                        $applyBtn.addClass('disabled');
+                    }
+                });
                 // Silly Select2 has different height rules for multiple and single select.
-                $addUsersDiv.find('span.select2-selection--single').css({'min-height': '32px'});
+                $addUsersDiv.find('span.select2-selection--single')
+                            .css({'min-height': '32px'});
             }
 
             var $othersDiv = $('<div>').css({
@@ -366,7 +370,7 @@ define ([
         /* private method - note: if placeholder is empty, then users cannot cancel a selection*/
         setupSelect2: function ($input) {
             var self = this;
-            var noMatchesFoundStr = 'Search by Name or Username';//"no users found";
+            var noMatchesFoundStr = 'Search by Name or Username';
 
             $.fn.select2.amd.require([
                 'select2/data/array',

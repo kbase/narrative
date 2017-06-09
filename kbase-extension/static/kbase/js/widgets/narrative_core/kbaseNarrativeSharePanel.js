@@ -1,8 +1,8 @@
-/*global define*/
+/*global define, Workspace*/
 /*jslint white: true*/
 /**
  * Widget for viewing and modifying narrative share settings
- * @author Michael Sneddon <mwsneddon@lbl.gov>
+ * @author Michael Sneddon <mwsneddon@lbl.gov>, Bill Riehl <wjriehl@lbl.gov>
  * @public
  */
 define ([
@@ -63,13 +63,14 @@ define ([
             this.refresh();
             return this;
         },
-        loggedOutCallback: function (event, auth) {
+        loggedOutCallback: function () {
             this.ws = null;
             this.authClient = null;
             this.my_user_id = null;
             this.refresh();
             return this;
         },
+
         ws_info: null,
         ws_permissions: null,
         user_data: {},
@@ -159,20 +160,20 @@ define ([
 
             self.$mainPanel.append($togglePublicPrivate);
             var $meDiv = $('<div>').css({'margin': '5px', 'margin-top': '20px'});
-            var status = "You do not have access to this Narrative.";
+            var status = 'You do not have access to this Narrative.';
             var isOwner = false;
             if (self.ws_info[2] === self.my_user_id) {
-                status = "You own this Narrative. You can edit it and share it with other users.";
+                status = 'You own this Narrative. You can edit it and share it with other users.';
                 isOwner = true;
                 $togglePublicPrivate.show();
             } else if (self.ws_info[5] === 'a') {
-                status = "You can edit and share this Narrative.";
+                status = 'You can edit and share this Narrative.';
                 isOwner = true;  // not really, but set this so we show sharing controls
                 $togglePublicPrivate.show();
             } else if (self.ws_info[5] === 'w') {
-                status = "You can edit this Narrative, but you cannot share it.";
+                status = 'You can edit this Narrative, but you cannot share it.';
             } else if (self.ws_info[5] === 'r' || self.ws_info[6] === 'r') { // either you can read it, or it is globally readable
-                status = "You can view this Narrative, but you cannot edit or share it.";
+                status = 'You can view this Narrative, but you cannot edit or share it.';
             }
             $meDiv.append($('<div>').css({'margin-top': '10px'}).append(status));
             self.$mainPanel.append($meDiv);
@@ -180,43 +181,45 @@ define ([
             if (isOwner) {
                 var $addUsersDiv = $('<div>').css({'margin-top': '10px'});
                 var $input = $('<select multiple data-placeholder="Share with...">')
-                    .addClass('kb-share-select');
+                    .addClass('form-control kb-share-select');
 
                 var $addAction =
-                    $('<div>')
-                    .addClass('btn-group')
-                    .append($('<button>')
-                        .addClass('btn btn-default dropdown-toggle ')
-                        .attr('type', 'button')
-                        .attr('data-toggle', 'dropdown')
-                        .attr('aria-expanded', 'false')
-                        .append('<span class="fa fa-caret-down"></span>'))
-                    .append($('<ul>')
-                        .addClass('dropdown-menu pull-right')
-                        .attr('role', 'menu')
+                    // .addClass('btn-group')
+                    // .append($('<button>')
+                    //     .addClass('btn btn-default dropdown-toggle ')
+                    //     .attr('type', 'button')
+                    //     .attr('data-toggle', 'dropdown')
+                    //     .attr('aria-expanded', 'false')
+                    //     .append('<span class="fa fa-caret-down"></span>'))
+                    $('<select>')
+                    // .append($('<select>')
+                        .css({'width': '25%', 'display': 'inline-block'})
                         // TODO: pull-right is deprecated, use dropdown-menu-right when bootstrap updates
-                        .append($('<li>').append(
+                        .append($('<option>').append(
                             $('<a>').append('Add with view privileges')
                             .on('click', function () {
                                 self.updateUserPermissions($input.select2('data'), 'r');
                             })))
-                        .append($('<li>').append(
+                        .append($('<option>').append(
                             $('<a>').append('Add with edit privileges')
                             .on('click', function () {
                                 self.updateUserPermissions($input.select2('data'), 'w');
                             })))
-                        .append($('<li>').append(
+                        .append($('<option>').append(
                             $('<a>').append('Add with edit/share privileges')
                             .on('click', function () {
                                 self.updateUserPermissions($input.select2('data'), 'a');
-                            }))));
+                            })));
 
-                $addUsersDiv.append($('<div style="width:100% !important">')
+                $addUsersDiv.append($('<div>')
                     .append($input)
                     .append($addAction));
                 self.$mainPanel.append($addUsersDiv);
 
                 self.setupSelect2($input);
+                $addAction.select2();
+                // Silly Select2 has different height rules for multiple and single select.
+                $addUsersDiv.find('span.select2-selection--single').css({'min-height': '32px'});
             }
 
             var $othersDiv = $('<div>').css({
@@ -234,14 +237,14 @@ define ([
             self.ws_permissions.sort(function (a, b) {
                 var getPermLevel = function(perm) {
                     switch (perm) {
-                        case 'a':
-                            return 1;
-                        case 'w':
-                            return 2;
-                        case 'r':
-                            return 3;
-                        default:
-                            return 0;
+                    case 'a':
+                        return 1;
+                    case 'w':
+                        return 2;
+                    case 'r':
+                        return 3;
+                    default:
+                        return 0;
                     }
                 };
                 if (a[1] !== b[1]) { // based on privilege first
@@ -478,15 +481,15 @@ define ([
                 code += username.charCodeAt(i);
             }
             var userColor = this.colors[ code % this.colors.length ];
-            var $span = $("<span>").addClass("fa fa-user").css({'color': userColor});
+            var $span = $('<span>').addClass('fa fa-user').css({'color': userColor});
 
             var userString = username;
             if (username === this.my_user_id) {
-                userString = " Me (" + username + ")";
+                userString = ' Me (' + username + ')';
             } else if (realName) {
-                userString = " " + realName + " (" + username + ")";
+                userString = ' ' + realName + ' (' + username + ')';
             } else if (this.user_data[username]) {
-                userString = " " + this.user_data[username] + " (" + username + ")";
+                userString = ' ' + this.user_data[username] + ' (' + username + ')';
             }
 
             var shortName = userString;

@@ -14,7 +14,7 @@ describe('Narrative Smoketest', function() {
             .build();
         this.driver.manage().timeouts().implicitlyWait(timeoutMilliSec);
         jasmine.DEFAULT_TIMEOUT_INTERVAL = timeoutMilliSec;
-        this.driver.get('http://localhost:9999/narrative/').then(done);
+        this.driver.get('http://localhost:9999/narrative/tree?').then(done);
     });
 
     // Close the website after each test is run (so that it is opened fresh each time)
@@ -23,9 +23,10 @@ describe('Narrative Smoketest', function() {
     });
 
     // Test to ensure we are on the home page by checking for sign-in button
-    it('The sign-in button is visible', function() {
+    it('The sign-in button is visible', function(done) {
         var element = this.driver.findElement(selenium.By.id('signin-button'));
         expect(element).not.toBeNull();
+        done();
         // element.getText().then( function(text){
         //     expect(text).toContain('Sign In');
         //     done();

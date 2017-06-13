@@ -5,28 +5,33 @@ from biokbase.narrative.contents.updater import (
     suggest_apps
 )
 import json
-from ConfigParser import ConfigParser
+from util import TestConfig
 
 class TestKeyError(ValueError):
     def __init__(self, keyname, source):
         ValueError.__init__(self, "Key {} not found in {}".format(keyname, source))
 
+
 class UpdaterTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        config = ConfigParser()
-        config.read('test.cfg')
+        config = TestConfig()
 
         # read in test file stuff from ./data/...
-        f = open(config.get('narratives', 'updater_file'), 'r')
-        self.test_nar = json.loads(f.read())['data']
-        f.close()
-        f = open(config.get('narratives', 'updater_file_big'), 'r')
-        self.test_nar_big = json.loads(f.read())['data']
-        f.close()
-        f = open(config.get('narratives', 'updater_file_poplar'), 'r')
-        self.test_nar_poplar = json.loads(f.read())['data']
-        f.close()
+        self.test_nar = config.load_json_file(config.get('narratives', 'updater_file'))['data']
+        self.test_nar_big = config.load_json_file(config.get('narratives', 'updater_file_big'))['data']
+        self.test_nar_poplar = config.load_json_file(config.get('narratives', 'updater_file_poplar'))['data']
+
+        #
+        # f = open(config.get('narratives', 'updater_file'), 'r')
+        # self.test_nar = json.loads(f.read())['data']
+        # f.close()
+        # f = open(config.get('narratives', 'updater_file_big'), 'r')
+        # self.test_nar_big = json.loads(f.read())['data']
+        # f.close()
+        # f = open(config.get('narratives', 'updater_file_poplar'), 'r')
+        # self.test_nar_poplar = json.loads(f.read())['data']
+        # f.close()
 
     def validate_narrative(self, nar):
         """

@@ -45,6 +45,7 @@ local notemgr = require('notelauncher')
 local locklib = require("resty.lock")
 local httplib = require("resty.http")
 local httpclient = httplib:new()
+local authclient = require("kbase_auth")
 
 -- forward declare the functions in this module
 local est_connections
@@ -113,12 +114,6 @@ local initialized = nil
 -- Command to run in order to get netstat info for tcp connections in
 -- pure numeric form (no DNS or service name lookups)
 local NETSTAT = 'netstat -nt'
-
--- Base URL for Globus Online Nexus API
--- the non-clocking client library we are using, resty.http, doesn't
--- support https, so we depend on a locally configured Nginx
--- reverse proxy to actually perform the request
-nexus_url = 'http://127.0.0.1:65001/users/'
 
 -- name of shared dict for locking library
 M.lock_name = "lock_map"
@@ -442,6 +437,9 @@ initialize = function(self, conf)
         docker_map = conf.docker_map or ngx.shared.docker_map
         token_cache = conf.token_cache or ngx.shared.token_cache
         proxy_mgr = conf.proxy_mgr or ngx.shared.proxy_mgr
+        authclient:initialize {
+            token_cache = token_cache
+        }
         ngx.log(ngx.INFO, string.format("Initializing proxy manager: sweep_interval %d mark_interval %d idle_timeout %d ",
                                             M.sweep_interval, M.mark_interval, M.timeout))
         ngx.log(ngx.INFO, string.format("Image %s",M.image))
@@ -757,98 +755,33 @@ end
 -- and only return a session id if the authentication is legit
 -- returns nil, err if a session cannot be found/created
 --
--- In the current implementation we take the token (if given) and
--- try to query Globus Online for the user profile, if it comes back
--- then the token is good and we put an entry in the token_cache
--- table for it
+-- Makes use of the separate kbase_auth client. It passes in an
+-- inscrutible auth token, and fetches a user id from it, if it's
+-- valid. If not, it gets nil.
 --
--- session identifier is parsed out of token from user name (un=) value
+-- We use the user id as the session id, since that's unique,
+-- and helps with tracing through logs.
 get_session = function()
-    local hdrs = ngx.req.get_headers()
-    local cheader = ngx.unescape_uri(hdrs['Cookie'])
-    local token = {}
-    local session_id = nil; -- nil return value by default
-
+    local user_id = nil
+    local headers = ngx.req.get_headers()
+    local cheader = ngx.unescape_uri(headers['Cookie'])
     if not cheader or cheader == '' then
-        cheader = ngx.unescape_uri(hdrs['Authorization'])
+        cheader = ngx.unescape_uri(headers['Authorization'])
     end
-
     if cheader then
-        -- ngx.log( ngx.DEBUG, string.format("cookie = %s",cheader))
-        local session = string.match(cheader, auth_cookie_name.."=([%S]+);?")
-        if session then
-            -- ngx.log( ngx.DEBUG, string.format("kbase_session = %s",session))
-            session = string.gsub(session, ";$", "")
-            session = url_decode(session)
-            for k, v in string.gmatch(session, "([%w_]+)=([^|]+);?") do
-                token[k] = v
+        local token = string.match(cheader, auth_cookie_name.."=([^;%s]+)")
+        if token then
+            user_id = authclient:get_user(token)
+            if user_id == nil then
+                ngx.log(ngx.ERR, "Error: unable to retrieve user session from auth token")
             end
-            if token['token'] then
-                token['token'] = string.gsub(token['token'], "PIPESIGN", "|")
-                token['token'] = string.gsub(token['token'], "EQUALSSIGN", "=")
-                -- ngx.log( ngx.DEBUG, string.format("token[token] = %s",token['token']))
-            end
-        end
-    end
-    if token['un'] then
-        local cached = token_cache:get(token['kbase_sessionid'])
-        -- we have to cache either the token itself, or a hash of the token
-        -- because this method gets called for every GET for something as
-        -- trivial as a .png or .css file, calculating and comparing an MD5
-        -- hash of the token would start to be costly given how many GETs
-        -- there are on a given page load.
-        -- So we cache the token itself. This is a security vulnerability,
-        -- however the exposure would require a hacker of fairly high end
-        -- skills (or someone who has read the source code...)
-        if cached and cached == token['token'] then
-            return token['un']
-        end
-        -- lock and try again
-        local token_lock = locklib:new(M.lock_name)
-        elapsed, err = token_lock:lock(token['kbase_sessionid'])
-        if elapsed == nil then
-            ngx.log(ngx.ERR, "Error: failed to update token cache: "..err)
-            return nil
-        end
-        cached = token_cache:get(token['kbase_sessionid'])
-        if cached and cached == token['token'] then
-            token_lock:unlock()
-            return token['un']
-        -- still missing, now get from globus
         else
-            ngx.log(ngx.WARN, "Token cache miss: ", token['kbase_sessionid'])
-            local req = {
-                url = nexus_url .. token['un'],
-                method = "GET",
-                headers = { Authorization = "Globus-Goauthtoken "..token['token'] }
-            }
-            --ngx.log( ngx.DEBUG, "request.url = " .. req.url)
-            local ok,code,headers,status,body = httpclient:request(req)
-            --ngx.log( ngx.DEBUG, "Response - code: ", code)
-            if code >= 200 and code < 300 then
-                local profile = json.decode(body)
-                ngx.log(ngx.INFO, "Token validated for "..profile.fullname.." ("..profile.username..")")
-                if profile.username == token.un then
-                    ngx.log(ngx.INFO, "Token username matches cookie identity, inserting session_id into token cache: "..token['kbase_sessionid'])
-                    token_cache:set(token['kbase_sessionid'], token['token'])
-                    session_id = profile.username
-                    token_lock:unlock()
-                else
-                    ngx.log(ngx.ERR, "Error: token username DOES NOT match cookie identity: "..profile.username)
-                end
-            else
-                ngx.log(ngx.ERR, "Error during token validation: "..status.." "..body)
-            end
+            ngx.log(ngx.ERR, "Error: authentication token not found")
         end
-        token_lock:unlock() -- make sure its unlcoked
     else
-        if cheader then
-            ngx.log(ngx.ERR, "Error: invalid token / auth format: "..cheader)
-        else
-            ngx.log(ngx.ERR, "Error: missing 'cookie' header")
-        end
+        ngx.log(ngx.ERR, "Error: missing 'cookie' header")
     end
-    return session_id
+    return user_id
 end
 
 --

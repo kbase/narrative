@@ -42,10 +42,6 @@
     font-style: italic;
 }
 
-
-
-
-
 @font-face {
     font-family: 'OxygenMono';
     src: url('../fonts/OxygenMono-Regular-webfont.eot');
@@ -129,18 +125,18 @@
 
 h1 {
 	font: 1.75em/2em 'RobotoBlack', Arial, sans-serif;
-	letter-spacing: 0; 
+	letter-spacing: 0;
 	color: #232323;
 	font-weight: normal;
 	}
 h2 {
-	font: 1.5em/1.75em 'RobotoBlack', Arial, sans-serif; 
-	font-weight: normal; 
-	color: #898989; 
+	font: 1.5em/1.75em 'RobotoBlack', Arial, sans-serif;
+	font-weight: normal;
+	color: #898989;
 	letter-spacing: 0;
 	}
 h3 {
-	font: 1.15em/1.25em 'RobotoBlack', Arial, sans-serif; 
+	font: 1.15em/1.25em 'RobotoBlack', Arial, sans-serif;
 	letter-spacing: 0;
 	font-weight: normal;
 	}
@@ -149,8 +145,8 @@ h4 {
 	letter-spacing: .07em;
 	}
 body {
-	font: 1.375em 'OxygenRegular', Arial, sans-serif; 
-	color: #333333; 
+	font: 1.375em 'OxygenRegular', Arial, sans-serif;
+	color: #333333;
 	background-color: #fff;
 	}
 strong, b {
@@ -167,7 +163,7 @@ strong em, em strong, b i, i b{
 	font-weight: normal;
 	}
 a {
-	color: #0088cc; 
+	color: #0088cc;
 	text-decoration: none;
 	}
 a:visited {
@@ -181,5 +177,3 @@ pre, code {
 	font-family: 'OxygenMonoRegular', "Lucida Console", "Lucida Sans Typewriter", monospace;
 	font-style: normal;
 	}
-
-

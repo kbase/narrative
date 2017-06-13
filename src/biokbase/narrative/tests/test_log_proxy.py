@@ -1,16 +1,15 @@
 """
 Test log proxy and kblogging
 """
-__author__ = 'Dan Gunter <dkgunter@lbl.gov>'
-
 import logging
 import os
 import signal
 import sys
 import time
 import unittest
-
 from biokbase.narrative.common import log_proxy as proxy
+
+__author__ = 'Dan Gunter <dkgunter@lbl.gov>'
 
 
 class MainTestCase(unittest.TestCase):

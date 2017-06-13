@@ -12,13 +12,14 @@ require.config({
         bloodhound: 'ext_components/corejs-typeahead/dist/bloodhound.min',
         // css: 'ext_components/require-css/css',
         d3: 'ext_components/d3/d3.min',
+        md5: 'ext_components/spark-md5/spark-md5',
         domReady: 'ext_components/requirejs/domReady',
         dropzone: 'ext_components/dropzone/dist/dropzone-amd-module',
         handlebars: 'ext_components/handlebars/handlebars',
         json: 'ext_components/requirejs-plugins/src/json',
         'jquery-nearest': 'ext_components/jquery-nearest/src/jquery.nearest.min',
         plotly: 'ext_components/plotly.js/dist/plotly.min',
-        kb_common: 'ext_components/kbase-common-js/dist/kb/common/',
+        kb_common: 'ext_components/kbase-common-js/dist/kb_common/',
         kb_service: 'ext_components/kbase-service-clients-js/dist/kb_service/',
         kb_sdk_clients: 'ext_components/kbase-sdk-clients-js/dist/amd/kb_sdk_clients/',
         numeral: 'ext_components/numeral/numeral',
@@ -58,8 +59,8 @@ require.config({
         narrativeConfig: 'kbase/js/narrativeConfig',
         narrativeMain: 'narrativeMain',
         narrativeTreeMain: 'narrativeTreeMain',
-        kbaseLogin: 'kbase/js/widgets/kbaseLoginFuncSite',
         narrativeLogin: 'kbase/js/narrativeLogin',
+        userMenu: 'kbase/js/userMenu',
         kbaseTabs: 'kbase/js/widgets/kbaseTabs',
         kbaseUploadWidget: 'kbase/js/widgets/kbaseUpload',
         kbasePrompt: 'kbase/js/widgets/kbasePromptNew',
@@ -109,7 +110,7 @@ require.config({
         'kbaseNarrativeDataList': 'kbase/js/widgets/narrative_core/kbaseNarrativeDataList',
         'kbaseNarrativeSidePanel': 'kbase/js/widgets/narrative_core/kbaseNarrativeSidePanel',
         'kbaseNarrativeJobsPanel': 'kbase/js/widgets/narrative_core/kbaseNarrativeJobsPanel',
-        'kbaseNarrativeMethodPanel': 'kbase/js/widgets/narrative_core/kbaseNarrativeMethodPanel',
+        'kbaseNarrativeAppPanel': 'kbase/js/widgets/narrative_core/kbaseNarrativeAppPanel',
         'kbaseNarrativeManagePanel': 'kbase/js/widgets/narrative_core/kbaseNarrativeManagePanel',
         'kbaseNarrativeDownloadPanel': 'kbase/js/widgets/narrative_core/kbaseNarrativeDownloadPanel',
         'kbaseNarrativeSharePanel': 'kbase/js/widgets/narrative_core/kbaseNarrativeSharePanel',
@@ -311,6 +312,9 @@ require.config({
         'kbaseReportView': 'kbase/js/widgets/function_output/kbaseReportView',
         'kbaseExpressionVolcanoPlot': 'kbase/js/widgets/function_output/kbaseExpressionVolcanoPlot',
 
+        'kbaseRESKESearchResultDemo': 'kbase/js/widgets/function_output/kbaseRESKESearchResultDemo',
+
+
         /***
          * END CUSTOM OUTPUT WIDGETS
          ***/
@@ -330,6 +334,9 @@ require.config({
     },
 
     shim: {
+        select2: {
+            deps: ['jquery']
+        },
         bloodhound: {
             deps: ['jquery'],
             exports: 'Bloodhound'
@@ -437,13 +444,6 @@ require.config({
                 'd3'
             ]
         },
-        // 'kbaseTabTableTabs' : {
-        //     'deps' : ['jquery',
-        //               'jqueryui',
-        //               'jquery-dataTables',
-        //               'jquery-dataTables-bootstrap',
-        //               'bootstrap']
-        // },
         kbapi: {
             deps: ['jquery', 'bootstrap', 'kbase-client-api']
         },

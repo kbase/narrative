@@ -103,6 +103,8 @@ jupyter nbextension enable editorCell/main --sys-prefix
 jupyter nbextension install $(pwd)/appCell2 --symlink --sys-prefix
 jupyter nbextension enable appCell2/main --sys-prefix
 
+jupyter nbextension install $(pwd)/advancedViewCell --symlink --sys-prefix
+jupyter nbextension enable advancedViewCell/main --sys-prefix
 
 jupyter nbextension enable --py --sys-prefix widgetsnbextension
 

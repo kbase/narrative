@@ -340,8 +340,9 @@ define([
         function renderStruct(events) {
             var layout = div({
                 style: {
-                    border: '1px silver solid',
-                    padding: '4px'
+                    'border-left': '5px silver solid',
+                    padding: '2px',
+                    margin: '6px'
                 }
             }, [
                 div({

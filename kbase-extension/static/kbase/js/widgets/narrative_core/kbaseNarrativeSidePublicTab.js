@@ -78,6 +78,9 @@ define ([
             this.icon_colors = Config.get('icons').colors;
             this.wsName = Jupyter.narrative.getWorkspaceName();
             this.categoryDescr = Config.get('publicCategories');
+            if (!this.categoryDescr) {
+                this.categoryDescr = {};
+            }
             if (Config.get('features').jgiPublicStaging) {
                 this.categoryDescr['jgi_gateway'] = {
                     name: 'JGI Public Data (TEST)',
@@ -258,6 +261,8 @@ define ([
 
         renderFromSearch: function(cat) {
             this.currentPage++;
+            // remove all periods from query since SOLR does those literally and returns unexpected things
+            this.currentQuery = this.currentQuery.replace(/\./g, '');
             this.search(this.currentCategory, this.currentQuery, this.itemsPerPage, this.currentPage, function(query, data) {
                 if (query !== this.currentQuery) {
                     return;

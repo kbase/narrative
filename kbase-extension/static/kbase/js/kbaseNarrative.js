@@ -10,37 +10,36 @@
  * To set global variables, use: Jupyter.narrative.<name> = value
  */
 
-define(
-    [
-        'jquery',
-        'bluebird',
-        'handlebars',
-        'narrativeConfig',
-        'kbaseNarrativeSidePanel',
-        'kbaseNarrativeOutputCell',
-        'kbaseNarrativeWorkspace',
-        'kbaseNarrativeMethodCell',
-        'kbaseAccordion',
-        'kbaseLogin',
-        'kbaseNarrativeSharePanel',
-        'kbase-client-api',
-        'kbaseNarrativePrestart',
-        'ipythonCellMenu',
-        'base/js/namespace',
-        'base/js/events',
-        'base/js/keyboard',
-        'notebook/js/notebook',
-        'util/display',
-        'util/bootstrapDialog',
-        'text!kbase/templates/update_dialog_body.html',
-        'narrativeLogin',
-        'common/ui',
-        'common/html',
-        'narrativeTour',
-        // for effect
-        'bootstrap',
+define([
+    'jquery',
+    'bluebird',
+    'handlebars',
+    'narrativeConfig',
+    'kbaseNarrativeSidePanel',
+    'kbaseNarrativeOutputCell',
+    'kbaseNarrativeWorkspace',
+    'kbaseNarrativeMethodCell',
+    'kbaseAccordion',
+    'kbaseNarrativeSharePanel',
+    'kbase-client-api',
+    'kbaseNarrativePrestart',
+    'ipythonCellMenu',
+    'base/js/namespace',
+    'base/js/events',
+    'base/js/keyboard',
+    'notebook/js/notebook',
+    'util/display',
+    'util/bootstrapDialog',
+    'text!kbase/templates/update_dialog_body.html',
+    'narrativeLogin',
+    'common/ui',
+    'common/html',
+    'narrativeTour',
 
-    ], function (
+    // for effect
+    'bootstrap',
+
+], function (
     $,
     Promise,
     Handlebars,
@@ -50,7 +49,6 @@ define(
     KBaseNarrativeWorkspace,
     KBaseNarrativeMethodCell,
     KBaseAccordion,
-    KBaseLogin,
     KBaseNarrativeSharePanel,
     KBaseClient,
     KBaseNarrativePrestart,
@@ -66,7 +64,7 @@ define(
     UI,
     html,
     Tour
-    ) {
+) {
     'use strict';
 
     KBaseNarrativePrestart.loadDomEvents();
@@ -117,9 +115,6 @@ define(
         //
         this.dataViewers = null;
 
-        // User Profile KBase client.
-        this.profileClient = new UserProfile(Config.url('user_profile'));
-
         // Used for mapping from user id -> user name without having to it
         // up again every time.
         this.cachedUserIds = {};
@@ -153,7 +148,7 @@ define(
             'z', 'd,d', 's', 'l', 'o', 'h',
             'i,i', '0,0', 'q', 'shift-j', 'shift-k',
             'shift-m', 'shift-o', 'shift-v'
-        ],
+            ],
             commandShortcuts = [],
             editShortcuts = [
                 // remove the command palette
@@ -233,37 +228,45 @@ define(
     /**
      * Initializes the sharing panel and sets up the events
      * that show and hide it.
+     *
+     * This is a hack and a half because Select2, Bootstrap,
+     * and Safari are all hateful things. Here are the sequence of
+     * events.
+     * 1. Initialize the dialog object.
+     * 2. When it gets invoked, show the dialog.
+     * 3. On the FIRST time it gets shown, after it's done
+     * being rendered (shown.bs.modal event), then build and
+     * show the share panel widget. The select2 thing only wants
+     * to appear and behave correctly after the page loads, and
+     * after there's a visible DOM element for it to render in.
      */
     Narrative.prototype.initSharePanel = function () {
-        var sharePanel = $('<div>'),
+        var sharePanel = $('<div style="text-align:center"><br><br><img src="' +
+            Config.get('loading_gif') +
+            '"></div>'),
             shareWidget = null,
-            shareDialog = null;
-        var makeAndShowPanel = function () {
-            if (!shareWidget || !shareDialog) {
-                shareDialog = new BootstrapDialog({
-                    title: 'Change Share Settings',
-                    body: sharePanel,
-                    closeButton: true,
-                    buttons: [$('<button class="kb-primary-btn">Done</button>').click(function() { shareDialog.hide(); })]
-                });
-                shareWidget = new KBaseNarrativeSharePanel(sharePanel, {
-                    ws_name_or_id: this.getWorkspaceName()
-                });
-            }
-            shareDialog.show();
-        }.bind(this);
+            shareDialog = new BootstrapDialog({
+                title: 'Change Share Settings',
+                body: sharePanel,
+                closeButton: true
+            });
+        shareDialog.getElement().one('shown.bs.modal', function() {
+            shareWidget = new KBaseNarrativeSharePanel(sharePanel.empty(), {
+                ws_name_or_id: this.getWorkspaceName()
+            });
+        }.bind(this));
         $('#kb-share-btn').click(function() {
             var narrName = Jupyter.notebook.notebook_name;
             if (narrName.trim().toLowerCase() === 'untitled' || narrName.trim().length === 0) {
                 Jupyter.save_widget.rename_notebook({
                     notebook: Jupyter.notebook,
                     message: 'Please name your Narrative before sharing.',
-                    callback: makeAndShowPanel
+                    callback: function() { shareDialog.show(); }
                 });
                 return;
             }
-            makeAndShowPanel();
-        });
+            shareDialog.show();
+        }.bind(this));
     };
 
     /**
@@ -335,7 +338,7 @@ define(
         var dialogNode = findParent(innerNode, '.modal-dialog');
 
         if (!dialogNode) {
-            console.error('COULD NOT FIND PAREnT NOde');
+            console.error('COULD NOT FIND PARENT NODE');
             throw new Error('Could not find the parent node!');
         }
 
@@ -388,11 +391,6 @@ define(
     }
 
     Narrative.prototype.initSettingsDialog = function () {
-        //var sharePanel = $('<div>');
-        //var shareWidget = new KBaseNarrativeSharePanel(sharePanel, {
-        //    ws_name_or_id: this.getWorkspaceName()
-        //});
-
         var settingsButtonNode = document.getElementById('kb-settings-btn');
         if (!settingsButtonNode) {
             return;
@@ -401,7 +399,6 @@ define(
         settingsButtonNode.addEventListener('click', function () {
             showSettingsDialog();
         });
-
     };
 
 
@@ -657,17 +654,18 @@ define(
     // This should not be run until AFTER the notebook has been loaded!
     // It depends on elements of the Notebook metadata.
     Narrative.prototype.init = function () {
+        // NAR-271 - Firefox needs to be told where the top of the page is. :P
+        window.scrollTo(0, 0);
+
+        this.authToken = NarrativeLogin.sessionInfo.token;
+        this.userId = NarrativeLogin.sessionInfo.user;
+
         Jupyter.narrative.patchKeyboardMapping();
         this.registerEvents();
         this.initAboutDialog();
         this.initUpgradeDialog();
         this.initShutdownDialog();
         this.initTour();
-        // NAR-271 - Firefox needs to be told where the top of the page is. :P
-        window.scrollTo(0, 0);
-
-        this.authToken = NarrativeLogin.loginWidget($('#signin-button')).token();
-        this.userId = NarrativeLogin.loginWidget($('#signin-button')).userId();
 
         /* Clever extension to $.event from StackOverflow
          * Lets us watch DOM nodes and catch when a widget's node gets nuked.
@@ -755,7 +753,7 @@ define(
      * If it can't, or if this is being run locally, it pops up an alert saying so.
      */
     Narrative.prototype.updateVersion = function () {
-        var user = NarrativeLogin.loginWidget($('#signin-button')).session('user_id');
+        var user = NarrativeLogin.sessionInfo.user; //.loginWidget($('#signin-button')).session('user_id');
         Promise.resolve($.ajax({
             contentType: 'application/json',
             url: '/narrative_shutdown/' + user,
@@ -794,7 +792,7 @@ define(
      */
     Narrative.prototype.createAndRunMethod = function (method_id, parameters) {
         //first make a request to get the method spec of a particular method
-        //getFunctionSpecs.Narrative is implemented in kbaseNarrativeMethodPanel
+        //getFunctionSpecs.Narrative is implemented in kbaseNarrativeAppPanel
         var request = {methods: [method_id]};
         var self = this;
         self.narrController.trigger('getFunctionSpecs.Narrative', [request,
@@ -813,7 +811,7 @@ define(
                     console.error(errorMsg);
                     return;
                 }
-                // put the method in the narrative by simulating a method clicked in kbaseNarrativeMethodPanel
+                // put the method in the narrative by simulating a method clicked in kbaseNarrativeAppPanel
                 self.narrController.trigger('methodClicked.Narrative', specs.methods[method_id]);
 
                 // the method initializes an internal method input widget, but rendering and initializing is

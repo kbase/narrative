@@ -31,7 +31,6 @@ define([
     'kbaseNarrativeSideImportTab',
     'kbaseNarrativeExampleDataTab',
     'kbaseNarrativeStagingDataTab',
-    'kbaseLogin',
     'kbase-generic-client-api',
     'bootstrap'
 ], function (
@@ -49,7 +48,6 @@ define([
     kbaseNarrativeSideImportTab,
     kbaseNarrativeExampleDataTab,
     kbaseNarrativeStagingDataTab,
-    kbaseLogin,
     GenericClient
     ) {
     'use strict';
@@ -151,8 +149,6 @@ define([
                     }
                 }.bind(this)
             );
-
-            $(document).on()
 
             this.$slideoutBtn = $('<button>')
                 .addClass('btn btn-xs btn-default')
@@ -365,16 +361,7 @@ define([
             var self = this;
             var maxObjFetch = Config.get('data_panel').ws_max_objs_to_fetch || 30000;
 
-            if (this.$login == undefined) {
-                if (this.loginInit) {
-                    return;
-                }
-                this.loginInit = true;
-                this.$login = new kbaseLogin($('#signin-button'));
-                this.loginInit = false;
-            }
-            var user = this.$login.session('user_id');
-            //var user = $('#signin-button').kbaseLogin('session', 'user_id');
+            var user = Jupyter.narrative.userId;
 
             if (!user) {
                 console.error("NarrativeDataPanel: user is not defined, parsing token instead...");
@@ -579,8 +566,7 @@ define([
             }
 
             // It is silly to invoke a new object for each widget
-            var auth = {token: this.$login.session('token')};
-            //var auth = {token: $("#signin-button").kbaseLogin('session', 'token')};
+            var auth = {token: Jupyter.narrative.authToken};
             var ws = new Workspace(this.options.workspaceURL, auth);
             var serviceClient = new GenericClient(Config.url('service_wizard'), auth);
 

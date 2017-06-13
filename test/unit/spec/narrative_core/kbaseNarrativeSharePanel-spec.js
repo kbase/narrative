@@ -4,8 +4,9 @@
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
 define([
+    'jquery',
     'kbaseNarrativeSharePanel'
-], function(Widget) {
+], function($, Widget) {
     describe('Test the kbaseNarrativeSharePanel widget', function() {
         it('Should do things', function() {
 

@@ -5,18 +5,18 @@
  *
  * @author Bill Riehl wjriehl@lbl.gov
  */
-define(
-    [
-        'kbwidget',
-        'bootstrap',
-        'jquery',
-        'underscore',
-        'bluebird',
-        'narrativeConfig',
-        'util/timeFormat',
-        'kbase-client-api',
-        'kbaseAccordion'
-    ], function (
+define([
+    'kbwidget',
+    'bootstrap',
+    'jquery',
+    'underscore',
+    'bluebird',
+    'narrativeConfig',
+    'util/timeFormat',
+    'kbase-client-api',
+    'kbaseAccordion',
+    'api/auth'
+], function (
     KBWidget,
     bootstrap,
     $,
@@ -25,11 +25,13 @@ define(
     Config,
     TimeFormat,
     kbase_client_api,
-    KBaseAccordion
-    ) {
+    KBaseAccordion,
+    Auth
+) {
     'use strict';
 
     var profileClient = new UserProfile(Config.url('user_profile'));
+    var authClient = Auth.make({url: Config.url('auth')});
     var profilePageUrl = Config.url('profile_page');
     var cachedUserIds = {};
 
@@ -45,19 +47,17 @@ define(
      * displayRealName
      */
     function displayRealName(username, $target) {
-        lookupUserProfile(username).then(function (profile) {
+        authClient.getUserNames(null, [username])
+        .then(function(user) {
             var usernameLink = '<a href="' + profilePageUrl + username + '" target="_blank">' + username + '</a>';
-
-            if (profile && profile[0] && profile[0].user) {
-                var name = profile[0].user.realname;
-                if (name !== undefined)
-                    usernameLink = name + ' (' + usernameLink + ')';
+            if (user[username]) {
+                usernameLink = user[username] + ' (' + usernameLink + ')';
             }
             $target.html(usernameLink);
         })
-            .catch(function (err) {
-                console.log(err);
-            });
+        .catch(function (err) {
+            console.error(err);
+        });
     }
 
     /**
@@ -79,7 +79,7 @@ define(
     function loadingDiv(caption) {
         var $caption = $('<span>');
         var $loader = $('<div>').addClass('kb-data-loading')
-            .append('<img src="' + Config.get('loading_gif') + '">')
+            .append('<img src="' + Config.get('loading_gif') + '" style="margin:auto">')
             .append('<br>')
             .append($caption);
         if (caption)

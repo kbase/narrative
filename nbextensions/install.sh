@@ -32,3 +32,9 @@ jupyter nbextension enable editorCell/main --sys-prefix
 
 jupyter nbextension install ${dir}/appCell2 --symlink --sys-prefix
 jupyter nbextension enable appCell2/main --sys-prefix
+
+jupyter nbextension install ${dir}/advancedViewCell --symlink --sys-prefix
+jupyter nbextension enable advancedViewCell/main --sys-prefix
+
+#jupyter nbextension disable customView/main --sys-prefix
+#jupyter nbextension uninstall ${dir}/customView --sys-prefix

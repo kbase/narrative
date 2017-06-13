@@ -5,9 +5,6 @@
  * When initialized, it uses a loading gif while waiting for functions to load
  * (unless functions were passed in on construction).
  *
- * Each function is presented in a list (for now - accordion may be coming soon)
- * and when clicked will fire a "methodClicked.narrative" event.
- *
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @public
  */
@@ -19,6 +16,7 @@ define ([
     'narrativeConfig',
     'util/display',
     'util/bootstrapDialog',
+    'util/icon',
     'text!kbase/templates/beta_warning_body.html',
     'kbaseAccordion',
     'kbaseNarrativeControlPanel',
@@ -30,7 +28,7 @@ define ([
     'catalog-client-api',
     'kbase-client-api',
     'bootstrap'
-], function(
+], function (
     KBWidget,
     $,
     Promise,
@@ -38,6 +36,7 @@ define ([
     Config,
     DisplayUtil,
     BootstrapDialog,
+    Icon,
     BetaWarningTemplate,
     kbaseAccordion,
     kbaseNarrativeControlPanel,
@@ -48,7 +47,7 @@ define ([
 ) {
     'use strict';
     return KBWidget({
-        name: 'kbaseNarrativeMethodPanel',
+        name: 'kbaseNarrativeAppPanel',
         parent : kbaseNarrativeControlPanel,
         version: '0.0.1',
         options: {
@@ -68,7 +67,6 @@ define ([
         },
         id2Elem: {},
         methodSpecs: {},  // id -> spec
-        // appSpecs: {},     // id -> spec
         categories: {},   // id -> category info
 
         currentTag: null, // release/dev/beta; which version of the method spec to fetch.  default is release
@@ -86,8 +84,8 @@ define ([
          * @private
          */
         init: function(options) {
-            this._super(options);
             var self = this;
+            this._super(options);
             // DOM structure setup here.
             // After this, just need to update the function list
 
@@ -103,31 +101,14 @@ define ([
             this.$searchInput = $('<input type="text">')
                                 .addClass('form-control')
                                 .attr('Placeholder', 'Search apps')
-                                .on('input',
-                                    $.proxy(function(e) {
-                                        this.filterList();
-                                    }, this)
-                                )
-                                .on('focus',
-                                    function() {
-                                        if (Jupyter && Jupyter.narrative) {
-                                            Jupyter.narrative.disableKeyboardManager();
-                                        }
+                                .on('input', function() {
+                                    self.refreshPanel(this);
+                                })
+                                .on('keyup', function (e) {
+                                    if (e.keyCode === 27) {
+                                        self.$searchDiv.toggle({effect: 'blind', duration: 'fast'});
                                     }
-                                )
-                                .on('blur',
-                                    function() {
-                                        if (Jupyter && Jupyter.narrative) {
-                                            Jupyter.narrative.enableKeyboardManager();
-                                        }
-                                    }
-                                );
-
-            this.$searchInput.on('keyup', function (e) {
-                if (e.keyCode === 27) {
-                    this.$searchDiv.toggle({effect: 'blind', duration: 'fast'});
-                }
-            }.bind(this));
+                                });
 
             this.$numHiddenSpan = $('<span>0</span>');
             this.$showHideSpan = $('<span>show</span>');
@@ -138,7 +119,7 @@ define ([
                                     .append(' filtered out')
                                     .addClass('kb-function-toggle')
                                     .hide()
-                                    .click($.proxy(function(e) {
+                                    .click($.proxy(function() {
                                         var curText = this.$showHideSpan.text();
                                         this.toggleHiddenMethods(curText === 'show');
                                         this.$showHideSpan.text(curText === 'show' ? 'hide' : 'show');
@@ -149,7 +130,7 @@ define ([
                                   .attr('type', 'button')
                                   .append($('<span class="glyphicon glyphicon-remove">'))
                                   .click(
-                                    $.proxy(function(event) {
+                                    $.proxy(function() {
                                         this.$searchInput.val('');
                                         this.$searchInput.trigger('input');
                                     }, this)
@@ -160,7 +141,10 @@ define ([
 
             // placeholder for apps and methods once they're loaded.
             this.$methodList = $('<div>')
-                               .css({'height' : '300px', 'overflow-y': 'auto', 'overflow-x' : 'hidden'});
+                               .css({
+                                   'height' : '300px',
+                                   'overflow-y' : 'auto',
+                                   'overflow-x' : 'hidden'});
             // Make a function panel for everything to sit inside.
             this.$functionPanel = $('<div>')
                                   .addClass('kb-function-body')
@@ -201,7 +185,7 @@ define ([
             );
 
             $(document).on('removeFilterMethods.Narrative',
-                $.proxy(function(e) {
+                $.proxy(function() {
                     this.$searchDiv.toggle({effect: 'blind', duration: 'fast'});
                     this.$searchInput.val('');
                     this.$searchInput.trigger('input');
@@ -241,19 +225,57 @@ define ([
                 }, this)
             );
 
+            this.currentPanelStyle = 'category';
+            this.$filterLabel = $('<span>').append(this.currentPanelStyle);
+            var $filterMenu = $('<ul>')
+                .addClass('dropdown-menu dropdown-menu-right')
+                .css({
+                    'margin-top': '20px'
+                })
+                .attr('aria-labeledby', 'kb-app-panel-filter')
+                .append($('<li>')
+                        .append('<a style="cursor:pointer" data-filter="category">Category</a>'))
+                .append($('<li>')
+                        .append('<a style="cursor:pointer" data-filter="input">Input Types</a>'))
+                .append($('<li>')
+                        .append('<a style="cursor:pointer" data-filter="output">Output Types</a>'))
+                .append($('<li>')
+                        .append('<a style="cursor:pointer" data-filter="a-z">Name A-Z</a>'))
+                .append($('<li>')
+                        .append('<a style="cursor:pointer" data-filter="z-a">Name Z-A</a>'));
+            $filterMenu.find('li a').click(function() {
+                self.currentPanelStyle = $(this).data('filter');
+                self.$filterLabel.text(self.currentPanelStyle);
+                self.refreshPanel();
+            });
+
+            this.addButton($('<span class="dropdown">')
+                .append($('<button>')
+                        .addClass('btn btn-xs btn-default dropdown-toggle')
+                        .attr({
+                            type: 'button',
+                            id: 'kb-app-panel-filter',
+                            'data-toggle': 'dropdown',
+                            'aria-haspopup': true,
+                            'aria-expanded': true
+                        })
+                        .append(this.$filterLabel)
+                        .append('<span class="fa fa-filter"></span>'))
+                .append($filterMenu));
+
             // Search button
             this.addButton($('<button>')
                            .addClass('btn btn-xs btn-default')
                            .append('<span class="fa fa-search"></span>')
                            .tooltip({
-                                title: 'Search for Apps',
-                                container: 'body',
-                                delay: {
-                                    show: Config.get('tooltip').showDelay,
-                                    hide: Config.get('tooltip').hideDelay
-                                }
-                            })
-                           .click(function(event) {
+                               title: 'Search for Apps',
+                               container: 'body',
+                               delay: {
+                                   show: Config.get('tooltip').showDelay,
+                                   hide: Config.get('tooltip').hideDelay
+                               }
+                           })
+                           .click(function() {
                                this.$searchDiv.toggle({effect: 'blind', duration: 'fast'});
                                this.$searchInput.focus();
                            }.bind(this)));
@@ -263,23 +285,23 @@ define ([
                            .addClass('btn btn-xs btn-default')
                            .append('<span class="glyphicon glyphicon-refresh">')
                            .tooltip({
-                                title: 'Refresh app/method listings',
-                                container: 'body',
-                                delay: {
-                                    show: Config.get('tooltip').showDelay,
-                                    hide: Config.get('tooltip').hideDelay
-                                }
-                            })
-                           .click(function(e) {
-                                var versionTag = 'release';
-                                if(this.versionState === 'B') { versionTag='beta'; }
-                                else if(this.versionState === 'D') { versionTag='dev'; }
-                                this.refreshFromService(versionTag);
-                                this.refreshKernelSpecManager();
+                               title: 'Refresh app/method listings',
+                               container: 'body',
+                               delay: {
+                                   show: Config.get('tooltip').showDelay,
+                                   hide: Config.get('tooltip').hideDelay
+                               }
+                           })
+                           .click(function() {
+                               var versionTag = 'release';
+                               if(this.versionState === 'B') { versionTag='beta'; }
+                               else if(this.versionState === 'D') { versionTag='dev'; }
+                               this.refreshFromService(versionTag);
+                               this.refreshKernelSpecManager();
 
-                                if(this.appCatalog) {
-                                    this.appCatalog.refreshAndRender();
-                                }
+                               if(this.appCatalog) {
+                                   this.appCatalog.refreshAndRender();
+                               }
                            }.bind(this)));
 
             // Toggle version btn
@@ -315,7 +337,7 @@ define ([
                 showBetaWarning = $(this).is(':checked');
             }).prop('checked', showBetaWarning);
 
-            this.$toggleVersionBtn.click(function(e) {
+            this.$toggleVersionBtn.click(function() {
                 this.$toggleVersionBtn.tooltip('hide');
                 var versionTag = 'release';
                 if (this.versionState === 'R') {
@@ -370,7 +392,7 @@ define ([
                     }
                 })
                 .append('<span class="fa fa-arrow-right"></span>')
-                .click(function(event) {
+                .click(function() {
                     // only load the appCatalog on click
                     if(!this.appCatalog) {
                         this.appCatalog = new KBaseCatalogBrowser(
@@ -379,7 +401,7 @@ define ([
                                 ignoreCategories: this.ignoreCategories,
                                 tag: this.currentTag
                             }
-                        )
+                        );
                     }
 
                     this.$slideoutBtn.tooltip('hide');
@@ -394,27 +416,27 @@ define ([
             this.addButton(this.$slideoutBtn);
 
             if (!NarrativeMethodStore || !Catalog) {
-                this.showError('Sorry, an error occurred while loading KBase Apps.', 'Unable to connect to the Catalog or Narrative Method Store! Apps are currently unavailable.');
+                this.showError('Sorry, an error occurred while loading Apps.',
+                               'Unable to connect to the Catalog or Narrative Method Store! ' +
+                               'Apps are currently unavailable.');
                 return this;
             }
 
             this.methClient = new NarrativeMethodStore(this.options.methodStoreURL);
-            this.catalog = new Catalog(this.options.catalogURL, { token: this.auth().token });
-
-            if (this.options.autopopulate === true) {
-                this.refresh();
-            }
-
+            this.catalog = new Catalog(this.options.catalogURL);
+            this.refreshFromService();
             return this;
         },
 
         refreshKernelSpecManager: function() {
             try {
-                Jupyter.notebook.kernel.execute("from biokbase.narrative.jobs.specmanager import SpecManager\nSpecManager().reload()")
+                Jupyter.notebook.kernel.execute(
+                    'from biokbase.narrative.jobs.specmanager import SpecManager\n' +
+                    'SpecManager().reload()'
+                );
             }
             catch (e) {
                 alert(e);
-                console.log('REFRESH KERNEL SPEC MANAGER ERROR');
                 console.error(e);
             }
         },
@@ -430,42 +452,27 @@ define ([
             }
         },
 
-        filterList: function() {
-            var txt = this.$searchInput.val().trim().toLowerCase();
-            if (txt.indexOf("type:") === 0) {
-                this.visualFilter(this.objectTypeFilter, txt.substring(5));
-            }
-            else if (txt.indexOf("in_type:") === 0) {
-                this.visualFilter(this.inputTypeFilter, txt.substring(8));
-            }
-            else if (txt.indexOf("out_type:") === 0) {
-                this.visualFilter(this.outputTypeFilter, txt.substring(9));
-            }
-            else {
-                this.visualFilter(this.textFilter, txt);
-            }
-        },
-
-
-
         initMethodTooltip: function() {
             this.help = {};
 
             this.help.$helpPanel = $('<div>')
                                    .addClass('kb-function-help-popup alert alert-info')
                                    .hide()
-                                   .click($.proxy(function(event) { this.help.$helpPanel.hide(); }, this));
+                                   .click(function() {
+                                       this.help.$helpPanel.hide();
+                                   }.bind(this));
             this.help.$helpTitle = $('<span>');
             this.help.$helpVersion = $('<span>')
                                    .addClass('version');
 
             var $helpHeader = $('<div>')
-                              //.addClass('header')
                               .append(
                                     $('<h1>')
-                                      .css("display","inline")
-                                      .css("padding-right","8px")
-                                        .append(this.help.$helpTitle))
+                                      .css({
+                                          display: 'inline',
+                                          'padding-right': '8px'
+                                      })
+                                      .append(this.help.$helpTitle))
                               .append(this.help.$helpVersion);
 
             this.help.$helpBody = $('<div>')
@@ -482,9 +489,12 @@ define ([
             $('body').append(this.help.$helpPanel);
         },
 
+        /**
+         * Returns a promise that resolves when the app is done refreshing itself.
+         */
         refreshFromService: function(versionTag) {
             var self = this;
-            this.showLoadingMessage("Loading KBase Methods from service...");
+            this.showLoadingMessage('Loading available Apps...');
 
             var filterParams = {};
             if (versionTag) {
@@ -495,24 +505,23 @@ define ([
             var loadingCalls = [];
             loadingCalls.push(
                 Promise.resolve(self.methClient.list_methods(filterParams))
-                       .then(function(methods) {
-                           self.methodSpecs = {};
-                           self.methodInfo = {};
-                           for (var i=0; i<methods.length; i++) {
-                           // key should have LC module name if an SDK method
-                                if(methods[i].module_name) {
-                                    var idTokens = methods[i].id.split('/');
-                                    self.methodSpecs[idTokens[0].toLowerCase() + '/' + idTokens[1]] = {info:methods[i]};
-                                }
+                    .then(function(methods) {
+                        self.methodSpecs = {};
+                        self.methodInfo = {};
+                        for (var i=0; i<methods.length; i++) {
+                            // key should have LC module name if an SDK method
+                            if (methods[i].module_name) {
+                                var idTokens = methods[i].id.split('/');
+                                self.methodSpecs[idTokens[0].toLowerCase() + '/' + idTokens[1]] = {info:methods[i]};
                             }
                         }
-                    ));
+                    }));
 
             loadingCalls.push(
                 Promise.resolve(self.methClient.list_categories({}))
-                       .then(function(categories) {
-                            self.categories = categories[0];
-                       }));
+                    .then(function(categories) {
+                        self.categories = categories[0];
+                    }));
 
             if (!versionTag || versionTag === 'release') {
                 loadingCalls.push(self.catalog.list_basic_module_info({})
@@ -532,15 +541,15 @@ define ([
                 );
             }
 
-            Promise.all(loadingCalls)
+            return Promise.all(loadingCalls)
                 .then(function() {
-                    return Promise.resolve(self.catalog.list_favorites(self.auth().user_id))
+                    return Promise.resolve(self.catalog.list_favorites(Jupyter.narrative.userId))
                         .then(function(favs) {
                             for(var k=0; k<favs.length; k++) {
                                 var fav = favs[k];
                                 var lookup = fav.id;
                                 if(fav.module_name_lc !== 'nms.legacy') {
-                                    lookup = fav.module_name_lc + '/' + lookup
+                                    lookup = fav.module_name_lc + '/' + lookup;
                                 }
                                 if(self.methodSpecs[lookup]) {
                                     self.methodSpecs[lookup]['favorite'] = fav.timestamp; // this is when this was added as a favorite
@@ -548,96 +557,287 @@ define ([
                             }
                             self.parseMethods(self.categories, self.methodSpecs);
                             self.showFunctionPanel();
-                            self.filterList(); // keep the filters
+                            // self.filterList(); // keep the filters
                         })
                          // For some reason this is throwing a Bluebird error to include this error handler, but I don't know why right now -mike
                         .catch(function(error) {
-                            console.log('error getting favorites, but probably we can still try and proceed', error);
+                            console.error(error);
                             self.parseMethods(self.categories, self.methodSpecs);
                             self.showFunctionPanel();
-                            self.filterList(); // keep the filters
+                            // self.filterList(); // keep the filters
                         });
                 })
                 .catch(function(error) {
-                    console.log(error);
-                    self.showError('Sorry, an error occurred while loading KBase Apps.', error);
+                    self.showError('Sorry, an error occurred while loading Apps.', error);
                 });
         },
 
-        parseMethods: function(catSet, methSet) {
+
+        triggerMethod: function(method) {
             var self = this;
-            var triggerMethod = function(method) {
-                if(!method['spec']) {
-                    self.methClient.get_method_spec({ids:[method.info.id], tag:self.currentTag})
-                        .then(function(spec) {
-                            // todo: cache this spec into the methods list
-                            spec = spec[0];
-                            if (self.moduleVersions[spec.info.module_name]) {
-                                spec.info.ver = self.moduleVersions[spec.info.module_name];
-                            }
-                            self.trigger('methodClicked.Narrative', [spec, self.currentTag]);
-                        })
-                        .catch(function (err) {
-                            var errorId = new Uuid(4).format();
-                            console.error('Error getting method spec #' + errorId, err, method, self.currentTag);
-                            alert('Error getting method spec, see console for error info #' + errorId);
-                        })
-                } else {
-                    self.trigger('methodClicked.Narrative', [method, self.currentTag]);
-                }
-            };
-
-            var generatePanel = function(catSet, fnSet, icon, callback) {
-                var $fnPanel = $('<div>');
-                var fnList = [];
-                var id2Elem = {};
-                for (var fn in fnSet) {
-                    var ignoreFlag = false;
-                    for (var i=0; i<fnSet[fn].info.categories.length; i++) {
-                        if (self.ignoreCategories[fnSet[fn].info.categories[i]]) {
-                            ignoreFlag = true;
+            if(!method['spec']) {
+                self.methClient.get_method_spec({ids:[method.info.id], tag:self.currentTag})
+                    .then(function(spec) {
+                        // todo: cache this spec into the methods list
+                        spec = spec[0];
+                        if (self.moduleVersions[spec.info.module_name]) {
+                            spec.info.ver = self.moduleVersions[spec.info.module_name];
                         }
-                    }
+                        self.trigger('methodClicked.Narrative', [spec, self.currentTag]);
+                    })
+                    .catch(function (err) {
+                        var errorId = new Uuid(4).format();
+                        console.error('Error getting method spec #' + errorId, err, method, self.currentTag);
+                        alert('Error getting method spec, see console for error info #' + errorId);
+                    });
+            } else {
+                self.trigger('methodClicked.Narrative', [method, self.currentTag]);
+            }
+        },
 
-                    if (ignoreFlag)
-                        delete fnSet[fn];
-                    else
-                        fnList.push(fnSet[fn]);
+        parseMethods: function(catSet, appSet) {
+            var self = this;
+
+            this.catSet = catSet;
+            this.renderedApps = {};
+            for (var app in appSet) {
+                if (!appSet.hasOwnProperty(app)) {
+                    continue;
                 }
-                fnList.sort(function(a, b) {
+                var ignoreFlag = false;
+                for (var i=0; i<appSet[app].info.categories.length; i++) {
+                    if (self.ignoreCategories[appSet[app].info.categories[i]]) {
+                        ignoreFlag = true;
+                    }
+                }
+                if (!ignoreFlag) {
+                    this.renderedApps[app] = appSet[app];
+                }
+            }
+            this.refreshPanel();
+        },
+
+        categorizeApps: function(style, appSet) {
+            var allCategories = {
+                favorites: [],
+                uncategorized: []
+            };
+            Object.keys(appSet).forEach(function(appId) {
+                var categoryList = [];
+                switch(style) {
+                default:
+                case 'category':
+                    categoryList = appSet[appId].info.categories;
+                    var activeIndex = categoryList.indexOf('active');
+                    if (activeIndex !== -1) {
+                        categoryList.splice(activeIndex, 1);
+                    }
+                    break;
+                case 'input':
+                    categoryList = appSet[appId].info.input_types.map(function(input) {
+                        return input.split('.')[1];
+                    });
+                    break;
+                case 'output':
+                    categoryList = appSet[appId].info.output_types.map(function(output) {
+                        return output.split('.')[1];
+                    });
+                    break;
+                }
+                if (categoryList.length === 0) {
+                    allCategories.uncategorized.push(appId);
+                }
+                categoryList.forEach(function(cat) {
+                    if (!allCategories[cat]) {
+                        allCategories[cat] = [];
+                    }
+                    allCategories[cat].push(appId);
+                });
+                if (appSet[appId].favorite) {
+                    allCategories.favorites.push(appId);
+                }
+            });
+            Object.keys(allCategories).forEach(function(cat) {
+                allCategories[cat] = allCategories[cat].filter(function(el, index, arr) {
+                    return index === arr.indexOf(el);
+                });
+                allCategories[cat].sort(function(a, b) {
+                    a = appSet[a],
+                    b = appSet[b];
+                    return a.info.name.localeCompare(b.info.name);
+                });
+            });
+            if (allCategories.favorites.length === 0) {
+                delete allCategories['favorites'];
+            }
+            if (allCategories.uncategorized.length === 0) {
+                delete allCategories['uncategorized'];
+            }
+            return allCategories;
+        },
+
+        refreshPanel: function() {
+            var panelStyle = this.currentPanelStyle,
+                filterString = this.$searchInput.val(),
+                appSet = this.renderedApps,
+                self = this,
+                $appPanel = $('<div>');
+
+            var buildFlatPanel = function(ascending) {
+                var appList = Object.keys(appSet);
+                appList.sort(function(a, b) {
+                    a = appSet[a];
+                    b = appSet[b];
                     if(a.favorite && b.favorite) {
-                        if(a.favorite<b.favorite) return 1;
-                        if(a.favorite>b.favorite) return -1;
+                        if (ascending) {
+                            return a.info.name.localeCompare(b.info.name);
+                        }
+                        else {
+                            return b.info.name.localeCompare(a.info.name);
+                        }
                     }
                     if(a.favorite) return -1;
                     if(b.favorite) return 1;
 
-                    return a.info.name.localeCompare(b.info.name);
-                });
-                for (var i=0; i<fnList.length; i++) {
-                    // need the module name IDs to be lower case in the lookup table
-                    var id = fnList[i].info.id;
-                    if(fnList[i].info.module_name) {
-                        var idTokens = fnList[i].info.id.split('/');
-                        id = idTokens[0].toLowerCase() + '/' + idTokens[1];
-
-                        if (self.moduleVersions[fnList[i].info.module_name]) {
-                            fnList[i].info.ver = self.moduleVersions[fnList[i].info.module_name];
-                        }
+                    if (ascending) {
+                        return a.info.name.localeCompare(b.info.name);
                     }
-                    var $fnElem = self.buildMethod(icon, fnList[i], callback);
-                    id2Elem[id] = $fnElem;
-                    $fnPanel.append($fnElem);
+                    else {
+                        return b.info.name.localeCompare(a.info.name);
+                    }
+                });
+                for (var i=0; i<appList.length; i++) {
+                    $appPanel.append(self.buildMethod(appSet[appList[i]]));
                 }
-                return [$fnPanel, id2Elem];
             };
 
-            this.methodSet = {};
-            var methodRender = generatePanel(catSet, methSet, 'M', triggerMethod);
-            var $methodPanel = methodRender[0];
-            this.id2Elem['method'] = methodRender[1];
+            var buildSingleAccordion = function(category, appList) {
+                var $accordionBody = $('<div>');
+                appList.forEach(function(appId) {
+                    $accordionBody.append(self.buildMethod(appSet[appId]));
+                });
+                var categoryTitle = category.replace('_', ' ')
+                    .replace(/\w\S*/g, function(txt) {
+                        return txt.charAt(0).toUpperCase() + txt.substr(1);
+                    });
+                return {
+                    title: categoryTitle + ' <span class="label label-info pull-right" style="padding-top:0.4em">' + appList.length + '</span>',
+                    body: $accordionBody
+                };
+            };
 
-            this.$methodList.empty().append($methodPanel); //.append($appPanel);
+            var assembleAccordion = function(accordion) {
+                var $body = accordion.body;
+                var $toggle = $('<span class="glyphicon glyphicon-chevron-right">')
+                    .css({
+                        'padding-right': '3px'
+                    });
+                var $header = $('<div class="row">')
+                    .css({
+                        cursor: 'pointer',
+                        'font-size': '1.1em',
+                        'font-weight': 'bold',
+                        padding: '3px 0',
+                        'border-bottom': '1px solid #eee'
+                    })
+                    .append($toggle)
+                    .append(accordion.title)
+                    .click(function() {
+                        if ($toggle.hasClass('glyphicon-chevron-right')) {
+                            $body.slideDown('fast', function() {
+                                $toggle.removeClass('glyphicon-chevron-right')
+                                       .addClass('glyphicon-chevron-down');
+                            });
+                        } else {
+                            $body.slideUp('fast', function() {
+                                $toggle.removeClass('glyphicon-chevron-down')
+                                       .addClass('glyphicon-chevron-right');
+                            });
+                        }
+                    });
+                return $('<div>').append($header).append($body.hide());
+            };
+
+            var buildAccordionPanel = function(style) {
+                /* first, get elements in order like this:
+                 * { category1: [ appId1, appId2, appId3, ...]}
+                 */
+                var categorySet = self.categorizeApps(style, appSet);
+                var accordionList = [];
+                Object.keys(categorySet).sort().forEach(function(cat) {
+                    if (cat === 'favorites') {
+                        return;
+                    }
+                    accordionList.push(buildSingleAccordion(cat, categorySet[cat]));
+                });
+                if (categorySet.favorites) {
+                    accordionList.unshift(buildSingleAccordion('my favorites', categorySet.favorites));
+                }
+                accordionList.forEach(function(accordion) {
+                    $appPanel.append(assembleAccordion(accordion));
+                });
+            };
+
+            // 1. Go through filterString and keep those that pass the filter (not yet).
+
+            appSet = this.filterApps(filterString, appSet);
+
+            // 2. Switch over panelStyle and build the view based on that.
+            switch(panelStyle) {
+            case 'a-z':
+                buildFlatPanel(true);
+                break;
+            case 'z-a':
+                buildFlatPanel(false);
+                break;
+            case 'category':
+            case 'input':
+            case 'output':
+                buildAccordionPanel(panelStyle);
+                break;
+            default:
+                break;
+            }
+            this.$methodList.empty().append($appPanel);
+        },
+
+        /**
+         * Using the filterString, this returns only those apps that pass the filter.
+         * The string is applied to app names (to start)
+         * filterString - just a string. includes prefixes in_type:, out_type:
+         * appSet - keys=appIds, values=appSpecs
+         */
+        filterApps: function(filterString, appSet) {
+            if (!filterString) {
+                return appSet;
+            }
+            var filterType = 'name';
+            filterString = filterString.toLowerCase();
+            var filter = filterString.split(':');
+            if (filter.length === 2) {
+                if (filter[0] === 'in_type' || filter[1] === 'out_type') {
+                    filterType = filter[0];
+                    filterString = filter[1];
+                }
+            }
+            var filteredIds = Object.keys(appSet);
+            filteredIds = Object.keys(appSet).filter(function(id) {
+                switch(filterType) {
+                case 'in_type':
+                    var inputTypes = appSet[id].info.input_types;
+                    return inputTypes.join().toLowerCase().indexOf(filterString) !== -1;
+                case 'out_type':
+                    var outputTypes = appSet[id].info.output_types;
+                    return outputTypes.join().toLowerCase().indexOf(filterString) !== -1;
+                default:
+                    return appSet[id].info.name.toLowerCase().indexOf(filterString) !== -1;
+                }
+            });
+            var filteredSet = {};
+            filteredIds.forEach(function(id) {
+                filteredSet[id] = appSet[id];
+            });
+            return filteredSet;
         },
 
         /**
@@ -651,99 +851,87 @@ define ([
          * @param {object} method - the method object returned from the kernel.
          * @private
          */
-        buildMethod: function(icon, method, triggerFn) {
+        buildMethod: function(method) {
             var self = this;
             // add icon (logo)
             var $logo = $('<div>');
 
-            if(icon === 'A') {
-                $logo.append( DisplayUtil.getAppIcon({ isApp: true , cursor: 'pointer', setColor:true }) );
+            if (method.info.icon && method.info.icon.url) {
+                var url = this.options.methodStoreURL.slice(0, -3) + method.info.icon.url;
+                $logo.append( DisplayUtil.getAppIcon({ url: url , cursor: 'pointer' , setColor:true, size:'50px'}) )
+                    .css('padding', '3px');
             } else {
-                if(method.info.icon && method.info.icon.url) {
-                    var url = this.options.methodStoreURL.slice(0, -3) + method.info.icon.url;
-                    $logo.append( DisplayUtil.getAppIcon({ url: url , cursor: 'pointer' , setColor:true, size:'50px'}) )
-                        .css('padding', '3px');
-                } else {
-                    $logo.append( DisplayUtil.getAppIcon({ cursor: 'pointer' , setColor:true}) );
-                }
+                $logo.append( DisplayUtil.getAppIcon({ cursor: 'pointer' , setColor:true}) );
             }
             // add behavior
-            $logo.click($.proxy(
-                function(e) {
-                    e.stopPropagation();
-                    triggerFn(method);
-                }, this));
+            $logo.click(function(e) {
+                e.stopPropagation();
+                self.triggerMethod(method);
+            });
 
             var $star = $('<i>');
-            if(icon === 'M') {
-                if(method.favorite) {
-                    $star.addClass('fa fa-star kbcb-star-favorite').append('&nbsp;');
-                } else {
-                    $star.addClass('fa fa-star kbcb-star-nonfavorite').append('&nbsp;');
-                }
-                $star.on('click', function(event) {
-                    event.stopPropagation();
-                    var params = {};
-                    if(method.info.module_name) {
-                        params['module_name'] = method.info.module_name;
-                        params['id'] = method.info.id.split('/')[1];
-                    } else {
-                        params['id'] = method.info.id;
-                    }
-
-                    if(method.favorite) {
-                        // remove favorite
-                        self.catalog.remove_favorite(params)
-                            .then(function() {
-                                $star.removeClass('kbcb-star-favorite').addClass('kbcb-star-nonfavorite');
-                                method.favorite = null; // important to set this if we don't refresh the panel
-                            });
-                    } else {
-                        // add favorite
-                        self.catalog.add_favorite(params)
-                            .then(function() {
-                                $star.removeClass('kbcb-star-nonfavorite').addClass('kbcb-star-favorite');
-                                method.favorite =  new Date().getTime(); // important to set this if we don't refresh the panel
-                            });
-                    }
-                    //refresh?
-                    //self.refreshFromService(self.currentTag);
-                })
-                .tooltip({
-                    title: 'Add or remove from your favorites',
-                    container: 'body',
-                    placement: 'bottom',
-                    delay: {
-                        show: Config.get('tooltip').showDelay,
-                        hide: Config.get('tooltip').hideDelay
-                    }
-                });
+            if(method.favorite) {
+                $star.addClass('fa fa-star kbcb-star-favorite').append('&nbsp;');
+            } else {
+                $star.addClass('fa fa-star kbcb-star-nonfavorite').append('&nbsp;');
             }
+            $star.on('click', function(event) {
+                event.stopPropagation();
+                var params = {};
+                if(method.info.module_name) {
+                    params['module_name'] = method.info.module_name;
+                    params['id'] = method.info.id.split('/')[1];
+                } else {
+                    params['id'] = method.info.id;
+                }
+
+                if(method.favorite) {
+                    // remove favorite
+                    self.catalog.remove_favorite(params)
+                        .then(function() {
+                            $star.removeClass('kbcb-star-favorite').addClass('kbcb-star-nonfavorite');
+                            method.favorite = null; // important to set this if we don't refresh the panel
+                        });
+                } else {
+                    // add favorite
+                    self.catalog.add_favorite(params)
+                        .then(function() {
+                            $star.removeClass('kbcb-star-nonfavorite').addClass('kbcb-star-favorite');
+                            method.favorite =  new Date().getTime(); // important to set this if we don't refresh the panel
+                        });
+                }
+            })
+            .tooltip({
+                title: 'Add or remove from your favorites',
+                container: 'body',
+                placement: 'bottom',
+                delay: {
+                    show: Config.get('tooltip').showDelay,
+                    hide: Config.get('tooltip').hideDelay
+                }
+            });
 
             var $name = $('<div>')
                         .addClass('kb-data-list-name')
                         .css({'white-space':'normal', 'cursor':'pointer'})
-                        .append($('<a>').append(method.info.name)
-                                    .click($.proxy(function(e) {
-                                        e.stopPropagation();
-                                        triggerFn(method);
-                                    }, this)));
+                        .append($('<a>')
+                                .append(method.info.name)
+                                .click(function(e) {
+                                    e.stopPropagation();
+                                    self.triggerMethod(method);
+                                }));
             var versionStr = 'v'+method.info.ver; // note that method versions are meaningless right now; need to update!
             if (method.info.module_name) {
                 versionStr = '<a href="'+this.options.moduleLink+'/'+method.info.module_name+'" target="_blank">' +
                                 method.info.namespace + '</a> ' + versionStr;
             }
-            var $version = $('<span>').addClass("kb-data-list-type").append($star).append(versionStr); // use type because it is a new line
+            var $version = $('<span>').addClass('kb-data-list-type').append($star).append(versionStr); // use type because it is a new line
 
             var moreLink = '';
-            if(icon==='M') {
-                if(method.info.module_name) {
-                    moreLink = this.options.methodHelpLink + method.info.id + '/' + this.currentTag;
-                } else {
-                    moreLink = this.options.methodHelpLink + 'l.m/' + method.info.id;
-                }
-            } else if(icon==='A') {
-                moreLink = this.options.appHelpLink + method.info.id;
+            if(method.info.module_name) {
+                moreLink = this.options.methodHelpLink + method.info.id + '/' + this.currentTag;
+            } else {
+                moreLink = this.options.methodHelpLink + 'l.m/' + method.info.id;
             }
             var $more = $('<div>')
                         .addClass('kb-method-list-more-div');
@@ -794,12 +982,13 @@ define ([
                            .append($newMethod)
                            .append($more.hide())
                            .mouseenter(function() {
-                                $moreBtn.show();
+                               $moreBtn.show();
                            })
                            .mouseleave(function() { $moreBtn.hide(); })
                            .click(function() {
-                                $more.slideToggle('fast');
-                           } ));
+                               $more.slideToggle('fast');
+                           }
+                       ));
 
         },
 
@@ -827,17 +1016,7 @@ define ([
          * If a spec isn't found, then it won't appear in the return values.
          */
         getFunctionSpecs: function(specSet, callback) {
-            //console.debug("getFunctionSpecs(specSet=",specSet,")");
             var results = {};
-            // handle legacy apps; we already have the specs
-            // if (specSet.apps && specSet.apps instanceof Array) {
-            //     results.apps = {};
-            //     for (var i=0; i<specSet.apps.length; i++) {
-            //         if (this.appSpecs[specSet.apps[i]])
-            //             results.apps[specSet.apps[i]] = this.appSpecs[specSet.apps[i]];
-            //     }
-            // }
-            // handle methods, we now have to fetch the specs since we don't keep them around
             if (specSet.methods && specSet.methods instanceof Array) {
                 results.methods = {};
                 // we need to fetch some methods, so don't
@@ -858,47 +1037,6 @@ define ([
                 // there were no methods to fetch, so return
                 callback(results);
             }
-        },
-
-        logoColorLookup:function(type) {
-            var colors = [
-                            '#F44336', //red
-                            '#E91E63', //pink
-                            '#9C27B0', //purple
-                            '#673AB7', //deep purple
-                            '#3F51B5', //indigo
-                            '#2196F3', //blue
-                            '#03A9F4', //light blue
-                            '#00BCD4', //cyan
-                            '#009688', //teal
-                            '#4CAF50', //green
-                            '#8BC34A', //lime green
-                            '#CDDC39', //lime
-                            '#FFEB3B', //yellow
-                            '#FFC107', //amber
-                            '#FF9800', //orange
-                            '#FF5722', //deep orange
-                            '#795548', //brown
-                            '#9E9E9E', //grey
-                            '#607D8B'  //blue grey
-                         ];
-
-            // first, if there are some colors we want to catch...
-            switch (type) {
-                case "M":
-                    return "#FF9800";
-                    break;
-                case "A":
-                    return "#03A9F4";
-                    break;
-            }
-
-            // pick one based on the characters
-            var code = 0;
-            for(var i=0; i<type.length; i++) {
-                code += type.charCodeAt(i);
-            }
-            return colors[ code % colors.length ];
         },
 
         /**
@@ -937,199 +1075,6 @@ define ([
             return;
         },
 
-        /**
-         * A simple filter based on whether the given pattern string is present in the
-         * method's name.
-         * Returns true if so, false if not.
-         * Doesn't care if its a method or an app, since they both have name fields at their root.
-         */
-        textFilter: function(pattern, method) {
-            var lcName = method.info.name.toLowerCase();
-            var module_name = '';
-            if (method.info.module_name) {
-                module_name = method.info.module_name.toLowerCase();
-            }
-            // match any token in the query, not the full string
-            var tokens = pattern.toLowerCase().split(' ');
-            for(var k=0; k<tokens.length; k++) {
-                if(lcName.indexOf(tokens[k]) < 0 &&
-                   module_name.indexOf(tokens[k]) < 0) {
-                    // token not found, so we return false
-                    return false;
-                }
-            }
-            // returns true only if all tokens were found
-            return true;
-        },
-
-        /**
-         * Returns true if the type is available as in input to the method, false otherwise, assumes
-         * only the first token in 'type' is the type name
-         *
-         * 'style' should be one of three values:
-         * "object" = the type appears in either ins or outs of the method
-         * "input" = the type only appears in input fields
-         * "output" = the type only appears in output fields
-         */
-        typeFilter: function(type, spec, style) {
-            style = style.toLowerCase();
-
-            var tokens = type.split(' ');
-            var type = tokens[0];
-            tokens.shift();
-            // first check that other tokens match the method/app name
-            if (!this.textFilter(tokens.join(' '), spec)) {
-                return false;
-            }
-
-            var methodFilter = function(type, spec) {
-                if(!spec.parameters) return false;
-                for (var i=0; i<spec.parameters.length; i++) {
-                    var p = spec.parameters[i];
-
-                    if (p.text_options && p.text_options.valid_ws_types && p.text_options.valid_ws_types.length > 0) {
-                        // outputs have "is_output_name" in text_options
-                        var isOutput = p.text_options.is_output_name; // 0 or 1
-                        var checkThisParam = true;
-                        switch (style) {
-                            case 'input':
-                                if (isOutput)
-                                    checkThisParam = false;
-                                break;
-                            case 'output':
-                                if (!isOutput)
-                                    checkThisParam = false;
-                                break;
-                            case 'object': // always check
-                                break;
-                            default: break;
-                        }
-
-                        if (!checkThisParam)
-                            continue;
-                        var validTypes = p.text_options.valid_ws_types;
-                        for (var j=0; j<validTypes.length; j++) {
-                            if (validTypes[j].toLowerCase().indexOf(type) !== -1)
-                                return true;
-                        }
-                    }
-                }
-            };
-            if (spec.steps) {
-                // ignoring apps right now
-                for (var i=0; i<spec.steps.length; i++) {
-                    var methodSpec = this.methodSpecs[spec.steps[i].method_id]; // don't need to make module LC, because this is for
-                                                                                // apps only so specs cannot be in an SDK module
-                    if (!methodSpec || methodSpec === undefined || methodSpec === null) {
-                    }
-                    else if (methodFilter(type, methodSpec))
-                        return true;
-                }
-                return false;
-            } else {
-                // this is a method-- things are easy now because this info is returned by the NMS!
-                // if style==object => check both input and output
-                if(style === 'input' || style === 'object') {
-                    if(spec.info.input_types) {
-                        for(var k=0; k<spec.info.input_types.length; k++) {
-                            if(spec.info.input_types[k].toLowerCase().indexOf(type) >=0) {
-                                return true;
-                            }
-                        }
-                    }
-                } else if (style === 'output' || style === 'object') {
-                    if(spec.info.output_types) {
-                        for(var k=0; k<spec.info.output_types.length; k++) {
-                            if(spec.info.output_types[k].toLowerCase().indexOf(type) >=0) {
-                                return true;
-                            }
-                        }
-                    }
-                }
-                // not found
-                return false;
-            }
-        },
-
-        objectTypeFilter: function(type, spec) {
-            return this.typeFilter(type, spec, 'object');
-        },
-
-        inputTypeFilter: function(type, spec) {
-            return this.typeFilter(type, spec, 'input');
-        },
-
-        outputTypeFilter: function(type, spec) {
-            return this.typeFilter(type, spec, 'output');
-        },
-
-        /**
-         * @method
-         * @public
-         * Expects this.methodSet to be an associative array, like this:
-         * {
-         *     <methodId> : {
-         *         $elem : rendered element as jQuery node,
-         *         rest of method spec
-         *     }
-         * }
-         */
-        visualFilter: function(filterFn, fnInput) {
-            var numHidden = 0;
-            var self = this;
-            filterFn = $.proxy(filterFn, this);
-            var filterSet = function(set, type) {
-
-                var numHidden = 0;
-                for (var id in set) {
-                    // have to make sure module names are in LC, annoying, I know!
-                    var idTokens = id.split('/');
-                    if(idTokens.length === 2) { // has a module name
-                        id = idTokens[0].toLowerCase() + '/' + idTokens[1];
-                    }
-                    if (!filterFn(fnInput, set[id])) {
-                        self.id2Elem[type][id].hide();
-                        self.id2Elem[type][id].addClass('kb-function-dim');
-                        numHidden++;
-                    }
-                    else {
-                        self.id2Elem[type][id].removeClass('kb-function-dim');
-                        self.id2Elem[type][id].show();
-                    }
-                }
-                return numHidden;
-            };
-
-            // numHidden += filterSet(this.appSpecs, 'app');
-            numHidden += filterSet(this.methodSpecs, 'method');
-
-            if (numHidden > 0) {
-                this.$numHiddenSpan.text(numHidden);
-                this.$toggleHiddenDiv.show();
-                this.toggleHiddenMethods(this.$showHideSpan.text() !== 'show');
-            }
-            else {
-                this.$toggleHiddenDiv.hide();
-                this.toggleHiddenMethods(true);
-            }
-        },
-
-        toggleHiddenMethods: function(show) {
-            /* 2 cases
-             * show is truthy -> show()
-             * show is falsy -> hide()
-             */
-
-            if (show) {
-                this.$functionPanel.find('.kb-function-dim').show();
-            }
-            else {
-                this.$functionPanel.find('.kb-function-dim').hide();
-
-            }
-        },
-
-        // Temporary pass-through for Jim's gallery widget
         toggleOverlay: function() {
             this.trigger('toggleSidePanelOverlay.Narrative');
         }

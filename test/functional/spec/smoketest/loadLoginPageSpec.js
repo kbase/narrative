@@ -5,7 +5,7 @@
 describe('Narrative Smoketest', function() {
 
     var selenium = require('selenium-webdriver');
-    var timeoutMilliSec = 10 * 1000;
+    var timeoutMilliSec = 20 * 1000;
 
     // Open up the local instance of the narrative from test/unit/run_tests.py
     beforeEach(function(done) {
@@ -26,6 +26,8 @@ describe('Narrative Smoketest', function() {
     it('The sign-in button is visible', function(done) {
         var element = this.driver.findElement(selenium.By.id('signin-button'));
         expect(element).not.toBeNull();
+        console.log('got element');
+        console.log(element);
         done();
         // element.getText().then( function(text){
         //     expect(text).toContain('Sign In');

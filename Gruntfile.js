@@ -187,7 +187,7 @@ module.exports = function(grunt) {
     ]);
 
     grunt.registerTask('test', [
-        'karma:unit',
+        // 'karma:unit',
         'jasmine_nodejs'
     ]);
 

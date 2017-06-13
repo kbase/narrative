@@ -12,7 +12,7 @@ describe('Narrative Smoketest', function() {
         this.driver = new selenium.Builder()
             .withCapabilities(selenium.Capabilities.firefox())
             .build();
-        this.driver.manage().timeouts().implicitlyWait(timeoutMilliSec);
+        // this.driver.manage().timeouts().implicitlyWait(timeoutMilliSec);
         jasmine.DEFAULT_TIMEOUT_INTERVAL = timeoutMilliSec;
         this.driver.get('http://localhost:9999/narrative/tree?').then(done);
     });

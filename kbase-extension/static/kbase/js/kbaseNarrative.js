@@ -250,8 +250,7 @@ define([
             shareDialog = new BootstrapDialog({
                 title: 'Change Share Settings',
                 body: sharePanel,
-                closeButton: true,
-                buttons: [$('<button class="kb-primary-btn">Done</button>').click(function() { shareDialog.hide(); })]
+                closeButton: true
             });
         shareDialog.getElement().one('shown.bs.modal', function() {
             shareWidget = new KBaseNarrativeSharePanel(sharePanel.empty(), {
@@ -394,11 +393,6 @@ define([
     }
 
     Narrative.prototype.initSettingsDialog = function () {
-        //var sharePanel = $('<div>');
-        //var shareWidget = new KBaseNarrativeSharePanel(sharePanel, {
-        //    ws_name_or_id: this.getWorkspaceName()
-        //});
-
         var settingsButtonNode = document.getElementById('kb-settings-btn');
         if (!settingsButtonNode) {
             return;
@@ -407,7 +401,6 @@ define([
         settingsButtonNode.addEventListener('click', function () {
             showSettingsDialog();
         });
-
     };
 
 

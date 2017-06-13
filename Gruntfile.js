@@ -188,7 +188,7 @@ module.exports = function(grunt) {
 
     grunt.registerTask('test', [
         'karma:unit',
-        'jasmine_nodejs'
+        // 'jasmine_nodejs'
     ]);
 
     // Does a single unit test run, then sends

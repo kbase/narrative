@@ -3,6 +3,12 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v4.4.1 (more notes will follow).
 
+### Version 3.4.0
+__Changes__
+- Modified the Sharing dialog to make the actions more clear.
+- Modified the configuration for publicly available data sources.
+- Made global changes to support the new KBase authentication/authorization system.
+
 ### Version 3.3.0
 __Changes__
 - Modified how to select an App from the App Panel, now you can sort and group by category, inputs, outputs, and alphabetically.

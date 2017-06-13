@@ -31,7 +31,6 @@ define([
     'kbaseNarrativeSideImportTab',
     'kbaseNarrativeExampleDataTab',
     'kbaseNarrativeStagingDataTab',
-    'kbaseLogin',
     'kbase-generic-client-api',
     'bootstrap'
 ], function (
@@ -49,7 +48,6 @@ define([
     kbaseNarrativeSideImportTab,
     kbaseNarrativeExampleDataTab,
     kbaseNarrativeStagingDataTab,
-    kbaseLogin,
     GenericClient
     ) {
     'use strict';
@@ -569,7 +567,6 @@ define([
 
             // It is silly to invoke a new object for each widget
             var auth = {token: Jupyter.narrative.authToken};
-            //var auth = {token: $("#signin-button").kbaseLogin('session', 'token')};
             var ws = new Workspace(this.options.workspaceURL, auth);
             var serviceClient = new GenericClient(Config.url('service_wizard'), auth);
 

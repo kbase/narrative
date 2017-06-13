@@ -1,7 +1,7 @@
 {
     "config": "ci",
     "name": "KBase Narrative",
-    "version": "3.3.0",
+    "version": "3.4.0",
     "dev_mode": true,
     "auth_cookie": "kbase_session",
     "git_commit_hash": "60e2219",
@@ -26,6 +26,7 @@
     "use_local_widgets": true,
     "loading_gif": "/narrative/static/kbase/images/ajax-loader.gif",
     "appdev": {
+        "auth": "https://appdev.kbase.us/services/auth",
         "ftp_api_url": "https://appdev.kbase.us/services/kb-ftp-api/v0",
         "ftp_api_root": "/data/bulk",
         "awe": "https://appdev.kbase.us/services/awe-api",
@@ -145,6 +146,7 @@
         "ws_browser": "http://narrative.kbase.us/#ws"
     },
     "next": {
+        "auth": "https://next.kbase.us/services/auth",
         "awe": "https://next.kbase.us/services/awe-api",
         "catalog": "https://next.kbase.us/services/catalog",
         "cdn": "https://next.kbase.us/cdn/files",
@@ -185,6 +187,7 @@
         "ws_browser": "https://narrative.kbase.us/#ws"
     },
     "prod": {
+        "auth": "https://kbase.us/services/auth",
         "awe": "https://kbase.us/services/awe-api",
         "catalog": "https://kbase.us/services/catalog",
         "cdn": "https://kbase.us/cdn/files",

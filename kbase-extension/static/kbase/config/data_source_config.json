@@ -304,10 +304,11 @@
                 },
                 {
                     "name": [
-                        "ContigSet"
+                        "ContigSet",
+			"Assembly"
                     ],
-                    "displayName": "Example Contig Sets",
-                    "header": "A set of DNA sequences"
+                    "displayName": "Example Assemblies",
+                    "header": "Assembled DNA sequences"
                 },
                 {
                     "name": [

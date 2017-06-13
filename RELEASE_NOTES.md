@@ -8,6 +8,7 @@ __Changes__
 - Modified the Sharing dialog to make the actions more clear.
 - Modified the configuration for publicly available data sources.
 - Made global changes to support the new KBase authentication/authorization system.
+- KBASE-5243 - fix problem where Narratives (and probably data objects) were showing a change date one month into the future.
 
 ### Version 3.3.0
 __Changes__

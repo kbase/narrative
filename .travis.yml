@@ -2,21 +2,36 @@ sudo: false
 language: python
 python:
   - "2.7"
+addons:
+  firefox: "latest"
+  apt:
+    packages:
+      - oracle-java8-installer
+env:
+  - TRAVIS_NODE_VERSION="6.6.0"
 cache:
   directories:
-  - kbase-extension/static/components
+  - kbase-extension/static/ext_components
   - node_modules
 branches:
   only:
     - develop
     - staging
     - master
-    - jupyter
+    - travis-firefox
+
 before_install:
   - pip install virtualenv
+  - nvm install $TRAVIS_NODE_VERSION
   - npm install -g bower
   - npm install -g grunt-cli
   - npm install -g karma-cli
 install:
   - pip install -r src/requirements.txt
+
+before_script:
+  - "export DISPLAY=:99.0"
+  - "sh -e /etc/init.d/xvfb start"
+  - sleep 3 # give xvfb some time to start
+
 script: make build-travis-narrative && make test

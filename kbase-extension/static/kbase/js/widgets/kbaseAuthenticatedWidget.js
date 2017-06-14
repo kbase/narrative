@@ -2,7 +2,19 @@
 
 */
 
-(function( $, undefined ) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'kbwidget'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		KBWidget
+	) {
+
 
 
     return KBWidget({
@@ -16,6 +28,7 @@
             'authToken',
             'user_id',
             'loggedInCallback',
+            'logInCanceledCallback',
             'loggedOutCallback',
             'loggedInQueryCallback'
         ],
@@ -47,6 +60,17 @@
                 }, this)
             );
 
+            $(document).on(
+                'logInCanceled.kbase',
+                $.proxy(function (e) {
+                    this.setAuth(undefined);
+                    if (this.logInCanceledCallback) {
+                        this.logInCanceledCallback(e);
+                    }
+                }, this)
+            );
+
+
             $(document).trigger(
                 'loggedInQuery',
                 $.proxy(function (auth) {
@@ -75,7 +99,7 @@
             }
             this.sessionId(newAuth.kbase_sessionid);
             this.authToken(newAuth.token);
-            this.user_id(newAuth.user_id);
+            this.user_id(newAuth.user);
         },
 
         loggedInQueryCallback : function(args) {
@@ -86,4 +110,4 @@
 
     });
 
-}( jQuery ) );
+});

@@ -1,15 +1,24 @@
 {
     "config": "ci",
     "name": "KBase Narrative",
-    "version": "3.0.0",
+    "version": "3.4.0",
     "dev_mode": true,
+    "auth_cookie": "kbase_session",
     "git_commit_hash": "60e2219",
     "git_commit_time": "Thu Mar 3 15:44:21 2016 -0800",
-    "features": {
-        "advanced": false,
-        "developer": false
-    },
     "release_notes": "https://github.com/kbase/narrative/blob/staging/RELEASE_NOTES.md",
+    "comm_wait_timeout": 60000,
+    "data_panel": {
+        "ws_chunk_size": 10000,
+        "ws_max_objs_to_fetch": 30000,
+        "obj_render_initial": 40,
+        "obj_render_scroll": 5,
+        "typeahead_search_limit": 20000,
+        "initial_sort_limit": 10000,
+        "max_name_length": 33,
+        "refresh_interval_ms": 30000,
+        "max_single_request": 1000
+    },
     "tooltip": {
         "hideDelay": 0,
         "showDelay": 750
@@ -17,6 +26,9 @@
     "use_local_widgets": true,
     "loading_gif": "/narrative/static/kbase/images/ajax-loader.gif",
     "appdev": {
+        "auth": "https://appdev.kbase.us/services/auth",
+        "ftp_api_url": "https://appdev.kbase.us/services/kb-ftp-api/v0",
+        "ftp_api_root": "/data/bulk",
         "awe": "https://appdev.kbase.us/services/awe-api",
         "catalog": "https://appdev.kbase.us/services/catalog",
         "cdn": "https://appdev.kbase.us/cdn/files",
@@ -33,6 +45,7 @@
         "login": "https://appdev.kbase.us/services/authorization/Sessions/Login",
         "narrative_job_proxy": "https://appdev.kbase.us/services/narrativejobproxy/",
         "narrative_method_store": "https://appdev.kbase.us/services/narrative_method_store/rpc",
+        "narrative_method_store_image": "https://appdev.kbase.us/services/narrative_method_store/",
         "narrative_method_store_types": "https://next.kbase.us/services/narrative_method_store/rpc",
         "profile_page": "/#people/",
         "protein_info": "",
@@ -54,6 +67,9 @@
         "ws_browser": "https://appdev.kbase.us/#ws"
     },
     "ci": {
+        "auth": "https://ci.kbase.us/services/auth",
+        "ftp_api_url": "https://ci.kbase.us/services/kb-ftp-api/v0",
+        "ftp_api_root": "/data/bulk",
         "awe": "https://ci.kbase.us/services/awe-api",
         "catalog": "https://ci.kbase.us/services/catalog",
         "cdn": "https://ci.kbase.us/cdn/files",
@@ -66,16 +82,15 @@
         "invocation": "",
         "job_service": "https://ci.kbase.us/services/njs_wrapper",
         "landing_pages": "/#dataview/",
-        "log_proxy_host": "172.17.42.1",
+        "log_proxy_host": "172.17.0.1",
         "log_proxy_port": 32001,
         "login": "https://ci.kbase.us/services/authorization/Sessions/Login",
-        "narrative_job_proxy": "http://narrative-ci.kbase.us:7068",
         "narrative_method_store": "https://ci.kbase.us/services/narrative_method_store/rpc",
         "narrative_method_store_image": "https://ci.kbase.us/services/narrative_method_store/",
         "profile_page": "/#people/",
         "protein_info": "",
         "reset_password": "https://gologin.kbase.us/ResetPassword",
-        "search": "https://kbase.us/services/search/getResults",
+        "search": "https://ci.kbase.us/services/search/getResults",
         "service_wizard": "https://ci.kbase.us/services/service_wizard",
         "shock": "https://ci.kbase.us/services/shock-api",
         "status_page": "http://kbase.us/internal/status/",
@@ -130,8 +145,8 @@
         "workspace": "http://dev04.berkeley.kbase.us:7058",
         "ws_browser": "http://narrative.kbase.us/#ws"
     },
-
     "next": {
+        "auth": "https://next.kbase.us/services/auth",
         "awe": "https://next.kbase.us/services/awe-api",
         "catalog": "https://next.kbase.us/services/catalog",
         "cdn": "https://next.kbase.us/cdn/files",
@@ -139,6 +154,8 @@
         "data_panel_sources": "/data_source_config.json",
         "fba": "https://next.kbase.us/services/KBaseFBAModeling/",
         "feature_values": "https://next.kbase.us/services/feature_values/jsonrpc",
+        "ftp_api_url": "https://next.kbase.us/services/kb-ftp-api/v0",
+        "ftp_api_root": "/data/bulk",
         "gene_families": "https://next.kbase.us/services/gene_families",
         "genomeCmp": "https://next.kbase.us/services/genome_comparison/jsonrpc",
         "invocation": "",
@@ -170,6 +187,7 @@
         "ws_browser": "https://narrative.kbase.us/#ws"
     },
     "prod": {
+        "auth": "https://kbase.us/services/auth",
         "awe": "https://kbase.us/services/awe-api",
         "catalog": "https://kbase.us/services/catalog",
         "cdn": "https://kbase.us/cdn/files",
@@ -177,6 +195,8 @@
         "data_panel_sources": "/data_source_config.json",
         "fba": "https://kbase.us/services/KBaseFBAModeling/",
         "feature_values": "https://kbase.us/services/feature_values/jsonrpc",
+        "ftp_api_url": "https://kbase.us/services/kb-ftp-api/v0",
+        "ftp_api_root": "/data/bulk",
         "gene_families": "https://kbase.us/services/gene_families",
         "genomeCmp": "https://kbase.us/services/genome_comparison/jsonrpc",
         "invocation": "https://kbase.us/services/invocation",

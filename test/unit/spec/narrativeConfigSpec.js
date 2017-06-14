@@ -54,5 +54,11 @@ define (
         it('should return undefined for an unknown configuration key', function() {
             expect(Config.get('gleeblegorf')).toBeUndefined();
         });
+
+        it('can use the get method to see what features should be enabled or not', function() {
+            var features = Config.get('features');
+            expect(features).toEqual(jasmine.any(Object));
+            expect(features.stagingDataViewer).toBeDefined();
+        });
     });
 });

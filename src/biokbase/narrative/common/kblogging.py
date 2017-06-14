@@ -130,6 +130,8 @@ class BufferedSocketHandler(handlers.SocketHandler):
         # stuff 'extra' from environment into record
         #_logdbg("@@ stuffing into record: {}".format(kbase_env))
         record.__dict__.update(kbase_env)
+        if 'auth_token' in record.__dict__:
+            del record.__dict__['auth_token']
         self.buf_lock.acquire()
         try:
             self.buf.append(record)

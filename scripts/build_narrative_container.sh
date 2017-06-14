@@ -5,11 +5,13 @@ DS=$( date +%Y%m%d%H%M )
 
 # This is the name for now, as this is what the Lua provisioner looks for to fire up a Narrative.
 NAR_NAME="kbase/narrative"
+HEADLESS_NAME="kbase/narrative_headless"
 NAR_BASE="kbase/narrbase"
-NAR_BASE_VER="4.5"
+NAR_BASE_VER="4.6"
 NAR_PREREQ="kbase/narrprereq"
 NAR_PREREQ_VER="1.1"
 WEBROOT_DIR="/kb/deployment/services/kbase-ui"
+DOCKERFILE_HEADLESS="Dockerfile_headless"
 
 function usage () {
     printf "usage: $0 [options]\n"
@@ -72,6 +74,8 @@ fi
 echo "Building latest narrative version"
 
 # Build the Narrative container and tag it (as a backup)
+# Force the entrypoint to "headless-narrative" for the headless
+# narrative runner
 docker build -q -t $NAR_NAME .
 docker tag $NAR_NAME:latest $NAR_NAME:$DS
 

@@ -3,7 +3,7 @@
   the Narrative styles.
 */
 .kb-app-cell {
-
+    font-family: 'Oxygen', sans-serif;
 }
 
 .kb-app-cell .kb-app-warning {
@@ -23,6 +23,35 @@
     padding:5px;
     border-radius:5px;
 }
+.kb-app-cell .kb-app-parameter-row:hover {
+    background-color:rgba(0, 0, 0, 0.03);
+}
+
+
+.kb-app-row-close-btn-addon {
+    background: transparent;
+    border: 0;
+
+}
+.kb-app-row-close-btn {
+    height: 100%;
+    margin-left:1px;
+    border-left: 3px solid transparent;
+    border-right: 0;
+    border-top: 0;
+    border-bottom: 0;
+}
+.kb-app-row-close-btn:hover {
+    border-left: 3px solid #337ab7; /* this is the bootstrap link color to match to close icon */
+}
+
+.kb-app-parameter-right-error-bar {
+    height: 100%;
+    background: red;
+}
+
+
+
 /* for some reason, the css :hover doesn't work right on this div, so we use jquery to toggle this class */
 .kb-app-cell .kb-app-parameter-row-hover {
     background:#F9F9F9;
@@ -32,21 +61,16 @@
     background: #f2dede;
 }
 .kb-app-cell  .kb-app-parameter-row .message.-warning {
-    xbackground: yellow;
 }
 .kb-app-cell .kb-app-parameter-row .message {
-    xpadding: 5px;
     text-align: center;
     font-family: 'Oxygen', sans-serif;
-    xfont-weight: bold;
-    /* font-size: 9pt; */
 }
 
 .kb-app-cell .kb-app-parameter-row .message.-error {
     color: #F44336;
 }
 .kb-app-cell .kb-app-parameter-row .message.-warning {
-    xcolor: orange;
 }
 
 /* not sure how to get text in these divs to valign middle... */
@@ -55,25 +79,32 @@
     color: #777;
     text-align: left;
     vertical-align: bottom;
-    xmargin-top: 3px;
     padding-right: 4px;
     padding-left: 0px;
     white-space: normal;
-    xborder-bottom: 1px #ddd dotted;
 }
 .kb-app-cell .kb-app-parameter-input {
     vertical-align:middle;
-    xwhite-space: nowrap;
-    xpadding-left:10px;
-    xborder-bottom: 1px #ccc dotted;
-}
-.kb-app-cell .kb-app-parameter-input input {
-    xfont-weight: bold;
 }
 
 .kb-app-cell .kb-app-parameter-input select.form-control {
     margin: 0;
 }
+
+
+.kb-app-field-feedback {
+    background: transparent;
+    border: 0;
+}
+
+.kb-input-group-addon {
+    background: transparent;
+    border: 0;
+    padding: 0px 4px 0px 4px;
+}
+
+
+
 
 /*
 This set of styles is a to accomodate the required/satisfied icon which appears
@@ -171,6 +202,24 @@ control with padding, and then scooting the icon back into its column.
 }
 
 
+.report-widget .panel-title > [data-toggle="collapse"]::before {
+    display: inline-block;
+    margin-left: 0px;
+    margin-right: 4px;
+    font-family: "FontAwesome";
+    font-style: normal;
+    font-weight: normal;
+    font-size: 90%;
+    width: 12px;
+    color: silver;
+    line-height: 1;
+    vertical-align: baseline;
+    content: "\f078 ";
+}
+.report-widget .panel-title > [data-toggle="collapse"].collapsed::before {
+    margin-left: 2px; margin-right: 2px;
+    content: "\f054 ";
+}
 
 .kb-app-cell .panel-title > [data-toggle="collapse"]::before {
     display: inline-block;
@@ -249,7 +298,7 @@ official kbase green:
 
 rgb(75,184,86)
 
-or 
+or
 
  rgb(42,190,159) which is the lighter variant. both used in mocks (but depends where you sample).
 
@@ -301,10 +350,8 @@ warning: orange
     color: rgb(33, 150, 243);
     background-color: #DDD;
     border-bottom: 2px rgb(33, 150, 243) solid;
-    margin-bottom: 4px;   
+    margin-bottom: 4px;
 }
-
-
 
 /* DANGER - for error */
 .btn.kb-app-cell-btn.btn-danger {
@@ -334,10 +381,8 @@ warning: orange
     color: rgb(209,82,65);
     background-color: #DDD;
     border-bottom: 2px rgb(209,82,65) solid;
-    margin-bottom: 4px;   
+    margin-bottom: 4px;
 }
-
-
 
 /* DISABLED is gray border and text */
 /*
@@ -353,21 +398,18 @@ warning: orange
     color: #888;
     background-color: #FFF;
     border: 2px #888 solid;
-    margin-bottom: 4px;    
+    margin-bottom: 4px;
 }
 
 
 
 
 .kb-app-cell [data-element="run-control-panel"] {
-    xpadding-left: 8px;
     width: 100%;
 }
 
 .kb-app-cell [data-element="tab-pane"] {
     border-top: 2px rgb(33, 150, 243) solid;
-    xborder: 1px solid rgb(32, 77, 16);
-    xbackground-color: #f5f5f5;
 }
 
 .kb-app-cell [data-element="tab-pane"] > div:empty {
@@ -376,28 +418,6 @@ warning: orange
 
 .kb-app-cell [data-element="tab-pane"] > div {
     padding: 4px;
-}
-
-.kb-app-cell .btn.disabled {
-    background-color: #FFF;
-}
-
-.kb-app-cell .btn-primary.kb-btn-action.-rerun {
-    color: rgb(33, 150, 243)
-}
-
-
-.kb-app-cell .btn-primary.kb-btn-action.-run {
-    color: rgb(75,184,86)
-}
-
-
-.kb-app-cell .btn-danger.kb-btn-action.-cancel {
-    color: rgb(209,82,65)
-}
-
-.kb-app-cell .btn-danger.kb-btn-action.-reset {
-    color: rgb(209,82,65)
 }
 
 .kb-app-status-ok {
@@ -419,5 +439,56 @@ warning: orange
 
 .parameter-panel .info-panel {
     padding-top: 4px;
-    background-color: #FFF;
+    background: transparent;
+}
+
+.tt-input,
+.tt-query {
+  -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+     -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+          box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+  width : 100%
+}
+
+.tt-hint {
+  color: #999
+}
+
+.tt-menu {    /* used to be tt-dropdown-menu in older versions */
+  margin-top: 4px;
+  padding: 4px 0;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  -webkit-border-radius: 4px;
+     -moz-border-radius: 4px;
+          border-radius: 4px;
+  -webkit-box-shadow: 0 5px 10px rgba(0,0,0,.2);
+     -moz-box-shadow: 0 5px 10px rgba(0,0,0,.2);
+          box-shadow: 0 5px 10px rgba(0,0,0,.2);
+  width : 100%
+}
+
+.tt-suggestion {
+  padding: 3px 20px;
+  line-height: 24px;
+}
+
+.tt-suggestion.tt-cursor,.tt-suggestion:hover {
+  color: #fff;
+  background-color: #0097cf;
+
+}
+
+.tt-suggestion p {
+  margin: 0;
+}
+
+.tt-header {
+  font-size : 75%;
+  /* this doesn't work, don't want to just turn it on, though:
+  font-color : gray;
+  */
+  font-style : italic;
+  padding-left : 5px;
 }

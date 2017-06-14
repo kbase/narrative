@@ -1,5 +1,5 @@
 from requests.exceptions import HTTPError
-from biokbase.NarrativeJobService.Client import ServerError as NJSServerError
+from biokbase.NarrativeJobService.baseclient import ServerError as NJSServerError
 from biokbase.userandjobstate.baseclient import ServerError as UJSServerError
 
 class NarrativeException(Exception):

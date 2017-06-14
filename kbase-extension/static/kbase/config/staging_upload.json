@@ -1,0 +1,97 @@
+{
+    "dropdown_order": [
+        {
+            "id": "fastq_reads",
+            "name": "FASTQ Reads"
+        },
+        {
+            "id": "sra_reads",
+            "name": "SRA Reads"
+        },
+        {
+            "id": "genbank_genome",
+            "name": "Genbank Genome"
+        },
+        {
+            "id": "gff_genome",
+            "name": "GFF Genome"
+        },
+        {
+            "id": "expression_matrix",
+            "name": "Expression Matrix"
+        },
+        {
+            "id": "media",
+            "name": "Media"
+        },
+        {
+            "id": "assembly",
+            "name": "Assembly"
+        }
+    ],
+    "app_info": {
+        "fastq_reads": {
+            "app_id": "kb_uploadmethods/import_fastq_sra_as_reads_from_staging",
+            "app_input_param": "fastq_fwd_staging_file_name",
+            "app_input_param_type": "string",
+            "app_static_params": {"import_type": "FASTQ/FASTA"},
+            "app_output_param": "name",
+            "app_output_suffix": "_reads",
+            "multiselect": false
+        },
+        "sra_reads": {
+            "app_id": "kb_uploadmethods/import_fastq_sra_as_reads_from_staging",
+            "app_input_param": "sra_staging_file_name",
+            "app_input_param_type": "string",
+            "app_static_params": {"import_type": "SRA"},
+            "app_output_param": "name",
+            "app_output_suffix": "_reads",
+            "multiselect": false
+        },
+        "genbank_genome": {
+            "app_id": "kb_uploadmethods/import_genbank_as_genome_from_staging",
+            "app_input_param": "staging_file_subdir_path",
+            "app_input_param_type": "string",
+            "app_static_params": {},
+            "app_output_param": "genome_name",
+            "app_output_suffix": "_genome",
+            "multiselect": false
+        },
+        "gff_genome": {
+            "app_id": "kb_uploadmethods/import_gff_fasta_as_genome_from_staging",
+            "app_input_param": "gff_file",
+            "app_input_param_type": "string",
+            "app_static_params": {},
+            "app_output_param": "genome_name",
+            "app_output_suffix": "_genome",
+            "multiselect": false
+        },
+        "expression_matrix": {
+            "app_id": "kb_uploadmethods/import_tsv_as_expression_matrix_from_staging",
+            "app_input_param": "staging_file_subdir_path",
+            "app_input_param_type": "string",
+            "app_static_params": {},
+            "app_output_param": "matrix_name",
+            "app_output_suffix": "_matrix",
+            "multiselect": false
+        },
+        "media": {
+            "app_id": "kb_uploadmethods/import_tsv_excel_as_media_from_staging",
+            "app_input_param": "staging_file_subdir_path",
+            "app_input_param_type": "string",
+            "app_static_params": {},
+            "app_output_param": "media_name",
+            "app_output_suffix": "_media",
+            "multiselect": false
+        },
+        "assembly": {
+            "app_id": "kb_uploadmethods/import_fasta_as_assembly_from_staging",
+            "app_input_param": "staging_file_subdir_path",
+            "app_input_param_type": "string",
+            "app_static_params": {},
+            "app_output_param": "assembly_name",
+            "app_output_suffix": "_assembly",
+            "multiselect": false
+        }
+    }
+}

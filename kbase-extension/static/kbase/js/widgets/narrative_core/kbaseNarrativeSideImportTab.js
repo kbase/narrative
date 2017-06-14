@@ -1,22 +1,25 @@
-/*global define*/
-/*jslint white: true*/
+/*global define,console*/
+/*jslint white: true;*/
+/*eslint-env browser*/
 /**
  * "Import" tab on data side panel.
  * @author Roman Sutormin <rsutormin@lbl.gov>
  * @public
  */
 define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery',
-		'narrativeConfig',
-		'kbaseAuthenticatedWidget',
-		'select2',
-		'util/string',
+    [
+        'kbwidget',
+        'bootstrap',
+        'jquery',
+        'narrativeConfig',
+        'kbaseAuthenticatedWidget',
+        'select2',
+        'util/string',
         'base/js/namespace',
-        'common/pythonInterop'
-	], function(
+        'common/pythonInterop',
+        'util/kbaseApiUtil',
+        'kbase-client-api'
+    ], function(
         KBWidget,
         bootstrap,
         $,
@@ -25,13 +28,14 @@ define (
         select2,
         StringUtil,
         Jupyter,
-        PythonInterop
+        PythonInterop,
+        APIUtil
 	) {
     'use strict';
     return KBWidget({
-        name: "kbaseNarrativeSideImportTab",
+        name: 'kbaseNarrativeSideImportTab',
         parent : kbaseAuthenticatedWidget,
-        version: "1.0.0",
+        version: '1.0.0',
         options: {
             ws_name: null
         },
@@ -96,12 +100,10 @@ define (
             var confirmButton = $('<button type="button" data-dismiss="modal">')
                                 .addClass("btn")
                                 .append("Confirm")
-                                .click(
-                                    $.proxy(function(event) {
-                                       self.stopTimer();
-                                       self.back();
-                                    }, this)
-                                );
+                                .click(function() {
+                                    self.stopTimer();
+                                    self.back();
+								}.bind(this));
 
             self.$warningModal.append(
                 $('<div>').addClass('modal-dialog').append(
@@ -197,7 +199,7 @@ define (
                         }
                     }
                     var keys = [];
-                    for (var key in self.types) {
+                    for (key in self.types) {
                         keys.push(key);
                     }
                     keys.sort(function(a,b) {return self.types[a]["name"].localeCompare(self.types[b]["name"])});
@@ -206,7 +208,7 @@ define (
                     }
                     $dropdown.select2({
                         minimumResultsForSearch: -1,
-                        formatSelection: function(object, container) {
+                        formatSelection: function(object) {
                             var display = '<span class="kb-parameter-data-selection">'+object.text+'</span>';
                             return display;
                         }
@@ -223,23 +225,23 @@ define (
             );
             return this;
         },
-        
-        getVersionTag: function() {
-            var tag = Jupyter.narrative.sidePanel.$methodsWidget.currentTag;
-            if (!tag) {
-                tag = "release";
-            }
-            return tag;
-        },
-        
+
+        // getVersionTag: function() {
+        //     var tag = Jupyter.narrative.sidePanel.$methodsWidget.currentTag;
+        //     if (!tag) {
+        //         tag = "release";
+        //     }
+        //     return tag;
+        // },
+
         getMethodSpecs: function(callback, errorCallback) {
             var self = this;
-            var tag = self.getVersionTag();
+            var tag = APIUtil.getAppVersionTag();
             if (self.allMethodIds[tag] && self.methodFullInfo[tag] && self.methods[tag]) {
                 callback(self.methodFullInfo[tag], self.methods[tag], tag);
                 return;
             }
-            self.methClient.list_method_ids_and_names({'tag': tag}, function(methodIdToName) {
+            self.methClient.list_method_ids_and_names({tag: tag}, function(methodIdToName) {
                 self.allMethodIds[tag] = methodIdToName;
                 var methodIds = [];
                 for (var i in self.methodIds) {
@@ -247,13 +249,13 @@ define (
                     if (self.allMethodIds[tag][methodId]) {
                         methodIds.push(methodId);
                     } else {
-                        console.log("Importer method id=" + methodId + " is skipped for " + 
+                        console.log("Importer method id=" + methodId + " is skipped for " +
                                 "tag \"" + tag + "\"");
                     }
                 }
-                var prom1 = self.methClient.get_method_full_info({'ids': methodIds, 
+                var prom1 = self.methClient.get_method_full_info({'ids': methodIds,
                     'tag' : tag});
-                var prom2 = self.methClient.get_method_spec({'ids': methodIds, 
+                var prom2 = self.methClient.get_method_spec({'ids': methodIds,
                     'tag' : tag});
                 $.when(prom1, prom2).done(function(fullInfoList, specs) {
                     self.methodFullInfo[tag] = {};
@@ -261,18 +263,20 @@ define (
                         self.methodFullInfo[tag][fullInfoList[i].id] = fullInfoList[i];
                     }
                     self.methods[tag] = {};
-                    for (var i in specs) {
+                    for (i in specs) {
                         self.methods[tag][specs[i].info.id] = specs[i];
                     }
                     callback(self.methodFullInfo[tag], self.methods[tag], tag);
                 }).fail(function(error) {
+                    alert(error);
                     errorCallback(error);
                 });
             }, function(error) {
+                alert(error);
                 errorCallback(error);
             });
         },
-        
+
         showWidget: function(type, methodFullInfo, methods, tag) {
             var self = this;
             this.selectedType = type;
@@ -290,13 +294,13 @@ define (
             }
             var numberOfTabs = importMethodIds.length;
             if (numberOfTabs > 1) {
-                var $header = $('<div>');
-                var $body = $('<div>');
+                $header = $('<div>');
+                $body = $('<div>');
                 this.widgetPanelCard2.append($header).append($body);
             }
 
             for (var methodPos in importMethodIds) {
-                self.showTab(importMethodIds, methodPos, $header, $body, 
+                self.showTab(importMethodIds, methodPos, $header, $body,
                         numberOfTabs, methodFullInfo, methods);
             }
             var $importButton = $('<button>')
@@ -351,15 +355,15 @@ define (
 
             var $buttons = $('<div style="margin: 0px 30px 0px 33px;">')
                            .addClass('buttons')
-                           .append($importButton)
+                           .append($backButton)
                            .append('&nbsp;')
                            .append('&nbsp;')
-                           .append($backButton);
+                           .append($importButton);
 
             self.widgetPanelCard2.append($buttons);
         },
 
-        showTab: function(importMethodIds, methodPos, $header, $body, 
+        showTab: function(importMethodIds, methodPos, $header, $body,
                 numberOfTabs, methodFullInfo, methods) {
             var self = this;
             var methodId = importMethodIds[methodPos];
@@ -368,30 +372,30 @@ define (
                 return;
             var inputWidgetName = methodSpec.widgets.input;
             if (!inputWidgetName || inputWidgetName === 'null')
-                inputWidgetName = "kbaseNarrativeMethodInput";
+                inputWidgetName = 'kbaseNarrativeMethodInput';
             var methodJson = JSON.stringify(methodSpec);
 
             var $inputDiv = $('<div>');
 
             var methodUuid = 'import-method-details-'+StringUtil.uuid();
-            var buttonLabel = 'details';
+            // var buttonLabel = 'details';
             var methodTitle = methodSpec.info.tooltip.trim();
             var methodDescr = methodFullInfo[methodId].description.trim();
-            var $overviewSwitch = $("<a/>").html('more...');
+            var $overviewSwitch = $('<a/>').html('more...');
             var $methodInfo = $('<div>')
                     .addClass('kb-func-desc')
                     .css({'margin' : '25px 0px 0px 15px'})
                     .append($('<h2>')
                     .attr('id', methodUuid)
                     .addClass('collapse in')
-                    .append(methodTitle).append("&nbsp;&nbsp&nbsp").append($overviewSwitch));
+                    .append(methodTitle).append('&nbsp;&nbsp&nbsp').append($overviewSwitch));
 
             var $methodDescrPanel = $('<div/>')
                     .addClass('kb-func-desc')
                     .css({'margin' : '20px 0px 0px 20px', 'display' : 'none'})
                     .append(methodDescr);
             if (methodDescr && methodDescr != '' && methodDescr != 'none' &&
-                    methodDescr != methodTitle && (methodDescr + ".") != methodTitle) {
+                    methodDescr != methodTitle && (methodDescr + '.') != methodTitle) {
                 $overviewSwitch.click(function(){
                     $methodDescrPanel.toggle();
                 });
@@ -403,7 +407,7 @@ define (
                     .append($('<div>')
                     .addClass('kb-func-panel kb-cell-run')
                     .append($methodInfo).append($methodDescrPanel))
-                    .append($('<div>').css({'margin' : '25px 0px 0px 15px'}).append("<hr>"))
+                    .append($('<div>').css({'margin' : '25px 0px 0px 15px'}).append('<hr>'))
                     .append($('<div>')
                     .append($inputDiv))
                     .append($('<div>')
@@ -425,7 +429,7 @@ define (
                 $header.append(tabHeader);
                 var tabContent = $('<div>')
                     .addClass('kb-side-tab3')
-                    .css("display", "none")
+                    .css('display', 'none')
                     .append(params.content);
                 $body.append(tabContent);
                 if (params.show) {
@@ -445,27 +449,34 @@ define (
                     }
                 }, this));
             }
-            var wig = $inputDiv[inputWidgetName]({ method: methodJson, isInSidePanel: true });
-            this.inputWidget[methodId] = wig;
+            require([inputWidgetName], function(InputWidget) {
+                // var wig = $inputDiv[inputWidgetName]({ method: methodJson, isInSidePanel: true });
+                var wig = new InputWidget($inputDiv, {method: methodJson, isInSidePanel: true});
+                self.inputWidget[methodId] = wig;
 
-            var onChange = function() {
-                var w = self.getInputWidget();
-                if (self.timer)
-                    return;
-                var v = w.isValid();
-                if (v.isValid) {
-                    self.showInfo('All parameters are valid and you can start "Import" now');
-                } else {
-                    self.showInfo('You can start "Import" when all parameters are ready (marked by green check)');
+                var onChange = function() {
+                    var w = self.getInputWidget();
+                    if (!w) { return };
+
+                    if (self.timer)
+                        return;
+                    var v = w.isValid();
+                    if (v.isValid) {
+                        self.showInfo('All parameters are valid and you can start "Import" now');
+                    } else {
+                        self.showInfo('You can start "Import" when all parameters are ready (marked by green check)');
+                    }
+                };
+                var paramValues = wig.getAllParameterValues();
+                for (var paramPos in paramValues) {
+                    var paramId = paramValues[paramPos].id;
+                    wig.addInputListener(paramId, onChange);
                 }
-            };
-            var paramValues = wig.getAllParameterValues();
-            for (var paramPos in paramValues) {
-                var paramId = paramValues[paramPos].id;
-                wig.addInputListener(paramId, onChange);
-            }
 
-            this.tabs[methodId] = tab;
+                self.tabs[methodId] = tab;
+            }, function(error) {
+                alert(error);
+            });
         },
 
         getSelectedTabId: function() {
@@ -500,6 +511,7 @@ define (
         createImportStatusCell: function(methodName, jobId) {
             var cellIndex = Jupyter.notebook.get_selected_index();
             var cell = Jupyter.notebook.insert_cell_below('code', cellIndex);
+            $(cell.element).trigger('toggleCodeArea.cell');
             var title = 'Import job status for ' + methodName;
             var cellText = ['from biokbase.narrative.jobs.jobmanager import JobManager',
                             'JobManager().get_job(' + jobId + ')'].join('\n');
@@ -514,6 +526,9 @@ define (
                     }
             };
             cell.metadata = meta;
+            cell.events.one('output_appended.OutputArea', function() {
+                Jupyter.narrative.saveNarrative();
+            });
             cell.execute();
             Jupyter.narrative.hideOverlay();
             this.showInfo(''); // clear the info message when we close the overlay
@@ -546,7 +561,7 @@ define (
                             var data = ret.content.data;
                             if (!data)
                                 return;
-                            var session = ret.header.session;
+                            // var session = ret.header.session;
                             var jobId = data['text/plain'];
                             var methodName = methodSpec.info.name;
                             self.createImportStatusCell(methodName, jobId);
@@ -611,7 +626,7 @@ define (
             return this;
         },
 
-        loggedOutCallback: function(event, auth) {
+        loggedOutCallback: function(event) {
             this.token = null;
             this.render();
             return this;

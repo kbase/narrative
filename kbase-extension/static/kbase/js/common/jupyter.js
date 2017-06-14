@@ -2,9 +2,11 @@
 /*jslint white:true,browser:true*/
 
 define([
+    'jquery',
     'base/js/namespace',
     'base/js/dialog'
 ], function (
+    $,
     Jupyter,
     dialog
     ) {
@@ -47,7 +49,21 @@ define([
     }
     
     function getCells() {
-        Jupyter.notebook.get_cells();
+        return Jupyter.notebook.get_cells();
+    }
+
+    function getCell(kbaseId) {
+        var cells = getCells(), cell;
+        for (var i = 0; i < cells.length; i += 1) {
+            cell = cells[i];
+            if (cell.metadata.kbase &&
+                cell.metadata.kbase.attributes &&
+                cell.metadata.kbase.attributes.id &&
+                cell.metadata.kbase.attributes.id === kbaseId) {
+                return cell;
+            }
+        }
+        return null;
     }
     
     /*
@@ -78,6 +94,32 @@ define([
             Jupyter.keyboard_manager.disable();
         }, true);
     }
+
+    function getWorkspaceRef() {
+        var workspaceName = Jupyter.notebook.metadata.ws_name, 
+            workspaceId;
+
+        if (workspaceName) {
+            return { workspace: workspaceName };
+        }
+
+        workspaceId = Jupyter.notebook.metadata.ws_id;
+        if (workspaceId) {
+            return { id: workspaceId };
+        }
+
+        throw new Error('workspace name or id is missing from this narrative');
+    }
+
+    function onEvent(type, handler) {
+        $([Jupyter.events]).on(type, function(event, data) {
+            try {
+                handler(event, data);
+            } catch (err) {
+                console.error('Error in Jupyter event handler for ' + type + ':' + err.message, err);
+            }
+        });
+    }
     
     return {
         deleteCell: deleteCell,
@@ -86,6 +128,9 @@ define([
         saveNotebook: saveNotebook,
         findCellIndex: findCellIndex,
         getCells: getCells,
-        disableKeyListenersForCell: disableKeyListenersForCell
+        getCell: getCell,
+        disableKeyListenersForCell: disableKeyListenersForCell,
+        getWorkspaceRef: getWorkspaceRef,
+        onEvent: onEvent
     };
 });

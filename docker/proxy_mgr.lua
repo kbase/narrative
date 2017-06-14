@@ -45,6 +45,7 @@ local notemgr = require('notelauncher')
 local locklib = require("resty.lock")
 local httplib = require("resty.http")
 local httpclient = httplib:new()
+local authclient = require("kbase_auth")
 
 -- forward declare the functions in this module
 local est_connections
@@ -114,12 +115,6 @@ local initialized = nil
 -- pure numeric form (no DNS or service name lookups)
 local NETSTAT = 'netstat -nt'
 
--- Base URL for Globus Online Nexus API
--- the non-clocking client library we are using, resty.http, doesn't
--- support https, so we depend on a locally configured Nginx
--- reverse proxy to actually perform the request
-nexus_url = 'http://127.0.0.1:65001/users/'
-
 -- name of shared dict for locking library
 M.lock_name = "lock_map"
 
@@ -140,7 +135,10 @@ M.provision_count = 20
 -- The max number of docker containers to have running, including provisioned
 M.container_max = 5000
 
-M.load_redirect = "/loading.html?n=%s"
+-- Image to use for notebooks
+M.image = "kbase/narrative:latest"
+
+M.load_redirect = "/load-narrative.html?n=%s&check=true"
 --
 -- Function that runs a netstat and returns a table of foreign IP:PORT
 -- combinations and the number of observed ESTABLISHED connetions (at
@@ -434,12 +432,17 @@ initialize = function(self, conf)
         M.provision_count = conf.provision_count or M.provision_count
         M.container_max = conf.container_max or M.container_max
         M.lock_name = conf.lock_name or M.lock_name
+        M.image = conf.image or M.image
         session_map = conf.session_map or ngx.shared.session_map
         docker_map = conf.docker_map or ngx.shared.docker_map
         token_cache = conf.token_cache or ngx.shared.token_cache
         proxy_mgr = conf.proxy_mgr or ngx.shared.proxy_mgr
+        authclient:initialize {
+            token_cache = token_cache
+        }
         ngx.log(ngx.INFO, string.format("Initializing proxy manager: sweep_interval %d mark_interval %d idle_timeout %d ",
                                             M.sweep_interval, M.mark_interval, M.timeout))
+        ngx.log(ngx.INFO, string.format("Image %s",M.image))
     else
         ngx.log(ngx.INFO, string.format("Initialized at %d, skipping", initialized))
     end
@@ -450,7 +453,7 @@ end
 -- The intent is that this is a fast, specific reaping process, accessible from outside.
 -- It's set up as a REST call, but a valid user token is required, and that token must come
 -- from the user who's instance it's trying to shut down.
--- Only the GET and DELETE methods are implemented. GET returns some info, and DELETE 
+-- Only the GET and DELETE methods are implemented. GET returns some info, and DELETE
 -- will shutdown the container under 2 conditions:
 -- 1. A valid KBase auth token is given in the cookie given by auth_cookie_name
 -- 2. The user specified by that cookie is shutting down their own Narrative instance
@@ -726,7 +729,7 @@ set_proxy = function(self)
                     ngx.status = ngx.HTTP_NOT_FOUND
                 end
             end
-        else 
+        else
             response["error"] = "No valid session key specified"
             ngx.status = ngx.HTTP_NOT_FOUND
         end
@@ -752,93 +755,33 @@ end
 -- and only return a session id if the authentication is legit
 -- returns nil, err if a session cannot be found/created
 --
--- In the current implementation we take the token (if given) and
--- try to query Globus Online for the user profile, if it comes back
--- then the token is good and we put an entry in the token_cache
--- table for it
+-- Makes use of the separate kbase_auth client. It passes in an
+-- inscrutible auth token, and fetches a user id from it, if it's
+-- valid. If not, it gets nil.
 --
--- session identifier is parsed out of token from user name (un=) value
+-- We use the user id as the session id, since that's unique,
+-- and helps with tracing through logs.
 get_session = function()
-    local hdrs = ngx.req.get_headers()
-    local cheader = ngx.unescape_uri(hdrs['Cookie'])
-    local token = {}
-    local session_id = nil; -- nil return value by default
+    local user_id = nil
+    local headers = ngx.req.get_headers()
+    local cheader = ngx.unescape_uri(headers['Cookie'])
+    if not cheader or cheader == '' then
+        cheader = ngx.unescape_uri(headers['Authorization'])
+    end
     if cheader then
-        -- ngx.log( ngx.DEBUG, string.format("cookie = %s",cheader))
-        local session = string.match(cheader, auth_cookie_name.."=([%S]+);?")
-        if session then
-            -- ngx.log( ngx.DEBUG, string.format("kbase_session = %s",session))
-            session = string.gsub(session, ";$", "")
-            session = url_decode(session)
-            for k, v in string.gmatch(session, "([%w_]+)=([^|]+);?") do
-                token[k] = v
+        local token = string.match(cheader, auth_cookie_name.."=([^;%s]+)")
+        if token then
+            user_id = authclient:get_user(token)
+            if user_id == nil then
+                ngx.log(ngx.ERR, "Error: unable to retrieve user session from auth token")
             end
-            if token['token'] then
-                token['token'] = string.gsub(token['token'], "PIPESIGN", "|")
-                token['token'] = string.gsub(token['token'], "EQUALSSIGN", "=")
-                -- ngx.log( ngx.DEBUG, string.format("token[token] = %s",token['token']))
-            end
-        end
-    end
-    if token['un'] then
-        local cached = token_cache:get(token['kbase_sessionid'])
-        -- we have to cache either the token itself, or a hash of the token
-        -- because this method gets called for every GET for something as
-        -- trivial as a .png or .css file, calculating and comparing an MD5
-        -- hash of the token would start to be costly given how many GETs
-        -- there are on a given page load.
-        -- So we cache the token itself. This is a security vulnerability,
-        -- however the exposure would require a hacker of fairly high end
-        -- skills (or someone who has read the source code...)
-        if cached and cached == token['token'] then
-            return token['un']
-        end
-        -- lock and try again
-        local token_lock = locklib:new(M.lock_name)
-        elapsed, err = token_lock:lock(token['kbase_sessionid'])
-        if elapsed == nil then
-            ngx.log(ngx.ERR, "Error: failed to update token cache: "..err)
-            return nil
-        end
-        cached = token_cache:get(token['kbase_sessionid'])
-        if cached and cached == token['token'] then
-            token_lock:unlock()
-            return token['un']
-        -- still missing, now get from globus
         else
-            ngx.log(ngx.WARN, "Token cache miss: ", token['kbase_sessionid'])
-            local req = {
-                url = nexus_url .. token['un'],
-                method = "GET",
-                headers = { Authorization = "Globus-Goauthtoken "..token['token'] }
-            }
-            --ngx.log( ngx.DEBUG, "request.url = " .. req.url)
-            local ok,code,headers,status,body = httpclient:request(req)
-            --ngx.log( ngx.DEBUG, "Response - code: ", code)
-            if code >= 200 and code < 300 then
-                local profile = json.decode(body)
-                ngx.log(ngx.INFO, "Token validated for "..profile.fullname.." ("..profile.username..")")
-                if profile.username == token.un then
-                    ngx.log(ngx.INFO, "Token username matches cookie identity, inserting session_id into token cache: "..token['kbase_sessionid'])
-                    token_cache:set(token['kbase_sessionid'], token['token'])
-                    session_id = profile.username
-                    token_lock:unlock()
-                else
-                    ngx.log(ngx.ERR, "Error: token username DOES NOT match cookie identity: "..profile.username)
-                end
-            else
-                ngx.log(ngx.ERR, "Error during token validation: "..status.." "..body)
-            end
+            ngx.log(ngx.ERR, "Error: authentication token not found")
         end
-        token_lock:unlock() -- make sure its unlcoked
     else
-        if cheader then
-            ngx.log(ngx.ERR, "Error: invalid token / auth format: "..cheader)
-        else
-            ngx.log(ngx.ERR, "Error: missing 'cookie' header")
-        end
+        ngx.log(ngx.ERR, "Error: missing 'cookie' header")
     end
-    return session_id
+    return user_id
 end
 
 --
@@ -891,7 +834,7 @@ end
 -- remove any containers that don't exist in both
 sync_containers = function()
     ngx.log(ngx.INFO, "Syncing docker memory map with docker container state")
-    local portmap = notemgr:get_notebooks()
+    local portmap = notemgr:get_notebooks(M.image)
     local ids = docker_map:get_keys()
     local dock_lock = locklib:new(M.lock_name, lock_opts)
     local session_lock = locklib:new(M.lock_name, lock_opts)
@@ -942,7 +885,7 @@ end
 --
 new_container = function()
     ngx.log(ngx.INFO, "Creating container for queue")
-    local id, info = notemgr:launch_notebook()
+    local id, info = notemgr:launch_notebook(M.image)
     if id == nil then
         ngx.log(ngx.ERR, "Failed to launch new instance : "..p.write(info))
         return nil
@@ -1035,7 +978,7 @@ use_proxy = function(self)
     -- get session
     -- If if fails for any reason (there are several possible) redirect to
     -- an end point which can authenticate and hopefully send them back here
-    -- NB although the key for the container is called various things through this 
+    -- NB although the key for the container is called various things through this
     -- file it is important that it is the USERNAME, and thus it is named in this
     -- function.
     local username = get_session()
@@ -1050,12 +993,12 @@ use_proxy = function(self)
     if target == nil then
         session_lock = locklib:new(M.lock_name, lock_opts)
         elapsed, err = session_lock:lock(username)
-        if err then 
+        if err then
             ngx.log(ngx.ERR, string.format("Error obtaining key %s", err))
             return ngx.exit(ngx.HTTP_REQUEST_TIMEOUT, string.format("Error obtaining key %s", err))
         end
         target = session_map:get(username)
-        -- still missing, but we would expect that, as it is unlikely that 
+        -- still missing, but we would expect that, as it is unlikely that
         -- a session for this user would be created between the two calls.
         if target == nil then
             -- this updates docker_map with session info
@@ -1076,7 +1019,7 @@ use_proxy = function(self)
             -- can not assign a new one / bad state
             if target == nil then
                 ngx.log(ngx.ERR, "No available docker containers!")
-                return(ngx.exit(ngx.HTTP_SERVICE_UNAVAILABLE))
+                return ngx.exit(ngx.HTTP_SERVICE_UNAVAILABLE)
             end
 
             -- if a container is assigned, enqueue another
@@ -1085,8 +1028,10 @@ use_proxy = function(self)
             -- route to the "loading" page which will wait until the container
             -- is ready before loading the narrative.
             local scheme = ngx.var.src_scheme and ngx.var.src_scheme or 'http'
-            local returnurl = string.format("%s://%s%s", scheme, ngx.var.http_host, ngx.var.request_uri)            
-            return ngx.redirect(string.format(M.load_redirect, ngx.escape_uri(ngx.var.request_uri)))
+            local returnurl = string.format("%s://%s%s", scheme, ngx.var.http_host, ngx.var.request_uri)
+            local g = string.gmatch(ngx.var.request_uri, "(%w+)/(%S+)")
+            local prefix, narrative_id = g()
+            return ngx.redirect(string.format(M.load_redirect, ngx.escape_uri(narrative_id)))
         end
         session_lock:unlock()
     end
@@ -1113,7 +1058,7 @@ use_proxy = function(self)
         -- I really don't even see how this condition is possible, or likely
         -- the session should either be found, created, or if it can't be created
         -- an error condition reported.
-        return(ngx.exit(ngx.HTTP_NOT_FOUND))
+        return ngx.exit(ngx.HTTP_NOT_FOUND)
     end
 end
 
@@ -1126,17 +1071,44 @@ check_proxy = function(self)
     check_provisioner()
     check_marker()
 
+
+    -- TESTING start
+
+    if true then
+
+        -- use this line to simulate slow responses from the Narrative server
+        -- if it exceeds the timeout interval in the narrativeLoader.js, 
+        -- a timeout error should be generated.
+        -- ngx.sleep(2);
+
+        -- use this line to simulate the Narrative session (docker container)
+        -- either taking a long time to start or being in continuous error state.
+        -- return ngx.exit(ngx.HTTP_BAD_GATEWAY)
+
+        -- return ngx.exit(ngx.HTTP_UNAUTHORIZED)
+
+        -- ngx.status = ngx.HTTP_REQUEST_TIMEOUT
+        -- ngx.say(string.format("Error obtaining key %s", err))
+        -- return ngx.exit(ngx.HTTP_OK)
+
+        -- return ngx.exit(ngx.HTTP_SERVICE_UNAVAILABLE)
+
+        -- return ngx.exit(ngx.HTTP_CREATED)
+
+        -- return ngx.exit(ngx.HTTP_NOT_FOUND)
+    end
+
+    -- TESTING end
+
     -- get session
     -- If if fails for any reason (there are several possible) redirect to
     -- an end point which can authenticate and hopefully send them back here
-    -- NB although the key for the container is called various things through this 
+    -- NB although the key for the container is called various things through this
     -- file it is important that it is the USERNAME, and thus it is named in this
     -- function.
     local username = get_session()
     if not username then
-        ngx.status = ngx.HTTP_UNAUTHORIZED
-        return ngx.exit(ngx.HTTP_OK)
-        -- return auth_redirect()
+        return ngx.exit(ngx.HTTP_UNAUTHORIZED)
     end
 
     -- get proxy target
@@ -1146,9 +1118,9 @@ check_proxy = function(self)
     if target == nil then
         session_lock = locklib:new(M.lock_name, lock_opts)
         elapsed, err = session_lock:lock(username)
-        if err then 
+        if err then
             ngx.log(ngx.ERR, string.format("Error obtaining key %s", err))
-            
+
             -- Weird construction, but necessary to set a status code and also
             -- return content.
             ngx.status = ngx.HTTP_REQUEST_TIMEOUT
@@ -1157,7 +1129,7 @@ check_proxy = function(self)
         end
         target = session_map:get(username)
 
-        -- still missing, but we would expect that, as it is unlikely that 
+        -- still missing, but we would expect that, as it is unlikely that
         -- a session for this user would be created between the two calls.
         if target == nil then
             -- this updates docker_map with session info
@@ -1216,7 +1188,7 @@ check_proxy = function(self)
         -- I really don't even see how this condition is possible, or likely
         -- the session should either be found, created, or if it can't be created
         -- an error condition reported.
-        return(ngx.exit(ngx.HTTP_NOT_FOUND))
+        return ngx.exit(ngx.HTTP_NOT_FOUND)
     end
 end
 
@@ -1226,6 +1198,7 @@ M.set_proxy = set_proxy
 M.check_proxy = check_proxy
 M.use_proxy = use_proxy
 M.initialize = initialize
+M.get_session = get_session
 M.narrative_shutdown = narrative_shutdown
 
 return M

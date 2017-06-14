@@ -56,20 +56,25 @@ During the OS configuration, it is easiest just to move into superuser mode:
 
 Get the system updated and select repositories for more up to date versions of primary dependencies (nginx, nodejs):
 
-    apt-get install -y python-software-properties
-    add-apt-repository ppa:nginx/stable
+```
     apt-get update
     apt-get upgrade -y
     apt-get dist-upgrade -y
     apt-get autoremove -y
+    apt-get install -y python-software-properties
+    add-apt-repository ppa:nginx/stable
     apt-get install -y git nginx-extras
+```
+
+> NB the system update first may be necessary. I've encountered source repos
+go missing in old distros (vagrant boxes) before apt-get update
 
 ### Install and set up nodejs
 
 https://github.com/nodesource/distributions
 
     curl -sL https://deb.nodesource.com/setup_4.x | sudo -E bash -
-    sudo apt-get install -y nodejs
+    apt-get install -y nodejs
 
 
 ### Install and set up Docker
@@ -110,7 +115,7 @@ Okay, that is it for a while as superuser, go back to your mortal self, or rathe
 
 ## Set up the narrative
 
-You should be in the vagrant user directory, which is file. We'll create a directory in which to work here. It will be named kb_narr just as a documentation convention -- the name does not matter.
+You should be in the vagrant user directory, which is fine. We'll create a directory in which to work here. It will be named kb_narr just as a documentation convention -- the name does not matter.
 
     mkdir kb_narr
     cd kb_narr
@@ -260,10 +265,10 @@ back to superuser for a while...
 
 ```
 sudo su
-sudo ./deploybuild.sh
+sh deploybuild.sh
 ```
 
-> Er, for the time being -- sudo sh ./deploybuild.sh.sh
+> Er, for the time being -- sudo sh ./deploybuild.sh
 
 > Note: do not need this step if you are mapping your local kbase-ui directly into /kb/deployment/services/kbase-ui
 

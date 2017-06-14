@@ -1,0 +1,70 @@
+<div>
+    <hr class="kb-data-list-row-hr" style="margin-left: 150px">
+    <div style="margin: 2px 2px 5px {{#unless actionLeft}}30px{{/unless}}; padding: 4px">
+        <div class="kb-data-list-obj-row-main">
+            <table style="width: 100%; background: #FFF">
+                <tr>
+                    {{#if actionLeft}}
+                        {{> actionPartial}}
+                    {{/if}}
+                    <td style="width: 50px">
+                        <span id="icon"></span>
+                    </td>
+                    <td>
+                        <div class="kb-data-list-info" style="padding: 0; margin: 0">
+                            {{#if btnToolbar}}
+                                <span class="btn-toolbar pull-right" role="toolbar" style="display:none">
+                                    <span class="btn btn-xs btn-default">
+                                        <span class="fa fa-binoculars" style="color: #888"></span>
+                                    </span>
+                                    <span class="btn btn-xs btn-default">
+                                        <span class="fa fa-sitemap fa-rotate-90" style="color: #888"></span>
+                                    </span>
+                                </span>
+                            {{/if}}
+                            <span class="kb-data-list-name">
+                                <a href="{{linkOut}}">{{displayName}}</a>
+                            </span>
+                            {{#if objVersion}}<span class="kb-data-list-version">{{objVersion}}</span>{{/if}}
+                            {{#if objType}}
+                                <br>
+                                <span class="kb-data-list-type">{{objType}}</span>
+                            {{/if}}
+                            {{#if objNarrative}}
+                                <br>
+                                <span class="kb-data-list-narrative">{{objNarrative}}</span>
+                            {{/if}}
+                            {{#if objModDate}}
+                                <br>
+                                <span class="kb-data-list-date">{{objModDate}}</span>
+                                {{#if username}}
+                                    <span class="kb-data-list-edit-by"> by {{username}}</span>
+                                {{/if}}
+                            {{/if}}
+                            {{#if simpleMetadata}}
+                                {{#each simpleMetadata}}
+                                    <br><span class="kb-data-list-type">{{@key}}: {{this}}</span>
+                                {{/each}}
+                            {{/if}}
+                        </div>
+                    </td>
+                    {{#if detailedMetadata}}
+                        <td style="width: 20px">
+                            <span id="meta-toggle" class="kb-data-list-more" style="display:none">
+                                <button class="kb-default-btn">
+                                    <span class="fa fa-ellipsis-h" style="color: #888"></span>
+                                </button>
+                            </span>
+                        </td>
+                    {{/if}}
+                    {{#unless actionLeft}}
+                        {{> actionPartial}}
+                    {{/unless}}
+                </tr>
+            </table>
+            {{#if detailedMetadata}}
+                <div id="more-metadata" style="display:none"></div>
+            {{/if}}
+        </div>
+    </div>
+</div>

@@ -8,18 +8,19 @@ define([
     'common/ui',
     'common/html',
     'common/jupyter'
-], function (
+], function(
     Runtime,
     BusEventManager,
     Props,
     UI,
     html,
     Jupyter
-    ) {
+) {
     'use strict';
 
     var t = html.tag,
-        div = t('div'), p = t('p');
+        div = t('div'),
+        p = t('p');
 
     function factory(config) {
         var cell = config.cell,
@@ -27,7 +28,7 @@ define([
             eventManager = BusEventManager.make({
                 bus: runtime.bus()
             }),
-            bus = runtime.bus().makeChannelBus(null, 'data cell bus'),
+            bus = runtime.bus().makeChannelBus({ description: 'data cell bus' }),
 
             // To be instantiated at attach()
             container, ui,
@@ -44,8 +45,8 @@ define([
                 ]),
                 p('Continue to delete this data cell?')
             ]);
-            ui.showConfirmDialog({title: 'Confirm Cell Deletion', body: content})
-                .then(function (confirmed) {
+            ui.showConfirmDialog({ title: 'Confirm Cell Deletion', body: content })
+                .then(function(confirmed) {
                     if (!confirmed) {
                         return;
                     }
@@ -60,12 +61,12 @@ define([
 
         // Widget API
 
-        eventManager.add(bus.on('run', function (message) {
+        eventManager.add(bus.on('run', function(message) {
             container = message.node;
-            ui = UI.make({node:container});
+            ui = UI.make({ node: container });
 
             // Events for comm from the parent.
-            eventManager.add(bus.on('stop', function () {
+            eventManager.add(bus.on('stop', function() {
                 eventManager.removeAll();
             }));
 
@@ -75,10 +76,13 @@ define([
             // without a physical handle on the widget object.
 
             cellBus = runtime.bus().makeChannelBus({
-                cell: Props.getDataItem(cell.metadata, 'kbase.attributes.id')
-            }, 'A cell channel');
+                name: {
+                    cell: Props.getDataItem(cell.metadata, 'kbase.attributes.id')
+                },
+                description: 'A cell channel'
+            });
 
-            eventManager.add(cellBus.on('delete-cell', function () {
+            eventManager.add(cellBus.on('delete-cell', function() {
                 doDeleteCell();
             }));
 
@@ -90,7 +94,7 @@ define([
     }
 
     return {
-        make: function (config) {
+        make: function(config) {
             return factory(config);
         }
     };

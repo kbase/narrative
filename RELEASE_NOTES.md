@@ -6,6 +6,7 @@ This is built on the Jupyter Notebook v4.4.1 (more notes will follow).
 ### Version 3.4.1
 - Fixed job status widget spamming the kernel with constant update requests.
 - Fixed job status widget not starting its logs as expected.
+- Hide the "outdated job" warning in view only mode so tutorials don't look goofy.
 
 ### Version 3.4.0
 __Changes__

@@ -138,7 +138,7 @@ define([
                         xicon: {
                             name: 'play'
                         },
-                        label: 'Run'                    
+                        label: 'Run'
                     },
                     cancel: {
                         help: 'Cancel the running app',
@@ -934,12 +934,12 @@ define([
         function buildRunControlPanelRunButtons(events) {
             var style = {};
             if (Jupyter.narrative.readonly) {
-                style.display = 'none';            
+                style.display = 'none';
             }
             style.padding = '6px';
-            var buttonDiv = div({ 
-                class: 'btn-group', 
-                style: style 
+            var buttonDiv = div({
+                class: 'btn-group',
+                style: style
             },
                 Object.keys(actionButtons.availableButtons).map(function (key) {
                     var button = actionButtons.availableButtons[key],
@@ -1473,9 +1473,9 @@ define([
             // the user-selected tab is no longer enabled or is hidden.
 
             // disable tab buttons
-            // If current tab is not enabled in this state, then forget that the user 
+            // If current tab is not enabled in this state, then forget that the user
             // made a selection.
-            
+
             var userStateTab = state.ui.tabs[selectedTabId()];
             if (!userStateTab || !userStateTab.enabled || userStateTab.hidden) {
                 userSelectedTab = false;
@@ -1491,7 +1491,7 @@ define([
                 }
                 // TODO honor user-selected tab.
                 // Unless the tab is not enabled in this state, in which case
-                // we do switch to the one called for by the state.         
+                // we do switch to the one called for by the state.
                 if (tab.selected && !userSelectedTab) {
                     tabSelected = true;
                     selectTab(tabId);
@@ -1540,6 +1540,7 @@ define([
                 // It'd be nice to put all the elements in view-only mode,
                 // to mimic a running state, right? Maybe that's another
                 // FSM state?
+                ui.hideElement('outdated');
                 var buttonBar = container.querySelector('.kb-btn-toolbar-cell-widget');
                 if (buttonBar) {
                     buttonBar.classList.add('hidden');
@@ -1607,7 +1608,7 @@ define([
 
         function doRerun() {
             var confirmationMessage = div([
-                p('This action will clear the Results and re-enable the Configure tab for editing. You may then change inputs and run the app again.'), 
+                p('This action will clear the Results and re-enable the Configure tab for editing. You may then change inputs and run the app again.'),
                 p('Any output you have already produced will be left intact in the Narrative and Data Panel'),
                 p('Proceed to Reset and resume editing?')
             ]);
@@ -2098,11 +2099,11 @@ define([
                         } else {
                             clock = [config.prefix || '', format.niceDuration(elapsed), config.suffix || ''].join('');
                             return {
-                                content: clock + ' ago'                        
+                                content: clock + ' ago'
                             };
                         }
                     }
-                }                
+                }
             });
             widgets.runClock.start({
                 node: ui.getElement('run-control-panel.status.execMessage.clock'),
@@ -2607,7 +2608,7 @@ define([
                     utils.setCellMeta(cell, 'kbase.attributes.title', model.getItem('app.spec.info.name'));
                     utils.setCellMeta(cell, 'kbase.attributes.subtitle', model.getItem('app.spec.info.subtitle'));
                     utils.setCellMeta(cell, 'kbase.attributes.info.url', url);
-                    utils.setCellMeta(cell, 'kbase.attributes.info.label', 'more...');                   
+                    utils.setCellMeta(cell, 'kbase.attributes.info.label', 'more...');
                 })
                 .then(function () {
                     // this will not change, so we can just render it here.

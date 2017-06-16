@@ -3,6 +3,10 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v4.4.1 (more notes will follow).
 
+### Version 3.4.1
+- Fixed job status widget spamming the kernel with constant update requests.
+- Fixed job status widget not starting its logs as expected.
+
 ### Version 3.4.0
 __Changes__
 - Modified the Sharing dialog to make the actions more clear.

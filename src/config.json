@@ -1,12 +1,12 @@
 {
     "config": "ci",
     "name": "KBase Narrative",
-    "version": "3.4.0",
+    "version": "3.4.1",
     "dev_mode": true,
     "auth_cookie": "kbase_session",
     "git_commit_hash": "60e2219",
     "git_commit_time": "Thu Mar 3 15:44:21 2016 -0800",
-    "release_notes": "https://github.com/kbase/narrative/blob/staging/RELEASE_NOTES.md",
+    "release_notes": "https://github.com/kbase/narrative/blob/master/RELEASE_NOTES.md",
     "comm_wait_timeout": 60000,
     "data_panel": {
         "ws_chunk_size": 10000,

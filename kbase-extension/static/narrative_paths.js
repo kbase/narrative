@@ -59,7 +59,6 @@ require.config({
         narrativeConfig: 'kbase/js/narrativeConfig',
         narrativeMain: 'narrativeMain',
         narrativeTreeMain: 'narrativeTreeMain',
-        kbaseLogin: 'kbase/js/widgets/kbaseLoginFuncSite',
         narrativeLogin: 'kbase/js/narrativeLogin',
         userMenu: 'kbase/js/userMenu',
         kbaseTabs: 'kbase/js/widgets/kbaseTabs',

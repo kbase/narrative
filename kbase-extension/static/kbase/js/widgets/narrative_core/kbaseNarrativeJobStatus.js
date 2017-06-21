@@ -11,6 +11,7 @@ define([
     'kbase-client-api',
     'base/js/namespace',
     'util/timeFormat',
+    'util/string',
     'kb_service/client/workspace',
     'kbaseAuthenticatedWidget',
     'kbaseTabs',
@@ -34,6 +35,7 @@ define([
     KBaseClientApi,
     Jupyter,
     TimeFormat,
+    StringUtil,
     Workspace,
     KBaseAuthenticatedWidget,
     KBaseTabs,
@@ -53,7 +55,7 @@ define([
         var startPos;
         var theSlice;
         var trimEnd = config.trimEnd || 'auto';
-        
+
         if (config.value) {
             theSlice = config.value;
             if (theSlice.length > maxSize) {
@@ -116,7 +118,7 @@ define([
             } else {
                 if (growAtEnd) {
                     trim('begin');
-                } 
+                }
             }
         }
 
@@ -182,6 +184,7 @@ define([
         maxLogLines: 200, // num lines before we start trimming
         maxLineRequest: 100, // max number of lines to request
         autoplayInterval: 2000, // when on autoplay, how long to pause before the next log request
+        statusRequestInterval: 5000, // how often to request job status updates
         // VARIABLES
         pendingLogStart: 0, // pending top line number we're expecting.
         pendingLogRequest: false, // got a log request pending? (used for keeping log instances separate)
@@ -189,6 +192,7 @@ define([
 
         init: function (options) {
             this._super(options);
+            this.logWaitingForJobStart = true;
             this.jobId = this.options.jobId;
             this.state = this.options.state;
             this.outputWidgetInfo = this.options.outputWidgetInfo;
@@ -201,10 +205,6 @@ define([
             });
 
             var cellNode = this.$elem.closest('.cell').get(0);
-
-            // Flag to support initialization logic for job status 
-            // messages.
-            this.firstTime = true;
 
             function findCell() {
                 var cells = Jupyter.notebook.get_cell_elements().toArray().filter(function (element) {
@@ -234,16 +234,22 @@ define([
              * 2. If not, use inputs as initial state.
              * 3. Initialize layout, set up bus.
              */
-            var cellState = this.getCellState();
-            if (cellState && cellState.jobId === this.jobId) {
+            var cellMeta = this.getCellState();
+            if (cellMeta && cellMeta.state.jobId === this.jobId) {
                 // use this and not the state input.
-                this.state = cellState;
+                this.state = cellMeta.state;
+            }
+            if (cellMeta && cellMeta.attributes && cellMeta.attributes.id) {
+                this.cellId = cellMeta.attributes.id;
+            }
+            else {
+                this.cellId = StringUtil.uuid();
             }
 
             this.busConnection = this.runtime.bus().connect();
             this.channel = this.busConnection.channel('default');
 
-           
+
             // TODO: can we introduce a stop method for kbwidget?
             // We need to disconnect these listeners when this widget is removed.
 
@@ -328,23 +334,23 @@ define([
             this.tabController = new KBaseTabs($tabDiv, {
                 tabs: [{
                     tab: 'Status',
+                    canDelete: false,
                     content: body,
                 },
                 {
                     tab: 'Log',
-                    content: this.logView
-                }
-                    // {
-                    //     tab: 'Report',
-                    //     content: this.reportView
-                    // },
-                    // {
-                    //     tab: 'New Data Objects',
-                    //     content: this.newDataView
-                    // }
-                ]
+                    canDelete: false,
+                    showContentCallback: this.initLogView.bind(this)
+                }]
             });
             this.$elem.append($tabDiv);
+        },
+
+        initLogView: function () {
+            // only initialize on first view.
+            // essentially, click the 'play' button.
+            this.logView.find('#kblog-bottom').trigger('click');
+            return this.logView;
         },
 
         updateView: function () {
@@ -541,7 +547,7 @@ define([
         getCellState: function () {
             var metadata = this.cell.metadata;
             if (metadata.kbase && metadata.kbase.state) {
-                return metadata.kbase.state;
+                return metadata.kbase;
             } else {
                 return null;
             }
@@ -550,7 +556,6 @@ define([
         setCellState: function () {
             var metadata = this.cell.metadata;
             metadata['kbase'] = {
-                type: 'output',
                 jobId: this.jobId,
                 state: this.state
             };
@@ -559,7 +564,7 @@ define([
 
         handleJobStatus: function (message) {
             /* Main states:
-               1. initial - first job state message received. For any queued issue message, 
+               1. initial - first job state message received. For any queued issue message,
                   in progress start auto fetch loop, otherwise show the end of the log
                2. autoplay - if the play button has been pressed or the user has not interacted
                   with the buttons (this.userEngaged), play the log when in-progress.
@@ -577,40 +582,39 @@ define([
                     });
                 }
                 this.logView.find('#kblog-play').prop('disabled', true);
-                if (this.firstTime) {
-                    this.logView.find('#kblog-bottom').trigger('click');
-                }
-                // TODO: we need to remove all of the job listeners at this point, but 
+                // TODO: we need to remove all of the job listeners at this point, but
                 // the busConnection also has the job log listeners, which may be used at any time.
                 // What we need to do is move these into separate widgets which can be stopped and started
                 // as the tabs are activated, and control their own bus connections.
                 // this.busConnection.stop();
                 break;
             case 'queued':
-                this.showLogMessage('The job is queued. When it has started running, the log will be displayed below.');
-                if (this.firstTime) {
-                    this.logView.find('#kblog-play').trigger('click');
-                }
                 this.requestedUpdates = true;
-                this.channel.emit('request-job-status', {
-                    jobId: this.jobId
-                });
+                this.showLogMessage('The job is queued. When it has started running, the log will be displayed below.');
+                this.requestJobStatus();
                 break;
             case 'in-progress':
                 // If the user has not used the navigation yet, should go into "play" mode;
-                this.requestedUpdates = true;
-                this.channel.emit('request-job-status', {
-                    jobId: this.jobId
-                });
-                if (this.firstTime) {
-                    this.logView.find('#kblog-play').trigger('click');
+                if (this.logWaitingForJobStart) {
+                    this.logView.find('#kblog-play').prop('disabled', false).click();
+                    this.logWaitingForJobStart = false;
                 }
+                this.requestedUpdates = true;
+                this.requestJobStatus();
+                break;
             }
-            this.firstTime = false;
             this.state = message.jobState;
             this.outputWidgetInfo = message.outputWidgetInfo;
             this.setCellState();
             this.updateView();
+        },
+
+        requestJobStatus: function () {
+            window.setTimeout(function () {
+                this.channel.emit('request-job-status', {
+                    jobId: this.jobId
+                });
+            }.bind(this), this.statusRequestInterval);
         },
 
         handleJobLog: function (message) {
@@ -644,7 +648,7 @@ define([
                 } else {
                     elapsedQueueTime = TimeFormat.calcTimeDifference(this.state.creation_time, this.state.exec_start_time);
                     if (!this.state.finish_time) {
-                        // 
+                        //
                         elapsedRunTime = TimeFormat.calcTimeDifference(this.state.exec_start_time, new Date().getTime());
                     } else {
                         elapsedRunTime = TimeFormat.calcTimeDifference(this.state.exec_start_time, this.state.finish_time);
@@ -724,7 +728,7 @@ define([
             $logPanel.find('#kblog-header')
                 .children()
                 .tooltip()
-                .on('click', function (e) { 
+                .on('click', function (e) {
                     $(e.currentTarget).tooltip('hide'); });
             return $logPanel;
         },
@@ -800,9 +804,10 @@ define([
                     this.logView.find('#kblog-stop').click();
                     this.logView.find('#kblog-play').prop('disabled', true);
                     this.logView.find('#kblog-stop').prop('disabled', true);
+                    this.doLogLoop = false;
                 } else {
-                    this.looper = window.setTimeout(function () { 
-                        this.sendLogRequest('latest', true); 
+                    this.looper = window.setTimeout(function () {
+                        this.sendLogRequest('latest');
                     }.bind(this), this.autoplayInterval);
                 }
             }

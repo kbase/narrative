@@ -212,20 +212,20 @@ define([
 
             // Fetches job status from kernel.
             bus.on('request-job-status', function (message) {
-                //console.log('requesting job status for ' + message.jobId);
+                // console.log('requesting job status for ' + message.jobId);
                 this.sendCommMessage(this.JOB_STATUS, message.jobId);
             }.bind(this));
 
             // Requests job status updates for this job via the job channel, and also
             // ensures that job polling is running.
             bus.on('request-job-update', function (message) {
-                //console.log('requesting job updates for ' + message.jobId);
+                // console.log('requesting job updates for ' + message.jobId);
                 this.sendCommMessage(this.START_JOB_UPDATE, message.jobId);
             }.bind(this));
 
             // Tells kernel to stop including a job in the lookup loop.
             bus.on('request-job-completion', function (message) {
-                //console.log('cancelling job updates for ' + message.jobId);
+                // console.log('cancelling job updates for ' + message.jobId);
                 this.sendCommMessage(this.STOP_JOB_UPDATE, message.jobId);
             }.bind(this));
 
@@ -313,6 +313,7 @@ define([
                  * Notify the front end about the changed or new job
                  * states.
                  */
+                // console.log('sending job status', jobStateMessage);
                 this.sendJobMessage('job-status', jobId, {
                     jobId: jobId,
                     jobState: jobStateMessage.state,
@@ -454,13 +455,13 @@ define([
                         });
                         break;
                     case 'job_logs':
-                        this.sendJobMessage('job-log-deleted', content.job_id, { 
+                        this.sendJobMessage('job-log-deleted', content.job_id, {
                             jobId: content.job_id,
                             message: content.message
                         });
                         break;
                     case 'job_logs_latest':
-                        this.sendJobMessage('job-log-deleted', content.job_id, { 
+                        this.sendJobMessage('job-log-deleted', content.job_id, {
                             jobId: content.job_id,
                             message: content.message
                         });

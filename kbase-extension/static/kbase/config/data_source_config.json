@@ -1,29 +1,23 @@
 {
     "ci": {
         "publicData": {
-            "reference_genomes": {
-                "name": "Reference Genomes",
+            "reference_genomes_ci": {
+                "name": "NCBI RefSeq Genomes",
                 "type": "KBaseGenomes.Genome",
                 "ws": "ReferenceDataManager",
                 "search": true
             },
-            "legacy_genomes": {
-                "name": "Legacy Genomes",
-                "type": "KBaseGenomes.Genome",
-                "ws": "KBasePublicGenomesV5",
-                "search": false
-            },
-            "plant_genomes": {
-                "name": "Plant Genomes",
+            "phytozome_genomes": {
+                "name": "Phytozome Genomes",
                 "type": "KBaseGenomes.Genome",
                 "ws": "Phytozome_Genomes",
                 "search": false
             },
-            "pubSEED_genomes": {
-                "name": "Public SEED Genomes",
-                "type": "KBaseGenomes.Genome",
-                "ws": "pubSEEDGenomes",
-                "search": false
+            "pubSEED_genomes": {		
+                "name": "Public SEED Genomes",		
+                "type": "KBaseGenomes.Genome",		
+                "ws": "pubSEEDGenomes",		
+                "search": false		
             },
             "media": {
                 "name": "Media",
@@ -121,8 +115,8 @@
     },
     "next": {
         "publicData": {
-            "reference_genomes": {
-                "name": "Reference Genomes",
+            "genomes": {
+                "name": "Legacy Genomes",
                 "type": "KBaseGenomes.Genome",
                 "ws": "ReferenceDataManager",
                 "search": true
@@ -230,10 +224,22 @@
     "prod": {
         "publicData": {
             "reference_genomes": {
-                "name": "Reference Genomes",
+                "name": "NCBI RefSeq Genomes",
                 "type": "KBaseGenomes.Genome",
                 "ws": "ReferenceDataManager",
                 "search": true
+            },
+             "plant_genomes": {
+                "name": "Plant Genomes",
+                "type": "KBaseGenomes.Genome",
+                "ws": "Phytozome_Genomes",
+                "search": false
+            },
+            "media": {
+                "name": "Media",
+                "type": "KBaseBiochem.Media",
+                "ws": "KBaseMedia",
+                "search": false
             },
             "legacy_genomes": {
                 "name": "Legacy Genomes",
@@ -298,10 +304,11 @@
                 },
                 {
                     "name": [
-                        "ContigSet"
+                        "ContigSet",
+			"Assembly"
                     ],
-                    "displayName": "Example Contig Sets",
-                    "header": "A set of DNA sequences"
+                    "displayName": "Example Assemblies",
+                    "header": "Assembled DNA sequences"
                 },
                 {
                     "name": [
@@ -337,7 +344,7 @@
     "appdev": {
         "publicData": {
             "genomes": {
-                "name": "Genomes",
+                "name": "Legacy Genomes",
                 "type": "KBaseGenomes.Genome",
                 "ws": "KBasePublicGenomesV5",
                 "search": true

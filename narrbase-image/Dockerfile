@@ -6,11 +6,6 @@ ENV IPYWIDGETS_VERSION 6.0.0
 
 RUN mkdir -p /kb/installers
 
-# dist-upgrade to make sure OS libs are up to date
-RUN \
-   apt-get update && \
-   DEBIAN_FRONTEND=noninteractive apt-get dist-upgrade -y
-
 # Download Jupyter Notebook
 ADD https://github.com/jupyter/notebook/archive/${JUPYTER_VERSION}.tar.gz /kb/installers/jupyter_notebook/notebook-${JUPYTER_VERSION}.tar.gz
 

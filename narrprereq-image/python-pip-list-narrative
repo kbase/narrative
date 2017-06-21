@@ -4,6 +4,7 @@ biopython
 certifi==0.0.8
 chardet==1.0.1
 configobj
+ete3==3.0.0b35
 flup
 gitpython
 httplib2

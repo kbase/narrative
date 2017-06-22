@@ -77,11 +77,12 @@ define([
             this.workspaceRef = Jupyter.narrative.workspaceRef;
             this.workspaceId = Jupyter.narrative.workspaceId;
 
-            $(document).on(
-                'copyThis.Narrative', function (e, panel, active, jump) {
-                    this.copyThisNarrative(panel, active, jump);
-                }.bind(this)
-            );
+            // Doesn't appear to be used.
+            // $(document).on(
+            //     'copyThis.Narrative', function (e, panel, active, jump) {
+            //         this.copyThisNarrative(panel, active, jump);
+            //     }.bind(this)
+            // );
 
             $([Jupyter.events]).on(
                 'notebook_saved.Notebook', function (e) {
@@ -666,7 +667,7 @@ define([
                                     .append('Copy')
                                     .click(function () {
                                         $(this).prop('disabled', true);
-                                        self.copyThisNarrative($newNameInput.val())
+                                        self.copyNarrative(object_info[6] + '/' + object_info[0], $newNameInput.val())
                                         .then(function() {
                                             self.refresh();
                                         })
@@ -1019,7 +1020,7 @@ define([
                     $errorMessage.empty();
                     $doCopyBtn.prop('disabled', true);
                     $cancelBtn.prop('disabled', true);
-                    this.copyThisNarrative($newNameInput.val())
+                    this.copyNarrative(this.workspaceRef, $newNameInput.val())
                     .then(function(result) {
                         $alertContainer.hide();
                         setButtonWorking(false);
@@ -1074,7 +1075,7 @@ define([
          *    any existing jobs, and save it to the new workspace.
          * 4. Update the new workspace's metadata so it references the new Narrative.
          */
-        copyThisNarrative: function (newName) {
+        copyNarrative: function (workspaceRef, newName) {
             var preCheckError = null;
             if (!this.ws) {
                 preCheckError = 'Cannot copy - please sign in again.';
@@ -1093,7 +1094,7 @@ define([
             return Promise.resolve(this.serviceClient.sync_call(
                 'NarrativeService.copy_narrative',
                 [{
-                    workspaceRef: this.workspaceRef,
+                    workspaceRef: workspaceRef,
                     newName: newName
                 }]
             ))

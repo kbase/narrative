@@ -34,9 +34,9 @@ define([
 ) {
     'use strict';
     return new KBWidget({
-        name: "kbaseNarrativeManagePanel",
+        name: 'kbaseNarrativeManagePanel',
         parent : ControlPanel,
-        version: "1.0.0",
+        version: '1.0.0',
         wsClient: null,
         table: null,
         tableData: [],
@@ -54,7 +54,7 @@ define([
             nms_url: Config.url('narrative_method_store'),
             profile_page_url: Config.url('profile_page'),
             nar_name: null,
-            new_narrative_link: "/#narrativemanager/new"
+            new_narrative_link: '/#narrativemanager/new'
         },
         ws: null,
         manager: null,
@@ -77,11 +77,12 @@ define([
             this.workspaceRef = Jupyter.narrative.workspaceRef;
             this.workspaceId = Jupyter.narrative.workspaceId;
 
-            $(document).on(
-                'copyThis.Narrative', function (e, panel, active, jump) {
-                    this.copyThisNarrative(panel, active, jump);
-                }.bind(this)
-            );
+            // Doesn't appear to be used.
+            // $(document).on(
+            //     'copyThis.Narrative', function (e, panel, active, jump) {
+            //         this.copyThisNarrative(panel, active, jump);
+            //     }.bind(this)
+            // );
 
             $([Jupyter.events]).on(
                 'notebook_saved.Notebook', function (e) {
@@ -105,7 +106,7 @@ define([
             this.refresh();
             return this;
         },
-        loggedOutCallback: function (event, auth) {
+        loggedOutCallback: function () {
             this.ws = null;
             this.manager = null;
             this.my_user_id = null;
@@ -119,7 +120,6 @@ define([
         },
 
         narData: null,
-        allNarInfo: null,
         tempNars: null,
         oldStyleWs: null,
         loadDataAndRenderPanel: function () {
@@ -160,7 +160,6 @@ define([
                  6: permission globalread,
                  7: lock_status lockstat
                  8: usermeta metadata*/
-                var allNarInfo = [];
                 for (var i = 0; i < wsList.length; i++) {
                     if (wsList[i][8]) { // must have metadata or else we skip
 
@@ -181,12 +180,12 @@ define([
                             if (wsList[i][2] === this._attributes.auth.user_id) {
                                 this.allNarData.push(info);
                                 this.narData.mine.push(info);
-                                narRefsToLookup.push({ref: info.ws_info[0] + "/" + wsList[i][8].narrative});
+                                narRefsToLookup.push({ref: info.ws_info[0] + '/' + wsList[i][8].narrative});
                                 wsPermsToLookup.push({id: info.ws_info[0]});
                             } else if (wsList[i][5] === 'a' || wsList[i][5] === 'w' || wsList[i][5] === 'r') {
                                 this.allNarData.push(info);
                                 this.narData.shared.push(info);
-                                narRefsToLookup.push({ref: info.ws_info[0] + "/" + wsList[i][8].narrative});
+                                narRefsToLookup.push({ref: info.ws_info[0] + '/' + wsList[i][8].narrative});
                                 wsPermsToLookup.push({id: info.ws_info[0]});
                             }
                         }
@@ -197,7 +196,7 @@ define([
                         }
                     }
                 }
-                var newProms = []
+                var newProms = [];
                 /*
                  * set up Promises - first is for all Narrative object info, rest are for WS permissions
                  */
@@ -287,8 +286,8 @@ define([
             if (this.$mainPanel) {
                 this.$mainPanel.empty();
 
-                var $msgPanel = $("<div>").css({'margin': '10px', 'text-align': 'center'});
-                var $newNarrPanel = $("<div>").css({'margin': '10px', 'text-align': 'center'});
+                var $msgPanel = $('<div>').css({'margin': '10px', 'text-align': 'center'});
+                var $newNarrPanel = $('<div>').css({'margin': '10px', 'text-align': 'center'});
                 this.$copyThisNarrBtn = this.makeCopyThisNarrativeBtn($msgPanel);
                 this.$mainPanel.append(
                     $('<div>')
@@ -329,7 +328,7 @@ define([
                 self.$narPanel.children().detach(); // this will also hide any loading messages if they exist
 
                 if (self.narData.mine.length > 0) {
-                    self.$narPanel.append($('<div>').append($('<div>').addClass('kb-nar-manager-titles').append("My Narratives")));
+                    self.$narPanel.append($('<div>').append($('<div>').addClass('kb-nar-manager-titles').append('My Narratives')));
                     self.narData.mine.sort(self.sortNarrativesFunc);
                     for (var k = 0; k < self.narData.mine.length; k++) {
                         if (!self.narData.mine[k].$div) {
@@ -342,7 +341,7 @@ define([
 
                 if (self.narData.shared.length > 0) {
                     self.narData.shared.sort(self.sortNarrativesFunc);
-                    self.$narPanel.append($('<div>').append($('<div>').addClass('kb-nar-manager-titles').append("Shared With Me")));
+                    self.$narPanel.append($('<div>').append($('<div>').addClass('kb-nar-manager-titles').append('Shared With Me')));
                     for (var k = 0; k < self.narData.shared.length; k++) {
                         if (!self.narData.shared[k].$div) {
                             self.narData.shared[k].$div = self.renderNarrativeDiv(self.narData.shared[k]);
@@ -355,16 +354,16 @@ define([
 
                 // ADVANCED TAB: allows users to set the default narrative for any workspace
                 var $advancedDiv = $('<div>').hide();
-                var $advLink = $('<h4>').append("Show Advanced Controls");
-                self.$narPanel.append($('<div>').append($('<span>').append($("<a>").append($advLink)))
+                var $advLink = $('<h4>').append('Show Advanced Controls');
+                self.$narPanel.append($('<div>').append($('<span>').append($('<a>').append($advLink)))
                     .css({'text-align': 'center', 'cursor': 'pointer'})
                     .on('click', function () {
-                        if ($advancedDiv.is(":visible")) {
+                        if ($advancedDiv.is(':visible')) {
                             $advancedDiv.hide();
-                            $advLink.html("Show Advanced Controls");
+                            $advLink.html('Show Advanced Controls');
                         } else {
                             $advancedDiv.show();
-                            $advLink.html("Hide Advanced Controls");
+                            $advLink.html('Hide Advanced Controls');
                         }
                     }));
                 self.$narPanel.append($advancedDiv);
@@ -383,7 +382,7 @@ define([
                         .addClass('form-group')
                         .css({'text-align': 'center'})
                         .append($('<label for="setPrimaryNarSelectWs">')
-                                .append("Set Active Narrative for Workspace"))
+                                .append('Set Active Narrative for Workspace'))
                         .append($selectWsContainer)
                         .append($selectNarContainer)
                         .append($setBtn)
@@ -408,7 +407,7 @@ define([
                     function () {
                         $selectNarContainer.empty();
                         Promise.resolve(self.serviceClient.sync_call(
-                            "NarrativeService.list_objects_with_sets",
+                            'NarrativeService.list_objects_with_sets',
                             [{
                                 types: ['KBaseNarrative.Narrative'],
                                 workspaces: [$selectWsContainer.val()]
@@ -469,13 +468,12 @@ define([
                                 'narrative': nar,
                                 'is_temporary': 'false',
                                 'narrative_nice_name': self.advancedSetNarLookup[nar]
-                            }
-                        },
+                            }},
                             function (args) {
                                 self.loadDataAndRenderPanel();
                             },
                             function name(error) {
-                                $setBtn.html("error...");
+                                $setBtn.html('error...');
                                 console.error(error);
                             }
                         );
@@ -489,17 +487,18 @@ define([
                 .append(errorMessage);
             this.setInteractionPanel($interactionPanel, 'Error', $error);
         },
+
         setInteractionPanel: function ($interactionPanel, title, body) {
             $interactionPanel.find('[data-element="title"]').html(title);
             $interactionPanel.find('[data-element="body"]').append(body);
         },
+
         toggleInteractionPanel: function ($interactionPanel, mode) {
             // If same mode, then strip down and hide the panel.
             var currentMode = $interactionPanel.data('mode');
             if (currentMode === mode) {
                 $interactionPanel.find('[data-element="title"]').empty();
                 $interactionPanel.find('[data-element="body"]').empty();
-                // $interactionPanel.slideToggle('fast');
                 $interactionPanel.hide();
                 $interactionPanel.data('mode', 'inactive');
                 $interactionPanel.closest('.kb-data-list-obj-row').find('[data-button="' + mode + '"]').button('toggle');
@@ -515,7 +514,6 @@ define([
                 $interactionPanel.find('[data-element="title"]').empty();
             }
             $interactionPanel.closest('.kb-data-list-obj-row').find('[data-button="' + mode + '"]').button('toggle');
-            // $interactionPanel.slideToggle('fast');
             $interactionPanel.show();
             $interactionPanel.data('mode', mode);
 
@@ -531,7 +529,7 @@ define([
                 .attr('role', 'toolbar')
                 .append($btnToolbarGroup);
 
-            var btnClasses = "btn btn-subtle btn-default";
+            var btnClasses = 'btn btn-subtle btn-default';
 
             var $openHistory = $('<button>');
             if (!isError) {
@@ -553,7 +551,7 @@ define([
                         }
 
                         if (self.ws_name && self.ws) {
-                            self.ws.get_object_history({ref: object_info[6] + "/" + object_info[0]},
+                            self.ws.get_object_history({ref: object_info[6] + '/' + object_info[0]},
                                 function (history) {
                                     history.reverse();
                                     var isCurrent = false;
@@ -570,7 +568,8 @@ define([
                                         } else {
                                             var revertRef = {wsid: history[k][6], objid: history[k][0], ver: history[k][4]};
                                             (function (revertRefLocal) {
-                                                $revertBtn.tooltip({title: 'Revert to this version?', placement: 'bottom'})
+                                                $revertBtn
+                                                    .tooltip({title: 'Revert to this version?', placement: 'bottom'})
                                                     .click(function () {
                                                         self.ws.revert_object(revertRefLocal,
                                                             function (reverted_obj_info) {
@@ -586,18 +585,20 @@ define([
                                                                         }
                                                                     },
                                                                     function (error) {
-                                                                        var errorMessage = "Narrative reverted, but a minor data update error occured." + error.error.message;
+                                                                        var errorMessage = 'Narrative reverted, but a minor data update error occured.' + error.error.message;
                                                                         console.log(errorMessage);
                                                                         console.log(error);
                                                                         self.setInteractionError($interactionPanel, errorMessage);
 
                                                                     });
-                                                            }, function (error) {
-                                                            var errorMessage = "Error! " + error.error.message;
-                                                            console.log(errorMessage);
-                                                            console.error(error);
-                                                            self.setInteractionError($interactionPanel, errorMessage);
-                                                        });
+                                                            },
+                                                            function (error) {
+                                                                var errorMessage = "Error! " + error.error.message;
+                                                                console.log(errorMessage);
+                                                                console.error(error);
+                                                                self.setInteractionError($interactionPanel, errorMessage);
+                                                            }
+                                                        );
                                                     });
                                             })(revertRef);
                                         }
@@ -619,7 +620,7 @@ define([
                                     if (error.error && error.error.message) {
                                         msg = error.error.message;
                                     }
-                                    var errorMessage = "Error! " + msg;
+                                    var errorMessage = 'Error! ' + msg;
                                     console.log(errorMessage);
                                     console.error(error);
                                     self.setInteractionError($interactionPanel, errorMessage);
@@ -659,23 +660,19 @@ define([
                         var $copyDiv = $('<div>')
                             .append(
                                 $('<div>')
-                                .append(
-                                    $('<div>').append("Enter a name for the new Narrative")
-                                    )
-                                .append(
-                                    $('<div>').append($newNameInput)
-                                    )
+                                .append($('<div>').append('Enter a name for the new Narrative'))
+                                .append($('<div>').append($newNameInput))
                                 .append($('<button>')
                                     .addClass('kb-data-list-btn')
                                     .append('Copy')
                                     .click(function () {
-                                        $(this).prop("disabled", true);
-                                        self.copyThisNarrative($newNameInput.val())
+                                        $(this).prop('disabled', true);
+                                        self.copyNarrative(object_info[6] + '/' + object_info[0], $newNameInput.val())
                                         .then(function() {
                                             self.refresh();
                                         })
                                         .catch(function(error) {
-                                            self.setInteractionError($interactionPanel, "Sorry, an error occurred while copying!");
+                                            self.setInteractionError($interactionPanel, 'Sorry, an error occurred while copying!');
                                             console.error(error);
                                         });
                                     }))
@@ -727,8 +724,7 @@ define([
                                                 }
                                             },
                                             function (error) {
-                                                var errorMessage = "Error! " + error.error.message;
-                                                console.log(errorMessage);
+                                                var errorMessage = 'Error! ' + error.error.message;
                                                 console.error(error);
                                                 self.setInteractionError($interactionPanel, errorMessage);
                                             });
@@ -737,7 +733,7 @@ define([
                             .append($('<button>').addClass('kb-data-list-cancel-btn')
                                 .append('Cancel')
                                 .click(function () {
-                                    self.toggleInteractionPanel($interactionPanel, 'delete')
+                                    self.toggleInteractionPanel($interactionPanel, 'delete');
                                 }));
                         self.setInteractionPanel($interactionPanel, 'Delete Narrative', $deleteDiv);
                     });
@@ -761,7 +757,6 @@ define([
 
             var $narDiv = $('<div>').addClass('kb-data-list-obj-row');
 
-            var $tbl = $('<table>').css({'width': '100%'});
             var $dataCol = $('<td>').css({'text-align': 'left', 'vertical-align': 'top'});
             var $ctrCol = $('<td>').css({'text-align': 'right', 'vertical-align': 'top', 'width': '80px'});
             var $ctrContent = $('<div>').css({'min-height': '60px'});
@@ -796,7 +791,7 @@ define([
                 .data('mode', 'inactive')
                 .hide();
 
-            var narRef = "ws." + data.ws_info[0] + ".obj." + data.ws_info[8].narrative;
+            var narRef = 'ws.' + data.ws_info[0] + '.obj.' + data.ws_info[8].narrative;
             var nameText = narRef;
             var version = '';
             if (data.nar_info && data.nar_info[10].name) {
@@ -805,7 +800,7 @@ define([
             } else if (data.error && data.ws_info[8].narrative_nice_name) {
                 nameText = data.ws_info[8].narrative_nice_name + ' (' + nameText + ')';
             }
-            var $version = $('<span>').addClass("kb-data-list-version").append(version);
+            var $version = $('<span>').addClass('kb-data-list-version').append(version);
             var $priv = $('<span>').css({'color': '#999', 'margin-left': '8px'}).prop('data-toggle', 'tooltip').prop('data-placement', 'right');
             if (data.ws_info[5] === 'r') {
                 $priv.addClass('fa fa-lock').prop('title', 'read-only');
@@ -827,8 +822,7 @@ define([
             // only display the rest if there was no error
             if (!data.error) {
                 var $usrNameSpan = $('<span>').addClass('kb-data-list-type').append(data.ws_info[2]);
-                if (data.ws_info[2] === this._attributes.auth.user_id) {
-                } else {
+                if (data.ws_info[2] !== this._attributes.auth.user_id) {
                     $dataCol.append($usrNameSpan).append('<br>');
                     DisplayUtil.displayRealName(data.ws_info[2], $usrNameSpan);
                 }
@@ -896,7 +890,7 @@ define([
 
                         var $sharingDiv = $('<div>');
                         self.setInteractionPanel($interactionPanel, 'Share Settings', $sharingDiv);
-                         new kbaseNarrativeSharePanel($sharingDiv, {
+                        new kbaseNarrativeSharePanel($sharingDiv, {
                             ws_name_or_id: data.ws_info[0],
                             max_list_height: 'none',
                             add_user_input_width: '280px'
@@ -990,10 +984,12 @@ define([
              */
             var $newNameInput = $('<input type="text">')
                 .addClass('form-control')
-                .tooltip({title: 'Please enter a name.',
-                          container: 'body',
-                          placement: 'right',
-                          trigger: 'manual'})
+                .tooltip({
+                    title: 'Please enter a name.',
+                    container: 'body',
+                    placement: 'right',
+                    trigger: 'manual'
+                })
                 .on('focus', function () {
                     Jupyter.narrative.disableKeyboardManager();
                 })
@@ -1018,46 +1014,44 @@ define([
              * Does the actual copy and displays the error if that happens.
              */
             var $doCopyBtn = $('<button>')
-                             .addClass('kb-primary-btn')
-                             .append('Copy')
-                             .click(function(e) {
-
-                                $errorMessage.empty();
-                                $doCopyBtn.prop('disabled', true);
-                                $cancelBtn.prop('disabled', true);
-                                this.copyThisNarrative($newNameInput.val())
-                                .then(function(result) {
-                                    $alertContainer.hide();
-                                    setButtonWorking(false);
-                                    this.refresh();
-                                    console.log(result);
-                                }.bind(this))
-                                .catch(function(error) {
-                                    if (error && error.error && error.error.message) {
-                                        $errorMessage.append(error.error.message);
-                                    }
-                                    else {
-                                        $errorMessage.append('Sorry, an error occurred while copying. Please try again.');
-                                    }
-                                    $doCopyBtn.prop('disabled', false);
-                                    $cancelBtn.prop('disabled', false);
-                                })
-                             }.bind(this))
+                .addClass('kb-primary-btn')
+                .append('Copy')
+                .click(function(e) {
+                    $errorMessage.empty();
+                    $doCopyBtn.prop('disabled', true);
+                    $cancelBtn.prop('disabled', true);
+                    this.copyNarrative(this.workspaceRef, $newNameInput.val())
+                    .then(function(result) {
+                        $alertContainer.hide();
+                        setButtonWorking(false);
+                        this.refresh();
+                    }.bind(this))
+                    .catch(function(error) {
+                        if (error && error.error && error.error.message) {
+                            $errorMessage.append(error.error.message);
+                        }
+                        else {
+                            $errorMessage.append('Sorry, an error occurred while copying. Please try again.');
+                        }
+                        $doCopyBtn.prop('disabled', false);
+                        $cancelBtn.prop('disabled', false);
+                    });
+                }.bind(this));
 
             var $cancelBtn = $('<button>')
                              .addClass('kb-default-btn')
                              .append('Cancel')
                              .click(function () {
-                                $doCopyBtn.prop('disabled', false);
-                                $alertContainer.slideUp();
-                                $newNameInput.tooltip('hide');
-                                setButtonWorking(false);
+                                 $doCopyBtn.prop('disabled', false);
+                                 $alertContainer.slideUp();
+                                 $newNameInput.tooltip('hide');
+                                 setButtonWorking(false);
                              });
 
             setButtonWorking(false);
             $alertContainer.append(
                 $('<div>')
-                .append($('<div>').append("Enter a name for the new Narrative"))
+                .append($('<div>').append('Enter a name for the new Narrative'))
                 .append($('<div>').append($newNameInput))
                 .append($doCopyBtn)
                 .append($cancelBtn)
@@ -1081,16 +1075,16 @@ define([
          *    any existing jobs, and save it to the new workspace.
          * 4. Update the new workspace's metadata so it references the new Narrative.
          */
-        copyThisNarrative: function (newName) {
+        copyNarrative: function (workspaceRef, newName) {
             var preCheckError = null;
             if (!this.ws) {
-                preCheckError = "Cannot copy - please sign in again.";
+                preCheckError = 'Cannot copy - please sign in again.';
             }
             else if (!this.workspaceRef) {
-                preCheckError = "Cannot copy - cannot find Narrative id. Please refresh the page and try again.";
+                preCheckError = 'Cannot copy - cannot find Narrative id. Please refresh the page and try again.';
             }
             else if (!this.workspaceId) {
-                preCheckError = "Cannot copy - cannot find Narrative data id. Please refresh the page and try again.";
+                preCheckError = 'Cannot copy - cannot find Narrative data id. Please refresh the page and try again.';
             }
             if (preCheckError) {
                 return Promise.reject(preCheckError);
@@ -1100,7 +1094,7 @@ define([
             return Promise.resolve(this.serviceClient.sync_call(
                 'NarrativeService.copy_narrative',
                 [{
-                    workspaceRef: this.workspaceRef,
+                    workspaceRef: workspaceRef,
                     newName: newName
                 }]
             ))
@@ -1108,11 +1102,13 @@ define([
                 result = result[0];
                 return {
                     status: 'success',
-                    url: [window.location.origin,
-                          '/narrative/ws.',
-                          result.newWsId,
-                          '.obj.',
-                          result.newNarId].join('')
+                    url: [
+                        window.location.origin,
+                        '/narrative/ws.',
+                        result.newWsId,
+                        '.obj.',
+                        result.newNarId
+                    ].join('')
                 };
             });
         },
@@ -1129,12 +1125,12 @@ define([
                         .empty()
                         .append(workingStr);
                     Promise.resolve(this.serviceClient.sync_call(
-                        "NarrativeService.create_new_narrative",
+                        'NarrativeService.create_new_narrative',
                         [{ includeIntroCell: 1 }]
                     ))
                     .then(function(results) {
                         $btn.empty().append(doneStr);
-                        var url = "/narrative/" + results[0].narrativeInfo.obj_id;
+                        var url = '/narrative/' + results[0].narrativeInfo.obj_id;
                         var $newNarrLink = $('<a>')
                             .attr('href', url)
                             .attr('target', '_blank')
@@ -1232,8 +1228,6 @@ define([
                 var content = JSON.parse(nar_info[10].methods);
                 var apps = [];
                 var methods = [];
-                var appCount = 0;
-                var methodCount = 0;
                 for (var a in content.app) {
                     if (content.app.hasOwnProperty(a)) {
                         apps.push({name: a, count: content.app[a]});
@@ -1252,7 +1246,7 @@ define([
                 if (nar_info[10].description) {
                     $container.append('<br><b>Description</b><br><div style="text-align:left;">' + nar_info[10].description + '</div>');
                 }
-                return "<br>No Apps or Methods in this Narrative.<br>";
+                return '<br>No Apps or Methods in this Narrative.<br>';
             }
 
             var $container = $('<div>').css({'width': '100%'});

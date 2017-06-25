@@ -13,12 +13,6 @@
                 "ws": "Phytozome_Genomes",
                 "search": false
             },
-            "pubSEED_genomes": {		
-                "name": "Public SEED Genomes",		
-                "type": "KBaseGenomes.Genome",		
-                "ws": "pubSEEDGenomes",		
-                "search": false		
-            },
             "media": {
                 "name": "Media",
                 "type": "KBaseBiochem.Media",
@@ -133,12 +127,6 @@
                 "ws": "Phytozome_Genomes",
                 "search": false
             },
-            "pubSEED_genomes": {
-                "name": "Public SEED Genomes",
-                "type": "KBaseGenomes.Genome",
-                "ws": "pubSEEDGenomes",
-                "search": false
-            },
             "media": {
                 "name": "Media",
                 "type": "KBaseBiochem.Media",
@@ -251,12 +239,6 @@
                 "name": "Plant Genomes",
                 "type": "KBaseGenomes.Genome",
                 "ws": "Phytozome_Genomes",
-                "search": false
-            },
-            "pubSEED_genomes": {
-                "name": "Public SEED Genomes",
-                "type": "KBaseGenomes.Genome",
-                "ws": "pubSEEDGenomes",
                 "search": false
             },
             "media": {

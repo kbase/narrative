@@ -229,12 +229,6 @@
                 "ws": "KBaseMedia",
                 "search": false
             },
-            "legacy_genomes": {
-                "name": "Legacy Genomes",
-                "type": "KBaseGenomes.Genome",
-                "ws": "KBasePublicGenomesV5",
-                "search": false
-            },
             "plant_genomes": {
                 "name": "Plant Genomes",
                 "type": "KBaseGenomes.Genome",

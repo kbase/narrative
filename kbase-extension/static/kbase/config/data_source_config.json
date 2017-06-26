@@ -109,6 +109,12 @@
     },
     "next": {
         "publicData": {
+            "genomes": {
+                "name": "Legacy Genomes",
+                "type": "KBaseGenomes.Genome",
+                "ws": "KBasePublicGenomesV5",
+                "search": true
+            },
             "plant_genomes": {
                 "name": "Plant Genomes",
                 "type": "KBaseGenomes.Genome",

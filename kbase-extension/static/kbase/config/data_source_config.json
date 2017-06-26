@@ -112,12 +112,6 @@
             "genomes": {
                 "name": "Legacy Genomes",
                 "type": "KBaseGenomes.Genome",
-                "ws": "ReferenceDataManager",
-                "search": true
-            },
-            "legacy_genomes": {
-                "name": "Legacy Genomes",
-                "type": "KBaseGenomes.Genome",
                 "ws": "KBasePublicGenomesV5",
                 "search": false
             },

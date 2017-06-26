@@ -109,12 +109,6 @@
     },
     "next": {
         "publicData": {
-            "genomes": {
-                "name": "Legacy Genomes",
-                "type": "KBaseGenomes.Genome",
-                "ws": "KBasePublicGenomesV5",
-                "search": false
-            },
             "plant_genomes": {
                 "name": "Plant Genomes",
                 "type": "KBaseGenomes.Genome",
@@ -312,10 +306,10 @@
     },
     "appdev": {
         "publicData": {
-            "genomes": {
-                "name": "Legacy Genomes",
+            "reference_genomes": {
+                "name": "NCBI RefSeq Genomes",
                 "type": "KBaseGenomes.Genome",
-                "ws": "KBasePublicGenomesV5",
+                "ws": "ReferenceDataManager",
                 "search": true
             },
             "plant_genomes": {

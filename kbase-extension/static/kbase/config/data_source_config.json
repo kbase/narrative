@@ -13,12 +13,6 @@
                 "ws": "Phytozome_Genomes",
                 "search": false
             },
-            "pubSEED_genomes": {		
-                "name": "Public SEED Genomes",		
-                "type": "KBaseGenomes.Genome",		
-                "ws": "pubSEEDGenomes",		
-                "search": false		
-            },
             "media": {
                 "name": "Media",
                 "type": "KBaseBiochem.Media",
@@ -118,25 +112,13 @@
             "genomes": {
                 "name": "Legacy Genomes",
                 "type": "KBaseGenomes.Genome",
-                "ws": "ReferenceDataManager",
-                "search": true
-            },
-            "legacy_genomes": {
-                "name": "Legacy Genomes",
-                "type": "KBaseGenomes.Genome",
                 "ws": "KBasePublicGenomesV5",
-                "search": false
+                "search": true
             },
             "plant_genomes": {
                 "name": "Plant Genomes",
                 "type": "KBaseGenomes.Genome",
                 "ws": "Phytozome_Genomes",
-                "search": false
-            },
-            "pubSEED_genomes": {
-                "name": "Public SEED Genomes",
-                "type": "KBaseGenomes.Genome",
-                "ws": "pubSEEDGenomes",
                 "search": false
             },
             "media": {
@@ -241,22 +223,10 @@
                 "ws": "KBaseMedia",
                 "search": false
             },
-            "legacy_genomes": {
-                "name": "Legacy Genomes",
-                "type": "KBaseGenomes.Genome",
-                "ws": "KBasePublicGenomesV5",
-                "search": false
-            },
             "plant_genomes": {
                 "name": "Plant Genomes",
                 "type": "KBaseGenomes.Genome",
                 "ws": "Phytozome_Genomes",
-                "search": false
-            },
-            "pubSEED_genomes": {
-                "name": "Public SEED Genomes",
-                "type": "KBaseGenomes.Genome",
-                "ws": "pubSEEDGenomes",
                 "search": false
             },
             "media": {
@@ -343,10 +313,10 @@
     },
     "appdev": {
         "publicData": {
-            "genomes": {
-                "name": "Legacy Genomes",
+            "reference_genomes": {
+                "name": "NCBI RefSeq Genomes",
                 "type": "KBaseGenomes.Genome",
-                "ws": "KBasePublicGenomesV5",
+                "ws": "ReferenceDataManager",
                 "search": true
             },
             "plant_genomes": {

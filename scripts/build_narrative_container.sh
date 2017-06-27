@@ -7,9 +7,9 @@ DS=$( date +%Y%m%d%H%M )
 NAR_NAME="kbase/narrative"
 HEADLESS_NAME="kbase/narrative_headless"
 NAR_BASE="kbase/narrbase"
-NAR_BASE_VER="4.6"
+NAR_BASE_VER="4.7"
 NAR_PREREQ="kbase/narrprereq"
-NAR_PREREQ_VER="1.1"
+NAR_PREREQ_VER="1.2"
 WEBROOT_DIR="/kb/deployment/services/kbase-ui"
 DOCKERFILE_HEADLESS="Dockerfile_headless"
 

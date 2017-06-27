@@ -28,7 +28,7 @@ RUN echo 'deb http://cran.cnr.berkeley.edu/bin/linux/ubuntu trusty/' | tee /etc/
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
 apt-mark hold udev initscripts plymouth initramfs-tools procps busybox-initramfs
-RUN DEBIAN_FRONTEND=noninteractive apt-get -f upgrade -y
+RUN DEBIAN_FRONTEND=noninteractive apt-get -f dist-upgrade -y
 
 # Install the stuff we actually need
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y \

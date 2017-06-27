@@ -6,6 +6,7 @@ This is built on the Jupyter Notebook v4.4.1 (more notes will follow).
 ### Version 3.4.2
 - Update base Narrative image to include an Ubuntu kernel security update.
 - Add ETE3 to the environment.
+- PTV-409 - fix problem where copying a Narrative using the "Narratives" panel would only make a copy of the currently viewed Narrative.
 
 ### Version 3.4.1
 - Fixed job status widget spamming the kernel with constant update requests.

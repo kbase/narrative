@@ -2558,10 +2558,6 @@ define([
                 throw new Error('Mismatching app modules: ' + cellAppSpec.info.module + ' !== ' + appSpec.info.module);
             }
 
-            // if (cellAppSpec.info.name !== appSpec.info.name) {
-            //     throw new Error('Mismatching app names: ' + cellAppSpec.info.name + ' !== ' + appSpec.info.name);
-            // }
-
             if (cellAppSpec.info.git_commit_hash !== appSpec.info.git_commit_hash) {
                 return new ToErr.KBError({
                     severity: 'warning',

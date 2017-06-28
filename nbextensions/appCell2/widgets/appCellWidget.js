@@ -1132,7 +1132,9 @@ define([
                                     role: 'alert'
                                 }, [
                                     span({ style: { 'font-weight': 'bold' } }, 'Warning'),
-                                    ': this app appears to be out of date. Running it may cause undesired results. Add a new "<b>' + model.getItem('app.spec.info.name') + '</b>" App for the most recent version.'
+                                    ': this app appears to be out of date. Running it may cause undesired results. Add a new "',
+                                    span({ style: { 'font-weight': 'bold' }, dataElement: 'new-app-name'}),
+                                    '" App for the most recent version.'
                                 ]),
                                 ui.buildPanel({
                                     title: 'App Cell Settings',
@@ -1450,6 +1452,7 @@ define([
             renderSettings();
             var state = fsm.getCurrentState();
             if (model.getItem('outdated')) {
+                ui.setContent('outdated.new-app-name', model.getItem('newAppName', model.getItem('app.spec.info.name')));
                 ui.showElement('outdated');
             }
 
@@ -2555,9 +2558,9 @@ define([
                 throw new Error('Mismatching app modules: ' + cellAppSpec.info.module + ' !== ' + appSpec.info.module);
             }
 
-            if (cellAppSpec.info.name !== appSpec.info.name) {
-                throw new Error('Mismatching app names: ' + cellAppSpec.info.name + ' !== ' + appSpec.info.name);
-            }
+            // if (cellAppSpec.info.name !== appSpec.info.name) {
+            //     throw new Error('Mismatching app names: ' + cellAppSpec.info.name + ' !== ' + appSpec.info.name);
+            // }
 
             if (cellAppSpec.info.git_commit_hash !== appSpec.info.git_commit_hash) {
                 return new ToErr.KBError({
@@ -2567,7 +2570,8 @@ define([
                     info: {
                         tag: model.getItem('app.tag'),
                         cellCommitHash: cellAppSpec.info.git_commit_hash,
-                        catalogCommitHash: appSpec.info.git_commit_hash
+                        catalogCommitHash: appSpec.info.git_commit_hash,
+                        newAppName: appSpec.info.name
                             //cellAppSpec: cellAppSpec,
                             //catalogAppSpec: appSpec
                     },
@@ -2600,6 +2604,7 @@ define([
                     if (warning && warning.severity === 'warning') {
                         if (warning.type === 'app-spec-mismatched-commit') {
                             model.setItem('outdated', true);
+                            model.setItem('newAppName', warning.info.newAppName);
                         }
                     }
 

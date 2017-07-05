@@ -98,12 +98,15 @@ define (
               );
 
               if (newDataset.tpm_expression_levels != undefined) {
-                this.data('container').addTab(
-                  {
-                    'tab' : 'TPM Histogram',
-                    'content' : this.data('tpmHistElem')
-                  }
-                )
+                if (!this.hasTPMTab) {
+                  this.data('container').addTab(
+                    {
+                      'tab' : 'TPM Histogram',
+                      'content' : this.data('tpmHistElem')
+                    }
+                  );
+                  this.hasTPMTab = true;
+                }
                 var tpm_min = Number.MAX_VALUE;
                 var tpm_max = Number.MIN_VALUE;
                 var tpmBarData = [];
@@ -254,6 +257,13 @@ define (
                         $self.loadExpression($self.options.output.sample_expression_ids[0]);
                       }
 
+                  })
+                  .fail(function(d) {
+
+                      $self.$elem.empty();
+                      $self.$elem
+                          .addClass('alert alert-danger')
+                          .html("Could not load object : " + d.error.message);
                   });
 
 
@@ -330,7 +340,12 @@ define (
                             tab : 'FPKM Histogram',
                             content : $histElem
                         }
-                    ]
+                    ],
+                    deleteTabCallback : function(tabName) {
+                      if (tabName === 'TPM Histogram') {
+                        delete this.tpmTab;
+                      }
+                    }
                 }
             )
 

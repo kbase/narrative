@@ -3,6 +3,9 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v4.4.1 (more notes will follow).
 
+### Version 3.4.3
+- TASK-877 - fix issue where mismatched App names between different versions caused the App Cell to fail to render.
+
 ### Version 3.4.2
 - Update base Narrative image to include an Ubuntu kernel security update.
 - Add ETE3 to the environment.

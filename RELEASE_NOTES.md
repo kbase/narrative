@@ -5,6 +5,7 @@ This is built on the Jupyter Notebook v4.4.1 (more notes will follow).
 
 ### Version 3.4.3
 - TASK-877 - fix issue where mismatched App names between different versions caused the App Cell to fail to render.
+- Update Expression Sample widget to better handle failures and only show a single widget tab.
 
 ### Version 3.4.2
 - Update base Narrative image to include an Ubuntu kernel security update.

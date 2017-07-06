@@ -11,7 +11,6 @@ define (
 		'kbase-client-api',
 		'kbaseTable',
 		'jquery-dataTables-bootstrap',
-		'kbaseReportView'
 	], function(
 		KBWidget,
 		bootstrap,
@@ -21,8 +20,7 @@ define (
 		kbaseHistogram,
 		kbase_client_api,
 		kbaseTable,
-		jquery_dataTables,
-		kbaseReportView
+		jquery_dataTables
 	) {
 
     'use strict';
@@ -202,16 +200,6 @@ define (
         init : function init(options) {
 
           this._super(options);
-
-          if (this.options.report_name != undefined) {
-
-            var $div = $.jqElem('div');
-            this.$elem.append($div);
-
-            $div.kbaseReportView( this.options);
-            return this;
-          }
-
 
 
             this._super(options);

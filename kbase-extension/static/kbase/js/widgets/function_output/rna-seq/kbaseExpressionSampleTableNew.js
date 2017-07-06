@@ -10,7 +10,7 @@ define (
 		'kbaseHistogram',
 		'kbase-client-api',
 		'kbaseTable',
-		'jquery-dataTables',
+		'jquery-dataTables-bootstrap',
 		'kbaseReportView'
 	], function(
 		KBWidget,
@@ -142,23 +142,26 @@ define (
               var $dt = this.data('$dt');
               if ($dt == undefined) {
 
-                var aoColumns = [
+                var columns = [
                     { title : 'Feature ID'},
                     { title : 'Feature Value : log2(FPKM + 1)'},
                 ];
                 if (newDataset.tpm_expression_levels != undefined) {
                   this.data('tableElem').find('th').css('display', '');
-                  aoColumns.push({ title : 'Feature Value : log2(TPM + 1)'});
+                  columns.push({ title : 'Feature Value : log2(TPM + 1)'});
                 }
 
-                $dt = this.data('tableElem').dataTable({
-                    aoColumns : aoColumns
+                $dt = this.data('tableElem').DataTable({
+                    columns : columns
                 });
 
                 this.data('$dt', $dt);
               }
+              else {
+                $dt.clear();
+              }
 
-              $dt.fnAddData(rows);
+              $dt.rows.add(rows).draw();
               this.data('loader').hide();
               this.data('containerElem').show();
             }

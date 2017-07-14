@@ -105,7 +105,7 @@ define([
 
         $container.empty();
         text = text[0].data;
-        console.log("GOT ME BACK DATA : ", text);
+
         var $tabPane = $.jqElem('div');
         $container.append($tabPane);
 
@@ -366,7 +366,7 @@ define([
 
         var sliderUpdate = _.debounce(function() {
           fc = self.data( "fc").val();
-          console.log("fc changed", fc);
+
           self.data('selfc').text(parseFloat(fc).toFixed(2));
           var numCircles = svg.selectAll("circle").size();
           var seenCircles = 0;
@@ -425,16 +425,6 @@ define([
 
         pv = self.data( "pvalue").slider('getValue');
         fc = self.data( "fc").slider('getValue');
-
-        /*
-           console.log(pv);
-           console.log(fc);
-
-           pv1 = ymin;
-           pv2 = ymax;
-           fc1 = xmin;
-           fc2 = xmax;
-           */
 
         var xScale = d3.scale.linear()
           .domain([xmin,xmax])

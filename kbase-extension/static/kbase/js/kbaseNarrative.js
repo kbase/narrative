@@ -781,7 +781,7 @@ define([
     };
 
     Narrative.prototype.addAndPopulateApp = function(appId, tag, parameters) {
-        self.sidePanel.$methodsWidget.triggerApp(appId, tag, parameters);
+        this.sidePanel.$methodsWidget.triggerApp(appId, tag, parameters);
     };
 
     /**

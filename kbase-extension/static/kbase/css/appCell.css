@@ -46,9 +46,9 @@
 }
 
 .kb-app-parameter-right-error-bar {
-    //height: 100%;
+    /* height: 100%; */
+    height:28px; /* firefox wants it explicitly wired */
     background: red;
-    height:28px;
 }
 
 

@@ -780,8 +780,8 @@ define([
         Jupyter.notebook.save_checkpoint();
     };
 
-    Narrative.prototype.createAndPopulateApp = function(appId, parameters) {
-        self.sidePanel.$methodsWidget.triggerApp(appId, undefined, parameters);
+    Narrative.prototype.addAndPopulateApp = function(appId, tag, parameters) {
+        self.sidePanel.$methodsWidget.triggerApp(appId, tag, parameters);
     };
 
     /**

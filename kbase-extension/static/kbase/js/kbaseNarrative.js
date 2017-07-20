@@ -781,8 +781,8 @@ define([
     };
 
     Narrative.prototype.createAndPopulateApp = function(appId, parameters) {
-        self.narrController.trigger('appClicked.Narrative', specs.methods[appId])
-    }
+        self.sidePanel.$methodsWidget.triggerApp(appId, undefined, parameters);
+    };
 
     /**
      * @method

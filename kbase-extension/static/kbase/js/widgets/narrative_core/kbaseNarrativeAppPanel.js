@@ -71,18 +71,6 @@ define ([
 
         currentTag: null, // release/dev/beta; which version of the method spec to fetch.  default is release
 
-        /**
-         * This private method is automatically called when the widget is initialized.
-         *
-         * Initialization steps:
-         * 1. Put a loading spinner in its attached div
-         * 2. Assume that the kernel is loaded before this is inited. //Check if the kernel is loaded - wait until it is.
-         * 3. Make a kernel call to get the set of available services and functions.
-         * 4. Shuffle the available functions into the right format.
-         * 5. Display them on the screen, bind events.
-         * @param {object} options
-         * @private
-         */
         init: function(options) {
             var self = this;
             this._super(options);
@@ -568,25 +556,48 @@ define ([
                 });
         },
 
-        triggerMethod: function(method) {
+        /**
+         * Gather App spec information and plop the App Cell in place.
+         * @param {app} string/object - if a string, it uses that as a key into self.appSpecs
+         * and tries to look up its needed info that way. Otherwise, if it's just method "info"
+         * (See the NarrativeMethodStore), it will go to NMS to fetch the full spec before
+         * triggering the appClicked.Narrative event.
+         * @param {tag} string - optional. If present, is passed along as the release tag for that
+         * app (should be one of "release", "beta", "dev"). Otherwise, we use the current user-
+         * selected tag.
+         */
+        triggerApp: function(app, tag, parameters) {
             var self = this;
-            if(!method['spec']) {
-                self.methClient.get_method_spec({ids:[method.info.id], tag:self.currentTag})
-                    .then(function(spec) {
-                        // todo: cache this spec into the methods list
-                        spec = spec[0];
-                        if (self.moduleVersions[spec.info.module_name]) {
-                            spec.info.ver = self.moduleVersions[spec.info.module_name];
+            if(!tag) {
+                tag = self.currentTag;
+            }
+            if (typeof(app) === 'string') {
+                var info = self.methodSpecs[app.toLowerCase()];
+                if (!info) {
+                    info = {
+                        'info': {
+                            'id': app
                         }
-                        self.trigger('appClicked.Narrative', [spec, self.currentTag]);
-                    })
-                    .catch(function (err) {
-                        var errorId = new Uuid(4).format();
-                        console.error('Error getting method spec #' + errorId, err, method, self.currentTag);
-                        alert('Error getting method spec, see console for error info #' + errorId);
-                    });
+                    };
+                }
+                app = info;
+            }
+            if(!app['spec']) {
+                Promise.resolve(self.methClient.get_method_spec({ids: [app.info.id], tag: tag}))
+                .then(function(spec) {
+                    spec = spec[0];
+                    if (self.moduleVersions[spec.info.module_name]) {
+                        spec.info.ver = self.moduleVersions[spec.info.module_name];
+                    }
+                    self.trigger('appClicked.Narrative', [spec, self.currentTag, parameters]);
+                })
+                .catch(function (err) {
+                    var errorId = new Uuid(4).format();
+                    console.error('Error getting method spec #' + errorId, err, app, self.currentTag);
+                    alert('Error getting app spec, see console for error info #' + errorId);
+                });
             } else {
-                self.trigger('appClicked.Narrative', [method, self.currentTag]);
+                self.trigger('appClicked.Narrative', [app, self.currentTag, parameters]);
             }
         },
 
@@ -860,7 +871,7 @@ define ([
             // add behavior
             $logo.click(function(e) {
                 e.stopPropagation();
-                self.triggerMethod(app);
+                self.triggerApp(app);
             });
 
             var $star = $('<i>');
@@ -918,7 +929,7 @@ define ([
                                 .append(app.info.name)
                                 .click(function(e) {
                                     e.stopPropagation();
-                                    self.triggerMethod(app);
+                                    self.triggerApp(app);
                                 }));
             var versionStr = 'v'+app.info.ver; // note that app versions are meaningless right now; need to update!
             if (app.info.module_name) {

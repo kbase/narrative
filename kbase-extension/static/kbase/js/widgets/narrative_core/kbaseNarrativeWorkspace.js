@@ -175,8 +175,8 @@ define([
             );
 
             $(document).on('appClicked.Narrative',
-                function(event, method, tag) {
-                    this.buildAppCodeCell(method, tag);
+                function(event, method, tag, parameters) {
+                    this.buildAppCodeCell(method, tag, parameters);
                 }.bind(this)
             );
 
@@ -414,7 +414,7 @@ define([
             }
         },
 
-        buildAppCodeCell: function(spec, tag) {
+        buildAppCodeCell: function(spec, tag, parameters) {
             if (!spec || !spec.info) {
                 console.error('ERROR build method code cell: ', spec, tag);
                 alert('Sorry, could not find this method');
@@ -451,6 +451,15 @@ define([
                     appSpec: spec
                 }
             });
+
+            // Finally, if we have parameters, wedge them in the new cell's metadata.
+            if (parameters) {
+                var meta = cell.metadata;
+                Object.keys(parameters).forEach(function(param) {
+                    meta.kbase.appCell.params[param] = parameters[param];
+                });
+                cell.metadata = meta;
+            }
             return cell;
         },
 

@@ -149,7 +149,7 @@ define ([
                 authClient.getTokenInfo(token)
                 .catch(function(error) {
                     console.error(error);
-                    tokenTimeout();
+                    tokenTimeout(true);
                 });
             }
             lastCheckTime = new Date().getTime();

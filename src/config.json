@@ -8,6 +8,7 @@
     "git_commit_time": "Thu Mar 3 15:44:21 2016 -0800",
     "release_notes": "https://github.com/kbase/narrative/blob/master/RELEASE_NOTES.md",
     "comm_wait_timeout": 60000,
+    "auth_sleep_recheck_ms": 60000,
     "data_panel": {
         "ws_chunk_size": 10000,
         "ws_max_objs_to_fetch": 30000,

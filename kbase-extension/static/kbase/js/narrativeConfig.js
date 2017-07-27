@@ -63,10 +63,11 @@ define([
         uploaders: StagingUpload,
         data_panel: ConfigSet.data_panel,
         comm_wait_timeout: ConfigSet.comm_wait_timeout,
-        auth_cookie: ConfigSet.auth_cookie
+        auth_cookie: ConfigSet.auth_cookie,
+        auth_sleep_recheck_ms: ConfigSet.auth_sleep_recheck_ms
     };
 
-    debug = config.mode === "debug";
+    debug = config.mode === 'debug';
     config.debug = debug;
 
     // Add a remote UI-common to the Require.js config

@@ -8,6 +8,7 @@ import json
 from jinja2 import Template
 from IPython.display import HTML
 
+
 class SpecManager(object):
     __instance = None
 
@@ -42,7 +43,7 @@ class SpecManager(object):
             for spec in specs:
                 spec_dict[spec['info']['id']] = spec
             self.app_specs[tag] = spec_dict
-        
+
         # And let's load all types from the beginning and cache them
         self.type_specs = client.list_categories({'load_types': 1})[3]
 

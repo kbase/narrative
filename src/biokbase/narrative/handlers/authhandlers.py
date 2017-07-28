@@ -62,6 +62,7 @@ class KBaseLoginHandler(LoginHandler):
                 auth_info = get_user_info(token)
             except Exception as e:
                 app_log.error("Unable to get user information from authentication token!")
+                raise
 
             # re-enable if token logging info is needed.
             # if app_log.isEnabledFor(logging.DEBUG):

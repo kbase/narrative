@@ -174,17 +174,20 @@ define([
                     return false;
                 }
                 else {
-                    return Promise.delay(1000)
-                    .then(function() {
-                        return validateToken(token, retries-0);
-                    })
-                    .then(function(info) {
-                        return info;
-                    })
-                    .catch(function(error) {
-                        return false;
-                    });
+                    throw error;
                 }
+                // else {
+                //     return Promise.delay(3000)
+                //     .then(function() {
+                //         return validateToken(token, retries-0);
+                //     })
+                //     .then(function(info) {
+                //         return info;
+                //     })
+                //     .catch(function(error) {
+                //         return false;
+                //     });
+                // }
             });
         }
 

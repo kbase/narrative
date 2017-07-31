@@ -139,6 +139,7 @@ define ([
          */
         var lastCheckTime = new Date().getTime();
         var browserSleepValidateTime = Config.get('auth_sleep_recheck_ms');
+        var validateOnCheck = false;
         tokenCheckTimer = setInterval(function() {
             var token = authClient.getAuthToken();
             if (!token) {
@@ -146,6 +147,9 @@ define ([
             }
             var lastCheckInterval = new Date().getTime() - lastCheckTime;
             if (lastCheckInterval > browserSleepValidateTime) {
+                validateOnCheck = true;
+            }
+            if (validateOnCheck) {
                 console.warn('Revalidating token after sleeping for ' + (lastCheckInterval/1000) + 's');
                 authClient.validateToken(token)
                 .then(function(info) {
@@ -153,11 +157,13 @@ define ([
                         console.warn('Auth is still valid. Carry on.');
                     } else {
                         console.warn('Auth is invalid! Logging out.');
+                        tokenTimeout(true);
                     }
+                    validateOnCheck = false;
                 })
                 .catch(function(error) {
+                    console.error('Error while validating token after sleep. Trying again...');
                     console.error(error);
-                    // tokenTimeout(true);
                 });
             }
             lastCheckTime = new Date().getTime();

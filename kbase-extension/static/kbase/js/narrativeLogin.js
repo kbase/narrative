@@ -144,12 +144,20 @@ define ([
             if (!token) {
                 tokenTimeout();
             }
-            if (new Date().getTime() - lastCheckTime > browserSleepValidateTime) {
-                console.log('fetching token info');
-                authClient.getTokenInfo(token)
+            var lastCheckInterval = new Date().getTime() - lastCheckTime;
+            if (lastCheckInterval > browserSleepValidateTime) {
+                console.warn('Revalidating token after sleeping for ' + (lastCheckInterval/1000) + 's');
+                authClient.validateToken(token)
+                .then(function(info) {
+                    if (info === true) {
+                        console.warn('Auth is still valid. Carry on.');
+                    } else {
+                        console.warn('Auth is invalid! Logging out.');
+                    }
+                })
                 .catch(function(error) {
                     console.error(error);
-                    tokenTimeout(true);
+                    // tokenTimeout(true);
                 });
             }
             lastCheckTime = new Date().getTime();

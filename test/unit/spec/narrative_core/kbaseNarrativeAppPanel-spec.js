@@ -5,13 +5,16 @@
 /*jslint white: true*/
 define([
     'jquery',
-    'kbaseNarrativeAppPanel'
-], function($, AppPanel) {
+    'kbaseNarrativeAppPanel',
+    'base/js/namespace',
+    'kbaseNarrative'
+], function($, AppPanel, Jupyter, Narrative) {
     var $panel = $('<div>');
     var appPanel = null;
 
     describe('Test the kbaseNarrativeAppPanel widget', function() {
         beforeEach(function() {
+            Jupyter.narrative = new Narrative();
             appPanel = new AppPanel($panel);
         });
         afterEach(function() {

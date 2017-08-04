@@ -8,8 +8,8 @@ This is built on the Jupyter Notebook v4.4.1 (more notes will follow).
 - Update Expression Sample widget to better handle failures and only show a single widget tab.
 - TASK-816 - update Volcano Plot viewer to improve functionality and performance with different data types.
 - TASK-141 - update available types for sorting in Data Panel slideout.
+- TASK-922 - fix visual problem where red bars indicating a required app input were not visible in certain browsers.
 - Fixed favorites star in App Panel.
-- TASK-922 - fix missing red required App parameter bars in Firefox/Safari.
 
 ### Version 3.4.2
 - Update base Narrative image to include an Ubuntu kernel security update.

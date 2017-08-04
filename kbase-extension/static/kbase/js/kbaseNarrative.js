@@ -142,12 +142,12 @@ define([
     // Wrappers for the Jupyter/Jupyter function so we only maintain it in one place.
     Narrative.prototype.patchKeyboardMapping = function () {
         var commonShortcuts = [
-            'a', 'm', 'f', 'y', 'r',
-            '1', '2', '3', '4', '5', '6',
-            'k', 'j', 'b', 'x', 'c', 'v',
-            'z', 'd,d', 's', 'l', 'o', 'h',
-            'i,i', '0,0', 'q', 'shift-j', 'shift-k',
-            'shift-m', 'shift-o', 'shift-v'
+                'a', 'm', 'f', 'y', 'r',
+                '1', '2', '3', '4', '5', '6',
+                'k', 'j', 'b', 'x', 'c', 'v',
+                'z', 'd,d', 's', 'l', 'o', 'h',
+                'i,i', '0,0', 'q', 'shift-j', 'shift-k',
+                'shift-m', 'shift-o', 'shift-v'
             ],
             commandShortcuts = [],
             editShortcuts = [
@@ -209,10 +209,10 @@ define([
             $('#kb-save-btn').find('div.fa-save').removeClass('fa-spin');
         });
         $([Jupyter.events]).on('kernel_idle.Kernel', function () {
-            $("#kb-kernel-icon").removeClass().addClass('fa fa-circle-o');
+            $('#kb-kernel-icon').removeClass().addClass('fa fa-circle-o');
         });
         $([Jupyter.events]).on('kernel_busy.Kernel', function () {
-            $("#kb-kernel-icon").removeClass().addClass('fa fa-circle');
+            $('#kb-kernel-icon').removeClass().addClass('fa fa-circle');
         });
         $([Jupyter.events]).on('delete.Cell', function () {
             // this.enableKeyboardManager();
@@ -400,7 +400,6 @@ define([
             showSettingsDialog();
         });
     };
-
 
     /**
      * The "Upgrade your container" dialog should be made available when
@@ -598,7 +597,7 @@ define([
 
                 var res = /User\s+(\w+)\s+may\s+not\s+write\s+to\s+workspace\s+(\d+)/.exec(errorText);
                 if (res) {
-                    errorText = "User " + res[1] + " does not have permission to save to workspace " + res[2] + ".";
+                    errorText = 'User ' + res[1] + ' does not have permission to save to workspace ' + res[2] + '.';
                 }
             }
         } else {
@@ -606,11 +605,11 @@ define([
         }
 
         Jupyter.dialog.modal({
-            title: "Narrative save failed!",
+            title: 'Narrative save failed!',
             body: $('<div>').append(errorText),
             buttons: {
                 OK: {
-                    class: "btn-primary",
+                    class: 'btn-primary',
                     click: function () {
                         return;
                     }
@@ -688,7 +687,7 @@ define([
             // Disable autosave so as not to spam the Workspace.
             Jupyter.notebook.set_autosave_interval(0);
             KBaseCellToolbar.register(Jupyter.notebook);
-            Jupyter.CellToolbar.activate_preset("KBase");
+            Jupyter.CellToolbar.activate_preset('KBase');
             Jupyter.CellToolbar.global_show();
 
             if (Jupyter.notebook && Jupyter.notebook.metadata) {
@@ -779,6 +778,10 @@ define([
     Narrative.prototype.saveNarrative = function () {
         this.narrController.saveAllCellStates();
         Jupyter.notebook.save_checkpoint();
+    };
+
+    Narrative.prototype.addAndPopulateApp = function(appId, tag, parameters) {
+        this.sidePanel.$methodsWidget.triggerApp(appId, tag, parameters);
     };
 
     /**

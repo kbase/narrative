@@ -9,6 +9,7 @@ This is built on the Jupyter Notebook v4.4.1 (more notes will follow).
 - TASK-816 - update Volcano Plot viewer to improve functionality and performance with different data types.
 - TASK-141 - update available types for sorting in Data Panel slideout.
 - TASK-922 - fix visual problem where red bars indicating a required app input were not visible in certain browsers.
+- Fixed favorites star in App Panel.
 
 ### Version 3.4.2
 - Update base Narrative image to include an Ubuntu kernel security update.

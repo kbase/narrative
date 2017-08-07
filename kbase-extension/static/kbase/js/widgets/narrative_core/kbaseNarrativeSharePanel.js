@@ -38,7 +38,7 @@ define ([
             add_user_input_width: '200px'
         },
         ws: null, // workspace client
-
+        narrOwner: null,
         $mainPanel: null,
         $notificationPanel: null,
         init: function (options) {
@@ -76,47 +76,48 @@ define ([
         user_data: {},
         all_users: null,
         getInfoAndRender: function () {
-            if (!this.ws || !this.options.ws_name_or_id) {
+            var self = this;
+            if (!self.ws || !self.options.ws_name_or_id) {
                 return;
             }
             var wsIdentity = {};
-            if (this.options.ws_name_or_id) {
-                if (/^[1-9]\d*$/.test(this.options.ws_name_or_id)) {
-                    wsIdentity.id = parseInt(this.options.ws_name_or_id);
+            if (self.options.ws_name_or_id) {
+                if (/^[1-9]\d*$/.test(self.options.ws_name_or_id)) {
+                    wsIdentity.id = parseInt(self.options.ws_name_or_id);
                 } else {
-                    wsIdentity.workspace = this.options.ws_name_or_id;
+                    wsIdentity.workspace = self.options.ws_name_or_id;
                 }
             }
 
-            Promise.resolve(this.ws.get_workspace_info(wsIdentity))
+            Promise.resolve(self.ws.get_workspace_info(wsIdentity))
             .then(function (info) {
-                this.ws_info = info;
-                return Promise.resolve(this.ws.get_permissions(wsIdentity));
-            }.bind(this))
+                self.ws_info = info;
+                self.narrOwner = info[2];
+                return Promise.resolve(self.ws.get_permissions(wsIdentity));
+            })
             .then(function (perm) {
-                this.ws_permissions = [];
-                this.user_data = {};
-                var usernameList = [ this.my_user_id ];
-                for (var u in perm) {
-                    if (perm.hasOwnProperty(u)) {
-                        if (u !== '*') {
-                            this.ws_permissions.push([u, perm[u]]);
-                            usernameList.push(u);
-                        }
+                self.ws_permissions = [];
+                self.user_data = {};
+                var usernameList = [ self.my_user_id ];
+                Object.keys(perm).forEach(function(u) {
+                    if (u === '*') {
+                        return;
                     }
-                }
-                return this.authClient.getUserNames(this.authClient.getAuthToken(), usernameList);
-            }.bind(this))
+                    self.ws_permissions.push([u, perm[u]]);
+                    usernameList.push(u);
+                });
+                return self.authClient.getUserNames(self.authClient.getAuthToken(), usernameList);
+            })
             .then(function (data) {
-                this.user_data = data;
-            }.bind(this))
+                self.user_data = data;
+            })
             .catch(function(error) {
                 console.error(error);
-                this.reportError(error);
+                self.reportError(error);
             })
             .finally(function() {
-                this.render();
-            }.bind(this));
+                self.render();
+            });
         },
         /*
 
@@ -161,14 +162,14 @@ define ([
             self.$mainPanel.append($togglePublicPrivate);
             var $meDiv = $('<div>').css({'margin': '5px', 'margin-top': '20px'});
             var status = 'You do not have access to this Narrative.';
-            var isOwner = false;
-            if (self.ws_info[2] === self.my_user_id) {
+            var isAdmin = false;
+            if (self.narrOwner === self.my_user_id) {
                 status = 'You own this Narrative. You can edit it and share it with other users.';
-                isOwner = true;
+                isAdmin = true;
                 $togglePublicPrivate.show();
             } else if (self.ws_info[5] === 'a') {
                 status = 'You can edit and share this Narrative.';
-                isOwner = true;  // not really, but set this so we show sharing controls
+                isAdmin = true;  // not really, but set this so we show sharing controls
                 $togglePublicPrivate.show();
             } else if (self.ws_info[5] === 'w') {
                 status = 'You can edit this Narrative, but you cannot share it.';
@@ -178,7 +179,7 @@ define ([
             $meDiv.append($('<div>').css({'margin-top': '10px'}).append(status));
             self.$mainPanel.append($meDiv);
 
-            if (isOwner) {
+            if (isAdmin) {
                 var $addUsersDiv = $('<div>').css({'margin-top': '10px'});
                 var $input = $('<select multiple data-placeholder="Share with...">')
                     .addClass('form-control kb-share-select');
@@ -270,8 +271,8 @@ define ([
                 }
                 var $select;
                 var $removeBtn = null;
-                if (isOwner) {
-                    var thisUser = self.ws_permissions[i][0];
+                var thisUser = self.ws_permissions[i][0];
+                if (isAdmin && thisUser !== self.narrOwner) {
                     $select = $('<select>')
                         .addClass('form-control kb-share-user-permissions-dropdown')
                         .attr('user', thisUser)
@@ -293,14 +294,17 @@ define ([
                         });
                 } else {
                     $select = $('<div>').addClass('form-control kb-share-user-permissions-dropdown');
-                    if (self.ws_permissions[i][1] === 'r') {
-                        $select.append('can view');
+                    if (thisUser === self.narrOwner) {
+                        $select.append('owns this Narrative');
                     }
-                    if (self.ws_permissions[i][1] === 'w') {
+                    else if (self.ws_permissions[i][1] === 'w') {
                         $select.append('can edit');
                     }
-                    if (self.ws_permissions[i][1] === 'a') {
+                    else if (self.ws_permissions[i][1] === 'a') {
                         $select.append('can edit/share');
+                    }
+                    else {
+                        $select.append('can view');
                     }
                 }
                 var user_display = self.renderUserIconAndName(self.ws_permissions[i][0], null, true);

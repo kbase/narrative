@@ -265,6 +265,9 @@ define([
                 });
                 return;
             }
+            if (shareWidget) {
+                shareWidget.refresh();
+            }
             shareDialog.show();
         }.bind(this));
     };

@@ -10,6 +10,8 @@ This is built on the Jupyter Notebook v4.4.1 (more notes will follow).
 - TASK-141 - update available types for sorting in Data Panel slideout.
 - TASK-922 - fix visual problem where red bars indicating a required app input were not visible in certain browsers.
 - Fixed favorites star in App Panel.
+- TASK-959 - sharing panel wasn't updating properly when sharing privileges were changed in a different window
+- TASK-960 - fix problem where a user with sharing privileges who didn't own the Narrative could try and fail to remove privileges from the owner of that Narrative.
 
 ### Version 3.4.2
 - Update base Narrative image to include an Ubuntu kernel security update.

@@ -71,18 +71,6 @@ define ([
 
         currentTag: null, // release/dev/beta; which version of the method spec to fetch.  default is release
 
-        /**
-         * This private method is automatically called when the widget is initialized.
-         *
-         * Initialization steps:
-         * 1. Put a loading spinner in its attached div
-         * 2. Assume that the kernel is loaded before this is inited. //Check if the kernel is loaded - wait until it is.
-         * 3. Make a kernel call to get the set of available services and functions.
-         * 4. Shuffle the available functions into the right format.
-         * 5. Display them on the screen, bind events.
-         * @param {object} options
-         * @private
-         */
         init: function(options) {
             var self = this;
             this._super(options);
@@ -370,10 +358,8 @@ define ([
             }.bind(this));
             this.addButton(this.$toggleVersionBtn);
 
-
             this.$appCatalogBody = $('<div>');
             this.appCatalog = null;
-
             this.$appCatalogContainer = $('<div>')
                                   .append($('<div>')
                                           .addClass('kb-side-header active')
@@ -423,7 +409,7 @@ define ([
             }
 
             this.methClient = new NarrativeMethodStore(this.options.methodStoreURL);
-            this.catalog = new Catalog(this.options.catalogURL);
+            this.catalog = new Catalog(this.options.catalogURL, {token: Jupyter.narrative.authToken});
             this.refreshFromService();
             return this;
         },
@@ -555,16 +541,14 @@ define ([
                                     self.methodSpecs[lookup]['favorite'] = fav.timestamp; // this is when this was added as a favorite
                                 }
                             }
-                            self.parseMethods(self.categories, self.methodSpecs);
-                            self.showFunctionPanel();
-                            // self.filterList(); // keep the filters
                         })
                          // For some reason this is throwing a Bluebird error to include this error handler, but I don't know why right now -mike
                         .catch(function(error) {
                             console.error(error);
-                            self.parseMethods(self.categories, self.methodSpecs);
-                            self.showFunctionPanel();
-                            // self.filterList(); // keep the filters
+                        })
+                        .finally(function() {
+                            self.parseApps(self.categories, self.methodSpecs);
+                            self.showAppPanel();
                         });
                 })
                 .catch(function(error) {
@@ -572,30 +556,52 @@ define ([
                 });
         },
 
-
-        triggerMethod: function(method) {
+        /**
+         * Gather App spec information and plop the App Cell in place.
+         * @param {app} string/object - if a string, it uses that as a key into self.appSpecs
+         * and tries to look up its needed info that way. Otherwise, if it's just method "info"
+         * (See the NarrativeMethodStore), it will go to NMS to fetch the full spec before
+         * triggering the appClicked.Narrative event.
+         * @param {tag} string - optional. If present, is passed along as the release tag for that
+         * app (should be one of "release", "beta", "dev"). Otherwise, we use the current user-
+         * selected tag.
+         */
+        triggerApp: function(app, tag, parameters) {
             var self = this;
-            if(!method['spec']) {
-                self.methClient.get_method_spec({ids:[method.info.id], tag:self.currentTag})
-                    .then(function(spec) {
-                        // todo: cache this spec into the methods list
-                        spec = spec[0];
-                        if (self.moduleVersions[spec.info.module_name]) {
-                            spec.info.ver = self.moduleVersions[spec.info.module_name];
+            if(!tag) {
+                tag = self.currentTag;
+            }
+            if (typeof(app) === 'string') {
+                var info = self.methodSpecs[app.toLowerCase()];
+                if (!info) {
+                    info = {
+                        'info': {
+                            'id': app
                         }
-                        self.trigger('methodClicked.Narrative', [spec, self.currentTag]);
-                    })
-                    .catch(function (err) {
-                        var errorId = new Uuid(4).format();
-                        console.error('Error getting method spec #' + errorId, err, method, self.currentTag);
-                        alert('Error getting method spec, see console for error info #' + errorId);
-                    });
+                    };
+                }
+                app = info;
+            }
+            if(!app['spec']) {
+                Promise.resolve(self.methClient.get_method_spec({ids: [app.info.id], tag: tag}))
+                .then(function(spec) {
+                    spec = spec[0];
+                    if (self.moduleVersions[spec.info.module_name]) {
+                        spec.info.ver = self.moduleVersions[spec.info.module_name];
+                    }
+                    self.trigger('appClicked.Narrative', [spec, self.currentTag, parameters]);
+                })
+                .catch(function (err) {
+                    var errorId = new Uuid(4).format();
+                    console.error('Error getting method spec #' + errorId, err, app, self.currentTag);
+                    alert('Error getting app spec, see console for error info #' + errorId);
+                });
             } else {
-                self.trigger('methodClicked.Narrative', [method, self.currentTag]);
+                self.trigger('appClicked.Narrative', [app, self.currentTag, parameters]);
             }
         },
 
-        parseMethods: function(catSet, appSet) {
+        parseApps: function(catSet, appSet) {
             var self = this;
 
             this.catSet = catSet;
@@ -707,14 +713,14 @@ define ([
                     }
                 });
                 for (var i=0; i<appList.length; i++) {
-                    $appPanel.append(self.buildMethod(appSet[appList[i]]));
+                    $appPanel.append(self.buildAppItem(appSet[appList[i]]));
                 }
             };
 
             var buildSingleAccordion = function(category, appList) {
                 var $accordionBody = $('<div>');
                 appList.forEach(function(appId) {
-                    $accordionBody.append(self.buildMethod(appSet[appId]));
+                    $accordionBody.append(self.buildAppItem(appSet[appId]));
                 });
                 var categoryTitle = category.replace('_', ' ')
                     .replace(/\w\S*/g, function(txt) {
@@ -841,23 +847,22 @@ define ([
         },
 
         /**
-         * Creates and returns a list item containing info about the given narrative function.
-         * Clicking the function anywhere outside the help (?) button will trigger a
-         * methodClicked.Narrative event. Clicking the help (?) button will trigger a
-         * function_help.Narrative event.
+         * Creates and returns a JQuery node containing a single representation of an App.
+         * Clicking the name or icon will trigger the insertion of a new App cell with that
+         * App's info and spec. Clicking the star icon will toggle whether that App is one of the
+         * current user's favorite Apps. Clicking the ellipsis (or anywhere else in the App item)
+         * will make it slide down some additional information.
          *
-         * Both events have the relevant data passed along with them for use by the responding
-         * element.
-         * @param {object} method - the method object returned from the kernel.
+         * @param {object} app - the app object that contains app info and spec.
          * @private
          */
-        buildMethod: function(method) {
+        buildAppItem: function(app) {
             var self = this;
             // add icon (logo)
             var $logo = $('<div>');
 
-            if (method.info.icon && method.info.icon.url) {
-                var url = this.options.methodStoreURL.slice(0, -3) + method.info.icon.url;
+            if (app.info.icon && app.info.icon.url) {
+                var url = this.options.methodStoreURL.slice(0, -3) + app.info.icon.url;
                 $logo.append( DisplayUtil.getAppIcon({ url: url , cursor: 'pointer' , setColor:true, size:'50px'}) )
                     .css('padding', '3px');
             } else {
@@ -866,11 +871,11 @@ define ([
             // add behavior
             $logo.click(function(e) {
                 e.stopPropagation();
-                self.triggerMethod(method);
+                self.triggerApp(app);
             });
 
             var $star = $('<i>');
-            if(method.favorite) {
+            if(app.favorite) {
                 $star.addClass('fa fa-star kbcb-star-favorite').append('&nbsp;');
             } else {
                 $star.addClass('fa fa-star kbcb-star-nonfavorite').append('&nbsp;');
@@ -878,27 +883,33 @@ define ([
             $star.on('click', function(event) {
                 event.stopPropagation();
                 var params = {};
-                if(method.info.module_name) {
-                    params['module_name'] = method.info.module_name;
-                    params['id'] = method.info.id.split('/')[1];
+                if(app.info.module_name) {
+                    params['module_name'] = app.info.module_name;
+                    params['id'] = app.info.id.split('/')[1];
                 } else {
-                    params['id'] = method.info.id;
+                    params['id'] = app.info.id;
                 }
 
-                if(method.favorite) {
+                if(app.favorite) {
                     // remove favorite
-                    self.catalog.remove_favorite(params)
-                        .then(function() {
-                            $star.removeClass('kbcb-star-favorite').addClass('kbcb-star-nonfavorite');
-                            method.favorite = null; // important to set this if we don't refresh the panel
-                        });
+                    Promise.resolve(self.catalog.remove_favorite(params))
+                    .then(function() {
+                        $star.removeClass('kbcb-star-favorite').addClass('kbcb-star-nonfavorite');
+                        app.favorite = null; // important to set this if we don't refresh the panel
+                    })
+                    .catch(function(error) {
+                        console.error(error);
+                    });
                 } else {
                     // add favorite
-                    self.catalog.add_favorite(params)
-                        .then(function() {
-                            $star.removeClass('kbcb-star-nonfavorite').addClass('kbcb-star-favorite');
-                            method.favorite =  new Date().getTime(); // important to set this if we don't refresh the panel
-                        });
+                    Promise.resolve(self.catalog.add_favorite(params))
+                    .then(function() {
+                        $star.removeClass('kbcb-star-nonfavorite').addClass('kbcb-star-favorite');
+                        app.favorite = new Date().getTime(); // important to set this if we don't refresh the panel
+                    })
+                    .catch(function(error) {
+                        console.error(error);
+                    });
                 }
             })
             .tooltip({
@@ -915,33 +926,33 @@ define ([
                         .addClass('kb-data-list-name')
                         .css({'white-space':'normal', 'cursor':'pointer'})
                         .append($('<a>')
-                                .append(method.info.name)
+                                .append(app.info.name)
                                 .click(function(e) {
                                     e.stopPropagation();
-                                    self.triggerMethod(method);
+                                    self.triggerApp(app);
                                 }));
-            var versionStr = 'v'+method.info.ver; // note that method versions are meaningless right now; need to update!
-            if (method.info.module_name) {
-                versionStr = '<a href="'+this.options.moduleLink+'/'+method.info.module_name+'" target="_blank">' +
-                                method.info.namespace + '</a> ' + versionStr;
+            var versionStr = 'v'+app.info.ver; // note that app versions are meaningless right now; need to update!
+            if (app.info.module_name) {
+                versionStr = '<a href="'+this.options.moduleLink+'/'+app.info.module_name+'" target="_blank">' +
+                                app.info.namespace + '</a> ' + versionStr;
             }
             var $version = $('<span>').addClass('kb-data-list-type').append($star).append(versionStr); // use type because it is a new line
 
             var moreLink = '';
-            if(method.info.module_name) {
-                moreLink = this.options.methodHelpLink + method.info.id + '/' + this.currentTag;
+            if(app.info.module_name) {
+                moreLink = this.options.methodHelpLink + app.info.id + '/' + this.currentTag;
             } else {
-                moreLink = this.options.methodHelpLink + 'l.m/' + method.info.id;
+                moreLink = this.options.methodHelpLink + 'l.m/' + app.info.id;
             }
             var $more = $('<div>')
                         .addClass('kb-method-list-more-div');
 
             if (self.currentTag && self.currentTag !== 'release') {
                 $more.append($('<div style="font-size:8pt">')
-                             .append(method.info.git_commit_hash));
+                             .append(app.info.git_commit_hash));
             }
             $more.append($('<div>')
-                         .append(method.info.subtitle))
+                         .append(app.info.subtitle))
                  .append($('<div>')
                          .append($('<a>')
                                  .append('more...')
@@ -1056,7 +1067,7 @@ define ([
          * Shows the main function panel, hiding all others.
          * @private
          */
-        showFunctionPanel: function() {
+        showAppPanel: function() {
             this.$errorPanel.hide();
             this.$loadingPanel.hide();
             this.$functionPanel.show();

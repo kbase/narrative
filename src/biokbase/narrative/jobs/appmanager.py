@@ -2,8 +2,6 @@
 A module for managing apps, specs, requirements, and for starting jobs.
 """
 import biokbase.auth as auth
-from biokbase.NarrativeJobService.Client import NarrativeJobService
-from biokbase.narrative.common.url_config import URLS
 from job import Job
 from jobmanager import JobManager
 from specmanager import SpecManager
@@ -53,9 +51,6 @@ class AppManager(object):
     """
     __instance = None
 
-    nms = clients.get('narrative_method_store')
-    ws_client = clients.get('workspace')
-    service_client = clients.get('service')
     __MAX_TOKEN_NAME_LEN = 30
 
     spec_manager = SpecManager()
@@ -310,8 +305,7 @@ class AppManager(object):
         kblogging.log_event(self._log, "run_app", log_info)
 
         try:
-            njs = NarrativeJobService(url=URLS.job_service, token=agent_token['token'])
-            job_id = njs.run_job(job_runner_inputs)
+            job_id = clients.get("job_service").run_job(job_runner_inputs)
         except Exception as e:
             log_info.update({'err': str(e)})
             kblogging.log_event(self._log, "run_app_error", log_info)
@@ -674,7 +668,7 @@ class AppManager(object):
         input_vals = params
         function_name = spec['behavior']['kb_service_name'] + '.' + spec['behavior']['kb_service_method']
         try:
-            result = self.service_client.sync_call(
+            result = clients.get("service").sync_call(
                 function_name,
                 input_vals,
                 service_version=tag

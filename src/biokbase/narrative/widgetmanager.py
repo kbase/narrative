@@ -1,15 +1,4 @@
 from __future__ import print_function
-
-"""
-widgetmanager.py
-
-Implements the WidgetManager class that programmatically shows
-KBase JavaScript widgets.
-"""
-__author__ = 'Bill Riehl <wjriehl@lbl.gov>'
-
-from biokbase.narrative.common.url_config import URLS
-from biokbase.workspace.client import Workspace
 from biokbase.narrative.app_util import (
     check_tag,
     system_variable
@@ -27,6 +16,14 @@ from biokbase.narrative.jobs.specmanager import SpecManager
 import biokbase.narrative.clients as clients
 from biokbase.narrative.app_util import map_outputs_from_state
 from biokbase.narrative.app_util import validate_parameters
+"""
+widgetmanager.py
+
+Implements the WidgetManager class that programmatically shows
+KBase JavaScript widgets.
+"""
+__author__ = 'Bill Riehl <wjriehl@lbl.gov>'
+
 
 
 class WidgetManager(object):
@@ -400,7 +397,7 @@ class WidgetManager(object):
                                              cell_id=cell_id,
                                              timestamp=int(round(time.time()*1000)))
         return Javascript(data=js, lib=None, css=None)
-        
+
 
     def show_data_widget(self, ref, title="", cell_id=None, tag="release"):
         """

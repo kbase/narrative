@@ -7,16 +7,14 @@ define(
         'bootstrap',
         'jquery',
         'narrativeConfig',
-        'common/runtime',
-        'kbaseNarrativeSharePanel'
+        'common/runtime'
     ],
     function(
         KBWidget,
         bootstrap,
         $,
         Config,
-        Runtime,
-        kbaseNarrativeSharePanel
+        Runtime
     ) {
         'use strict';
 

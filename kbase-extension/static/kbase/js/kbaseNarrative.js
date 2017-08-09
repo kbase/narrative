@@ -462,6 +462,7 @@ define([
         }).catch(function (error) {
             console.error('Error while checking for a version update: ' + error.statusText);
             KBError('Narrative.checkVersion', 'Unable to check for a version update!');
+            console.error(error);
         });
     };
 

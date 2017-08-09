@@ -146,6 +146,51 @@ define([
             }));
         }
 
+        /**
+         * Validates a token with the following series of calls.
+         * 1. calls GET /token on the auth service.
+         * 2. If a 200 is returned (with valid JSON), returns true.
+         * 3. If a 401/403 is returned (also with valid JSON), returns false.
+         * 4. If anything is returned, it's a server error, and we wait a second before
+         *    trying again. This solves the case where a computer is reawakened and still
+         *    needs to connect to the internet before making a call.
+         */
+        function validateToken(token, retries) {
+            if (!token) {
+                token = getAuthToken();
+            }
+            if (retries === undefined || retries === null) {
+                retries = 3;
+            }
+            return getTokenInfo(token)
+            .then(function(info) {
+                if (info.expires && info.expires > new Date().getTime()) {
+                    return true;
+                }
+                return false;
+            })
+            .catch(function(error) {
+                if (error.status === 401 || error.status === 403 || retries < 0) {
+                    return false;
+                }
+                else {
+                    throw error;
+                }
+                // else {
+                //     return Promise.delay(3000)
+                //     .then(function() {
+                //         return validateToken(token, retries-0);
+                //     })
+                //     .then(function(info) {
+                //         return info;
+                //     })
+                //     .catch(function(error) {
+                //         return false;
+                //     });
+                // }
+            });
+        }
+
         return {
             putCurrentProfile: putCurrentProfile,
             getCurrentProfile: getCurrentProfile,
@@ -156,7 +201,8 @@ define([
             revokeAuthToken: revokeAuthToken,
             getTokenInfo: getTokenInfo,
             getUserNames: getUserNames,
-            searchUserNames: searchUserNames
+            searchUserNames: searchUserNames,
+            validateToken: validateToken
         };
 
     }

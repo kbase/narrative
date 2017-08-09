@@ -1,10 +1,6 @@
 """
-Kbase wrappers around Globus Online Nexus client libraries. We wrap the Nexus
-libraries to provide a similar API between the Perl Bio::KBase::Auth* libraries
-and the python version
-
-In this module, we follow standard Python idioms of raising exceptions for
-various failure states (Perl modules returned error states in error_msg field)
+Narrative authentication tools.
+This uses the KBase auth2 API to get and manage auth tokens.
 """
 
 import requests
@@ -16,6 +12,18 @@ tokenenv = 'KB_AUTH_TOKEN'
 token_api_url = URLS.auth + "/api/V2"
 endpt_token = "/token"
 endpt_token_revoke = "/tokens/revoke"
+
+
+def validate_token():
+    """
+    Validates the currently set auth token. Returns True if valid, False otherwise.
+    """
+    headers = {"Authorization": get_auth_token()}
+    r = requests.get(token_api_url + endpt_token, headers=headers)
+    if r.status_code == 200:
+        return True
+    else:
+        return False
 
 
 def set_environ_token(token):

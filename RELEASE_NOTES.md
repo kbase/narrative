@@ -3,6 +3,9 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v4.4.1 (more notes will follow).
 
+### Version 3.4.4
+- TASK-932 - fix problem where authentication tokens appear to get lost when a Narrative has been asleep for a while.
+
 ### Version 3.4.3
 - TASK-877 - fix issue where mismatched App names between different versions caused the App Cell to fail to render.
 - Update Expression Sample widget to better handle failures and only show a single widget tab.

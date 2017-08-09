@@ -1,11 +1,11 @@
 /**
  * Base class for viewers visualizaing expression of a set of genes from various aspects
- * 
+ *
  * The descendant classes should override:
  * 1. getSubmtrixParams - to set params for get_submatrix_stat method from the KBaseFeatureValues service
  * 2. buildWidget - to create a custom visuzualization
  *
- * 
+ *
  *
  *
  * Pavel Novichkov <psnovichkov@lbl.gov>
@@ -315,27 +315,6 @@ define([
                     return v.toString(16);
                 });
         },
-        buildObjectIdentity: function (workspaceID, objectID, objectVer, wsRef) {
-            var obj = {};
-            if (wsRef) {
-                obj['ref'] = wsRef;
-            } else {
-                if (/^\d+$/.exec(workspaceID))
-                    obj['wsid'] = workspaceID;
-                else
-                    obj['workspace'] = workspaceID;
-
-                // same for the id
-                if (/^\d+$/.exec(objectID))
-                    obj['objid'] = objectID;
-                else
-                    obj['name'] = objectID;
-
-                if (objectVer)
-                    obj['ver'] = objectVer;
-            }
-            return obj;
-        }
 
     });
 });

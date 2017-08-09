@@ -240,28 +240,6 @@ define (
 				});
 		},
 
-		buildObjectIdentity: function(workspaceID, objectID, objectVer, wsRef) {
-			var obj = {};
-			if (wsRef) {
-				obj['ref'] = wsRef;
-			} else {
-				if (/^\d+$/.exec(workspaceID))
-					obj['wsid'] = workspaceID;
-				else
-					obj['workspace'] = workspaceID;
-
-				// same for the id
-				if (/^\d+$/.exec(objectID))
-					obj['objid'] = objectID;
-				else
-					obj['name'] = objectID;
-
-				if (objectVer)
-					obj['ver'] = objectVer;
-			}
-			return obj;
-		},
-
 		clientError: function(error){
 			this.loading(false);
 			this.showMessage(error.error.error);

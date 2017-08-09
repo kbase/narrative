@@ -10,15 +10,14 @@ define([
 ], function($, Tour, Handlebars, TourTmpl) {
     "use strict";
 
-    var NarrativeTour = function (narrative, notebook, events) {
+    var NarrativeTour = function(narrative, notebook, events) {
         var that = this;
         this.notebook = notebook;
         this.narrative = narrative;
         this.step_duration = 0;
         this.events = events;
         this.template = Handlebars.compile(TourTmpl);
-        this.tour_steps = [
-            {
+        this.tour_steps = [{
                 title: "Welcome to the Narrative Tour", // add a grayed out background.
                 placement: 'bottom',
                 orphan: true,
@@ -183,12 +182,12 @@ define([
                 placement: 'bottom',
                 content: 'Access control options for the Jupyter kernel that powers the Narrative Interface. This is useful for restarting or reconnecting to KBase after your network connection has been disrupted.',
             },
-            {
-                element: '#kb-settings-btn',
-                title: 'Adjust Global Settings',
-                placement: 'bottom',
-                content: 'Enable advanced or developer features for your Narrative in the Settings Menu. These option are enabled for individual Narratives. Refresh your browser to enable these settings for your Narrative.'
-            },
+            // {
+            //     element: '#kb-settings-btn',
+            //     title: 'Adjust Global Settings',
+            //     placement: 'bottom',
+            //     content: 'Enable advanced or developer features for your Narrative in the Settings Menu. These option are enabled for individual Narratives. Refresh your browser to enable these settings for your Narrative.'
+            // },
             {
                 element: '#kb-add-code-cell',
                 title: 'Code Cells',
@@ -214,7 +213,7 @@ define([
             onResume: this.toggle_pause_play,
             steps: this.tour_steps,
             template: function(i, step) {
-                return that.template({step: (i+1), totalSteps: that.tour_steps.length});
+                return that.template({ step: (i + 1), totalSteps: that.tour_steps.length });
             },
             orphan: true
         });
@@ -231,14 +230,13 @@ define([
             // $('.kb-side-tab[kb-data-id="0"]').find('button > .fa-arrow-right')
             //                                  .first()
             //                                  .click();
-        }
-        else {
+        } else {
             this.narrative.hideOverlay();
             // $(document).trigger('hideSidePanelOverlay.Narrative');
         }
     };
 
-    NarrativeTour.prototype.start = function () {
+    NarrativeTour.prototype.start = function() {
         console.log("let's start the tour");
         this.tour.init();
         this.tour.start();
@@ -251,7 +249,7 @@ define([
         $('#modal_indicator').css('min-height', '18px');
     };
 
-    NarrativeTour.prototype.toggle_pause_play = function () {
+    NarrativeTour.prototype.toggle_pause_play = function() {
         $('#tour-pause').toggleClass('fa-pause fa-play');
     };
 
@@ -260,6 +258,6 @@ define([
         this.notebook.edit_mode();
     };
 
-    return {'Tour': NarrativeTour};
+    return { 'Tour': NarrativeTour };
 
 });

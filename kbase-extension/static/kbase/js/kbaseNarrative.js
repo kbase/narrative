@@ -209,10 +209,10 @@ define([
             $('#kb-save-btn').find('div.fa-save').removeClass('fa-spin');
         });
         $([Jupyter.events]).on('kernel_idle.Kernel', function () {
-            $("#kb-kernel-icon").removeClass().addClass('fa fa-circle-o');
+            $('#kb-kernel-icon').removeClass().addClass('fa fa-circle-o');
         });
         $([Jupyter.events]).on('kernel_busy.Kernel', function () {
-            $("#kb-kernel-icon").removeClass().addClass('fa fa-circle');
+            $('#kb-kernel-icon').removeClass().addClass('fa fa-circle');
         });
         $([Jupyter.events]).on('delete.Cell', function () {
             // this.enableKeyboardManager();
@@ -264,6 +264,9 @@ define([
                     callback: function () { shareDialog.show(); }
                 });
                 return;
+            }
+            if (shareWidget) {
+                shareWidget.refresh();
             }
             shareDialog.show();
         }.bind(this));
@@ -403,7 +406,6 @@ define([
     //     });
     // };
 
-
     /**
      * The "Upgrade your container" dialog should be made available when
      * there's a more recent version of the Narrative ready to use. This
@@ -462,6 +464,7 @@ define([
         }).catch(function (error) {
             console.error('Error while checking for a version update: ' + error.statusText);
             KBError('Narrative.checkVersion', 'Unable to check for a version update!');
+            console.error(error);
         });
     };
 
@@ -600,7 +603,7 @@ define([
 
                 var res = /User\s+(\w+)\s+may\s+not\s+write\s+to\s+workspace\s+(\d+)/.exec(errorText);
                 if (res) {
-                    errorText = "User " + res[1] + " does not have permission to save to workspace " + res[2] + ".";
+                    errorText = 'User ' + res[1] + ' does not have permission to save to workspace ' + res[2] + '.';
                 }
             }
         } else {
@@ -608,11 +611,11 @@ define([
         }
 
         Jupyter.dialog.modal({
-            title: "Narrative save failed!",
+            title: 'Narrative save failed!',
             body: $('<div>').append(errorText),
             buttons: {
                 OK: {
-                    class: "btn-primary",
+                    class: 'btn-primary',
                     click: function () {
                         return;
                     }
@@ -690,7 +693,7 @@ define([
             // Disable autosave so as not to spam the Workspace.
             Jupyter.notebook.set_autosave_interval(0);
             KBaseCellToolbar.register(Jupyter.notebook);
-            Jupyter.CellToolbar.activate_preset("KBase");
+            Jupyter.CellToolbar.activate_preset('KBase');
             Jupyter.CellToolbar.global_show();
 
             if (Jupyter.notebook && Jupyter.notebook.metadata) {
@@ -777,6 +780,10 @@ define([
     Narrative.prototype.saveNarrative = function () {
         this.narrController.saveAllCellStates();
         Jupyter.notebook.save_checkpoint();
+    };
+
+    Narrative.prototype.addAndPopulateApp = function(appId, tag, parameters) {
+        this.sidePanel.$methodsWidget.triggerApp(appId, tag, parameters);
     };
 
     /**

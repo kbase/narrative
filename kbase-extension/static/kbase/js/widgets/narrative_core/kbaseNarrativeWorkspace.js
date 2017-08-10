@@ -34,6 +34,7 @@ define([
     'narrativeConfig',
     'util/bootstrapDialog',
     'util/string',
+    'util/timeFormat',
     'handlebars',
     'kbaseDefaultNarrativeOutput',
     'kbaseDefaultNarrativeInput',
@@ -60,6 +61,7 @@ define([
     Config,
     BootstrapDialog,
     StringUtil,
+    TimeFormat,
     Handlebars,
     kbaseDefaultNarrativeOutput,
     kbaseDefaultNarrativeInput,
@@ -211,14 +213,13 @@ define([
                 }.bind(this)
             );
 
-            $(document).on('methodClicked.Narrative',
-                function (event, method, tag) {
-                    if (this.uiMode === 'view') {
+            $(document).on('appClicked.Narrative',
+                function(event, method, tag, parameters) {
+                     if (this.uiMode === 'view') {
                         console.warn('ignoring attempt to insert app cell in view-only mode');
                         return;
                     }
-
-                    this.buildAppCodeCell(method, tag);
+                    this.buildAppCodeCell(method, tag, parameters);
                 }.bind(this)
             );
 
@@ -480,8 +481,7 @@ define([
             }
         },
 
-        buildAppCodeCell: function (spec, tag) {
-            var methodName = 'Unknown method';
+        buildAppCodeCell: function(spec, tag, parameters) {
             if (!spec || !spec.info) {
                 console.error('ERROR build method code cell: ', spec, tag);
                 alert('Sorry, could not find this method');
@@ -517,6 +517,15 @@ define([
                     appSpec: spec
                 }
             });
+
+            // Finally, if we have parameters, wedge them in the new cell's metadata.
+            if (parameters) {
+                var meta = cell.metadata;
+                Object.keys(parameters).forEach(function(param) {
+                    meta.kbase.appCell.params[param] = parameters[param];
+                });
+                cell.metadata = meta;
+            }
             return cell;
         },
 
@@ -1588,7 +1597,7 @@ define([
                     // Run the method.
                     var method = cell.metadata[self.KB_CELL].method;
                     self.runCell()(cell, method.service, method.title, paramList);
-                    $(cell.element).find('#last-run').html('Last run: ' + self.readableTimestamp(self.getTimestamp()));
+                    $(cell.element).find('#last-run').html('Last run: ' + TimeFormat.readableTimestamp(self.getTimestamp()));
                 }
             );
         },
@@ -2554,31 +2563,6 @@ define([
          */
         getTimestamp: function () {
             return new Date().getTime();
-        },
-
-        /**
-         * Converts a timestamp to a simple string.
-         * Do this American style - HH:MM:SS MM/DD/YYYY
-         *
-         * @param {string} timestamp - a timestamp in number of milliseconds since the epoch.
-         * @return {string} a human readable timestamp
-         */
-        readableTimestamp: function (timestamp) {
-            var format = function (x) {
-                if (x < 10)
-                    x = '0' + x;
-                return x;
-            };
-
-            var d = new Date(timestamp);
-            var hours = format(d.getHours());
-            var minutes = format(d.getMinutes());
-            var seconds = format(d.getSeconds());
-            var month = d.getMonth() + 1;
-            var day = format(d.getDate());
-            var year = d.getFullYear();
-
-            return hours + ':' + minutes + ':' + seconds + ', ' + month + '/' + day + '/' + year;
         },
 
         /**

@@ -5,6 +5,17 @@ This is built on the Jupyter Notebook v4.4.1 (more notes will follow).
 
 ### Version 3.4.4
 - TASK-932 - fix problem where authentication tokens appear to get lost when a Narrative has been asleep for a while.
+- TASK-956 - fix error handling for the PanGenome viewer (and for other viewers that use the dynamicTable widget).
+- TASK-938 - fix problems and usability in read only mode
+    - Can now double-click on a cell title area to collapse/expand it
+    - Collapse/expand button is now in the top-right of a cell.
+    - Read-only narratives cannot have app inputs modified.
+    - In read-only mode, no data view cells can be added.
+    - In read-only mode, code cells are not editable.
+    - In read-only mode, narrative titles can no longer be edited.
+    - Removed the "config" cog button in the top menu.
+    - Double-clicking markdown content switches to edit mode.
+    - App cells should no longer flash their code area before converting to the widget view on narrative startup.
 
 ### Version 3.4.3
 - TASK-877 - fix issue where mismatched App names between different versions caused the App Cell to fail to render.

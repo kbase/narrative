@@ -5,6 +5,7 @@ This is built on the Jupyter Notebook v4.4.1 (more notes will follow).
 
 ### Version 3.4.4
 - TASK-932 - fix problem where authentication tokens appear to get lost when a Narrative has been asleep for a while.
+- TASK-956 - fix error handling for the PanGenome viewer (and for other viewers that use the dynamicTable widget).
 
 ### Version 3.4.3
 - TASK-877 - fix issue where mismatched App names between different versions caused the App Cell to fail to render.

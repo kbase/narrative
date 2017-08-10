@@ -14,7 +14,7 @@ define([
     './widgets/appInfoDialog',
     './widgets/appCellWidget',
     'common/spec'
-], function (
+], function(
     Promise,
     Uuid,
     utils,
@@ -54,41 +54,46 @@ define([
             spec;
 
         function specializeCell() {
-            cell.minimize = function () {
-                var inputArea = this.input.find('.input_area'),
+            cell.minimize = function() {
+                var inputArea = this.input.find('.input_area').get(0),
                     outputArea = this.element.find('.output_wrapper'),
                     viewInputArea = this.element.find('[data-subarea-type="app-cell-input"]'),
                     showCode = utils.getCellMeta(cell, 'kbase.appCell.user-settings.showCodeInputArea');
 
                 if (showCode) {
-                    inputArea.addClass('hidden');
+                    // inputArea.addClass('hidden');
+                    inputArea.classList.remove('-show');
                 }
                 outputArea.addClass('hidden');
                 viewInputArea.addClass('hidden');
             };
 
-            cell.maximize = function () {
-                var inputArea = this.input.find('.input_area'),
+            cell.maximize = function() {
+                var inputArea = this.input.find('.input_area').get(0),
                     outputArea = this.element.find('.output_wrapper'),
                     viewInputArea = this.element.find('[data-subarea-type="app-cell-input"]'),
                     showCode = utils.getCellMeta(cell, 'kbase.appCell.user-settings.showCodeInputArea');
 
                 if (showCode) {
-                    inputArea.removeClass('hidden');
+                    // inputArea.removeClass('hidden');
+                    if (!inputArea.classList.contains('-show')) {
+                        inputArea.classList.add('-show');
+                        cell.code_mirror.refresh();
+                    }
                 }
                 outputArea.removeClass('hidden');
                 viewInputArea.removeClass('hidden');
             };
-            cell.getIcon = function () {
+            cell.getIcon = function() {
                 return AppUtils.makeToolbarAppIcon(utils.getCellMeta(cell, 'kbase.appCell.app.spec'));
             };
-            cell.renderIcon = function () {
+            cell.renderIcon = function() {
                 var iconNode = this.element[0].querySelector('.celltoolbar [data-element="icon"]');
                 if (iconNode) {
                     iconNode.innerHTML = AppUtils.makeToolbarAppIcon(utils.getCellMeta(cell, 'kbase.appCell.app.spec'));
                 }
             };
-            cell.showInfo = function () {
+            cell.showInfo = function() {
                 var app = utils.getCellMeta(cell, 'kbase.appCell.app');
                 appInfoDialog.show({
                     id: app.spec.info.id,
@@ -99,14 +104,20 @@ define([
             };
         }
 
-        
-
         function setupCell() {
-            return Promise.try(function () {
+            return Promise.try(function() {
                 // Only handle kbase cells.
                 if (!isAppCell(cell)) {
                     return;
                 }
+
+                var cellElement = cell.element;
+                cellElement.addClass('kb-cell').addClass('kb-app-cell');
+
+                // Just ide the code area. If it is to be displayed due to the cell
+                // settings, that will be handled by the app cell widget.
+                // var codeInputArea = cell.input.find('.input_area');
+                // codeInputArea[0].classList.add('hidden');
 
                 specializeCell(cell);
 
@@ -134,6 +145,7 @@ define([
                 // to insert a node before the node following the one we are 
                 // referencing. If there is no next sibling, the null value
                 // causes insertBefore to actually ... insert at the end!
+                kbaseNode.classList.add('hidden');
                 cell.input[0].parentNode.insertBefore(kbaseNode, cell.input[0].nextSibling);
 
                 /*
@@ -150,18 +162,18 @@ define([
                 // cell.kbase.$node = $(kbaseNode);
 
                 return appCellWidget.init()
-                    .then(function () {
+                    .then(function() {
                         return appCellWidget.attach(kbaseNode);
                     })
-                    .then(function () {
+                    .then(function() {
                         return appCellWidget.start();
                     })
-                    .then(function () {
+                    .then(function() {
                         return appCellWidget.run({
                             authToken: runtime.authToken()
                         });
                     })
-                    .then(function () {
+                    .then(function() {
                         cell.renderMinMax();
 
                         return {
@@ -169,7 +181,7 @@ define([
                             bus: cellBus
                         };
                     })
-                    .catch(function (err) {
+                    .catch(function(err) {
                         console.error('ERROR starting app cell', err);
                         // var ui = UI.make({
                         //     node: document.body
@@ -186,13 +198,13 @@ define([
                         // });
                         // TODO:
                         return appCellWidget.stop()
-                            .then(function () {
+                            .then(function() {
                                 return appCellWidget.detach();
                             })
-                            .catch(function (err) {
+                            .catch(function(err) {
                                 console.log('ERR in ERR', err);
                             })
-                            .finally(function () {
+                            .finally(function() {
                                 var ui = UI.make({
                                     node: document.body
                                 });
@@ -221,7 +233,7 @@ define([
         }
 
         function upgradeToAppCell(appSpec, appTag) {
-            return Promise.try(function () {
+            return Promise.try(function() {
                     // Create base app cell
 
                     // TODO: this should capture the entire app spec, so don't need
@@ -262,7 +274,7 @@ define([
                     // Complete the cell setup.
                     return setupCell();
                 })
-                .then(function (cellStuff) {
+                .then(function(cellStuff) {
                     // Initialize the cell to its default state.
                     // cellStuff.bus.emit('reset-to-defaults');
                 });
@@ -276,7 +288,7 @@ define([
     }
 
     return {
-        make: function (config) {
+        make: function(config) {
             return factory(config);
         },
         isAppCell: isAppCell

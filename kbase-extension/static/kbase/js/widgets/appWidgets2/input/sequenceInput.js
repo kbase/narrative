@@ -71,33 +71,33 @@ define([
 
         function setModelValue(value, index) {
             return Promise.try(function() {
-                if (index !== undefined) {
-                    if (value) {
-                        model.value[index] = value;
+                    if (index !== undefined) {
+                        if (value) {
+                            model.value[index] = value;
+                        } else {
+                            model.value.splice(index, 1);
+                        }
                     } else {
-                        model.value.splice(index, 1);
+                        if (value) {
+                            model.value = value;
+                        } else {
+                            unsetModelValue();
+                        }
                     }
-                } else {
-                    if (value) {
-                        model.value = value;
-                    } else {
-                        unsetModelValue();
-                    }
-                }
-                normalizeModel();
-            })
-            .then(function() {
-                return render();
-            });
+                    normalizeModel();
+                })
+                .then(function() {
+                    return render();
+                });
         }
 
         function unsetModelValue() {
             return Promise.try(function() {
-                model.value = [];
-            })
-            .then(function() {
-                return render();
-            });
+                    model.value = [];
+                })
+                .then(function() {
+                    return render();
+                });
         }
 
         function resetModelValue() {
@@ -198,7 +198,7 @@ define([
                         key: {
                             type: 'get-parameter'
                         },
-                        handle: function (message) {
+                        handle: function(message) {
                             if (message.parameterName) {
                                 return channel.request(message, {
                                     key: {
@@ -228,7 +228,7 @@ define([
                             height: '100%'
                         }
                     }, button({
-                        class: 'btn btn-link btn-xs kb-app-row-close-btn',
+                        class: 'btn btn-danger btn-xs kb-app-row-close-btn',
                         type: 'button',
                         dataIndex: String(control.index),
                         id: events.addEvent({
@@ -278,9 +278,9 @@ define([
                 type: 'click',
                 handler: function() {
                     addNewControl()
-                    .then(function() {
-                        return autoValidate();
-                    });
+                        .then(function() {
+                            return autoValidate();
+                        });
                 }
             };
         }
@@ -374,11 +374,11 @@ define([
                     return;
                 }
                 return Promise.all(initialValue.map(function(value) {
-                    return addNewControl(value);
-                }))
-                .then(function () {
-                    return autoValidate();
-                });
+                        return addNewControl(value);
+                    }))
+                    .then(function() {
+                        return autoValidate();
+                    });
             });
         }
 
@@ -429,11 +429,11 @@ define([
         function stop() {
             return Promise.try(function() {
                 return Promise.all(viewModel.getItem('items').map(function(item) {
-                    return item.inputControl.instance.stop();
-                }))
-                .then(function() {
-                    busConnection.stop();
-                });
+                        return item.inputControl.instance.stop();
+                    }))
+                    .then(function() {
+                        busConnection.stop();
+                    });
             });
         }
 

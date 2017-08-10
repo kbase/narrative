@@ -156,26 +156,30 @@ define([
 
     function specializeCell(cell) {
         cell.minimize = function() {
-            var inputArea = this.input.find('.input_area'),
+            var inputArea = this.input.find('.input_area').get(0),
                 outputArea = this.element.find('.output_wrapper'),
                 viewInputArea = this.element.find('[data-subarea-type="view-cell-input"]'),
-                showCode = utils.getCellMeta(cell, 'kbase.appCell.user-settings.showCodeInputArea');
+                showCode = utils.getCellMeta(cell, 'kbase.viewCell.user-settings.showCodeInputArea');
 
             if (showCode) {
-                inputArea.addClass('hidden');
+                // inputArea.addClass('hidden');
+                inputArea.classList.remove('-show');
             }
             outputArea.addClass('hidden');
             viewInputArea.addClass('hidden');
         };
 
         cell.maximize = function() {
-            var inputArea = this.input.find('.input_area'),
+            var inputArea = this.input.find('.input_area').get(0),
                 outputArea = this.element.find('.output_wrapper'),
                 viewInputArea = this.element.find('[data-subarea-type="view-cell-input"]'),
-                showCode = utils.getCellMeta(cell, 'kbase.appCell.user-settings.showCodeInputArea');
+                showCode = utils.getCellMeta(cell, 'kbase.viewCell.user-settings.showCodeInputArea');
 
             if (showCode) {
-                inputArea.removeClass('hidden');
+                // inputArea.removeClass('hidden');
+                if (!inputArea.classList.contains('-show')) {
+                    inputArea.classList.add('-show');
+                }
             }
             outputArea.removeClass('hidden');
             viewInputArea.removeClass('hidden');
@@ -238,6 +242,11 @@ define([
 
             specializeCell(cell);
 
+            var cellElement = cell.element;
+            cellElement.addClass('kb-cell').addClass('kb-view-cell');
+
+
+
             // The kbase property is only used for managing runtime state of the cell
             // for kbase. Anything to be persistent should be on the metadata.
             cell.kbase = {};
@@ -262,6 +271,7 @@ define([
                 }));
 
             // Create (above) and place the main container for the input cell.
+            kbaseNode.classList.add('hidden');
             cell.input.after($(kbaseNode));
             cell.kbase.node = kbaseNode;
             cell.kbase.$node = $(kbaseNode);

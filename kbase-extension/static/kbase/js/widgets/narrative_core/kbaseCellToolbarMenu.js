@@ -8,7 +8,15 @@ define([
     'common/utils',
     'util/bootstrapDialog',
     'kbase/js/widgets/appInfoPanel'
-], function($, html, Events, Jupyter, utils, BootstrapDialog, AppInfoPanel) {
+], function(
+    $,
+    html,
+    Events,
+    Jupyter,
+    utils,
+    BootstrapDialog,
+    AppInfoPanel
+) {
     'use strict';
 
     var t = html.tag,
@@ -35,7 +43,8 @@ define([
 
     function factory(config) {
         var container,
-            cell;
+            cell,
+            readOnly = Jupyter.narrative.readonly;
 
         function doMoveCellUp() {
             Jupyter.notebook.move_cell_up();
@@ -88,7 +97,13 @@ define([
             return '';
         }
 
-        function doToggleMinMaxCell() {
+        function doToggleMinMaxCell(e) {
+            if (e.getModifierState) {
+                var modifier = e.getModifierState('Alt');
+                if (modifier) {
+                    console.log('I want to toggle all cells!');
+                }
+            }
             cell.element.trigger('toggleMinMax.cell');
         }
 
@@ -195,15 +210,15 @@ define([
                     //                        },
                     //                        id: events.addEvent({type: 'click', handler: doHelp})
                     //                    },
-                    {
-                        name: 'toggle-collapse',
-                        label: toggleMinMax === 'maximized' ? 'Collapse' : 'Expand',
-                        icon: {
-                            type: toggleIcon + '-square-o',
-                            color: 'orange'
-                        },
-                        id: events.addEvent({ type: 'click', handler: doToggleMinMaxCell })
-                    }
+                    // {
+                    //     name: 'toggle-collapse',
+                    //     label: toggleMinMax === 'maximized' ? 'Collapse' : 'Expand',
+                    //     icon: {
+                    //         type: toggleIcon + '-square-o',
+                    //         color: 'orange'
+                    //     },
+                    //     id: events.addEvent({ type: 'click', handler: doToggleMinMaxCell })
+                    // }
                 ];
 
             // we can always dream
@@ -247,19 +262,26 @@ define([
                 });
             }
 
-            menuItems.push({
-                type: 'separator'
-            });
-            menuItems.push({
-                name: 'delete-cell',
-                label: 'Delete cell',
-                icon: {
-                    type: 'times',
-                    color: 'red'
-                },
-                id: events.addEvent({ type: 'click', handler: doDeleteCell })
-            });
+            if (!readOnly) {
+                if (menuItems.length > 0) {
+                    menuItems.push({
+                        type: 'separator'
+                    });
+                }
+                menuItems.push({
+                    name: 'delete-cell',
+                    label: 'Delete cell',
+                    icon: {
+                        type: 'times',
+                        color: 'red'
+                    },
+                    id: events.addEvent({ type: 'click', handler: doDeleteCell })
+                });
+            }
 
+            if (menuItems.length === 0) {
+                return '';
+            }
 
             return span({ class: 'dropdown' }, [
                 button({
@@ -270,7 +292,10 @@ define([
                     ariaHaspopup: 'true',
                     ariaExpanded: 'true'
                 }, [span({ class: 'fa fa-ellipsis-h fa-lg' })]),
-                ul({ class: 'dropdown-menu dropdown-menu-right', ariaLabelledby: dropdownId }, [
+                ul({
+                    class: 'dropdown-menu dropdown-menu-right',
+                    ariaLabelledby: dropdownId
+                }, [
                     menuItems.map(function(item) {
                         switch (item.type) {
                             case 'separator':
@@ -318,12 +343,13 @@ define([
 
         function render(cell) {
             var events = Events.make({ node: container }),
-                buttons = Jupyter.narrative.readonly ? [] : [
+                buttons = [
                     div({ class: 'buttons pull-right' }, [
                         span({ class: 'kb-func-timestamp' }),
                         span({ class: 'fa fa-circle-o-notch fa-spin', style: { color: 'rgb(42, 121, 191)', display: 'none' } }),
                         span({ class: 'fa fa-exclamation-triangle', style: { color: 'rgb(255, 0, 0)', display: 'none' } }),
-                        button({
+
+                        (readOnly ? null : button({
                             type: 'button',
                             class: 'btn btn-default btn-xs',
                             dataToggle: 'tooltip',
@@ -333,8 +359,8 @@ define([
                             id: events.addEvent({ type: 'click', handler: doMoveCellUp })
                         }, [
                             span({ class: 'fa fa-arrow-up fa-lg' })
-                        ]),
-                        button({
+                        ])),
+                        (readOnly ? null : button({
                             type: 'button',
                             class: 'btn btn-default btn-xs',
                             dataToggle: 'tooltip',
@@ -344,8 +370,8 @@ define([
                             id: events.addEvent({ type: 'click', handler: doMoveCellDown })
                         }, [
                             span({ class: 'fa fa-arrow-down fa-lg', style: 'xfont-size: 18px' })
-                        ]),
-                        renderOptions(cell, events)
+                        ])),
+                        renderOptions(cell, events),
                         //                    button({
                         //                        type: 'button',
                         //                        class: 'btn btn-default btn-xs',
@@ -357,20 +383,41 @@ define([
                         //                    }, [
                         //                        span({class: 'fa fa-times-circle', style: {fontSize: '14pt', color: 'red'}})
                         //                    ]),
-                        //                    button({
-                        //                        type: 'button',
-                        //                        class: 'btn btn-default btn-xs',
-                        //                        dataToggle: 'tooltip',
-                        //                        dataPlacement: 'left',
-                        //                        title: true,
-                        //                        dataOriginalTitle: toggleMinMax === 'maximized' ? 'Collapse Cell' : 'Expand Cell',
-                        //                        id: events.addEvent({type: 'click', handler: doToggleMinMaxCell})
-                        //                    }, [
-                        //                        span({class: 'fa fa-' + toggleIcon + '-square-o', style: {fontSize: '14pt', color: 'orange'}})
-                        //                    ])
-
+                        // enable the following
+                        // function to add the min / max button
+                        (function() {
+                            var toggleMinMax = utils.getCellMeta(cell, 'kbase.cellState.toggleMinMax', 'maximized'),
+                                toggleIcon = (toggleMinMax === 'maximized' ? 'minus' : 'plus'),
+                                color = (toggleMinMax === 'maximized' ? '#000' : 'rgba(255,137,0,1)');
+                            return button({
+                                type: 'button',
+                                class: 'btn btn-default btn-xs',
+                                dataToggle: 'tooltip',
+                                dataPlacement: 'left',
+                                title: true,
+                                dataOriginalTitle: toggleMinMax === 'maximized' ? 'Collapse Cell' : 'Expand Cell',
+                                id: events.addEvent({ type: 'click', handler: doToggleMinMaxCell })
+                            }, [
+                                span({
+                                    class: 'fa fa-' + toggleIcon + '-square-o fa-lg',
+                                    style: {
+                                        color: color
+                                    }
+                                })
+                            ]);
+                        }())
                     ])
                 ],
+                message = div({
+                    class: 'pull-right messsage',
+                    style: {
+                        fontStyle: 'italic'
+                    }
+                }, [
+                    div([
+                        utils.getCellMeta(cell, 'kbase.cellState.message')
+                    ])
+                ]),
                 content = div({ class: 'kb-cell-toolbar container-fluid' }, [
                     div({ class: 'row', style: { height: '56px' } }, [
                         div({ class: 'col-sm-9 title-container' }, [
@@ -383,7 +430,7 @@ define([
                                         xtop: '0',
                                         xleft: '0',
                                         xdisplay: 'inline-block',
-                                        flexShrink: "0",
+                                        flexShrink: '0',
                                         width: '56px',
                                         height: '56px',
                                         lineHeight: '56px'
@@ -391,19 +438,22 @@ define([
                                 }, [
                                     buildIcon(cell)
                                 ]),
-                                div({ style: { flexGrow: "1" } }, [
+                                div({ style: { flexGrow: '1' } }, [
                                     div({ dataElement: 'title', class: 'title', style: { lineHeight: '20px', height: '20px', marginTop: '8px', overflow: 'hidden' } }, [getCellTitle(cell)]),
                                     div({ dataElement: 'subtitle', class: 'subtitle', style: { lineHeight: '20px', height: '20px', overflow: 'hidden' } }, [getCellSubtitle(cell)])
                                     // div({dataElement: 'info-link', class: 'info-link'}, [getCellInfoLink(cell, events)])
                                 ])
                             ])
                         ]),
-                        div({ class: 'col-sm-3 buttons-container' }, buttons)
+                        div({ class: 'col-sm-3 buttons-container' }, [
+                            buttons,
+                            message
+                        ])
                     ])
                 ]);
-            if (Jupyter.narrative.readonly) {
-                $(content).find('.buttons-container').hide();
-            }
+            // if (Jupyter.narrative.readonly) {
+            //     $(content).find('.buttons-container').hide();
+            // }
 
             return {
                 events: events,
@@ -419,6 +469,11 @@ define([
                 container.innerHTML = rendered.content;
                 $(container).find('button').tooltip();
                 rendered.events.attachEvents();
+
+                // try this...
+                container.addEventListener('dblclick', function(e) {
+                    doToggleMinMaxCell(e);
+                });
             } catch (ex) {
                 console.error('ERROR in cell toolbar callback', ex);
             }

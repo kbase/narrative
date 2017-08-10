@@ -63,33 +63,33 @@ define([
 
         function setModelValue(value, index) {
             return Promise.try(function() {
-                if (index !== undefined) {
-                    if (value) {
-                        model.value[index] = value;
+                    if (index !== undefined) {
+                        if (value) {
+                            model.value[index] = value;
+                        } else {
+                            model.value.splice(index, 1);
+                        }
                     } else {
-                        model.value.splice(index, 1);
+                        if (value) {
+                            model.value = value;
+                        } else {
+                            unsetModelValue();
+                        }
                     }
-                } else {
-                    if (value) {
-                        model.value = value;
-                    } else {
-                        unsetModelValue();
-                    }
-                }
-                normalizeModel();
-            })
-            .then(function() {
-                return render();
-            });
+                    normalizeModel();
+                })
+                .then(function() {
+                    return render();
+                });
         }
 
         function unsetModelValue() {
             return Promise.try(function() {
-                model.value = [];
-            })
-            .then(function() {
-                return render();
-            });
+                    model.value = [];
+                })
+                .then(function() {
+                    return render();
+                });
         }
 
         function resetModelValue() {
@@ -110,38 +110,10 @@ define([
             });
         }
 
-        function doRemoveControl(control) {
-            var item = viewModel.getItem(['items', control.index]);
-
-            // Remove item from viewmodel.
-            var items = viewModel.getItem('items');
-            items.splice(control.index, 1);
-
-            // stop the field widget. This will unook all listeners
-            // and also clear the dom node.
-            item.inputControl.instance.stop()
-                .then(function() {
-
-                    // And we also need to remove the wrapper div attachment
-                    // point as well.
-                    item.node.parentNode.removeChild(item.node);
-
-                    // Now, to renumber. Oh, fun!
-                    items.forEach(function(control, index) {
-                        control.index = index;
-                        UI.make({ node: control.node }).setContent('index-label.index', String(index + 1));
-                    });
-
-                    viewModel.setItem('items', items);
-
-                    autoValidate();
-                });
-        }
-
         // TODO: wrap this in a new type of field control -- 
         //   specialized to be very lightweight for the sequence control.
         function makeSingleViewControl(control, events) {
-            return resolver.loadInputControl(itemSpec)
+            return resolver.loadViewControl(itemSpec)
                 .then(function(widgetFactory) {
                     // CONTROL
                     var preButton, postButton,
@@ -169,13 +141,13 @@ define([
                                 value: value
                             });
                         }
-                    });                   
+                    });
 
                     fieldWidget.bus.respond({
                         key: {
                             type: 'get-parameter'
                         },
-                        handle: function (message) {
+                        handle: function(message) {
                             if (message.parameterName) {
                                 return channel.request(message, {
                                     key: {
@@ -207,16 +179,8 @@ define([
                         class: 'btn btn-link btn-xs',
                         type: 'button',
                         style: { width: '4ex' },
-                        dataIndex: String(control.index),
-                        id: events.addEvent({
-                            type: 'click',
-                            handler: function() {
-                                doRemoveControl(control);
-                            }
-                        })
-                    }, ui.buildIcon({
-                        name: 'close'
-                    })));
+                        dataIndex: String(control.index)
+                    }, ''));
                     var content = div({
                         dataElement: 'input-row',
                         dataIndex: String(control.index),
@@ -250,48 +214,7 @@ define([
               Create and append a new input control to the DOM
               Set focus on the new input control
         */
-        function doAddNew() {
-            return {
-                type: 'click',
-                handler: function() {
-                    addNewControl()
-                    .then(function() {
-                        autoValidate();
-                    });
-                }
-            };
-        }
 
-        function makeToolbar(events) {
-            return div({
-                class: '',
-                role: '',
-                style: {
-                    padding: '6px'
-                }
-            }, [
-                div({
-                    style: {
-                        textAlign: 'left'
-                    }
-                }, [
-                    button({
-                        type: 'button',
-                        class: 'btn btn-default',
-                        style: {
-                            color: '#666',
-                            width: '100px',
-                            border: '1',
-                            'text-align': 'center'
-                        },
-                        id: events.addEvents({ events: [doAddNew()] })
-                    }, ui.buildIcon({
-                        name: 'plus-circle',
-                        size: 'lg'
-                    }))
-                ])
-            ]);
-        }
 
         function addNewControl(initialValue) {
             if (initialValue === undefined) {
@@ -338,23 +261,30 @@ define([
             });
         }
 
+        function addEmptyControl() {
+            var controlContainer = ui.getElement('control-container');
+            controlContainer.innerHTML = div({
+                style: {
+                    fontStyle: 'italic',
+                    color: 'gray'
+                }
+            }, 'no items to display');
+        }
+
         function render(initialValue) {
             return Promise.try(function() {
                 // render now just builds the initial view
-                var events = Events.make({ node: container });
                 container.innerHTML = makeLayout();
-                ui.setContent('toolbar-container', makeToolbar(events));
-                events.attachEvents();
 
-                if (!initialValue) {
-                    return;
+                if (!initialValue || initialValue.length === 0) {
+                    return addEmptyControl();
                 }
                 return Promise.all(initialValue.map(function(value) {
-                    return addNewControl(value);
-                }))
-                .then(function () {
-                    autoValidate();
-                });
+                        return addNewControl(value);
+                    }))
+                    .then(function() {
+                        autoValidate();
+                    });
             });
         }
 
@@ -364,9 +294,6 @@ define([
             }, [
                 div({
                     dataElement: 'control-container'
-                }),
-                div({
-                    dataElement: 'toolbar-container'
                 })
             ]);
         }
@@ -406,11 +333,11 @@ define([
         function stop() {
             return Promise.try(function() {
                 return Promise.all(viewModel.getItem('items').map(function(item) {
-                    return item.inputControl.instance.stop();
-                }))
-                .then(function() {
-                    busConnection.stop();
-                });
+                        return item.inputControl.instance.stop();
+                    }))
+                    .then(function() {
+                        busConnection.stop();
+                    });
             });
         }
 

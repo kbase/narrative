@@ -62,6 +62,7 @@ define([
             container,
             model,
             subdataMethods,
+            isAvailableValuesInitialized = false,
             options = {
                 objectSelectionPageSize: 20
             },
@@ -191,7 +192,9 @@ define([
                 events = Events.make({ node: container }),
                 content;
 
-            if (itemsToShow.length === 0) {
+            if (!isAvailableValuesInitialized) {
+                content = div({ style: { textAlign: 'center' } }, html.loading('Loading data...'));
+            } else if (itemsToShow.length === 0) {
                 content = div({ style: { textAlign: 'center' } }, 'no available values');
             } else {
                 content = itemsToShow.map(function(item, index) {
@@ -417,8 +420,11 @@ define([
             var availableItems = model.getItem('availableValues', []),
                 filteredItems = model.getItem('filteredAvailableItems', []),
                 content;
-
-            if (availableItems.length === 0) {
+            if (!isAvailableValuesInitialized) {
+                content = span({ style: { fontStyle: 'italic' } }, [
+                    ' - ' + html.loading('Loading data...')
+                ]);
+            } else if (availableItems.length === 0) {
                 content = span({ style: { fontStyle: 'italic' } }, [
                     ' - no available items'
                 ]);
@@ -713,8 +719,9 @@ define([
                     return fetchData();
                 })
                 .then(function(data) {
+                    isAvailableValuesInitialized = true;
                     if (!data) {
-                        return " no data? ";
+                        return ' no data? ';
                     }
 
                     // If default values have been provided, prepend them to the data.
@@ -835,15 +842,7 @@ define([
                 model.setItem('availableValues', []);
                 model.setItem('referenceObjectName', null);
                 doFilterItems();
-
                 renderSearchBox();
-                renderStats();
-                renderToolbar();
-                renderAvailableItems();
-                renderSelectedItems();
-
-                // updateInputControl('availableValues');
-                // updateInputControl('value');
             });
 
             /*
@@ -866,7 +865,7 @@ define([
                         type: 'parameter-changed',
                         parameter: spec.data.constraints.subdataSelection.constant_ref
                     },
-                    handle: function(message) { 
+                    handle: function(message) {
                         var newValue = message.newValue;
                         if (message.newValue === '') {
                             newValue = null;
@@ -1036,7 +1035,7 @@ define([
                         //     model.setItem('selectedItems', selectedItems);
                         // }
                         // updateInputControl('value');
-                         if (!config.initialValue) {
+                        if (!config.initialValue) {
                             model.setItem('selectedItems', []);
                         } else {
                             var selectedItems = config.initialValue;

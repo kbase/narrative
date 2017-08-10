@@ -5,12 +5,13 @@ define([
     'jquery',
     'base/js/namespace',
     'base/js/dialog'
-], function (
+], function(
     $,
     Jupyter,
     dialog
-    ) {
+) {
     'use strict';
+
     function deleteCell(cellOrIndex) {
         var cellIndex;
         if (typeof cellOrIndex === 'number') {
@@ -31,7 +32,7 @@ define([
     function editCellMetadata(cell) {
         dialog.edit_metadata({
             md: cell.metadata,
-            callback: function (md) {
+            callback: function(md) {
                 cell.metadata = md;
             },
             name: 'Cell',
@@ -39,21 +40,22 @@ define([
             keyboard_manager: Jupyter.keyboard_manager
         });
     }
-    
+
     function saveNotebook() {
         Jupyter.notebook.save_checkpoint();
     }
-    
+
     function findCellIndex(cell) {
         return Jupyter.notebook.find_cell_index(cell);
     }
-    
+
     function getCells() {
         return Jupyter.notebook.get_cells();
     }
 
     function getCell(kbaseId) {
-        var cells = getCells(), cell;
+        var cells = getCells(),
+            cell;
         for (var i = 0; i < cells.length; i += 1) {
             cell = cells[i];
             if (cell.metadata.kbase &&
@@ -65,7 +67,7 @@ define([
         }
         return null;
     }
-    
+
     /*
      * Disables the Jupyter keyboard manager for a given cell.
      * 
@@ -90,13 +92,13 @@ define([
      * specific cells or cell types, and within specific areas.
      */
     function disableKeyListenersForCell(cell) {
-        cell.element[0].addEventListener('focus', function () {
+        cell.element[0].addEventListener('focus', function() {
             Jupyter.keyboard_manager.disable();
         }, true);
     }
 
     function getWorkspaceRef() {
-        var workspaceName = Jupyter.notebook.metadata.ws_name, 
+        var workspaceName = Jupyter.notebook.metadata.ws_name,
             workspaceId;
 
         if (workspaceName) {
@@ -120,7 +122,15 @@ define([
             }
         });
     }
-    
+
+    function uiModeIs(modeTest) {
+        return Jupyter.narrative.narrController.uiModeIs(modeTest);
+    }
+
+    function canEdit() {
+        return Jupyter.narrative.narrController.uiModeIs('edit');
+    }
+
     return {
         deleteCell: deleteCell,
         editNotebookMetadata: editNotebookMetadata,
@@ -131,6 +141,8 @@ define([
         getCell: getCell,
         disableKeyListenersForCell: disableKeyListenersForCell,
         getWorkspaceRef: getWorkspaceRef,
-        onEvent: onEvent
+        onEvent: onEvent,
+        uiModeIs: uiModeIs,
+        canEdit: canEdit
     };
 });

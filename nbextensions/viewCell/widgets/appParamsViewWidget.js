@@ -42,7 +42,7 @@ define([
 
     function factory(config) {
         var runtime = Runtime.make(),
-            parentBus = config.bus,
+            paramsBus = config.bus,
             workspaceInfo = config.workspaceInfo,
             container,
             ui,
@@ -95,7 +95,7 @@ define([
         */
 
         function makeFieldWidget(appSpec, parameterSpec, value) {
-            return paramResolver.loadInputControl(parameterSpec)
+            return paramResolver.loadViewControl(parameterSpec)
                 .then(function(inputWidget) {
                     var fieldWidget = FieldWidget.make({
                         inputControlFactory: inputWidget,
@@ -105,19 +105,30 @@ define([
                         appSpec: appSpec,
                         parameterSpec: parameterSpec,
                         workspaceId: workspaceInfo.id,
-                        referenceType: 'name'
+                        referenceType: 'name',
+                        paramsChannelName: paramsBus.channelName
                     });
 
                     // Forward all changed parameters to the controller. That is our main job!
                     fieldWidget.bus.on('changed', function(message) {
-                        parentBus.emit('parameter-changed', {
+                        paramsBus.send({
+                            parameter: parameterSpec.id,
+                            newValue: message.newValue
+                        }, {
+                            key: {
+                                type: 'parameter-changed',
+                                parameter: parameterSpec.id
+                            }
+                        });
+
+                        paramsBus.emit('parameter-changed', {
                             parameter: parameterSpec.id,
                             newValue: message.newValue
                         });
                     });
 
                     fieldWidget.bus.on('touched', function() {
-                        parentBus.emit('parameter-touched', {
+                        paramsBus.emit('parameter-touched', {
                             parameter: parameterSpec.id
                         });
                     });
@@ -125,20 +136,20 @@ define([
 
                     // An input widget may ask for the current model value at any time.
                     fieldWidget.bus.on('sync', function() {
-                        parentBus.emit('parameter-sync', {
+                        paramsBus.emit('parameter-sync', {
                             parameter: parameterSpec.id
                         });
                     });
 
                     fieldWidget.bus.on('sync-params', function(message) {
-                        parentBus.emit('sync-params', {
+                        paramsBus.emit('sync-params', {
                             parameters: message.parameters,
                             replyToChannel: fieldWidget.bus.channelName
                         });
                     });
 
                     fieldWidget.bus.on('set-param-state', function(message) {
-                        parentBus.emit('set-param-state', {
+                        paramsBus.emit('set-param-state', {
                             id: parameterSpec.id,
                             state: message.state
                         });
@@ -149,8 +160,7 @@ define([
                             type: 'get-param-state'
                         },
                         handle: function(message) {
-                            console.log('getting param state');
-                            return parentBus.request({ id: parameterSpec.id }, {
+                            return paramsBus.request({ id: parameterSpec.id }, {
                                 key: {
                                     type: 'get-param-state'
                                 }
@@ -163,7 +173,7 @@ define([
                      * Or in fact any parameter value at any time...
                      */
                     fieldWidget.bus.on('get-parameter-value', function(message) {
-                        parentBus.request({
+                        paramsBus.request({
                                 parameter: message.parameter
                             }, {
                                 key: 'get-parameter-value'
@@ -181,7 +191,7 @@ define([
                         },
                         handle: function(message) {
                             if (message.parameterName) {
-                                return parentBus.request(message, {
+                                return paramsBus.request(message, {
                                     key: {
                                         type: 'get-parameter'
                                     }
@@ -193,7 +203,7 @@ define([
                     });
 
                     // Just pass the update along to the input widget.
-                    parentBus.listen({
+                    paramsBus.listen({
                         key: {
                             type: 'update',
                             parameter: parameterSpec.id
@@ -210,7 +220,6 @@ define([
         }
 
         function renderAdvanced(area) {
-
             // area is either "input" or "parameter"
 
             var areaElement = area + '-area',
@@ -468,7 +477,7 @@ define([
 
                 // here is what we do:
 
-                // based on the param ordering (layout), render the html layout, 
+                // based on the param ordering (layout), render the html layout,
                 // with an id mapped per parameter in this set
 
 
@@ -575,32 +584,29 @@ define([
             });
         }
 
-        function start() {
+        function start(arg) {
             return Promise.try(function() {
-                // send parent the ready message
-                parentBus.emit('ready');
 
                 // parent will send us our initial parameters
-                parentBus.on('run', function(message) {
-                    doAttach(message.node);
+                doAttach(arg.node);
 
-                    model.setItem('appSpec', message.appSpec);
-                    model.setItem('parameters', message.parameters);
-                    model.setItem('converted', message.converted);
+                model.setItem('appSpec', arg.appSpec);
+                model.setItem('parameters', arg.parameters);
+                model.setItem('converted', arg.converted);
+                model.setItem('params', arg.params);
 
-                    // we then create our widgets
-                    renderParameters()
-                        .then(function() {
-                            // do something after success
-                            attachEvents();
-                        })
-                        .catch(function(err) {
-                            // do somethig with the error.
-                            console.error('ERROR in start', err);
-                        });
-                });
+                // we then create our widgets
+                renderParameters()
+                    .then(function() {
+                        // do something after success
+                        attachEvents();
+                    })
+                    .catch(function(err) {
+                        // do somethig with the error.
+                        console.error('ERROR in start', err);
+                    });
 
-                parentBus.on('parameter-changed', function(message) {
+                paramsBus.on('parameter-changed', function(message) {
                     // Also, tell each of our inputs that a param has changed.
                     // TODO: use the new key address and subscription
                     // mechanism to make this more efficient.

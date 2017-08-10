@@ -75,7 +75,8 @@ define([
                         }
                         return option({
                             value: ref,
-                            selected: selected
+                            selected: selected,
+                            disabled: true
                         }, objectInfo.name);
                     });
             }

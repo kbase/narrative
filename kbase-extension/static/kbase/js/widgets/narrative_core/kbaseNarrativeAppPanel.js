@@ -8,7 +8,7 @@
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @public
  */
-define ([
+define([
     'kbwidget',
     'jquery',
     'bluebird',
@@ -24,11 +24,13 @@ define ([
     'kb_service/client/narrativeMethodStore',
     'uuid',
     'narrative_core/catalog/kbaseCatalogBrowser',
+    'util/bootstrapAlert',
+
     'kbaseNarrative',
     'catalog-client-api',
     'kbase-client-api',
     'bootstrap'
-], function (
+], function(
     KBWidget,
     $,
     Promise,
@@ -43,12 +45,13 @@ define ([
     Jupyter,
     NarrativeMethodStore,
     Uuid,
-    KBaseCatalogBrowser
+    KBaseCatalogBrowser,
+    BootstrapAlert
 ) {
     'use strict';
     return KBWidget({
         name: 'kbaseNarrativeAppPanel',
-        parent : kbaseNarrativeControlPanel,
+        parent: kbaseNarrativeControlPanel,
         version: '0.0.1',
         options: {
             loadingImage: Config.get('loading_gif'),
@@ -61,13 +64,13 @@ define ([
             appHelpLink: '/#appcatalog/app/l.a/'
         },
         ignoreCategories: {
-            inactive : 1,
-            importers : 1,
-            viewers : 1
+            inactive: 1,
+            importers: 1,
+            viewers: 1
         },
         id2Elem: {},
-        methodSpecs: {},  // id -> spec
-        categories: {},   // id -> category info
+        methodSpecs: {}, // id -> spec
+        categories: {}, // id -> category info
 
         currentTag: null, // release/dev/beta; which version of the method spec to fetch.  default is release
 
@@ -94,90 +97,91 @@ define ([
             this.icon_colors = Config.get('icons').colors;
 
             this.$searchDiv = $('<div>')
-                             .addClass('input-group')
-                             .css({'margin-bottom' : '3px'})
-                             .hide();
+                .addClass('input-group')
+                .css({ 'margin-bottom': '3px' })
+                .hide();
 
             this.$searchInput = $('<input type="text">')
-                                .addClass('form-control')
-                                .attr('Placeholder', 'Search apps')
-                                .on('input', function() {
-                                    self.refreshPanel(this);
-                                })
-                                .on('keyup', function (e) {
-                                    if (e.keyCode === 27) {
-                                        self.$searchDiv.toggle({effect: 'blind', duration: 'fast'});
-                                    }
-                                });
+                .addClass('form-control')
+                .attr('Placeholder', 'Search apps')
+                .on('input', function() {
+                    self.refreshPanel(this);
+                })
+                .on('keyup', function(e) {
+                    if (e.keyCode === 27) {
+                        self.$searchDiv.toggle({ effect: 'blind', duration: 'fast' });
+                    }
+                });
 
             this.$numHiddenSpan = $('<span>0</span>');
             this.$showHideSpan = $('<span>show</span>');
             this.$toggleHiddenDiv = $('<div>')
-                                    .append(this.$showHideSpan)
-                                    .append(' ')
-                                    .append(this.$numHiddenSpan)
-                                    .append(' filtered out')
-                                    .addClass('kb-function-toggle')
-                                    .hide()
-                                    .click($.proxy(function() {
-                                        var curText = this.$showHideSpan.text();
-                                        this.toggleHiddenMethods(curText === 'show');
-                                        this.$showHideSpan.text(curText === 'show' ? 'hide' : 'show');
-                                    }, this));
+                .append(this.$showHideSpan)
+                .append(' ')
+                .append(this.$numHiddenSpan)
+                .append(' filtered out')
+                .addClass('kb-function-toggle')
+                .hide()
+                .click($.proxy(function() {
+                    var curText = this.$showHideSpan.text();
+                    this.toggleHiddenMethods(curText === 'show');
+                    this.$showHideSpan.text(curText === 'show' ? 'hide' : 'show');
+                }, this));
 
             var $clearSearchBtn = $('<span>')
-                                  .addClass('input-group-addon btn btn-default kb-method-search-clear')
-                                  .attr('type', 'button')
-                                  .append($('<span class="glyphicon glyphicon-remove">'))
-                                  .click(
-                                    $.proxy(function() {
-                                        this.$searchInput.val('');
-                                        this.$searchInput.trigger('input');
-                                    }, this)
-                                  );
+                .addClass('input-group-addon btn btn-default kb-method-search-clear')
+                .attr('type', 'button')
+                .append($('<span class="glyphicon glyphicon-remove">'))
+                .click(
+                    $.proxy(function() {
+                        this.$searchInput.val('');
+                        this.$searchInput.trigger('input');
+                    }, this)
+                );
 
             this.$searchDiv.append(this.$searchInput)
-                           .append($clearSearchBtn);
+                .append($clearSearchBtn);
 
             // placeholder for apps and methods once they're loaded.
             this.$methodList = $('<div>')
-                               .css({
-                                   'height' : '300px',
-                                   'overflow-y' : 'auto',
-                                   'overflow-x' : 'hidden'});
+                .css({
+                    'height': '300px',
+                    'overflow-y': 'auto',
+                    'overflow-x': 'hidden'
+                });
             // Make a function panel for everything to sit inside.
             this.$functionPanel = $('<div>')
-                                  .addClass('kb-function-body')
-                                  .append($('<div>')
-                                          .append(this.$searchDiv)
-                                          .append(this.$toggleHiddenDiv))
-                                  .append(this.$methodList);
+                .addClass('kb-function-body')
+                .append($('<div>')
+                    .append(this.$searchDiv)
+                    .append(this.$toggleHiddenDiv))
+                .append(this.$methodList);
 
             // The 'loading' panel should just have a spinning gif in it.
             this.$loadingPanel = $('<div>')
-                                 .addClass('kb-data-loading')
-                                 .append('<img src="' + this.options.loadingImage + '">')
-                                 .append($('<div>')
-                                         .attr('id', 'message'))
-                                 .hide();
+                .addClass('kb-data-loading')
+                .append('<img src="' + this.options.loadingImage + '">')
+                .append($('<div>')
+                    .attr('id', 'message'))
+                .hide();
 
             // The error panel should be empty for now.
             this.$errorPanel = $('<div>')
-                               .hide();
+                .hide();
 
             // The help element should be outside of the panel itself, so it can be manipulated separately.
             // It should hide itself when clicked.
             this.initMethodTooltip();
             this.$bodyDiv.append($('<div>')
-                                 .addClass('kb-narr-panel-body')
-                                 .append(this.$functionPanel)
-                                 .append(this.$loadingPanel)
-                                 .append(this.$errorPanel));
+                .addClass('kb-narr-panel-body')
+                .append(this.$functionPanel)
+                .append(this.$loadingPanel)
+                .append(this.$errorPanel));
 
             $(document).on('filterMethods.Narrative',
                 $.proxy(function(e, filterString) {
                     if (filterString) {
-                        this.$searchDiv.show({effect: 'blind', duration: 'fast'});
+                        this.$searchDiv.show({ effect: 'blind', duration: 'fast' });
                         this.$searchInput.val(filterString);
                         this.$searchInput.trigger('input');
                     }
@@ -186,7 +190,7 @@ define ([
 
             $(document).on('removeFilterMethods.Narrative',
                 $.proxy(function() {
-                    this.$searchDiv.toggle({effect: 'blind', duration: 'fast'});
+                    this.$searchDiv.toggle({ effect: 'blind', duration: 'fast' });
                     this.$searchInput.val('');
                     this.$searchInput.trigger('input');
                 }, this)
@@ -234,15 +238,15 @@ define ([
                 })
                 .attr('aria-labeledby', 'kb-app-panel-filter')
                 .append($('<li>')
-                        .append('<a style="cursor:pointer" data-filter="category">Category</a>'))
+                    .append('<a style="cursor:pointer" data-filter="category">Category</a>'))
                 .append($('<li>')
-                        .append('<a style="cursor:pointer" data-filter="input">Input Types</a>'))
+                    .append('<a style="cursor:pointer" data-filter="input">Input Types</a>'))
                 .append($('<li>')
-                        .append('<a style="cursor:pointer" data-filter="output">Output Types</a>'))
+                    .append('<a style="cursor:pointer" data-filter="output">Output Types</a>'))
                 .append($('<li>')
-                        .append('<a style="cursor:pointer" data-filter="a-z">Name A-Z</a>'))
+                    .append('<a style="cursor:pointer" data-filter="a-z">Name A-Z</a>'))
                 .append($('<li>')
-                        .append('<a style="cursor:pointer" data-filter="z-a">Name Z-A</a>'));
+                    .append('<a style="cursor:pointer" data-filter="z-a">Name Z-A</a>'));
             $filterMenu.find('li a').click(function() {
                 self.currentPanelStyle = $(this).data('filter');
                 self.$filterLabel.text(self.currentPanelStyle);
@@ -251,58 +255,57 @@ define ([
 
             this.addButton($('<span class="dropdown">')
                 .append($('<button>')
-                        .addClass('btn btn-xs btn-default dropdown-toggle')
-                        .attr({
-                            type: 'button',
-                            id: 'kb-app-panel-filter',
-                            'data-toggle': 'dropdown',
-                            'aria-haspopup': true,
-                            'aria-expanded': true
-                        })
-                        .append(this.$filterLabel)
-                        .append('<span class="fa fa-filter"></span>'))
+                    .addClass('btn btn-xs btn-default dropdown-toggle')
+                    .attr({
+                        type: 'button',
+                        id: 'kb-app-panel-filter',
+                        'data-toggle': 'dropdown',
+                        'aria-haspopup': true,
+                        'aria-expanded': true
+                    })
+                    .append(this.$filterLabel)
+                    .append('<span class="fa fa-filter"></span>'))
                 .append($filterMenu));
 
             // Search button
             this.addButton($('<button>')
-                           .addClass('btn btn-xs btn-default')
-                           .append('<span class="fa fa-search"></span>')
-                           .tooltip({
-                               title: 'Search for Apps',
-                               container: 'body',
-                               delay: {
-                                   show: Config.get('tooltip').showDelay,
-                                   hide: Config.get('tooltip').hideDelay
-                               }
-                           })
-                           .click(function() {
-                               this.$searchDiv.toggle({effect: 'blind', duration: 'fast'});
-                               this.$searchInput.focus();
-                           }.bind(this)));
+                .addClass('btn btn-xs btn-default')
+                .append('<span class="fa fa-search"></span>')
+                .tooltip({
+                    title: 'Search for Apps',
+                    container: 'body',
+                    delay: {
+                        show: Config.get('tooltip').showDelay,
+                        hide: Config.get('tooltip').hideDelay
+                    }
+                })
+                .click(function() {
+                    this.$searchDiv.toggle({ effect: 'blind', duration: 'fast' });
+                    this.$searchInput.focus();
+                }.bind(this)));
 
             // Refresh button
             this.addButton($('<button>')
-                           .addClass('btn btn-xs btn-default')
-                           .append('<span class="glyphicon glyphicon-refresh">')
-                           .tooltip({
-                               title: 'Refresh app/method listings',
-                               container: 'body',
-                               delay: {
-                                   show: Config.get('tooltip').showDelay,
-                                   hide: Config.get('tooltip').hideDelay
-                               }
-                           })
-                           .click(function() {
-                               var versionTag = 'release';
-                               if(this.versionState === 'B') { versionTag='beta'; }
-                               else if(this.versionState === 'D') { versionTag='dev'; }
-                               this.refreshFromService(versionTag);
-                               this.refreshKernelSpecManager();
+                .addClass('btn btn-xs btn-default')
+                .append('<span class="glyphicon glyphicon-refresh">')
+                .tooltip({
+                    title: 'Refresh app/method listings',
+                    container: 'body',
+                    delay: {
+                        show: Config.get('tooltip').showDelay,
+                        hide: Config.get('tooltip').hideDelay
+                    }
+                })
+                .click(function() {
+                    var versionTag = 'release';
+                    if (this.versionState === 'B') { versionTag = 'beta'; } else if (this.versionState === 'D') { versionTag = 'dev'; }
+                    this.refreshFromService(versionTag);
+                    this.refreshKernelSpecManager();
 
-                               if(this.appCatalog) {
-                                   this.appCatalog.refreshAndRender();
-                               }
-                           }.bind(this)));
+                    if (this.appCatalog) {
+                        this.appCatalog.refreshAndRender();
+                    }
+                }.bind(this)));
 
             // Toggle version btn
             var toggleTooltipText = 'Toggle between Release and Beta Versions';
@@ -329,7 +332,7 @@ define ([
             this.betaWarningDialog = new BootstrapDialog({
                 title: 'Warning - entering beta mode!',
                 body: betaWarningCompiled(),
-                buttons: [ $('<button class="btn btn-primary" data-dismiss="modal">OK</button>') ],
+                buttons: [$('<button class="btn btn-primary" data-dismiss="modal">OK</button>')],
                 closeButton: true,
                 enterToTrigger: true
             });
@@ -346,18 +349,15 @@ define ([
                     if (!devMode && showBetaWarning) {
                         this.betaWarningDialog.show();
                     }
-                }
-                else if (this.versionState === 'B') {
+                } else if (this.versionState === 'B') {
                     if (devMode) {
                         this.versionState = 'D';
                         versionTag = 'dev';
-                    }
-                    else {
+                    } else {
                         this.versionState = 'R';
                         versionTag = 'release';
                     }
-                }
-                else if (this.versionState === 'D') {
+                } else if (this.versionState === 'D') {
                     this.versionState = 'R';
                     versionTag = 'release';
                 }
@@ -375,11 +375,11 @@ define ([
             this.appCatalog = null;
 
             this.$appCatalogContainer = $('<div>')
-                                  .append($('<div>')
-                                          .addClass('kb-side-header active')
-                                          .css({'width':'100%'})
-                                          .append('App Catalog'))
-                                  .append(this.$appCatalogBody);
+                .append($('<div>')
+                    .addClass('kb-side-header active')
+                    .css({ 'width': '100%' })
+                    .append('App Catalog'))
+                .append(this.$appCatalogBody);
 
             this.$slideoutBtn = $('<button>')
                 .addClass('btn btn-xs btn-default')
@@ -394,10 +394,9 @@ define ([
                 .append('<span class="fa fa-arrow-right"></span>')
                 .click(function() {
                     // only load the appCatalog on click
-                    if(!this.appCatalog) {
+                    if (!this.appCatalog) {
                         this.appCatalog = new KBaseCatalogBrowser(
-                            this.$appCatalogBody,
-                            {
+                            this.$appCatalogBody, {
                                 ignoreCategories: this.ignoreCategories,
                                 tag: this.currentTag
                             }
@@ -417,8 +416,8 @@ define ([
 
             if (!NarrativeMethodStore || !Catalog) {
                 this.showError('Sorry, an error occurred while loading Apps.',
-                               'Unable to connect to the Catalog or Narrative Method Store! ' +
-                               'Apps are currently unavailable.');
+                    'Unable to connect to the Catalog or Narrative Method Store! ' +
+                    'Apps are currently unavailable.');
                 return this;
             }
 
@@ -434,20 +433,18 @@ define ([
                     'from biokbase.narrative.jobs.specmanager import SpecManager\n' +
                     'SpecManager().reload()'
                 );
-            }
-            catch (e) {
+            } catch (e) {
                 alert(e);
                 console.error(e);
             }
         },
 
         setListHeight: function(height, animate) {
-            if(this.$methodList) {
-                if(animate) {
-                    this.$methodList.animate({'height':height}, this.slideTime); // slideTime comes from kbaseNarrativeControlPanel
-                }
-                else {
-                    this.$methodList.css({'height':height});
+            if (this.$methodList) {
+                if (animate) {
+                    this.$methodList.animate({ 'height': height }, this.slideTime); // slideTime comes from kbaseNarrativeControlPanel
+                } else {
+                    this.$methodList.css({ 'height': height });
                 }
             }
         },
@@ -456,36 +453,36 @@ define ([
             this.help = {};
 
             this.help.$helpPanel = $('<div>')
-                                   .addClass('kb-function-help-popup alert alert-info')
-                                   .hide()
-                                   .click(function() {
-                                       this.help.$helpPanel.hide();
-                                   }.bind(this));
+                .addClass('kb-function-help-popup alert alert-info')
+                .hide()
+                .click(function() {
+                    this.help.$helpPanel.hide();
+                }.bind(this));
             this.help.$helpTitle = $('<span>');
             this.help.$helpVersion = $('<span>')
-                                   .addClass('version');
+                .addClass('version');
 
             var $helpHeader = $('<div>')
-                              .append(
-                                    $('<h1>')
-                                      .css({
-                                          display: 'inline',
-                                          'padding-right': '8px'
-                                      })
-                                      .append(this.help.$helpTitle))
-                              .append(this.help.$helpVersion);
+                .append(
+                    $('<h1>')
+                    .css({
+                        display: 'inline',
+                        'padding-right': '8px'
+                    })
+                    .append(this.help.$helpTitle))
+                .append(this.help.$helpVersion);
 
             this.help.$helpBody = $('<div>')
-                                  .addClass('body');
+                .addClass('body');
             this.help.$helpLinkout = $('<a>')
-                                     .attr('href', this.options.methodHelpLink)
-                                     .attr('target', '_blank')
-                                     .append('More...');
+                .attr('href', this.options.methodHelpLink)
+                .attr('target', '_blank')
+                .append('More...');
 
             this.help.$helpPanel.append($helpHeader)
-                                .append(this.help.$helpBody)
-                                .append($('<div>').append(this.help.$helpLinkout))
-                                .append($('<h2>').append('Click to hide'));
+                .append(this.help.$helpBody)
+                .append($('<div>').append(this.help.$helpLinkout))
+                .append($('<h2>').append('Click to hide'));
             $('body').append(this.help.$helpPanel);
         },
 
@@ -505,23 +502,23 @@ define ([
             var loadingCalls = [];
             loadingCalls.push(
                 Promise.resolve(self.methClient.list_methods(filterParams))
-                    .then(function(methods) {
-                        self.methodSpecs = {};
-                        self.methodInfo = {};
-                        for (var i=0; i<methods.length; i++) {
-                            // key should have LC module name if an SDK method
-                            if (methods[i].module_name) {
-                                var idTokens = methods[i].id.split('/');
-                                self.methodSpecs[idTokens[0].toLowerCase() + '/' + idTokens[1]] = {info:methods[i]};
-                            }
+                .then(function(methods) {
+                    self.methodSpecs = {};
+                    self.methodInfo = {};
+                    for (var i = 0; i < methods.length; i++) {
+                        // key should have LC module name if an SDK method
+                        if (methods[i].module_name) {
+                            var idTokens = methods[i].id.split('/');
+                            self.methodSpecs[idTokens[0].toLowerCase() + '/' + idTokens[1]] = { info: methods[i] };
                         }
-                    }));
+                    }
+                }));
 
             loadingCalls.push(
                 Promise.resolve(self.methClient.list_categories({}))
-                    .then(function(categories) {
-                        self.categories = categories[0];
-                    }));
+                .then(function(categories) {
+                    self.categories = categories[0];
+                }));
 
             if (!versionTag || versionTag === 'release') {
                 loadingCalls.push(self.catalog.list_basic_module_info({})
@@ -530,11 +527,11 @@ define ([
                         return Promise.map(moduleInfoList, function(module) {
                             if (module.dynamic_service === 0) {
                                 return Promise.resolve(
-                                    self.catalog.get_module_version({module_name: module.module_name})
-                                )
-                                .then(function(version) {
-                                    self.moduleVersions[version.module_name] = version.version;
-                                });
+                                        self.catalog.get_module_version({ module_name: module.module_name })
+                                    )
+                                    .then(function(version) {
+                                        self.moduleVersions[version.module_name] = version.version;
+                                    });
                             }
                         });
                     })
@@ -545,13 +542,13 @@ define ([
                 .then(function() {
                     return Promise.resolve(self.catalog.list_favorites(Jupyter.narrative.userId))
                         .then(function(favs) {
-                            for(var k=0; k<favs.length; k++) {
+                            for (var k = 0; k < favs.length; k++) {
                                 var fav = favs[k];
                                 var lookup = fav.id;
-                                if(fav.module_name_lc !== 'nms.legacy') {
+                                if (fav.module_name_lc !== 'nms.legacy') {
                                     lookup = fav.module_name_lc + '/' + lookup;
                                 }
-                                if(self.methodSpecs[lookup]) {
+                                if (self.methodSpecs[lookup]) {
                                     self.methodSpecs[lookup]['favorite'] = fav.timestamp; // this is when this was added as a favorite
                                 }
                             }
@@ -559,7 +556,7 @@ define ([
                             self.showFunctionPanel();
                             // self.filterList(); // keep the filters
                         })
-                         // For some reason this is throwing a Bluebird error to include this error handler, but I don't know why right now -mike
+                        // For some reason this is throwing a Bluebird error to include this error handler, but I don't know why right now -mike
                         .catch(function(error) {
                             console.error(error);
                             self.parseMethods(self.categories, self.methodSpecs);
@@ -572,11 +569,27 @@ define ([
                 });
         },
 
-
         triggerMethod: function(method) {
+            if (Jupyter.narrative.readonly) {
+                // This alert just goes into the ether ... 
+                // actually, since the object entangles itself with bootstraps
+                // jquery handlers, it remains alive until the alert is closed, the
+                // dom node is removed, and the destroy method is called
+                // on the object.
+                // Otherwise, this method returns immediately, taking no action.
+                // TODO: an alernative approach is return a promise which will not 
+                // complete until the user closes the alert.
+                var readOnlyAlert = new BootstrapAlert({
+                    type: 'warning',
+                    title: 'Warning',
+                    body: 'Read-only Narrative -- may not add apps to this Narrative'
+                });
+                // alert('Read-only Narrative -- may not add apps to this Narrative');
+                return;
+            }
             var self = this;
-            if(!method['spec']) {
-                self.methClient.get_method_spec({ids:[method.info.id], tag:self.currentTag})
+            if (!method['spec']) {
+                self.methClient.get_method_spec({ ids: [method.info.id], tag: self.currentTag })
                     .then(function(spec) {
                         // todo: cache this spec into the methods list
                         spec = spec[0];
@@ -585,7 +598,7 @@ define ([
                         }
                         self.trigger('methodClicked.Narrative', [spec, self.currentTag]);
                     })
-                    .catch(function (err) {
+                    .catch(function(err) {
                         var errorId = new Uuid(4).format();
                         console.error('Error getting method spec #' + errorId, err, method, self.currentTag);
                         alert('Error getting method spec, see console for error info #' + errorId);
@@ -605,7 +618,7 @@ define ([
                     continue;
                 }
                 var ignoreFlag = false;
-                for (var i=0; i<appSet[app].info.categories.length; i++) {
+                for (var i = 0; i < appSet[app].info.categories.length; i++) {
                     if (self.ignoreCategories[appSet[app].info.categories[i]]) {
                         ignoreFlag = true;
                     }
@@ -624,25 +637,25 @@ define ([
             };
             Object.keys(appSet).forEach(function(appId) {
                 var categoryList = [];
-                switch(style) {
-                default:
-                case 'category':
-                    categoryList = appSet[appId].info.categories;
+                switch (style) {
+                    default:
+                        case 'category':
+                        categoryList = appSet[appId].info.categories;
                     var activeIndex = categoryList.indexOf('active');
                     if (activeIndex !== -1) {
                         categoryList.splice(activeIndex, 1);
                     }
                     break;
-                case 'input':
-                    categoryList = appSet[appId].info.input_types.map(function(input) {
-                        return input.split('.')[1];
-                    });
-                    break;
-                case 'output':
-                    categoryList = appSet[appId].info.output_types.map(function(output) {
-                        return output.split('.')[1];
-                    });
-                    break;
+                    case 'input':
+                            categoryList = appSet[appId].info.input_types.map(function(input) {
+                            return input.split('.')[1];
+                        });
+                        break;
+                    case 'output':
+                            categoryList = appSet[appId].info.output_types.map(function(output) {
+                            return output.split('.')[1];
+                        });
+                        break;
                 }
                 if (categoryList.length === 0) {
                     allCategories.uncategorized.push(appId);
@@ -663,7 +676,7 @@ define ([
                 });
                 allCategories[cat].sort(function(a, b) {
                     a = appSet[a],
-                    b = appSet[b];
+                        b = appSet[b];
                     return a.info.name.localeCompare(b.info.name);
                 });
             });
@@ -688,25 +701,23 @@ define ([
                 appList.sort(function(a, b) {
                     a = appSet[a];
                     b = appSet[b];
-                    if(a.favorite && b.favorite) {
+                    if (a.favorite && b.favorite) {
                         if (ascending) {
                             return a.info.name.localeCompare(b.info.name);
-                        }
-                        else {
+                        } else {
                             return b.info.name.localeCompare(a.info.name);
                         }
                     }
-                    if(a.favorite) return -1;
-                    if(b.favorite) return 1;
+                    if (a.favorite) return -1;
+                    if (b.favorite) return 1;
 
                     if (ascending) {
                         return a.info.name.localeCompare(b.info.name);
-                    }
-                    else {
+                    } else {
                         return b.info.name.localeCompare(a.info.name);
                     }
                 });
-                for (var i=0; i<appList.length; i++) {
+                for (var i = 0; i < appList.length; i++) {
                     $appPanel.append(self.buildMethod(appSet[appList[i]]));
                 }
             };
@@ -746,12 +757,12 @@ define ([
                         if ($toggle.hasClass('glyphicon-chevron-right')) {
                             $body.slideDown('fast', function() {
                                 $toggle.removeClass('glyphicon-chevron-right')
-                                       .addClass('glyphicon-chevron-down');
+                                    .addClass('glyphicon-chevron-down');
                             });
                         } else {
                             $body.slideUp('fast', function() {
                                 $toggle.removeClass('glyphicon-chevron-down')
-                                       .addClass('glyphicon-chevron-right');
+                                    .addClass('glyphicon-chevron-right');
                             });
                         }
                     });
@@ -783,20 +794,20 @@ define ([
             appSet = this.filterApps(filterString, appSet);
 
             // 2. Switch over panelStyle and build the view based on that.
-            switch(panelStyle) {
-            case 'a-z':
-                buildFlatPanel(true);
-                break;
-            case 'z-a':
-                buildFlatPanel(false);
-                break;
-            case 'category':
-            case 'input':
-            case 'output':
-                buildAccordionPanel(panelStyle);
-                break;
-            default:
-                break;
+            switch (panelStyle) {
+                case 'a-z':
+                    buildFlatPanel(true);
+                    break;
+                case 'z-a':
+                    buildFlatPanel(false);
+                    break;
+                case 'category':
+                case 'input':
+                case 'output':
+                    buildAccordionPanel(panelStyle);
+                    break;
+                default:
+                    break;
             }
             this.$methodList.empty().append($appPanel);
         },
@@ -822,15 +833,15 @@ define ([
             }
             var filteredIds = Object.keys(appSet);
             filteredIds = Object.keys(appSet).filter(function(id) {
-                switch(filterType) {
-                case 'in_type':
-                    var inputTypes = appSet[id].info.input_types;
-                    return inputTypes.join().toLowerCase().indexOf(filterString) !== -1;
-                case 'out_type':
-                    var outputTypes = appSet[id].info.output_types;
-                    return outputTypes.join().toLowerCase().indexOf(filterString) !== -1;
-                default:
-                    return appSet[id].info.name.toLowerCase().indexOf(filterString) !== -1;
+                switch (filterType) {
+                    case 'in_type':
+                        var inputTypes = appSet[id].info.input_types;
+                        return inputTypes.join().toLowerCase().indexOf(filterString) !== -1;
+                    case 'out_type':
+                        var outputTypes = appSet[id].info.output_types;
+                        return outputTypes.join().toLowerCase().indexOf(filterString) !== -1;
+                    default:
+                        return appSet[id].info.name.toLowerCase().indexOf(filterString) !== -1;
                 }
             });
             var filteredSet = {};
@@ -858,10 +869,10 @@ define ([
 
             if (method.info.icon && method.info.icon.url) {
                 var url = this.options.methodStoreURL.slice(0, -3) + method.info.icon.url;
-                $logo.append( DisplayUtil.getAppIcon({ url: url , cursor: 'pointer' , setColor:true, size:'50px'}) )
+                $logo.append(DisplayUtil.getAppIcon({ url: url, cursor: 'pointer', setColor: true, size: '50px' }))
                     .css('padding', '3px');
             } else {
-                $logo.append( DisplayUtil.getAppIcon({ cursor: 'pointer' , setColor:true}) );
+                $logo.append(DisplayUtil.getAppIcon({ cursor: 'pointer', setColor: true }));
             }
             // add behavior
             $logo.click(function(e) {
@@ -870,125 +881,124 @@ define ([
             });
 
             var $star = $('<i>');
-            if(method.favorite) {
+            if (method.favorite) {
                 $star.addClass('fa fa-star kbcb-star-favorite').append('&nbsp;');
             } else {
                 $star.addClass('fa fa-star kbcb-star-nonfavorite').append('&nbsp;');
             }
             $star.on('click', function(event) {
-                event.stopPropagation();
-                var params = {};
-                if(method.info.module_name) {
-                    params['module_name'] = method.info.module_name;
-                    params['id'] = method.info.id.split('/')[1];
-                } else {
-                    params['id'] = method.info.id;
-                }
+                    event.stopPropagation();
+                    var params = {};
+                    if (method.info.module_name) {
+                        params['module_name'] = method.info.module_name;
+                        params['id'] = method.info.id.split('/')[1];
+                    } else {
+                        params['id'] = method.info.id;
+                    }
 
-                if(method.favorite) {
-                    // remove favorite
-                    self.catalog.remove_favorite(params)
-                        .then(function() {
-                            $star.removeClass('kbcb-star-favorite').addClass('kbcb-star-nonfavorite');
-                            method.favorite = null; // important to set this if we don't refresh the panel
-                        });
-                } else {
-                    // add favorite
-                    self.catalog.add_favorite(params)
-                        .then(function() {
-                            $star.removeClass('kbcb-star-nonfavorite').addClass('kbcb-star-favorite');
-                            method.favorite =  new Date().getTime(); // important to set this if we don't refresh the panel
-                        });
-                }
-            })
-            .tooltip({
-                title: 'Add or remove from your favorites',
-                container: 'body',
-                placement: 'bottom',
-                delay: {
-                    show: Config.get('tooltip').showDelay,
-                    hide: Config.get('tooltip').hideDelay
-                }
-            });
+                    if (method.favorite) {
+                        // remove favorite
+                        self.catalog.remove_favorite(params)
+                            .then(function() {
+                                $star.removeClass('kbcb-star-favorite').addClass('kbcb-star-nonfavorite');
+                                method.favorite = null; // important to set this if we don't refresh the panel
+                            });
+                    } else {
+                        // add favorite
+                        self.catalog.add_favorite(params)
+                            .then(function() {
+                                $star.removeClass('kbcb-star-nonfavorite').addClass('kbcb-star-favorite');
+                                method.favorite = new Date().getTime(); // important to set this if we don't refresh the panel
+                            });
+                    }
+                })
+                .tooltip({
+                    title: 'Add or remove from your favorites',
+                    container: 'body',
+                    placement: 'bottom',
+                    delay: {
+                        show: Config.get('tooltip').showDelay,
+                        hide: Config.get('tooltip').hideDelay
+                    }
+                });
 
             var $name = $('<div>')
-                        .addClass('kb-data-list-name')
-                        .css({'white-space':'normal', 'cursor':'pointer'})
-                        .append($('<a>')
-                                .append(method.info.name)
-                                .click(function(e) {
-                                    e.stopPropagation();
-                                    self.triggerMethod(method);
-                                }));
-            var versionStr = 'v'+method.info.ver; // note that method versions are meaningless right now; need to update!
+                .addClass('kb-data-list-name')
+                .css({ 'white-space': 'normal', 'cursor': 'pointer' })
+                .append($('<a>')
+                    .append(method.info.name)
+                    .click(function(e) {
+                        e.stopPropagation();
+                        self.triggerMethod(method);
+                    }));
+            var versionStr = 'v' + method.info.ver; // note that method versions are meaningless right now; need to update!
             if (method.info.module_name) {
-                versionStr = '<a href="'+this.options.moduleLink+'/'+method.info.module_name+'" target="_blank">' +
-                                method.info.namespace + '</a> ' + versionStr;
+                versionStr = '<a href="' + this.options.moduleLink + '/' + method.info.module_name + '" target="_blank">' +
+                    method.info.namespace + '</a> ' + versionStr;
             }
             var $version = $('<span>').addClass('kb-data-list-type').append($star).append(versionStr); // use type because it is a new line
 
             var moreLink = '';
-            if(method.info.module_name) {
+            if (method.info.module_name) {
                 moreLink = this.options.methodHelpLink + method.info.id + '/' + this.currentTag;
             } else {
                 moreLink = this.options.methodHelpLink + 'l.m/' + method.info.id;
             }
             var $more = $('<div>')
-                        .addClass('kb-method-list-more-div');
+                .addClass('kb-method-list-more-div');
 
             if (self.currentTag && self.currentTag !== 'release') {
                 $more.append($('<div style="font-size:8pt">')
-                             .append(method.info.git_commit_hash));
+                    .append(method.info.git_commit_hash));
             }
             $more.append($('<div>')
-                         .append(method.info.subtitle))
-                 .append($('<div>')
-                         .append($('<a>')
-                                 .append('more...')
-                                 .attr('target', '_blank')
-                                 .attr('href', moreLink)));
+                    .append(method.info.subtitle))
+                .append($('<div>')
+                    .append($('<a>')
+                        .append('more...')
+                        .attr('target', '_blank')
+                        .attr('href', moreLink)));
 
             var $moreBtn =
-                    $('<button class="btn btn-xs btn-default pull-right" aria-hidden="true">')
-                        .append($('<span>')
-                                    .addClass('fa fa-ellipsis-h')
-                                    .css({'color' : '#999'}));
+                $('<button class="btn btn-xs btn-default pull-right" aria-hidden="true">')
+                .append($('<span>')
+                    .addClass('fa fa-ellipsis-h')
+                    .css({ 'color': '#999' }));
 
             var $mainDiv = $('<div>')
-                           .addClass('kb-data-list-info')
-                           .css({ padding:'0', margin:'0'})
-                           .append($name)
-                           .append($('<div>')
-                                   .append($version)
-                                   .append($moreBtn.hide()));
+                .addClass('kb-data-list-info')
+                .css({ padding: '0', margin: '0' })
+                .append($name)
+                .append($('<div>')
+                    .append($version)
+                    .append($moreBtn.hide()));
 
             var $newMethod = $('<table>')
-                             .css({'width':'100%'})
-                             .append($('<tr>')
-                                     .append($('<td>')
-                                             .css({'width':'15%'})
-                                             .append($logo))
-                                     .append($('<td>')
-                                             .css({'width':'70%'})
-                                             .append($mainDiv))
-                                     .append($('<td>')
-                                             .css({'width':'15%'})
-                                             .append($moreBtn.hide())));
+                .css({ 'width': '100%' })
+                .append($('<tr>')
+                    .append($('<td>')
+                        .css({ 'width': '15%' })
+                        .append($logo))
+                    .append($('<td>')
+                        .css({ 'width': '70%' })
+                        .append($mainDiv))
+                    .append($('<td>')
+                        .css({ 'width': '15%' })
+                        .append($moreBtn.hide())));
 
             return $('<div>')
-                   .append($('<hr>').addClass('kb-data-list-row-hr').css({'margin-left':'65px'}))
-                   .append($('<div>')
-                           .addClass('kb-data-list-obj-row')
-                           .append($newMethod)
-                           .append($more.hide())
-                           .mouseenter(function() {
-                               $moreBtn.show();
-                           })
-                           .mouseleave(function() { $moreBtn.hide(); })
-                           .click(function() {
-                               $more.slideToggle('fast');
-                           }
-                       ));
+                .append($('<hr>').addClass('kb-data-list-row-hr').css({ 'margin-left': '65px' }))
+                .append($('<div>')
+                    .addClass('kb-data-list-obj-row')
+                    .append($newMethod)
+                    .append($more.hide())
+                    .mouseenter(function() {
+                        $moreBtn.show();
+                    })
+                    .mouseleave(function() { $moreBtn.hide(); })
+                    .click(function() {
+                        $more.slideToggle('fast');
+                    }));
 
         },
 
@@ -1020,9 +1030,9 @@ define ([
             if (specSet.methods && specSet.methods instanceof Array) {
                 results.methods = {};
                 // we need to fetch some methods, so don't
-                Promise.resolve(this.methClient.get_method_spec({ids: specSet.methods, tag:this.currentTag}))
-                    .then(function(specs){
-                        for(var k=0; k<specs.length; k++) {
+                Promise.resolve(this.methClient.get_method_spec({ ids: specSet.methods, tag: this.currentTag }))
+                    .then(function(specs) {
+                        for (var k = 0; k < specs.length; k++) {
                             results.methods[specs[k].info.id] = specs[k];
                         }
                         callback(results);

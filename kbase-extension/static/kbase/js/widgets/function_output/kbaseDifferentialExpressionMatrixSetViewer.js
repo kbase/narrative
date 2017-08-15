@@ -39,7 +39,7 @@ define (
 
     return KBWidget({
 
-	    name: "kbaseDifferentialExpressionMatrixViewer.js",
+	    name: "kbaseDifferentialExpressionMatrixSetViewer",
 	    parent : kbaseAuthenticatedWidget,
 
         version: "1.0.0",

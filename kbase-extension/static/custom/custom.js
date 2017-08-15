@@ -107,6 +107,7 @@ define([
     'notebook/js/keyboardmanager',
     'notebook/js/cell',
     'common/utils',
+    'common/jupyter',
     'kb_common/html',
     'narrativeConfig',
 
@@ -128,13 +129,14 @@ define([
     keyboardManager,
     cell,
     utils,
+    Narrative,
     html,
     narrativeConfig
-    ) {
+) {
     'use strict';
 
     var t = html.tag,
-        span = t('span'), div = t('div');
+        span = t('span');
 
     // GLOBAL EVENTS AND OVERRIDES
 
@@ -144,9 +146,8 @@ define([
             'import os;' +
             'os.environ["KB_AUTH_TOKEN"]="' + Jupyter.narrative.authToken + '";' +
             'os.environ["KB_WORKSPACE_ID"]="' + Jupyter.notebook.metadata.ws_name + '"'
-            );
-    }
-    );
+        );
+    });
 
     // Kickstart the Narrative loading routine once the notebook is loaded.
     $([Jupyter.events]).on('app_initialized.NotebookApp', function () {
@@ -170,48 +171,48 @@ define([
              * edit mode if so.
              */
             Jupyter.keyboard_manager.actions.register({
-                handler: function (env, event) {
-                    var index = env.notebook.get_selected_index();
-                    var cell = env.notebook.get_cell(index);
-                    if (cell.at_bottom() && index !== (env.notebook.ncells() - 1)) {
-                        if (event) {
-                            event.preventDefault();
+                    handler: function (env, event) {
+                        var index = env.notebook.get_selected_index();
+                        var cell = env.notebook.get_cell(index);
+                        if (cell.at_bottom() && index !== (env.notebook.ncells() - 1)) {
+                            if (event) {
+                                event.preventDefault();
+                            }
+                            env.notebook.command_mode();
+                            env.notebook.select_next(true);
+                            if (!env.notebook.get_selected_cell().metadata['kb-cell']) {
+                                env.notebook.edit_mode();
+                                var cm = env.notebook.get_selected_cell().code_mirror;
+                                cm.setCursor(0, 0);
+                            }
                         }
-                        env.notebook.command_mode();
-                        env.notebook.select_next(true);
-                        if (!env.notebook.get_selected_cell().metadata['kb-cell']) {
-                            env.notebook.edit_mode();
-                            var cm = env.notebook.get_selected_cell().code_mirror;
-                            cm.setCursor(0, 0);
-                        }
+                        return false;
                     }
-                    return false;
-                }
-            },
+                },
                 'move-cursor-down',
                 'jupyter-notebook');
 
             Jupyter.keyboard_manager.actions.register({
-                handler: function (env, event) {
-                    var index = env.notebook.get_selected_index(),
-                        cell = env.notebook.get_cell(index),
-                        cm = env.notebook.get_selected_cell().code_mirror,
-                        cur = cm.getCursor();
-                    if (cell && cell.at_top() && index !== 0 && cur.ch === 0) {
-                        if (event) {
-                            event.preventDefault();
+                    handler: function (env, event) {
+                        var index = env.notebook.get_selected_index(),
+                            cell = env.notebook.get_cell(index),
+                            cm = env.notebook.get_selected_cell().code_mirror,
+                            cur = cm.getCursor();
+                        if (cell && cell.at_top() && index !== 0 && cur.ch === 0) {
+                            if (event) {
+                                event.preventDefault();
+                            }
+                            env.notebook.command_mode();
+                            env.notebook.select_prev(true);
+                            if (!env.notebook.get_selected_cell().metadata['kb-cell']) {
+                                env.notebook.edit_mode();
+                                cm = env.notebook.get_selected_cell().code_mirror;
+                                cm.setCursor(cm.lastLine(), 0);
+                            }
                         }
-                        env.notebook.command_mode();
-                        env.notebook.select_prev(true);
-                        if (!env.notebook.get_selected_cell().metadata['kb-cell']) {
-                            env.notebook.edit_mode();
-                            cm = env.notebook.get_selected_cell().code_mirror;
-                            cm.setCursor(cm.lastLine(), 0);
-                        }
+                        return false;
                     }
-                    return false;
-                }
-            },
+                },
                 'move-cursor-up',
                 'jupyter-notebook');
         });
@@ -263,32 +264,19 @@ define([
         }
 
         switch (type) {
-            case 'function_input':
-                return 'method';
-            case 'kb_app':
-                return 'app';
-            case 'function_output':
-                return 'output';
-            default:
-                return 'unknown';
+        case 'function_input':
+            return 'method';
+        case 'kb_app':
+            return 'app';
+        case 'function_output':
+            return 'output';
+        default:
+            return 'unknown';
         }
 
     }
 
     // CELLTOOLBAR
-
-//        cellToolbar.CellToolbar.prototype.renderToggleState = function () {
-//            var toggleState = this.cell.getCellState('toggleState', 'unknown');
-//            // Test to see if the kbaseNarrativeCellMenu is attached to this toolbar.
-//            //
-//            //var elemData = $(this.inner_element).find('.button_container').data();
-//            //if (elemData && elemData['kbaseNarrativeCellMenu'])
-//            //   $(this.inner_element).find('.button_container').kbaseNarrativeCellMenu('toggleState', toggleState);
-//            //
-//            // TODO: rewire the rendering of togglestate to just go through the
-//            // natural cell toolbar refresh which occurs when the cell metadata
-//            // is updated (cell.metadata = {what:'ever'};).
-//        };
 
     // disable hiding of the toolbar
     cellToolbar.CellToolbar.prototype.hide = function () {
@@ -343,15 +331,15 @@ define([
             }
 
             switch (toggleMode) {
-                case 'maximized':
-                    if (!this.maximize) {
-                        console.log('HELP', this);
-                    }
-                    this.maximize();
-                    break;
-                case 'minimized':
-                    this.minimize();
-                    break;
+            case 'maximized':
+                if (!this.maximize) {
+                    console.log('HELP', this);
+                }
+                this.maximize();
+                break;
+            case 'minimized':
+                this.minimize();
+                break;
             }
         };
 
@@ -360,12 +348,12 @@ define([
                 toggleMode = $cellNode.data('toggleMinMax') || 'maximized';
 
             switch (toggleMode) {
-                case 'maximized':
-                    toggleMode = 'minimized';
-                    break;
-                case 'minimized':
-                    toggleMode = 'maximized';
-                    break;
+            case 'maximized':
+                toggleMode = 'minimized';
+                break;
+            case 'minimized':
+                toggleMode = 'maximized';
+                break;
             }
 
             // NB namespacing is important with jquery messages because they
@@ -402,6 +390,11 @@ define([
                     this.toggleMinMax();
                 }.bind(this));
 
+                // This is triggered by the installation of the 'KBase' cell toolbar. Before this event we 
+                // cannot safely rely upon the cell toolbar, which provides the min-max ui.
+                // I believe the original reason for this event (it may be possible to also use notebook_loaded.Notebook,
+                // but I'm not sure), is that the extensions were originally developed in raw Jupyter,
+                // and only some cells had the KBase toolbar and behavior.
                 this.events.on('preset_activated.CellToolbar', function (e, data) {
                     if (data.name === 'KBase') {
                         this.renderMinMax();
@@ -409,13 +402,11 @@ define([
                 }.bind(this));
             };
         }());
-
     }());
-
 
     // RAW CELL
 
-     (function () {
+    (function () {
         var p = textCell.RawCell.prototype;
 
         p.minimize = function () {
@@ -449,21 +440,21 @@ define([
             var cell = this,
                 $cellNode = $(this.element);
 
-            this.element.dblclick(function () {
-                var cont = cell.unrender();
-                if (cont) {
-                    cell.focus_editor();
-                }
-            });
+            // why here in rawcell
+            // this.element.dblclick(function() {
+            //     var cont = cell.unrender();
+            //     if (cont) {
+            //         cell.focus_editor();
+            //     }
+            // });
 
-            /*
-             * This is the trick to get the markdown to render, and the edit area
-             * to disappear, when the user clicks out of the edit area.
-             */
-            this.code_mirror.on('blur', function () {
-                cell.render();
-            });
-
+            // /*
+            //  * This is the trick to get the markdown to render, and the edit area
+            //  * to disappear, when the user clicks out of the edit area.
+            //  */
+            // this.code_mirror.on('blur', function() {
+            //     cell.render();
+            // });
 
             /*
              * The cell toolbar buttons area knows how to set the title and
@@ -550,8 +541,6 @@ define([
         };
     }());
 
-
-
     // MARKDOWN CELL
 
     (function () {
@@ -562,6 +551,7 @@ define([
             $cellNode.find('.inner_cell > div:nth-child(2)').addClass('hidden');
             $cellNode.find('.inner_cell > div:nth-child(3)').addClass('hidden');
             utils.setCellMeta(this, 'kbase.cellState.showTitle', true);
+            utils.setCellMeta(this, 'kbase.cellState.message', '', true);
         };
 
         p.maximize = function () {
@@ -569,6 +559,9 @@ define([
             $cellNode.find('.inner_cell > div:nth-child(2)').removeClass('hidden');
             $cellNode.find('.inner_cell > div:nth-child(3)').removeClass('hidden');
             utils.setCellMeta(this, 'kbase.cellState.showTitle', false);
+            if (Narrative.canEdit()) {
+                utils.setCellMeta(this, 'kbase.cellState.message', 'Double click content to edit; click out of the edit area to preview', true);
+            }
         };
 
         // We need this method because the layout of each type of cell and
@@ -579,59 +572,52 @@ define([
                 return;
             }
             prompt.innerHTML = '';
-
-//            var prompt = this.element[0].querySelector('.input_prompt'),
-//                iconType = utils.getCellMeta(this, 'kbase.attributes.icon', 'file-o'),
-//                icon = span({
-//                    class: 'fa fa-' + iconType + ' fa-2x'
-//                });
-//
-//            if (!prompt) {
-//                return;
-//            }
-//
-//            prompt.innerHTML = div({
-//                style: {textAlign: 'center'}
-//            }, [
-//                icon
-//            ]);
         };
 
         p.getIcon = function () {
             var iconColor = 'silver';
 
-            return span({style: ''}, [
-                span({class: 'fa-stack fa-2x', style: {textAlign: 'center', color: iconColor}}, [
-                    span({class: 'fa fa-square fa-stack-2x', style: {color: iconColor}}),
-                    span({class: 'fa fa-inverse fa-stack-1x fa-' + 'paragraph'})
+            return span({ style: '' }, [
+                span({ class: 'fa-stack fa-2x', style: { textAlign: 'center', color: iconColor } }, [
+                    span({ class: 'fa fa-square fa-stack-2x', style: { color: iconColor } }),
+                    span({ class: 'fa fa-inverse fa-stack-1x fa-' + 'paragraph' })
                 ])
             ]);
         };
 
-
-
         /** @method bind_events **/
+        // NOTE: We need to completely replace the markdown cell bind_events because we 
+        // need to disable the double-click to edit if in view mode. We would need to unregister
+        // the original dbclick event handler, and we can't do that without
+        var originalBindEvents = p.bind_events;
         p.bind_events = function () {
-            textCell.TextCell.prototype.bind_events.apply(this);
+            originalBindEvents.apply(this);
+            // textCell.TextCell.prototype.bind_events.apply(this);
 
             var cell = this,
                 $cellNode = $(this.element);
 
-            this.element.dblclick(function () {
+            this.element.off('dblclick');
+
+            this.element.on('dblclick', '.text_cell_render', function () {
+                if (!Narrative.canEdit()) {
+                    return;
+                }
                 var cont = cell.unrender();
                 if (cont) {
+
                     cell.focus_editor();
                 }
             });
 
-            /*
-             * This is the trick to get the markdown to render, and the edit area
-             * to disappear, when the user clicks out of the edit area.
-             */
+            // /*
+            //  * This is the trick to get the markdown to render, and the edit area
+            //  * to disappear, when the user clicks out of the edit area.
+            //  */
             this.code_mirror.on('blur', function () {
+
                 cell.render();
             });
-
 
             /*
              * The cell toolbar buttons area knows how to set the title and
@@ -738,20 +724,7 @@ define([
                     title = '<i>empty markdown cell - add a title with # </i>';
                 }
 
-                // if (title) {
-                // cell.setCellState('title', title);
                 utils.setCellMeta(cell, 'kbase.attributes.title', title, true);
-
-                // this.renderPrompt();
-
-                // Extract title from h1, if any. otheriwse, first 50 characters
-                //var title = $html.filter('h1').first().first().text();
-                //if (!title && $html.first().html()) {
-                //    title = $html.first().html().substr(0, 50) || '';
-                //}
-
-                // $(cell.element).trigger('set-title.cell', cell.getCellState('title'));
-                //$(cell.element).trigger('set-icon.cell', ['<i class="fa fa-2x fa-paragraph markdown-icon"></i>']);
             }.bind(this));
 
             // Note - this event needs to be subscribed to in each cell interested.
@@ -763,15 +736,6 @@ define([
                 if (data.name === 'KBase') {
                     // ensure the icon is set?
                     utils.setCellMeta(this, 'kbase.attributes.icon', 'paragraph');
-                    // Set up the toolbar based on the state.
-                    // TODO: refactor in general -- reconcile cellState and attributes
-
-                    //$cellNode.trigger('set-title.cell', [cell.getCellState('title', '')]);
-                    //$cellNode.trigger('set-icon.cell', [cell.getCellState('icon', '')]);
-
-                    // DISABLED: toggling
-                    // TODO: re-enable!
-                    // cell.renderToggleState();
                 }
             }.bind(this));
         };
@@ -782,7 +746,7 @@ define([
         cm_config: {
             mode: 'ipythongfm'
         },
-        placeholder: "_Markdown_/LaTeX cell - double click here to edit."
+        placeholder: '_Markdown_/LaTeX cell - double click here to edit.'
             // "Type _Markdown_ and LaTeX: $\\alpha^2$" +
             //     "<!-- " +
             //     "The above text is Markdown and LaTeX markup.\n" +
@@ -810,19 +774,16 @@ define([
      *
      */
 
-     (function () {
-         keyboardManager.KeyboardManager.prototype.register_events = function (e) {
-             // NOOP
-             return;
-         };
-     }());
-
-
+    (function () {
+        keyboardManager.KeyboardManager.prototype.register_events = function (e) {
+            // NOOP
+            return;
+        };
+    }());
 
     // CODE CELL
 
     /*
-     * NEW:
      *
      * Extend the CodeCell bind_events method to add handling of toolbar
      * events.
@@ -835,22 +796,27 @@ define([
      *
      */
     (function () {
-        var p = codeCell.CodeCell.prototype,
-            originalMethod;
+        var p = codeCell.CodeCell.prototype;
 
         p.minimize = function () {
-            var inputArea = this.input.find('.input_area'),
+            var inputArea = this.input.find('.input_area').get(0),
                 outputArea = this.element.find('.output_wrapper');
 
-            inputArea.addClass('hidden');
+            inputArea.classList.remove('-show');
             outputArea.addClass('hidden');
         };
 
+        // Note that the 
         p.maximize = function () {
-            var inputArea = this.input.find('.input_area'),
+            var inputArea = this.input.find('.input_area').get(0),
                 outputArea = this.element.find('.output_wrapper');
 
-            inputArea.removeClass('hidden');
+            // if (!inputArea.classList.contains('-show')) {
+            //     inputArea.classList.add('-show');
+            // }
+            // if (this.code_mirror) {
+            //     this.code_mirror.refresh();
+            // }
             outputArea.removeClass('hidden');
         };
 
@@ -868,18 +834,20 @@ define([
 
         p.getIcon = function () {
             var iconColor = 'silver';
+            var icon;
+            icon = span({ class: 'fa fa-inverse fa-stack-1x fa-spinner fa-pulse fa-fw' });
 
-            return span({style: ''}, [
-                span({class: 'fa-stack fa-2x', style: {textAlign: 'center', color: iconColor}}, [
-                    span({class: 'fa fa-square fa-stack-2x', style: {color: iconColor}}),
-                    span({class: 'fa fa-inverse fa-stack-1x fa-' + 'terminal'})
+            return span({ style: '' }, [
+                span({ class: 'fa-stack fa-2x', style: { textAlign: 'center', color: iconColor } }, [
+                    span({ class: 'fa fa-square fa-stack-2x', style: { color: iconColor } }),
+                    icon
                 ])
             ]);
         };
 
-        originalMethod = codeCell.CodeCell.prototype.bind_events;
+        var originalBindEvents = codeCell.CodeCell.prototype.bind_events;
         p.bind_events = function () {
-            originalMethod.apply(this);
+            originalBindEvents.apply(this);
             var $cellNode = $(this.element),
                 thisCell = this;
 
@@ -888,18 +856,15 @@ define([
             $cellNode.on('unselected.cell', function () {
                 var $menu = $(thisCell.celltoolbar.element).find('.button_container');
                 utils.setCellMeta(cell, 'kbase.cellState.selected', false);
-                // thisCell.setCellState('selected', false);
                 $menu.trigger('unselected.toolbar');
             });
 
             // this.events
             $cellNode.on('selected.cell', function () {
                 var $menu = $(thisCell.celltoolbar.element).find('.button_container');
-                // thisCell.setCellState('selected', true);
                 utils.setCellMeta(cell, 'kbase.cellState.selected', true);
                 $menu.trigger('selected.toolbar');
             });
-
 
             $cellNode.on('toggleCodeArea.cell', function () {
                 thisCell.toggleCodeInputArea();
@@ -910,8 +875,7 @@ define([
             });
 
             if (this.code_mirror) {
-                this.code_mirror.on("change", function(cm, change) {
-                    // alert(' Rendering code cell ', cm, change);
+                this.code_mirror.on('change', function (cm, change) {
                     var lineCount = cm.lineCount(),
                         commentRe = /^\.*?\#\s*(.*)$/;
                     for (var i = 0; i < lineCount; i += 1) {
@@ -922,8 +886,6 @@ define([
                             break;
                         }
                     }
-                    // console.log('Code mirror?', cm, change);
-                    // utils.setCellMeta(cell, 'kbase.attributes.title', 'some title');
                 });
             }
         };
@@ -931,25 +893,57 @@ define([
         p.hideCodeInputArea = function () {
             var codeInputArea = this.input.find('.input_area')[0];
             if (codeInputArea) {
-                codeInputArea.classList.add('hidden');
+                codeInputArea.classList.remove('-show');
             }
         };
 
         p.isCodeShowing = function () {
             var codeInputArea = this.input.find('.input_area')[0];
             if (codeInputArea) {
-                return !codeInputArea.classList.contains('hidden');
+                return codeInputArea.classList.contains('-show');
             }
             return false;
         };
 
-        p.toggleCodeInputArea = function() {
+        p.toggleCodeInputArea = function () {
             var codeInputArea = this.input.find('.input_area')[0];
             if (codeInputArea) {
-                codeInputArea.classList.toggle('hidden');
+                codeInputArea.classList.toggle('-show');
                 this.metadata = this.metadata;
             }
         };
+
+        // Filter execute through read-only mode
+        // In generally we don't "run" code cells in ui view (aka read-only) mode,
+        // because the back-end code may make modifications to the Narrative.
+        // However, perhaps we should allow code execution as a 
+        // capability, and just block Narrative modifications?
+        var originalExecute = codeCell.CodeCell.prototype.execute;
+        p.execute = function () {
+            if (Jupyter.narrative.readonly) {
+                alert('Read only mode - execute prohibited');
+                return;
+            }
+            return originalExecute.apply(this, arguments);
+        };
+
+        // Can't do this because when a cell is constructed, it has no metadata!
+        // Look in notebook.js, fromJSON.
+        // var originalInitClasses = codeCell.CodeCell.prototype.init_classes;
+        // p.init_classes = function() {
+        //     originalInitClasses.apply(this, arguments);
+        //     if (this.metadata.kbase) {
+        //         return;
+        //     }
+        //     console.log('code cell metadata', this.metadata);
+        //     var codeInputArea = this.input.find('.input_area')[0];
+        //     if (codeInputArea) {
+        //         if (!codeInputArea.classList.contains('-show')) {
+        //             codeInputArea.classList.add('-show');
+        //         }
+        //     }
+        // };
+
     }());
 
     /*
@@ -996,26 +990,29 @@ define([
     saveWidget.SaveWidget.prototype.update_address_bar = function () {
         var base_url = this.notebook.base_url;
         var path = this.notebook.notebook_path;
-        var state = {path : path};
-        window.history.replaceState(state, "", nbUtils.url_path_join(
+        var state = { path: path };
+        window.history.replaceState(state, '', nbUtils.url_path_join(
             base_url,
-            nbUtils.encode_uri_components(path))
-        );
+            nbUtils.encode_uri_components(path)));
     };
 
     // Patch the save widget to take in options at save time
     saveWidget.SaveWidget.prototype.rename_notebook = function (options) {
+        // silently fail if a read-only narrative.
+        if (Jupyter.narrative.readonly) {
+            return;
+        }
         options = options || {};
         var that = this;
         var dialog_body = $('<div>').append(
             $('<p>').addClass('rename-message')
             .text(options.message ? options.message : 'Enter a new Narrative name:')
-            ).append(
+        ).append(
             $('<br>')
-            ).append(
+        ).append(
             $('<input>').attr('type', 'text').attr('size', '25').addClass('form-control')
             .val(options.notebook.get_notebook_name())
-            );
+        );
         var d = dialog.modal({
             title: 'Rename Narrative',
             body: dialog_body,

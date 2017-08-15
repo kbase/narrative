@@ -97,16 +97,22 @@ define([
                         }
                         return option({
                             value: ref,
-                            selected: selected
+                            selected: selected,
+                            disabled: true
                         }, objectInfo.name);
                     });
             }
 
             // CONTROL
+
             var selectElem = select({
                 id: html.genId(),
                 class: 'form-control',
-                dataElement: 'input'
+                style: {
+                    width: '100%'
+                },
+                dataElement: 'input',
+                disabled: true
             }, [option({ value: '' }, '')].concat(selectOptions));
 
             return selectElem;
@@ -183,22 +189,22 @@ define([
                 }
 
                 switch (objectRefType) {
-                case 'ref':
-                    return Validation.validateWorkspaceObjectRef(processedValue, validationOptions);
-                case 'name':
-                default:
-                    return Validation.validateWorkspaceObjectName(processedValue, validationOptions);
+                    case 'ref':
+                        return Validation.validateWorkspaceObjectRef(processedValue, validationOptions);
+                    case 'name':
+                    default:
+                        return Validation.validateWorkspaceObjectName(processedValue, validationOptions);
                 }
             });
         }
 
         function getObjectsByTypes_datalist(types) {
             return Data.getObjectsByTypes(types, bus, function(result) {
-                doWorkspaceUpdated(result.data);
-            })
-            .then(function(result) {
-                return result.data;
-            });
+                    doWorkspaceUpdated(result.data);
+                })
+                .then(function(result) {
+                    return result.data;
+                });
         }
 
 
@@ -254,18 +260,18 @@ define([
                 ui.setContent('input-container', content);
 
                 $(ui.getElement('input-container.input')).select2({
-                    readonly: true,
-                    templateResult: formatObjectDisplay,
-                    templateSelection: function(object) {
-                        if (!object.id) {
-                            return object.text;
+                        readonly: true,
+                        templateResult: formatObjectDisplay,
+                        templateSelection: function(object) {
+                            if (!object.id) {
+                                return object.text;
+                            }
+                            return model.availableValues[object.id].name;
                         }
-                        return model.availableValues[object.id].name;
-                    }
-                })
-                .on('advanced-shown.kbase', function (e) {
-                    $(e.target).select2({width: 'resolve'});
-                });
+                    })
+                    .on('advanced-shown.kbase', function(e) {
+                        $(e.target).select2({ width: 'resolve' });
+                    });
                 events.attachEvents(container);
 
             });
@@ -347,7 +353,7 @@ define([
                     });
             }
         }
-     
+
         // LIFECYCLE API
         function start(arg) {
             return Promise.try(function() {

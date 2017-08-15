@@ -87,37 +87,6 @@ define([
             }
         }
 
-        /*
-         * If the parameter is optional, and is empty, return null.
-         * If it allows multiple values, wrap single results in an array
-         * There is a weird twist where if it ...
-         * well, hmm, the only consumer of this, isValid, expects the values
-         * to mirror the input rows, so we shouldn't really filter out any
-         * values.
-         */
-
-        function getInputValue() {
-            return ui.getElement('input-container.input').value;
-        }
-
-        /*
-         *
-         * Text fields can occur in multiples.
-         * We have a choice, treat single-text fields as a own widget
-         * or as a special case of multiple-entry -- 
-         * with a min-items of 1 and max-items of 1.
-         * 
-         *
-         */
-
-        function copyProps(from, props) {
-            var newObj = {};
-            props.forEach(function(prop) {
-                newObj[prop] = from[prop];
-            });
-            return newObj;
-        }
-
         function validate(rawValue) {
             return Promise.try(function() {
                 // var validationOptions = {
@@ -125,81 +94,6 @@ define([
                 // };
                 return Validation.validate(rawValue, spec);
             });
-        }
-
-        function updateValue() {}
-
-        function doToggleEnableControl() {
-            var label = document.querySelector('#' + places.enableControl + ' [data-element="label"]');
-            if (viewModel.state.enabled) {
-                // Disable it
-                viewModel.state.enabled = false;
-                label.innerHTML = 'Enable';
-                viewModel.data = null;
-            } else {
-                // Enable it
-                viewModel.state.enabled = true;
-                label.innerHTML = 'Disable';
-                viewModel.data = lang.copy(spec.data.defaultValue);
-            }
-            bus.emit('set-param-state', {
-                state: viewModel.state
-            });
-            bus.emit('changed', {
-                newValue: lang.copy(viewModel.data)
-            });
-            renderSubcontrols();
-        }
-
-        function enableControl(events) {
-            var required = spec.data.constraints.required;
-
-            places.enableControl = html.genId();
-
-            // If the group is required, there is no choice, it is always enabled.
-            if (required) {
-                return '';
-                // return div({
-                //     id: places.enableControl
-                // }, [
-                //     input({
-                //         type: 'checkbox',
-                //         checked: true,
-                //         readonly: true,
-                //         disabled: true
-                //     }),
-                //     ' This group is required'
-                // ]);
-            }
-
-            var label, checked;
-            if (viewModel.state.enabled) {
-                label = 'Disable';
-                checked = true;
-            } else {
-                label = 'Enable'
-                checked = false;
-            }
-            return div({
-                id: places.enableControl
-            }, [
-                input({
-                    id: events.addEvent({
-                        type: 'click',
-                        handler: function(e) {
-                            doToggleEnableControl(e);
-                        }
-                    }),
-                    type: 'checkbox',
-                    checked: checked
-                }),
-                span({
-                    dataElement: 'label',
-                    style: {
-                        marginLeft: '4px'
-                    }
-                }, label)
-            ]);
         }
 
         function makeInputControl(events, bus) {
@@ -345,11 +239,6 @@ define([
                     margin: '6px'
                 }
             }, [
-                div({
-                    class: 'row'
-                }, [
-                    enableControl(events)
-                ]),
                 div({ dataElement: 'subcontrols' })
             ]);
             ui.setContent('input-container', layout);
@@ -365,38 +254,6 @@ define([
             renderStruct(events);
 
         }
-
-        // function autoValidate() {
-        //     return Promise.all(viewModel.data.map(function (value, index) {
-        //             // could get from DOM, but the model is the same.
-        //             var rawValue = container.querySelector('[data-index="' + index + '"]').value;
-        //             return validate(rawValue);
-        //         }))
-        //         .then(function (results) {
-        //             // a bit of a hack -- we need to handle the 
-        //             // validation here, and update the individual rows
-        //             // for now -- just create one mega message.
-        //             var errorMessages = [],
-        //                 validationMessage;
-        //             results.forEach(function (result, index) {
-        //                 if (result.errorMessage) {
-        //                     errorMessages.push(result.errorMessage + ' in item ' + index);
-        //                 }
-        //             });
-        //             if (errorMessages.length) {
-        //                 validationMessage = {
-        //                     diagnosis: 'invalid',
-        //                     errorMessage: errorMessages.join('<br/>')
-        //                 };
-        //             } else {
-        //                 validationMessage = {
-        //                     diagnosis: 'valid'
-        //                 };
-        //             }
-        //             bus.emit('validation', validationMessage);
-
-        //         });
-        // }
 
         // LIFECYCLE API
 

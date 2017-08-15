@@ -5,7 +5,6 @@ define([
     'common/events',
     'common/ui',
     'common/props',
-    '../inputUtils',
     'bootstrap',
     'css!font-awesome'
 ], function(
@@ -14,8 +13,7 @@ define([
     Validation,
     Events,
     UI,
-    Props,
-    inputUtils) {
+    Props) {
     'use strict';
 
     // Constants
@@ -37,10 +35,6 @@ define([
             };
 
         // CONTROL
-
-        function getControlValue() {
-            return ui.getElement('input-container.input').value;
-        }
 
         function setControlValue(newValue) {
             if (newValue === null) {
@@ -73,34 +67,12 @@ define([
             setControlValue(model.getItem('value', null));
         }
 
-
-        // VALIDATION
-
-        function importControlValue() {
-            return Promise.try(function() {
-                return Validation.importString(getControlValue());
-            });
-        }
-
-        function validate(value) {
-            return Promise.try(function() {
-                return Validation.validate(value, spec);
-            });
-        }
-
-        function autoValidate() {
-            return validate(model.getItem('value'))
-                .then(function(result) {
-                    bus.emit('validation', result);
-                });
-        }
-
         /*
          * Creates the markup
          * Places it into the dom node
          * Hooks up event listeners
          */
-        function makeViewControl(events) {
+        function makeViewControl() {
             return textarea({
                 class: 'form-control',
                 dataElement: 'input',
@@ -109,17 +81,16 @@ define([
             });
         }
 
-        function render(events) {
+        function render() {
             var content = div({
                 dataElement: 'main-panel'
             }, [
                 div({ dataElement: 'input-container' }, [
-                    makeViewControl(events)
+                    makeViewControl()
                 ])
             ]);
             return {
-                content: content,
-                events: events
+                content: content
             };
         }
 
@@ -130,13 +101,11 @@ define([
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
 
-                var events = Events.make(),
-                    theLayout = render(events);
+                var theLayout = render();
 
                 setModelValue(config.initialValue);
 
                 container.innerHTML = theLayout.content;
-                events.attachEvents(container);
 
                 bus.on('reset-to-defaults', function() {
                     resetModelValue();
@@ -144,9 +113,7 @@ define([
                 bus.on('update', function(message) {
                     setModelValue(message.value);
                 });
-                // bus.emit('sync');
                 syncModelToControl();
-                autoValidate();
             });
         }
 

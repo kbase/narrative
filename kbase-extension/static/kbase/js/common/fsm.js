@@ -14,7 +14,7 @@ define([
 ], function(
     utils,
     Runtime
-    ) {
+) {
     'use strict';
 
 
@@ -61,15 +61,13 @@ define([
 
         function findState(stateToFind) {
             var foundStates = allStates.filter(function(stateDef) {
-                if (utils.isEqual(stateToFind, stateDef.state)) {
-                    return true;
-                }
+                return utils.isEqual(stateToFind, stateDef.state);
             });
             if (foundStates.length === 1) {
                 return foundStates[0];
             }
             if (foundStates.length > 1) {
-                console.error('state error: multiple states found:', stateToFind, foundStates)
+                console.error('state error: multiple states found:', stateToFind, foundStates);
                 throw new Error('state error: multiple states found');
             }
 

@@ -137,10 +137,36 @@ define ([
          * First timer - check for token existence very second.
          * trigger the logout behavior if it's not there.
          */
+        var lastCheckTime = new Date().getTime();
+        var browserSleepValidateTime = Config.get('auth_sleep_recheck_ms');
+        var validateOnCheck = false;
         tokenCheckTimer = setInterval(function() {
-            if (!authClient.getAuthToken()) {
+            var token = authClient.getAuthToken();
+            if (!token) {
                 tokenTimeout();
             }
+            var lastCheckInterval = new Date().getTime() - lastCheckTime;
+            if (lastCheckInterval > browserSleepValidateTime) {
+                validateOnCheck = true;
+            }
+            if (validateOnCheck) {
+                console.warn('Revalidating token after sleeping for ' + (lastCheckInterval/1000) + 's');
+                authClient.validateToken(token)
+                .then(function(info) {
+                    if (info === true) {
+                        console.warn('Auth is still valid. Carry on.');
+                    } else {
+                        console.warn('Auth is invalid! Logging out.');
+                        tokenTimeout(true);
+                    }
+                    validateOnCheck = false;
+                })
+                .catch(function(error) {
+                    console.error('Error while validating token after sleep. Trying again...');
+                    console.error(error);
+                });
+            }
+            lastCheckTime = new Date().getTime();
         }, 1000);
 
         var currentTime = new Date().getTime();
@@ -159,13 +185,25 @@ define ([
         }
     }
 
-    function tokenTimeout(showDialog) {
+    function clearTokenCheckTimers() {
         if (tokenCheckTimer) {
             clearInterval(tokenCheckTimer);
         }
         if (tokenWarningTimer) {
             clearInterval(tokenWarningTimer);
         }
+    }
+
+    /**
+     * Timeout the auth token, removing it and invalidating it.
+     * This follows a few short steps.
+     * 1. If there are timers set for checking token validity, expire them.
+     * 2. Delete the token from the browser.
+     * 3. Revoke the token from the auth server.
+     * 4. Redirect to the logout page, with an optional warning that the user's now logged out.
+     */
+    function tokenTimeout(showDialog) {
+        clearTokenCheckTimers();
         authClient.clearAuthToken();
         authClient.revokeAuthToken(sessionInfo.token, sessionInfo.id);
         // show dialog - you're signed out!
@@ -184,6 +222,8 @@ define ([
          * 3. events to trigger: loggedIn, loggedInFailure, loggedOut
          * 4. Set up user widget thing on #signin-button
          */
+        console.warn('Initializing auth token tracker');
+        clearTokenCheckTimers();
         var sessionToken = authClient.getAuthToken();
         return Promise.all([authClient.getTokenInfo(sessionToken), authClient.getUserProfile(sessionToken)])
             .then(function(results) {
@@ -207,6 +247,7 @@ define ([
                 $(document).trigger('loggedIn.kbase', this.sessionInfo);
             }.bind(this))
             .catch(function(error) {
+                console.error(error);
                 if (document.location.hostname.indexOf('localhost') !== -1 ||
                     document.location.hostname.indexOf('0.0.0.0') !== -1) {
                     showTokenInjectionDialog();

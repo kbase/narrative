@@ -106,6 +106,9 @@ jupyter nbextension enable appCell2/main --sys-prefix
 jupyter nbextension install $(pwd)/advancedViewCell --symlink --sys-prefix
 jupyter nbextension enable advancedViewCell/main --sys-prefix
 
+jupyter nbextension install $(pwd)/codeCell --symlink --sys-prefix
+jupyter nbextension enable codeCell/main --sys-prefix
+
 jupyter nbextension enable --py --sys-prefix widgetsnbextension
 
 console "Done installing nbextension"

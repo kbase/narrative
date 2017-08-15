@@ -31,7 +31,7 @@ define([
     Events,
     html,
     Props,
-    Jupyter,
+    Narrative,
     BusEventManager,
     NarrativeMethodStore,
     Workspace,
@@ -248,6 +248,7 @@ define([
             bus = runtime.bus().makeChannelBus({ description: 'A view cell widget' }),
             env = {},
             model,
+            paramsWidget,
 
             eventManager = BusEventManager.make({
                 bus: runtime.bus()
@@ -517,7 +518,7 @@ define([
 
         function renderLayout() {
             var readOnlyStyle = {};
-            if (JupyterNamespace.narrative.readonly) {
+            if (!Narrative.canEdit()) {
                 readOnlyStyle.display = 'none';
             }
             var events = Events.make(),
@@ -631,7 +632,7 @@ define([
         }
 
         function validateModel() {
-            return spec.validateModel(model.getItem('params'));           
+            return spec.validateModel(model.getItem('params'));
         }
 
         // TODO: we need to determine the proper forms for a app identifier, and
@@ -709,11 +710,11 @@ define([
         // LIFECYCYLE API
 
         function doEditNotebookMetadata() {
-            Jupyter.editNotebookMetadata();
+            Narrative.editNotebookMetadata();
         }
 
         function doEditCellMetadata() {
-            Jupyter.editCellMetadata(cell);
+            Narrative.editCellMetadata(cell);
         }
 
         function initCodeInputArea() {
@@ -727,13 +728,15 @@ define([
         }
 
         function showCodeInputArea() {
-            var codeInputArea = cell.input.find('.input_area');
+            var codeInputArea = cell.input.find('.input_area').get(0);
             if (model.getItem('user-settings.showCodeInputArea')) {
-                codeInputArea.removeClass('hidden');
-                // codeInputArea.css('display', cell.kbase.inputAreaDisplayStyle);
+                if (!codeInputArea.classList.contains('-show')) {
+                    codeInputArea.classList.add('-show');
+                }
             } else {
-                codeInputArea.addClass('hidden');
-                // codeInputArea.css('display', 'none');
+                if (codeInputArea.classList.contains('-show')) {
+                    codeInputArea.classList.remove('-show');
+                }
             }
         }
 
@@ -866,7 +869,7 @@ define([
             }
             saveTimer = window.setTimeout(function() {
                 saveTimer = null;
-                Jupyter.saveNotebook();
+                Narrative.saveNotebook();
             }, saveMaxFrequency);
         }
 
@@ -914,7 +917,7 @@ define([
 
                     bus.emit('stop');
 
-                    Jupyter.deleteCell(cell);
+                    Narrative.deleteCell(cell);
                 });
         }
 
@@ -1009,15 +1012,20 @@ define([
 
         function start() {
             return Promise.try(function() {
+                // DOM EVENTS
+                cell.element.on('toggleCodeArea.cell', function() {
+                    toggleCodeInputArea(cell);
+                });
                 /*
                  * listeners for the local input cell message bus
                  */
 
-                bus.on('toggle-code-view', function() {
-                    var showing = toggleCodeInputArea(),
-                        label = showing ? 'Hide Code' : 'Show Code';
-                    ui.setButtonLabel('toggle-code-view', label);
-                });
+                // bus.on('toggle-code-view', function() {
+                //     console.log('toggling code view...');
+                //     var showing = toggleCodeInputArea(),
+                //         label = showing ? 'Hide Code' : 'Show Code';
+                //     ui.setButtonLabel('toggle-code-view', label);
+                // });
                 bus.on('show-notifications', function() {
                     doShowNotifications();
                 });
@@ -1056,7 +1064,8 @@ define([
                 });
 
                 bus.on('sync-all-display-parameters', function() {
-                    widgets.paramsDisplayWidget.bus.emit('sync-all-parameters');
+                    console.log('hmm, sync all display parameters called...???');
+                    // widgets.paramsDisplayWidget.bus.emit('sync-all-parameters');
                 });
 
                 // Events from widgets...
@@ -1078,6 +1087,23 @@ define([
 
                 eventManager.add(cellBus.on('delete-cell', function() {
                     doDeleteCell();
+                }));
+
+                eventManager.add(runtime.bus().on('ui-mode-changed', function(newMode) {
+                    // toggleViewOnlyMode(msg.readOnly);
+                    // renderUI();
+                    console.log('ui mode changed', newMode, Narrative.canEdit());
+                    if (Narrative.canEdit()) {
+                        unloadParamsWidget()
+                            .then(function() {
+                                loadInputParamsWidget();
+                            });
+                    } else {
+                        unloadParamsWidget()
+                            .then(function() {
+                                loadViewParamsWidget();
+                            });
+                    }
                 }));
 
 
@@ -1127,21 +1153,6 @@ define([
             });
         }
 
-        function findInputWidget(requestedInputWidget) {
-            var defaultModule = 'nbextensions/viewCell/widgets/appParamsWidget';
-            return defaultModule;
-
-            // if (requestedInputWidget === null) {
-            //     return defaultModule;
-            // }
-            // // Yes, the string literal 'null' can slip through
-            // if (requestedInputWidget === 'null') {
-            //     return defaultModule;
-            // }
-
-            // return 'nbextensions/viewCell/widgets/inputWidgets/' + requestedInputWidget;
-        }
-
         function exportParams() {
             var params = model.getItem('params'),
                 paramsToExport = {},
@@ -1162,28 +1173,43 @@ define([
             return paramsToExport;
         }
 
-        function loadInputWidget() {
+        function unloadParamsWidget() {
+            return Promise.try(function() {
+                if (paramsWidget) {
+                    return paramsWidget.stop();
+                }
+            });
+        }
+
+        function pRequire(ModulePath) {
             return new Promise(function(resolve, reject) {
-                var // inputWidget = env.appSpec.widgets.input,
-                    selectedWidget = findInputWidget();
+                require([ModulePath], function(Widget) {
+                    resolve(Widget);
+                }, function(err) {
+                    reject(err);
+                });
+            });
+        }
 
-                // if (!selectedWidget) {
-                //     reject('Cannot find the requested input widget ' + inputWidget);
-                // }
+        // TODO: handle raciness of the paramsWidget... 
+        function loadInputParamsWidget() {
+            pRequire('nbextensions/viewCell/widgets/appParamsWidget')
+                .then(function(Widget) {
 
-                require([selectedWidget], function(Widget) {
-                    // TODO: widget should make own bus.
-                    var bus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for input widget' }),
-                        widget = Widget.make({
-                            bus: bus,
-                            workspaceInfo: workspaceInfo
-                        });
-                    widgets.paramsInputWidget = {
-                        path: ['parameters-group', 'widget'],
-                        // module: widgetModule,
+
+                    var bus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for input widget' });
+
+                    paramsWidget = Widget.make({
                         bus: bus,
-                        instance: widget
-                    };
+                        workspaceInfo: workspaceInfo
+                    });
+
+                    // widgets.paramsInputWidget = {
+                    //     path: ['parameters-group', 'widget'],
+                    //     // module: widgetModule,
+                    //     bus: bus,
+                    //     instance: widget
+                    // };
                     bus.on('parameter-sync', function(message) {
                         var value = model.getItem(['params', message.parameter]);
                         bus.send({
@@ -1241,39 +1267,115 @@ define([
                         model.setItem(['params', message.parameter], message.newValue);
                         evaluateAppState();
                     });
-                    widget.start({
-                            node: ui.getElement(['parameters-group', 'widget']),
-                            appSpec: model.getItem('app.spec'),
-                            parameters: spec.getSpec().parameters,
-                            params: model.getItem('params')
-                        })
-                        .then(function() {
-                            resolve();
-                        });
-                }, function(err) {
-                    console.log('ERROR', err);
-                    reject(err);
+                    return paramsWidget.start({
+                        node: ui.getElement(['parameters-group', 'widget']),
+                        appSpec: model.getItem('app.spec'),
+                        parameters: spec.getSpec().parameters,
+                        params: model.getItem('params')
+                    });
                 });
-            });
         }
 
-        function loadInputViewWidget() {
-            return new Promise(function(resolve, reject) {
-                require([
-                    'nbextensions/viewCell/widgets/appParamsViewWidget'
-                ], function(Widget) {
-                    // TODO: widget should make own bus
-                    var bus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for load input view widget' }),
-                        widget = Widget.make({
-                            bus: bus,
-                            workspaceInfo: workspaceInfo
-                        });
-                    widgets.paramsDisplayWidget = {
-                        path: ['parameters-display-group', 'widget'],
-                        // module: widgetModule,
+        function loadViewParamsWidget() {
+            pRequire('nbextensions/viewCell/widgets/appParamsViewWidget')
+                .then(function(Widget) {
+
+
+                    var bus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for input widget' });
+
+                    paramsWidget = Widget.make({
                         bus: bus,
-                        instance: widget
-                    };
+                        workspaceInfo: workspaceInfo
+                    });
+
+                    // widgets.paramsInputWidget = {
+                    //     path: ['parameters-group', 'widget'],
+                    //     // module: widgetModule,
+                    //     bus: bus,
+                    //     instance: widget
+                    // };
+                    bus.on('parameter-sync', function(message) {
+                        var value = model.getItem(['params', message.parameter]);
+                        bus.send({
+                            parameter: message.parameter,
+                            value: value
+                        }, {
+                            // This points the update back to a listener on this key
+                            key: {
+                                type: 'update',
+                                parameter: message.parameter
+                            }
+                        });
+                    });
+
+                    bus.on('sync-params', function(message) {
+                        message.parameters.forEach(function(paramId) {
+                            bus.send({
+                                parameter: paramId,
+                                value: model.getItem(['params', message.parameter])
+                            }, {
+                                key: {
+                                    type: 'parameter-value',
+                                    parameter: paramId
+                                },
+                                channel: message.replyToChannel
+                            });
+                        });
+                    });
+
+                    bus.respond({
+                        key: {
+                            type: 'get-parameter'
+                        },
+                        handle: function(message) {
+                            return {
+                                value: model.getItem(['params', message.parameterName])
+                            };
+                        }
+                    });
+
+                    //                    bus.on('get-parameter-value', function (message) {
+                    //                        var value = model.getItem(['params', message.parameter]);
+                    //                        bus.send({
+                    //                            parameter: message.parameter,
+                    //                            value: value
+                    //                        }, {
+                    //                            key: {
+                    //                                type: 'parameter-value',
+                    //                                parameter: message.parameter
+                    //                            }
+                    //                        });
+                    //                    });
+                    bus.on('parameter-changed', function(message) {
+                        // We simply store the new value for the parameter.
+                        model.setItem(['params', message.parameter], message.newValue);
+                        evaluateAppState();
+                    });
+                    return paramsWidget.start({
+                        node: ui.getElement(['parameters-group', 'widget']),
+                        appSpec: model.getItem('app.spec'),
+                        parameters: spec.getSpec().parameters,
+                        params: model.getItem('params')
+                    });
+                });
+        }
+
+        function xloadViewParamsWidget() {
+            return pRequire('nbextensions/viewCell/widgets/appParamsViewWidget')
+                .then(function(Widget) {
+                    // TODO: widget should make own bus
+                    var bus = runtime.bus().makeChannelBus({ description: 'Parent comm bus for input view widget' });
+
+                    paramsWidget = Widget.make({
+                        bus: bus,
+                        workspaceInfo: workspaceInfo
+                    });
+                    // widgets.paramsDisplayWidget = {
+                    //     path: ['parameters-display-group', 'widget'],
+                    //     // module: widgetModule,
+                    //     bus: bus,
+                    //     instance: widget
+                    // };
                     bus.on('sync-all-parameters', function() {
                         var params = model.getItem('params');
                         Object.keys(params).forEach(function(key) {
@@ -1308,19 +1410,22 @@ define([
                             }
                         });
                     });
-                    widget.start();
-                    bus.emit('run', {
-                        node: ui.getElement(['parameters-display-group', 'widget']),
-                        appSpec: env.appSpec,
-                        parameters: env.parameters
-                    });
 
-                    resolve();
-                }, function(err) {
-                    console.log('ERROR', err);
-                    reject(err);
+                    // return paramsWidget.start()
+                    //     .then(function() {
+                    //         bus.emit('run', {
+                    //             node: ui.getElement(['parameters-display-group', 'widget']),
+                    //             appSpec: env.appSpec,
+                    //             parameters: env.parameters
+                    //         });
+                    //     });
+                    return paramsWidget.start({
+                        node: ui.getElement(['parameters-group', 'widget']),
+                        appSpec: model.getItem('app.spec'),
+                        parameters: spec.getSpec().parameters,
+                        params: model.getItem('params')
+                    });
                 });
-            });
         }
 
         function makeIcon() {
@@ -1435,10 +1540,17 @@ define([
                     utils.setCellMeta(cell, 'kbase.attributes.subtitle', model.getItem('app.spec.info.subtitle'));
                     utils.setCellMeta(cell, 'kbase.attributes.info.url', url);
                     utils.setCellMeta(cell, 'kbase.attributes.info.label', 'more...');
-                    return Promise.all([
-                        loadInputWidget()
-                        // loadInputViewWidget()
-                    ]);
+                    if (Narrative.canEdit()) {
+                        return unloadParamsWidget()
+                            .then(function() {
+                                return loadInputParamsWidget();
+                            });
+                    } else {
+                        return unloadParamsWidget()
+                            .then(function() {
+                                return loadViewParamsWidget();
+                            });
+                    }
                 })
                 .then(function() {
                     // this will not change, so we can just render it here.
@@ -1471,10 +1583,10 @@ define([
         }
 
         // INIT
-
         model = Props.make({
             data: utils.getMeta(cell, 'viewCell'),
             onUpdate: function(props) {
+                console.log('setting view cell metadata to ', props.getRawObject());
                 utils.setMeta(cell, 'viewCell', props.getRawObject());
                 // saveNarrative();
             }

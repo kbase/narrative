@@ -7,16 +7,14 @@ define(
         'bootstrap',
         'jquery',
         'narrativeConfig',
-        'common/runtime',
-        'kbaseNarrativeSharePanel'
+        'common/runtime'
     ],
     function(
         KBWidget,
         bootstrap,
         $,
         Config,
-        Runtime,
-        kbaseNarrativeSharePanel
+        Runtime
     ) {
         'use strict';
 
@@ -64,7 +62,15 @@ define(
             $('#kb-status-btn').attr('href', Config.url('status_page'));
 
             $('#kb-add-code-cell').click(function() {
-                    Jupyter.narrative.insertAndSelectCellBelow('code');
+                    var cell = Jupyter.narrative.insertAndSelectCellBelow('code');
+                    // Now we need to invent a way of triggering the cell to set itself up.
+                    $([Jupyter.events]).trigger('inserted.Cell', {
+                        cell: cell,
+                        kbase: {
+                            type: 'code',
+                            language: 'python'
+                        }
+                    });
                 })
                 .tooltip({
                     delay: {

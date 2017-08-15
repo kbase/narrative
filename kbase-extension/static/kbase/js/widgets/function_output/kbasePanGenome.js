@@ -48,7 +48,12 @@ define([
             if (this.isError) {
                 return;
             }
-            this.dataPromise = Promise.resolve(this.serviceClient.sync_call('PanGenomeAPI.compute_summary_from_pangenome', [{ pangenome_ref: this.objRef }]));
+            this.dataPromise = Promise.resolve(
+                this.serviceClient.sync_call(
+                    'PanGenomeAPI.compute_summary_from_pangenome',
+                    [{ pangenome_ref: this.objRef }]
+                )
+            );
             var $tabContainer = $('<div>');
             this.$elem.append($tabContainer);
             this.tabs = new KBaseTabs($tabContainer, {
@@ -90,7 +95,6 @@ define([
             var self = this;
             var $summaryDiv = $('<div>').append(Display.loadingDiv().div);
             this.dataPromise.then(function(data) {
-                console.log(data);
                 data = data[0];
                 var $topTable = $('<table class="table table-hover table-striped table-bordered">');
 
@@ -138,8 +142,9 @@ define([
                 $summaryDiv.empty().append($topTable).append($genomeTable);
             })
             .catch(function(error) {
-                alert(error);
-                console.error(error);
+                $summaryDiv
+                .empty()
+                .append(Display.createError('Pangenome data summary error', error.error));
             });
             return $summaryDiv;
         },
@@ -175,7 +180,9 @@ define([
                 $homologDiv.empty().append($prettyTable);
             })
             .catch(function(error) {
-                alert(error);
+                $homologDiv
+                .empty()
+                .append(Display.createError('Pangenome homolog family data error', error.error));
             });
             return $homologDiv;
         },
@@ -430,7 +437,8 @@ define([
                 };
             })
             .catch(function(error) {
-                alert(error);
+                console.error(error);
+                throw error;
             });
         },
 

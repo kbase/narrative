@@ -100,11 +100,12 @@ define([
                 checked = true;
             }
             return label([
-                input({                   
+                input({
                     type: 'checkbox',
                     dataElement: 'input',
                     checked: checked,
                     value: 1,
+                    disabled: true,
                     readonly: true
                 })
             ]);

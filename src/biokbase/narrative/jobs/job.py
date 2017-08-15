@@ -42,8 +42,6 @@ class Job(object):
         self.owner = owner
         self.token_id = token_id
 
-        self._njs = clients.get('job_service')
-
     @classmethod
     def from_state(Job, job_id, job_info, owner, app_id, tag='release',
                    cell_id=None, run_id=None, token_id=None):
@@ -110,7 +108,7 @@ class Job(object):
             return self.inputs
         else:
             try:
-                self.inputs = self._njs.get_job_params(self.job_id)[0]['params']
+                self.inputs = clients.get("job_service").get_job_params(self.job_id)[0]['params']
                 return self.inputs
             except Exception as e:
                 raise Exception("Unable to fetch parameters for job {} - {}".format(self.job_id, e))
@@ -123,7 +121,7 @@ class Job(object):
         if self._last_state is not None and self._last_state.get('finished', 0) == 1:
             return self._last_state
         try:
-            state = self._njs.check_job(self.job_id)
+            state = clients.get("job_service").check_job(self.job_id)
             if 'cancelled' in state:
                 state[u'canceled'] = state.get('cancelled', 0)
                 del state['cancelled']
@@ -204,8 +202,9 @@ class Job(object):
         return (num_available_lines, self._job_logs[first_line:first_line+num_lines])
 
     def _update_log(self):
-        log_update = self._njs.get_job_logs({'job_id': self.job_id,
-                                             'skip_lines': len(self._job_logs)})
+        log_update = clients.get("job_service").get_job_logs(
+            {'job_id': self.job_id,
+             'skip_lines': len(self._job_logs)})
         if log_update['lines']:
             self._job_logs = self._job_logs + log_update['lines']
 

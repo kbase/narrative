@@ -136,6 +136,12 @@ We'll have super powers for a while
 
     sudo su
 
+Install luasec first
+
+    apt-get install lua-sec
+
+Otherwise the lua deps won't install
+
 Run the Lua dependencies installer script:
 
     sh ./narrative/docker/lua-dependencies.txt
@@ -176,7 +182,8 @@ You'll need to make the the docker defaults sane to prevent your machine from th
 ```
 provision_count = 2
 container_max = 5
-server_name localhost localhost.kbase.us local-dev.kbase.us;
+# server_name localhost localhost.kbase.us local-dev.kbase.us;
+server_name ci.kbase.us;
 ```
 
 Add we really should operate in secure mode. (And part of the Narrative installation will attempt to contact the narrative server on a secure port, so we do need this.)

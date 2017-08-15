@@ -95,7 +95,7 @@ define([
                             result: null
                         },
                         params: null,
-                        outputWidgetState: null 
+                        outputWidgetState: null
                     }
                 };
                 cell.metadata = meta;
@@ -125,7 +125,7 @@ define([
                 showCode = utils.getCellMeta(cell, 'kbase.viewCell.user-settings.showCodeInputArea');
 
             if (showCode) {
-                inputArea.addClass('hidden');
+                inputArea.classList.remove('-show');
             }
             outputArea.addClass('hidden');
             viewInputArea.addClass('hidden');
@@ -138,7 +138,9 @@ define([
                 showCode = utils.getCellMeta(cell, 'kbase.viewCell.user-settings.showCodeInputArea');
 
             if (showCode) {
-                inputArea.removeClass('hidden');
+                if (!inputArea.classList.contains('-show')) {
+                    inputArea.classList.add('-show');
+                }
             }
             outputArea.removeClass('hidden');
             viewInputArea.removeClass('hidden');
@@ -287,7 +289,7 @@ define([
                 return setupNotebook();
             })
             .then(function() {
-                jupyter.onEvent('inserted.Cell', function (event, data) {
+                jupyter.onEvent('inserted.Cell', function(event, data) {
                     if (data.kbase && data.kbase.type === 'advancedView') {
                         upgradeToViewCell(data.cell, data.kbase.appSpec, data.kbase.appTag)
                             .catch(function(err) {

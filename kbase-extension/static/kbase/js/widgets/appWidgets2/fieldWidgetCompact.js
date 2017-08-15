@@ -17,7 +17,7 @@ define([
     'common/runtime',
     './errorControl',
     'css!google-code-prettify/prettify.css'
-], function (
+], function(
     Promise,
     PR,
     html,
@@ -75,6 +75,7 @@ define([
                 referenceType: config.referenceType
             });
         } catch (ex) {
+            console.error('Error creating input control', ex);
             inputControl = ErrorControlFactory.make({
                 message: ex.message
             }).make();
@@ -125,7 +126,7 @@ define([
                         class: 'btn btn-link alert-link',
                         id: events.addEvent({
                             type: 'click',
-                            handler: function () {
+                            handler: function() {
                                 showMessageDialog(messageDef.id);
                             }
                         })
@@ -214,12 +215,12 @@ define([
 
         function parameterInfoTypeRules(spec) {
             switch (spec.data.type) {
-            case 'float':
-            case 'int':
-                return [
-                    tr([th('Min'), td(spec.data.constraints.min)]),
-                    tr([th('Max'), td(spec.data.constraints.max)])
-                ];
+                case 'float':
+                case 'int':
+                    return [
+                        tr([th('Min'), td(spec.data.constraints.min)]),
+                        tr([th('Max'), td(spec.data.constraints.max)])
+                    ];
             }
         }
 
@@ -229,10 +230,10 @@ define([
                 tr([th('Data type'), td(spec.data.type)]),
                 // tr([th('Field type'), td(spec.spec.field_type)]),
                 tr([th('Multiple values?'), td(spec.multipleItems ? 'yes' : 'no')]),
-                (function () {
+                (function() {
                     return tr([th('Default value'), td(spec.data.defaultValue)]);
                 }()),
-                (function () {
+                (function() {
                     if (spec.data.constraints.types) {
                         return tr([th('Valid types'), td(spec.data.constraints.types.join('<br>'))]);
                     }
@@ -261,25 +262,25 @@ define([
                 div({ dataElement: 'big-tip', class: 'hidden' }, html.makeTabs({
                     alignRight: true,
                     tabs: [{
-                        label: 'Description',
-                        name: 'description',
-                        content: div({ style: { padding: '0px' } }, infoTipText)
-                    },
-                    {
-                        label: 'About',
-                        name: 'about',
-                        content: parameterInfoContent(spec)
-                    },
-                    {
-                        label: 'Rules',
-                        name: 'rules',
-                        content: parameterInfoRules(spec)
-                    },
-                    {
-                        label: 'Spec',
-                        name: 'spec',
-                        content: rawSpec(spec)
-                    }
+                            label: 'Description',
+                            name: 'description',
+                            content: div({ style: { padding: '0px' } }, infoTipText)
+                        },
+                        {
+                            label: 'About',
+                            name: 'about',
+                            content: parameterInfoContent(spec)
+                        },
+                        {
+                            label: 'Rules',
+                            name: 'rules',
+                            content: parameterInfoRules(spec)
+                        },
+                        {
+                            label: 'Spec',
+                            name: 'spec',
+                            content: rawSpec(spec)
+                        }
                     ]
                 }))
             ]);
@@ -342,21 +343,20 @@ define([
                         marginBottom: '0'
                     }
                 }, [
-                    div({class: 'col-md-3' }, [
-                            label({
-                                    class: 'xcontrol-label kb-app-parameter-name control-label',
-                                    title: infoTipText,
-                                    style: {cursor: 'help'},
-                                    id: events.addEvent({
-                                        type: 'click',
-                                            handler: function () {
-                                                places.infoPanel.querySelector('[data-element="big-tip"]').classList.toggle('hidden');
-                                            }
-                                        })
-                                },
-                                [
-                                    spec.ui.label || spec.ui.id
-                                ])
+                    div({ class: 'col-md-3' }, [
+                        label({
+                            class: 'xcontrol-label kb-app-parameter-name control-label',
+                            title: infoTipText,
+                            style: { cursor: 'help' },
+                            id: events.addEvent({
+                                type: 'click',
+                                handler: function() {
+                                    places.infoPanel.querySelector('[data-element="big-tip"]').classList.toggle('hidden');
+                                }
+                            })
+                        }, [
+                            spec.ui.label || spec.ui.id
+                        ])
                     ]),
                     div({ class: 'input-group col-md-9' }, [
                         div({
@@ -438,7 +438,7 @@ define([
         // LIFECYCLE
 
         function attach(node) {
-            return Promise.try(function () {
+            return Promise.try(function() {
                 parent = node;
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
@@ -471,37 +471,37 @@ define([
 
         function start(arg) {
             return attach(arg.node)
-                .then(function () {
-                    bus.on('validation', function (message) {
+                .then(function() {
+                    bus.on('validation', function(message) {
                         switch (message.diagnosis) {
-                        case 'valid':
-                            feedbackOk();
-                            clearError();
-                            break;
-                        case 'required-missing':
-                            feedbackRequired();
-                            clearError();
-                            break;
-                        case 'suspect':
-                            feedbackOk();
-                            clearError();
-                            setWarning({
-                                message: message.shortMessage,
-                                id: message.messageId
-                            });
-                            break;
-                        case 'invalid':
-                            feedbackError();
-                            clearError();
-                            setError({
-                                id: message.messageId,
-                                message: message.errorMessage
-                            });
-                            break;
-                        case 'optional-empty':
-                            feedbackNone();
-                            clearError();
-                            break;
+                            case 'valid':
+                                feedbackOk();
+                                clearError();
+                                break;
+                            case 'required-missing':
+                                feedbackRequired();
+                                clearError();
+                                break;
+                            case 'suspect':
+                                feedbackOk();
+                                clearError();
+                                setWarning({
+                                    message: message.shortMessage,
+                                    id: message.messageId
+                                });
+                                break;
+                            case 'invalid':
+                                feedbackError();
+                                clearError();
+                                setError({
+                                    id: message.messageId,
+                                    message: message.errorMessage
+                                });
+                                break;
+                            case 'optional-empty':
+                                feedbackNone();
+                                clearError();
+                                break;
                         }
                     });
                     // bus.on('touched', function (message) {
@@ -510,31 +510,31 @@ define([
                     // bus.on('changed', function () {
                     //     places.feedback.style.backgroundColor = '';
                     // });
-                    bus.on('enable', function (message) {
+                    bus.on('enable', function(message) {
                         doEnable();
                     });
-                    bus.on('disable', function (message) {
+                    bus.on('disable', function(message) {
                         doDisable();
                     });
 
                     if (inputControl.start) {
                         return inputControl.start({
-                            node: places.inputControl
-                        })
-                        .then(function () {
-                            // TODO: get rid of this pattern
-                            bus.emit('run', {
                                 node: places.inputControl
+                            })
+                            .then(function() {
+                                // TODO: get rid of this pattern
+                                bus.emit('run', {
+                                    node: places.inputControl
+                                });
                             });
-                        });
                     }
                 });
         }
 
         function stop() {
-            return Promise.try(function () {
+            return Promise.try(function() {
                 return inputControl.stop()
-                    .then(function () {
+                    .then(function() {
                         if (parent && container) {
                             parent.removeChild(container);
                         }
@@ -552,7 +552,7 @@ define([
     }
 
     return {
-        make: function (config) {
+        make: function(config) {
             return factory(config);
         }
     };

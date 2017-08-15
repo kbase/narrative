@@ -2,6 +2,7 @@ from requests.exceptions import HTTPError
 from biokbase.NarrativeJobService.baseclient import ServerError as NJSServerError
 from biokbase.userandjobstate.baseclient import ServerError as UJSServerError
 
+
 class NarrativeException(Exception):
     def __init__(self, code, message, name, source):
         self.code = code
@@ -11,6 +12,7 @@ class NarrativeException(Exception):
 
     def __str__(self):
         return self.message
+
 
 def transform_job_exception(e):
     """

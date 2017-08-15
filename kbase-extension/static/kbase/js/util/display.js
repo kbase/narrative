@@ -157,9 +157,20 @@ define([
     }
 
     /**
-     * errorTitle = a string that'll be in bold at the top of the panel.
-     * errorBody = a string that'll be in standard text, in the error's body area.
-     * if errorBody is an object, ...
+     * title - a string for the title of the error panel
+     * error - either a string or a simple object (key-value pairs) representing the error
+     *         if it has the following structure, then it's treated as a KBase JSON-RPC error:
+     * {
+     *     status: (number),
+     *     error: {
+     *         code: (number),
+     *         message: (string),
+     *         name: (string),
+     *         error: (long traceback string)
+     *     }
+     * }
+     * stackTrace (optional) - a (usually large) string with a stacktrace error. This gets
+     *                         hidden behind an accordion.
      */
     function createError(title, error, stackTrace) {
         var $errorPanel = $('<div>')
@@ -175,8 +186,20 @@ define([
 
         // If it's an object, expect an error object
         else if (typeof error === 'object') {
-            Object.keys(error).forEach(function(key) {
-                $errorPanel.append($('<div>').append('<b>' + key + ':</b> ' + error[key]));
+            var errObj = error;
+            if (error.status && error.error && error.error.error) {
+                errObj = {
+                    status: error.status,
+                    code: error.error.code,
+                    message: error.error.message,
+                    name: error.error.name
+                };
+                if (!stackTrace) {
+                    stackTrace = error.error.error;
+                }
+            }
+            Object.keys(errObj).forEach(function(key) {
+                $errorPanel.append($('<div>').append('<b>' + key + ':</b> ' + errObj[key]));
             });
         }
         else if (error) {
@@ -189,7 +212,7 @@ define([
                 elements: [
                     {
                         title: 'Error Details',
-                        body: $('<div>').addClass('kb-function-error-traceback').append(stackTrace)
+                        body: $('<pre>').addClass('kb-function-error-traceback').append(stackTrace)
                     }
                 ]}
             );

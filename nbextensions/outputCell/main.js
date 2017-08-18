@@ -133,12 +133,11 @@ define([
         cell.renderIcon();
     }
 
-    function upgradeCell(data) {
+    function upgradeCell(cell, setupData) {
         return Promise.try(function() {
-            var cell = data.cell,
-                meta = cell.metadata,
+            var meta = cell.metadata,
                 outputCode, parentTitle,
-                cellId = data.kbase.cellId || (new Uuid(4).format());
+                cellId = setupData.cellId || (new Uuid(4).format());
 
             // Set the initial metadata for the output cell.
             meta.kbase = {
@@ -152,9 +151,9 @@ define([
                     title: 'Output Cell'
                 },
                 outputCell: {
-                    jobId: data.kbase.jobId,
-                    parentCellId: data.kbase.parentCellId,
-                    widget: data.kbase.widget
+                    jobId: setupData.jobId,
+                    parentCellId: setupData.parentCellId,
+                    widget: setupData.widget
                 }
             };
             cell.metadata = meta;
@@ -162,7 +161,7 @@ define([
             // We just need to generate, set, and execute the output
             // the first time (for now).
 
-            outputCode = PythonInterop.buildOutputRunner(data.kbase.widget.name, data.kbase.widget.tag, cellId, data.kbase.widget.params);
+            outputCode = PythonInterop.buildOutputRunner(setupData.widget.name, setupData.widget.tag, cellId, setupData.widget.params);
             cell.set_text(outputCode);
             cell.execute();
 
@@ -181,13 +180,19 @@ define([
     }
 
     function load() {
-        $([Jupyter.events]).on('inserted.Cell', function(event, data) {
-            if (data.kbase && data.kbase.type === 'output') {
-                upgradeCell(data)
+        $([Jupyter.events]).on('insertedAtIndex.Cell', function(event, payload) {
+            var cell = payload.cell;
+            var setupData = payload.data;
+            var jupyterCellType = payload.type;
+
+            if (jupyterCellType === 'code' &&
+                setupData && 
+                setupData.type === 'output') {
+                upgradeCell(cell, setupData)
                     .catch(function(err) {
                         console.error('ERROR creating cell', err);
                         // delete cell.
-                        $(document).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(data.cell));
+                        $(document).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(cell));
                         alert('Could not insert cell due to errors.\n' + err.message);
                     });
             }

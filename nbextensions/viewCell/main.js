@@ -380,16 +380,21 @@ define([
                 // Primary hook for new cell creation.
                 // If the cell has been set with the metadata key kbase.type === 'app'
                 // we have a app cell.
-                $([Jupyter.events]).on('inserted.Cell', function(event, data) {
-                    if (data.kbase && data.kbase.type === 'view') {
-                        upgradeToViewCell(data.cell, data.kbase.appSpec, data.kbase.appTag)
+                $([Jupyter.events]).on('insertedAtIndex.Cell', function(event, payload) {
+                    var cell = payload.cell;
+                    var setupData = payload.data;
+                    var jupyterCellType = payload.type;
+                    if (jupyterCellType === 'code' &&
+                        setupData && 
+                        setupData.type === 'view') {
+                        upgradeToViewCell(cell, setupData.appSpec, setupData.appTag)
                             .then(function() {
                                 // console.log('Cell created?');
                             })
                             .catch(function(err) {
                                 console.error('ERROR creating cell', err);
                                 // delete cell.
-                                Jupyter.notebook.delete_cell(Jupyter.notebook.find_cell_index(data.cell));
+                                Jupyter.notebook.delete_cell(Jupyter.notebook.find_cell_index(cell));
                                 alert('Could not insert cell due to errors.\n' + err.message);
                             });
                     }

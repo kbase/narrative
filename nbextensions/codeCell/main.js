@@ -136,19 +136,19 @@ define([
         });
     }
 
-    function upgradeCell(data) {
-        var cell = data.cell,
-            meta = cell.metadata,
-            cellId = data.kbase.cellId || (new Uuid(4).format());
+    function upgradeCell(cell, data) {
+        data = data || {};
+        var meta = cell.metadata,
+            cellId = data.cellId || (new Uuid(4).format());
 
         // Accomodate import/job cells.
         // For now we create an import property on the side.
 
         var jobInfo;
-        if (meta.kbase && meta.kbase.state) {
+        if (data && data.state) {
             jobInfo = {
-                jobId: meta.kbase.jobId,
-                state: meta.kbase.state
+                jobId: data.jobId,
+                state: data.state
             };
         }
 
@@ -161,8 +161,8 @@ define([
                 created: new Date().toGMTString(),
                 lastLoaded: new Date().toGMTString(),
                 icon: 'code',
-                title: data.kbase.title || 'Code Cell',
-                subtitle: data.kbase.language
+                title: data.title || 'Code Cell',
+                subtitle: data.language
             },
             codeCell: {
                 userSettings: {
@@ -210,15 +210,38 @@ define([
     }
 
     function load() {
-        $([Jupyter.events]).on('inserted.Cell', function (event, data) {
-            if (data.kbase && data.kbase.type === 'code') {
+        // $([Jupyter.events]).on('inserted.Cell', function (event, data) {
+        //     if (data.kbase && data.kbase.type === 'code') {
+        //         try {
+        //             var cell = upgradeCell(data);
+        //             setupCell(cell);
+        //         } catch (err) {
+        //             console.error('ERROR creating cell', err);
+        //             // delete cell.
+        //             $(document).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(data.cell));
+        //             alert('Could not insert cell due to errors.\n' + err.message);
+        //         }
+        //     }
+        // });
+
+        // cases to handle:
+        // a kbase-inserted cell, with setup data indicating type of 'code'
+        // a jupyter-inserted cell, with no setup data
+
+        $([Jupyter.events]).on('insertedAtIndex.Cell', function (event, payload) {
+            // console.log('cell inserted...', data);
+            var cell = payload.cell;
+            var setupData = payload.data;
+            var jupyterCellType = payload.type;
+            if (jupyterCellType === 'code' &&
+                (!setupData || setupData.type === 'code')) {
                 try {
-                    var cell = upgradeCell(data);
+                    upgradeCell(cell, setupData);
                     setupCell(cell);
                 } catch (err) {
                     console.error('ERROR creating cell', err);
                     // delete cell.
-                    $(document).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(data.cell));
+                    $(document).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(setupData.cell));
                     alert('Could not insert cell due to errors.\n' + err.message);
                 }
             }

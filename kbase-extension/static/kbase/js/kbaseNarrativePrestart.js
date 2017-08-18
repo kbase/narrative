@@ -62,15 +62,11 @@ define(
             $('#kb-status-btn').attr('href', Config.url('status_page'));
 
             $('#kb-add-code-cell').click(function() {
-                    var cell = Jupyter.narrative.insertAndSelectCellBelow('code');
-                    // Now we need to invent a way of triggering the cell to set itself up.
-                    $([Jupyter.events]).trigger('inserted.Cell', {
-                        cell: cell,
-                        kbase: {
-                            type: 'code',
-                            language: 'python'
-                        }
-                    });
+                    var data = {
+                        type: 'code',
+                        language: 'python'
+                    };
+                    Jupyter.narrative.insertAndSelectCellBelow('code', null, data);
                 })
                 .tooltip({
                     delay: {

@@ -94,6 +94,7 @@
 define([
     'jquery',
     'base/js/namespace',
+    'kbaseNarrative',
     'base/js/security',
     'base/js/utils',
     'base/js/page',
@@ -116,6 +117,7 @@ define([
 ], function (
     $,
     Jupyter,
+    Narrative,
     security,
     nbUtils,
     page,
@@ -129,7 +131,7 @@ define([
     keyboardManager,
     cell,
     utils,
-    Narrative,
+    NarrativeRuntime,
     html,
     narrativeConfig
 ) {
@@ -334,6 +336,7 @@ define([
             case 'maximized':
                 if (!this.maximize) {
                     console.log('HELP', this);
+                    return;
                 }
                 this.maximize();
                 break;
@@ -395,6 +398,12 @@ define([
                 // I believe the original reason for this event (it may be possible to also use notebook_loaded.Notebook,
                 // but I'm not sure), is that the extensions were originally developed in raw Jupyter,
                 // and only some cells had the KBase toolbar and behavior.
+                // Actually, we do need to use the preset_activated event
+                // because WE generate this event by activating the KBase
+                // cell toolbar (in kbaseNarrative) after receiving
+                // the notebeook_loaded event and also after setting up
+                // the basic narrController with some info needed by the
+                // cell toolbar (readonly, e.g.)
                 this.events.on('preset_activated.CellToolbar', function (e, data) {
                     if (data.name === 'KBase') {
                         this.renderMinMax();
@@ -559,7 +568,7 @@ define([
             $cellNode.find('.inner_cell > div:nth-child(2)').removeClass('hidden');
             $cellNode.find('.inner_cell > div:nth-child(3)').removeClass('hidden');
             utils.setCellMeta(this, 'kbase.cellState.showTitle', false);
-            if (Narrative.canEdit()) {
+            if (NarrativeRuntime.canEdit()) {
                 utils.setCellMeta(this, 'kbase.cellState.message', 'Double click content to edit; click out of the edit area to preview', true);
             }
         };
@@ -592,7 +601,6 @@ define([
         var originalBindEvents = p.bind_events;
         p.bind_events = function () {
             originalBindEvents.apply(this);
-            // textCell.TextCell.prototype.bind_events.apply(this);
 
             var cell = this,
                 $cellNode = $(this.element);
@@ -600,7 +608,7 @@ define([
             this.element.off('dblclick');
 
             this.element.on('dblclick', '.text_cell_render', function () {
-                if (!Narrative.canEdit()) {
+                if (!NarrativeRuntime.canEdit()) {
                     return;
                 }
                 var cont = cell.unrender();
@@ -806,7 +814,6 @@ define([
             outputArea.addClass('hidden');
         };
 
-        // Note that the 
         p.maximize = function () {
             var inputArea = this.input.find('.input_area').get(0),
                 outputArea = this.element.find('.output_wrapper');
@@ -926,24 +933,6 @@ define([
             }
             return originalExecute.apply(this, arguments);
         };
-
-        // Can't do this because when a cell is constructed, it has no metadata!
-        // Look in notebook.js, fromJSON.
-        // var originalInitClasses = codeCell.CodeCell.prototype.init_classes;
-        // p.init_classes = function() {
-        //     originalInitClasses.apply(this, arguments);
-        //     if (this.metadata.kbase) {
-        //         return;
-        //     }
-        //     console.log('code cell metadata', this.metadata);
-        //     var codeInputArea = this.input.find('.input_area')[0];
-        //     if (codeInputArea) {
-        //         if (!codeInputArea.classList.contains('-show')) {
-        //             codeInputArea.classList.add('-show');
-        //         }
-        //     }
-        // };
-
     }());
 
     /*
@@ -953,13 +942,15 @@ define([
      * state of the cell, as reflected in the cell metadata
      * (via getCellState).
      */
+
+    // NOTEBOOK
+
     notebook.Notebook.prototype.eachCell = function (fun) {
         var cells = this.get_cells();
         cells.forEach(function (cell) {
             fun(cell);
         });
     };
-
 
     // Patch the Notebook to return the right name
     notebook.Notebook.prototype.get_notebook_name = function () {
@@ -984,6 +975,69 @@ define([
             }
         );
     };
+
+    // Extend methods.
+    (function () {
+        var p = notebook.Notebook.prototype;
+
+        var sidecarData = null;
+
+        // insert_cell_at_index wrapper
+        // Adds a third argument, "data", which is passed in the 
+        // "insertedAtIndex.Cell" event to any listeners, esp. 
+        // notebook extensions for cells. Note that if "data" is absent
+        // or falsey, the sidecarData closed-over variable is used. It 
+        // may be set by insert_cell_below or insert_cell_above if they 
+        // are called with a similarly new third argument.
+        //
+        // We use this technique since we do not want to re-implement the 
+        // underlying method, just wrap it.
+        // 
+        // Note that the cell object created is not extensible, so we can't 
+        // store this on the cell object itself.
+        // 
+        // Also note that this works because ... js is single threaded and there
+        // is no possibility that another call will bump into this value.
+        (function () {
+            var originalMethod = p.insert_cell_at_index;
+            p.insert_cell_at_index = function (type, index, data) {
+                var cell = originalMethod.apply(this, arguments);
+                var dataToSend = data || sidecarData;
+                sidecarData = null;
+                this.events.trigger('insertedAtIndex.Cell', {
+                    type: type || 'code',
+                    index: index,
+                    cell: cell,
+                    data: dataToSend
+                });
+                return cell;
+            };
+        }());
+
+        // insert_cell_below wrapper
+        // Accepts a third argument "data" not supported in the original.
+        // Since it cannot be passed to the inner method, it is set
+        // on the sidecarData variable, which is picked up above.
+        // This method always calls insert_cell_at_index to do the
+        // actual cell insertion, so is a reliable method of passing this
+        // extra argument.
+        (function () {
+            var originalMethod = p.insert_cell_below;
+            p.insert_cell_below = function (type, index, data) {
+                sidecarData = data;
+                var cell = originalMethod.apply(this, arguments);
+                return cell;
+            };
+        }());
+        (function () {
+            var originalMethod = p.insert_cell_above;
+            p.insert_cell_above = function (type, index, data) {
+                sidecarData = data;
+                var cell = originalMethod.apply(this, arguments);
+                return cell;
+            };
+        }());
+    }());
 
     // Patch the save widget to skip the 'notebooks' part of the URL when updating
     // after a notebook rename.

@@ -231,7 +231,7 @@ define([], function() {
                 },
                 {
                     mode: 'processing',
-                    state: 'launched'
+                    stage: 'launched'
                 },
                 {
                     mode: 'processing',

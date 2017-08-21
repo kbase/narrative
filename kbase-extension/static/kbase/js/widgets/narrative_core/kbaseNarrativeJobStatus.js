@@ -13,6 +13,7 @@ define([
     'util/timeFormat',
     'util/string',
     'kb_service/client/workspace',
+    'kb_service/utils',
     'kbaseAuthenticatedWidget',
     'kbaseTabs',
     'kbaseReportView',
@@ -40,6 +41,7 @@ define([
     TimeFormat,
     StringUtil,
     Workspace,
+    ServiceUtils,
     KBaseAuthenticatedWidget,
     KBaseTabs,
     KBaseReportView,
@@ -463,7 +465,7 @@ define([
                                                     });
                                                     return;
                                                 }
-                                                this.openViewerCell(this.createInfoObject(info));
+                                                Jupyter.narrative.addViewerCell(info);
                                             }.bind(this));
                                         }
                                         $div.append($objTable);
@@ -478,28 +480,6 @@ define([
                 }
                 this.showingNewObjects = true;
             }
-        },
-
-        openViewerCell: function (info) {
-            var cell = Jupyter.notebook.get_selected_cell();
-            var near_idx = 0;
-            if (cell) {
-                near_idx = Jupyter.notebook.find_cell_index(cell);
-                $(cell.element).off('dblclick');
-                $(cell.element).off('keydown');
-            }
-            this.trigger('createViewerCell.Narrative', {
-                'nearCellIdx': near_idx,
-                'widget': 'kbaseNarrativeDataCell',
-                'info': info
-            });
-        },
-
-        createInfoObject: function (info) {
-            return _.object(['id', 'name', 'type', 'save_date', 'version',
-                'saved_by', 'ws_id', 'ws_name', 'chsum', 'size',
-                'meta'
-            ], info);
         },
 
         /**

@@ -15,6 +15,7 @@ define([
     'kb_common/html',
     'kb_sdk_clients/genericClient',
     'kb_service/client/workspace',
+    'kb_service/utils',
     'common/ui',
     'common/iframe/hostMessages',
     'common/events',
@@ -34,6 +35,7 @@ define([
     html,
     GenericClient,
     Workspace,
+    ServiceUtils,
     UI,
     HostMessages,
     Events,
@@ -380,7 +382,7 @@ define([
                         // We may receive this if a 'ready' was received
                         // from another cell. Perhaps there is a better
                         // way of filtering messages before getting here!
-                        // TODO: implement an address feature to allow a 
+                        // TODO: implement an address feature to allow a
                         //   message bus to ignore messages not sent to it.
                         //   we use the frame id for this, but it should actually
                         //   be a feature of the message bus itself.
@@ -492,7 +494,7 @@ define([
                                             e.stopPropagation();
                                             e.preventDefault();
                                             var objName = [$(this).data('objname')];
-                                            self.openViewerCell(dataNameToInfo[objName]);
+                                            Jupyter.narrative.addViewerCell(dataNameToInfo[objName]);
                                         });
                                     }
 
@@ -604,7 +606,7 @@ define([
                 // REPORT SECTION
 
                 /*
-                The "inline" report can come from either the direct_html property or the direct_html_link_index. 
+                The "inline" report can come from either the direct_html property or the direct_html_link_index.
                 The direct_html_link_index will take precedence since it offers a better method for referencing
                 content within an iframe. Generally the app developer should use either method, not both
                  */
@@ -653,7 +655,7 @@ define([
                                 };
                             }
                         } else {
-                            // If the direct_html is a full document we cannot (yet?) insert 
+                            // If the direct_html is a full document we cannot (yet?) insert
                             // the necessary code to gracefully handle resizing and click-passthrough.
                             if (/<html/.test(report.direct_html)) {
                                 console.warn('Html document inserted into iframe', report);
@@ -663,8 +665,8 @@ define([
                                     events: events
                                 });
                             } else {
-                                // note that for direct_html, we set the max height. this content is expected 
-                                // to be smaller than linked content, and we will want the container 
+                                // note that for direct_html, we set the max height. this content is expected
+                                // to be smaller than linked content, and we will want the container
                                 // to shrink, but if it is larger, we simply don't want it to be too tall.
                                 iframe = _this.makeIframe({
                                     content: report.direct_html,
@@ -822,36 +824,6 @@ define([
             events.attachEvents();
 
             this.loading(false);
-        },
-        openViewerCell: function(ws_info) {
-            if (Jupyter.narrative.readonly) {
-                new Alert({
-                    type: 'warning',
-                    title: 'Warning: Read-only Narrative',
-                    body: 'You cannot insert a data viewer cell into this Narrative because it is read-only'
-                });
-                return;
-            }
-            var self = this;
-            var cell = Jupyter.notebook.get_selected_cell();
-            var near_idx = 0;
-            if (cell) {
-                near_idx = Jupyter.notebook.find_cell_index(cell);
-                $(cell.element).off('dblclick');
-                $(cell.element).off('keydown');
-            }
-            var info = self.createInfoObject(ws_info);
-            self.trigger('createViewerCell.Narrative', {
-                'nearCellIdx': near_idx,
-                'widget': 'kbaseNarrativeDataCell',
-                'info': info
-            });
-        },
-        createInfoObject: function(info) {
-            return _.object(['id', 'name', 'type', 'save_date', 'version',
-                'saved_by', 'ws_id', 'ws_name', 'chsum', 'size',
-                'meta'
-            ], info);
         },
         loading: function(isLoading) {
             if (isLoading) {

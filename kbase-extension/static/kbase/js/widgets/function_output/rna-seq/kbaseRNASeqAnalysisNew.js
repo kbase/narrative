@@ -8,7 +8,8 @@ define (
 		'kbaseTable',
 		'kbaseAuthenticatedWidget',
 		'kbase-client-api',
-		'jquery-dataTables'
+		'jquery-dataTables',
+        'kb_service/utils'
 	], function(
 		KBWidget,
 		bootstrap,
@@ -16,7 +17,8 @@ define (
 		kbaseTable,
 		kbaseAuthenticatedWidget,
 		kbase_client_api,
-		jquery_dataTables
+		jquery_dataTables,
+        ServiceUtils
 	) {
 
     'use strict';
@@ -144,12 +146,6 @@ define (
                     .html("Could not load object : " + d.error.message);
             });
 
-        },
-
-        createInfoObject: function (info) {
-            return _.object(['id', 'name', 'type', 'save_date', 'version',
-                'saved_by', 'ws_id', 'ws_name', 'chsum', 'size',
-                'meta'], info);
         },
 
         linkFromData : function(info_obj) {
@@ -323,10 +319,10 @@ define (
                                 .attr('target', '_blank')
                                 .append('Download'),
                               'Condition' : this.dataset().condition.join('<br>'),
-                              'Alignment Set' : this.linkFromData(this.createInfoObject(this.dataset().alignmentset) ),
-                              'Expression Set' : this.linkFromData(this.createInfoObject(this.dataset().expressionset)),
-                              'Genome' : this.linkFromData(this.createInfoObject(this.dataset().genome)),
-                              'Sample Set' : this.linkFromData(this.createInfoObject(this.dataset().sampleset)),
+                              'Alignment Set' : this.linkFromData(ServiceUtils.objectInfoToObject(this.dataset().alignmentset)),
+                              'Expression Set' : this.linkFromData(ServiceUtils.objectInfoToObject(this.dataset().expressionset)),
+                              'Genome' : this.linkFromData(ServiceUtils.objectInfoToObject(this.dataset().genome)),
+                              'Sample Set' : this.linkFromData(ServiceUtils.objectInfoToObject(this.dataset().sampleset)),
                           },
                       }
                   }

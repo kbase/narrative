@@ -695,6 +695,9 @@ define([
 
         $([Jupyter.events]).on('notebook_loaded.Notebook', function () {
             // Disable autosave so as not to spam the Workspace.
+            this.narrController = new KBaseNarrativeWorkspace($('#notebook_panel'), {
+                ws_id: this.getWorkspaceName()
+            });
             Jupyter.notebook.set_autosave_interval(0);
             KBaseCellToolbar.register(Jupyter.notebook);
             Jupyter.CellToolbar.activate_preset('KBase');
@@ -724,15 +727,13 @@ define([
 
             this.sidePanel = new KBaseNarrativeSidePanel($('#kb-side-panel'), { autorender: false });
             // init the controller
-            this.narrController = new KBaseNarrativeWorkspace($('#notebook_panel'), {
-                ws_id: this.getWorkspaceName()
-            });
+            
             this.narrController.render()
                 .finally(function () {
                     this.sidePanel.render();
                     $('#kb-wait-for-ws').remove();
                 }.bind(this));
-
+            $([Jupyter.events]).trigger('loaded.Narrative');
             $([Jupyter.events]).on('kernel_ready.Kernel',
                 function () {
                     console.log('Kernel Ready! Initializing Job Channel...');
@@ -945,20 +946,20 @@ define([
      * is a helper that does so. It then returns the cell object
      * that gets created.
      */
-    Narrative.prototype.insertAndSelectCellBelow = function (cellType, index) {
-        return this.insertAndSelectCell(cellType, 'below', index);
+    Narrative.prototype.insertAndSelectCellBelow = function (cellType, index, data) {
+        return this.insertAndSelectCell(cellType, 'below', index, data);
     };
 
-    Narrative.prototype.insertAndSelectCellAbove = function (cellType, index) {
-        return this.insertAndSelectCell(cellType, 'above', index);
+    Narrative.prototype.insertAndSelectCellAbove = function (cellType, index, data) {
+        return this.insertAndSelectCell(cellType, 'above', index, data);
     };
 
-    Narrative.prototype.insertAndSelectCell = function (cellType, direction, index) {
+    Narrative.prototype.insertAndSelectCell = function (cellType, direction, index, data) {
         var newCell;
         if (direction === 'below') {
-            newCell = Jupyter.notebook.insert_cell_below(cellType, index);
+            newCell = Jupyter.notebook.insert_cell_below(cellType, index, data);
         } else {
-            newCell = Jupyter.notebook.insert_cell_above(cellType, index);
+            newCell = Jupyter.notebook.insert_cell_above(cellType, index, data);
         }
         Jupyter.notebook.focus_cell(newCell);
         Jupyter.notebook.select(Jupyter.notebook.find_cell_index(newCell));

@@ -149,19 +149,27 @@ define([
                 // Primary hook for new cell creation.
                 // If the cell has been set with the metadata key kbase.type === 'app'
                 // we have a app cell.
-                $([Jupyter.events]).on('inserted.Cell', function(event, data) {
-                    if (!data.kbase || !(data.kbase.type === 'app2' || data.kbase.type === 'app')) {
+                $([Jupyter.events]).on('insertedAtIndex.Cell', function(event, payload) {
+
+                    var cell = payload.cell;
+                    var setupData = payload.data;
+                    var jupyterCellType = payload.type;
+
+                    if (jupyterCellType !== 'code' ||
+                        !setupData || 
+                        !(setupData.type === 'app2' || 
+                          setupData.type === 'app')) {
                         return;
                     }
 
                     var appCell = AppCell.make({
-                        cell: data.cell,
+                        cell: cell,
                         workspaceInfo: workspaceInfo
                     });
-                    appCell.upgradeToAppCell(data.kbase.appSpec, data.kbase.appTag)
+                    appCell.upgradeToAppCell(setupData.appSpec, setupData.appTag)
                         .catch(function(err) {
                             console.error('ERROR creating cell', err);
-                            Jupyter.notebook.delete_cell(Jupyter.notebook.find_cell_index(data.cell));
+                            Jupyter.notebook.delete_cell(Jupyter.notebook.find_cell_index(cell));
                             // For now, just pop up an error dialog;
                             var ui = UI.make({
                                 node: document.body

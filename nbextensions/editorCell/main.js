@@ -391,19 +391,21 @@ define([
                 // Primary hook for new cell creation.
                 // If the cell has been set with the metadata key kbase.type === 'app'
                 // we have a app cell.
-                $([Jupyter.events]).on('inserted.Cell', function(event, data) {
-                    if (data.kbase && data.kbase.type === 'editor') {
+                $([Jupyter.events]).on('insertedAtIndex.Cell', function(event, payload) {
+                    var cell = payload.cell;
+                    var setupData = payload.data;
+                    var jupyterCellType = payload.type;
+        
+                    if (jupyterCellType === 'code' &&
+                        setupData && 
+                        setupData.type === 'editor') {
                         // NB: the app spec and tag come in as appSpec and appTag, but 
                         // are rewritten in the "upgraded" cell to app.spec and app.tag
-                        upgradeToEditorCell(data.cell, data.kbase.appSpec, data.kbase.appTag)
-                            .then(function() {
-                                // console.log('Cell created?');
-                            })
+                        upgradeToEditorCell(cell, setupData.appSpec, setupData.appTag)
                             .catch(function(err) {
                                 console.error('ERROR creating cell', err);
                                 // delete cell.
-                                // $(document).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(data.cell));
-                                Jupyter.notebook.delete_cell(Jupyter.notebook.find_cell_index(data.cell));
+                                Jupyter.notebook.delete_cell(Jupyter.notebook.find_cell_index(cell));
                                 alert('Could not insert cell due to errors.\n\n' + err.message);
                             });
                     }

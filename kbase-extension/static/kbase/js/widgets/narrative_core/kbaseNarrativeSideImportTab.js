@@ -517,30 +517,19 @@ define(
 
             createImportStatusCell: function(methodName, jobId) {
                 var cellIndex = Jupyter.notebook.get_selected_index();
-                var cell = Jupyter.notebook.insert_cell_below('code', cellIndex);
+                var cellData = {
+                    type: 'code',
+                    language: 'python',
+                    title: title
+                };
+                var cell = Jupyter.notebook.insert_cell_below('code', cellIndex, cellData);
                 $(cell.element).trigger('toggleCodeArea.cell');
                 var title = 'Import job status for ' + methodName;
                 var cellText = ['from biokbase.narrative.jobs.jobmanager import JobManager',
                     'JobManager().get_job(' + jobId + ')'
                 ].join('\n');
                 cell.set_text(cellText);
-                $([Jupyter.events]).trigger('inserted.Cell', {
-                    cell: cell,
-                    kbase: {
-                        type: 'code',
-                        language: 'python',
-                        title: title
-                    }
-                });
-                // var meta = {
-                //     'kbase': {
-                //         'attributes': {
-                //             'title': title
-                //         },
-                //         'type': 'code'
-                //     }
-                // };
-                // cell.metadata = meta;
+                
                 cell.events.one('output_appended.OutputArea', function() {
                     Jupyter.narrative.saveNarrative();
                 });

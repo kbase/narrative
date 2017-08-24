@@ -407,7 +407,6 @@ define([
                 noMatchesFoundStr = "Enter a name for the output data object.";
                 tags = true;
             }
-            console.log($input);
             $input.select2({
                 data: data,
                 language: {
@@ -783,7 +782,7 @@ define([
         // make a randomized string, assuming it's for an output.
         generateRandomOutputString: function (generProps) {
             var strArr = [];
-            var symbols = 8
+            var symbols = 8;
             if (generProps['symbols'])
                 symbols = generProps['symbols'];
             for (var i = 0; i < symbols; i++)
@@ -792,7 +791,7 @@ define([
             if (generProps['prefix'])
                 ret = generProps['prefix'] + ret;
             if (generProps['suffix'])
-                ret = ret + str(generProps['suffix']);
+                ret = ret + String(generProps['suffix']);
             return ret;
         },
         prepareValueBeforeRun: function (methodSpec) {
@@ -817,7 +816,7 @@ define([
                 }
                 var generatedValueMapping = null;
                 for (var i in inputMapping) {
-                    mapping = inputMapping[i];
+                    var mapping = inputMapping[i];
                     var aParamId = mapping['input_parameter'];
                     if (aParamId && aParamId === paramId && mapping['generated_value']) {
                         generatedValueMapping = mapping['generated_value'];

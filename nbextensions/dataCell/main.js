@@ -146,11 +146,10 @@ define([
         cell.renderIcon();
     }
 
-    function upgradeCell(data) {
+    function upgradeCell(cell, setupData) {
         return Promise.try(function() {
-            var cell = data.cell,
-                meta = cell.metadata,
-                cellId = data.kbase.cellId || (new Uuid(4).format());
+            var meta = cell.metadata,
+                cellId = setupData.cellId || (new Uuid(4).format());
 
             // Set the initial metadata for the output cell.
             meta.kbase = {
@@ -164,8 +163,8 @@ define([
                     title: 'Data Cell'
                 },
                 dataCell: {
-                    objectInfo: data.objectInfo,
-                    widget: data.kbase.widget
+                    objectInfo: setupData.objectInfo,
+                    widget: setupData.widget
                 }
             };
             cell.metadata = meta;
@@ -177,7 +176,7 @@ define([
             if (!tag) {
                 tag = 'release';
             }
-            var objInfo = data.objectInfo;
+            var objInfo = setupData.objectInfo;
             var ref = objInfo.ref_path;
             if (!ref) {
                 ref = objInfo.ws_id + '/' + objInfo.id + '/' + objInfo.version;
@@ -191,8 +190,8 @@ define([
             // all we do for now is set up the input area
             utils.setCellMeta(cell, 'kbase.dataCell.user-settings.showCodeInputArea', false);
 
-            utils.setCellMeta(cell, 'kbase.attributes.title', data.objectInfo.name);
-            var subtitle = 'v' + String(data.objectInfo.version) + ' - ' + data.objectInfo.type;
+            utils.setCellMeta(cell, 'kbase.attributes.title', setupData.objectInfo.name);
+            var subtitle = 'v' + String(setupData.objectInfo.version) + ' - ' + setupData.objectInfo.type;
             utils.setCellMeta(cell, 'kbase.attributes.subtitle', subtitle, true);
 
             setupCell(cell);
@@ -200,13 +199,19 @@ define([
     }
 
     function load() {
-        $([Jupyter.events]).on('inserted.Cell', function(event, data) {
-            if (data.kbase && data.kbase.type === 'data') {
-                upgradeCell(data)
+        $([Jupyter.events]).on('insertedAtIndex.Cell', function(event, payload) {
+            var cell = payload.cell;
+            var setupData = payload.data;
+            var jupyterCellType = payload.type;
+
+            if (jupyterCellType === 'code' &&
+                setupData && 
+                setupData.type === 'data') {
+                upgradeCell(cell, setupData)
                     .catch(function(err) {
                         console.error('ERROR creating cell', err);
                         // delete cell.
-                        $(document).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(data.cell));
+                        $(document).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(cell));
                         alert('Could not insert cell due to errors.\n' + err.message);
                     });
             }

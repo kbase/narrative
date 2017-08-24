@@ -506,17 +506,12 @@ define([
             // useful for us really since we haven't been able to set the
             // metadata yet. Don't worry, I checked, the Jupyter api does not
             // provide a way to set the cell metadata as it is being created.
-            var cell = Jupyter.narrative.insertAndSelectCellBelow('code');
-
-            // Now we need to invent a way of triggering the cell to set itself up.
-            $([Jupyter.events]).trigger('inserted.Cell', {
-                cell: cell,
-                kbase: {
-                    type: cellType,
-                    appTag: tag,
-                    appSpec: spec
-                }
-            });
+            var cellData = {
+                type: cellType,
+                appTag: tag,
+                appSpec: spec
+            };
+            var cell = Jupyter.narrative.insertAndSelectCellBelow('code', null, cellData);
 
             // Finally, if we have parameters, wedge them in the new cell's metadata.
             if (parameters) {
@@ -596,158 +591,7 @@ define([
             this.removeCellEditFunction(cell);
         },
 
-        // runMethodCell: function(data) {
-        //     if (!data || !data.cell || !data.method || !data.parameters) {
-        //         // do some erroring later.
-        //         return;
-        //     }
-        //     this.saveCellState(data.cell);
-        //     var self = this;
-        //     var code = '';
-        //     var showOutput = true;
-
-        //     // Three cases to NOT show immediately:
-        //     // 1. method.job_id_output_field is not null    -- long running (via UJS)
-        //     // 2. method.behavior.kb_service_method is not null && method.behavior.kb_service_url IS null    -- long running service call (via NJS)
-        //     // 3. method.behavior.script_module is not null -- AWE script backend (via NJS)
-
-        //     // if there's a job_id_output_field in the method, then it's long-running, and we shouldn't show an output cell right away.
-        //     // ...or maybe show a temporary one?
-        //     if ((data.method.job_id_output_field && data.method.job_id_output_field != null) ||
-        //         (data.method.behavior.kb_service_method && (!data.method.behavior.kb_service_url || data.method.behavior.kb_service_url.length === 0)) ||
-        //         (data.method.behavior.script_module)) {
-        //         showOutput = false;
-        //     }
-        //     // old, pre-njs style where the methods were all living in Jupyter-land
-        //     if (data.method.behavior.python_class && data.method.behavior.python_function) {
-        //         code = this.buildRunCommand(data.method.behavior.python_class, data.method.behavior.python_function, data.parameters);
-        //     }
-        //     // newer, njs/njs-mock style where methods get farmed out
-        //     else if ((data.method.behavior.kb_service_method && data.method.behavior.kb_service_name) ||
-        //              (data.method.behavior.script_module && data.method.behavior.script_name)) {
-        //         code = this.buildGenericRunCommand(data);
-        //     }
-        //     else {
-        //         // something else!
-        //         // do the standard for now.
-        //         code = this.buildGenericRunCommand(data);
-        //     }
-        //     // var callbacks = {
-        //     //     'execute_reply' : function(content) { self.handleExecuteReply(data.cell, content); },
-        //     //     'output' : function(msgType, content) { self.handleOutput(data.cell, msgType, content, showOutput); },
-        //     //     'clear_output' : function(content) { self.handleClearOutput(data.cell, content); },
-        //     //     'set_next_input' : function(text) { self.handleSetNextInput(data.cell, content); },
-        //     //     'input_request' : function(content) { self.handleInputRequest(data.cell, content); }
-        //     // };
-
-        //     var handleError = function() {
-        //         if(data.widget) {
-        //             if(data.widget.changeState)
-        //                 data.widget.changeState('error');
-        //         }
-        //     };
-
-        //     var callbacks = {
-        //         shell: {
-        //             reply: function(content) { self.handleExecuteReply(data.cell, content); },
-        //             payload: {
-        //                 set_next_input: function(content) { self.handleSetNextInput(data.cell, content); },
-        //             },
-        //         },
-        //         iopub: {
-        //             output: function(content) { self.handleOutput(data.cell, content, showOutput, handleError, data.widget); },
-        //             clear_output: function(content) { self.handleClearOutput(data.cell, content); },
-        //         },
-        //         input: function(content) { self.handleInputRequest(data.cell, content); }
-        //     };
-
-        //     var executeOptions = {
-        //         silent: true,
-        //         user_expressions: {},
-        //         allow_stdin: false,
-        //         store_history: false
-        //     };
-
-        //     $(data.cell.element).find('#kb-func-progress').css({'display': 'block'});
-        //     Jupyter.notebook.kernel.execute(code, callbacks, executeOptions);
-        // },
-
-        // buildAppCell: function(appSpec) {
-        //     var cell = Jupyter.narrative.insertAndSelectCellBelow('markdown');
-        //     // cell.celltoolbar.hide();
-        //     this.removeCellEditFunction(cell);
-
-        //     var tempContent = '<img src="' + this.options.loadingImage + '">';
-        //     cell.set_text(tempContent);
-        //     cell.rendered = false;
-        //     cell.render();
-
-        //     this.setAppCell(cell, appSpec);
-        //     var cellIndex = Jupyter.notebook.ncells() - 1;
-        //     var cellId = 'kb-cell-' + cellIndex + '-' + StringUtil.uuid();
-
-        //     // The various components are HTML STRINGS, not jQuery objects.
-        //     // This is because the cell expects a text input, not a jQuery input.
-        //     // Yeah, I know it's ugly, but that's how it goes.
-        //     var cellContent = "<div id='" + cellId + "'></div>" +
-        //                       "\n<script>" +
-        //                        "new kbaseNarrativeAppCell($('#" + cellId + "'), {'appSpec' : '" + StringUtil.safeJSONStringify(appSpec) + "', 'cellId' : '" + cellId + "'});" +
-        //                       "</script>";
-        //     cell.set_text(cellContent);
-        //     cell.rendered = false;
-        //     cell.render();
-        // },
-
-        // runAppCell: function(data) {
-        //     if (!data || !data.cell || !data.appSpec || !data.methodSpecs || !data.parameters) {
-        //         // error out.
-        //         return;
-        //     }
-        //     this.saveCellState(data.cell);
-        //     var self = this;
-        //     var callbacks = {
-        //         shell: {
-        //             reply: function(content) { self.handleExecuteReply(data.cell, content); },
-        //             payload: {
-        //                 set_next_input: function(content) { self.handleSetNextInput(data.cell, content); },
-        //             },
-        //         },
-        //         iopub: {
-        //             output: function(content) { self.handleOutput(data.cell, content, "app"); },
-        //             clear_output: function(content) { self.handleClearOutput(data.cell, content); },
-        //         },
-        //         input: function(content) { self.handleInputRequest(data.cell, content); }
-        //     };
-
-        //     var executeOptions = {
-        //         silent: true,
-        //         user_expressions: {},
-        //         allow_stdin: false,
-        //         store_history: false
-        //     };
-
-        //     // var callbacks = {
-        //     //     'execute_reply' : function(content) { self.handleExecuteReply(data.cell, content); },
-        //     //     'output' : function(msgType, content) { self.handleOutput(data.cell, msgType, content, "app"); },
-        //     //     'clear_output' : function(content) { self.handleClearOutput(data.cell, content); },
-        //     //     'set_next_input' : function(text) { self.handleSetNextInput(data.cell, content); },
-        //     //     'input_request' : function(content) { self.handleInputRequest(data.cell, content); }
-        //     // };
-
-        //     var code = this.buildAppCommand(data.appSpec, data.methodSpecs, data.parameters);
-        //     Jupyter.notebook.kernel.execute(code, callbacks, executeOptions);
-        // },
-
-        // buildAppCommand: function(appSpec, methodSpecs, parameters) {
-        //     // console.log([appSpec, methodSpecs, parameters]);
-        //     var appSpecJSON = StringUtil.safeJSONStringify(appSpec);
-        //     var methodSpecJSON = StringUtil.safeJSONStringify(methodSpecs);
-        //     var paramsJSON = StringUtil.safeJSONStringify(parameters);
-
-        //     return "import biokbase.narrative.common.service as Service\n" +
-        //            "method = Service.get_service('app_service').get_method('app_call')\n" +
-        //            "method('" + appSpecJSON + "', '" + methodSpecJSON + "', '" + paramsJSON + "')";
-        // },
+        
 
         /**
          * A TEMPORARY FUNCTION that should refresh and update the given cell's metadata to the new(er) version,
@@ -2147,13 +1991,17 @@ define([
         createViewerCell: function (cellIndex, data, widget) {
             var placement = data.placement || 'below';
             var cell;
+            var cellData = {
+                type: 'data',
+                objectInfo: data.info
+            };
             if (placement === 'above') {
-                cell = Jupyter.notebook.insert_cell_above('code', cellIndex);
+                Jupyter.notebook.insert_cell_above('code', cellIndex, cellData);
             } else {
-                cell = Jupyter.notebook.insert_cell_below('code', cellIndex);
+                Jupyter.notebook.insert_cell_below('code', cellIndex, cellData);
             }
-            var title = (data.info && data.info.name) ? data.info.name : 'Data Viewer';
-            var type = 'viewer';
+            // var title = (data.info && data.info.name) ? data.info.name : 'Data Viewer';
+            // var type = 'viewer';
             // $(cell.element).trigger('toggleCodeArea.cell');
 
 
@@ -2169,13 +2017,13 @@ define([
             // };
             // cell.metadata = meta;
             // cell.execute();
-            $([Jupyter.events]).trigger('inserted.Cell', {
-                cell: cell,
-                kbase: {
-                    type: 'data'
-                },
-                objectInfo: data.info
-            });
+            // $([Jupyter.events]).trigger('inserted.Cell', {
+            //     cell: cell,
+            //     kbase: {
+            //         type: 'data'
+            //     },
+            //     objectInfo: data.info
+            // });
 
         },
 

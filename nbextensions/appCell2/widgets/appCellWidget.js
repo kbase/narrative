@@ -1945,18 +1945,14 @@ define([
             var cellId = utils.getMeta(cell, 'attributes', 'id'),
                 cellIndex = Jupyter.notebook.find_cell_index(cell),
                 newCellId = new Uuid(4).format(),
-                newCell = Jupyter.notebook.insert_cell_below('code', cellIndex);
-
-            $([Jupyter.events]).trigger('inserted.Cell', {
-                cell: newCell,
-                kbase: {
+                setupData = {
                     type: 'output',
                     cellId: newCellId,
                     parentCellId: cellId,
                     jobId: jobId,
                     widget: model.getItem('exec.outputWidgetInfo')
-                }
-            });
+                };
+            Jupyter.notebook.insert_cell_below('code', cellIndex, setupData);
 
             return newCellId;
         }
@@ -1973,7 +1969,6 @@ define([
         // FSM state change events
 
         function doStartRunning() {
-            console.log('start running...');
             var jobState = model.getItem('exec.jobState');
             if (!jobState) {
                 console.warn('What, no job state?');
@@ -1991,7 +1986,6 @@ define([
                 prefix: 'started ',
                 suffix: ' ago'
             });
-            console.log('start running more ...');
             widgets.runClock.start({
                     node: ui.getElement('run-control-panel.status.execMessage.clock'),
                     startTime: jobState.exec_start_time
@@ -2446,10 +2440,6 @@ define([
 
                         delete output.byJob[message.jobId];
                         model.setItem('output', output);
-                        widgets.outputWidget.instance.bus().emit('update', {
-                            jobState: model.getItem('exec.jobState'),
-                            output: output
-                        });
                     }));
 
                     busEventManager.add(runtime.bus().on('read-only-changed', function(msg) {

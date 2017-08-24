@@ -75,17 +75,21 @@ define([
     }
 
     function load() {
-        $([Jupyter.events]).on('inserted.Cell', function (event, data) {
-            if (data.kbase && data.kbase.type === 'output') {
-                upgradeCell(data.cell)
+        $([Jupyter.events]).on('insertedAtIndex.Cell', function (event, payload) {
+            var cell = payload.cell;
+            var setupData = payload.data;
+            var jupyterCellType = payload.type;
+            if (jupyterCellType === 'code' &&
+                setupData && 
+                setupData.type === 'output') {
+                upgradeCell(cell)
                     .then(function () {
-                        
                         console.log('OUTPUT: Cell created?');
                     })
                     .catch(function (err) {
                         console.error('ERROR creating cell', err);
                         // delete cell.
-                        $(document).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(data.cell));
+                        $(document).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(cell));
                         alert('Could not insert cell due to errors.\n' + err.message);
                     });
             }

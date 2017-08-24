@@ -260,6 +260,47 @@ define (
 
 
                 }
+                else if (thing.items) {
+                  $self.options.output = thing;
+                  thing.sample_expression_ids = [];
+
+                  var promises = [];
+                  $.each(
+                    $self.options.output.items,
+                    function (i,v) {
+                      thing.sample_expression_ids.push(v.ref);
+                      promises.push(
+                        ws.get_object_info([{ref : v.ref}])
+                      );
+                    }
+                  );
+
+                  $.when.apply($, promises).then(function () {
+
+                      var args = arguments;
+                      $self.options.output.sample_expression_names = [];
+                      $.each(
+                        arguments,
+                        function (i, v) {
+                          $self.options.output.sample_expression_names.push(v[0][1]);
+                        }
+                      );
+
+                      $self.appendUI($self.$elem);
+
+                      if ($self.options.output.sample_expression_ids.length) {
+                        $self.loadExpression($self.options.output.sample_expression_ids[0]);
+                      }
+
+                  })
+                  .fail(function(d) {
+
+                      $self.$elem.empty();
+                      $self.$elem
+                          .addClass('alert alert-danger')
+                          .html("Could not load object : " + d.error.message);
+                  });
+                }
                 else {
                   $self.appendUI($self.$elem);
                   $self.setDataset(d[0].data);

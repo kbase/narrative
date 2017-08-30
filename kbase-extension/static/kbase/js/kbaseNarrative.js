@@ -691,6 +691,10 @@ define([
 
         $([Jupyter.events]).on('notebook_loaded.Notebook', function () {
             // Disable autosave so as not to spam the Workspace.
+
+            // Tricky with inter/intra-dependencies between kbaseNarrative and kbaseNarrativeWorkspace...
+            this.sidePanel = new KBaseNarrativeSidePanel($('#kb-side-panel'), { autorender: false });
+
             this.narrController = new KBaseNarrativeWorkspace($('#notebook_panel'), {
                 ws_id: this.getWorkspaceName()
             });
@@ -721,9 +725,8 @@ define([
                 this.workspaceId = wsInfo[1];
             }
 
-            this.sidePanel = new KBaseNarrativeSidePanel($('#kb-side-panel'), { autorender: false });
             // init the controller
-            
+
             this.narrController.render()
                 .finally(function () {
                     this.sidePanel.render();
@@ -783,7 +786,7 @@ define([
         Jupyter.notebook.save_checkpoint();
     };
 
-    Narrative.prototype.addAndPopulateApp = function(appId, tag, parameters) {
+    Narrative.prototype.addAndPopulateApp = function (appId, tag, parameters) {
         this.sidePanel.$methodsWidget.triggerApp(appId, tag, parameters);
     };
 

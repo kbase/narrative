@@ -214,8 +214,8 @@ define([
             );
 
             $(document).on('appClicked.Narrative',
-                function(event, method, tag, parameters) {
-                     if (this.uiMode === 'view') {
+                function (event, method, tag, parameters) {
+                    if (this.uiMode === 'view') {
                         console.warn('ignoring attempt to insert app cell in view-only mode');
                         return;
                     }
@@ -481,7 +481,7 @@ define([
             }
         },
 
-        buildAppCodeCell: function(spec, tag, parameters) {
+        buildAppCodeCell: function (spec, tag, parameters) {
             if (!spec || !spec.info) {
                 console.error('ERROR build method code cell: ', spec, tag);
                 alert('Sorry, could not find this method');
@@ -516,7 +516,7 @@ define([
             // Finally, if we have parameters, wedge them in the new cell's metadata.
             if (parameters) {
                 var meta = cell.metadata;
-                Object.keys(parameters).forEach(function(param) {
+                Object.keys(parameters).forEach(function (param) {
                     meta.kbase.appCell.params[param] = parameters[param];
                 });
                 cell.metadata = meta;
@@ -537,15 +537,15 @@ define([
             // executing app.
             if (spec.behavior.kb_service_name && spec.behavior.kb_service_method) {
                 switch (spec.info.app_type) {
-                case 'editor':
-                    return 'editor';
-                case 'app':
-                    return 'app';
-                case 'advanced_viewer':
-                    return 'advancedView';
-                default:
-                    console.warn('The app ' + spec.info.id + ' does not specify a valid spec.info.app_type "' + spec.info.app_type + '" - defaulting to "app"');
-                    return 'app';
+                    case 'editor':
+                        return 'editor';
+                    case 'app':
+                        return 'app';
+                    case 'advanced_viewer':
+                        return 'advancedView';
+                    default:
+                        console.warn('The app ' + spec.info.id + ' does not specify a valid spec.info.app_type "' + spec.info.app_type + '" - defaulting to "app"');
+                        return 'app';
                 }
             }
 
@@ -591,7 +591,7 @@ define([
             this.removeCellEditFunction(cell);
         },
 
-        
+
 
         /**
          * A TEMPORARY FUNCTION that should refresh and update the given cell's metadata to the new(er) version,
@@ -1620,15 +1620,6 @@ define([
             var self = this;
             return function (cell, service, method, params) {
                 var nb = Jupyter.notebook;
-                var currentIndex = nb.get_selected_index();
-
-                // var callbacks = {
-                //     'execute_reply' : function(content) { self.handleExecuteReply(cell, content); },
-                //     'output' : function(msgType, content) { self.handleOutput(cell, msgType, content); },
-                //     'clear_output' : function(content) { self.handleClearOutput(cell, content); },
-                //     'set_next_input' : function(text) { self.handleSetNextInput(cell, content); },
-                //     'input_request' : function(content) { self.handleInputRequest(cell, content); }
-                // };
 
                 var callbacks = {
                     shell: {
@@ -1730,26 +1721,26 @@ define([
                 // XXX: assume either more maps or simple type
                 var vtype = typeof value;
                 switch (vtype) {
-                case 'boolean':
-                    if (value)
-                        dict += 'True';
-                    else
-                        dict += 'False';
-                    break;
-                case 'number':
-                    dict += value;
-                    break;
-                case 'string':
-                    dict += '\'' + value + '\'';
-                    break;
-                case 'undefined':
-                    dict += 'None';
-                    break;
-                case 'object':
-                    dict += this._pythonDict(value);
-                    break;
-                default:
-                    console.error('Cannot convert to Python:', vtype);
+                    case 'boolean':
+                        if (value)
+                            dict += 'True';
+                        else
+                            dict += 'False';
+                        break;
+                    case 'number':
+                        dict += value;
+                        break;
+                    case 'string':
+                        dict += '\'' + value + '\'';
+                        break;
+                    case 'undefined':
+                        dict += 'None';
+                        break;
+                    case 'object':
+                        dict += this._pythonDict(value);
+                        break;
+                    default:
+                        console.error('Cannot convert to Python:', vtype);
                 }
                 dict += ', '
             });
@@ -1863,53 +1854,53 @@ define([
                             var matches = line.match(/^@@([ADEGJSP])(.*)/);
                             if (matches) { // if we got one
                                 switch (matches[1]) {
-                                case 'S': // Start running
-                                    // if we're starting, init the progress bar.
-                                    break;
+                                    case 'S': // Start running
+                                        // if we're starting, init the progress bar.
+                                        break;
 
-                                case 'D': // Done running
-                                    // were done, so hide the progress bar (wait like a second or two?)
-                                    self.resetProgress(cell);
-                                    break;
+                                    case 'D': // Done running
+                                        // were done, so hide the progress bar (wait like a second or two?)
+                                        self.resetProgress(cell);
+                                        break;
 
-                                case 'P': // Progress step
-                                    var progressInfo = matches[2].split(',');
-                                    if (progressInfo.length == 3) {
-                                        self.showCellProgress(cell, progressInfo[0], progressInfo[1], progressInfo[2]);
-                                        offs += line.length;
-                                        if (index < lines.length - 1)
-                                            offs += 1;
-                                    } else
-                                        done = true;
-                                    break;
+                                    case 'P': // Progress step
+                                        var progressInfo = matches[2].split(',');
+                                        if (progressInfo.length == 3) {
+                                            self.showCellProgress(cell, progressInfo[0], progressInfo[1], progressInfo[2]);
+                                            offs += line.length;
+                                            if (index < lines.length - 1)
+                                                offs += 1;
+                                        } else
+                                            done = true;
+                                        break;
 
-                                case 'E': // Error while running
-                                    var errorJson = matches[2];
-                                    errorJson = errorJson.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\$/g, '&#36;');
-                                    self.createOutputCell(cell, '{"error" :' + errorJson + '}', true);
-                                    break;
+                                    case 'E': // Error while running
+                                        var errorJson = matches[2];
+                                        errorJson = errorJson.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\$/g, '&#36;');
+                                        self.createOutputCell(cell, '{"error" :' + errorJson + '}', true);
+                                        break;
 
-                                case 'G': // debuG message
-                                    var debug = matches[2];
-                                    self.dbg('[KERNEL] ' + debug);
-                                    break;
+                                    case 'G': // debuG message
+                                        var debug = matches[2];
+                                        self.dbg('[KERNEL] ' + debug);
+                                        break;
 
-                                case 'J': // Job id register
-                                    var jobId = matches[2];
-                                    self.dbg('[JOB ID] ' + jobId);
-                                    self.registerJobId(jobId, cell);
-                                    break;
+                                    case 'J': // Job id register
+                                        var jobId = matches[2];
+                                        self.dbg('[JOB ID] ' + jobId);
+                                        self.registerJobId(jobId, cell);
+                                        break;
 
-                                case 'A': // App id register
-                                    var appId = matches[2];
-                                    self.dbg('[APP ID] ' + appId);
-                                    self.registerJobId(appId, cell);
-                                    break;
+                                    case 'A': // App id register
+                                        var appId = matches[2];
+                                        self.dbg('[APP ID] ' + appId);
+                                        self.registerJobId(appId, cell);
+                                        break;
 
-                                default:
-                                    // by default just dump it to the console
-                                    self.dbg('[UNKNOWN TAG] ' + line);
-                                    break;
+                                    default:
+                                        // by default just dump it to the console
+                                        self.dbg('[UNKNOWN TAG] ' + line);
+                                        break;
                                 }
                                 return;
                             }
@@ -2165,8 +2156,8 @@ define([
             var $title = $('<h3>').text('Suggested next steps:');
             $tgt.append($title);
             // init hide/unhide behavior
-            $hide_btn = $('<span>').addClass('kb-app-next-hide').text('hide');
-            $unhide_btn = $('<span>').addClass('kb-app-next-unhide')
+            var $hide_btn = $('<span>').addClass('kb-app-next-hide').text('hide');
+            var $unhide_btn = $('<span>').addClass('kb-app-next-unhide')
                 .text('next steps').hide();
             $hide_btn.click(function () { // hide
                 $title.hide();
@@ -2269,12 +2260,12 @@ define([
         addOutputCell: function (currentIndex, widget, placement) {
             var cell;
             switch (placement) {
-            case 'above':
-                cell = Jupyter.notebook.insert_cell_above('markdown', currentIndex);
-                break;
-            case 'below':
-            default:
-                var cell = Jupyter.notebook.insert_cell_below('markdown', currentIndex);
+                case 'above':
+                    cell = Jupyter.notebook.insert_cell_above('markdown', currentIndex);
+                    break;
+                case 'below':
+                default:
+                    var cell = Jupyter.notebook.insert_cell_below('markdown', currentIndex);
             }
             // cell.celltoolbar.hide();
             this.setOutputCell(cell, widget);

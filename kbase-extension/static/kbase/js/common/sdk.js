@@ -121,6 +121,9 @@ define([
             break;
         case 'textsubdata':
             if (spec.default_values) {
+                if (spec.default_values.length === 1 && spec.default_values[0] === '') {
+                    return [];
+                }
                 return spec.default_values[0].split(',');
             } else {
                 return [];
@@ -268,7 +271,7 @@ define([
         // a dropdown even though the field_type is 'text'.
 
         switch (dataType) {
-        case 'custom': 
+        case 'custom':
             constraints = {
                 type: Props.getDataItem(spec, 'text_options.validate_as')
             };
@@ -711,7 +714,7 @@ define([
         if (structSpec.parameters.layout.length === 0) {
             throw new Error('Empty parameter group not allowed in ' + group.id);
         }
-        
+
         if (group.allow_multiple === 1) {
             params[group.id] = makeGroupSequence(group, structSpec);
         } else {
@@ -745,7 +748,7 @@ define([
                 convertGroup(group, parameterSpecs);
                 // don't know how the group is ordered in the spec ... so just append it later.
             });
-        }      
+        }
 
         // first filter out the paramters which have been moved into groups,
         // and then add the groups in.

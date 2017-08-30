@@ -226,6 +226,7 @@ require.config({
         'kbaseEditHistory': 'kbase/js/widgets/function_input/editors/kbaseEditHistory',
         'kbaseHomologySearch': 'kbase/js/widgets/function_input/kbaseHomologySearch',
         'kbaseModal': 'kbase/js/widgets/narrative_core/kbaseModal',
+        'kbaseGenericSetViewer': 'kbase/js/widgets/function_output/kbaseGenericSetViewer',
 
         // another implementation of kbaseTabs needed for kbaseTabTable
         'kbaseTabTableTabs': 'kbase/js/widgets/function_output/modeling/kbaseTabs',

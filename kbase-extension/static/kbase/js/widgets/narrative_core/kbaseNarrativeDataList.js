@@ -1376,30 +1376,6 @@ define([
 
         insertViewer: function (key) {
             Jupyter.narrative.addViewerCell(this.keyToObjId[key]);
-            // if (Jupyter.narrative.readonly) {
-            //     new BootstrapAlert({
-            //         type: 'warning',
-            //         title: 'Warning',
-            //         body: 'Read-only Narrative -- may not add a data viewer to this Narrative'
-            //     });
-            //     return;
-            // }
-            // var cell = Jupyter.notebook.get_selected_cell(),
-            //     near_idx = 0;
-            // if (cell) {
-            //     near_idx = Jupyter.notebook.find_cell_index(cell);
-            //     $(cell.element).off('dblclick');
-            //     $(cell.element).off('keydown');
-            // }
-            // var obj = this.dataObjects[this.keyToObjId[key]], // _.findWhere(self.objectList, {key: key});
-            //     info = this.createInfoObject(obj.info, obj.refPath);
-            // // Insert the narrative data cell into the div we just rendered
-            // // new kbaseNarrativeDataCell($('#' + cell_id), {cell: cell, info: info});
-            // this.trigger('createViewerCell.Narrative', {
-            //     'nearCellIdx': near_idx,
-            //     'widget': 'kbaseNarrativeDataCell',
-            //     'info': info
-            // });
         },
 
         renderMore: function () {

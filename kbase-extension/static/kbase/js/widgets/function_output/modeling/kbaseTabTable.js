@@ -393,21 +393,21 @@ return KBWidget({
 
         this.getBiochemReaction = function(id) {
         	var input = {reactions: [id]};
-            return self.kbapi('fba', 'get_reactions', {reactions: [id]})
+            return self.kbapi('biochem', 'get_reactions', {reactions: [id]})
                        .then(function(data) {
                           return data[0];
                        })
         }
 
         this.getBiochemCompound = function(id) {
-            return self.kbapi('fba', 'get_compounds', {compounds: [id]})
+            return self.kbapi('biochem', 'get_compounds', {compounds: [id]})
                        .then(function(data) {
                           return data[0];
                        })
         }
 
         this.getBiochemCompounds = function(ids) {
-            return self.kbapi('fba', 'get_compounds', {compounds: ids})
+            return self.kbapi('biochem', 'get_compounds', {compounds: ids})
         }
 
         this.compoundImage = function(id) {

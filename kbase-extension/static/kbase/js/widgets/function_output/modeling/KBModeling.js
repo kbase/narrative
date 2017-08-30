@@ -15,6 +15,9 @@ function KBModeling(token) {
         } else if (service == 'fba') {
             url = "https://kbase.us/services/KBaseFBAModeling/";
             method = 'fbaModelServices.'+method;
+        } else if (service == 'biochem') {
+            url = "https://kbase.us/dynserv/b584fe4f8ee3910fd7685cf8f368097893400fc2.BiochemistryAPI";
+            method = 'BiochemistryAPI.'+method;
         }
 
         var rpc = {

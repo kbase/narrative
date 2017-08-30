@@ -274,7 +274,7 @@ function KBaseFBA_FBAModel(modeltabs) {
 		});
 		if (rxn.rxnkbid != "rxn00000") {
 			console.log(rxn.rxnkbid);
-			var p = self.modeltabs.kbapi('fba', 'get_reactions', {
+			var p = self.modeltabs.kbapi('biochem', 'get_reactions', {
 				reactions: [rxn.rxnkbid],
 				biochemistry: self.biochem,
     			biochemistry_workspace: "kbase",
@@ -348,7 +348,7 @@ function KBaseFBA_FBAModel(modeltabs) {
 			"data": self.cmphash[cpd.cmpkbid].name+" "+self.cmphash[cpd.cmpkbid].compartmentIndex,
 		}];
 		if (cpd.cpdkbid != "cpd00000") {
-			var p = self.modeltabs.kbapi('fba', 'get_compounds', {
+			var p = self.modeltabs.kbapi('biochem', 'get_compounds', {
 				compounds: [cpd.cpdkbid],
 				biochemistry: self.biochem,
     			biochemistry_workspace: "kbase",

@@ -3,7 +3,6 @@ Tests for Mixin class that handles IO between the
 Narrative and workspace service.
 """
 import unittest
-from getpass import getpass
 from biokbase.narrative.contents.narrativeio import (
     KBaseWSManagerMixin,
     PermissionsError
@@ -32,6 +31,7 @@ class NarrIOTestCase(unittest.TestCase):
         def deco(f):
             def wrapper(self, *args, **kwargs):
                 if self.test_token is None:
+                    print("Skipping test due to missing auth token")
                     self.skipTest()
                 else:
                     f(self, *args, **kwargs)
@@ -47,6 +47,13 @@ class NarrIOTestCase(unittest.TestCase):
 
         self.test_token = util.read_token_file(config.get_path('token_files', 'test_user'))
         self.private_token = util.read_token_file(config.get_path('token_files', 'private_user'))
+
+        if self.test_token is None or self.private_token is None:
+            print("Skipping most narrativeio.py tests due to missing tokens.")
+            print("To enable these, place a valid auth token in files\n{}\nand\n{}".format(
+                config.get_path('token_files', 'test_user'),
+                config.get_path('token_files', 'private_user')))
+            print("Note that these should belong to different users.")
 
         self.ws_uri = URLS.workspace
 

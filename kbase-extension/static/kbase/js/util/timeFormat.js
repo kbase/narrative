@@ -52,8 +52,13 @@ define([], function() {
         var d = new Date(time);
         if (Object.prototype.toString.call(d) !== '[object Date]' || isNaN(d.getTime())) {
             var t = time.split(/[^0-9]/);
+            // if t[0] is 0 or empty string, then just bail now and return null. This means that the
+            // given timestamp was not valid.
+            if (!t[0]) {
+                return null;
+            }
             while (t.length < 7) {
-                t.append(0);
+                t.push(0);
             }
             d = new Date(t[0], t[1]-1, t[2], t[3], t[4], t[5], t[6]);
             // Test the new Date object
@@ -70,9 +75,6 @@ define([], function() {
             return null;
         }
         else {
-            if (isNaN(d.getTime())) {
-                return null;
-            }
             return d;
         }
     }

@@ -62,7 +62,7 @@ define([
         };
 
         /*
-         * The data cell icon is derived by looking up the type in the 
+         * The data cell icon is derived by looking up the type in the
          * narrative configuration.
          */
         cell.renderIcon = function() {
@@ -178,8 +178,9 @@ define([
             }
             var objInfo = setupData.objectInfo;
             var ref = objInfo.ref_path;
+            var wsId = objInfo.ws_id || objInfo.wsid;
             if (!ref) {
-                ref = objInfo.ws_id + '/' + objInfo.id + '/' + objInfo.version;
+                ref = wsId + '/' + objInfo.id + '/' + objInfo.version;
             }
             var title = (objInfo && objInfo.name) ? objInfo.name : 'Data Viewer';
             var cellText = PythonInterop.buildDataWidgetRunner(ref, cellId, title, tag);
@@ -205,7 +206,7 @@ define([
             var jupyterCellType = payload.type;
 
             if (jupyterCellType === 'code' &&
-                setupData && 
+                setupData &&
                 setupData.type === 'data') {
                 upgradeCell(cell, setupData)
                     .catch(function(err) {

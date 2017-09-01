@@ -30,11 +30,13 @@ define([
     'notebook/js/notebook',
     'util/display',
     'util/bootstrapDialog',
+    'util/bootstrapAlert',
     'text!kbase/templates/update_dialog_body.html',
     'narrativeLogin',
     'common/ui',
     'common/html',
     'narrativeTour',
+    'kb_service/utils',
 
     // for effect
     'bootstrap',
@@ -59,11 +61,13 @@ define([
     Notebook,
     DisplayUtil,
     BootstrapDialog,
+    BootstrapAlert,
     UpdateDialogBodyTemplate,
     NarrativeLogin,
     UI,
     html,
-    Tour
+    Tour,
+    ServiceUtils
 ) {
     'use strict';
 
@@ -786,8 +790,64 @@ define([
         Jupyter.notebook.save_checkpoint();
     };
 
-    Narrative.prototype.addAndPopulateApp = function (appId, tag, parameters) {
+    /**
+     * @method
+     * @public
+     * Insert a new App cell into a narrative and pre-populate its parameters with a given set of
+     * values. The cell is inserted below the currently selected cell.
+     * @param {string} appId - The id of the app (should be in form module_name/app_name)
+     * @param {string} tag - The release tag of the app (one of release, beta, dev)
+     * @param {object} parameters - Key-value-pairs describing the parameters to initialize the app
+     * with. Keys are param ids (should match the spec), and values are the values of those
+     * parameters.
+     */
+    Narrative.prototype.addAndPopulateApp = function(appId, tag, parameters) {
         this.sidePanel.$methodsWidget.triggerApp(appId, tag, parameters);
+    };
+
+    /**
+     * @method
+     * @public
+     * Insert a new Viewer cell into a narrative for a given object. The new cell is inserted below
+     * the currently selected cell.
+     * @param {string|object|array} obj - If a string, expected to be an object reference. If an object,
+     * expected to be a set of Key-value-pairs describing the object. If an array, expected to be
+     * the usual workspace info array for an object.
+     */
+    Narrative.prototype.addViewerCell = function(obj) {
+        if (Jupyter.narrative.readonly) {
+            new BootstrapAlert({
+                type: 'warning',
+                title: 'Warning',
+                body: 'Read-only Narrative -- may not add a data viewer to this Narrative'
+            });
+            return;
+        }
+        var cell = Jupyter.notebook.get_selected_cell(),
+            nearIdx = 0;
+        if (cell) {
+            nearIdx = Jupyter.notebook.find_cell_index(cell);
+            $(cell.element).off('dblclick');
+            $(cell.element).off('keydown');
+        }
+        var objInfo = {};
+        // If a string, expect a ref, and fetch the info.
+        if (typeof obj === 'string') {
+            objInfo = this.sidePanel.$dataWidget.getDataObjectByRef(obj, true);
+        }
+        // If an array, expect it to be an array of the info, and convert it.
+        else if (obj instanceof Array) {
+            objInfo = ServiceUtils.objectInfoToObject(obj);
+        }
+        // If not an array or a string, it's our object already.
+        else {
+            objInfo = obj;
+        }
+        this.narrController.trigger('createViewerCell.Narrative', {
+            'nearCellIdx': nearIdx,
+            'widget': 'kbaseNarrativeDataCell',
+            'info': objInfo
+        });
     };
 
     /**

@@ -47,7 +47,7 @@ define([
     Runtime,
     Handlebars,
     ObjectRowHtml,
-    serviceUtils,
+    ServiceUtils,
     BootstrapAlert
 ) {
     'use strict';
@@ -418,7 +418,7 @@ define([
                         // see code below this function for the format of
                         // items in the dataObjects collection
                         var dataObject = this.dataObjects[objId];
-                        var info = serviceUtils.objectInfoToObject(dataObject.info);
+                        var info = this.createInfoObject(dataObject.info);
                         info.dataPaletteRef = dataObject.refPath;
                         return info;
                     }.bind(this));
@@ -603,7 +603,12 @@ define([
             return this.objData;
         },
 
-        getDataObjectByRef: function (ref) {
+        /**
+         * Returns the object info for the given object.
+         * if asObject is truthy, it will package this array up as an object and include the reference
+         * path as key refPath.
+         */
+        getDataObjectByRef: function (ref, asObject) {
             if (!ref) {
                 return null;
             }
@@ -618,10 +623,16 @@ define([
                 return null;
             }
             ref = refSegments[0] + '/' + refSegments[1];
+            var retVal = null;
             if (this.dataObjects[ref]) {
-                return this.dataObjects[ref].info;
+                retVal = this.dataObjects[ref].info;
+                if (asObject) {
+                    retVal = ServiceUtils.objectInfoToObject(retVal);
+                    retVal.ws_id = retVal.wsid;
+                    retVal.ref_path = this.dataObjects[ref].refPath;
+                }
             }
-            return null;
+            return retVal;
         },
 
         getDataObjectByName: function (name, wsId) {
@@ -971,17 +982,14 @@ define([
                             })));
                 });
 
-            // if (!Jupyter.narrative.readonly) {
             $btnToolbar.append($filterMethodInput)
-                .append($filterMethodOutput);
-            // }
-            $btnToolbar.append($openLandingPage);
+                .append($filterMethodOutput)
+                .append($openLandingPage);
             if (!Jupyter.narrative.readonly && !fromPalette) {
                 $btnToolbar.append($openHistory);
             }
             $btnToolbar.append($openProvenance)
                 .append($download);
-
             if (!Jupyter.narrative.readonly && !fromPalette) {
                 $btnToolbar.append($rename)
                     .append($delete);
@@ -1357,10 +1365,8 @@ define([
          * list of fields returned from Workspace service.
          */
         createInfoObject: function (info, refPath) {
-            var ret = _.object(['id', 'name', 'type', 'save_date', 'version',
-                'saved_by', 'ws_id', 'ws_name', 'chsum', 'size',
-                'meta'
-            ], info);
+            var ret = ServiceUtils.objectInfoToObject(info);
+
             if (refPath) {
                 ret['ref_path'] = refPath;
             }
@@ -1369,30 +1375,7 @@ define([
         // ============= end DnD ================
 
         insertViewer: function (key) {
-            if (Jupyter.narrative.readonly) {
-                new BootstrapAlert({
-                    type: 'warning',
-                    title: 'Warning',
-                    body: 'Read-only Narrative -- may not add a data viewer to this Narrative'
-                });
-                return;
-            }
-            var cell = Jupyter.notebook.get_selected_cell(),
-                near_idx = 0;
-            if (cell) {
-                near_idx = Jupyter.notebook.find_cell_index(cell);
-                $(cell.element).off('dblclick');
-                $(cell.element).off('keydown');
-            }
-            var obj = this.dataObjects[this.keyToObjId[key]], // _.findWhere(self.objectList, {key: key});
-                info = this.createInfoObject(obj.info, obj.refPath);
-            // Insert the narrative data cell into the div we just rendered
-            // new kbaseNarrativeDataCell($('#' + cell_id), {cell: cell, info: info});
-            this.trigger('createViewerCell.Narrative', {
-                'nearCellIdx': near_idx,
-                'widget': 'kbaseNarrativeDataCell',
-                'info': info
-            });
+            Jupyter.narrative.addViewerCell(this.keyToObjId[key]);
         },
 
         renderMore: function () {

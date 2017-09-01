@@ -17,7 +17,8 @@ define (
 		'underscore',
 		'narrativeConfig',
 		'narrativeViewers',
-		'kbaseNarrativeCell'
+		'kbaseNarrativeCell',
+        'kb_service/utils'
 	], function(
 		KBWidget,
 		bootstrap,
@@ -25,7 +26,8 @@ define (
 		_,
 		Config,
 		Viewers,
-		kbaseNarrativeCell
+		kbaseNarrativeCell,
+        ServiceUtils
 	) {
     'use strict';
 
@@ -62,7 +64,8 @@ define (
             this._super(options);
             //console.log("kbaseNarrativeDataCell: options=", JSON.stringify(options, null, 2));
             if (options.info_tuple) {
-                this.obj_info = this.createInfoObject(options.info_tuple);
+                this.obj_info = ServiceUtils.objectInfoToObject(options.info_tuple);
+                this.obj_info.ws_id = this.obj_info.wsid;
             } else {
                 this.obj_info = options.info;
             }

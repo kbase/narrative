@@ -564,6 +564,9 @@ define([
                         // Skip any Narrative objects.
                         var objInfo = obj.object_info;
                         if (objInfo[2].indexOf('KBaseNarrative') === 0) {
+                            if (objInfo[2].indexOf('KBaseNarrative.Narrative') === 0) {
+                                Jupyter.narrative.checkDocumentVersion(objInfo);
+                            }
                             continue;
                         }
                         // Only adds to dataObjects, etc., if it's not already there.

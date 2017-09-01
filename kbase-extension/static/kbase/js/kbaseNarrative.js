@@ -31,7 +31,9 @@ define([
     'util/display',
     'util/bootstrapDialog',
     'util/bootstrapAlert',
+    'util/timeFormat',
     'text!kbase/templates/update_dialog_body.html',
+    'text!kbase/templates/document_version_change.html',
     'narrativeLogin',
     'common/ui',
     'common/html',
@@ -62,7 +64,9 @@ define([
     DisplayUtil,
     BootstrapDialog,
     BootstrapAlert,
+    TimeFormat,
     UpdateDialogBodyTemplate,
+    DocumentVersionDialogBodyTemplate,
     NarrativeLogin,
     UI,
     html,
@@ -115,6 +119,9 @@ define([
 
         // The version of the Narrative UI (semantic version)
         this.currentVersion = Config.get('version');
+
+        // The version of the currently loaded Narrative document object.
+        this.documentVersionInfo = [];
 
         //
         this.dataViewers = null;
@@ -211,7 +218,8 @@ define([
         });
         $([Jupyter.events]).on('notebook_saved.Notebook', function () {
             $('#kb-save-btn').find('div.fa-save').removeClass('fa-spin');
-        });
+            this.updateDocumentVersion();
+        }.bind(this));
         $([Jupyter.events]).on('kernel_idle.Kernel', function () {
             $('#kb-kernel-icon').removeClass().addClass('fa fa-circle-o');
         });
@@ -276,58 +284,6 @@ define([
         }.bind(this));
     };
 
-    /**
-     */
-    // function renderSettingsDialog(settings) {
-    //     var t = html.tag,
-    //         div = t('div'),
-    //         input = t('input'),
-    //         label = t('label'),
-    //         p = t('p');
-
-    //     return div([
-    //         p({}, [
-    //             'These settings apply to and are saved with this Narrative. Changes ',
-    //             'made here will not affect existing Narratives or new Narratives that you ',
-    //             'may create.'
-    //         ]),
-    //         p({ style: { fontStyle: 'italic' } }, [
-    //             'Please note that you will need to refresh the browser in order to ',
-    //             'enable any changes.'
-    //         ]),
-    //         div({ class: 'form-horizontal settings-dialog' }, [
-    //             div({ class: 'form-group' }, [
-    //                 div({ class: 'col-md-8 checkbox' }, [
-    //                     label([
-    //                         input({
-    //                             type: 'checkbox',
-    //                             name: 'advanced',
-    //                             value: 'advanced',
-    //                             checked: settings.advanced
-    //                         }),
-    //                         'Use Advanced features'
-    //                     ])
-    //                 ]),
-    //                 div({ class: 'col-md-4' })
-    //             ]),
-    //             div({ class: 'form-group' }, [
-    //                 div({ class: 'col-md-8 checkbox' }, [
-    //                     label([
-    //                         input({
-    //                             type: 'checkbox',
-    //                             name: 'developer',
-    //                             value: 'developer',
-    //                             checked: settings.developer
-    //                         }),
-    //                         'Use Developer features'
-    //                     ])
-    //                 ]),
-    //                 div({ class: 'col-md-4' })
-    //             ])
-    //         ])
-    //     ]);
-    // }
-
     /*
      * Given an inner node, which is probably a button, inspect the contents
      * of the submitted form.
@@ -345,70 +301,85 @@ define([
         return findParent(node.parentNode, selector);
     }
 
-    // function doCheckSettings(innerNode) {
-    //     var dialogNode = findParent(innerNode, '.modal-dialog');
+    /**
+     * Expects docInfo to be a workspace object info array, especially where the 4th element is
+     * an int > 0.
+     */
+    Narrative.prototype.checkDocumentVersion = function (docInfo) {
+        if (docInfo.length < 5) {
+            return;
+        }
+        if (docInfo[4] !== this.documentVersionInfo[4]) {
+            // now we make the dialog and all that.
+            $('#kb-narr-version-btn')
+                .off('click')
+                .on('click', function() {
+                    this.showDocumentVersionDialog(docInfo);
+                }.bind(this));
+            this.toggleDocumentVersionBtn(true);
+        }
+    };
 
-    //     if (!dialogNode) {
-    //         console.error('COULD NOT FIND PARENT NODE');
-    //         throw new Error('Could not find the parent node!');
-    //     }
+    /**
+     * Expects the usual workspace object info array. If that's present, it's captured. If not,
+     * we run get_object_info_new and fetch it ourselves. Note that it should have its metadata.
+     */
+    Narrative.prototype.updateDocumentVersion = function (docInfo) {
+        var self = this;
+        return Promise.try(function () {
+            if (docInfo) {
+                self.documentVersionInfo = docInfo;
+            }
+            else {
+                var workspace = new Workspace(Config.url('workspace'), {token: self.authToken});
+                Promise.resolve(workspace.get_object_info_new({
+                    'objects': [{'ref': self.workspaceRef}],
+                    'includeMetadata': 1
+                }))
+                    .then(function (info) {
+                        self.documentVersionInfo = info[0];
+                    })
+                    .catch(function (error) {
+                        // no op for now.
+                        console.error(error);
+                    });
+            }
+        });
+    };
 
-    //     var settings = {};
-    //     var advanced = dialogNode.querySelector('[name="advanced"]').checked;
-    //     settings.advanced = advanced;
+    Narrative.prototype.showDocumentVersionDialog = function (newVerInfo) {
+        var bodyTemplate = Handlebars.compile(DocumentVersionDialogBodyTemplate);
 
-    //     var developer = dialogNode.querySelector('[name="developer"]').checked;
-    //     settings.developer = developer;
+        var versionDialog = new BootstrapAlert({
+            title: 'Showing an older Narrative document',
+            body: bodyTemplate({
+                currentVer: this.documentVersionInfo,
+                currentDate: TimeFormat.readableTimestamp(this.documentVersionInfo[3]),
+                newVer: newVerInfo,
+                newDate: TimeFormat.readableTimestamp(newVerInfo[3]),
+                sameUser: this.documentVersionInfo[5] === newVerInfo[5],
+                readOnly: this.readonly
+            })
+        });
 
-    //     return settings;
-    // }
+        versionDialog.show();
+    };
 
-    // function doSaveSettings(settings) {
-    //     var existingSettings = Jupyter.notebook.metadata.kbase.userSettings;
-    //     Object.keys(settings).forEach(function(key) {
-    //         existingSettings[key] = settings[key];
-    //     });
-    //     Jupyter.notebook.metadata.kbase.userSettings = existingSettings;
-    //     Jupyter.notebook.save_checkpoint();
-    // }
-
-    // function showSettingsDialog() {
-    //     var ui = UI.make({ node: document.body }),
-    //         existingSettings = Jupyter.notebook.metadata.kbase.userSettings;
-
-    //     if (!existingSettings) {
-    //         existingSettings = {};
-    //         Jupyter.notebook.metadata.kbase.userSettings = {};
-    //     }
-    //     ui.showDialog({
-    //             title: 'Narrative User Settings',
-    //             body: renderSettingsDialog(existingSettings),
-    //             buttons: [{
-    //                 type: 'primary',
-    //                 label: 'Save Settings',
-    //                 action: 'save',
-    //                 handler: function(e) {
-    //                     return doCheckSettings(e.target);
-    //                 }
-    //             }]
-    //         })
-    //         .then(function(result) {
-    //             if (result.action === 'save') {
-    //                 doSaveSettings(result.result);
-    //             }
-    //         });
-    // }
-
-    // Narrative.prototype.initSettingsDialog = function() {
-    //     var settingsButtonNode = document.getElementById('kb-settings-btn');
-    //     if (!settingsButtonNode) {
-    //         return;
-    //     }
-
-    //     settingsButtonNode.addEventListener('click', function() {
-    //         showSettingsDialog();
-    //     });
-    // };
+    /**
+     * @method
+     * @public
+     * This shows or hides the "narrative has been saved in a different window" button.
+     * If show is truthy, show it. Otherwise, hide it.
+     */
+    Narrative.prototype.toggleDocumentVersionBtn = function (show) {
+        var $btn = $('#kb-narr-version-btn');
+        if (show && !$btn.is(':visible')) {
+            $btn.fadeIn('fast');
+        }
+        else if (!show && $btn.is(':visible')){
+            $btn.fadeOut('fast');
+        }
+    };
 
     /**
      * The "Upgrade your container" dialog should be made available when
@@ -729,13 +700,16 @@ define([
                 this.workspaceId = wsInfo[1];
             }
 
-            // init the controller
-
-            this.narrController.render()
-                .finally(function () {
-                    this.sidePanel.render();
-                    $('#kb-wait-for-ws').remove();
-                }.bind(this));
+            this.updateDocumentVersion()
+            .then(function() {
+                // init the controller
+                return this.narrController.render();
+            }.bind(this))
+            .finally(function () {
+                this.sidePanel.render();
+                this.updateDocumentVersion();
+                $('#kb-wait-for-ws').remove();
+            }.bind(this));
             $([Jupyter.events]).trigger('loaded.Narrative');
             $([Jupyter.events]).on('kernel_ready.Kernel',
                 function () {
@@ -763,7 +737,8 @@ define([
      */
     Narrative.prototype.updateVersion = function () {
         var user = NarrativeLogin.sessionInfo.user; //.loginWidget($('#signin-button')).session('user_id');
-        Promise.resolve($.ajax({
+        Promise.resolve(
+            $.ajax({
                 contentType: 'application/json',
                 url: '/narrative_shutdown/' + user,
                 type: 'DELETE',
@@ -788,6 +763,7 @@ define([
     Narrative.prototype.saveNarrative = function () {
         this.narrController.saveAllCellStates();
         Jupyter.notebook.save_checkpoint();
+        this.toggleDocumentVersionBtn(false);
     };
 
     /**

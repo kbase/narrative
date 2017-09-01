@@ -50,10 +50,15 @@ define([], function() {
          * new Date object directly.
          */
         var d = new Date(time);
-        if (Object.prototype.toString.call(d) !== '[object Date]') {
+        if (Object.prototype.toString.call(d) !== '[object Date]' || isNaN(d.getTime())) {
             var t = time.split(/[^0-9]/);
+            // if t[0] is 0 or empty string, then just bail now and return null. This means that the
+            // given timestamp was not valid.
+            if (!t[0]) {
+                return null;
+            }
             while (t.length < 7) {
-                t.append(0);
+                t.push(0);
             }
             d = new Date(t[0], t[1]-1, t[2], t[3], t[4], t[5], t[6]);
             // Test the new Date object
@@ -70,15 +75,12 @@ define([], function() {
             return null;
         }
         else {
-            if (isNaN(d.getTime())) {
-                return null;
-            }
             return d;
         }
     }
 
     /**
-     * @method parseTimestamp
+     * @method reformatISOTimeString
      * Parses the user_and_job_state timestamp and returns it as a user-
      * readable string in the UTC time.
      *
@@ -297,10 +299,23 @@ define([], function() {
     }
 
     /**
+     * @private
+     * @method
+     * Checks if the timestamp looks like it should be ISO 8601 format.
+     * If so, it "cleans" it up to make sure (if it has a trailing +0000, it converts it
+     * to a trailing +00:00, for example)
+     */
+    function cleanupISOFormat (timestamp) {
+        // check if ISO.
+
+    };
+
+    /**
      * Converts a timestamp to a simple string.
      * Do this American style - HH:MM:SS MM/DD/YYYY
      *
-     * @param {string} timestamp - a timestamp in number of milliseconds since the epoch.
+     * @param {string} timestamp - a timestamp in number of milliseconds since the epoch, or any
+     * ISO8601 format that new Date() can deal with.
      * @return {string} a human readable timestamp
      */
     function readableTimestamp (timestamp) {
@@ -310,7 +325,7 @@ define([], function() {
             return x;
         };
 
-        var d = new Date(timestamp);
+        var d = parseDate(timestamp);
         var hours = format(d.getHours());
         var minutes = format(d.getMinutes());
         var seconds = format(d.getSeconds());

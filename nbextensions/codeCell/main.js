@@ -138,7 +138,7 @@ define([
 
     function upgradeCell(cell, data) {
         data = data || {};
-        var meta = cell.metadata,
+        var meta = cell.metadata || {},
             cellId = data.cellId || (new Uuid(4).format());
 
         // Accomodate import/job cells.
@@ -193,7 +193,7 @@ define([
                     }
                 } else {
                     // a code cell with a kbase property but no type specified
-                    // must be a pre-code-cell-extension code cell, which can be 
+                    // must be a pre-code-cell-extension code cell, which can be
                     // converted.
                     fixupCell(cell);
                     return true;

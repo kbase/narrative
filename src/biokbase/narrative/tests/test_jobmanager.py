@@ -8,83 +8,13 @@ from biokbase.narrative.jobs.job import Job
 from util import TestConfig
 import os
 from IPython.display import HTML
-from pprint import pprint
+from narrative_mock.mockclients import get_mock_client
+from narrative_mock.mockcomm import MockComm
 
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
 config = TestConfig()
 job_info = config.load_json_file(config.get('jobs', 'job_info_file'))
-# job_info = read_json_file(config.get('jobs', 'job_info_file'))
-
-
-class MockComm(object):
-    """
-    Mock class for ipython.kernel.Comm
-    This keeps the last message that was sent, so it can be retrieved and
-    analyzed during the test.
-    """
-    def __init__(self, *args, **kwargs):
-        """Mock the init"""
-        self.last_message = None
-
-    def on_msg(self, *args, **kwargs):
-        """Mock the msg router"""
-        pass
-
-    def send(self, data=None, content=None):
-        """Mock sending a msg"""
-        self.last_message = {"data": data, "content": content}
-
-    def clear_message_cache(self):
-        self.last_message = None
-
-
-class MockAllClients(object):
-    """
-    Mock KBase service clients as needed for JobManager tests. This covers all of them,
-    just need to add more methods as needed.
-    """
-    def list_jobs2(self, params):
-        return job_info.get('job_info')
-
-    def delete_job(self, job):
-        return "bar"
-
-    def cancel_job(self, job_id):
-        return "done"
-
-    def get_job_params(self, job_id):
-        return [job_info.get('job_param_info', {}).get(job_id, None)]
-
-    def check_job(self, job_id):
-        return job_info.get('job_status_info', {}).get(job_id, None)
-
-    def check_jobs(self, params):
-        states = dict()
-        job_params = dict()
-        for job_id in params['job_ids']:
-            states[job_id] = job_info.get('job_status_info', {}).get(job_id, {})
-        if params.get('with_job_params', 0) == 1:
-            for job_id in params['job_ids']:
-                job_params[job_id] = job_info.get('job_param_info', {}).get(job_id, None)
-        ret = {
-            'job_states': states
-        }
-        if len(job_params) > 0:
-            ret['job_params'] = job_params
-        return ret
-
-    def list_methods_spec(self, params):
-        return config.load_json_file(config.get('specs', 'app_specs_file'))
-        # return read_json_file(config.get('specs', 'app_specs_file'))
-
-    def list_categories(self, params):
-        return config.load_json_file(config.get('specs', 'type_specs_file'))
-        # return read_json_file(config.get('specs', 'type_specs_file'))
-
-
-def get_mock_client(client_name):
-    return MockAllClients()
 
 
 @mock.patch('biokbase.narrative.jobs.job.clients.get', get_mock_client)

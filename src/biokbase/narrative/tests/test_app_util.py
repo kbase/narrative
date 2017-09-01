@@ -9,6 +9,7 @@ from biokbase.narrative.app_util import (
     map_inputs_from_job,
     map_outputs_from_state
 )
+from narrative_mock.mockclients import get_mock_client
 import os
 import mock
 
@@ -30,7 +31,7 @@ class AppUtilTestCase(unittest.TestCase):
         self.user_id = "KBaseTest"
         self.good_fake_token = "un={}|tokenid=12345|expiry=1592895594|client_id={}|token_type=bearer|SigningSubject=whaaaaaaaaaaat".format(self.user_id, self.user_id)
         self.bad_fake_token = "NotAGoodTokenLOL"
-        self.workspace = "{}:12345".format(self.user_id)
+        self.workspace = "valid_workspace"
 
     def test_check_tag_good(self):
         self.assertTrue(check_tag(self.good_tag))
@@ -39,7 +40,7 @@ class AppUtilTestCase(unittest.TestCase):
         self.assertFalse(check_tag(self.bad_tag))
 
     def test_check_tag_bad_except(self):
-        with self.assertRaises(ValueError) as err:
+        with self.assertRaises(ValueError):
             check_tag(self.bad_tag, raise_exception=True)
 
     def test_sys_var_user(self):
@@ -64,16 +65,14 @@ class AppUtilTestCase(unittest.TestCase):
             del os.environ['KB_WORKSPACE_ID']
         self.assertIsNone(system_variable('workspace_id'))
 
-    @mock.patch('biokbase.narrative.app_util._ws_client')
-    def test_sys_var_workspace_id(self, m):
+    @mock.patch('biokbase.narrative.app_util.clients.get', get_mock_client)
+    def test_sys_var_workspace_id(self):
         os.environ['KB_WORKSPACE_ID'] = self.workspace
-        m.get_workspace_info.return_value = [12345, 'foo', 'bar']
         self.assertEquals(system_variable('workspace_id'), 12345)
 
-    @mock.patch('biokbase.narrative.app_util._ws_client')
-    def test_sys_var_workspace_id_except(self, m):
-        os.environ['KB_WORKSPACE_ID'] = '12345'
-        m.get_workspace_info.side_effect = Exception('not found')
+    @mock.patch('biokbase.narrative.app_util.clients.get', get_mock_client)
+    def test_sys_var_workspace_id_except(self):
+        os.environ['KB_WORKSPACE_ID'] = 'invalid_workspace'
         self.assertIsNone(system_variable('workspace_id'))
 
     def test_sys_var_bad_token(self):
@@ -258,7 +257,7 @@ class AppUtilTestCase(unittest.TestCase):
             'an_input': 'input_val'
         }
         state = {}
-        with self.assertRaises(ValueError) as e:
+        with self.assertRaises(ValueError):
             map_outputs_from_state(state, params, app_spec)
 
 

@@ -7,6 +7,7 @@ from biokbase.narrative.contents.updater import (
 import json
 from util import TestConfig
 
+
 class TestKeyError(ValueError):
     def __init__(self, keyname, source):
         ValueError.__init__(self, "Key {} not found in {}".format(keyname, source))

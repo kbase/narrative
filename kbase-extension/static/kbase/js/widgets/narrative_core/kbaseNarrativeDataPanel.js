@@ -299,9 +299,9 @@ define([
             }
         },
 
-        getDataObjectByRef: function(ref) {
+        getDataObjectByRef: function(ref, asObject) {
             if (this.dataListWidget) {
-                return this.dataListWidget.getDataObjectByRef(ref);
+                return this.dataListWidget.getDataObjectByRef(ref, asObject);
             }
         },
 

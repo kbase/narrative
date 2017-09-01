@@ -314,6 +314,8 @@ require.config({
         'kbaseExpressionVolcanoPlot': 'kbase/js/widgets/function_output/kbaseExpressionVolcanoPlot',
 
         'kbaseRESKESearchResultDemo': 'kbase/js/widgets/function_output/kbaseRESKESearchResultDemo',
+        'kbaseGenericSetViewer': 'kbase/js/widgets/function_output/kbaseGenericSetViewer',
+        'kbaseDifferentialExpressionMatrixSetViewer': 'kbase/js/widgets/function_output/kbaseDifferentialExpressionMatrixSetViewer',
 
 
         /***

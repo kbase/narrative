@@ -6,6 +6,10 @@ define([
     'kbaseAuthenticatedWidget',
     'kbaseTabs',
     'underscore',
+		'narrativeConfig',
+		'kbase-generic-client-api',
+		'common/runtime',
+		'kb_service/client/workspace',
     'css!ext_components/jquery.tipsy/css/jquery.tipsy.css',
     'css!ext_components/bootstrap-slider/slider.css',
     'bootstrap',
@@ -20,7 +24,12 @@ define([
     Config,
     KBaseAuthenticatedWidget,
     KBaseTabs,
-    _
+    _,
+    Config,
+		GenericClient,
+		Runtime,
+		Workspace
+
   ) {
     return KBWidget({
       name          : "kbaseExpressionVolcanoPlot",
@@ -74,12 +83,42 @@ define([
             .append("&nbsp;&nbsp;loading data...")
         );
 
-        kbws.get_objects([{ref: self.ws_name + "/" + self.ws_id}], function (text) {
-          self.renderPlot(text)
-        }, function (text) {
-          $container.empty();
-          $container.append('<p>[Error] ' + data.error.message + '</p>');
-        });
+        if (this.options.diffExprMatrixSet_ref) {
+          this.genericClient = new GenericClient(
+            Config.url('service_wizard'),
+            { token: Runtime.make().authToken() }
+          );
+          this.genericClient.sync_call('ExpressionAPI.get_differentialExpressionMatrixSet', [{
+            'diffExprMatrixSet_ref' : this.options.diffExprMatrixSet_ref,
+          }])
+          .then(function(results) {
+
+            var volcano_data = results[0].volcano_plot_data[0];
+
+            self.renderPlot({
+              unique_conditions : [volcano_data.condition_1, volcano_data.condition_2],
+              condition_pairs : [{
+                condition_1 : volcano_data.condition_1,
+                condition_2 : volcano_data.condition_2,
+                voldata : volcano_data.voldata
+              }]
+            });
+
+          })
+          .catch(function(e) {
+            //console.log("generic failure : ", e);
+            self.$elem.empty();
+            self.$elem.append("ERROR : " + e);
+          });
+        }
+        else {
+          kbws.get_objects([{ref: self.ws_name + "/" + self.ws_id}], function (text) {
+            self.renderPlot(text[0].data)
+          }, function (text) {
+            $container.empty();
+            $container.append('<p>[Error] ' + data.error.message + '</p>');
+          });
+        }
 
         return this;
       },
@@ -104,7 +143,6 @@ define([
         var $container = this.$elem;
 
         $container.empty();
-        text = text[0].data;
 
         var $tabPane = $.jqElem('div');
         $container.append($tabPane);

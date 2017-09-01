@@ -30,6 +30,8 @@ define([
     'notebook/js/notebook',
     'util/display',
     'util/bootstrapDialog',
+    'util/bootstrapAlert',
+    'util/timeFormat',
     'text!kbase/templates/update_dialog_body.html',
     'text!kbase/templates/document_version_change.html',
     'narrativeLogin',
@@ -60,6 +62,8 @@ define([
     Notebook,
     DisplayUtil,
     BootstrapDialog,
+    BootstrapAlert,
+    TimeFormat,
     UpdateDialogBodyTemplate,
     DocumentVersionDialogBodyTemplate,
     NarrativeLogin,
@@ -344,12 +348,15 @@ define([
     Narrative.prototype.showDocumentVersionDialog = function (newVerInfo) {
         var bodyTemplate = Handlebars.compile(DocumentVersionDialogBodyTemplate);
 
-        var versionDialog = new BootstrapDialog({
+        var versionDialog = new BootstrapAlert({
             title: 'Showing an older Narrative document',
-            buttons: [$('<button type="button" data-dismiss="modal">OK</button>')],
             body: bodyTemplate({
                 currentVer: this.documentVersionInfo,
-                newVer: newVerInfo
+                currentDate: TimeFormat.readableTimestamp(this.documentVersionInfo[3]),
+                newVer: newVerInfo,
+                newDate: TimeFormat.readableTimestamp(newVerInfo[3]),
+                sameUser: this.documentVersionInfo[5] === newVerInfo[5],
+                readOnly: this.readonly
             })
         });
 
@@ -754,6 +761,7 @@ define([
     Narrative.prototype.saveNarrative = function () {
         this.narrController.saveAllCellStates();
         Jupyter.notebook.save_checkpoint();
+        this.toggleDocumentVersionBtn(false);
     };
 
     Narrative.prototype.addAndPopulateApp = function (appId, tag, parameters) {

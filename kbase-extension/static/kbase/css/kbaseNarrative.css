@@ -248,6 +248,12 @@ span#searchspan{
 .kb-nav-btn-upgrade:hover {
     background-color: #43A047 !important;
 }
+.kb-nav-btn-upgrade.warning {
+    background-color: #F44336 !important;
+}
+.kb-nav-btn-upgrade.warning:hover {
+    background-color: #DC3C31 !important;
+}
 .kb-nav-menu-icon {
     display: inline-block;
     width: 20px;

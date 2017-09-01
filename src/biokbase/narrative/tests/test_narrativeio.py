@@ -34,17 +34,6 @@ class NarrIOTestCase(unittest.TestCase):
     test_token = None
     private_token = None
 
-        # def deco(f):
-        #     @wraps(f)
-        #     def wrapper(self, *args, **kwargs):
-        #         if self.test_token is None:
-        #             print("Skipping test due to missing auth token")
-        #             self.skipTest()
-        #         else:
-        #             f(self, *args, **kwargs)
-        #     return wrapper
-        # return deco
-
     @classmethod
     def setUpClass(self):
         config = util.TestConfig()

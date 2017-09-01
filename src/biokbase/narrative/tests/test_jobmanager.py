@@ -15,11 +15,6 @@ __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
 config = TestConfig()
 job_info = config.load_json_file(config.get('jobs', 'job_info_file'))
-# job_info = read_json_file(config.get('jobs', 'job_info_file'))
-
-
-# def get_mock_client(client_name):
-#     return MockClients()
 
 
 @mock.patch('biokbase.narrative.jobs.job.clients.get', get_mock_client)

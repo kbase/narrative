@@ -68,13 +68,11 @@ class AppUtilTestCase(unittest.TestCase):
     @mock.patch('biokbase.narrative.app_util.clients.get', get_mock_client)
     def test_sys_var_workspace_id(self):
         os.environ['KB_WORKSPACE_ID'] = self.workspace
-        # m.get_workspace_info.return_value = [12345, 'foo', 'bar']
         self.assertEquals(system_variable('workspace_id'), 12345)
 
     @mock.patch('biokbase.narrative.app_util.clients.get', get_mock_client)
     def test_sys_var_workspace_id_except(self):
         os.environ['KB_WORKSPACE_ID'] = 'invalid_workspace'
-        # m.get_workspace_info.side_effect = Exception('not found')
         self.assertIsNone(system_variable('workspace_id'))
 
     def test_sys_var_bad_token(self):
@@ -259,7 +257,7 @@ class AppUtilTestCase(unittest.TestCase):
             'an_input': 'input_val'
         }
         state = {}
-        with self.assertRaises(ValueError) as e:
+        with self.assertRaises(ValueError):
             map_outputs_from_state(state, params, app_spec)
 
 

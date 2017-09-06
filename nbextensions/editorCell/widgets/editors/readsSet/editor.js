@@ -406,13 +406,15 @@ define([
         }
 
         function showCodeInputArea() {
-            var codeInputArea = cell.input.find('.input_area');
+            var codeInputArea = cell.input.find('.input_area').get(0);
             if (editorState.getItem('user-settings.showCodeInputArea')) {
-                codeInputArea.removeClass('hidden');
-                // codeInputArea.css('display', cell.kbase.inputAreaDisplayStyle);
+                if (!codeInputArea.classList.contains('-show')) {
+                    codeInputArea.classList.add('-show');
+                }
             } else {
-                codeInputArea.addClass('hidden');
-                // codeInputArea.css('display', 'none');
+                if (codeInputArea.classList.contains('-show')) {
+                    codeInputArea.classList.remove('-show');
+                }
             }
         }
 

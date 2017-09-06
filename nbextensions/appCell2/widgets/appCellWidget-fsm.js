@@ -1,7 +1,7 @@
 /*global define*/
 /*jslint white:true,browser:true*/
 
-define([], function () {
+define([], function() {
     'use strict';
 
     var appStates = [{
@@ -54,22 +54,51 @@ define([], function () {
                     params: 'incomplete'
                 }
             ]
-        },
-        {
+        }, {
             state: {
                 mode: 'editing',
                 params: 'incomplete'
             },
             ui: {
                 tabs: {
-                    configure: {
-                        enabled: true,
-                        selected: true
-                    },
-                    viewConfigure: {
-                        enabled: false,
-                        hidden: true
-                    },
+                    configure: [{
+                        selector: {
+                            viewOnly: false
+                        },
+                        settings: {
+                            enabled: true,
+                            hidden: false,
+                            selected: true
+                        }
+                    }, {
+                        selector: {
+                            viewOnly: true
+                        },
+                        settings: {
+                            enabled: false,
+                            hidden: true,
+                            selected: false
+                        }
+                    }],
+                    viewConfigure: [{
+                        selector: {
+                            viewOnly: false
+                        },
+                        settings: {
+                            enabled: false,
+                            hidden: true,
+                            selected: false
+                        }
+                    }, {
+                        selector: {
+                            viewOnly: true
+                        },
+                        settings: {
+                            enabled: true,
+                            hidden: false,
+                            selected: true
+                        }
+                    }],
                     logs: {
                         enabled: false
                     },
@@ -121,14 +150,44 @@ define([], function () {
             },
             ui: {
                 tabs: {
-                    configure: {
-                        enabled: true,
-                        selected: true
-                    },
-                    viewConfigure: {
-                        enabled: false,
-                        hidden: true
-                    },
+                    configure: [{
+                        selector: {
+                            viewOnly: false
+                        },
+                        settings: {
+                            enabled: true,
+                            hidden: false,
+                            selected: true
+                        }
+                    }, {
+                        selector: {
+                            viewOnly: true
+                        },
+                        settings: {
+                            enabled: false,
+                            hidden: true,
+                            selected: false
+                        }
+                    }],
+                    viewConfigure: [{
+                        selector: {
+                            viewOnly: false
+                        },
+                        settings: {
+                            enabled: false,
+                            hidden: true,
+                            selected: false
+                        }
+                    }, {
+                        selector: {
+                            viewOnly: true
+                        },
+                        settings: {
+                            enabled: true,
+                            hidden: false,
+                            selected: true
+                        }
+                    }],
                     logs: {
                         enabled: false
                     },
@@ -172,7 +231,7 @@ define([], function () {
                 },
                 {
                     mode: 'processing',
-                    state: 'launched'
+                    stage: 'launched'
                 },
                 {
                     mode: 'processing',
@@ -280,8 +339,7 @@ define([], function () {
                     }]
                 }
             },
-            next: [
-                {
+            next: [{
                     mode: 'processing',
                     stage: 'launched'
                 },
@@ -362,8 +420,7 @@ define([], function () {
                     }]
                 }
             },
-            next: [
-                {
+            next: [{
                     mode: 'processing',
                     stage: 'launched'
                 },
@@ -468,6 +525,7 @@ define([], function () {
                     mode: 'processing',
                     stage: 'queued'
                 },
+
                 {
                     mode: 'canceled'
                 },
@@ -503,6 +561,7 @@ define([], function () {
                 }
             ]
         },
+
         {
             state: {
                 mode: 'processing',
@@ -566,6 +625,7 @@ define([], function () {
                     mode: 'processing',
                     stage: 'running'
                 },
+
                 {
                     mode: 'canceled'
                 },
@@ -592,6 +652,7 @@ define([], function () {
                 }
             ]
         },
+
         {
             state: {
                 mode: 'canceling'
@@ -797,7 +858,7 @@ define([], function () {
                 },
                 resume: {
                     messages: [{
-                        emit: 'on-success'
+                        emit: 'resume-success'
                     }]
                 },
                 exit: {
@@ -819,6 +880,7 @@ define([], function () {
                 }
             ]
         },
+
         {
             state: {
                 mode: 'error',

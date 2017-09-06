@@ -13,16 +13,20 @@ define([
     'util/timeFormat',
     'util/string',
     'kb_service/client/workspace',
+    'kb_service/utils',
     'kbaseAuthenticatedWidget',
     'kbaseTabs',
     'kbaseReportView',
     'common/runtime',
     'common/semaphore',
+    'common/utils',
     'text!kbase/templates/job_status/status_table.html',
     'text!kbase/templates/job_status/header.html',
     'text!kbase/templates/job_status/log_panel.html',
     'text!kbase/templates/job_status/log_line.html',
     'text!kbase/templates/job_status/new_objects.html',
+    'util/bootstrapAlert',
+
     'css!kbase/css/kbaseJobLog.css',
     'bootstrap'
 ], function (
@@ -37,21 +41,24 @@ define([
     TimeFormat,
     StringUtil,
     Workspace,
+    ServiceUtils,
     KBaseAuthenticatedWidget,
     KBaseTabs,
     KBaseReportView,
     Runtime,
     Semaphore,
+    utils,
     JobStatusTableTemplate,
     HeaderTemplate,
     LogPanelTemplate,
     LogLineTemplate,
-    NewObjectsTemplate
+    NewObjectsTemplate,
+    Alert
 ) {
     'use strict';
 
     function VirtualSlice(config) {
-        var maxSize = config.max  || 100;
+        var maxSize = config.max || 100;
         var startPos;
         var theSlice;
         var trimEnd = config.trimEnd || 'auto';
@@ -85,6 +92,7 @@ define([
                 startPos = startPos + chop;
             }
         }
+
         function grow(log) {
             // handle cases in which the new entires are discontiguous.
             if (log.start + log.lines.length < startPos) {
@@ -95,7 +103,8 @@ define([
                 replace(log);
                 return;
             }
-            var growLength, growLines, growAtBegin = false, growAtEnd = false;
+            var growLength, growLines, growAtBegin = false,
+                growAtEnd = false;
             if (log.first < startPos) {
                 growLength = log.first + log.lines.length - startPos;
                 growLines = log.lines.slice(0, log.lines.length - growLength);
@@ -127,6 +136,7 @@ define([
             theSlice = log.lines;
             trim();
         }
+
         function update(log) {
             if (log.first === null || log.first === undefined || !log.lines) {
                 return;
@@ -151,12 +161,15 @@ define([
         function getStart() {
             return startPos;
         }
+
         function getEnd() {
             return startPos + theSlice.length;
         }
+
         function getLength() {
             return theSlice.length;
         }
+
         function trimAt(newEnd) {
             trimEnd = newEnd;
         }
@@ -235,14 +248,21 @@ define([
              * 3. Initialize layout, set up bus.
              */
             var cellMeta = this.getCellState();
-            if (cellMeta && cellMeta.state.jobId === this.jobId) {
-                // use this and not the state input.
-                this.state = cellMeta.state;
+
+            // When this is initially inserted into the Narrative, the cell metadata will not be fully populated.
+            // In this case, the job state that is passed to the widget will be used, otherwise the job state
+            // stored in the metadata will be used.
+            if (utils.getCellMeta(this.cell, 'kbase.codeCell.jobInfo.state.jobId') === this.jobId) {
+                this.state = utils.getCellMeta(this.cell, 'kbase.codeCell.jobInfo.state');
             }
+
+            // if (cellMeta && cellMeta.codeCell && cellMeta.codeCell && cellMeta.codeCell.jobInfo.state.jobId === this.jobId) {
+            //     // use this and not the state input.
+            //     this.state = cellMeta.codeCell.jobInfo.state;
+            // }
             if (cellMeta && cellMeta.attributes && cellMeta.attributes.id) {
                 this.cellId = cellMeta.attributes.id;
-            }
-            else {
+            } else {
                 this.cellId = StringUtil.uuid();
             }
 
@@ -299,6 +319,19 @@ define([
                         }.bind(this)
                     });
 
+                    this.busConnection.listen({
+                        channel: {
+                            jobId: this.jobId
+                        },
+                        key: {
+                            type: 'job-does-not-exist'
+                        },
+                        handle: function (message) {
+                            // this.handleJobStatus(message);
+                            console.warn('job does not exist? ', message);
+                        }.bind(this)
+                    });
+
                     this.channel.emit('request-job-status', {
                         jobId: this.jobId
                     });
@@ -333,15 +366,16 @@ define([
             var $tabDiv = $('<div>');
             this.tabController = new KBaseTabs($tabDiv, {
                 tabs: [{
-                    tab: 'Status',
-                    canDelete: false,
-                    content: body,
-                },
-                {
-                    tab: 'Log',
-                    canDelete: false,
-                    showContentCallback: this.initLogView.bind(this)
-                }]
+                        tab: 'Status',
+                        canDelete: false,
+                        content: body,
+                    },
+                    {
+                        tab: 'Log',
+                        canDelete: false,
+                        showContentCallback: this.initLogView.bind(this)
+                    }
+                ]
             });
             this.$elem.append($tabDiv);
         },
@@ -371,7 +405,6 @@ define([
                     this.showNewObjects();
                 }
             }
-
         },
 
         showNewObjects: function () {
@@ -421,8 +454,18 @@ define([
                                         var $objTable = $(newObjTmpl(renderedInfo));
                                         for (var i = 0; i < objInfo.length; i++) {
                                             var info = objInfo[0];
-                                            $objTable.find('#' + objInfo[i][1]).click(function () {
-                                                this.openViewerCell(this.createInfoObject(info));
+                                            $objTable.find('[data-object-name="' + objInfo[i][1] + '"]').click(function (e) {
+                                                e.stopPropagation();
+                                                e.preventDefault();
+                                                if (Jupyter.narrative.readonly) {
+                                                    new Alert({
+                                                        type: 'warning',
+                                                        title: 'Warning: Read-only Narrative',
+                                                        body: 'You cannot insert a data viewer cell into this Narrative because it is read-only'
+                                                    });
+                                                    return;
+                                                }
+                                                Jupyter.narrative.addViewerCell(info);
                                             }.bind(this));
                                         }
                                         $div.append($objTable);
@@ -437,28 +480,6 @@ define([
                 }
                 this.showingNewObjects = true;
             }
-        },
-
-        openViewerCell: function (info) {
-            var cell = Jupyter.notebook.get_selected_cell();
-            var near_idx = 0;
-            if (cell) {
-                near_idx = Jupyter.notebook.find_cell_index(cell);
-                $(cell.element).off('dblclick');
-                $(cell.element).off('keydown');
-            }
-            this.trigger('createViewerCell.Narrative', {
-                'nearCellIdx': near_idx,
-                'widget': 'kbaseNarrativeDataCell',
-                'info': info
-            });
-        },
-
-        createInfoObject: function (info) {
-            return _.object(['id', 'name', 'type', 'save_date', 'version',
-                'saved_by', 'ws_id', 'ws_name', 'chsum', 'size',
-                'meta'
-            ], info);
         },
 
         /**
@@ -544,9 +565,46 @@ define([
             return $(tmpl(this.appInfo));
         },
 
+
+
         getCellState: function () {
             var metadata = this.cell.metadata;
-            if (metadata.kbase && metadata.kbase.state) {
+            // This is altogether the wrong place to do this sort of
+            // cell repair...
+            if (metadata.kbase) {
+                if (metadata.kbase.state) {
+                    // Copied from the codeCell extension
+                    var newKbaseMeta = {
+                        type: 'code',
+                        attributes: {
+                            id: StringUtil.uuid(),
+                            status: 'new',
+                            created: new Date().toGMTString(),
+                            lastLoaded: new Date().toGMTString(),
+                            icon: 'code',
+                            title: 'Import Job Cell',
+                            subtitle: ''
+                        },
+                        codeCell: {
+                            userSettings: {
+                                showCodeInputArea: true
+                            },
+                            jobInfo: {
+                                jobId: metadata.kbase.jobId,
+                                state: metadata.kbase.state
+                            }
+                        }
+                    };
+                    // fix up the metadata.
+                    // The old metadata just wrote over the kbase property
+                    // kbase.jobId
+                    // kbase.state
+                    // Originally it was set up as an output cell, but
+                    // did not match an output cell metadata, so would fail
+                    // we need to fix that here...
+                    this.cell.metadata.kbase = newKbaseMeta;
+                    this.cell.metadata = this.cell.metadata;
+                }
                 return metadata.kbase;
             } else {
                 return null;
@@ -555,7 +613,7 @@ define([
 
         setCellState: function () {
             var metadata = this.cell.metadata;
-            metadata['kbase'] = {
+            metadata.kbase.codeCell.jobInfo = {
                 jobId: this.jobId,
                 state: this.state
             };
@@ -729,7 +787,8 @@ define([
                 .children()
                 .tooltip()
                 .on('click', function (e) {
-                    $(e.currentTarget).tooltip('hide'); });
+                    $(e.currentTarget).tooltip('hide');
+                });
             return $logPanel;
         },
 
@@ -759,7 +818,7 @@ define([
             this.logView.find('#kblog-msg').html(message);
         },
 
-        logButton: function(name) {
+        logButton: function (name) {
             return this.logView.find('#kblog-' + name);
         },
 

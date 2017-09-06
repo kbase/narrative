@@ -13,7 +13,7 @@ define([
     './samplePropertyHistogram',
     './growthCondition'
 
-], function(
+], function (
     Handlebars,
     Runtime,
     Props,
@@ -55,7 +55,7 @@ define([
             return div({ style: { wordWrap: 'break-word' } }, [
                 div({ style: { fontWeight: 'bold' } }, item.id),
                 item.desc,
-                (function() {
+                (function () {
                     if (showSourceObjectName && item.objectName) {
                         return div({ style: { padding: '0px', fontStyle: 'italic' } }, item.objectName);
                     }
@@ -77,7 +77,7 @@ define([
                 dataCall = workspaceCall(subObjectIdentity);
             }
             return dataCall
-                .then(function(results) {
+                .then(function (results) {
                     var values = [],
                         selectionId = subdataSelection.selection_id,
                         descriptionFields = subdataSelection.selection_description || [],
@@ -85,13 +85,13 @@ define([
                         descriptionTemplate;
 
                     if (!descriptionTemplateText) {
-                        descriptionTemplateText = descriptionFields.map(function(field) {
+                        descriptionTemplateText = descriptionFields.map(function (field) {
                             return '{{' + field + '}}';
                         }).join(' - ');
                     }
 
                     descriptionTemplate = Handlebars.compile(descriptionTemplateText);
-                    results.forEach(function(result) {
+                    results.forEach(function (result) {
                         if (!result) {
                             return;
                         }
@@ -128,7 +128,7 @@ define([
                         if (subdata instanceof Array) {
                             // For arrays we pluck off the "selectionId" property from
                             // each item.
-                            subdata.forEach(function(datum) {
+                            subdata.forEach(function (datum) {
                                 var id = datum;
                                 if (selectionId && typeof id === 'object') {
                                     id = datum[selectionId];
@@ -141,25 +141,25 @@ define([
                                 });
                             });
                         } else {
-                            Object.keys(subdata).forEach(function(key) {
+                            Object.keys(subdata).forEach(function (key) {
                                 var datum = subdata[key],
                                     id;
 
                                 if (selectionId) {
                                     switch (typeof datum) {
-                                        case 'object':
-                                            id = datum[selectionId];
-                                            break;
-                                        case 'string':
-                                        case 'number':
-                                            if (selectionId === 'value') {
-                                                id = datum;
-                                            } else {
-                                                id = key;
-                                            }
-                                            break;
-                                        default:
+                                    case 'object':
+                                        id = datum[selectionId];
+                                        break;
+                                    case 'string':
+                                    case 'number':
+                                        if (selectionId === 'value') {
+                                            id = datum;
+                                        } else {
                                             id = key;
+                                        }
+                                        break;
+                                    default:
+                                        id = key;
                                     }
                                 } else {
                                     id = key;
@@ -175,14 +175,14 @@ define([
                             });
                         }
                     });
-                    return values.map(function(item) {
+                    return values.map(function (item) {
                         item.text = makeLabel(item, arg.spec.ui.showSourceObject);
                         return item;
                     });
                 })
-                .then(function(data) {
+                .then(function (data) {
                     // sort by id now.
-                    data.sort(function(a, b) {
+                    data.sort(function (a, b) {
                         if (a.id > b.id) {
                             return 1;
                         }
@@ -197,32 +197,32 @@ define([
 
         function getSubdataInfo(appSpec, paramSpec) {
             switch (appSpec.widgets.input) {
-                case 'kbaseSamplePropertyHistogramInput':
-                    switch (paramSpec.id) {
-                        case 'input_samples':
-                            return SamplePropertyHistogram.make().getMethod();
-                        default:
-                            throw new Error('Unknown custom parameter id for ' + appSpec.widgets.input);
-                    }
-                case 'kbaseSampleProperty2DPlotInput':
-                    switch (paramSpec.id) {
-                        case 'input_property_x':
-                        case 'input_property_y':
-                            return SampleProperty.make().getMethod();
-                        default:
-                            throw new Error('Unknown custom parameter id for ' + appSpec.widgets.input);
-                    }
-                case 'kbaseGrowthParamsPlotInput':
-                    switch (paramSpec.id) {
-                        case 'input_condition_param':
-                            return GrowthCondition.make().getMethod();
-                        default:
-                            throw new Error('Unknown custom parameter id for ' + appSpec.widgets.input);
-                    }
-                case 'kbaseGrowthCurvesInput':
-                    return GrowthCurves.make().getMethod();
+            case 'kbaseSamplePropertyHistogramInput':
+                switch (paramSpec.id) {
+                case 'input_samples':
+                    return SamplePropertyHistogram.make().getMethod();
                 default:
-                    throw new Error('Sorry, input widget ' + appSpec.widgets.input + ' is not recognized');
+                    throw new Error('Unknown custom parameter id for ' + appSpec.widgets.input);
+                }
+            case 'kbaseSampleProperty2DPlotInput':
+                switch (paramSpec.id) {
+                case 'input_property_x':
+                case 'input_property_y':
+                    return SampleProperty.make().getMethod();
+                default:
+                    throw new Error('Unknown custom parameter id for ' + appSpec.widgets.input);
+                }
+            case 'kbaseGrowthParamsPlotInput':
+                switch (paramSpec.id) {
+                case 'input_condition_param':
+                    return GrowthCondition.make().getMethod();
+                default:
+                    throw new Error('Unknown custom parameter id for ' + appSpec.widgets.input);
+                }
+            case 'kbaseGrowthCurvesInput':
+                return GrowthCurves.make().getMethod();
+            default:
+                throw new Error('Sorry, input widget ' + appSpec.widgets.input + ' is not recognized');
             }
         }
 
@@ -235,7 +235,7 @@ define([
                     included: arg.included
                 }];
             return workspace.get_object_subset(query)
-                .then(function(result) {
+                .then(function (result) {
                     return arg.extractItems(result, arg.params);
                 });
         }
@@ -246,7 +246,7 @@ define([
                     token: runtime.authToken()
                 });
             return workspace.get_objects([{ ref: referenceObjectRef }])
-                .then(function(data) {
+                .then(function (data) {
                     var nextRef = arg.getRef(data),
                         query = [{
                             ref: nextRef,
@@ -254,7 +254,7 @@ define([
                         }];
                     return workspace.get_object_subset(query);
                 })
-                .then(function(result) {
+                .then(function (result) {
                     return arg.extractItems(result, arg.params);
                 });
         }
@@ -275,7 +275,7 @@ define([
     }
 
     return {
-        make: function(config) {
+        make: function (config) {
             return factory(config);
         }
     };

@@ -5,6 +5,7 @@
     Customize bootstrap styles
 */
 
+
 /*
   Bs recommends h4 for the modal title, but this is overridden by the general 
   purpose kbase h4 style. Generally, I (Erik) do not like using semantic tags
@@ -19,6 +20,17 @@
     color: #2e618d;
 }
 
+
+/*
+    Unset the global modal title color set above for alert modals, which 
+    may set the color style based on the alert type.
+*/
+
+.modal.kb-modal-alert .modal-title {
+    color: unset;
+}
+
+
 /*
     The BS checkbox appears too low, due to the top margin, when used with a label
     in the recommended manner. 
@@ -28,6 +40,7 @@
     accomodate this.) Anyway, we roll with it but try to patch up the styling
     as it breaks.
 */
+
 .modal input[type="checkbox"] {
     margin-top: 1px;
 }
@@ -36,22 +49,29 @@
     border: none;
     margin-bottom: 10px;
 }
+
+
 /* colors copied shamelessly from peeking at bootstrap
    http://getbootstrap.com/css/
 */
+
 .panel-danger.kb-panel-light .panel-title {
     color: #a94442;
 }
+
 .panel-success.kb-panel-light .panel-title {
     color: #3c763d;
 }
+
 .panel-warning.kb-panel-light .panel-title {
     color: #8a6d3b;
 }
+
 .panel-info.kb-panel-light .panel-title {
     color: blue;
 }
-.panel.kb-panel-light > .panel-heading {
+
+.panel.kb-panel-light>.panel-heading {
     background-color: transparent;
     font-weight: bold;
     color: #666;
@@ -59,6 +79,7 @@
     padding-bottom: 2px;
     border-bottom: 1px #CCC solid;
 }
+
 .panel.kb-panel-light .panel-body {
     padding-top: 0;
     padding: 0;
@@ -67,7 +88,8 @@
 .panel.kb-panel-container {
     border: none;
 }
-.panel.kb-panel-container > .panel-heading {
+
+.panel.kb-panel-container>.panel-heading {
     background-color: transparent;
     font-weight: bold;
     xcolor: #2e618d;
@@ -76,9 +98,11 @@
     border-bottom: 2px #CCC solid;
     margin-bottom: 10px;
 }
+
 .panel.kb-panel-container .panel-body {
     padding-top: 0;
 }
+
 
 /*
   The button bar in a cell widgetis located at the bottom of the inputs, but 
@@ -86,6 +110,7 @@
   These styles attempt to help the button toolbar, which represents the actions
   the user can take, be visually distinct from the other bits surrounding it.
 */
+
 .btn-toolbar.kb-btn-toolbar-cell-widget {
     margin-bottom: 20px;
     background-color: #EEE;

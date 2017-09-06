@@ -28,7 +28,7 @@ define([
     'css!kbase/css/appCell.css',
     'css!./styles/main.css',
     'bootstrap'
-], function (
+], function(
     $,
     Jupyter,
     Promise,
@@ -47,14 +47,14 @@ define([
         p = t('p');
 
     function setupNotebook(workspaceInfo) {
-        return Promise.all(Jupyter.notebook.get_cells().map(function (cell) {
+        return Promise.all(Jupyter.notebook.get_cells().map(function(cell) {
             if (AppCell.isAppCell(cell)) {
                 var appCell = AppCell.make({
                     cell: cell,
                     workspaceInfo: workspaceInfo
                 });
                 return appCell.setupCell(cell)
-                    .catch(function (err) {
+                    .catch(function(err) {
                         // If we have an error here, there is a serious problem setting up the cell and it is not usable.
                         // What to do? The safest thing to do is inform the user, and then strip out the cell, leaving
                         // in it's place a markdown cell with the error info.
@@ -127,43 +127,49 @@ define([
         // dataUpdated.Narrative is emitted by the data sidebar list
         // after it has fetched and updated its data. Not the best of
         // triggers that the ws has changed, not the worst.
-        $(document).on('dataUpdated.Narrative', function () {
+        $(document).on('dataUpdated.Narrative', function() {
             // Tell each cell that the workspace has been updated.
             // This is what is interesting, no?
             runtime.bus().emit('workspace-changed');
         });
 
-
-
         // TODO: get the kbase specific info out of the notebook, specifically
         // the workspace name, ...
 
         setupWorkspace(runtime.config('services.workspace.url'))
-            .then(function (wsInfo) {
+            .then(function(wsInfo) {
                 workspaceInfo = serviceUtils.workspaceInfoToObject(wsInfo);
             })
-            .then(function () {
+            .then(function() {
                 return setupNotebook(workspaceInfo);
             })
-            .then(function () {
+            .then(function() {
                 // set up event hooks
 
                 // Primary hook for new cell creation.
                 // If the cell has been set with the metadata key kbase.type === 'app'
                 // we have a app cell.
-                $([Jupyter.events]).on('inserted.Cell', function (event, data) {
-                    if (!data.kbase || !(data.kbase.type === 'app2' || data.kbase.type === 'app')) {
+                $([Jupyter.events]).on('insertedAtIndex.Cell', function(event, payload) {
+
+                    var cell = payload.cell;
+                    var setupData = payload.data;
+                    var jupyterCellType = payload.type;
+
+                    if (jupyterCellType !== 'code' ||
+                        !setupData || 
+                        !(setupData.type === 'app2' || 
+                          setupData.type === 'app')) {
                         return;
                     }
 
                     var appCell = AppCell.make({
-                        cell: data.cell,
+                        cell: cell,
                         workspaceInfo: workspaceInfo
                     });
-                    appCell.upgradeToAppCell(data.kbase.appSpec, data.kbase.appTag)
-                        .catch(function (err) {
+                    appCell.upgradeToAppCell(setupData.appSpec, setupData.appTag)
+                        .catch(function(err) {
                             console.error('ERROR creating cell', err);
-                            Jupyter.notebook.delete_cell(Jupyter.notebook.find_cell_index(data.cell));
+                            Jupyter.notebook.delete_cell(Jupyter.notebook.find_cell_index(cell));
                             // For now, just pop up an error dialog;
                             var ui = UI.make({
                                 node: document.body
@@ -190,7 +196,7 @@ define([
                 // also delete.Cell, edit_mode.Cell, select.Cell, command_mocd.Cell, output_appended.OutputArea ...
                 // preset_activated.CellToolbar, preset_added.CellToolbar
             })
-            .catch(function (err) {
+            .catch(function(err) {
 
                 console.error('ERROR setting up notebook', err);
             });
@@ -210,6 +216,6 @@ define([
         // This is the sole ipython/jupyter api call
         load_ipython_extension: load_ipython_extension
     };
-}, function (err) {
+}, function(err) {
     console.error('ERROR loading appCell main', err);
 });

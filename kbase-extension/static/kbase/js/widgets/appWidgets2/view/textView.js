@@ -36,10 +36,6 @@ define([
 
         // CONTROL
 
-        function getControlValue() {
-            return ui.getElement('input-container.input').value;
-        }
-
         function setControlValue(newValue) {
             ui.getElement('input-container.input').value = newValue;
         }
@@ -64,30 +60,6 @@ define([
         function syncModelToControl() {
             setControlValue(model.getItem('value', null));
         }
-
-
-
-        // VALIDATION
-
-        function importControlValue() {
-            return Promise.try(function() {
-                return Validation.importString(getControlValue());
-            });
-        }
-
-        function validate(value) {
-            return Promise.try(function() {
-                return Validation.validate(value, spec);
-            });
-        }
-
-        function autoValidate() {
-            return validate(model.getItem('value'))
-                .then(function(result) {
-                    bus.emit('validation', result);
-                });
-        }
-
 
         // DOM & RENDERING
 
@@ -119,7 +91,6 @@ define([
             }
         }
 
-
         // LIFECYCLE API
 
         function start(arg) {
@@ -134,15 +105,9 @@ define([
                 events.attachEvents(container);
                 // model.setItem('value', config.initialValue);
                 syncModelToControl();
-                autoValidate();
 
                 bus.on('reset-to-defaults', function() {
                     resetModelValue();
-                });
-                bus.on('update', function(message) {
-                    setModelValue(message.value);
-                    syncModelToControl();
-                    autoValidate();
                 });
                 bus.on('focus', function() {
                     doFocus();
@@ -165,10 +130,7 @@ define([
             data: {
                 value: null
             },
-            onUpdate: function() {
-                //syncModelToControl();
-                //autoValidate();
-            }
+            onUpdate: function() {}
         });
 
         setModelValue(config.initialValue);

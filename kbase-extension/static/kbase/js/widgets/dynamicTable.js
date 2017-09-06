@@ -123,8 +123,12 @@ define([
         this.$tBody = $('<tbody>');
         this.$table.append(this.$tBody);
 
+        this.$notificationArea = $('<div>');
         this.$container
-            .append($('<div class="row">').append($('<div class="col-md-12">').append(this.$table)))
+            .append(this.$notificationArea)
+            .append($('<div class="row">')
+                    .append($('<div class="col-md-12">')
+                            .append(this.$table)))
             .append(this.makeWidgetFooter());
         $(elem).append(this.$container);
     };
@@ -243,6 +247,20 @@ define([
     };
 
     /**
+     * Displays an error using the Narrative DisplayUtil stuff.
+     */
+    DynamicTable.prototype.displayError = function(error) {
+        var errorObj = error;
+        if (error.status && error.error && error.error.error) {
+            errorObj = error.error;
+        }
+        this.$notificationArea
+        .empty()
+        .append(Display.createError('Table data error', errorObj));
+        console.error(error);
+    };
+
+    /**
      * This fetches a new set of data, by firing the updateFunction
      * with the current table state, including page, etc.
      */
@@ -256,9 +274,8 @@ define([
                 this.update(data);
             }.bind(this))
             .catch(function(error) {
-                alert('error!');
-                console.error(error);
-            })
+                this.displayError(error);
+            }.bind(this))
             .finally(function() {
                 this.$loadingElement.hide();
             }.bind(this));
@@ -364,6 +381,12 @@ define([
             }
         }.bind(this));
         // update data
+        if (!data) {
+            throw {
+                message: 'There was no data or information about it provided for the table.',
+                name: 'no data'
+            };
+        }
         this.setData(data.rows);
         this.start = data.start;
         this.end = data.start + data.rows.length;

@@ -15,8 +15,7 @@ define([
     'kb_service/client/narrativeMethodStore',
     'handlebars',
     'text!kbase/templates/app_info_panel.html'
-],
-function(
+], function(
     Promise,
     Runtime,
     Catalog,
@@ -25,6 +24,7 @@ function(
     appInfoPanelTmpl
 ) {
     'use strict';
+
     function factory(config) {
         var container,
             runtime = Runtime.make(),
@@ -37,61 +37,55 @@ function(
             info = {};
 
         function start(arg) {
-            return Promise.try(function () {
-                container = arg.node;
+            return Promise.try(function() {
+                    container = arg.node;
 
-                var infoProms = [
-                    /* Get the method full info so we can populate the description */
-                    nms.get_method_full_info({'ids': [appId], 'tag': tag})
-                    .then(function(methodInfo) {
-                        methodInfo = methodInfo[0] || {};
-                        return Promise.try(function() {
-                            var desc = methodInfo.description || "";
+                    var infoProms = [
+                        /* Get the method full info so we can populate the description */
+                        nms.get_method_full_info({ 'ids': [appId], 'tag': tag })
+                        .then(function(methodInfo) {
+                            methodInfo = methodInfo[0] || {};
+                            var desc = methodInfo.description || '';
                             info.description = new Handlebars.SafeString(desc);
 
                             var authorList = methodInfo.authors || [];
                             info.authorList = authorList.join(', ');
                             info.multiAuthors = authorList.length > 1;
-                        });
-                    }),
+                        }),
 
-                    /* Get the method stats so we know how many times it was run. */
-                    catalog.get_exec_aggr_stats({'full_app_ids': [appId]})
-                    .then(function(appStats) {
-                        return Promise.try(function() {
+                        /* Get the method stats so we know how many times it was run. */
+                        catalog.get_exec_aggr_stats({ 'full_app_ids': [appId] })
+                        .then(function(appStats) {
+                            console.log('app stats', appStats);
                             appStats = appStats[0] || {};
                             info.runCount = appStats.number_of_calls || 'unknown';
-                        });
-                    }),
+                        }),
 
-                    /* Get the module info so we know when it was last updated. */
-                    catalog.get_module_info({'module_name': appModule})
-                    .then(function(moduleInfo) {
-                        return Promise.try(function() {
+                        /* Get the module info so we know when it was last updated. */
+                        catalog.get_module_info({ 'module_name': appModule })
+                        .then(function(moduleInfo) {
                             moduleInfo = moduleInfo[tag] || {};
                             var timestamp = moduleInfo.timestamp || 'unknown';
                             var dateString = 'unknown';
                             try {
                                 dateString = new Date(timestamp).toLocaleDateString();
-                            }
-                            catch (e) {
+                            } catch (e) {
                                 //pass
                             }
                             info.updateDate = dateString;
-                        });
-                    })
-                ];
-                return Promise.all(infoProms);
-            })
-            .then(function() {
-                return Promise.try(function() {
-                    container.html(infoPanel(info));
+                        })
+                    ];
+                    return Promise.all(infoProms);
+                })
+                .then(function() {
+                    return Promise.try(function() {
+                        container.html(infoPanel(info));
+                    });
                 });
-            });
         }
 
         function stop() {
-            return Promise.try(function () {
+            return Promise.try(function() {
                 container.html('');
             });
         }

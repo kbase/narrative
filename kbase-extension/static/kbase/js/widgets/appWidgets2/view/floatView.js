@@ -4,14 +4,19 @@ define([
     'bluebird',
     'base/js/namespace',
     'kb_common/html',
-    '../validators/float',
     'common/events',
     'common/ui',
     'common/props',
 
     'bootstrap',
     'css!font-awesome'
-], function(Promise, Jupyter, html, Validation, Events, UI, Props) {
+], function(
+    Promise,
+    Jupyter,
+    html,
+    Events,
+    UI,
+    Props) {
     'use strict';
 
     // Constants
@@ -45,14 +50,6 @@ define([
             setModelValue(spec.data.constraints.defaultValue);
         }
 
-        // VALIDATION
-
-        function validate(value) {
-            return Promise.try(function() {
-                return Validation.validate(value, spec);
-            });
-        }
-
         /*
          * Creates the markup
          * Places it into the dom node
@@ -71,7 +68,7 @@ define([
             return div({ style: { width: '100%' }, dataElement: 'input-wrapper' }, [
                 div({ class: 'input-group', style: { width: '100%' } }, [
                     (typeof min === 'number' ? div({ class: 'input-group-addon kb-input-group-addon', fontFamily: 'monospace' }, String(min) + ' &#8804; ') : ''),
-                    input({                        
+                    input({
                         class: 'form-control',
                         dataElement: 'input',
                         dataType: 'float',
@@ -89,31 +86,20 @@ define([
 
         function render() {
             return Promise.try(function() {
-                var events = Events.make(),
-                    inputControl = makeViewControl(model.getItem('value'), events, bus);
-
+                var inputControl = makeViewControl(model.getItem('value'));
                 ui.setContent('input-container', inputControl);
-                events.attachEvents(container);
             });
         }
 
-        function layout(events) {
+        function layout() {
             var content = div({
                 dataElement: 'main-panel'
             }, [
                 div({ dataElement: 'input-container' })
             ]);
             return {
-                content: content,
-                events: events
+                content: content
             };
-        }
-
-        function autoValidate() {
-            return validate(model.getItem('value'))
-                .then(function(result) {
-                    bus.emit('validation', result);
-                });
         }
 
         // LIFECYCLE API
@@ -124,12 +110,9 @@ define([
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
 
-                var events = Events.make(),
-                    theLayout = layout(events);
+                var theLayout = layout();
 
                 container.innerHTML = theLayout.content;
-                events.attachEvents(container);
-                // model.setItem('value', arg.value);
 
                 bus.on('reset-to-defaults', function() {
                     resetModelValue();
@@ -137,12 +120,8 @@ define([
                 bus.on('update', function(message) {
                     model.setItem('value', message.value);
                 });
-                // bus.emit('sync');
 
-                return render()
-                    .then(function() {
-                        return autoValidate();
-                    });
+                return render();
             });
         }
 

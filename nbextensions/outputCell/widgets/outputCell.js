@@ -1,6 +1,5 @@
 /*global define*/
 /*jslint white:true,browser:true*/
-
 define([
     'common/runtime',
     'common/busEventManager',
@@ -31,7 +30,7 @@ define([
             bus = runtime.bus().makeChannelBus({ description: 'output cell bus' }),
 
             // To be instantiated at attach()
-            container, ui,
+            ui,
 
             // To be instantiated in start()
             cellBus;
@@ -70,8 +69,6 @@ define([
                 });
         }
 
-
-
         // Widget API
 
         eventManager.add(bus.on('run', function(message) {
@@ -83,11 +80,6 @@ define([
                 eventManager.removeAll();
             }));
 
-
-            // The cell bus is for communication via the common id.
-            // This allows disassociated elements to communicate with us
-            // without a physical handle on the widget object.
-
             cellBus = runtime.bus().makeChannelBus({
                 name: {
                     cell: Props.getDataItem(cell.metadata, 'kbase.attributes.id')
@@ -98,7 +90,6 @@ define([
             eventManager.add(cellBus.on('delete-cell', function() {
                 doDeleteCell();
             }));
-
         }));
 
         return {

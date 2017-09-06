@@ -35,9 +35,6 @@ define([
                 value: null
             };
 
-        // Validate configuration.
-        // Nothing to do...
-
         options.enabled = true;
 
         model.availableValues = spec.data.constraints.options;
@@ -47,34 +44,6 @@ define([
             item.index = index;
             model.availableValuesMap[item.value] = item;
         });
-
-        function getControlValue() {
-            var control = ui.getElement('input-container.input'),
-                selected = control.selectedOptions;
-
-            if (selected.length === 0) {
-                return spec.data.nullValue;
-            }
-
-            // we are modeling a single string value, so we always just get the 
-            // first selected element, which is all there should be!
-            return selected.item(0).value;
-        }
-
-        // VALIDATION
-
-        function validate(value) {
-            return Promise.try(function() {
-                return Validation.validate(value, spec);
-            });
-        }
-
-        function autoValidate() {
-            return validate(model.value)
-                .then(function(result) {
-                    bus.emit('validation', result);
-                });
-        }
 
         function makeViewControl(events) {
             var selected,
@@ -86,7 +55,8 @@ define([
 
                     return option({
                         value: item.value,
-                        selected: selected
+                        selected: selected,
+                        disabled: true
                     }, item.display);
                 });
 
@@ -160,7 +130,6 @@ define([
                 // bus.emit('sync');
 
                 setModelValue(config.initialValue);
-                autoValidate();
                 syncModelToControl();
             });
         }

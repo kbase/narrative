@@ -15,13 +15,15 @@ define([
     'kb_common/html',
     'kb_sdk_clients/genericClient',
     'kb_service/client/workspace',
+    'kb_service/utils',
     'common/ui',
     'common/iframe/hostMessages',
     'common/events',
+    'util/bootstrapAlert',
 
     'jquery-dataTables',
     'jquery-dataTables-bootstrap'
-], function (
+], function(
     bootstrap,
     $,
     Jupyter,
@@ -33,10 +35,13 @@ define([
     html,
     GenericClient,
     Workspace,
+    ServiceUtils,
     UI,
     HostMessages,
-    Events
+    Events,
+    Alert
 ) {
+    'use strict';
     return KBWidget({
         name: 'kbaseReportView',
         parent: kbaseAuthenticatedWidget,
@@ -55,7 +60,7 @@ define([
         },
         // workspace client
         ws: null,
-        init: function (options) {
+        init: function(options) {
             this._super(options);
 
             // Create a message pane
@@ -67,8 +72,7 @@ define([
 
             return this;
         },
-        loggedInCallback: function (event, auth) {
-
+        loggedInCallback: function(event, auth) {
             // Build a client
             this.ws = new Workspace(this.options.wsURL, auth);
 
@@ -76,7 +80,7 @@ define([
             this.loadAndRender();
             return this;
         },
-        loggedOutCallback: function (event, auth) {
+        loggedOutCallback: function(event, auth) {
             this.isLoggedIn = false;
             return this;
         },
@@ -86,7 +90,7 @@ define([
         // Also, this is embedding the token into the html and the URL, both of which are potentially security concerns.
         // TODO: update to put the auth token into the url... should be working in CI already.
         // TODO: NO HARDCODING OF URLS!!!
-        importExportLink: function (shock_url, name) {
+        importExportLink: function(shock_url, name) {
             var m = shock_url.match(/\/node\/(.+)$/);
             if (m) {
                 var shock_id = m[1];
@@ -96,7 +100,7 @@ define([
                     name: name
                 };
                 var queryString = Object.keys(query)
-                    .map(function (key) {
+                    .map(function(key) {
                         return [key, query[key]]
                             .map(encodeURIComponent)
                             .join('=');
@@ -107,38 +111,27 @@ define([
             }
         },
 
-        loadAndRender: function () {
+        loadAndRender: function() {
             var self = this;
             self.loading(true);
 
             self.objIdentity = self.buildObjectIdentity(this.options.workspace_name, this.options.report_name, null, this.options.report_ref);
 
-            //self.objIdentity = {ref : "11699/2/77"};
-
             self.ws.get_objects([self.objIdentity])
-                .then(function (result) {
+                .then(function(result) {
                     self.reportData = result[0].data;
                     return self.getLinks(self.reportData);
                 })
-                .then(function (links) {
+                .then(function(links) {
                     self.reportLinks = links;
                     return self.render();
                 })
-                .catch(function (err) {
+                .catch(function(err) {
                     self.clientError(err);
                 });
-
-            // self.ws.get_objects([self.objIdentity],
-            //     function (data) {
-            //         self.reportData = data[0].data;
-            //         self.render();
-            //     },
-            //     function (error) {
-            //         self.clientError(error);
-            //     });
         },
 
-        wrapHtmlDoc: function (content) {
+        wrapHtmlDoc: function(content) {
             if (/<html/.test(content)) {
                 console.warn('Html document inserted into iframe');
                 return content;
@@ -161,7 +154,7 @@ define([
             ]);
         },
 
-        makeIframe: function (arg) {
+        makeIframe: function(arg) {
             var t = html.tag,
                 div = t('div'),
                 script = t('script'),
@@ -242,91 +235,7 @@ define([
             };
         },
 
-        // preserved for a minute. The approach below blocks off the report and presents a 
-        // translucent layer and link on top of the report area. The premise is that the 
-        // content is nearly useless, so don't encourage users to try to use it.
-
-        // openReportWindow: function (arg) {
-        //     var w = window.open('http://www.apple.com', 'report');
-        //     w.focus();
-        // },
-
-        // makeIframeDoc: function (arg) {
-        //     var t = html.tag,
-        //         iframe = t('iframe'),
-        //         div = t('div');
-
-        //     var iframeId = 'frame_' + html.genId();
-
-        //     var _this = this;
-
-        //     // The iframe content needs requirejs amd.
-
-        //     var width = arg.width || '100%',
-        //         maxHeight = arg.maxHeight || 'auto',
-        //         iframeContent = arg.content,
-        //         iframeHtml = iframe({
-        //             style: {
-        //                 display: 'block',
-        //                 width: width,
-        //                 height: arg.height,
-        //                 maxHeight: maxHeight,
-        //                 margin: 0,
-        //                 padding: 0
-        //             },
-        //             dataFrame: iframeId,
-        //             frameborder: '0',
-        //             id: iframeId,
-        //             src: 'data:text/html;charset=utf-8,' + encodeURIComponent(iframeContent)
-        //         }),
-        //         wrappedIframe = div({
-        //             style: {
-        //                 position: 'relative'
-        //             }
-        //         }, [
-        //             div({
-        //                 id: arg.events.addEvent({
-        //                     type: 'click',
-        //                     handler: function (e) {
-        //                         _this.openReportWindow({
-        //                             url: 'something'
-        //                         });
-        //                     }
-        //                 }),
-        //                 style: {
-        //                     position: 'absolute',
-        //                     top: '0',
-        //                     bottom: '0',
-        //                     left: '0',
-        //                     right: '0',
-        //                     backgroundColor: 'rgba(200,200,200,0.5)'
-        //                 }
-        //             }, [
-        //                 div({
-        //                     style: {
-        //                         position: 'absolute',
-        //                         top: '50%',
-        //                         fontSize: '200%',
-        //                         color: '#FFF',
-        //                         fontWeight: 'bold',
-        //                         padding: '8px',
-        //                         backgroundColor: 'rgba(100,100,100,0.5)',
-        //                         textAlign: 'center',
-        //                         margin: 'auto',
-        //                         border: '2px green solid'
-        //                     }
-        //                 }, 'Click anywhere to view report')
-        //             ]),
-        //             iframeHtml
-        //         ]);
-
-        //     return {
-        //         id: iframeId,
-        //         content: wrappedIframe
-        //     };
-        // },
-
-        makeIframeSrcDataPlain: function (arg) {
+        makeIframeSrcDataPlain: function(arg) {
             var t = html.tag,
                 iframe = t('iframe');
 
@@ -356,7 +265,7 @@ define([
             };
         },
 
-        makeIframeSrc: function (arg) {
+        makeIframeSrc: function(arg) {
             var t = html.tag,
                 iframe = t('iframe');
 
@@ -385,7 +294,7 @@ define([
             };
         },
 
-        escapeHtml: function (string) {
+        escapeHtml: function(string) {
             if (typeof string !== 'string') {
                 return;
             }
@@ -404,7 +313,7 @@ define([
             });
         },
 
-        getLinks: function (report) {
+        getLinks: function(report) {
             // NOTE: this returns a promise -- we must look up the html file set service url first.
             var _this = this;
 
@@ -414,10 +323,10 @@ define([
                 module: 'HTMLFileSetServ'
             });
             return client.lookupModule()
-                .spread(function (serviceStatus) {
+                .spread(function(serviceStatus) {
                     var htmlServiceURL = serviceStatus.url;
                     if (report.html_links && report.html_links.length) {
-                        return report.html_links.map(function (item, index) {
+                        return report.html_links.map(function(item, index) {
                             return {
                                 name: item.name,
                                 // If label is not provided, name must be.
@@ -432,7 +341,7 @@ define([
                 });
         },
 
-        makeIframeSrcUrl: function (arg) {
+        makeIframeSrcUrl: function(arg) {
             var t = html.tag,
                 iframe = t('iframe');
 
@@ -462,18 +371,18 @@ define([
             };
         },
 
-        setupHostComm: function (iframe, container) {
+        setupHostComm: function(iframe, container) {
             iframe.messages.start();
             var _this = this;
 
             iframe.messages.listen({
                 name: 'ready',
-                handler: function (message) {
+                handler: function(message) {
                     if (message.iframeId !== iframe.id) {
                         // We may receive this if a 'ready' was received
                         // from another cell. Perhaps there is a better
                         // way of filtering messages before getting here!
-                        // TODO: implement an address feature to allow a 
+                        // TODO: implement an address feature to allow a
                         //   message bus to ignore messages not sent to it.
                         //   we use the frame id for this, but it should actually
                         //   be a feature of the message bus itself.
@@ -498,7 +407,7 @@ define([
 
             iframe.messages.listen({
                 name: 'rendered',
-                handler: function (message) {
+                handler: function(message) {
                     var height = message.height,
                         iframeNode = _this.$mainPanel[0].querySelector('[data-frame="' + iframe.id + '"]');
 
@@ -508,7 +417,7 @@ define([
 
             iframe.messages.listen({
                 name: 'clicked',
-                handler: function (message) {
+                handler: function(message) {
                     if (message.iframeId !== iframe.id) {
                         return;
                     }
@@ -520,7 +429,7 @@ define([
             });
         },
 
-        render: function () {
+        render: function() {
             var self = this;
             var _this = this;
             var t = html.tag,
@@ -564,27 +473,13 @@ define([
                         }
                         self.ws.get_object_info_new({ 'objects': objIds })
                             .then(
-                                function (objInfo) {
-
+                                function(objInfo) {
                                     var pref = StringUtil.uuid();
                                     var displayData = [];
                                     var dataNameToInfo = {};
                                     for (var k = 0; k < objInfo.length; k++) {
-
-                                        //var $name = $('<a>').append(objInfo[k][1]);
-                                        /* TODO: we need code something like this to show data objects on click
-                                         var obj = _.findWhere(self.objectList, {key: key});
-                                         var info = self.createInfoObject(obj.info);
-                                         // Insert the narrative data cell into the div we just rendered
-                                         new kbaseNarrativeDataCell(//$('#' + cell_id), {cell: cell, info: info});
-                                         self.trigger('createViewerCell.Narrative', {
-                                         'nearCellIdx': near_idx,
-                                         'widget': 'kbaseNarrativeDataCell',
-                                         'info' : info
-                                         });*/
-
                                         displayData.push({
-                                            'name': '<a style="cursor: pointer;" class="report_row_' + pref + '" data-objname="' + objInfo[k][1] + '">' + objInfo[k][1] + '</a>',
+                                            'name': '<a href="#" style="cursor: pointer;" class="report_row_' + pref + '" data-objname="' + objInfo[k][1] + '">' + objInfo[k][1] + '</a>',
                                             'type': objInfo[k][2].split('-')[0].split('.')[1],
                                             'fullType': objInfo[k][2],
                                             'description': objsCreated[k].description ? objsCreated[k].description : '',
@@ -595,17 +490,16 @@ define([
 
                                     function reportRowEvents() {
                                         $('.report_row_' + pref).unbind('click');
-                                        $('.report_row_' + pref).click(function () {
+                                        $('.report_row_' + pref).click(function(e) {
+                                            e.stopPropagation();
+                                            e.preventDefault();
                                             var objName = [$(this).data('objname')];
-                                            self.openViewerCell(dataNameToInfo[objName]);
+                                            Jupyter.narrative.addViewerCell(dataNameToInfo[objName]);
                                         });
                                     }
 
                                     var iDisplayLength = 5;
                                     var sDom = 'ft<ip>';
-                                    var $tblDiv = $('<div>').css('margin-top', '10px');
-                                    //self.$mainPanel.append($tblDiv);
-
                                     var objTableId = self.uuid();
 
                                     ui.setContent('created-objects',
@@ -624,7 +518,7 @@ define([
                                     if (displayData.length <= iDisplayLength) {
                                         var $objTable = $('<table class="table table-striped table-bordered" style="margin-left: auto; margin-right: auto;">');
 
-                                        displayData.sort(function (a, b) {
+                                        displayData.sort(function(a, b) {
                                             return a.name < b.name;
                                         });
                                         var color = '#555';
@@ -638,7 +532,7 @@ define([
                                                 .append('<td style="width:20%;color:' + color + ';">' + displayData[k].type + '</td>')
                                                 .append('<td style="color:' + color + ';">' + displayData[k].description + '</td>'));
                                         }
-                                        $tblDiv.append($objTable)
+                                        $tblDiv.append($objTable);
                                         reportRowEvents();
                                     } else {
                                         var $tbl = $('<table cellpadding="0" cellspacing="0" border="0" style="width: 100%; margin-left: 0px; margin-right: 0px;">')
@@ -698,7 +592,7 @@ define([
                                 }
                             )
                             .catch(
-                                function (error) {
+                                function(error) {
                                     console.error(error);
                                 }
                             );
@@ -712,7 +606,7 @@ define([
                 // REPORT SECTION
 
                 /*
-                The "inline" report can come from either the direct_html property or the direct_html_link_index. 
+                The "inline" report can come from either the direct_html property or the direct_html_link_index.
                 The direct_html_link_index will take precedence since it offers a better method for referencing
                 content within an iframe. Generally the app developer should use either method, not both
                  */
@@ -722,13 +616,13 @@ define([
                 if (report.direct_html && report.direct_html.length > 0) {
                     hasDirectHtml = true;
                 }
-                if (typeof report.direct_html_link_index === 'number' && 
+                if (typeof report.direct_html_link_index === 'number' &&
                     report.direct_html_link_index >= 0) {
                     hasDirectHtmlIndex = true;
                 }
 
                 if (hasDirectHtml || hasDirectHtmlIndex) {
-                    (function () {
+                    (function() {
                         showingReport = true;
                         // an iframe to hold the contents of the report.
                         var iframe;
@@ -761,7 +655,7 @@ define([
                                 };
                             }
                         } else {
-                            // If the direct_html is a full document we cannot (yet?) insert 
+                            // If the direct_html is a full document we cannot (yet?) insert
                             // the necessary code to gracefully handle resizing and click-passthrough.
                             if (/<html/.test(report.direct_html)) {
                                 console.warn('Html document inserted into iframe', report);
@@ -771,8 +665,8 @@ define([
                                     events: events
                                 });
                             } else {
-                                // note that for direct_html, we set the max height. this content is expected 
-                                // to be smaller than linked content, and we will want the container 
+                                // note that for direct_html, we set the max height. this content is expected
+                                // to be smaller than linked content, and we will want the container
                                 // to shrink, but if it is larger, we simply don't want it to be too tall.
                                 iframe = _this.makeIframe({
                                     content: report.direct_html,
@@ -805,9 +699,7 @@ define([
                 // SUMMARY SECTION
 
                 if (report.text_message && report.text_message.length > 0) {
-
                     self.$mainPanel.append(div({ dataElement: 'summary-section' }));
-
                     var reportSummary = div({
                         style: {
                             width: '100%',
@@ -841,10 +733,9 @@ define([
             // LINKS SECTION
 
             if (self.options.showHTML) {
-
                 if (self.reportLinks && self.reportLinks.length) {
                     var $ul = $.jqElem('ul');
-                    self.reportLinks.forEach(function (reportLink) {
+                    self.reportLinks.forEach(function(reportLink) {
                         var link_id = StringUtil.uuid();
                         var $linkItem = $.jqElem('li')
                             .append(
@@ -887,7 +778,7 @@ define([
                     var $ul = $.jqElem('ul');
                     $.each(
                         report.file_links,
-                        function (i, v) {
+                        function(i, v) {
                             var link_id = StringUtil.uuid();
                             $ul.append(
                                 $.jqElem('li')
@@ -901,8 +792,8 @@ define([
                                 )
                             );
 
-                            setTimeout(function () {
-                                $('#' + link_id).on('click', function (e) {
+                            setTimeout(function() {
+                                $('#' + link_id).on('click', function(e) {
                                     e.preventDefault();
                                     e.stopPropagation();
                                     $('#' + iframe_id).attr('src', self.importExportLink(v.URL, v.name || 'download-' + i));
@@ -934,45 +825,23 @@ define([
 
             this.loading(false);
         },
-        openViewerCell: function (ws_info) {
-            var self = this;
-            var cell = Jupyter.notebook.get_selected_cell();
-            var near_idx = 0;
-            if (cell) {
-                near_idx = Jupyter.notebook.find_cell_index(cell);
-                $(cell.element).off('dblclick');
-                $(cell.element).off('keydown');
-            }
-            var info = self.createInfoObject(ws_info);
-            self.trigger('createViewerCell.Narrative', {
-                'nearCellIdx': near_idx,
-                'widget': 'kbaseNarrativeDataCell',
-                'info': info
-            });
-        },
-        createInfoObject: function (info) {
-            return _.object(['id', 'name', 'type', 'save_date', 'version',
-                'saved_by', 'ws_id', 'ws_name', 'chsum', 'size',
-                'meta'
-            ], info);
-        },
-        loading: function (isLoading) {
+        loading: function(isLoading) {
             if (isLoading) {
                 this.showMessage('<i class="fa fa-spinner fa-spin"></i>');
             } else {
                 this.hideMessage();
             }
         },
-        showMessage: function (message) {
+        showMessage: function(message) {
             var span = $('<span/>').append(message);
             this.$messagePane.append(span);
             this.$messagePane.show();
         },
-        hideMessage: function () {
+        hideMessage: function() {
             this.$messagePane.hide();
             this.$messagePane.empty();
         },
-        clientError: function (error) {
+        clientError: function(error) {
             this.loading(false);
             var errString = 'Unknown error.';
             console.error(error);
@@ -991,7 +860,7 @@ define([
             this.$elem.empty();
             this.$elem.append($errorDiv);
         },
-        buildObjectIdentity: function (workspaceID, objectID, objectVer, wsRef) {
+        buildObjectIdentity: function(workspaceID, objectID, objectVer, wsRef) {
             var obj = {};
             if (wsRef) {
                 obj['ref'] = wsRef;

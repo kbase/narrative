@@ -9,7 +9,6 @@ Some utility functions for running KBase Apps or Methods or whatever they are th
 __author__ = "Bill Riehl <wjriehl@lbl.gov>, Roman Sutormin <rsutormin@lbl.gov>"
 
 app_version_tags = ['release', 'beta', 'dev']
-_ws_client = clients.get('workspace')
 
 
 def check_tag(tag, raise_exception=False):
@@ -47,7 +46,7 @@ def system_variable(var):
         if ws_name is None:
             return None
         try:
-            ws_info = _ws_client.get_workspace_info({'workspace': ws_name})
+            ws_info = clients.get('workspace').get_workspace_info({'workspace': ws_name})
             return ws_info[0]
         except:
             return None
@@ -577,14 +576,14 @@ def validate_param_value(param, value, workspace):
                                          'have the right format - should be ' +
                                          'workspace/object/version(optional)'
                                          ).format(value))
-                info = _ws_client.get_object_info_new({
+                info = clients.get('workspace').get_object_info_new({
                     'objects': [{'ref': value}]
                 })[0]
                 path_items[len(path_items) - 1] = "{}/{}/{}".format(info[6], info[0], info[4])
                 ws_ref = ';'.join(path_items)
             # Otherwise, assume it's a name, not a reference.
             else:
-                info = _ws_client.get_object_info_new({
+                info = clients.get('workspace').get_object_info_new({
                     'objects': [{'workspace': workspace, 'name': value}]
                 })[0]
                 ws_ref = "{}/{}/{}".format(info[6], info[0], info[4])
@@ -637,7 +636,7 @@ def validate_param_value(param, value, workspace):
                     "Data object names can only include symbols: _ - . |")
 
     # Last, regex. not being used in any extant specs, but cover it anyway.
-    # Disabled for now - the regex string that works in javascript may not work 
+    # Disabled for now - the regex string that works in javascript may not work
     # in python and vice versa
     # if 'regex_constraint' in param:
     #     for regex in param['regex_constraint']:
@@ -659,12 +658,12 @@ def resolve_single_ref(workspace, value):
             if len(path_item.split('/')) > 3:
                 raise ValueError('Object reference {} has too many slashes  - should be workspace/object/version(optional)'.format(value))
             # return (ws_ref, 'Data reference named {} does not have the right format - should be workspace/object/version(optional)')
-        info = _ws_client.get_object_info_new({'objects': [{'ref': value}]})[0]
+        info = clients.get('workspace').get_object_info_new({'objects': [{'ref': value}]})[0]
         path_items[len(path_items) - 1] = "{}/{}/{}".format(info[6], info[0], info[4])
         ret = ';'.join(path_items)
     # Otherwise, assume it's a name, not a reference.
     else:
-        info = _ws_client.get_object_info_new({'objects': [{'workspace': workspace, 'name': value}]})[0]
+        info = clients.get('workspace').get_object_info_new({'objects': [{'workspace': workspace, 'name': value}]})[0]
         ret = "{}/{}/{}".format(info[6], info[0], info[4])
     return ret
 
@@ -673,7 +672,7 @@ def resolve_ref(workspace, value):
         return [resolve_single_ref(workspace, v) for v in value]
     else:
         return resolve_single_ref(workspace, value)
- 
+
 
 
 def resolve_ref_if_typed(value, spec_param):

@@ -108,6 +108,9 @@ define([
             var selectElem = select({
                 class: 'form-control',
                 dataElement: 'input',
+                style: {
+                    width: '100%'
+                },
                 id: html.genId()
             }, [option({ value: '' }, '')].concat(selectOptions));
 
@@ -184,22 +187,22 @@ define([
                 }
 
                 switch (objectRefType) {
-                case 'ref':
-                    return Validation.validateWorkspaceObjectRef(processedValue, validationOptions);
-                case 'name':
-                default:
-                    return Validation.validateWorkspaceObjectName(processedValue, validationOptions);
+                    case 'ref':
+                        return Validation.validateWorkspaceObjectRef(processedValue, validationOptions);
+                    case 'name':
+                    default:
+                        return Validation.validateWorkspaceObjectName(processedValue, validationOptions);
                 }
             });
         }
 
         function getObjectsByTypes_datalist(types) {
             return Data.getObjectsByTypes(types, bus, function(result) {
-                doWorkspaceUpdated(result.data);
-            })
-            .then(function(result) {
-                return result.data;
-            });
+                    doWorkspaceUpdated(result.data);
+                })
+                .then(function(result) {
+                    return result.data;
+                });
         }
 
 
@@ -285,8 +288,8 @@ define([
                     }
                 }).on('change', function() {
                     doChange();
-                }).on('advanced-shown.kbase', function (e) {
-                    $(e.target).select2({width: 'resolve'});
+                }).on('advanced-shown.kbase', function(e) {
+                    $(e.target).select2({ width: 'resolve' });
                 });
                 events.attachEvents(container);
 

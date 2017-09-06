@@ -31,23 +31,6 @@ define([
             model,
             ui;
 
-        // CONTROL
-
-        function getControlValue() {
-            return ui.getElement('input-container.input').value;
-        }
-
-        function setControlValue(value) {
-            var stringValue;
-            if (value === null) {
-                stringValue = '';
-            } else {
-                stringValue = String(value);
-            }
-
-            ui.getElement('input-container.input').value = stringValue;
-        }
-
         // MODEL
 
         function setModelValue(value) {
@@ -64,21 +47,6 @@ define([
 
         function resetModelValue() {
             setModelValue(spec.data.constraints.defaultValue);
-        }
-
-        // VALIDATION
-
-        function validate(value) {
-            return Promise.try(function() {
-                return Validation.validate(value, spec);
-            });
-        }
-
-        function autoValidate() {
-            return validate(model.getItem('value'))
-                .then(function(result) {
-                    bus.emit('validation', result);
-                });
         }
 
         function makeViewControl(currentValue) {
@@ -118,19 +86,16 @@ define([
             });
         }
 
-        function layout(events) {
+        function layout() {
             var content = div({
                 dataElement: 'main-panel'
             }, [
                 div({ dataElement: 'input-container' })
             ]);
             return {
-                content: content,
-                events: events
+                content: content
             };
         }
-
-
 
         // LIFECYCLE API
 
@@ -140,12 +105,9 @@ define([
                 container = parent.appendChild(document.createElement('div'));
                 ui = UI.make({ node: container });
 
-                var events = Events.make(),
-                    theLayout = layout(events);
+                var theLayout = layout();
 
                 container.innerHTML = theLayout.content;
-                events.attachEvents(container);
-                // model.setItem('value', message.value);
 
                 bus.on('reset-to-defaults', function() {
                     resetModelValue();
@@ -153,22 +115,8 @@ define([
                 bus.on('update', function(message) {
                     model.setItem('value', message.value);
                 });
-                bus.on('enable', function() {
-                    doEnable();
-                });
-                bus.on('disable', function() {
-                    doDisable();
-                });
 
-                // TODO: since we now rely on initialValue -- perhaps 
-                // we can omit the 'sync' event or at least in cases
-                // in which the initial value is known to be available.
-                // bus.emit('sync');
-
-                return render()
-                    .then(function() {
-                        return autoValidate();
-                    });
+                return render();
             });
         }
 

@@ -1,6 +1,6 @@
 from biokbase.narrative.jobs.specmanager import SpecManager
 import unittest
-import mock
+
 
 class SpecManagerTestCase(unittest.TestCase):
     @classmethod
@@ -26,7 +26,7 @@ class SpecManagerTestCase(unittest.TestCase):
         self.assertFalse(self.sm.check_app(self.bad_app_id, self.good_tag))
 
         # bad id with raise
-        with self.assertRaises(ValueError) as err:
+        with self.assertRaises(ValueError):
             self.sm.check_app(self.bad_app_id, raise_exception=True)
 
 

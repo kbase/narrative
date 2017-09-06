@@ -7,6 +7,7 @@ from biokbase.narrative.jobs.job import Job
 from IPython.display import HTML
 import unittest
 import mock
+from narrative_mock.mockclients import get_mock_client
 import os
 from util import TestConfig
 
@@ -81,10 +82,10 @@ class AppManagerTestCase(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.am.available_apps(self.bad_tag)
 
-    @mock.patch('biokbase.narrative.jobs.appmanager.NarrativeJobService.run_job', side_effect=mock_run_job)
+    @mock.patch('biokbase.narrative.jobs.appmanager.clients.get', get_mock_client)
     @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')
     @mock.patch('biokbase.narrative.jobs.appmanager.auth.get_agent_token', side_effect=mock_agent_token)
-    def test_run_app_good_inputs(self, m, njs, auth):
+    def test_run_app_good_inputs(self, m, auth):
         m.return_value._send_comm_message.return_value = None
         os.environ['KB_WORKSPACE_ID'] = self.public_ws
         new_job = self.am.run_app(
@@ -98,12 +99,11 @@ class AppManagerTestCase(unittest.TestCase):
         self.assertEquals(new_job.tag, self.test_tag)
         self.assertIsNone(new_job.cell_id)
 
-    @mock.patch('biokbase.narrative.jobs.appmanager.NarrativeJobService')
+    @mock.patch('biokbase.narrative.jobs.appmanager.clients.get', get_mock_client)
     @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')
     @mock.patch('biokbase.narrative.jobs.appmanager.auth.get_agent_token', side_effect=mock_agent_token)
-    def test_run_app_from_gui_cell(self, m, njs, auth):
+    def test_run_app_from_gui_cell(self, m, auth):
         m.return_value._send_comm_message.return_value = None
-        njs.run_job.return_value = self.test_job_id
         os.environ['KB_WORKSPACE_ID'] = self.public_ws
         self.assertIsNone(self.am.run_app(
             self.test_app_id,
@@ -135,12 +135,11 @@ class AppManagerTestCase(unittest.TestCase):
 
     # Running an app with missing inputs is now allowed. The app can
     # crash if it wants to, it can leave its process behind.
-    @mock.patch('biokbase.narrative.jobs.appmanager.NarrativeJobService')
+    @mock.patch('biokbase.narrative.jobs.appmanager.clients.get', get_mock_client)
     @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')
     @mock.patch('biokbase.narrative.jobs.appmanager.auth.get_agent_token', side_effect=mock_agent_token)
-    def test_run_app_missing_inputs(self, m, njs, auth):
+    def test_run_app_missing_inputs(self, m, auth):
         m.return_value._send_comm_message.return_value = None
-        njs.run_job.return_value = self.test_job_id
         self.assertIsNotNone(self.am.run_app(self.good_app_id,
                                              None,
                                              tag=self.good_tag))

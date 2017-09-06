@@ -118,30 +118,33 @@ define([
 
     function specializeCell(cell) {
         cell.minimize = function() {
-            var inputArea = this.input.find('.input_area'),
+            var inputArea = this.input.find('.input_area').get(0),
                 outputArea = this.element.find('.output_wrapper'),
                 editorInputArea = this.element.find('[data-subarea-type="editor-cell-input"]'),
-                showCode = utils.getCellMeta(cell, 'kbase.appCell.user-settings.showCodeInputArea');
+                showCode = utils.getCellMeta(cell, 'kbase.editorCell.user-settings.showCodeInputArea');
 
             if (showCode) {
-                inputArea.addClass('hidden');
+                inputArea.classList.remove('-show');
             }
             outputArea.addClass('hidden');
             editorInputArea.addClass('hidden');
         };
 
         cell.maximize = function() {
-            var inputArea = this.input.find('.input_area'),
+            var inputArea = this.input.find('.input_area').get(0),
                 outputArea = this.element.find('.output_wrapper'),
                 editorInputArea = this.element.find('[data-subarea-type="editor-cell-input"]'),
-                showCode = utils.getCellMeta(cell, 'kbase.appCell.user-settings.showCodeInputArea');
+                showCode = utils.getCellMeta(cell, 'kbase.editorCell.user-settings.showCodeInputArea');
 
             if (showCode) {
-                inputArea.removeClass('hidden');
+                if (!inputArea.classList.contains('-show')) {
+                    inputArea.classList.add('-show');
+                }
             }
             outputArea.removeClass('hidden');
             editorInputArea.removeClass('hidden');
         };
+
         cell.renderIcon = function() {
             var inputPrompt = this.element[0].querySelector('[data-element="prompt"]');
 
@@ -153,8 +156,19 @@ define([
                 ]);
             }
         };
+
         cell.getIcon = function() {
             return AppUtils.makeToolbarAppIcon(utils.getCellMeta(cell, 'kbase.editorCell.app.spec'));
+        };
+
+        cell.toggleCodeInputArea = function() {
+            var codeInputArea = this.input.find('.input_area')[0];
+            if (codeInputArea) {
+                codeInputArea.classList.toggle('-show');
+                utils.setCellMeta(cell, 'kbase.editorCell.user-settings.showCodeInputArea', this.isCodeShowing(), true);
+                // NB purely for side effect - toolbar refresh
+                cell.metadata = cell.metadata;
+            }
         };
     }
 
@@ -264,6 +278,8 @@ define([
                         }));
 
                     // Create (above) and place the main container for the input cell.
+                    // start out hidden so we don't thrash the ui for closed cells.
+                    kbaseNode.classList.add('hidden');
                     cell.input.after($(kbaseNode));
                     cell.kbase.node = kbaseNode;
                     cell.kbase.$node = $(kbaseNode);
@@ -283,7 +299,7 @@ define([
                                 widget: editor,
                                 bus: cellBus
                             };
-                        })
+                        });
                 });
         });
     }
@@ -375,19 +391,21 @@ define([
                 // Primary hook for new cell creation.
                 // If the cell has been set with the metadata key kbase.type === 'app'
                 // we have a app cell.
-                $([Jupyter.events]).on('inserted.Cell', function(event, data) {
-                    if (data.kbase && data.kbase.type === 'editor') {
+                $([Jupyter.events]).on('insertedAtIndex.Cell', function(event, payload) {
+                    var cell = payload.cell;
+                    var setupData = payload.data;
+                    var jupyterCellType = payload.type;
+        
+                    if (jupyterCellType === 'code' &&
+                        setupData && 
+                        setupData.type === 'editor') {
                         // NB: the app spec and tag come in as appSpec and appTag, but 
                         // are rewritten in the "upgraded" cell to app.spec and app.tag
-                        upgradeToEditorCell(data.cell, data.kbase.appSpec, data.kbase.appTag)
-                            .then(function() {
-                                // console.log('Cell created?');
-                            })
+                        upgradeToEditorCell(cell, setupData.appSpec, setupData.appTag)
                             .catch(function(err) {
                                 console.error('ERROR creating cell', err);
                                 // delete cell.
-                                // $(document).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(data.cell));
-                                Jupyter.notebook.delete_cell(Jupyter.notebook.find_cell_index(data.cell));
+                                Jupyter.notebook.delete_cell(Jupyter.notebook.find_cell_index(cell));
                                 alert('Could not insert cell due to errors.\n\n' + err.message);
                             });
                     }

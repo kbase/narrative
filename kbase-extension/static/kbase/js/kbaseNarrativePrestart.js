@@ -7,16 +7,14 @@ define(
         'bootstrap',
         'jquery',
         'narrativeConfig',
-        'common/runtime',
-        'kbaseNarrativeSharePanel'
+        'common/runtime'
     ],
     function(
         KBWidget,
         bootstrap,
         $,
         Config,
-        Runtime,
-        kbaseNarrativeSharePanel
+        Runtime
     ) {
         'use strict';
 
@@ -64,7 +62,11 @@ define(
             $('#kb-status-btn').attr('href', Config.url('status_page'));
 
             $('#kb-add-code-cell').click(function() {
-                    Jupyter.narrative.insertAndSelectCellBelow('code');
+                    var data = {
+                        type: 'code',
+                        language: 'python'
+                    };
+                    Jupyter.narrative.insertAndSelectCellBelow('code', null, data);
                 })
                 .tooltip({
                     delay: {

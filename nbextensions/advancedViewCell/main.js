@@ -95,7 +95,7 @@ define([
                             result: null
                         },
                         params: null,
-                        outputWidgetState: null 
+                        outputWidgetState: null
                     }
                 };
                 cell.metadata = meta;
@@ -125,7 +125,7 @@ define([
                 showCode = utils.getCellMeta(cell, 'kbase.viewCell.user-settings.showCodeInputArea');
 
             if (showCode) {
-                inputArea.addClass('hidden');
+                inputArea.classList.remove('-show');
             }
             outputArea.addClass('hidden');
             viewInputArea.addClass('hidden');
@@ -138,7 +138,9 @@ define([
                 showCode = utils.getCellMeta(cell, 'kbase.viewCell.user-settings.showCodeInputArea');
 
             if (showCode) {
-                inputArea.removeClass('hidden');
+                if (!inputArea.classList.contains('-show')) {
+                    inputArea.classList.add('-show');
+                }
             }
             outputArea.removeClass('hidden');
             viewInputArea.removeClass('hidden');
@@ -287,12 +289,23 @@ define([
                 return setupNotebook();
             })
             .then(function() {
-                jupyter.onEvent('inserted.Cell', function (event, data) {
-                    if (data.kbase && data.kbase.type === 'advancedView') {
-                        upgradeToViewCell(data.cell, data.kbase.appSpec, data.kbase.appTag)
+                // insertedAtIndex.Cell issued after insert_at_index with 
+                // the following message:
+                // cell - cell object created
+                // type - jupyter cell type ('code', 'markdown')
+                // index - index at which cell was inserted
+                // data - kbase cell setup data.
+                jupyter.onEvent('insertedAtIndex.Cell', function(event, payload) {
+                    var cell = payload.cell;
+                    var setupData = payload.data;
+                    var jupyterCellType = payload.type;
+                    if (setupData && 
+                        jupyterCellType === 'code' && 
+                        setupData.type === 'advancedView') {
+                        upgradeToViewCell(cell, setupData.appSpec, setupData.appTag)
                             .catch(function(err) {
                                 console.error('ERROR creating cell', err);
-                                jupyter.deleteCell(data.cell);
+                                jupyter.deleteCell(cell);
                                 // TODO proper error dialog
                                 alert('Could not insert cell due to errors.\n' + err.message);
                             });

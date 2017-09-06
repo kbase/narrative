@@ -20,6 +20,7 @@ module.exports = function (config) {
             {pattern: 'test/unit/spec/**/*.js', included: false},
             'kbase-extension/static/narrative_paths.js',
             {pattern: 'test/unit/testConfig.json', included: false, served: true, nocache: true},
+            {pattern: 'test/*.tok', included: false, served: true, nocache: true},
             'test/unit/testUtil.js',
             'test/unit/test-main.js'
         ],

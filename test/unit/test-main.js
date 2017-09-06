@@ -44,9 +44,9 @@ requirejs.config({
 
     callback: function() {
         require(['testUtil'], function(TestUtil) {
-            console.log('test util loaded');
-            console.log(TestUtil);
-            window.__karma__.start();
+            TestUtil.make().then(function() {
+                window.__karma__.start();
+            });
         }, function (error) {
             console.error('Failed to open TestUtil file.');
             console.error(error);

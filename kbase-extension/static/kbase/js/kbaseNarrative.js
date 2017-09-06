@@ -665,7 +665,11 @@ define([
         };
 
         $([Jupyter.events]).on('notebook_loaded.Notebook', function () {
-            // Disable autosave so as not to spam the Workspace.
+            var wsInfo = window.location.href.match(/ws\.(\d+)\.obj\.(\d+)/);
+            if (wsInfo && wsInfo.length === 3) {
+                this.workspaceRef = wsInfo[1] + '/' + wsInfo[2];
+                this.workspaceId = wsInfo[1];
+            }
 
             // Tricky with inter/intra-dependencies between kbaseNarrative and kbaseNarrativeWorkspace...
             this.sidePanel = new KBaseNarrativeSidePanel($('#kb-side-panel'), { autorender: false });
@@ -673,6 +677,8 @@ define([
             this.narrController = new KBaseNarrativeWorkspace($('#notebook_panel'), {
                 ws_id: this.getWorkspaceName()
             });
+
+            // Disable autosave so as not to spam the Workspace.
             Jupyter.notebook.set_autosave_interval(0);
             KBaseCellToolbar.register(Jupyter.notebook);
             Jupyter.CellToolbar.activate_preset('KBase');
@@ -693,12 +699,6 @@ define([
 
             this.initSharePanel();
             // this.initSettingsDialog();
-
-            var wsInfo = window.location.href.match(/ws\.(\d+)\.obj\.(\d+)/);
-            if (wsInfo && wsInfo.length === 3) {
-                this.workspaceRef = wsInfo[1] + '/' + wsInfo[2];
-                this.workspaceId = wsInfo[1];
-            }
 
             this.updateDocumentVersion()
             .then(function() {

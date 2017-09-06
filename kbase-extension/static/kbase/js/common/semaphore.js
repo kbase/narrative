@@ -7,7 +7,7 @@ define([
 
     // Ensure semaphore structure is in place when the module is loaded.
     // This is stored in the global environment because it is possible for modules
-    // to be reloaded. We don't do this now, but may rely upon this behavior in the 
+    // to be reloaded. We don't do this now, but may rely upon this behavior in the
     // future.
     if (!window.__kbase_semaphores__) {
         window.__kbase_semaphores__ = {};
@@ -15,15 +15,17 @@ define([
 
 
     /*
-    The sempahores mechanism has a functional interface. 
+    The sempahores mechanism has a functional interface.
     */
 
     function factory(config) {
         function add(name, initialValue) {
+            console.warn('SEMAPHORE initializing channel "' + name + '" with value "' + initialValue + '"');
             window.__kbase_semaphores__[name] = initialValue || null;
         }
 
         function set(name, value) {
+            console.warn('SEMAPHORE setting channel "' + name + '" to "' + value + '"');
             window.__kbase_semaphores__[name] = value;
         }
 
@@ -40,7 +42,8 @@ define([
         }
 
         function when(name, value, timeout) {
-            var startTime = new Date().getTime();            
+            console.warn('SEMAPHORE setting waiter on channel "' + name + '" for value "' + value + '"');
+            var startTime = new Date().getTime();
             return new Promise(function (resolve, reject) {
                 function waiter() {
                     var elapsed = new Date().getTime() - startTime;
@@ -56,7 +59,10 @@ define([
                         waiter();
                     }, 100);
                 }
-                waiter();
+                // waiter();
+                window.setTimeout(function () {
+                    reject(new Error('Timed out waiting for semaphore "' + name + '" with value "' + value + '"'));
+                }, 100);
             });
         }
 

@@ -2319,7 +2319,7 @@ define([
                     // by default.
                     showCodeInputArea();
 
-                    // Honor 
+                    // Honor
                     if (readOnly) {
                         ui.hideElement('outdated');
                         // var buttonBar = container.querySelector('.kb-btn-toolbar-cell-widget');
@@ -2329,6 +2329,7 @@ define([
                     }
                 })
                 .then(function() {
+                    console.log('App cell setting up semaphore lock');
                     return Semaphore.make().when('comm', 'ready', Config.get('comm_wait_timeout'));
                 })
                 .then(function() {
@@ -2450,6 +2451,17 @@ define([
                     // Initialize display
 
                     return null;
+                })
+                .catch(function(err) {
+                    if (err.message.indexOf('semaphore') !== -1) {
+                        var semaphoreMsg = err.message;
+                        throw new Error(
+                            'A network timeout occurred while trying to build a communication ' +
+                            'channel to retrieve job information. Please refresh the page to try ' +
+                            'again.<br><br>Details: ' + semaphoreMsg
+                        );
+                    }
+                    throw err;
                 });
         }
 

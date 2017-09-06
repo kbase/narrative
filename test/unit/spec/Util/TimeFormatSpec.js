@@ -7,11 +7,13 @@
 define ([
     'bootstrap',
     'jquery',
-    'util/timeFormat'
+    'util/timeFormat',
+    'testUtil'
 ], function(
 	bootstrap,
 	$,
-	TF
+	TF,
+    TestUtil
 ) {
     'use strict';
     var testISOTime = '2015-12-09T21:58:22.202Z';
@@ -21,6 +23,10 @@ define ([
     var testExactDayStr = 'Dec 9, 2015';
 
     describe('KBase Time Formatting Utility function module', function() {
+        beforeEach(function() {
+            console.log(TestUtil.getToken());
+        });
+
         it('getTimeStampStr should properly output an exact time string', function() {
             var d = TF.getTimeStampStr(testISOTime, true);
             expect(d).toBe(testExactDayStr);

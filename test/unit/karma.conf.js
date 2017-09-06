@@ -19,6 +19,8 @@ module.exports = function (config) {
 
             {pattern: 'test/unit/spec/**/*.js', included: false},
             'kbase-extension/static/narrative_paths.js',
+            {pattern: 'test/unit/testConfig.json', included: false, served: true, nocache: true},
+            'test/unit/testUtil.js',
             'test/unit/test-main.js'
         ],
         // test results reporter to use
@@ -49,7 +51,8 @@ module.exports = function (config) {
         singleRun: true,
         proxies: {
             '/narrative/static/': 'http://localhost:9999/narrative/static/',
-            '/static/': 'http://localhost:9999/narrative/static/'
+            '/static/': 'http://localhost:9999/narrative/static/',
+            '/test/': '/base/test/'
         }
 
     });

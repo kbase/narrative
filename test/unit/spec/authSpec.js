@@ -1,22 +1,29 @@
 /*global define*/
 /*global describe, it, expect*/
-/*global jasmine*/
+/*global jasmine, pending*/
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
 
 define ([
     'api/auth',
-    'narrativeConfig'
+    'narrativeConfig',
+    'testUtil'
 ], function(
     Auth,
-    Config
+    Config,
+    TestUtil
 ) {
     'use strict';
-    return;
 
     var authClient;
-    var token = '';
+    var token = TestUtil.getToken();
     document.cookie='kbase_session=' + token;
+
+    function pendingIfNoToken() {
+        if (!TestUtil.hasToken) {
+            pending();
+        }
+    }
 
     beforeEach(function() {
         authClient = Auth.make({url: Config.url('auth')});
@@ -24,11 +31,15 @@ define ([
 
     describe('Test the Auth API module', function() {
         it('Should make a new Auth client on request', function() {
+            pendingIfNoToken();
+
             var auth = Auth.make({url: Config.url('auth')});
             expect(auth).not.toBeNull();
         });
 
         it('Should get auth token info', function(done) {
+            pendingIfNoToken();
+
             authClient.getTokenInfo(token)
             .then(function(response) {
                 expect(Object.keys(response)).toContain('expires');
@@ -41,6 +52,8 @@ define ([
         });
 
         it('Should fail to get auth token info from a fake token', function(done) {
+            pendingIfNoToken();
+
             authClient.getTokenInfo('faketoken')
             .then(function(response) {
                 expect(response).toBeNull();
@@ -54,6 +67,8 @@ define ([
         });
 
         it('Should return my profile', function(done) {
+            pendingIfNoToken();
+
             authClient.getUserProfile()
             .then(function(response) {
                 expect(response).not.toBeNull();
@@ -77,6 +92,8 @@ define ([
         });
 
         it('Should return a list of users', function(done) {
+            pendingIfNoToken();
+
             var badName = 'not_a_user_name';
             authClient.getUserNames(token, ['wjriehl', badName])
             .then(function(names) {
@@ -101,6 +118,8 @@ define ([
         });
 
         it('Should search for users', function(done) {
+            pendingIfNoToken();
+
             var query = 'ie';
             authClient.searchUserNames(token, query)
             .then(function(results) {
@@ -114,6 +133,8 @@ define ([
         });
 
         it('Should search for users with extra options', function(done) {
+            pendingIfNoToken();
+
             var query = 'ie';
             var options = [''];
             authClient.searchUserNames(token, query, options)

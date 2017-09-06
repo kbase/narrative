@@ -1,4 +1,5 @@
 /*jslint white: true*/
+/*global module */
 module.exports = function (config) {
     'use strict';
     config.set({
@@ -11,6 +12,9 @@ module.exports = function (config) {
             'karma-coverage',
             'karma-requirejs'
         ],
+        preprocessors: {
+            'kbase-extension/static/kbase/**/*.js': ['coverage']
+        },
         files: [
             // {pattern: 'kbase-extension/static/components/**/*.js', included: false},
             // {pattern: 'kbase-extension/static/kbase/js/*.js', included: false},
@@ -28,6 +32,10 @@ module.exports = function (config) {
         // possible values: 'dots', 'progress'
         // available reporters: https://npmjs.org/browse/keyword/karma-reporter
         reporters: ['progress', 'coverage'],
+        coverageReporter: {
+            type: 'html',
+            dir: 'js-coverage/'
+        },
         // web server port
         port: 9876,
         // enable / disable colors in the output (reporters and logs)

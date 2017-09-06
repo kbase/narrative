@@ -42,6 +42,7 @@ class TestConfig(object):
     def __init__(self):
         self._path_prefix = os.path.join(os.environ["NARRATIVE_DIR"], "src", "biokbase",
                                          "narrative", "tests")
+        self._path_root = os.path.join(os.environ["NARRATIVE_DIR"])
         config_file_path = self.file_path(_config_file)
         self._config = ConfigParser.ConfigParser()
         self._config.read(config_file_path)
@@ -50,8 +51,12 @@ class TestConfig(object):
         return self._config.get(*args, **kwargs)
 
     def get_path(self, *args, **kwargs):
+        from_root = False
+        if 'from_root' in kwargs:
+            from_root = kwargs['from_root']
+            del kwargs['from_root']
         val = self.get(*args, **kwargs)
-        return self.file_path(val)
+        return self.file_path(val, from_root)
 
     def load_json_file(self, filename):
         """
@@ -65,12 +70,15 @@ class TestConfig(object):
             f.close()
             return data
 
-    def file_path(self, filename):
+    def file_path(self, filename, from_root=False):
         """
         Returns the path to the filename, relative to this file's expected location.
         <narrative root>/src/biokbase/narrative/tests
         """
-        return os.path.join(self._path_prefix, filename)
+        if from_root:
+            return os.path.join(self._path_root, filename)
+        else:
+            return os.path.join(self._path_prefix, filename)
 
 
 def fetch_narrative(nar_id, auth_token, url=ci_ws, file_name=None):

@@ -30,8 +30,8 @@ function KBModeling(token) {
                     if (self.token)
                         xhr.setRequestHeader("Authorization", self.token);
                 }
-            }).then(_callback)
-            return prom
+            }).then(_callback);
+            return prom;
         }
 
         var url, method;

@@ -45,12 +45,12 @@ function KBModeling(token) {
             return call_ajax(url, method, params)
         } else if (service == 'biochem') {
             s_url = 'https://kbase.us/services/service_wizard';
-            s_params = {'module_name' : "BiochemistryAPI", 'version' : 'dev'};
+            s_params = {'module_name' : "BiochemistryAPI", 'version' : 'beta'};
             s_method = 'ServiceWizard.get_service_status';
             callback = function(service_status_ret) {
                 srv_url = service_status_ret['result'][0]['url'];
                 console.log(srv_url);
-                return call_ajax(srv_url, 'BiochemistryAPI.'+method, [params]);
+                return call_ajax(srv_url, 'BiochemistryAPI.'+method, params);
             }
             return call_ajax(s_url, s_method, s_params, callback);
         }

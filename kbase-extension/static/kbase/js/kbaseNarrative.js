@@ -677,7 +677,6 @@ define([
             this.narrController = new KBaseNarrativeWorkspace($('#notebook_panel'), {
                 ws_id: this.getWorkspaceName()
             });
-
             // Disable autosave so as not to spam the Workspace.
             Jupyter.notebook.set_autosave_interval(0);
             KBaseCellToolbar.register(Jupyter.notebook);

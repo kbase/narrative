@@ -21,6 +21,7 @@ This is built on the Jupyter Notebook v4.4.1 (more notes will follow).
 - TASK-816 - Fix problems with a differential expression viewer.
 - TASK-933 - Fixes problems with the volcano plot viewer for expression data.
 - Adds a generic data viewer for all Set data.
+- TASK-1036 - Address problems with FBA Modeling object viewers (FBAModel, Media, etc.)
 
 
 ### Version 3.4.3

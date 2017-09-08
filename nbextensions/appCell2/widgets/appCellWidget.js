@@ -2319,17 +2319,14 @@ define([
                     // by default.
                     showCodeInputArea();
 
-                    // Honor
                     if (readOnly) {
                         ui.hideElement('outdated');
-                        // var buttonBar = container.querySelector('.kb-btn-toolbar-cell-widget');
-                        // if (buttonBar) {
-                        //     buttonBar.classList.add('hidden');
-                        // }
                     }
                 })
                 .then(function() {
-                    console.log('App cell setting up semaphore lock');
+                    // console.log('App cell setting up semaphore lock');
+                    alert('setting up semaphore lock on cell in state: ' + fsm.getCurrentState().state.mode);
+                    console.log(fsm.getCurrentState());
                     return Semaphore.make().when('comm', 'ready', Config.get('comm_wait_timeout'));
                 })
                 .then(function() {
@@ -2454,11 +2451,10 @@ define([
                 })
                 .catch(function(err) {
                     if (err.message.indexOf('semaphore') !== -1) {
-                        var semaphoreMsg = err.message;
                         throw new Error(
                             'A network timeout occurred while trying to build a communication ' +
                             'channel to retrieve job information. Please refresh the page to try ' +
-                            'again.<br><br>Details: ' + semaphoreMsg
+                            'again.<br><br>Details: ' + err.message
                         );
                     }
                     throw err;
@@ -2638,19 +2634,14 @@ define([
 
                     // Initial job state listening.
                     switch (fsm.getCurrentState().state.mode) {
+                        case 'execute-requested':
+                            // alert('started in "sending" state?');
+                            break;
                         case 'editing':
                             break;
                         case 'processing':
-                            // switch (state.stage) {
-                            //     case 'launched':
-                            //     case 'queued':
-                            //     case 'running':
-                            // if (!readOnly) {
                             startListeningForJobMessages(model.getItem('exec.jobState.job_id'));
                             requestJobStatus(model.getItem('exec.jobState.job_id'));
-                            // }
-                            //         break;
-                            // }
                             break;
                         case 'success':
                         case 'error':

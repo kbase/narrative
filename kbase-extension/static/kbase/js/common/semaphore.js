@@ -59,10 +59,7 @@ define([
                         waiter();
                     }, 100);
                 }
-                // waiter();
-                window.setTimeout(function () {
-                    reject(new Error('Timed out waiting for semaphore "' + name + '" with value "' + value + '"'));
-                }, 100);
+                waiter();
             });
         }
 

@@ -595,15 +595,15 @@ define([
                     if (self.moduleVersions[spec.info.module_name]) {
                         spec.info.ver = self.moduleVersions[spec.info.module_name];
                     }
-                    self.trigger('appClicked.Narrative', [spec, self.currentTag, parameters]);
+                    self.trigger('appClicked.Narrative', [spec, tag, parameters]);
                 })
                 .catch(function (err) {
                     var errorId = new Uuid(4).format();
-                    console.error('Error getting method spec #' + errorId, err, app, self.currentTag);
+                    console.error('Error getting method spec #' + errorId, err, app, tag);
                     alert('Error getting app spec, see console for error info #' + errorId);
                 });
             } else {
-                self.trigger('appClicked.Narrative', [app, self.currentTag, parameters]);
+                self.trigger('appClicked.Narrative', [app, tag, parameters]);
             }
         },
 

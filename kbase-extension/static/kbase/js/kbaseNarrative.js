@@ -141,10 +141,9 @@ define([
         // key = cell id, value = Widget object itself.
         this.kbaseWidgets = {};
 
-        this.loadingWidget = LoadingWidget.make({
+        this.loadingWidget = new LoadingWidget({
             node: document.querySelector('#kb-loading-blocker')
         });
-        this.loadingWidget.start();
 
         //Jupyter.keyboard_manager.disable();
         return this;

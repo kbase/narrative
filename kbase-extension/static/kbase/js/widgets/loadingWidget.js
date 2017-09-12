@@ -1,58 +1,50 @@
 define([
-    'jquery',
-    'common/ui',
-    'kb_common/html'
-], function ($, UI, HTML) {
+    'jquery'  // just for the handy fadeOut thing.
+], function ($) {
     'use strict';
-    var t = HTML.tag,
-        div = t('div'),
-        span = t('span');
 
-    function factory (config) {
-        var node = config.node,
-            container = node.querySelector('.progress-container'),
-            progress = {
-                data: false,
-                jobs: false,
-                apps: false,
-                kernel: false,
-                narrative: false
-            },
-            progressBar = node.querySelector('.progress-bar'),
-            totalDone = 0,
-            totalSteps = Object.keys(progress).length;
-
-        function start () {
-            // renderLayout();
-        }
-
-        function updateProgress(name, done, error) {
-            var text = '<i class="fa fa-check" aria-hidden="true" style="color:green"></i>';
-            if (error) {
-                text = '... error while loading.';
-            }
-            var prog = container.querySelector('[data-element="' + name + '"] .kb-progress-stage');
-            prog.innerHTML = text;
-            totalDone++;
-            progressBar.style.width = (totalDone / totalSteps * 100) + '%';
-            if (totalDone >= totalSteps) {
-                remove();
-            }
-        }
-
-        function remove () {
-            $(node).fadeOut('slow');
-        }
-
-        return {
-            start: start,
-            stop: stop,
-            remove: remove,
-            updateProgress: updateProgress
+    var LoadingWidget = function (config) {
+        this.node = config.node;
+        this.container = this.node ? this.node.querySelector('.progress-container') : null;
+        this.progress = {
+            data: false,
+            jobs: false,
+            apps: false,
+            kernel: false,
+            narrative: false
         };
-    }
+        this.progressBar = this.node ? this.node.querySelector('.progress-bar') : null;
+        this.totalDone = 0;
+        this.totalSteps = Object.keys(this.progress).length;
 
-    return {
-        make: factory
+        return this;
     };
+
+    LoadingWidget.prototype.updateProgress = function(name, done, error) {
+        var text = '<i class="fa fa-check" aria-hidden="true" style="color:green"></i>';
+        if (error) {
+            text = '<i class="fa fa-times" aria-hidden="true" style="color:red"></i> Error while loading.';
+        }
+        if (this.container) {
+            var prog = this.container.querySelector('[data-element="' + name + '"] .kb-progress-stage');
+            if (prog) {
+                prog.innerHTML = text;
+                this.totalDone++;
+                this.progressBar.style.width = (this.totalDone / this.totalSteps * 100) + '%';
+                console.log('TOTAL DONE THINGS', this.totalDone);
+                if (this.totalDone >= this.totalSteps) {
+                    this.remove();
+                }
+            }
+        }
+    };
+
+    LoadingWidget.prototype.remove = function () {
+        console.log('removing the node');
+        if (this.node) {
+            $(this.node).fadeOut('slow');
+        }
+    };
+
+    return LoadingWidget;
 });

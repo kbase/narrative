@@ -41,8 +41,8 @@ class NarrIOTestCase(unittest.TestCase):
         self.test_user = config.get('users', 'test_user')
         self.private_user = config.get('users', 'private_user')
 
-        self.test_token = util.read_token_file(config.get_path('token_files', 'test_user'))
-        self.private_token = util.read_token_file(config.get_path('token_files', 'private_user'))
+        self.test_token = util.read_token_file(config.get_path('token_files', 'test_user', from_root=True))
+        self.private_token = util.read_token_file(config.get_path('token_files', 'private_user', from_root=True))
 
         if self.test_token is None or self.private_token is None:
             print("Skipping most narrativeio.py tests due to missing tokens.")

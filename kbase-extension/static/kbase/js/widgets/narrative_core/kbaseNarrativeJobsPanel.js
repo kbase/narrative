@@ -368,7 +368,6 @@ define([
                  * This would signal a "job-deleted" message.
                  * Although it could be the case that a+++
                  */
-                // NB: this implies that t
                 Object.keys(this.jobStates).forEach(function (jobId) {
                     if (!incomingJobs[jobId]) {
                         // If ths job is not found in the incoming list of all

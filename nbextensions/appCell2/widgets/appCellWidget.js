@@ -88,6 +88,7 @@ define([
             runtime = Runtime.make(),
             cell = config.cell,
             parentBus = config.bus,
+            kernelReady = Narrative.isKernelReady(),
             // TODO: the cell bus should be created and managed through main.js,
             // that is, the extension.
             cellBus = runtime.bus().makeChannelBus({
@@ -168,6 +169,12 @@ define([
                             name: 'refresh'
                         },
                         label: 'Reset'
+                    },
+                    offline: {
+                        help: 'Currently disconnected from the server.',
+                        type: 'danger',
+                        classes: ['-cancel'],
+                        label: 'Offline'
                     }
                 }
             };
@@ -1232,10 +1239,12 @@ define([
                 onNewState: function(fsm) {
                     model.setItem('fsm.currentState', fsm.getCurrentState().state);
                     // save the narrative!
-
                 }
             });
             // fsm events
+            fsm.bus.on('disconnected', function() {
+                ui.setContent('run-control-panel.status.execMessage', 'Disconnected. Unable to communicate with server.');
+            });
 
             fsm.bus.on('on-execute-requested', function() {
                 ui.setContent('run-control-panel.status.execMessage', 'Sending...');
@@ -1554,6 +1563,10 @@ define([
 
         function toggleViewOnlyMode(newViewOnly) {
             viewOnly = newViewOnly;
+        }
+
+        function toggleKernelState(newState) {
+            kernelReady = newState;
         }
 
         var saveTimer = null;
@@ -2323,12 +2336,10 @@ define([
                         ui.hideElement('outdated');
                     }
                 })
-                .then(function() {
-                    // console.log('App cell setting up semaphore lock');
-                    alert('setting up semaphore lock on cell in state: ' + fsm.getCurrentState().state.mode);
-                    console.log(fsm.getCurrentState());
-                    return Semaphore.make().when('comm', 'ready', Config.get('comm_wait_timeout'));
-                })
+                // .then(function() {
+                //     alert('setting up semaphore lock on cell in state: ' + fsm.getCurrentState().state.mode);
+                //     return Semaphore.make().when('comm', 'ready', Config.get('comm_wait_timeout'));
+                // })
                 .then(function() {
                     /*
                      * listeners for the local input cell message bus
@@ -2442,6 +2453,11 @@ define([
 
                     busEventManager.add(runtime.bus().on('read-only-changed', function(msg) {
                         toggleViewOnlyMode(msg.readOnly);
+                        renderUI();
+                    }));
+
+                    busEventManager.add(runtime.bus().on('kernel-state-changed', function(msg) {
+                        toggleKernelState(msg.isReady);
                         renderUI();
                     }));
 

@@ -25,7 +25,6 @@ define([
     'uuid',
     'narrative_core/catalog/kbaseCatalogBrowser',
     'util/bootstrapAlert',
-
     'kbaseNarrative',
     'catalog-client-api',
     'kbase-client-api',
@@ -538,6 +537,7 @@ define([
                                     self.methodSpecs[lookup]['favorite'] = fav.timestamp; // this is when this was added as a favorite
                                 }
                             }
+                            self.trigger('appListUpdated.Narrative');
                         })
                         // For some reason this is throwing a Bluebird error to include this error handler, but I don't know why right now -mike
                         .catch(function(error) {

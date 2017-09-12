@@ -37,8 +37,10 @@ define([
     'narrativeLogin',
     'common/ui',
     'common/html',
+    'common/runtime',
     'narrativeTour',
     'kb_service/utils',
+    'widgets/loadingWidget',
 
     // for effect
     'bootstrap',
@@ -70,8 +72,10 @@ define([
     NarrativeLogin,
     UI,
     html,
+    Runtime,
     Tour,
-    ServiceUtils
+    ServiceUtils,
+    LoadingWidget
 ) {
     'use strict';
 
@@ -95,7 +99,7 @@ define([
         // Maximum narrative size that can be stored in the workspace.
         // This is set by nginx on the backend - this variable is just for
         // communication on error.
-        this.maxNarrativeSize = "10 MB";
+        this.maxNarrativeSize = '10 MB';
 
         // the controller is an instance of kbaseNarrativeWorkspace, which
         // controls widget management and KBase method execution
@@ -136,6 +140,11 @@ define([
         // The set of currently instantiated KBase Widgets.
         // key = cell id, value = Widget object itself.
         this.kbaseWidgets = {};
+
+        this.loadingWidget = LoadingWidget.make({
+            node: document.querySelector('#kb-loading-blocker')
+        });
+        this.loadingWidget.start();
 
         //Jupyter.keyboard_manager.disable();
         return this;
@@ -213,18 +222,33 @@ define([
      * manager when KBase cells are selected.
      */
     Narrative.prototype.registerEvents = function () {
+        var self = this;
         $([Jupyter.events]).on('before_save.Notebook', function () {
             $('#kb-save-btn').find('div.fa-save').addClass('fa-spin');
         });
         $([Jupyter.events]).on('notebook_saved.Notebook', function () {
             $('#kb-save-btn').find('div.fa-save').removeClass('fa-spin');
-            this.updateDocumentVersion();
-        }.bind(this));
+            self.updateDocumentVersion();
+        });
         $([Jupyter.events]).on('kernel_idle.Kernel', function () {
             $('#kb-kernel-icon').removeClass().addClass('fa fa-circle-o');
         });
         $([Jupyter.events]).on('kernel_busy.Kernel', function () {
             $('#kb-kernel-icon').removeClass().addClass('fa fa-circle');
+        });
+        [
+            'kernel_connected.Kernel', 'kernel_starting.Kernel', 'kernel_ready.Kernel',
+            'kernel_disconnected.Kernel', 'kernel_killed.Kernel', 'kernel_dead.Kernel'
+        ].forEach(function(e) {
+            $([Jupyter.events]).on(e, function () {
+                Runtime.make().bus().emit(
+                    'kernel-state-changed',
+                    {
+                        isReady: Jupyter.notebook.kernel && Jupyter.notebook.kernel.is_connected()
+                    }
+                );
+                console.log('emitted kernel-state-changed event, probably not ready!');
+            });
         });
         $([Jupyter.events]).on('delete.Cell', function () {
             // this.enableKeyboardManager();
@@ -439,7 +463,6 @@ define([
         }).catch(function (error) {
             console.error('Error while checking for a version update: ' + error.statusText);
             KBError('Narrative.checkVersion', 'Unable to check for a version update!');
-            console.error(error);
         });
     };
 
@@ -665,11 +688,20 @@ define([
         };
 
         $([Jupyter.events]).on('notebook_loaded.Notebook', function () {
+            this.loadingWidget.updateProgress('narrative', true);
             var wsInfo = window.location.href.match(/ws\.(\d+)\.obj\.(\d+)/);
             if (wsInfo && wsInfo.length === 3) {
                 this.workspaceRef = wsInfo[1] + '/' + wsInfo[2];
                 this.workspaceId = wsInfo[1];
             }
+
+            $(document).one('dataUpdated.Narrative', function () {
+                this.loadingWidget.updateProgress('data', true);
+            }.bind(this));
+
+            $(document).one('appListUpdated.Narrative', function () {
+                this.loadingWidget.updateProgress('apps', true);
+            }.bind(this));
 
             // Tricky with inter/intra-dependencies between kbaseNarrative and kbaseNarrativeWorkspace...
             this.sidePanel = new KBaseNarrativeSidePanel($('#kb-side-panel'), { autorender: false });
@@ -690,9 +722,9 @@ define([
                 // This puts the cell menu in the right place.
                 $([Jupyter.events]).trigger('select.Cell', { cell: Jupyter.notebook.get_selected_cell() });
             }
-            if (this.getWorkspaceName() == null) {
+            if (this.getWorkspaceName() === null) {
                 KBFatal('Narrative.init', 'Unable to locate workspace name from the Narrative object!');
-                $('#kb-wait-for-ws').remove();
+                this.loadingWidget.remove();
                 return;
             }
 
@@ -707,22 +739,25 @@ define([
             .finally(function () {
                 this.sidePanel.render();
                 this.updateDocumentVersion();
-                $('#kb-wait-for-ws').remove();
+                // this.loadingWidget.remove();
             }.bind(this));
             $([Jupyter.events]).trigger('loaded.Narrative');
             $([Jupyter.events]).on('kernel_ready.Kernel',
                 function () {
                     console.log('Kernel Ready! Initializing Job Channel...');
-
+                    this.loadingWidget.updateProgress('kernel', true);
                     // TODO: This should be an event "kernel-ready", perhaps broadcast
                     // on the default bus channel.
                     this.sidePanel.$jobsWidget.initCommChannel()
+                        .then(function () {
+                            this.loadingWidget.updateProgress('jobs', true);
+                        }.bind(this))
                         .catch(function (err) {
                             // TODO: put the narrative into a terminal state
                             console.error('ERROR initializing kbase comm channel', err);
                             KBFatal('Narrative.ini', 'KBase communication channel could not be initiated with the back end. TODO');
-                            $('#kb-wait-for-ws').remove();
-                        });
+                            // this.loadingWidget.remove();
+                        }.bind(this));
                 }.bind(this)
             );
         }.bind(this));

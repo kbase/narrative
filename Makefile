@@ -39,8 +39,8 @@ test: test-backend test-frontend-unit test-frontend-e2e
 # with it.
 test-backend:
 	@echo "running backend tests"
-	#sh $(BACKEND_TEST_SCRIPT)
-	@echo "THIS IS A NO-OP UNTIL THE AUTH2 SWITCH"
+	sh $(BACKEND_TEST_SCRIPT)
+	# @echo "THIS IS A NO-OP UNTIL THE AUTH2 SWITCH"
 	@echo "done"
 
 # test-frontend-unit should use karma and jasmine to test

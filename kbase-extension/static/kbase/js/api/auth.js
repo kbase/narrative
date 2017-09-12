@@ -176,18 +176,6 @@ define([
                 else {
                     throw error;
                 }
-                // else {
-                //     return Promise.delay(3000)
-                //     .then(function() {
-                //         return validateToken(token, retries-0);
-                //     })
-                //     .then(function(info) {
-                //         return info;
-                //     })
-                //     .catch(function(error) {
-                //         return false;
-                //     });
-                // }
             });
         }
 

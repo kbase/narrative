@@ -5,7 +5,6 @@ This is built on the Jupyter Notebook v4.4.1 (more notes will follow).
 
 ### Version 3.5.0
 - TASK-1054 - Create a new loading window with a set of tasks to load and connect to (treats the problem of slowly loading websockets, still probably needs some adjusting).
--
 
 ### Version 3.4.4
 - TASK-932 - fix problem where authentication tokens appear to get lost when a Narrative has been asleep for a while.

@@ -20,12 +20,10 @@ define([
 
     function factory(config) {
         function add(name, initialValue) {
-            console.warn('SEMAPHORE initializing channel "' + name + '" with value "' + initialValue + '"');
             window.__kbase_semaphores__[name] = initialValue || null;
         }
 
         function set(name, value) {
-            console.warn('SEMAPHORE setting channel "' + name + '" to "' + value + '"');
             window.__kbase_semaphores__[name] = value;
         }
 
@@ -42,7 +40,6 @@ define([
         }
 
         function when(name, value, timeout) {
-            console.warn('SEMAPHORE setting waiter on channel "' + name + '" for value "' + value + '"');
             var startTime = new Date().getTime();
             return new Promise(function (resolve, reject) {
                 function waiter() {

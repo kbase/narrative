@@ -2336,10 +2336,9 @@ define([
                         ui.hideElement('outdated');
                     }
                 })
-                // .then(function() {
-                //     alert('setting up semaphore lock on cell in state: ' + fsm.getCurrentState().state.mode);
-                //     return Semaphore.make().when('comm', 'ready', Config.get('comm_wait_timeout'));
-                // })
+                .then(function() {
+                    return Semaphore.make().when('comm', 'ready', Config.get('comm_wait_timeout'));
+                })
                 .then(function() {
                     /*
                      * listeners for the local input cell message bus

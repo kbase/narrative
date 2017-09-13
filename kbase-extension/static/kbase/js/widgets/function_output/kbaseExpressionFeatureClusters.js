@@ -20,6 +20,8 @@ define (
 		'kbaseExpressionHeatmap',
 		'kbaseExpressionPairwiseCorrelation',
 		'knhx',
+		'base/js/namespace',
+		'kbaseGenericSetViewer'
 		// 'jquery-dataScroller'
 	], function(
 		KBWidget,
@@ -35,7 +37,9 @@ define (
 		kbaseExpressionSparkline,
 		kbaseExpressionHeatmap,
 		kbaseExpressionPairwiseCorrelation,
-		knhx
+		knhx,
+		Jupyter,
+		kbaseGenericSetViewer
 		// jquery_dataScroller
 	) {
 	return KBWidget({
@@ -113,6 +117,7 @@ define (
 						],
 						function(data) {
 							self.expMatrixName = data[0].info[1];
+							console.log("DATA REF : ", data[0].data.genome_ref);
 							self.genomeRef = data[0].data.genome_ref;
                             self.featureMapping = data[0].data.feature_mapping;
 							self.matrixRowIds = data[0].data.data.row_ids;
@@ -125,10 +130,12 @@ define (
 							                 'features/[*]/function', 'features/[*]/aliases'] }
 							            ],
 							            function(data){
+							            console.log("DATA IS ", data);
 							                self.genomeID = data[0].info[1];
 							                self.genomeName = data[0].data.scientific_name;
 							                self.features = data[0].data.features;
 							                // Now we are ready to visualize it
+							                self.genomeKey = data[0].info[7] + '/' + self.genomeName;
 							                self.render();
 							            },
 							            function(error){
@@ -332,6 +339,21 @@ define (
                                       'named ' + self.options.clusterSetID + '.'
                             }
                           ); */
+                          console.log("METHOD INPUT IS BUILD FEATURE SET!", {
+                              'input_genome':self.genomeID,
+                              'input_feature_ids': self.getClusterGeneIds(rowIndex).join(","),
+                              'output_feature_set': self.options.clusterSetID + "_Cluster"+rowIndex+"_Features",
+                              'description': 'Features were selected from Cluster ' + rowIndex + ' of a FeatureClusters data object '+
+                                      'named ' + self.options.clusterSetID + '.'
+                            });
+                          console.log("KEY IS : ", self.genomeKey, self.genomeRef);
+                          Jupyter.narrative.addAndPopulateApp('KBaseFeatureValues/build_feature_set', 'release', {
+                              'input_genome':self.genomeRef,
+                              'input_feature_ids': self.getClusterGeneIds(rowIndex).join(","),
+                              'output_feature_set': self.options.clusterSetID + "_Cluster"+rowIndex+"_Features",
+                              'description': 'Features were selected from Cluster ' + rowIndex + ' of a FeatureClusters data object '+
+                                      'named ' + self.options.clusterSetID + '.'
+                            });
 			                  }
 			                  else {
 
@@ -404,6 +426,8 @@ define (
 				    <li><a tabindex="-1" href="#" methodInput="view_expression_profile">View expression profile</a></li> \
 				    <li><a tabindex="-1" href="#" methodInput="view_expression_pairwise_correlation">View pairwise correlation</a></li> \
 				    <li><a tabindex="-1" href="#" methodInput="view_expression_heatmap">View in sortable condition heatmap</a></li> \
+				    <li class="divider"></li> \
+				    <li><a tabindex="-1" href="#" methodInput="build_feature_set">Create a FeatureSet</a></li> \
 				</ul> \
 			');
 

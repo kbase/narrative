@@ -10,12 +10,13 @@ define([
 		'kbase-generic-client-api',
 		'common/runtime',
 		'kb_service/client/workspace',
+    'base/js/namespace',
     'css!ext_components/jquery.tipsy/css/jquery.tipsy.css',
     'css!ext_components/bootstrap-slider/slider.css',
     'bootstrap',
     'bootstrap-slider',
     'tipsy',
-    'jquery-dataTables-bootstrap'
+    'jquery-dataTables-bootstrap',
   ],
   function (
     KBWidget,
@@ -28,8 +29,8 @@ define([
     Config,
 		GenericClient,
 		Runtime,
-		Workspace
-
+		Workspace,
+		Jupyter
   ) {
     return KBWidget({
       name          : "kbaseExpressionVolcanoPlot",
@@ -241,6 +242,22 @@ define([
               })
           )
           .append('<br>')
+          .append(
+            $.jqElem('button')
+              .addClass('btn btn-primary')
+              .on('click', function(e) {
+                var fc = self.data('fc').val() || 0;
+                var pvalue = self.data('pvalue').val() || 0;
+                console.log("CLICKED THE BUTTON", fc, pvalue);
+                Jupyter.narrative.addAndPopulateApp('FeatureSetUtils/upload_featureset_from_diff_expr', 'dev',
+                  {
+                    'diff_expression_ref' : self.options.diffExprMatrixSet_ref,
+                    'p_cutoff' : pvalue,
+                    'fold_change_cutoff' : fc
+                  });
+              })
+              .append('Export as feature set')
+          )
           .append(
             $.jqElem('div')
               .css({ fontWeight : 'bold', textAlign : 'center' })

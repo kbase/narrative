@@ -28,7 +28,7 @@ __version__ = "0.0.1"
 
 class JobManager(object):
     """
-    The KBase Job Manager clsas. This handles all jobs and makes their status available.
+    The KBase Job Manager class. This handles all jobs and makes their status available.
     On status lookups, it feeds the results to the KBaseJobs channel that the front end
     listens to.
     """

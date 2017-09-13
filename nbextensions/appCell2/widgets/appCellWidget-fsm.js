@@ -54,7 +54,8 @@ define([], function() {
                     params: 'incomplete'
                 }
             ]
-        }, {
+        },
+        {
             state: {
                 mode: 'editing',
                 params: 'incomplete'

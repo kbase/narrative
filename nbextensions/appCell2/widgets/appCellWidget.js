@@ -88,6 +88,7 @@ define([
             runtime = Runtime.make(),
             cell = config.cell,
             parentBus = config.bus,
+            kernelReady = Narrative.isKernelReady(),
             // TODO: the cell bus should be created and managed through main.js,
             // that is, the extension.
             cellBus = runtime.bus().makeChannelBus({
@@ -168,6 +169,12 @@ define([
                             name: 'refresh'
                         },
                         label: 'Reset'
+                    },
+                    offline: {
+                        help: 'Currently disconnected from the server.',
+                        type: 'danger',
+                        classes: ['-cancel'],
+                        label: 'Offline'
                     }
                 }
             };
@@ -1232,10 +1239,12 @@ define([
                 onNewState: function(fsm) {
                     model.setItem('fsm.currentState', fsm.getCurrentState().state);
                     // save the narrative!
-
                 }
             });
             // fsm events
+            fsm.bus.on('disconnected', function() {
+                ui.setContent('run-control-panel.status.execMessage', 'Disconnected. Unable to communicate with server.');
+            });
 
             fsm.bus.on('on-execute-requested', function() {
                 ui.setContent('run-control-panel.status.execMessage', 'Sending...');
@@ -1554,6 +1563,10 @@ define([
 
         function toggleViewOnlyMode(newViewOnly) {
             viewOnly = newViewOnly;
+        }
+
+        function toggleKernelState(newState) {
+            kernelReady = newState;
         }
 
         var saveTimer = null;
@@ -2319,13 +2332,8 @@ define([
                     // by default.
                     showCodeInputArea();
 
-                    // Honor 
                     if (readOnly) {
                         ui.hideElement('outdated');
-                        // var buttonBar = container.querySelector('.kb-btn-toolbar-cell-widget');
-                        // if (buttonBar) {
-                        //     buttonBar.classList.add('hidden');
-                        // }
                     }
                 })
                 .then(function() {
@@ -2447,9 +2455,24 @@ define([
                         renderUI();
                     }));
 
+                    busEventManager.add(runtime.bus().on('kernel-state-changed', function(msg) {
+                        toggleKernelState(msg.isReady);
+                        renderUI();
+                    }));
+
                     // Initialize display
 
                     return null;
+                })
+                .catch(function(err) {
+                    if (err.message.indexOf('semaphore') !== -1) {
+                        throw new Error(
+                            'A network timeout occurred while trying to build a communication ' +
+                            'channel to retrieve job information. Please refresh the page to try ' +
+                            'again.<br><br>Details: ' + err.message
+                        );
+                    }
+                    throw err;
                 });
         }
 
@@ -2626,19 +2649,14 @@ define([
 
                     // Initial job state listening.
                     switch (fsm.getCurrentState().state.mode) {
+                        case 'execute-requested':
+                            // alert('started in "sending" state?');
+                            break;
                         case 'editing':
                             break;
                         case 'processing':
-                            // switch (state.stage) {
-                            //     case 'launched':
-                            //     case 'queued':
-                            //     case 'running':
-                            // if (!readOnly) {
                             startListeningForJobMessages(model.getItem('exec.jobState.job_id'));
                             requestJobStatus(model.getItem('exec.jobState.job_id'));
-                            // }
-                            //         break;
-                            // }
                             break;
                         case 'success':
                         case 'error':

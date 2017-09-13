@@ -393,7 +393,7 @@ define([
                     this.toggleMinMax();
                 }.bind(this));
 
-                // This is triggered by the installation of the 'KBase' cell toolbar. Before this event we 
+                // This is triggered by the installation of the 'KBase' cell toolbar. Before this event we
                 // cannot safely rely upon the cell toolbar, which provides the min-max ui.
                 // I believe the original reason for this event (it may be possible to also use notebook_loaded.Notebook,
                 // but I'm not sure), is that the extensions were originally developed in raw Jupyter,
@@ -568,9 +568,14 @@ define([
             $cellNode.find('.inner_cell > div:nth-child(2)').removeClass('hidden');
             $cellNode.find('.inner_cell > div:nth-child(3)').removeClass('hidden');
             utils.setCellMeta(this, 'kbase.cellState.showTitle', false);
-            if (NarrativeRuntime.canEdit()) {
-                utils.setCellMeta(this, 'kbase.cellState.message', 'Double click content to edit; click out of the edit area to preview', true);
-            }
+
+            // this is a little distracting to see in all markdown cells at all times.
+            // it might make more sense in some kind of help settings? or as a tooltip?
+            // but there's also already a placeholder in shiny new markdown cells, making this
+            // redundant. This text has been moved there.
+            // if (NarrativeRuntime.canEdit()) {
+            //     utils.setCellMeta(this, 'kbase.cellState.message', 'Double click content to edit; click out of the edit area to preview', true);
+            // }
         };
 
         // We need this method because the layout of each type of cell and
@@ -595,7 +600,7 @@ define([
         };
 
         /** @method bind_events **/
-        // NOTE: We need to completely replace the markdown cell bind_events because we 
+        // NOTE: We need to completely replace the markdown cell bind_events because we
         // need to disable the double-click to edit if in view mode. We would need to unregister
         // the original dbclick event handler, and we can't do that without
         var originalBindEvents = p.bind_events;
@@ -754,7 +759,7 @@ define([
         cm_config: {
             mode: 'ipythongfm'
         },
-        placeholder: '_Markdown_/LaTeX cell - double click here to edit.'
+        placeholder: '_Markdown_/LaTeX cell - double click here to edit, click out of the edit area to preview.'
             // "Type _Markdown_ and LaTeX: $\\alpha^2$" +
             //     "<!-- " +
             //     "The above text is Markdown and LaTeX markup.\n" +
@@ -923,7 +928,7 @@ define([
         // Filter execute through read-only mode
         // In generally we don't "run" code cells in ui view (aka read-only) mode,
         // because the back-end code may make modifications to the Narrative.
-        // However, perhaps we should allow code execution as a 
+        // However, perhaps we should allow code execution as a
         // capability, and just block Narrative modifications?
         var originalExecute = codeCell.CodeCell.prototype.execute;
         p.execute = function () {
@@ -983,19 +988,19 @@ define([
         var sidecarData = null;
 
         // insert_cell_at_index wrapper
-        // Adds a third argument, "data", which is passed in the 
-        // "insertedAtIndex.Cell" event to any listeners, esp. 
+        // Adds a third argument, "data", which is passed in the
+        // "insertedAtIndex.Cell" event to any listeners, esp.
         // notebook extensions for cells. Note that if "data" is absent
-        // or falsey, the sidecarData closed-over variable is used. It 
-        // may be set by insert_cell_below or insert_cell_above if they 
+        // or falsey, the sidecarData closed-over variable is used. It
+        // may be set by insert_cell_below or insert_cell_above if they
         // are called with a similarly new third argument.
         //
-        // We use this technique since we do not want to re-implement the 
+        // We use this technique since we do not want to re-implement the
         // underlying method, just wrap it.
-        // 
-        // Note that the cell object created is not extensible, so we can't 
+        //
+        // Note that the cell object created is not extensible, so we can't
         // store this on the cell object itself.
-        // 
+        //
         // Also note that this works because ... js is single threaded and there
         // is no possibility that another call will bump into this value.
         (function () {

@@ -128,14 +128,7 @@
     </noscript>
 
     {% block loading_message %}
-    <div id="kb-wait-for-ws">
-        <img src="{{ static_url("kbase/images/kbase_logo_rect.png") }}"
-                class="kb-logo">
-        <div id="kb-wait-for-ws-loader">
-            <i class="fa fa-4x fa-spinner fa-spin"></i>
-        </div>
-        <p>Connecting to KBase services...</p>
-    </div>
+    {% include 'loading.html' %}
     {% endblock %}
 
     <nav class="navbar-kbase navbar-static-top" id="header">

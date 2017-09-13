@@ -349,7 +349,7 @@ define (
                           console.log("KEY IS : ", self.genomeKey, self.genomeRef);
                           Jupyter.narrative.addAndPopulateApp('KBaseFeatureValues/build_feature_set', 'release', {
                               'input_genome':self.genomeRef,
-                              'input_feature_ids': self.getClusterGeneIds(rowIndex).join(","),
+                              'input_feature_ids': self.getClusterGeneIds(rowIndex),
                               'output_feature_set': self.options.clusterSetID + "_Cluster"+rowIndex+"_Features",
                               'description': 'Features were selected from Cluster ' + rowIndex + ' of a FeatureClusters data object '+
                                       'named ' + self.options.clusterSetID + '.'

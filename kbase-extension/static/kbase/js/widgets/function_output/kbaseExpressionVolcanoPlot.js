@@ -252,8 +252,8 @@ define([
                 Jupyter.narrative.addAndPopulateApp('FeatureSetUtils/upload_featureset_from_diff_expr', 'dev',
                   {
                     'diff_expression_ref' : self.options.diffExprMatrixSet_ref,
-                    'p_cutoff' : pvalue,
-                    'fold_change_cutoff' : fc
+                    'p_cutoff' : Number(pvalue),
+                    'fold_change_cutoff' : Number(fc)
                   });
               })
               .append('Export as feature set')

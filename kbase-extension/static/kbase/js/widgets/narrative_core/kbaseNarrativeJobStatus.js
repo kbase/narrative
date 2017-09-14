@@ -716,7 +716,7 @@ define([
 
             var info = {
                 jobId: this.jobId,
-                status: this.state.job_state,
+                status: this.state.job_state === 'suspend' ? 'failed' : this.state.job_state,
                 creationTime: TimeFormat.readableTimestamp(this.state.creation_time),
                 queueTime: elapsedQueueTime,
                 queuePos: this.state.position ? this.state.position : null,

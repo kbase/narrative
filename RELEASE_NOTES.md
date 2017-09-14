@@ -5,6 +5,9 @@ This is built on the Jupyter Notebook v4.4.1 (more notes will follow).
 
 ### Version 3.5.0
 - TASK-1054 - Create a new loading window with a set of tasks to load and connect to (treats the problem of slowly loading websockets, still probably needs some adjusting).
+- TASK-588 - Change status of importers from "suspend" to "error" if the import job fails.
+- KBASE-3778/TASK-1017 - hide "next steps" area of app results tab if there are no next steps available.
+
 
 ### Version 3.4.4
 - TASK-932 - fix problem where authentication tokens appear to get lost when a Narrative has been asleep for a while.

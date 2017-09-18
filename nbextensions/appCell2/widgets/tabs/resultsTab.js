@@ -117,6 +117,7 @@ define([
             apps = apps.filter(function(app) {
                 return app.info.module_name;
             });
+            // If there are no next apps to suggest, don't even show the Suggested Next Steps panel
             if (apps.length > 0) {
                 appList = apps.map(function(app, index) {
                     return div([
@@ -132,18 +133,18 @@ define([
                         span(' - ' + app.info.module_name)
                     ]);
                 }).join('\n');
+                ui.setContent('next-steps',
+                    ui.buildCollapsiblePanel({
+                        title: 'Suggested Next Steps',
+                        name: 'next-steps-toggle',
+                        hidden: false,
+                        type: 'default',
+                        classes: ['kb-panel-container'],
+                        body: appList
+                    })
+                );
+                events.attachEvents(container);
             }
-            ui.setContent('next-steps',
-                ui.buildCollapsiblePanel({
-                    title: 'Suggested Next Steps',
-                    name: 'next-steps-toggle',
-                    hidden: false,
-                    type: 'default',
-                    classes: ['kb-panel-container'],
-                    body: appList
-                })
-            );
-            events.attachEvents(container);
         }
 
         function stop() {

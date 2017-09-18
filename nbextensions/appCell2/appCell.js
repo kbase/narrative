@@ -32,7 +32,8 @@ define([
 
     var t = html.tag,
         div = t('div'),
-        p = t('p');
+        p = t('p'),
+        b = t('b');
 
     function isAppCell(cell) {
         if (cell.cell_type !== 'code') {
@@ -142,19 +143,19 @@ define([
                     dom = Dom.make({ node: cell.input[0] }),
                     kbaseNode = dom.createNode(div({ dataSubareaType: 'app-cell-input' }));
                 // inserting after, with raw dom, means telling the parent node
-                // to insert a node before the node following the one we are 
+                // to insert a node before the node following the one we are
                 // referencing. If there is no next sibling, the null value
                 // causes insertBefore to actually ... insert at the end!
                 kbaseNode.classList.add('hidden');
                 cell.input[0].parentNode.insertBefore(kbaseNode, cell.input[0].nextSibling);
 
                 /*
-                 * This is required for all KBase cells in order to disable the 
+                 * This is required for all KBase cells in order to disable the
                  * Jupyter keyboard management. Although a app startup code remaps
                  * some of the more dangerous Jupyter keys (change cell type, delete cel,
-                 * etc.), there are keys that we need to keep enabled because 
+                 * etc.), there are keys that we need to keep enabled because
                  * they are part of the standard Jupyter functionality, such as
-                 * shift-enter, ctrl-enter for code cells, 
+                 * shift-enter, ctrl-enter for code cells,
                  */
                 jupyter.disableKeyListenersForCell(cell);
 
@@ -217,17 +218,12 @@ define([
                                         title: 'Error Starting App Cell',
                                         type: 'danger',
                                         body: ui.buildErrorTabs({
-                                            preamble: p('There was an error starting the app cell.'),
+                                            preamble: p(b('There was an error starting the app cell.')),
                                             error: err
                                         })
                                     })
                                 ]);
-
                             });
-
-                        // Replace app cell node with an error message!!!
-
-                        // alert('Error starting app cell: ' + err.message);
                     });
             });
         }

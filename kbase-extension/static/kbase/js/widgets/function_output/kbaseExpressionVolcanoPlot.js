@@ -85,6 +85,12 @@ define([
         );
 
         if (this.options.diffExprMatrixSet_ref) {
+
+          // we need to hand in a name to create feature set, not a ref. Fun times.
+          kbws.get_object_info_new({objects: [{'ref':this.options.diffExprMatrixSet_ref}], includeMetadata:1}, function(info) {
+            self.diffExprMatrixSet_name = info[0][1];
+          });
+
           this.genericClient = new GenericClient(
             Config.url('service_wizard'),
             { token: Runtime.make().authToken() }
@@ -107,7 +113,6 @@ define([
 
           })
           .catch(function(e) {
-            //console.log("generic failure : ", e);
             self.$elem.empty();
             self.$elem.append("ERROR : " + e);
           });
@@ -243,20 +248,24 @@ define([
           )
           .append('<br>')
           .append(
-            $.jqElem('button')
-              .addClass('btn btn-primary')
-              .on('click', function(e) {
-                var fc = self.data('fc').val() || 0;
-                var pvalue = self.data('pvalue').val() || 0;
-                console.log("CLICKED THE BUTTON", fc, pvalue);
-                Jupyter.narrative.addAndPopulateApp('FeatureSetUtils/upload_featureset_from_diff_expr', 'dev',
-                  {
-                    'diff_expression_ref' : self.options.diffExprMatrixSet_ref,
-                    'p_cutoff' : Number(pvalue),
-                    'fold_change_cutoff' : Number(fc)
-                  });
-              })
-              .append('Export as feature set')
+            $.jqElem('div')
+            .css('display', self.options.diffExprMatrixSet_ref ? '' : 'none')
+            .css('text-align', 'right')
+            .append(
+              $.jqElem('button')
+                .addClass('btn btn-primary')
+                .on('click', function(e) {
+                  var fc = self.data('fc').val() || 0;
+                  var pvalue = self.data('pvalue').val() || 0;
+                  Jupyter.narrative.addAndPopulateApp('FeatureSetUtils/upload_featureset_from_diff_expr', 'dev',
+                    {
+                      'diff_expression_ref' : self.diffExprMatrixSet_name,
+                      'p_cutoff' : parseFloat(parseFloat(pvalue, 10).toPrecision(4), 10),
+                      'fold_change_cutoff' : parseFloat(parseFloat(fc, 10).toPrecision(4), 10)
+                    });
+                })
+                .append('Export as feature set')
+            )
           )
           .append(
             $.jqElem('div')

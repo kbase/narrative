@@ -219,7 +219,29 @@ define([
                         }
                         return -1;
                     });
-                    return objects;
+                    // if our current object isn't in the list,
+                    // try to fetch its info manually
+                    // (it might be in another workspace)
+                    var containsCurrent = false;
+                    var currentObj = getModelValue();
+                    // to begin, this only applies to obj references.
+                    // so test for that.
+                    if (Validation.validateWorkspaceObjectRef(currentObj).isValid) {
+                        objects.forEach(function(o) {
+                            if (o.ref === currentObj) {
+                                containsCurrent = true;
+                            }
+                        });
+                        if (!containsCurrent) {
+                            return Data.getObjectsByRef([currentObj])
+                                .then(function(info) {
+                                    return [info[currentObj]].concat(objects);
+                                });
+                        }
+                    }
+                    return Promise.try(function() {
+                        return objects;
+                    });
                 });
         }
 
@@ -350,9 +372,9 @@ define([
                 // our map is a little strange.
                 // we have dataPaletteRefs, which are always ref paths
                 // we have object ref or names otherwise.
-                // whether we are using refs or names depends on the 
+                // whether we are using refs or names depends on the
                 // config setting. This is because some apps don't yet accept
-                // names... 
+                // names...
                 // So our key is either dataPaletteRef or (ref or name)
                 model.availableValues.forEach(function(objectInfo, index) {
                     var id;
@@ -395,6 +417,7 @@ define([
                 events.attachEvents(container);
 
                 if (config.initialValue !== undefined) {
+                    // note this might come from a different workspace...
                     model.value = config.initialValue;
                 }
 

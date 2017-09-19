@@ -20,6 +20,8 @@ define (
 		'kbaseExpressionHeatmap',
 		'kbaseExpressionPairwiseCorrelation',
 		'knhx',
+		'base/js/namespace',
+		'kbaseGenericSetViewer'
 		// 'jquery-dataScroller'
 	], function(
 		KBWidget,
@@ -35,7 +37,9 @@ define (
 		kbaseExpressionSparkline,
 		kbaseExpressionHeatmap,
 		kbaseExpressionPairwiseCorrelation,
-		knhx
+		knhx,
+		Jupyter,
+		kbaseGenericSetViewer
 		// jquery_dataScroller
 	) {
 	return KBWidget({
@@ -129,6 +133,7 @@ define (
 							                self.genomeName = data[0].data.scientific_name;
 							                self.features = data[0].data.features;
 							                // Now we are ready to visualize it
+							                //self.genomeKey = data[0].info[7] + '/' + self.genomeName;
 							                self.render();
 							            },
 							            function(error){
@@ -332,6 +337,13 @@ define (
                                       'named ' + self.options.clusterSetID + '.'
                             }
                           ); */
+                          Jupyter.narrative.addAndPopulateApp('KBaseFeatureValues/build_feature_set', 'release', {
+                              'input_genome':self.genomeRef,
+                              'input_feature_ids': self.getClusterGeneIds(rowIndex),
+                              'output_feature_set': self.options.clusterSetID + "_Cluster"+rowIndex+"_Features",
+                              'description': 'Features were selected from Cluster ' + rowIndex + ' of a FeatureClusters data object '+
+                                      'named ' + self.options.clusterSetID + '.'
+                            });
 			                  }
 			                  else {
 
@@ -404,8 +416,22 @@ define (
 				    <li><a tabindex="-1" href="#" methodInput="view_expression_profile">View expression profile</a></li> \
 				    <li><a tabindex="-1" href="#" methodInput="view_expression_pairwise_correlation">View pairwise correlation</a></li> \
 				    <li><a tabindex="-1" href="#" methodInput="view_expression_heatmap">View in sortable condition heatmap</a></li> \
+				    <li class="divider"></li> \
+				    <li><a tabindex="-1" href="#" methodInput="build_feature_set">Create a FeatureSet</a></li> \
 				</ul> \
 			');
+
+
+        /* XXX
+
+          This doesn't work yet. It'll need to go up into the string above, inside the ul.
+
+          The known issue is that it's trying to pass in an object reference (or name or whatever) into the create feature set app, but that
+          was designed on the explicit assumption that it'd only be given names of objects within the current narrative. But this would hand in
+          a full ref to an object in another workspace, which the app can't handle.
+
+          Once the code is updated to allow something like that, we can re-enable it. The rest of the wiring should be ready to go.
+        */
 
 				    // <li class="divider"></li> \
 				    // <li><a tabindex="-1" href="#" methodInput="build_feature_set">Create a FeatureSet</a></li> \

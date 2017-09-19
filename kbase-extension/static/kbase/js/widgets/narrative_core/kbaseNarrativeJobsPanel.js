@@ -56,6 +56,8 @@ define([
         CANCEL_JOB: 'cancel_job',
         JOB_LOGS: 'job_logs',
         JOB_LOGS_LATEST: 'job_logs_latest',
+        JOB_INFO: 'job_info',
+
         name: 'kbaseNarrativeJobsPanel',
         parent: kbaseNarrativeControlPanel,
         version: '0.0.1',
@@ -239,6 +241,11 @@ define([
                 this.sendCommMessage(this.JOB_LOGS_LATEST, message.jobId, message.options);
             }.bind(this));
 
+            // Fetches info (not state) about a job. Like the app id, name, and inputs.
+            bus.on('request-job-info', function (message) {
+                this.sendCommMessage(this.JOB_INFO, message.jobId);
+            }.bind(this));
+
         },
         /**
          * Sends a comm message to the JobManager in the kernel.
@@ -382,6 +389,15 @@ define([
                     }
                 }.bind(this));
                 this.populateJobsPanel(); //status, info, content);
+                break;
+            case 'job_info':
+                var jobInfoMessage = msg.content.data.content,
+                    jobId = jobInfoMessage.job_id;
+
+                this.sendJobMessage('job-info', jobId, {
+                    jobId: jobId,
+                    jobInfo: jobInfoMessage
+                });
                 break;
             case 'run_status':
                 // Send job status notifications on the default channel,

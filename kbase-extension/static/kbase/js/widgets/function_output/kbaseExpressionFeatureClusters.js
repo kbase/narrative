@@ -338,7 +338,7 @@ define (
                             }
                           ); */
                           Jupyter.narrative.addAndPopulateApp('KBaseFeatureValues/build_feature_set', 'release', {
-                              'input_genome':self.genomeID,
+                              'input_genome':self.genomeRef,
                               'input_feature_ids': self.getClusterGeneIds(rowIndex),
                               'output_feature_set': self.options.clusterSetID + "_Cluster"+rowIndex+"_Features",
                               'description': 'Features were selected from Cluster ' + rowIndex + ' of a FeatureClusters data object '+
@@ -416,6 +416,8 @@ define (
 				    <li><a tabindex="-1" href="#" methodInput="view_expression_profile">View expression profile</a></li> \
 				    <li><a tabindex="-1" href="#" methodInput="view_expression_pairwise_correlation">View pairwise correlation</a></li> \
 				    <li><a tabindex="-1" href="#" methodInput="view_expression_heatmap">View in sortable condition heatmap</a></li> \
+				    <li class="divider"></li> \
+				    <li><a tabindex="-1" href="#" methodInput="build_feature_set">Create a FeatureSet</a></li> \
 				</ul> \
 			');
 

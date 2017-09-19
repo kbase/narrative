@@ -356,7 +356,6 @@ define([
         },
 
         handleJobInfo: function (info) {
-            console.log('got job info', info);
             if (utils.getCellMeta(this.cell, 'kbase.attributes.title') !== info.jobInfo.app_name) {
                 var metadata = this.cell.metadata;
                 if (metadata.kbase && metadata.kbase.attributes) {

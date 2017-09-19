@@ -31,7 +31,6 @@ define([
                 prog.innerHTML = text;
                 this.totalDone++;
                 this.progressBar.style.width = (this.totalDone / this.totalSteps * 100) + '%';
-                console.log('TOTAL DONE THINGS', this.totalDone);
                 if (this.totalDone >= this.totalSteps) {
                     this.remove();
                 }
@@ -40,7 +39,6 @@ define([
     };
 
     LoadingWidget.prototype.remove = function () {
-        console.log('removing the node');
         if (this.node) {
             $(this.node).fadeOut('slow');
         }

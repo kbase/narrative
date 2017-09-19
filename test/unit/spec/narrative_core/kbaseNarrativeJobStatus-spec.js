@@ -4,11 +4,18 @@
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
 define([
+    'jquery',
     'kbaseNarrativeJobStatus'
-], function(Widget) {
+], function($, JobStatusWidget) {
     describe('Test the kbaseNarrativeJobStatus widget', function() {
-        it('Should do things', function() {
+        var dummyNode;
+        beforeEach(function() {
+            dummyNode = document.createElement('div');
+        });
 
+        it('Should load successfully', function() {
+            // var w = new JobStatusWidget($(dummyNode));
+            // expect(w).not.toBeNull();
         });
     });
 });

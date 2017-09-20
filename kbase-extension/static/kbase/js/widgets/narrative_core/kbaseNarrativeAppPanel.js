@@ -137,6 +137,7 @@ define([
                     'overflow-y': 'auto',
                     'overflow-x': 'hidden'
                 });
+
             // Make a function panel for everything to sit inside.
             this.$functionPanel = $('<div>')
                 .addClass('kb-function-body')
@@ -643,7 +644,6 @@ define([
                 for (var i = 0; i < appSet[app].info.categories.length; i++) {
                     if (self.ignoreCategories[appSet[app].info.categories[i]]) {
                         ignoreFlag = true;
-                        console.log('ignoring app: ' + app);
                         break;
                     }
                 }
@@ -655,7 +655,6 @@ define([
                 appSet[app].info.short_output_types = shortenTypes(appSet[app].info.output_types);
                 this.renderedApps[app] = appSet[app];
             }
-            console.log('rendering ' + Object.keys(this.renderedApps).length);
             this.refreshPanel();
         },
 

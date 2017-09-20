@@ -237,11 +237,16 @@ define([
     };
 
     NarrativeTour.prototype.start = function() {
-        console.log("let's start the tour");
         this.tour.init();
         this.tour.start();
         if (this.tour.ended()) {
             this.tour.restart();
+        }
+    };
+
+    NarrativeTour.prototype.stop = function() {
+        if (this.tour && !this.tour.ended()) {
+            this.tour.end();
         }
     };
 

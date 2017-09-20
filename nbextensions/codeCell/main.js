@@ -89,7 +89,7 @@ define([
         if (cell.cell_type !== 'code') {
             return;
         }
-        if (cell.metadata.kbase && (cell.metadata.kbase.type !== 'code')) {
+        if (cell.metadata.kbase && cell.metadata.kbase.type && (cell.metadata.kbase.type !== 'code')) {
             return;
         }
 
@@ -116,7 +116,7 @@ define([
             node: null
         });
 
-        jupyter.disableKeyListenersForCell(cell);
+        // jupyter.disableKeyListenersForCell(cell);
         cell.renderMinMax();
         // force toolbar rerender.
         cell.metadata = cell.metadata;

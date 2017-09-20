@@ -691,7 +691,7 @@ define([
                 .addClass(btnClasses)
                 .append($('<span>').addClass('fa fa-sign-in').css(css))
                 .click(function () {
-                    this.trigger('filterMethods.Narrative', 'in_type:' + object_info[2].split('-')[0].split('.')[1]);
+                    this.trigger('filterMethods.Narrative', 'input:' + object_info[2].split('-')[0]);
                 }.bind(this));
 
             var $filterMethodOutput = $('<span>')
@@ -706,7 +706,7 @@ define([
                 .addClass(btnClasses)
                 .append($('<span>').addClass('fa fa-sign-out').css(css))
                 .click(function () {
-                    this.trigger('filterMethods.Narrative', 'out_type:' + object_info[2].split('-')[0].split('.')[1]);
+                    this.trigger('filterMethods.Narrative', 'output:' + object_info[2].split('-')[0]);
                 }.bind(this));
 
             var $openLandingPage = $('<span>')

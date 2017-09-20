@@ -8,13 +8,15 @@ This is built on the Jupyter Notebook v4.4.1 (more notes will follow).
 - TASK-588 - Change status of importers from "suspend" to "error" if the import job fails.
 - KBASE-3778/TASK-1017 - hide "next steps" area of app results tab if there are no next steps available.
 - KBASE-1041 - fix error that shows a version number instead of username for who saved the most recent narrative.
-- KBASE-1069 - fix problems with searching and filtering the App panel
+- TASK-1069 - fix problems with searching and filtering the App panel
     - Searching by output object type works again.
     - Added "input:" and "output:" as filters for input object types and output object types (same as "in_type:" and "out_type:", respectively)
     - Made type search more stringent.
         - If no "." separator is present, will only match by the type name. E.g. "in_type:Genome" will not match "GenomeSet" or "PanGenome" or "KBaseGenomes.ContigSet", just "ANYMODULE.Genome"
         - If a "." is present, will only match a full type name, like "KBaseGenomes.Genome"
     - Non-type search will also search i/o fields now and do fuzzy matching. E.g. "Genome" will match "Annotate Domains in a GenomeSet" (by the name), and "Assemble Reads with MEGAHIT" (by the output object KBaseGenomeAnnotations.Assembly)
+- TASK-1079 - fix problems with code cell rendering and controls.
+- KBASE-5275 - fix title for code cells used to track import jobs.
 
 
 ### Version 3.4.4

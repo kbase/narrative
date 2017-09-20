@@ -276,13 +276,22 @@ define([
             // render up the panel's view layer.
             this.initializeView();
             this.updateView();
-
-            //The job has not started yet. When it has started running, the log will be displayed in this area.
-
             this.showLogMessage('Loading the log viewer...');
 
             Semaphore.make().when('comm', 'ready', Config.get('comm_wait_timeout'))
                 .then(function () {
+                    this.busConnection.listen({
+                        channel: {
+                            jobId: this.jobId
+                        },
+                        key: {
+                            type: 'job-info'
+                        },
+                        handle: function (message) {
+                            this.handleJobInfo(message);
+                        }.bind(this)
+                    });
+
                     this.busConnection.listen({
                         channel: {
                             jobId: this.jobId
@@ -332,6 +341,10 @@ define([
                         }.bind(this)
                     });
 
+                    this.channel.emit('request-job-info', {
+                        jobId: this.jobId
+                    });
+
                     this.channel.emit('request-job-status', {
                         jobId: this.jobId
                     });
@@ -339,9 +352,19 @@ define([
                 .catch(function (err) {
                     console.error('Jobs Comm channel not available', err);
                 });
-
-
             return this;
+        },
+
+        handleJobInfo: function (info) {
+            if (utils.getCellMeta(this.cell, 'kbase.attributes.title') !== info.jobInfo.app_name) {
+                var metadata = this.cell.metadata;
+                if (metadata.kbase && metadata.kbase.attributes) {
+                    metadata.kbase.attributes.title = info.jobInfo.app_name;
+                    metadata.kbase.attributes.subtitle = 'App Status';
+                    metadata.kbase.attributes.icon = 'code';
+                }
+                this.cell.metadata = metadata;
+            }
         },
 
         initializeView: function () {
@@ -565,8 +588,6 @@ define([
             return $(tmpl(this.appInfo));
         },
 
-
-
         getCellState: function () {
             var metadata = this.cell.metadata;
             // This is altogether the wrong place to do this sort of
@@ -667,6 +688,12 @@ define([
             this.updateView();
         },
 
+        requestJobInfo: function () {
+            this.channel.emit('request-job-info', {
+                jobId: this.jobId
+            });
+        },
+
         requestJobStatus: function () {
             window.setTimeout(function () {
                 this.channel.emit('request-job-status', {
@@ -716,7 +743,7 @@ define([
 
             var info = {
                 jobId: this.jobId,
-                status: this.state.job_state,
+                status: this.state.job_state === 'suspend' ? 'error' : this.state.job_state,
                 creationTime: TimeFormat.readableTimestamp(this.state.creation_time),
                 queueTime: elapsedQueueTime,
                 queuePos: this.state.position ? this.state.position : null,

@@ -700,7 +700,12 @@ define([
             }
 
             if (!referenceObjectRef) {
-                referenceObjectRef = workspaceId + '/' + referenceObjectName;
+                if (referenceObjectName.indexOf('/') === -1) {
+                    referenceObjectRef = workspaceId + '/' + referenceObjectName;
+                }
+                else {
+                    referenceObjectRef = referenceObjectName;
+                }
             }
 
             return subdataMethods.fetchData({

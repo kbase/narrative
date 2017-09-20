@@ -818,7 +818,6 @@ define([
             };
 
             // 1. Go through filterString and keep those that pass the filter (not yet).
-
             appSet = this.filterApps(filterString, appSet);
 
             // 2. Switch over panelStyle and build the view based on that.

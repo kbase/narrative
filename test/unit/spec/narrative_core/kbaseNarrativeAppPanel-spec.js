@@ -39,15 +39,15 @@ define([
             appPanel.$searchInput.val('genome');
             appPanel.refreshPanel();
             expect(appPanel.$methodList.children().children().length).not.toBe(0);
+            //TODO:
+            // verify by setting output:genome and making sure there's only one output category
         });
 
         it('Should trigger search by jquery event filterMethods.Narrative', function () {
             expect(appPanel.$methodList.children().children().length).not.toBe(0);
 
             $(document).trigger('filterMethods.Narrative', 'should show nothing');
-            // appPanel.refreshPanel();
             expect(appPanel.$methodList.children().children().length).toBe(0);
-
         });
 
         it('Should have a working filter menu', function() {

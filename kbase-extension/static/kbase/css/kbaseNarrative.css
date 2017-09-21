@@ -2486,7 +2486,7 @@ button.kb-data-obj {
 .kb-data-list-name {
     color:#2e618d;
     font-size: 11pt;
-    font-weight: bold;
+    font-family: 'OyxgenBold', Arial, sans-serif;
     margin: 2px;
 }
 .kb-data-list-name:hover {
@@ -3003,9 +3003,9 @@ button.kb-data-obj {
     /*background-color: #2196F3;
     color: #BBDEFB;*/
     color: #2196F3;
-    font-family: 'OxygenRegular', Arial, sans-serif;
+    font-family: 'OxygenBold', Arial, sans-serif;
     font-size: 16px;
-    font-weight: bold;
+    /* font-weight: bold; */
     padding: 3px;
     margin-top: -3px;
     width: 147px;
@@ -3031,9 +3031,9 @@ button.kb-data-obj {
 }
 /* this is the banner for readonly mode */
 .navbar-right div.label-warning {
-    font-family: 'OxygenRegular', Arial, sans-serif;
+    font-family: 'OxygenBold', Arial, sans-serif;
     font-size: 16px;
-    font-weight: bold;
+    /* font-weight: bold; */
 }
 
 /* Show this over the whole narrative UI until the

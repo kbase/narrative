@@ -1712,6 +1712,7 @@ define([
          */
         populateAvailableTypes: function () {
             if (this.availableTypes && this.$filterTypeSelect) {
+                var selected = this.$filterTypeSelect.val();
                 this.$filterTypeSelect.empty();
                 var runningCount = 0;
                 Object.keys(this.availableTypes).sort().forEach(function (type) {
@@ -1719,7 +1720,7 @@ define([
                     var suf = typeInfo.count > 0 ? 's' : '';
                     this.$filterTypeSelect.append(
                         $('<option value="' + typeInfo.type + '">')
-                        .append([typeInfo.type, ' (', typeInfo.count, ' object', suf, ')'].join(''))
+                            .append([typeInfo.type, ' (', typeInfo.count, ' object', suf, ')'].join(''))
                     );
                     runningCount += typeInfo.count;
                 }.bind(this));
@@ -1727,16 +1728,10 @@ define([
                 this.$filterTypeSelect
                     .prepend($('<option value="">')
                         .append('Show All Types (' + runningCount + ' object' + suf + ')'))
-                    .val('');
+                    .val(selected);
+
             }
         },
-
-        reverseData: function () {
-            this.viewOrder.reverse();
-            this.renderList();
-            this.search();
-        },
-
         sortData: function (sortfunction) {
             this.viewOrder.sort(sortfunction);
             this.renderList();

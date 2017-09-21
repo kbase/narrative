@@ -131,6 +131,14 @@ define([
         return Jupyter.narrative.narrController.uiModeIs('edit');
     }
 
+    /**
+     * Returns true if the kernel exists and is ready (e.g., there is a Websocket connection active
+     * and in state "WebSocket.OPEN")
+     */
+    function isKernelReady () {
+        return Jupyter.notebook.kernel && Jupyter.notebook.kernel.is_connected();
+    }
+
     return {
         deleteCell: deleteCell,
         editNotebookMetadata: editNotebookMetadata,
@@ -143,6 +151,7 @@ define([
         getWorkspaceRef: getWorkspaceRef,
         onEvent: onEvent,
         uiModeIs: uiModeIs,
-        canEdit: canEdit
+        canEdit: canEdit,
+        isKernelReady: isKernelReady
     };
 });

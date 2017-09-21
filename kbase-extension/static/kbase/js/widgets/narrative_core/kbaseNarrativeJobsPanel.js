@@ -56,6 +56,8 @@ define([
         CANCEL_JOB: 'cancel_job',
         JOB_LOGS: 'job_logs',
         JOB_LOGS_LATEST: 'job_logs_latest',
+        JOB_INFO: 'job_info',
+
         name: 'kbaseNarrativeJobsPanel',
         parent: kbaseNarrativeControlPanel,
         version: '0.0.1',
@@ -239,6 +241,11 @@ define([
                 this.sendCommMessage(this.JOB_LOGS_LATEST, message.jobId, message.options);
             }.bind(this));
 
+            // Fetches info (not state) about a job. Like the app id, name, and inputs.
+            bus.on('request-job-info', function (message) {
+                this.sendCommMessage(this.JOB_INFO, message.jobId);
+            }.bind(this));
+
         },
         /**
          * Sends a comm message to the JobManager in the kernel.
@@ -368,7 +375,6 @@ define([
                  * This would signal a "job-deleted" message.
                  * Although it could be the case that a+++
                  */
-                // NB: this implies that t
                 Object.keys(this.jobStates).forEach(function (jobId) {
                     if (!incomingJobs[jobId]) {
                         // If ths job is not found in the incoming list of all
@@ -383,6 +389,15 @@ define([
                     }
                 }.bind(this));
                 this.populateJobsPanel(); //status, info, content);
+                break;
+            case 'job_info':
+                var jobInfoMessage = msg.content.data.content,
+                    jobId = jobInfoMessage.job_id;
+
+                this.sendJobMessage('job-info', jobId, {
+                    jobId: jobId,
+                    jobInfo: jobInfoMessage
+                });
                 break;
             case 'run_status':
                 // Send job status notifications on the default channel,
@@ -554,81 +569,76 @@ define([
         },
         /**
          * Initializes the comm channel to the back end.
-         * Takes a callback to be executed once the channel's up, since the Jupyter
-         * async kernel methods don't seem to play well with Promises.
-         * (At least, I couldn't get them to work - Bill 5/27/2016)
          */
         initCommChannel: function () {
+            console.log('INITIALIZING COMM CHANNEL NOW');
             var _this = this;
             this.comm = null;
             var commSemaphore = Semaphore.make();
             commSemaphore.add('comm', false);
             return new Promise(function (resolve, reject) {
-                    // First we check to see if our comm channel already
-                    // exists. If so, we do some funny business to create a
-                    // new client side for it, register it, and set up our
-                    // handler on it.
-                    //console.log(new Date().getTime() + ' : Initializing comm channel');
-
-                    Jupyter.notebook.kernel.comm_info(_this.COMM_NAME, function (msg) {
-                        if (msg.content && msg.content.comms) {
-                            // skim the reply for the right id
-                            for (var id in msg.content.comms) {
-                                if (msg.content.comms[id].target_name === _this.COMM_NAME) {
-                                    _this.comm = new JupyterComm.Comm(_this.COMM_NAME, id);
-                                    Jupyter.notebook.kernel.comm_manager.register_comm(_this.comm);
-                                    _this.comm.on_msg(_this.handleCommMessages.bind(_this));
+                // First we check to see if our comm channel already
+                // exists. If so, we do some funny business to create a
+                // new client side for it, register it, and set up our
+                // handler on it.
+                Jupyter.notebook.kernel.comm_info(_this.COMM_NAME, function (msg) {
+                    if (msg.content && msg.content.comms) {
+                        // skim the reply for the right id
+                        for (var id in msg.content.comms) {
+                            if (msg.content.comms[id].target_name === _this.COMM_NAME) {
+                                _this.comm = new JupyterComm.Comm(_this.COMM_NAME, id);
+                                Jupyter.notebook.kernel.comm_manager.register_comm(_this.comm);
+                                _this.comm.on_msg(_this.handleCommMessages.bind(_this));
+                            }
+                        }
+                    }
+                    resolve();
+                });
+            })
+            .then(function () {
+                // If no existing comm channel could be hooked up to, we have an alternative
+                // strategy, apparently. We register our channel endpoint, even though there is
+                // no back end yet, and our next call to utilize it below will create it??
+                if (_this.comm) {
+                    commSemaphore.set('comm', 'ready');
+                    return;
+                }
+                return new Promise(function (resolve, reject) {
+                    Jupyter.notebook.kernel.comm_manager.register_target(_this.COMM_NAME, function (comm, msg) {
+                        _this.comm = comm;
+                        comm.on_msg(_this.handleCommMessages.bind(_this));
+                        commSemaphore.set('comm', 'ready');
+                    });
+                    var callbacks = {
+                        shell: {
+                            reply: function (reply) {
+                                if (reply.content.error) {
+                                    console.error('ERROR executing jobInit', reply);
+                                    commSemaphore.set('comm', 'error');
+                                    reject(new Error(reply.content.name + ':' + reply.content.evalue));
+                                } else {
+                                    resolve();
                                 }
                             }
                         }
-                        resolve();
-                    });
-                })
-                .then(function () {
-                    // If no existing comm channel could be hooked up to, we have an alternative
-                    // strategy, apparently. We register our channel endpoint, even though there is
-                    // no back end yet, and our next call to utlize it below will create it??
-                    if (_this.comm) {
-                        commSemaphore.set('comm', 'ready');
-                        return;
-                    }
-                    return new Promise(function (resolve, reject) {
-                        Jupyter.notebook.kernel.comm_manager.register_target(_this.COMM_NAME, function (comm, msg) {
-                            _this.comm = comm;
-                            comm.on_msg(_this.handleCommMessages.bind(_this));
-                            commSemaphore.set('comm', 'ready');
-                        });
-                        var callbacks = {
-                            shell: {
-                                reply: function (reply) {
-                                    if (reply.content.error) {
-                                        console.error('ERROR executing jobInit', reply);
-                                        commSemaphore.set('comm', 'error');
-                                        reject(new Error(reply.content.name + ':' + reply.content.evalue));
-                                    } else {
-                                        resolve();
-                                    }
-                                }
-                            }
-                        };
-                        Jupyter.notebook.kernel.execute(_this.getJobInitCode(), callbacks);
-                    });
-                })
-                .then(function () {
-                    if (!_this.comm) {
-                        commSemaphore.set('comm', 'error');
-                        throw new Error('Could not initialize job comm channel');
-                    }
+                    };
+                    Jupyter.notebook.kernel.execute(_this.getJobInitCode(), callbacks);
                 });
+            })
+            .then(function () {
+                if (!_this.comm) {
+                    commSemaphore.set('comm', 'error');
+                    throw new Error('Could not initialize job comm channel');
+                }
+            });
         },
-
-
 
         getJobInitCode: function () {
             return ['from biokbase.narrative.jobs.jobmanager import JobManager',
                 'JobManager().initialize_jobs()'
             ].join('\n');
         },
+
         setJobCounter: function (numJobs) {
             this.$jobCountBadge.html(numJobs > 0 ? numJobs : '');
         },

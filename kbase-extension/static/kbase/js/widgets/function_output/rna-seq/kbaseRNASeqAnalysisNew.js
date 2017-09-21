@@ -89,19 +89,23 @@ define (
                 var ref_map = {};
                 var ref_map_by_id = {};
                 $.each(
-                    extra_args.infos,
-                    function(i, v) {
-
-                        var info_obj = {};
-                        $.each(
-                            info_keys,
-                            function(i,key) {
-                                info_obj[key] = v[0][i];
-                            }
-                        );
-                        ref_map_by_id[ [ v[0][6], v[0][0], v[0][4] ].join('/')] = info_obj;
-                        ref_map[info_obj['name']] = info_obj;
-                    }
+                  extra_args,
+                  function (eaIdx, extra_arg) {
+                    $.each(
+                      extra_arg.infos,
+                      function(i, v) {
+                          var info_obj = {};
+                          $.each(
+                              info_keys,
+                              function(i,key) {
+                                  info_obj[key] = v[i];
+                              }
+                          );
+                          ref_map_by_id[ [ v[6], v[0], v[4] ].join('/')] = info_obj;
+                          ref_map[info_obj['name']] = info_obj;
+                      }
+                    )
+                  }
                 );
 
                 if (analysis.sample_ids) {
@@ -110,7 +114,6 @@ define (
                     $.each(
                       analysis.sample_ids,
                       function (i, v) {
-
                         sample_id_data.push(
                           [
                             ref_map_by_id[v] ? ref_map_by_id[v].name : v,

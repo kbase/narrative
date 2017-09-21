@@ -20,7 +20,8 @@ requirejs.config({
         moment: 'components/moment/moment',
         codemirror: 'components/codemirror',
         bootstraptour: 'components/bootstrap-tour/build/js/bootstrap-tour.min',
-        bootstrap: 'components/bootstrap/js/bootstrap.min'
+        bootstrap: 'components/bootstrap/js/bootstrap.min',
+        testUtil: '../../test/unit/testUtil'
     },
     map: {
         '*': {
@@ -41,7 +42,17 @@ requirejs.config({
         }
     },
 
-    callback: window.__karma__.start
+    callback: function() {
+        require(['testUtil'], function(TestUtil) {
+            TestUtil.make().then(function() {
+                window.__karma__.start();
+            });
+        }, function (error) {
+            console.error('Failed to open TestUtil file.');
+            console.error(error);
+            throw error;
+        });
+    }
 });
 
 

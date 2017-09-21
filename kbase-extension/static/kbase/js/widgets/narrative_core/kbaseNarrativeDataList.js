@@ -111,6 +111,7 @@ define([
         setViewMode: false, // Whether the panel is in hierarchy "mode"
         cachedSetItems: {}, // Items retrieved from a mega-call to list_sets
         dataIconParam: {},
+        selectedType : "",
 
         /**
          * Utility function to portably return the identifier to
@@ -459,7 +460,20 @@ define([
                     }
 
                     this.populateAvailableTypes();
-                    this.renderList();
+                    var typeSelected = this.$filterTypeSelect.val();
+
+                    if(this.selectedType === 'filterTypeSelect'){            
+    
+                        // whenever we change the type filter, we need to clear the current match
+                        // so that the complete filter can rerun
+                        this.currentMatch = this.viewOrder;
+    
+                        this.filterByType(typeSelected);
+
+                    }else{
+
+                        this.renderList();
+                    }
                     this.hideLoading();
                     this.trigger('dataUpdated.Narrative');
                 }.bind(this));
@@ -1666,6 +1680,7 @@ define([
                 .css('margin', 'inherit')
                 .append($('<option value="">'))
                 .change(function () {
+                    self.selectedType = 'filterTypeSelect';
                     var optionSelected = $(this).find('option:selected');
                     var typeSelected = optionSelected.val();
 

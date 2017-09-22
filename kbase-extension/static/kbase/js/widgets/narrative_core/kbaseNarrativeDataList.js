@@ -111,7 +111,12 @@ define([
         setViewMode: false, // Whether the panel is in hierarchy "mode"
         cachedSetItems: {}, // Items retrieved from a mega-call to list_sets
         dataIconParam: {},
+
+        /*
+        variables to keep track of current state before workspace refresh
+        */
         selectedType : "",
+        lastSortFunction : null,
 
         /**
          * Utility function to portably return the identifier to
@@ -455,24 +460,21 @@ define([
                             }
                             return 0;
                         }.bind(this));
-                        this.$elem.find('#nar-data-list-default-sort-label').addClass('active');
                         this.$elem.find('#nar-data-list-default-sort-option').attr('checked');
                     }
 
                     this.populateAvailableTypes();
                     var typeSelected = this.$filterTypeSelect.val();
-
                     if(this.selectedType === 'filterTypeSelect'){            
-    
-                        // whenever we change the type filter, we need to clear the current match
-                        // so that the complete filter can rerun
                         this.currentMatch = this.viewOrder;
-    
                         this.filterByType(typeSelected);
-
-                    }else{
-
+                    }else if(this.selectedType === 'sortData'){
+                        this.sortData(this.lastSortFunction);
+                    }
+                    else{
                         this.renderList();
+                        this.$elem.find('#nar-data-list-default-sort-label').addClass('active');
+
                     }
                     this.hideLoading();
                     this.trigger('dataUpdated.Narrative');
@@ -1748,6 +1750,8 @@ define([
             }
         },
         sortData: function (sortfunction) {
+            this.selectedType = 'sortData';
+            this.lastSortFunction = sortfunction;
             this.viewOrder.sort(sortfunction);
             this.renderList();
             this.search(); // always refilter on the search term search if there is something there

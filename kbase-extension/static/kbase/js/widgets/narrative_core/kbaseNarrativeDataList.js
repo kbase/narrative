@@ -1749,6 +1749,11 @@ define([
 
             }
         },
+        reverseData: function () {
+            this.viewOrder.reverse();
+            this.renderList();
+            this.search();
+        },
         sortData: function (sortfunction) {
             this.selectedType = 'sortData';
             this.lastSortFunction = sortfunction;

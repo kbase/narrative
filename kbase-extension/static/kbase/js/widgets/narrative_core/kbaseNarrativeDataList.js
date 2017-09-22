@@ -112,6 +112,12 @@ define([
         cachedSetItems: {}, // Items retrieved from a mega-call to list_sets
         dataIconParam: {},
 
+        /*
+        variables to keep track of current state before workspace refresh
+        */
+        selectedType : "",
+        lastSortFunction : null,
+
         /**
          * Utility function to portably return the identifier to
          * use for a single data object.
@@ -454,12 +460,22 @@ define([
                             }
                             return 0;
                         }.bind(this));
-                        this.$elem.find('#nar-data-list-default-sort-label').addClass('active');
                         this.$elem.find('#nar-data-list-default-sort-option').attr('checked');
                     }
 
                     this.populateAvailableTypes();
-                    this.renderList();
+                    var typeSelected = this.$filterTypeSelect.val();
+                    if(this.selectedType === 'filterTypeSelect'){            
+                        this.currentMatch = this.viewOrder;
+                        this.filterByType(typeSelected);
+                    }else if(this.selectedType === 'sortData'){
+                        this.sortData(this.lastSortFunction);
+                    }
+                    else{
+                        this.renderList();
+                        this.$elem.find('#nar-data-list-default-sort-label').addClass('active');
+
+                    }
                     this.hideLoading();
                     this.trigger('dataUpdated.Narrative');
                 }.bind(this));
@@ -1666,6 +1682,7 @@ define([
                 .css('margin', 'inherit')
                 .append($('<option value="">'))
                 .change(function () {
+                    self.selectedType = 'filterTypeSelect';
                     var optionSelected = $(this).find('option:selected');
                     var typeSelected = optionSelected.val();
 
@@ -1712,6 +1729,7 @@ define([
          */
         populateAvailableTypes: function () {
             if (this.availableTypes && this.$filterTypeSelect) {
+                var selected = this.$filterTypeSelect.val();
                 this.$filterTypeSelect.empty();
                 var runningCount = 0;
                 Object.keys(this.availableTypes).sort().forEach(function (type) {
@@ -1719,7 +1737,7 @@ define([
                     var suf = typeInfo.count > 0 ? 's' : '';
                     this.$filterTypeSelect.append(
                         $('<option value="' + typeInfo.type + '">')
-                        .append([typeInfo.type, ' (', typeInfo.count, ' object', suf, ')'].join(''))
+                            .append([typeInfo.type, ' (', typeInfo.count, ' object', suf, ')'].join(''))
                     );
                     runningCount += typeInfo.count;
                 }.bind(this));
@@ -1727,17 +1745,18 @@ define([
                 this.$filterTypeSelect
                     .prepend($('<option value="">')
                         .append('Show All Types (' + runningCount + ' object' + suf + ')'))
-                    .val('');
+                    .val(selected);
+
             }
         },
-
         reverseData: function () {
             this.viewOrder.reverse();
             this.renderList();
             this.search();
         },
-
         sortData: function (sortfunction) {
+            this.selectedType = 'sortData';
+            this.lastSortFunction = sortfunction;
             this.viewOrder.sort(sortfunction);
             this.renderList();
             this.search(); // always refilter on the search term search if there is something there

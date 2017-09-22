@@ -43,15 +43,15 @@ return KBWidget({
                         }},
                         { title: 'Map ID', mData: 1},
                         { title: 'Rxn Count', sWidth: '10%', mData: function(d){
-                            if ('reaction_ids' in d[10]){
-                                return d[10].reaction_ids.split(',').length;
+                            if ('Number reactions' in d[10]){
+                                return d[10]['Number reactions'];
                             } else {
                                 return 'N/A';
                             }
                         }},
                         { title: 'Cpd Count', sWidth: '10%', mData: function(d) {
-                            if ('compound_ids' in d[10]) {
-                                return d[10].compound_ids.split(',').length;
+                            if ('Number compounds' in d[10]) {
+                                return d[10]['Number compounds'];
                             } else {
                                 return 'N/A';
                             }

@@ -577,11 +577,13 @@ define([
                     .then(function (data) {
                         var dataTypes = {};
                         data.forEach(datum => {
-                          var [module, type] = datum[2].match(/([^.]+)\.([^-]+)/).slice(1,3);
+                          var match = datum[2].match(/([^.]+)\.([^-]+)/)
+                          var module = match[1];
+                          var type = match[2];
                           if (dataTypes[type] === undefined) {
                             dataTypes[type] = {};
                           }
-                          dataTypes[type][`${module}.${type}`] = true;
+                          dataTypes[type][module + '.' + type] = true;
                         });
                         knownTypes = dataTypes;
                         if (view === 'mine') {

@@ -576,7 +576,7 @@ define([
                     })
                     .then(function (data) {
                         var dataTypes = {};
-                        data.forEach(datum => {
+                        data.forEach(function(datum) {
                           var match = datum[2].match(/([^.]+)\.([^-]+)/)
                           var module = match[1];
                           var type = match[2];

@@ -575,9 +575,9 @@ define([
                         return cleanupData(data, view);
                     })
                     .then(function (data) {
-                        let dataTypes = {};
+                        var dataTypes = {};
                         data.forEach(datum => {
-                          let [module, type] = datum[2].match(/([^.]+)\.([^-]+)/).slice(1,3);
+                          var [module, type] = datum[2].match(/([^.]+)\.([^-]+)/).slice(1,3);
                           if (dataTypes[type] === undefined) {
                             dataTypes[type] = {};
                           }
@@ -1109,8 +1109,8 @@ define([
                 // create type filter
                 var typeInput = $('<select class="form-control kb-import-filter">');
                 typeInput.append('<option>All types...</option>');
-                let typeKeys = Object.keys(knownTypes).sort();
-                for (let typeKey of typeKeys) {
+                var typeKeys = Object.keys(knownTypes).sort();
+                for (var typeKey of typeKeys) {
                     typeInput.append('<option data-type="' + Object.keys(knownTypes[typeKey]).sort().join(',') + '">' +
                         typeKey +
                         '</option>');

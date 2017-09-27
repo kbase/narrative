@@ -558,11 +558,9 @@ p#site-title {
 .kb-side-tab {
     display: none;
     height:100%;
-    border: 3px solid black;
 }
 .kb-narr-side-panel-set{
     height:100%;
-    border: 3px solid pink;
 
 }
 

@@ -51,6 +51,26 @@ define([
     GenericClient
     ) {
     'use strict';
+
+    /*
+      as a bit of trivia, in case it comes up....
+
+      I'm pretty sure this could have a race condition which is not currently manifesting.
+      It rebuilds the list of knownTypes inside the getAndRenderData, which is called when
+      the filtering params are changed or the tab is changed w/o having data already.
+
+      But the list of knownTypes is variable across panes - for example, My Data and Shared With Me
+      may have different sets of types. Right now everything works just fine because the lists of types
+      are refreshed at appropriate times, and the input on an inactive pane doesn't rebuild its typeInput
+      field due to action on an active pane. So we're good. At least, I think we are.
+
+      However, it's easy to come up with a scenario where a list may be properly refreshed on a given pane and
+      reflects incorrect data. So in case anybody starts complaining about the list of types not matching their
+      data, this is probably the cause and should be revisited. For now, I'm going to sweep it under the rug.
+    */
+
+    var knownTypes = [];
+
     return KBWidget({
         name: "kbaseNarrativeDataPanel",
         parent: kbaseNarrativeControlPanel,
@@ -199,6 +219,7 @@ define([
         loggedInCallback: function (event, auth) {
             this.token = auth.token;
             this.wsClient = new Workspace(this.options.workspaceURL, auth);
+
             this.serviceClient = new GenericClient(Config.url('service_wizard'), auth);
             this.isLoggedIn = true;
             if (this.ws_name) {
@@ -384,58 +405,6 @@ define([
             var mineSelected = [],
                 sharedSelected = [];
 
-            var types = [
-                "KBaseGenomes.Genome",
-                "KBaseGenomes.Pangenome",
-                "KBaseGenomes.GenomeComparison",
-                "KBaseGenomes.GenomeDomainData",
-                "GenomeComparison.ProteomeComparison",
-
-                "KBaseFile.SingleEndLibrary",
-                "KBaseFile.PairedEndLibrary",
-                "KBaseGenomeAnnotations.Assembly",
-                "KBaseGenomes.ContigSet",
-
-                "KBaseTrees.MSA",
-                "KBaseTrees.Tree",
-                "KBaseGeneDomains.DomainAnnotation",
-
-                "KBaseBiochem.Media",
-                "KBaseFBA.FBAModel",
-                "KBaseFBA.ModelTemplate",
-                "KBaseFBA.FBA",
-                "KBaseFBA.ReactionSensitivityAnalysis",
-                "KBasePhenotypes.PhenotypeSet",
-                "KBasePhenotypes.PhenotypeSimulationSet",
-
-                "KBaseMetagenomes.BinnedContigs",
-
-                "KBaseRNASeq.RNASeqAlignment",
-                "KBaseRNASeq.RNASeqExpression",
-                "KBaseRNASeq.RNASeqSampleSet",
-                "KBaseFeatureValues.ExpressionMatrix",
-                "KBaseFeatureValues.FeatureClusters",
-
-                "KBaseSets.ReadsSet",
-                "KBaseSets.AssemblySet",
-                "KBaseSets.DifferentialExpressionMatrixSet",
-                "KBaseSets.ExpressionSet",
-                "KBaseSets.FeatureSetSet",
-                // "KBaseSets.GenomeSet", // Not clear if this is the GenomeSet in use
-                "KBaseSets.ReadsAlignmentSet",
-                "KBaseCollections.FeatureSet",
-            ];
-
-            types.sort(function (a, b) {
-                var aName = a.split('.')[1].toUpperCase();
-                var bName = b.split('.')[1].toUpperCase();
-                if (aName < bName)
-                    return -1; // sort by name
-                if (aName > bName)
-                    return 1;
-                return 0;
-            });
-
             // tab panels
             var minePanel = $('<div class="kb-import-content kb-import-mine">'),
                 sharedPanel = $('<div class="kb-import-content kb-import-shared">'),
@@ -585,20 +554,36 @@ define([
                 return Promise.try(function () {
                     // data = [].concat.apply([], data);
                     data.sort(function (a, b) {
+                        // enable this if desired - it changes the sort to be by the alphabetical type first, and then the creation date
+                        /*if (
+                          a[2].match(/\.([^-]+)/)[1] < b[2].match(/\.([^-]+)/)[1]
+                          || (a[2].match(/\.([^-]+)/)[1] === b[2].match(/\.([^-]+)/)[1] && a[3] > b[3]))
+                        */
                         if (a[3] > b[3])
                             return -1;
+                        else
                         return 1;
                     });
+                    console.log("DATA IS NOW :", data);
                     return data;
                 });
             }
 
-            function getAndRenderData(view, workspaces, type, specWs, ignoreWs, nameFilter) {
-                return getData(view, workspaces, type, specWs, ignoreWs, nameFilter)
+            function getAndRenderData(view, workspaces, types, specWs, ignoreWs, nameFilter) {
+                return getData(view, workspaces, types, specWs, ignoreWs, nameFilter)
                     .then(function (data) {
                         return cleanupData(data, view);
                     })
                     .then(function (data) {
+                        let dataTypes = {};
+                        data.forEach(datum => {
+                          let [module, type] = datum[2].match(/([^.]+)\.([^-]+)/).slice(1,3);
+                          if (dataTypes[type] === undefined) {
+                            dataTypes[type] = {};
+                          }
+                          dataTypes[type][`${module}.${type}`] = true;
+                        });
+                        knownTypes = dataTypes;
                         if (view === 'mine') {
                             myData = data;
                             render(view, myData, $mineScrollPanel, mineSelected);
@@ -704,7 +689,7 @@ define([
              * or just the one named wsName.
              * Also returns only data of the given type, if not undefined
              */
-            function getData(view, workspaces, type, wsName, ignoreWs, nameFilter) {
+            function getData(view, workspaces, types, wsName, ignoreWs, nameFilter) {
                 if (workspaces.length === 0) {
                     return Promise.try(function () {
                         return [];
@@ -755,6 +740,8 @@ define([
                     };
                     if (start.type)
                         param.types = [start.type];
+                    if (start.types)
+                      param.types = start.types;
                     if (start.id)
                         param.workspaces.push(start.id);
                     return param;
@@ -764,7 +751,7 @@ define([
                 // This grabs everything into the client for now,
                 // until we have some server-side searching.
                 var paramsList = [],
-                    curParam = newParamSet({type: type}),
+                    curParam = newParamSet({types: types}),
                     curTotal = 0,
                     maxRequest = Config.get('data_panel').max_single_request || 1000,
                     totalFetch = 0;
@@ -787,7 +774,7 @@ define([
                     // this ws
                     else if (thisWs.count < maxRequest) {
                         paramsList.push(curParam);
-                        curParam = newParamSet({type: type, id: String(thisWs.id)});
+                        curParam = newParamSet({types: types, id: String(thisWs.id)});
                         curTotal = thisWs.count;
                     }
                     // if there isn't room because that's one big
@@ -796,7 +783,7 @@ define([
                     // kinda inefficient. Don't care.
                     else if (thisWs.count > maxRequest) {
                         for (var j = 0; j < thisWs.count; j += maxRequest) {
-                            var newParam = newParamSet({type: type, id: String(thisWs.id)});
+                            var newParam = newParamSet({types: types, id: String(thisWs.id)});
                             newParam.minObjectID = j + 1;
                             newParam.maxObjectID = j + maxRequest;
                             paramsList.push(newParam);
@@ -1122,9 +1109,10 @@ define([
                 // create type filter
                 var typeInput = $('<select class="form-control kb-import-filter">');
                 typeInput.append('<option>All types...</option>');
-                for (var i = 0; i < types.length; i++) {
-                    typeInput.append('<option data-type="' + types[i] + '">' +
-                        types[i].split('.')[1] +
+                let typeKeys = Object.keys(knownTypes).sort();
+                for (let typeKey of typeKeys) {
+                    typeInput.append('<option data-type="' + Object.keys(knownTypes[typeKey]).sort().join(',') + '">' +
+                        typeKey +
                         '</option>');
                 }
                 var typeFilter = $('<div class="col-sm-3">').append(typeInput);
@@ -1132,8 +1120,10 @@ define([
                 // event for type dropdown
                 typeInput.change(function () {
                     type = $(this).children('option:selected').data('type');
+                    if (type) {
+                      type = type.split(',');
+                    }
                     filterInput.val('');
-
                     // request again with filted type
                     setLoading(view, true);
                     getAndRenderData(view, workspaces, type, ws);

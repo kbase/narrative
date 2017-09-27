@@ -321,15 +321,12 @@ define(
                 if (!widgets || Object.prototype.toString.call(widgets) !== '[object Array]' || widgets.length === 0)
                     return $panelSet;
 
-                var height = 100 / widgets.length;
-                var minHeight = 200;
 
                 var retObj = {};
                 for (var i = 0; i < widgets.length; i++) {
                     var widgetInfo = widgets[i];
                     var $widgetDiv = $('<div>')
-                        .addClass('kb-side-separator')
-                        .css({ 'height': height + '%' });
+                        .addClass('kb-side-separator');
 
                     var constructor_mapping = {
                         'kbaseNarrativeDataPanel': kbaseNarrativeDataPanel,

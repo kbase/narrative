@@ -1197,8 +1197,18 @@ div#notebook_panel {
 }
 
 .kb-narr-panel-body {
+    height: calc(100%);
     padding: 3px;
-    /*overflow-y: auto;*/
+}
+.kb-narr-panel-body > div{
+    height: 100%;
+}
+.kb-narr-panel-body-wrapper {
+    height: calc(100% - 40px);
+    padding: 3px;
+}
+.kb-narr-panel-body-wrapper > div{
+    height: 100%;
 }
 
 .kb-narr-panel-toggle {
@@ -1213,9 +1223,8 @@ div#notebook_panel {
 
 /* Container for func list */
 .kb-function-body {
-    height: 45%;
-    max-height:45%;
-    overflow-y: auto;
+    height: 100%;
+    /* overflow-y: auto; */
     width: 100%;
 }
 

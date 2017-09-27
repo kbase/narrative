@@ -75,6 +75,7 @@ define([
 
         init: function(options) {
             var self = this;
+            this.app_offset = true;
             this._super(options);
             // DOM structure setup here.
             // After this, just need to update the function list
@@ -268,6 +269,14 @@ define([
                 })
                 .click(function() {
                     this.$searchDiv.toggle({ effect: 'blind', duration: 'fast' });
+                    var new_height = this.$methodList.height();
+                    if(this.app_offset){
+                        new_height = (new_height - 40) + "px";
+                    }else{
+                        new_height = (new_height + 40) + "px";
+                    }
+                    this.$methodList.css('height', new_height);
+                    this.app_offset = !this.app_offset;
                     this.$searchInput.focus();
                 }.bind(this)));
 
@@ -425,11 +434,12 @@ define([
         },
 
         setListHeight: function(height, animate) {
+
             if (this.$methodList) {
                 if (animate) {
-                    this.$methodList.animate({ 'height': height }, this.slideTime); // slideTime comes from kbaseNarrativeControlPanel
+                    this.$methodList.animate({ 'height': height}, this.slideTime); // slideTime comes from kbaseNarrativeControlPanel
                 } else {
-                    this.$methodList.css({ 'height': height });
+                    this.$methodList.css({ 'height': height});
                 }
             }
         },

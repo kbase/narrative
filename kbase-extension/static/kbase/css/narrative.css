@@ -224,6 +224,8 @@ nav ul li.selected {
 	color: #fff;
 }
 */
+
+
 .search-box {
 	position: relative;
 	display: inline;
@@ -329,14 +331,13 @@ nav ul li.selected {
 }
 
 /* left pane styling */
-#left-column {
+/* #left-column {
 	width: 289px;
 	position: fixed;
 	left: 10px;
 	bottom: 0;
 	top: 53px;
-	overflow-y: auto;
-}
+} */
 
 #data-header {
 	padding: 10px 0;

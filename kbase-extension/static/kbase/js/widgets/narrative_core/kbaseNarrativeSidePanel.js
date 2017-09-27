@@ -172,6 +172,8 @@ define(
             buildTabs: function(tabs, isOuter) {
                 var $header = $('<div>');
                 var $body = $('<div>');
+                $body.addClass('narrative-side-panel-content');
+                $body.css('height', 'calc(100% - 45px)');
 
                 $header.append($('<div>')
                     .addClass('kb-side-toggle')
@@ -314,7 +316,8 @@ define(
              */
             buildPanelSet: function(widgets) {
                 var $panelSet = $('<div>')
-                    .addClass('kb-narr-side-panel-set');
+                    .addClass('kb-narr-side-panel-set')
+                    .css('height', '100%');
                 if (!widgets || Object.prototype.toString.call(widgets) !== '[object Array]' || widgets.length === 0)
                     return $panelSet;
 

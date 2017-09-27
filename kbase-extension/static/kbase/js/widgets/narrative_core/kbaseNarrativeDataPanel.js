@@ -1112,11 +1112,11 @@ define([
                 var typeInput = $('<select class="form-control kb-import-filter">');
                 typeInput.append('<option>All types...</option>');
                 var typeKeys = Object.keys(knownTypes).sort();
-                for (var typeKey of typeKeys) {
+                typeKeys.forEach( function(typeKey) {
                     typeInput.append('<option data-type="' + Object.keys(knownTypes[typeKey]).sort().join(',') + '">' +
                         typeKey +
                         '</option>');
-                }
+                });
                 var typeFilter = $('<div class="col-sm-3">').append(typeInput);
 
                 // event for type dropdown

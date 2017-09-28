@@ -1508,9 +1508,11 @@ define([
                 .append('type')
                 .on('click', function () {
                     self.sortData(function (a, b) {
-                        if (self.dataObjects[a].info[2].toUpperCase() > self.dataObjects[b].info[2].toUpperCase())
+                        var aType = self.dataObjects[a.objId].info[2].toUpperCase().match(/\.(.+)/)[1];
+                        var bType = self.dataObjects[b.objId].info[2].toUpperCase().match(/\.(.+)/)[1];
+                        if (aType > bType)
                             return -1; // sort by type
-                        if (self.dataObjects[a].info[2].toUpperCase() < self.dataObjects[b].info[2].toUpperCase())
+                        if (aType < bType)
                             return 1;
                         return 0;
                     });

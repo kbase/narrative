@@ -125,8 +125,6 @@ define([
              */
             $(document).on(
                 'updateData.Narrative', function () {
-                    debugger;
-
                     this.dataListWidget.refresh();
                 }.bind(this)
             );
@@ -1059,7 +1057,6 @@ define([
 
 
             function buildMyRows (data, start, numRows, template) {
-                debugger;
                 // add each set of items to container to be added to DOM
                 var rows = $('<div class="kb-import-items">');
                 var loadedData = {};

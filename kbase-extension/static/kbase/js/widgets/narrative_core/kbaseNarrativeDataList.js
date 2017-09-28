@@ -369,7 +369,6 @@ define([
                 console.error('ws: ' + this.ws);
                 return;
             }
-
             Promise.resolve(this.ws.get_workspace_info({
                     workspace: this.ws_name
                 }))
@@ -980,6 +979,7 @@ define([
                                             self.ws.delete_objects([{ ref: object_info[6] + '/' + object_info[0] }],
                                                 function () {
                                                     self.refresh();
+                                                    $(document).trigger('deleteDataList.Narrative', object_info[1]);
                                                 },
                                                 function (error) {
                                                     console.error(error);

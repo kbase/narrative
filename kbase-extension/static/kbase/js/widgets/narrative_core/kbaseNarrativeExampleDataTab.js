@@ -50,6 +50,7 @@ define ([
         $mainPanel:null,
         $loadingDiv:null,
         loadedData:{},
+        infoList:null,
 
         /**
          * @method init
@@ -79,14 +80,21 @@ define ([
 
             this.narWs = Jupyter.narrative.getWorkspaceName();
 
+            $(document).on('deleteDataList.Narrative', $.proxy(function (event, data) {
+                this.loadedData[data] = false;
+                this.render();
+            }.bind(this)));
             return this;
         },
 
-        refresh: function() { },
+        refresh: function() {
+            // this.getExampleDataAndRender();
+        },
 
         objectList:null,
 
         getExampleDataAndRender: function() {
+            // debugger;
             if (!this.dataConfig) {
                 this.showError("Unable to load example data configuration! Please refresh your page to try again. If this continues to happen, please <a href='https://kbase.us/contact-us/'>click here</a> to contact KBase with the problem.");
                 return;
@@ -99,9 +107,7 @@ define ([
                         ws_name: this.dataConfig.ws
                     }]
                 ))
-                    .then(function(infoList) {
-                        infoList = infoList[0]['data'];
-                        // var loadedData = {};
+                    .then(function(infoList){
                         $(document).trigger('dataLoadedQuery.Narrative', [
                             false, 0,
                             function (data) {
@@ -113,25 +119,9 @@ define ([
                                 }.bind(this));
                             }.bind(this)
                         ]);
-                        this.objectList = [];
-                        // object_info:
-                        // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
-                        // [3] : timestamp save_date // [4] : int version // [5] : username saved_by
-                        // [6] : ws_id wsid // [7] : ws_name workspace // [8] : string chsum
-                        // [9] : int size // [10] : usermeta meta
-                        for (var i=0; i<infoList.length; i++) {
-                        // skip narrative objects
-                            var obj = infoList[i].object_info;
-                            if (obj[2].indexOf('KBaseNarrative') === 0) { continue; }
-                            if (obj[1].indexOf('Transcriptome') === 0) {
-                                obj[2] = 'TranscriptomeHack';
-                            }
-                            this.objectList.push({
-                                $div:this.renderObjectRowDiv(obj), // we defer rendering the div until it is shown
-                                info:obj
-                            });
-                        }
-                        this.renderData();
+                        infoList = infoList[0]['data'];
+                        this.infoList = infoList;                   
+                        this.render();
                     }.bind(this))
                     .catch(function(error) {
                         this.showError('Sorry, we\'re unable to load example data', error);
@@ -139,7 +129,29 @@ define ([
                     }.bind(this));
             }
         },
+        render: function () {
+            // var loadedData = {};
 
+            this.objectList = [];
+            // object_info:
+            // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
+            // [3] : timestamp save_date // [4] : int version // [5] : username saved_by
+            // [6] : ws_id wsid // [7] : ws_name workspace // [8] : string chsum
+            // [9] : int size // [10] : usermeta meta
+            for (var i = 0; i < this.infoList.length; i++) {
+                // skip narrative objects
+                var obj = this.infoList[i].object_info;
+                if (obj[2].indexOf('KBaseNarrative') === 0) { continue; }
+                if (obj[1].indexOf('Transcriptome') === 0) {
+                    obj[2] = 'TranscriptomeHack';
+                }
+                this.objectList.push({
+                    $div: this.renderObjectRowDiv(obj), // we defer rendering the div until it is shown
+                    info: obj
+                });
+            }
+            this.renderData();
+        },
         showError: function(title, error) {
             this.$mainPanel.show();
             this.$mainPanel.append(DisplayUtil.createError(title, error));
@@ -220,7 +232,6 @@ define ([
         },
 
         renderObjectRowDiv: function(object_info) {
-            // debugger;
             var self = this;
             // object_info:
             // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
@@ -238,11 +249,11 @@ define ([
             var $addDiv =
                 $('<div>').append(
                     $('<button>').addClass('kb-primary-btn').css({'white-space':'nowrap', padding:'10px 15px'})
-                        .append($('<span>').addClass('fa fa-chevron-circle-left')).append(function () {
+                        .append($('<span>').addClass('fa fa-chevron-circle-left'))
+                        .append(function () {
                             return (this.loadedData[object_info[1]]) ? ' Copy' : ' Add';
                         }.bind(this))
                         .on('click',function() { // probably should move action outside of render func, but oh well
-                            $(this).attr("disabled","disabled");
                             $(this).html('<img src="'+self.options.loadingImage+'">');
 
                             var thisBtn = this;
@@ -254,7 +265,10 @@ define ([
                                 }]
                             ))
                                 .then(function(info) {
-                                    $(thisBtn).html('Added');
+                                    $(thisBtn).html('');
+                                    $(thisBtn).append($('<span>').addClass('fa fa-chevron-circle-left'))
+                                        .append(' Copy');
+;
                                     self.trigger('updateDataList.Narrative');
                                 })
                                 .catch(function(error) {

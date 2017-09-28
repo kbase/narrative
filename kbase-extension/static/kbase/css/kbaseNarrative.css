@@ -435,7 +435,7 @@ p#site-title {
     border-right: 5px solid #CECECE;
     top: 70px;
     bottom: 0;
-    overflow-y: auto;
+    /* overflow-y: auto; */
 }
 
 .kb-side-overlay-container {
@@ -466,8 +466,8 @@ p#site-title {
 }
 
 .kb-side-panel {
-    height: 100%;
     overflow-y: hidden;
+    height: 100%;
 }
 
 #kb-side-toggle-in {
@@ -550,12 +550,18 @@ p#site-title {
     border-bottom: 5px solid #CECECE;
 }
 
-.kb-side-tab {
-    display: none;
-}
+
 
 .kb-side-tab.active {
     display: inherit;
+}
+.kb-side-tab {
+    display: none;
+    height:100%;
+}
+.kb-narr-side-panel-set{
+    height:100%;
+
 }
 
 .kb-overlay-dimmer {
@@ -1030,6 +1036,7 @@ div#notebook_panel {
 
 .kb-narr-side-panel {
     margin-bottom: 5px;
+    height:100%;
 }
 
 .kb-narr-side-panel .kb-title {
@@ -1190,8 +1197,18 @@ div#notebook_panel {
 }
 
 .kb-narr-panel-body {
+    height: calc(100%);
     padding: 3px;
-    /*overflow-y: auto;*/
+}
+.kb-narr-panel-body > div{
+    height: 100%;
+}
+.kb-narr-panel-body-wrapper {
+    height: calc(100% - 40px);
+    padding: 3px;
+}
+.kb-narr-panel-body-wrapper > div{
+    height: 100%;
 }
 
 .kb-narr-panel-toggle {
@@ -1206,9 +1223,8 @@ div#notebook_panel {
 
 /* Container for func list */
 .kb-function-body {
-    height: 45%;
-    max-height:45%;
-    overflow-y: auto;
+    height: 100%;
+    /* overflow-y: auto; */
     width: 100%;
 }
 

@@ -153,7 +153,11 @@ span#notebook_name:hover {
     right: 0;
     bottom: 0;
     overflow: auto;
-    padding-bottom: 100px;
+}
+#notebook-container:after{
+    content: "";
+    height: 100px;
+    display:block;
 }
 
 

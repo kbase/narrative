@@ -6,31 +6,33 @@
  * @public
  */
 define ([
-	'kbwidget',
-	'bootstrap',
-	'jquery',
+    'kbwidget',
+    'bootstrap',
+    'jquery',
     'underscore',
-	'bluebird',
-	'narrativeConfig',
-	'kbaseAuthenticatedWidget',
-	'kbaseNarrative',
+    'bluebird',
+    'narrativeConfig',
+    'kbaseAuthenticatedWidget',
+    'kbaseNarrative',
     'kbase-generic-client-api',
     'base/js/namespace',
     'util/display',
-    'util/icon'
+    'util/icon',
+    'util/bootstrapDialog'
 ], function (
-	KBWidget,
-	bootstrap,
-	$,
+    KBWidget,
+    bootstrap,
+    $,
     _,
-	Promise,
-	Config,
-	kbaseAuthenticatedWidget,
-	kbaseNarrative,
+    Promise,
+    Config,
+    kbaseAuthenticatedWidget,
+    kbaseNarrative,
     GenericClient,
     Jupyter,
     DisplayUtil,
-    Icon
+    Icon,
+    BootstrapDialog
 ) {
     'use strict';
     return KBWidget({
@@ -49,6 +51,8 @@ define ([
 
         $mainPanel:null,
         $loadingDiv:null,
+        loadedData:{},
+        infoList:null,
 
         /**
          * @method init
@@ -60,10 +64,11 @@ define ([
          * @private
          */
         init: function(options) {
+            
             this._super(options);
 
             this.$loadingDiv = $('<div>').addClass('kb-data-list-type')
-                                 .append('<img src="' + this.options.loadingImage + '">');
+                .append('<img src="' + this.options.loadingImage + '">');
             this.$elem.append(this.$loadingDiv);
             this.$mainPanel = $('<div>')
                 .css({'overflow-y':'auto','height':'604px'});
@@ -77,10 +82,18 @@ define ([
 
             this.narWs = Jupyter.narrative.getWorkspaceName();
 
+            $(document).on('deleteDataList.Narrative', $.proxy(function (event, data) {
+                this.loadedData[data] = false;
+                var className = "."+data.split('.').join('--');
+                $(className).html('');
+                $(className).append($('<span>').addClass('fa fa-chevron-circle-left'))
+                    .append(' Add');
+            },this));
             return this;
         },
 
-        refresh: function() { },
+        refresh: function() {
+        },
 
         objectList:null,
 
@@ -97,35 +110,50 @@ define ([
                         ws_name: this.dataConfig.ws
                     }]
                 ))
-                .then(function(infoList) {
-                    infoList = infoList[0]['data'];
-                    this.objectList = [];
-                    // object_info:
-                    // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
-                    // [3] : timestamp save_date // [4] : int version // [5] : username saved_by
-                    // [6] : ws_id wsid // [7] : ws_name workspace // [8] : string chsum
-                    // [9] : int size // [10] : usermeta meta
-                    for (var i=0; i<infoList.length; i++) {
-                        // skip narrative objects
-                        var obj = infoList[i].object_info;
-                        if (obj[2].indexOf('KBaseNarrative') === 0) { continue; }
-                        if (obj[1].indexOf('Transcriptome') === 0) {
-                            obj[2] = 'TranscriptomeHack';
-                        }
-                        this.objectList.push({
-                            $div:this.renderObjectRowDiv(obj), // we defer rendering the div until it is shown
-                            info:obj
-                        });
-                    }
-                    this.renderData();
-                }.bind(this))
-                .catch(function(error) {
-                    this.showError('Sorry, we\'re unable to load example data', error);
-                    alert(error);
-                }.bind(this));
+                    .then(function(infoList){
+                        $(document).trigger('dataLoadedQuery.Narrative', [
+                            false, 0,
+                            function (data) {
+                                Object.keys(data).forEach(function (type) {
+                                    data[type].forEach(function (obj) {
+                                        var name = obj[1];
+                                        this.loadedData[name] = true;
+                                    }.bind(this));
+                                }.bind(this));
+                            }.bind(this)
+                        ]);
+                        infoList = infoList[0]['data'];
+                        this.infoList = infoList;                   
+                        this.render();
+                    }.bind(this))
+                    .catch(function(error) {
+                        this.showError('Sorry, we\'re unable to load example data', error);
+                        alert(error);
+                    }.bind(this));
             }
         },
-
+        render: function () {
+            // var loadedData = {};
+            this.objectList = [];
+            // object_info:
+            // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
+            // [3] : timestamp save_date // [4] : int version // [5] : username saved_by
+            // [6] : ws_id wsid // [7] : ws_name workspace // [8] : string chsum
+            // [9] : int size // [10] : usermeta meta
+            for (var i = 0; i < this.infoList.length; i++) {
+                // skip narrative objects
+                var obj = this.infoList[i].object_info;
+                if (obj[2].indexOf('KBaseNarrative') === 0) { continue; }
+                if (obj[1].indexOf('Transcriptome') === 0) {
+                    obj[2] = 'TranscriptomeHack';
+                }
+                this.objectList.push({
+                    $div: this.renderObjectRowDiv(obj), // we defer rendering the div until it is shown
+                    info: obj
+                });
+            }
+            this.renderData();
+        },
         showError: function(title, error) {
             this.$mainPanel.show();
             this.$mainPanel.append(DisplayUtil.createError(title, error));
@@ -141,22 +169,22 @@ define ([
             for(var t=0; t<this.dataConfig.data_types.length; t++) {
                 var typeInfo = this.dataConfig.data_types[t];
                 var $tc = $('<div>')
-                            .append($('<div>').css({'margin':'15px'})
-                                .append($('<div>').css({'margin':'4px','margin-top':'15px','color':'#555','font-size':'large','font-weight':'bold'})
-                                        .append(typeInfo.displayName))
-                                .append($('<div>').css({'margin':'4px','color':'#555'})
-                                        .append(typeInfo.header)));
+                    .append($('<div>').css({'margin':'15px'})
+                        .append($('<div>').css({'margin':'4px','margin-top':'15px','color':'#555','font-size':'large','font-weight':'bold'})
+                            .append(typeInfo.displayName))
+                        .append($('<div>').css({'margin':'4px','color':'#555'})
+                            .append(typeInfo.header)));
                 for(var k=0; k<typeInfo.name.length; k++) {
                     typeDivs[typeInfo.name[k]] = $tc;
                     showTypeDiv[typeInfo.name[k]] = false;
                 }
             }
             var $tc = $('<div>')
-                      .append($('<div>').css({'margin':'15px'})
-                          .append($('<div>').css({'margin':'4px','margin-top':'15px','color':'#555','font-size':'large','font-weight':'bold'})
-                                  .append('Other Examples'))
-                          .append($('<div>').css({'margin':'4px','color':'#555'})
-                                  .append('Assorted data types used in more advanced analyses')));
+                .append($('<div>').css({'margin':'15px'})
+                    .append($('<div>').css({'margin':'4px','margin-top':'15px','color':'#555','font-size':'large','font-weight':'bold'})
+                        .append('Other Examples'))
+                    .append($('<div>').css({'margin':'4px','color':'#555'})
+                        .append('Assorted data types used in more advanced analyses')));
             typeDivs['other.types'] = $tc;
 
             var hasOthers = false;
@@ -207,6 +235,7 @@ define ([
 
         renderObjectRowDiv: function(object_info) {
             var self = this;
+            var isCopy = this.loadedData[object_info[1]];
             // object_info:
             // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
             // [3] : timestamp save_date // [4] : int version // [5] : username saved_by
@@ -216,45 +245,75 @@ define ([
             if (object_info[2]==='TranscriptomeHack') {
                 type='Genome';
             } else {
-                var type_tokens = object_info[2].split('.')
+                var type_tokens = object_info[2].split('.');
                 type = type_tokens[1].split('-')[0];
             }
 
             var $addDiv =
                 $('<div>').append(
                     $('<button>').addClass('kb-primary-btn').css({'white-space':'nowrap', padding:'10px 15px'})
-                        .append($('<span>').addClass('fa fa-chevron-circle-left')).append(' Add')
+                        .append($('<span>').addClass('fa fa-chevron-circle-left'))
+                        .append(function () {return (isCopy) ? ' Copy' : ' Add';})
+                        .addClass(function () { return object_info[1].split('.').join('--'); })
                         .on('click',function() { // probably should move action outside of render func, but oh well
-                            $(this).attr("disabled","disabled");
-                            $(this).html('<img src="'+self.options.loadingImage+'">');
+                            var updateButton = function () {
+                                $(this).html('<img src="' + self.options.loadingImage + '">');
+                                var thisBtn = this;
+                                Promise.resolve(self.serviceClient.sync_call(
+                                    "NarrativeService.copy_object",
+                                    [{
+                                        ref: object_info[6] + "/" + object_info[0],
+                                        target_ws_name: self.narWs,
+                                    }]
+                                ))
+                                    .then(function (info) {
+                                        var id = '.' + object_info[1].split('.').join('--');
+                                        $(id).html('');
+                                        $(id).append($('<span>').addClass('fa fa-chevron-circle-left'))
+                                            .append(' Copy');
+                                        self.trigger('updateDataList.Narrative');
+                                    })
+                                    .catch(function (error) {
+                                        $(thisBtn).html('Error');
+                                        if (error.error && error.error.message) {
+                                            if (error.error.message.indexOf('may not write to workspace') >= 0) {
+                                                self.options.$importStatus.html($('<div>').css({ 'color': '#F44336', 'width': '500px' }).append('Error: you do not have permission to add data to this Narrative.'));
+                                            } else {
+                                                self.options.$importStatus.html($('<div>').css({ 'color': '#F44336', 'width': '500px' }).append('Error: ' + error.error.message));
+                                            }
+                                        } else {
+                                            self.options.$importStatus.html($('<div>').css({ 'color': '#F44336', 'width': '500px' }).append('Unknown error!'));
+                                        }
+                                        console.error(error);
+                                    });
+                            };
+                            if ($(this).text().split(" ")[1] === "Copy"){
+                                var dialog = new BootstrapDialog({
+                                    title: 'Item already exists in workspace under same name.',
+                                    body: 'Do you want to override the existing copy?',
+                                    buttons: [$('<a type="button" class="btn btn-default">')
+                                        .append('Yes')
+                                        .click(function () {
+                                            dialog.hide();
+                                            updateButton.call(this);
 
-                            var thisBtn = this;
-                            Promise.resolve(self.serviceClient.sync_call(
-                                "NarrativeService.copy_object",
-                                [{
-                                    ref: object_info[6] + "/" + object_info[0],
-                                    target_ws_name: self.narWs,
-                                }]
-                            ))
-                            .then(function(info) {
-                                $(thisBtn).html('Added');
-                                self.trigger('updateDataList.Narrative');
-                            })
-                            .catch(function(error) {
-                                $(thisBtn).html('Error');
-                                if (error.error && error.error.message) {
-                                    if (error.error.message.indexOf('may not write to workspace')>=0) {
-                                        self.options.$importStatus.html($('<div>').css({'color':'#F44336','width':'500px'}).append('Error: you do not have permission to add data to this Narrative.'));
-                                    } else {
-                                        self.options.$importStatus.html($('<div>').css({'color':'#F44336','width':'500px'}).append('Error: '+error.error.message));
-                                    }
-                                } else {
-                                    self.options.$importStatus.html($('<div>').css({'color':'#F44336','width':'500px'}).append('Unknown error!'));
-                                }
-                                console.error(error);
-                            });
+                                        }.bind(this))
+                                        , $('<a type="button" class="btn btn-default">')
+                                        .append('No')
+                                        .click(function () {
+                                            dialog.hide();
+                                        })
+                                    ],
+                                    closeButton: true
+                                });
+                                dialog.show();
+                            } else {
+                                updateButton.call(this);
+                            }
+                            
                         }));
 
+            
             var shortName = object_info[1],
                 isShortened=false;
             var $name = $('<span>').addClass("kb-data-list-name").append(shortName);
@@ -280,18 +339,18 @@ define ([
                         .css({'width':'50px'})
                         .append($logo))
                     .append($('<td>')
-                         .append($name).append('<br>').append($type)));
+                        .append($name).append('<br>').append($type)));
 
             var $row = $('<div>')
-                        .css({margin:'2px',padding:'4px','margin-bottom': '5px'})
-                        .append($('<div>').addClass('kb-data-list-obj-row-main')
-                                    .append($topTable))
-                        .mouseenter(function(){
-                            $addDiv.show();
-                        })
-                        .mouseleave(function(){
-                            $addDiv.hide();
-                        });
+                .css({margin:'2px',padding:'4px','margin-bottom': '5px'})
+                .append($('<div>').addClass('kb-data-list-obj-row-main')
+                    .append($topTable))
+                .mouseenter(function(){
+                    $addDiv.show();
+                })
+                .mouseleave(function(){
+                    $addDiv.hide();
+                });
             Icon.buildDataIcon($logo, type);
 
             return $row;

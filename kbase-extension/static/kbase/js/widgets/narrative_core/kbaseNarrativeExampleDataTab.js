@@ -236,6 +236,7 @@ define ([
 
         renderObjectRowDiv: function(object_info) {
             var self = this;
+            var isCopy = this.loadedData[object_info[1]];
             // object_info:
             // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
             // [3] : timestamp save_date // [4] : int version // [5] : username saved_by
@@ -253,43 +254,68 @@ define ([
                 $('<div>').append(
                     $('<button>').addClass('kb-primary-btn').css({'white-space':'nowrap', padding:'10px 15px'})
                         .append($('<span>').addClass('fa fa-chevron-circle-left'))
-                        .append(function () {
-                            return (this.loadedData[object_info[1]]) ? ' Copy' : ' Add';
-                        }.bind(this))
+                        .append(function () {return (isCopy) ? ' Copy' : ' Add';})
                         .attr('id', function(){
                             return object_info[1].split('.').join('--');})
                         .on('click',function() { // probably should move action outside of render func, but oh well
-                            $(this).html('<img src="'+self.options.loadingImage+'">');
-
-                            var thisBtn = this;
-                            Promise.resolve(self.serviceClient.sync_call(
-                                "NarrativeService.copy_object",
-                                [{
-                                    ref: object_info[6] + "/" + object_info[0],
-                                    target_ws_name: self.narWs,
-                                }]
-                            ))
-                                .then(function(info) {
-                                    $(thisBtn).html('');
-                                    $(thisBtn).append($('<span>').addClass('fa fa-chevron-circle-left'))
-                                        .append(' Copy');
-                                    self.trigger('updateDataList.Narrative');
-                                })
-                                .catch(function(error) {
-                                    $(thisBtn).html('Error');
-                                    if (error.error && error.error.message) {
-                                        if (error.error.message.indexOf('may not write to workspace')>=0) {
-                                            self.options.$importStatus.html($('<div>').css({'color':'#F44336','width':'500px'}).append('Error: you do not have permission to add data to this Narrative.'));
+                            var updateButton = function () {
+                                $(this).html('<img src="' + self.options.loadingImage + '">');
+                                var thisBtn = this;
+                                Promise.resolve(self.serviceClient.sync_call(
+                                    "NarrativeService.copy_object",
+                                    [{
+                                        ref: object_info[6] + "/" + object_info[0],
+                                        target_ws_name: self.narWs,
+                                    }]
+                                ))
+                                    .then(function (info) {
+                                        $(thisBtn).html('');
+                                        $(thisBtn).append($('<span>').addClass('fa fa-chevron-circle-left'))
+                                            .append(' Copy');
+                                        self.trigger('updateDataList.Narrative');
+                                    })
+                                    .catch(function (error) {
+                                        $(thisBtn).html('Error');
+                                        if (error.error && error.error.message) {
+                                            if (error.error.message.indexOf('may not write to workspace') >= 0) {
+                                                self.options.$importStatus.html($('<div>').css({ 'color': '#F44336', 'width': '500px' }).append('Error: you do not have permission to add data to this Narrative.'));
+                                            } else {
+                                                self.options.$importStatus.html($('<div>').css({ 'color': '#F44336', 'width': '500px' }).append('Error: ' + error.error.message));
+                                            }
                                         } else {
-                                            self.options.$importStatus.html($('<div>').css({'color':'#F44336','width':'500px'}).append('Error: '+error.error.message));
+                                            self.options.$importStatus.html($('<div>').css({ 'color': '#F44336', 'width': '500px' }).append('Unknown error!'));
                                         }
-                                    } else {
-                                        self.options.$importStatus.html($('<div>').css({'color':'#F44336','width':'500px'}).append('Unknown error!'));
-                                    }
-                                    console.error(error);
+                                        console.error(error);
+                                    });
+                            };
+
+                            if ($(this).text() === " Copy"){
+                                var dialog = new BootstrapDialog({
+                                    title: 'Item already exists in workspace under same name.',
+                                    buttons: [$('<a type="button" class="btn btn-default">')
+                                        .append('Yes')
+                                        .click(function () {
+                                            dialog.hide();
+                                            updateButton.call(this);
+
+                                        }.bind(this))
+                                        , $('<a type="button" class="btn btn-default">')
+                                        .append('No')
+                                        .click(function () {
+                                            dialog.hide();
+
+                                        })
+                                    ],
+                                    closeButton: true
                                 });
+                                dialog.show();
+                            }else{
+                                updateButton.call(this);
+                            }
+                            
                         }));
 
+            
             var shortName = object_info[1],
                 isShortened=false;
             var $name = $('<span>').addClass("kb-data-list-name").append(shortName);

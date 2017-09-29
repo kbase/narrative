@@ -82,13 +82,15 @@ define ([
 
             $(document).on('deleteDataList.Narrative', $.proxy(function (event, data) {
                 this.loadedData[data] = false;
-                this.render();
-            }.bind(this)));
+                var id = "#"+data.split('.').join('--');
+                $(id).html('');
+                $(id).append($('<span>').addClass('fa fa-chevron-circle-left'))
+                    .append(' Add');
+            },this));
             return this;
         },
 
         refresh: function() {
-            // this.getExampleDataAndRender();
         },
 
         objectList:null,
@@ -131,7 +133,6 @@ define ([
         },
         render: function () {
             // var loadedData = {};
-
             this.objectList = [];
             // object_info:
             // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
@@ -242,7 +243,7 @@ define ([
             if (object_info[2]==='TranscriptomeHack') {
                 type='Genome';
             } else {
-                var type_tokens = object_info[2].split('.')
+                var type_tokens = object_info[2].split('.');
                 type = type_tokens[1].split('-')[0];
             }
 
@@ -253,6 +254,8 @@ define ([
                         .append(function () {
                             return (this.loadedData[object_info[1]]) ? ' Copy' : ' Add';
                         }.bind(this))
+                        .attr('id', function(){
+                            return object_info[1].split('.').join('--');})
                         .on('click',function() { // probably should move action outside of render func, but oh well
                             $(this).html('<img src="'+self.options.loadingImage+'">');
 
@@ -268,7 +271,6 @@ define ([
                                     $(thisBtn).html('');
                                     $(thisBtn).append($('<span>').addClass('fa fa-chevron-circle-left'))
                                         .append(' Copy');
-;
                                     self.trigger('updateDataList.Narrative');
                                 })
                                 .catch(function(error) {

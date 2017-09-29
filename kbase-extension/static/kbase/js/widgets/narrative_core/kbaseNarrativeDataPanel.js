@@ -150,6 +150,15 @@ define([
                 }.bind(this)
             );
 
+            $(document).on('deleteDataList.Narrative', $.proxy(function (event, data) {
+                debugger;
+                this.loadedData[data] = false;
+                var id = "#" + data.split('.').join('--');
+                $(id).html('');
+                $(id).append($('<span>').addClass('fa fa-chevron-circle-left'))
+                    .append(' Add');
+            }, this));
+
             this.$slideoutBtn = $('<button>')
                 .addClass('btn btn-xs btn-default')
                 .tooltip({
@@ -1270,6 +1279,9 @@ define([
                         $('<button>').addClass('kb-primary-btn').css({'white-space': 'nowrap', padding: '10px 15px'})
                             .append($('<span>').addClass('fa fa-chevron-circle-left')).append(function(){
                                 return (loadedData && loadedData[shortName]) ? ' Copy' :  ' Add';})
+                            .attr('id', function () {
+                                return object_info[1].split('.').join('--');
+                            })
                             .on('click', function () { // probably should move action outside of render func, but oh well
                                 $(this).html('<img src="' + self.options.loadingImage + '">');
 
@@ -1285,7 +1297,9 @@ define([
                                     }]
                                 ))
                                     .then(function() {
-                                        $(thisBtn).html('Copy');
+                                        $(thisBtn).html('');
+                                        $(thisBtn).append($('<span>').addClass('fa fa-chevron-circle-left'))
+                                            .append(' Copy');
                                         self.trigger('updateDataList.Narrative');
                                     })
                                     .catch(function(error) {

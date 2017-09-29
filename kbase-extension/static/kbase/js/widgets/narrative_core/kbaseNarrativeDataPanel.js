@@ -154,9 +154,9 @@ define([
 
             $(document).on('deleteDataList.Narrative', $.proxy(function (event, data) {
                 this.loadedData[data] = false;
-                var id = "#" + data.split('.').join('--');
-                $(id).html('');
-                $(id).append($('<span>').addClass('fa fa-chevron-circle-left'))
+                var className = "." + data.split('.').join('--');
+                $(className).html('');
+                $(className).append($('<span>').addClass('fa fa-chevron-circle-left'))
                     .append(' Add');
             }, this));
 
@@ -1281,9 +1281,7 @@ define([
                         $('<button>').addClass('kb-primary-btn').css({'white-space': 'nowrap', padding: '10px 15px'})
                             .append($('<span>').addClass('fa fa-chevron-circle-left'))
                             .append(function () { return (isCopy) ? ' Copy' : ' Add'; })
-                            .attr('id', function () {
-                                return object_info[1].split('.').join('--');
-                            })
+                            .addClass(function () {return object_info[1].split('.').join('--');})
                             .on('click', function () {
                                 var updateButton = function () {
                                     // probably should move action outside of render func, but oh well
@@ -1322,7 +1320,7 @@ define([
 
                                 };
 
-                                if (isCopy) {
+                                if ($(this).text().split(" ")[0] === "Copy") {
                                     var dialog = new BootstrapDialog({
                                         title: 'Item already exists in workspace under same name.',
                                         buttons: [$('<a type="button" class="btn btn-default">')

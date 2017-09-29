@@ -971,6 +971,7 @@ define([
                             .append('Delete')
                             .click(function () {
                                 //left outside of delete objects due to strange name change
+                                // $(document).trigger('deleteDataList.Narrative', object_info[1]);
 
                                 if (self.ws_name && self.ws) {
                                     self.ws.rename_object({

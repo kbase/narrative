@@ -98,7 +98,6 @@ define ([
         objectList:null,
 
         getExampleDataAndRender: function() {
-            // debugger;
             if (!this.dataConfig) {
                 this.showError("Unable to load example data configuration! Please refresh your page to try again. If this continues to happen, please <a href='https://kbase.us/contact-us/'>click here</a> to contact KBase with the problem.");
                 return;
@@ -291,7 +290,7 @@ define ([
                             if ($(this).text().split(" ")[1] === "Copy"){
                                 var dialog = new BootstrapDialog({
                                     title: 'Item already exists in workspace under same name.',
-                                    body: 'Do you want to override existing copy?',
+                                    body: 'Do you want to override the existing copy?',
                                     buttons: [$('<a type="button" class="btn btn-default">')
                                         .append('Yes')
                                         .click(function () {
@@ -303,13 +302,12 @@ define ([
                                         .append('No')
                                         .click(function () {
                                             dialog.hide();
-
                                         })
                                     ],
                                     closeButton: true
                                 });
                                 dialog.show();
-                            }else{
+                            } else {
                                 updateButton.call(this);
                             }
                             

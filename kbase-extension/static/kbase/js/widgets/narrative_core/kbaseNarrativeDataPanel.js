@@ -331,7 +331,7 @@ define([
                     .append(tab.content));
             }
 
-            $header.find('div').click($.proxy(function (event) {              
+            $header.find('div').click($.proxy(function (event) {
                 event.preventDefault();
                 event.stopPropagation();
                 var $headerDiv = $(event.currentTarget);
@@ -1288,9 +1288,6 @@ define([
                                     $(this).html('<img src="' + self.options.loadingImage + '">');
 
                                     var thisBtn = this;
-
-                                    // var targetName = object_info[1];
-                                    //console.log(object.name + " -> " + targetName);
                                     Promise.resolve(serviceClient.sync_call(
                                         "NarrativeService.copy_object",
                                         [{
@@ -1324,21 +1321,19 @@ define([
                                 if ($(this).text().split(" ")[1] === "Copy") {
                                     var dialog = new BootstrapDialog({
                                         title: 'Item already exists in workspace under same name.',
-                                        body: 'Do you want to override existing copy?',                                        
+                                        body: 'Do you want to override the existing copy?',                                        
                                         buttons: [$('<a type="button" class="btn btn-default">')
                                             .append('Yes')
                                             .click(function () {
-                                                dialog.hide();
-                                                
+                                                dialog.hide();   
                                                 updateButton.call(this);
 
                                             }.bind(this))
                                             , $('<a type="button" class="btn btn-default">')
-                                                .append('No')
-                                                .click(function () {
-                                                    dialog.hide();
-
-                                                })
+                                            .append('No')
+                                            .click(function () {
+                                                dialog.hide();
+                                            })
                                         ],
                                         closeButton: true
                                     });

@@ -1299,8 +1299,9 @@ define([
                                         }]
                                     ))
                                         .then(function () {
-                                            $(thisBtn).html('');
-                                            $(thisBtn).append($('<span>').addClass('fa fa-chevron-circle-left'))
+                                            var id = '.' + object_info[1].split('.').join('--');
+                                            $(id).html('');
+                                            $(id).append($('<span>').addClass('fa fa-chevron-circle-left'))
                                                 .append(' Copy');
                                             self.trigger('updateDataList.Narrative');
                                         })
@@ -1320,13 +1321,15 @@ define([
 
                                 };
 
-                                if ($(this).text().split(" ")[0] === "Copy") {
+                                if ($(this).text().split(" ")[1] === "Copy") {
                                     var dialog = new BootstrapDialog({
                                         title: 'Item already exists in workspace under same name.',
+                                        body: 'Do you want to override existing copy?',                                        
                                         buttons: [$('<a type="button" class="btn btn-default">')
                                             .append('Yes')
                                             .click(function () {
                                                 dialog.hide();
+                                                
                                                 updateButton.call(this);
 
                                             }.bind(this))

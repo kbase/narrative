@@ -369,7 +369,6 @@ define([
                 console.error('ws: ' + this.ws);
                 return;
             }
-
             Promise.resolve(this.ws.get_workspace_info({
                     workspace: this.ws_name
                 }))
@@ -971,28 +970,30 @@ define([
                         .append($('<button>').addClass('kb-data-list-btn')
                             .append('Delete')
                             .click(function () {
-                                if (self.ws_name && self.ws) {
-                                    self.ws.rename_object({
-                                            obj: { ref: object_info[6] + '/' + object_info[0] },
-                                            new_name: object_info[1].split('-deleted-')[0] + '-deleted-' + (new Date()).getTime()
-                                        },
-                                        function (renamed_info) {
-                                            self.ws.delete_objects([{ ref: object_info[6] + '/' + object_info[0] }],
-                                                function () {
-                                                    self.refresh();
-                                                },
-                                                function (error) {
-                                                    console.error(error);
-                                                    $alertContainer.empty();
-                                                    $alertContainer.append($('<span>').css({ 'color': '#F44336' }).append('Error! ' + error.error.message));
-                                                });
-                                        },
-                                        function (error) {
-                                            console.error(error);
-                                            $alertContainer.empty();
-                                            $alertContainer.append($('<span>').css({ 'color': '#F44336' }).append('Error! ' + error.error.message));
-                                        });
-                                }
+                                $(document).trigger('deleteDataList.Narrative', object_info[1]);
+                                // if (self.ws_name && self.ws) {
+                                //     self.ws.rename_object({
+                                //             obj: { ref: object_info[6] + '/' + object_info[0] },
+                                //             new_name: object_info[1].split('-deleted-')[0] + '-deleted-' + (new Date()).getTime()
+                                //         },
+                                //         function (renamed_info) {
+                                //             self.ws.delete_objects([{ ref: object_info[6] + '/' + object_info[0] }],
+                                //                 function () {
+                                //                     self.refresh();
+                                //                     $(document).trigger('deleteDataList.Narrative', object_info[1]);
+                                //                 },
+                                //                 function (error) {
+                                //                     console.error(error);
+                                //                     $alertContainer.empty();
+                                //                     $alertContainer.append($('<span>').css({ 'color': '#F44336' }).append('Error! ' + error.error.message));
+                                //                 });
+                                //         },
+                                //         function (error) {
+                                //             console.error(error);
+                                //             $alertContainer.empty();
+                                //             $alertContainer.append($('<span>').css({ 'color': '#F44336' }).append('Error! ' + error.error.message));
+                                //         });
+                                // }
                             }))
                         .append($('<button>').addClass('kb-data-list-cancel-btn')
                             .append('Cancel')

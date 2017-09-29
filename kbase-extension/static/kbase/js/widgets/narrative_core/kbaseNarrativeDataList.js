@@ -129,6 +129,8 @@ define([
             return obj[6] + '/' + obj[0];
         },
 
+        writtingLock: false,
+
         /**
          * Test if given object is a set.
          * This simply tests whether that object is in the `setInfo` mapping.
@@ -355,6 +357,7 @@ define([
         },
 
         refresh: function (showError) {
+            if(this.writtingLock) return;
             // Set the refresh timer on the first refresh. From  here, it'll refresh itself
             // every this.options.refresh_interval (30000) ms
             if (this.refreshTimer === null) {
@@ -906,6 +909,7 @@ define([
                         .val(object_info[1])
                         .on('focus', function () {
                             if (Jupyter && Jupyter.narrative) {
+                                self.writtingLock = true;
                                 Jupyter.narrative.disableKeyboardManager();
                             }
                         })
@@ -920,7 +924,9 @@ define([
                         .append($('<button>').addClass('kb-data-list-btn')
                             .append('Rename')
                             .click(function () {
+
                                 if (self.ws_name && self.ws) {
+                                    self.writtingLock = false;
                                     self.ws.rename_object({
                                             obj: { ref: object_info[6] + '/' + object_info[0] },
                                             new_name: $newNameInput.val()
@@ -938,6 +944,7 @@ define([
                         .append($('<button>').addClass('kb-data-list-cancel-btn')
                             .append('Cancel')
                             .click(function () {
+                                self.writtingLock = false;
                                 $alertContainer.empty();
                             })));
                 });
@@ -1185,6 +1192,7 @@ define([
                 }
                 if ($moreRow.is(':visible')) {
                     $moreRow.slideUp('fast');
+                    self.writtingLock = false;
                     //$toggleAdvancedViewBtn.show();
                 } else {
                     self.getRichData(object_info, $moreRow);

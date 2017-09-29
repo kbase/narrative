@@ -17,7 +17,8 @@ define ([
     'kbase-generic-client-api',
     'base/js/namespace',
     'util/display',
-    'util/icon'
+    'util/icon',
+    'util/bootstrapDialog'
 ], function (
 	KBWidget,
 	bootstrap,
@@ -30,7 +31,8 @@ define ([
     GenericClient,
     Jupyter,
     DisplayUtil,
-    Icon
+    Icon,
+    BootstrapDialog
 ) {
     'use strict';
     return KBWidget({

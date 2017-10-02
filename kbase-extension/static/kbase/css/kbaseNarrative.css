@@ -561,7 +561,9 @@ p#site-title {
 }
 .kb-narr-side-panel-set{
     height:100%;
-
+}
+.kb-narr-side-panel-set:last-child{
+    height:50%;
 }
 
 .kb-overlay-dimmer {

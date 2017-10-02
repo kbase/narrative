@@ -4,14 +4,13 @@
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
 
-define (
-	[
-		'narrativeConfig',
-		'bluebird'
-	], function(
-		Config,
-		Promise
-	) {
+define ([
+    'narrativeConfig',
+    'bluebird'
+], function(
+    Config,
+    Promise
+) {
     'use strict';
     describe('Tests for narrativeConfig', function() {
         it('loaded the config module', function() {

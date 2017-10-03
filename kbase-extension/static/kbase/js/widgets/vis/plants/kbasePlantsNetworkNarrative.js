@@ -236,13 +236,13 @@ define (
 
                 var $networkGraph = $.jqElem('div')
                     .css({width : 700, height : 600})
-                    .attr('align', 'center')
-                    new kbaseForcedNetwork( , {
-                            linkDistance : 200,
-                            filter : true,
-                            nodeHighlightColor : '#002200',
-                            relatedNodeHighlightColor : 'black',
-                        });
+                    .attr('align', 'center');
+                new kbaseForcedNetwork($networkGraph, {
+                    linkDistance : 200,
+                    filter : true,
+                    nodeHighlightColor : '#002200',
+                    relatedNodeHighlightColor : 'black',
+                });
 
                 this.networkGraph($networkGraph);
 

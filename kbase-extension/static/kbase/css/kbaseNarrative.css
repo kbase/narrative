@@ -444,6 +444,8 @@ p#site-title {
     z-index : 1030;
     background : white;
     position : fixed;
+    max-height: calc(100% - 73px);
+    overflow-y:auto;
 }
 
 .kb-side-overlay-header {
@@ -561,7 +563,9 @@ p#site-title {
 }
 .kb-narr-side-panel-set{
     height:100%;
-
+}
+.kb-narr-side-panel-set:last-child{
+    height:50%;
 }
 
 .kb-overlay-dimmer {

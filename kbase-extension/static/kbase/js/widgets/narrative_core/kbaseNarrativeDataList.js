@@ -357,13 +357,17 @@ define([
         },
 
         refresh: function (showError) {
+            console.log("writtingLock in refresh" , this.writtingLock);
             if(this.writtingLock) return;
             // Set the refresh timer on the first refresh. From  here, it'll refresh itself
             // every this.options.refresh_interval (30000) ms
             if (this.refreshTimer === null) {
+                // this.refreshTimer = setInterval(function () {
+                //     this.refresh();
+                // }.bind(this), this.options.refresh_interval); // check if there is new data every X ms
                 this.refreshTimer = setInterval(function () {
                     this.refresh();
-                }.bind(this), this.options.refresh_interval); // check if there is new data every X ms
+                }.bind(this), 3000); // check if there is new data every X ms
             }
 
             if (!this.ws_name || !this.ws) {
@@ -977,9 +981,6 @@ define([
                         .append($('<button>').addClass('kb-data-list-btn')
                             .append('Delete')
                             .click(function () {
-                                //left outside of delete objects due to strange name change
-                                // $(document).trigger('deleteDataList.Narrative', object_info[1]);
-
                                 if (self.ws_name && self.ws) {
                                     self.ws.rename_object({
                                             obj: { ref: object_info[6] + '/' + object_info[0] },
@@ -1382,11 +1383,7 @@ define([
                     hide: Config.get('tooltip').hideDelay
                 },
                 placement: 'top auto',
-                html: true,
-                viewport: {
-                    selector: '#kb-side-panel .kb-narr-side-panel:nth-child(1) .kb-narr-panel-body',
-                    padding: 2
-                }
+                html: true
             });
 
             return this;
@@ -1651,6 +1648,7 @@ define([
                 })
                 .append('<span class="glyphicon glyphicon-refresh"></span>')
                 .on('click', function () {
+                    this.writtingLock = false;
                     self.refresh();
                 });
             self.$searchInput = $('<input type="text">')

@@ -7,7 +7,9 @@ This is built on the Jupyter Notebook v4.4.1 (more notes will follow).
 - TASK-1094 - Fix overlapping cells and buttons issue in Firefox
 - TASK-1113/PUBLIC-148 - Import Panel scrolls if panel size is larger than screen size
 - TASK-1088 - Data Pane maintains filters after refresh due to changes in narritve
-- Fix bold font display inconsistencies between different browsers
+- Style Fixes
+    - Fix bold font display inconsistencies between different browsers
+    - Move tooltip in datapanel from covering buttons to the top
 
 
 ### Version 3.5.0

@@ -130,6 +130,7 @@ define([
         },
 
         writtingLock: false,
+        refreshWrittingLock:null,
 
         /**
          * Test if given object is a set.
@@ -293,7 +294,7 @@ define([
             // listener for refresh
             $(document).on('updateDataList.Narrative', function () {
                 self.refresh();
-            })
+            });
 
             // self.initDataListSets();
 
@@ -328,6 +329,7 @@ define([
             this.serviceClient = new GenericClient(Config.url('service_wizard'), auth);
             this.my_user_id = auth.user_id;
             this.isLoggedIn = true;
+            this.writtingLock = false;
             this.refresh();
             return this;
         },
@@ -357,17 +359,13 @@ define([
         },
 
         refresh: function (showError) {
-            console.log("writtingLock in refresh" , this.writtingLock);
             if(this.writtingLock) return;
             // Set the refresh timer on the first refresh. From  here, it'll refresh itself
             // every this.options.refresh_interval (30000) ms
             if (this.refreshTimer === null) {
-                // this.refreshTimer = setInterval(function () {
-                //     this.refresh();
-                // }.bind(this), this.options.refresh_interval); // check if there is new data every X ms
                 this.refreshTimer = setInterval(function () {
                     this.refresh();
-                }.bind(this), 3000); // check if there is new data every X ms
+                }.bind(this), this.options.refresh_interval); // check if there is new data every X ms
             }
 
             if (!this.ws_name || !this.ws) {
@@ -803,6 +801,7 @@ define([
                                                 .click(function () {
                                                     self.ws.revert_object(revertRefLocal,
                                                         function (reverted_obj_info) {
+                                                            self.writtingLock = false;
                                                             self.refresh();
                                                         },
                                                         function (error) {
@@ -908,6 +907,15 @@ define([
                                     .addClass('text-warning')));
                         return;
                     }
+
+                    //lock on refresh expires aftger 5 min
+                    var releaseLock = function(){
+                        if(self.refreshWrittingLock !== null) clearTimeout(self.refreshWrittingLock);
+                        
+                        self.refreshWrittingLock = setTimeout(function () {
+                            self.writtingLock = false;
+                        }.bind(this), 900000);                        
+                    };
                     var $newNameInput = $('<input type="text">')
                         .addClass('form-control')
                         .val(object_info[1])
@@ -922,6 +930,10 @@ define([
                                 Jupyter.narrative.enableKeyboardManager();
                             }
                         });
+                    
+                    $newNameInput.unbind('focus',releaseLock);
+                    $newNameInput.bind('focus',releaseLock);
+
                     $alertContainer.append($('<div>')
                         .append($('<div>').append('Warning: Apps using the old name may break.'))
                         .append($('<div>').append($newNameInput))
@@ -930,12 +942,12 @@ define([
                             .click(function () {
 
                                 if (self.ws_name && self.ws) {
-                                    self.writtingLock = false;
                                     self.ws.rename_object({
                                             obj: { ref: object_info[6] + '/' + object_info[0] },
                                             new_name: $newNameInput.val()
                                         },
                                         function (renamed_info) {
+                                            self.writtingLock = false;
                                             self.refresh();
                                         },
                                         function (error) {
@@ -990,6 +1002,7 @@ define([
                                             self.ws.delete_objects([{ ref: object_info[6] + '/' + object_info[0] }],
                                                 function () {
                                                     $(document).trigger('deleteDataList.Narrative', object_info[1]);
+                                                    self.writtingLock = false;
                                                     self.refresh();
 
                                                 },

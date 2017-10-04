@@ -27,8 +27,22 @@ define('testUtil', [
         // add some data to the workspace
     }
 
-    function loadNarrativeData() {
+    function createNarrative() {
 
+    }
+
+    function loadNarrativeData() {
+        /* Steps:
+         * 1. Make a new narrative if there isn't a current one.
+         * 2. Load all data given by TestConfig.data
+         * 3. ...
+         * 4. Profit.
+         */
+    }
+
+    function cleanupTestRun() {
+        /* If we have open Workspaces, delete them.
+         */
     }
 
     function getCurrentWorkspace() {

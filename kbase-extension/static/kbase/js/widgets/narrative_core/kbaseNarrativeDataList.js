@@ -129,6 +129,9 @@ define([
             return obj[6] + '/' + obj[0];
         },
 
+        writtingLock: false,
+        refreshWrittingLock:null,
+
         /**
          * Test if given object is a set.
          * This simply tests whether that object is in the `setInfo` mapping.
@@ -291,7 +294,7 @@ define([
             // listener for refresh
             $(document).on('updateDataList.Narrative', function () {
                 self.refresh();
-            })
+            });
 
             // self.initDataListSets();
 
@@ -326,6 +329,7 @@ define([
             this.serviceClient = new GenericClient(Config.url('service_wizard'), auth);
             this.my_user_id = auth.user_id;
             this.isLoggedIn = true;
+            this.writtingLock = false;
             this.refresh();
             return this;
         },
@@ -355,6 +359,7 @@ define([
         },
 
         refresh: function (showError) {
+            if(this.writtingLock) return;
             // Set the refresh timer on the first refresh. From  here, it'll refresh itself
             // every this.options.refresh_interval (30000) ms
             if (this.refreshTimer === null) {
@@ -796,6 +801,7 @@ define([
                                                 .click(function () {
                                                     self.ws.revert_object(revertRefLocal,
                                                         function (reverted_obj_info) {
+                                                            self.writtingLock = false;
                                                             self.refresh();
                                                         },
                                                         function (error) {
@@ -901,11 +907,21 @@ define([
                                     .addClass('text-warning')));
                         return;
                     }
+
+                    //lock on refresh expires aftger 5 min
+                    var releaseLock = function(){
+                        if(self.refreshWrittingLock !== null) clearTimeout(self.refreshWrittingLock);
+                        
+                        self.refreshWrittingLock = setTimeout(function () {
+                            self.writtingLock = false;
+                        }.bind(this), 900000);                        
+                    };
                     var $newNameInput = $('<input type="text">')
                         .addClass('form-control')
                         .val(object_info[1])
                         .on('focus', function () {
                             if (Jupyter && Jupyter.narrative) {
+                                self.writtingLock = true;
                                 Jupyter.narrative.disableKeyboardManager();
                             }
                         })
@@ -914,18 +930,24 @@ define([
                                 Jupyter.narrative.enableKeyboardManager();
                             }
                         });
+                    
+                    $newNameInput.unbind('focus',releaseLock);
+                    $newNameInput.bind('focus',releaseLock);
+
                     $alertContainer.append($('<div>')
                         .append($('<div>').append('Warning: Apps using the old name may break.'))
                         .append($('<div>').append($newNameInput))
                         .append($('<button>').addClass('kb-data-list-btn')
                             .append('Rename')
                             .click(function () {
+
                                 if (self.ws_name && self.ws) {
                                     self.ws.rename_object({
                                             obj: { ref: object_info[6] + '/' + object_info[0] },
                                             new_name: $newNameInput.val()
                                         },
                                         function (renamed_info) {
+                                            self.writtingLock = false;
                                             self.refresh();
                                         },
                                         function (error) {
@@ -938,6 +960,7 @@ define([
                         .append($('<button>').addClass('kb-data-list-cancel-btn')
                             .append('Cancel')
                             .click(function () {
+                                self.writtingLock = false;
                                 $alertContainer.empty();
                             })));
                 });
@@ -970,9 +993,6 @@ define([
                         .append($('<button>').addClass('kb-data-list-btn')
                             .append('Delete')
                             .click(function () {
-                                //left outside of delete objects due to strange name change
-                                // $(document).trigger('deleteDataList.Narrative', object_info[1]);
-
                                 if (self.ws_name && self.ws) {
                                     self.ws.rename_object({
                                             obj: { ref: object_info[6] + '/' + object_info[0] },
@@ -982,6 +1002,7 @@ define([
                                             self.ws.delete_objects([{ ref: object_info[6] + '/' + object_info[0] }],
                                                 function () {
                                                     $(document).trigger('deleteDataList.Narrative', object_info[1]);
+                                                    self.writtingLock = false;
                                                     self.refresh();
 
                                                 },
@@ -1185,6 +1206,7 @@ define([
                 }
                 if ($moreRow.is(':visible')) {
                     $moreRow.slideUp('fast');
+                    self.writtingLock = false;
                     //$toggleAdvancedViewBtn.show();
                 } else {
                     self.getRichData(object_info, $moreRow);
@@ -1374,11 +1396,7 @@ define([
                     hide: Config.get('tooltip').hideDelay
                 },
                 placement: 'top auto',
-                html: true,
-                viewport: {
-                    selector: '#kb-side-panel .kb-narr-side-panel:nth-child(1) .kb-narr-panel-body',
-                    padding: 2
-                }
+                html: true
             });
 
             return this;
@@ -1643,6 +1661,7 @@ define([
                 })
                 .append('<span class="glyphicon glyphicon-refresh"></span>')
                 .on('click', function () {
+                    this.writtingLock = false;
                     self.refresh();
                 });
             self.$searchInput = $('<input type="text">')

@@ -25,6 +25,10 @@
             "name": "Media"
         },
         {
+            "id": "fba_model",
+            "name": "FBA Model"
+        },
+        {
             "id": "assembly",
             "name": "Assembly"
         },
@@ -86,6 +90,15 @@
             "app_static_params": {},
             "app_output_param": "media_name",
             "app_output_suffix": "_media",
+            "multiselect": false
+        },
+        "fba_model": {
+            "app_id": "kb_uploadmethods/import_file_as_fba_model_from_staging",
+            "app_input_param": "model_file",
+            "app_input_param_type": "string",
+            "app_static_params": {},
+            "app_output_param": "model_name",
+            "app_output_suffix": "_model",
             "multiselect": false
         },
         "assembly": {

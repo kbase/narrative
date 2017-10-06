@@ -3,17 +3,6 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v4.4.1 (more notes will follow).
 
-### Version 3.5.1
-- TASK-1117 - Add importer for FBAModels to staging area
-- TASK-1116 - Add PhenotypeSet importer to staging area
-- TASK-1089 - Import data slide out panel tracks what object is added to narrative. "Add" button turns into "copy" if object already exists. Add pop up when user copies and overrides existing object.
-- TASK-1094 - Fix overlapping cells and buttons issue in Firefox
-- TASK-1113/PUBLIC-148 - Import Panel scrolls if panel size is larger than screen size
-- TASK-1088 - Data Pane maintains filters after refresh due to changes in narrative
-- Style Fixes
-    - Fix bold font display inconsistencies between different browsers
-    - Move tooltip in data panel from covering buttons to the top
-
 ### Version 3.5.0
 - TASK-1054 - Create a new loading window with a set of tasks to load and connect to (treats the problem of slowly loading websockets, still probably needs some adjusting).
 - TASK-588 - Change status of importers from "suspend" to "error" if the import job fails.

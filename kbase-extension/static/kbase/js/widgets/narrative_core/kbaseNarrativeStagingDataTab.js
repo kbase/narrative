@@ -15,7 +15,6 @@ define([
     StagingAreaViewer,
     Jupyter
 ) {
-    'use strict';
     return new KBWidget({
         name: 'kbaseNarrativeStagingDataTab',
         $myFiles: $('<div>'),

@@ -13,6 +13,10 @@ This is built on the Jupyter Notebook v4.4.1 (more notes will follow).
 - Style Fixes
     - Fix bold font display inconsistencies between different browsers
     - Move tooltip in data panel from covering buttons to the top
+- KBASE-4756 - Fix data type filtering in data panel slideout.
+- PTV-225 - Fixes sorting by type in data panel 
+- PTV-535 - Fix RNA-seq viewer to properly handle multiple input types.
+- PUBLIC-123 - Fix incorrect reaction counts in FBA Model viewer
 
 ### Version 3.5.0
 - TASK-1054 - Create a new loading window with a set of tasks to load and connect to (treats the problem of slowly loading websockets, still probably needs some adjusting).

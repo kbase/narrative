@@ -27,6 +27,10 @@
         {
             "id": "assembly",
             "name": "Assembly"
+        },
+        {
+            "id": "phenotype_set",
+            "name": "Phenotype Set"
         }
     ],
     "app_info": {
@@ -91,6 +95,15 @@
             "app_static_params": {},
             "app_output_param": "assembly_name",
             "app_output_suffix": "_assembly",
+            "multiselect": false
+        },
+        "phenotype_set": {
+            "app_id": "kb_uploadmethods/import_tsv_as_phenotype_set_from_staging",
+            "app_input_param": "staging_file_subdir_path",
+            "app_input_param_type": "string",
+            "app_static_params": {},
+            "app_output_param": "phenotype_set_name",
+            "app_output_suffix": "_phenotype_set",
             "multiselect": false
         }
     }

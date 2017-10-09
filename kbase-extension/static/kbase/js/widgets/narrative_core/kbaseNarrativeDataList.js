@@ -26,6 +26,7 @@ define([
     'text!kbase/templates/data_list/object_row.html',
     'kb_service/utils',
     'util/bootstrapAlert',
+    'kbase/js/widgets/narrative_core/kbaseCard',
 
     'bootstrap',
     'jquery-nearest'
@@ -48,7 +49,8 @@ define([
     Handlebars,
     ObjectRowHtml,
     ServiceUtils,
-    BootstrapAlert
+    BootstrapAlert,
+    kbaseCard
 ) {
     'use strict';
     return KBWidget({
@@ -235,6 +237,7 @@ define([
             this._super(options);
             var self = this;
 
+            // var test = new kbaseCard({});
             var dataConfig = Config.get('data_panel');
             // this is the limit of the number of objects to retrieve from the ws on each pass
             // note that if there are more objects than this, then sorts/search filters may
@@ -1158,7 +1161,9 @@ define([
 
             var $date = $('<span>').addClass('kb-data-list-date').append(TimeFormat.getTimeStampStr(object_info[3]));
             var $byUser = $('<span>').addClass('kb-data-list-edit-by');
+            var author = "";
             if (object_info[5] !== self.my_user_id) {
+                author = ' by ' + object_info[5];
                 $byUser.append(' by ' + object_info[5])
                     .click(function (e) {
                         e.stopPropagation();
@@ -1281,7 +1286,21 @@ define([
 
             // add the row
             $box.append($row);
-
+            var objVersion = 'v' + object_info[4];
+            var test = new kbaseCard(
+                $('<div>'), {
+                    name: shortName,
+                    version:  objVersion,
+                    date: TimeFormat.getTimeStampStr(object_info[3]),
+                    type: type,
+                    "edit-by": author });
+            var testCell = $('<div/>').append(test.content);
+            $('body').append(testCell
+                .css({
+                    'position': 'absolute',
+                    'background-color': 'white'
+                }
+                ));    
             return $box;
         },
 
@@ -1449,6 +1468,8 @@ define([
         },
 
         renderList: function () {
+
+
             this.detachAllRows();
             this.n_objs_rendered = 0;
 

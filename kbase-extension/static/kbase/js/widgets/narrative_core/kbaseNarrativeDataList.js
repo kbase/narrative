@@ -1287,7 +1287,7 @@ define([
             // add the row
             $box.append($row);
             var objVersion = 'v' + object_info[4];
-            var $moreContent = $('<div>')
+            var $moreContent = $('<div>').addClass('kb-data-list-more-div')
                 .append(self.addDataControls(object_info, $alertDiv, objData.fromPalette, ref_path)).append($alertDiv)
                 .append(
                     $('<table style="width:100%;">')
@@ -1295,7 +1295,7 @@ define([
                         .append('<tr><th>Full Type</th><td>' + typeLink + '</td></tr>')
                         .append($('<tr>').append('<th>Saved by</th>').append($savedByUserSpan))
                         .append(metadataText));
-            var test = new kbaseDataCard(
+            var $card = new kbaseDataCard(
                 {
                     name: shortName,
                     version:  objVersion,
@@ -1304,13 +1304,13 @@ define([
                     "edit-by": author,
                     moreContent: $moreContent
                 });
-            $('body').append(test
-                .css({
-                    'position': 'absolute',
-                    'background-color': 'white'
-                }
-                ));    
-            return $box;
+            // $('body').append($card
+            //     .css({
+            //         'position': 'absolute',
+            //         'background-color': 'white'
+            //     }
+            //     ));    
+            return $card;
         },
 
         // ============= DnD ==================

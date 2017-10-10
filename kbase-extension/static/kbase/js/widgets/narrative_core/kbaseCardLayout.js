@@ -33,10 +33,18 @@ define (
             //partitions
             var $card = $('<div/>', { 'class': 'narrative-card-row' });
             var $mainContent = $('<div/>', { 'class': 'narrative-card-row-main' });
-            var $moreContent = $('<div/>', { 'class': 'narrative-card-row-more' });               
-            if(options.moreContent) $moreContent.append(options.moreContent);
-
+            var $moreContent = $('<div/>', { 'class': 'narrative-card-row-more' }).hide();               
             var $info = $('<div/>', { 'class': 'kb-data-list-info' });
+            var $toggleAdvancedViewBtn =
+                $('<div>').addClass('narrative-card-ellipsis');
+
+            //if have sub content, add toggle    
+            if(options.moreContent) {
+                $moreContent.append(options.moreContent);
+                $toggleAdvancedViewBtn.hide()
+                    .html($('<button class="btn btn-xs btn-default pull-right" aria-hidden="true">')
+                        .append('<span class="fa fa-ellipsis-h" style="color:#888" />'));
+            }
             
             var $actionButton = options.actionButton;
             var $logo = options.logo;
@@ -52,12 +60,7 @@ define (
 
 
             //moreContent;
-            var $toggleAdvancedViewBtn =
-                $('<div>').addClass('narrative-card-ellipsis') 
-                    .hide()
-                    .html($('<button class="btn btn-xs btn-default pull-right" aria-hidden="true">')
-                        .append('<span class="fa fa-ellipsis-h" style="color:#888" />'));
-            
+          
             $mainContent.append($logo)
                 .append($info)
                 .append($toggleAdvancedViewBtn)
@@ -66,6 +69,9 @@ define (
                 })
                 .mouseleave(function () {
                     $toggleAdvancedViewBtn.hide();
+                })
+                .click(function(){
+                    $moreContent.toggle();
                 });
             $card.append($mainContent);
             $card.append($moreContent);

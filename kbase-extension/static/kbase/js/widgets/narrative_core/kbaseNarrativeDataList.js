@@ -26,7 +26,7 @@ define([
     'text!kbase/templates/data_list/object_row.html',
     'kb_service/utils',
     'util/bootstrapAlert',
-    'kbase/js/widgets/narrative_core/kbaseCard',
+    'kbase/js/widgets/narrative_core/kbaseDataCard',
 
     'bootstrap',
     'jquery-nearest'
@@ -50,7 +50,7 @@ define([
     ObjectRowHtml,
     ServiceUtils,
     BootstrapAlert,
-    kbaseCard
+    kbaseDataCard
 ) {
     'use strict';
     return KBWidget({
@@ -237,7 +237,7 @@ define([
             this._super(options);
             var self = this;
 
-            // var test = new kbaseCard({});
+            // var test = new kbaseDataCard({});
             var dataConfig = Config.get('data_panel');
             // this is the limit of the number of objects to retrieve from the ws on each pass
             // note that if there are more objects than this, then sorts/search filters may
@@ -1287,7 +1287,7 @@ define([
             // add the row
             $box.append($row);
             var objVersion = 'v' + object_info[4];
-            var test = new kbaseCard(
+            var test = new kbaseDataCard(
                 {
                     name: shortName,
                     version:  objVersion,

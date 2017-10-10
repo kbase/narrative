@@ -2267,7 +2267,10 @@ button.kb-data-obj {
     font-size: 13px;
 }
 
-
+/* card layout */
+.narrative-card-row-main{
+    display:flex;
+}
 
 /* data list */
 .kb-data-list-obj-row {

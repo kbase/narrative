@@ -1288,14 +1288,14 @@ define([
             $box.append($row);
             var objVersion = 'v' + object_info[4];
             var test = new kbaseCard(
-                $('<div>'), {
+                {
                     name: shortName,
                     version:  objVersion,
                     date: TimeFormat.getTimeStampStr(object_info[3]),
                     type: type,
-                    "edit-by": author });
-            var testCell = $('<div/>').append(test.content);
-            $('body').append(testCell
+                    "edit-by": author 
+                });
+            $('body').append(test
                 .css({
                     'position': 'absolute',
                     'background-color': 'white'

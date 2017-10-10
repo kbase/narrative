@@ -378,8 +378,8 @@ define([
                 return;
             }
             Promise.resolve(this.ws.get_workspace_info({
-                    workspace: this.ws_name
-                }))
+                workspace: this.ws_name
+            }))
                 .then(function (wsInfo) {
                     if (this.wsLastUpdateTimestamp !== wsInfo[3]) {
                         this.wsLastUpdateTimestamp = wsInfo[3];
@@ -572,13 +572,13 @@ define([
             }.bind(this);
 
             return Promise.resolve(
-                    this.serviceClient.sync_call(
-                        'NarrativeService.list_objects_with_sets', [{
-                            'ws_name': this.ws_name,
-                            'includeMetadata': 1
-                        }]
-                    )
+                this.serviceClient.sync_call(
+                    'NarrativeService.list_objects_with_sets', [{
+                        'ws_name': this.ws_name,
+                        'includeMetadata': 1
+                    }]
                 )
+            )
                 .then(function (result) {
                     result = result[0]['data'];
 
@@ -793,14 +793,14 @@ define([
                                         var revertRef = { wsid: history[k][6], objid: history[k][0], ver: history[k][4] };
                                         (function (revertRefLocal) {
                                             $revertBtn.tooltip({
-                                                    title: 'Revert to this version?',
-                                                    container: 'body',
-                                                    placement: 'bottom',
-                                                    delay: {
-                                                        show: Config.get('tooltip').showDelay,
-                                                        hide: Config.get('tooltip').hideDelay
-                                                    }
-                                                })
+                                                title: 'Revert to this version?',
+                                                container: 'body',
+                                                placement: 'bottom',
+                                                delay: {
+                                                    show: Config.get('tooltip').showDelay,
+                                                    hide: Config.get('tooltip').hideDelay
+                                                }
+                                            })
                                                 .click(function () {
                                                     self.ws.revert_object(revertRefLocal,
                                                         function (reverted_obj_info) {
@@ -946,18 +946,18 @@ define([
 
                                 if (self.ws_name && self.ws) {
                                     self.ws.rename_object({
-                                            obj: { ref: object_info[6] + '/' + object_info[0] },
-                                            new_name: $newNameInput.val()
-                                        },
-                                        function (renamed_info) {
-                                            self.writtingLock = false;
-                                            self.refresh();
-                                        },
-                                        function (error) {
-                                            console.error(error);
-                                            $alertContainer.empty();
-                                            $alertContainer.append($('<span>').css({ 'color': '#F44336' }).append('Error! ' + error.error.message));
-                                        });
+                                        obj: { ref: object_info[6] + '/' + object_info[0] },
+                                        new_name: $newNameInput.val()
+                                    },
+                                    function (renamed_info) {
+                                        self.writtingLock = false;
+                                        self.refresh();
+                                    },
+                                    function (error) {
+                                        console.error(error);
+                                        $alertContainer.empty();
+                                        $alertContainer.append($('<span>').css({ 'color': '#F44336' }).append('Error! ' + error.error.message));
+                                    });
                                 }
                             }))
                         .append($('<button>').addClass('kb-data-list-cancel-btn')
@@ -998,28 +998,28 @@ define([
                             .click(function () {
                                 if (self.ws_name && self.ws) {
                                     self.ws.rename_object({
-                                            obj: { ref: object_info[6] + '/' + object_info[0] },
-                                            new_name: object_info[1].split('-deleted-')[0] + '-deleted-' + (new Date()).getTime()
-                                        },
-                                        function (renamed_info) {
-                                            self.ws.delete_objects([{ ref: object_info[6] + '/' + object_info[0] }],
-                                                function () {
-                                                    $(document).trigger('deleteDataList.Narrative', object_info[1]);
-                                                    self.writtingLock = false;
-                                                    self.refresh();
+                                        obj: { ref: object_info[6] + '/' + object_info[0] },
+                                        new_name: object_info[1].split('-deleted-')[0] + '-deleted-' + (new Date()).getTime()
+                                    },
+                                    function (renamed_info) {
+                                        self.ws.delete_objects([{ ref: object_info[6] + '/' + object_info[0] }],
+                                            function () {
+                                                $(document).trigger('deleteDataList.Narrative', object_info[1]);
+                                                self.writtingLock = false;
+                                                self.refresh();
 
-                                                },
-                                                function (error) {
-                                                    console.error(error);
-                                                    $alertContainer.empty();
-                                                    $alertContainer.append($('<span>').css({ 'color': '#F44336' }).append('Error! ' + error.error.message));
-                                                });
-                                        },
-                                        function (error) {
-                                            console.error(error);
-                                            $alertContainer.empty();
-                                            $alertContainer.append($('<span>').css({ 'color': '#F44336' }).append('Error! ' + error.error.message));
-                                        });
+                                            },
+                                            function (error) {
+                                                console.error(error);
+                                                $alertContainer.empty();
+                                                $alertContainer.append($('<span>').css({ 'color': '#F44336' }).append('Error! ' + error.error.message));
+                                            });
+                                    },
+                                    function (error) {
+                                        console.error(error);
+                                        $alertContainer.empty();
+                                        $alertContainer.append($('<span>').css({ 'color': '#F44336' }).append('Error! ' + error.error.message));
+                                    });
                                 }
                             }))
                         .append($('<button>').addClass('kb-data-list-cancel-btn')
@@ -1194,15 +1194,15 @@ define([
                     .append(self.addDataControls(object_info, $alertDiv, objData.fromPalette, ref_path)).append($alertDiv))
                 .append(
                     $('<table style="width:100%;">')
-                    .append('<tr><th>Permament Id</th><td>' + object_info[6] + '/' + object_info[0] + '/' + object_info[4] + '</td></tr>')
-                    .append('<tr><th>Full Type</th><td>' + typeLink + '</td></tr>')
-                    .append($('<tr>').append('<th>Saved by</th>').append($savedByUserSpan))
-                    .append(metadataText));
+                        .append('<tr><th>Permament Id</th><td>' + object_info[6] + '/' + object_info[0] + '/' + object_info[4] + '</td></tr>')
+                        .append('<tr><th>Full Type</th><td>' + typeLink + '</td></tr>')
+                        .append($('<tr>').append('<th>Saved by</th>').append($savedByUserSpan))
+                        .append(metadataText));
 
             var $toggleAdvancedViewBtn =
                 $('<span>').addClass('kb-data-list-more') //.addClass('btn btn-default btn-xs kb-data-list-more-btn')
-                .hide()
-                .html($('<button class="btn btn-xs btn-default pull-right" aria-hidden="true">').append('<span class="fa fa-ellipsis-h" style="color:#888" />'));
+                    .hide()
+                    .html($('<button class="btn btn-xs btn-default pull-right" aria-hidden="true">').append('<span class="fa fa-ellipsis-h" style="color:#888" />'));
             var toggleAdvanced = function () {
                 if (self.selectedObject === object_info[0] && $moreRow.is(':visible')) {
                     // assume selection handling occurs before this is called
@@ -1287,13 +1287,22 @@ define([
             // add the row
             $box.append($row);
             var objVersion = 'v' + object_info[4];
+            var $moreContent = $('<div>')
+                .append(self.addDataControls(object_info, $alertDiv, objData.fromPalette, ref_path)).append($alertDiv)
+                .append(
+                    $('<table style="width:100%;">')
+                        .append('<tr><th>Permament Id</th><td>' + object_info[6] + '/' + object_info[0] + '/' + object_info[4] + '</td></tr>')
+                        .append('<tr><th>Full Type</th><td>' + typeLink + '</td></tr>')
+                        .append($('<tr>').append('<th>Saved by</th>').append($savedByUserSpan))
+                        .append(metadataText));
             var test = new kbaseDataCard(
                 {
                     name: shortName,
                     version:  objVersion,
                     date: TimeFormat.getTimeStampStr(object_info[3]),
                     type: type,
-                    "edit-by": author 
+                    "edit-by": author,
+                    moreContent: $moreContent
                 });
             $('body').append(test
                 .css({

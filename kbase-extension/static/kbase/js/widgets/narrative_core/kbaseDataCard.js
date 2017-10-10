@@ -58,12 +58,13 @@ define (
                                      .append($type)
                                      .append($date)
                                      .append($byUser);
-
+            // debugger;
             var layout = {
                 actionButton: undefined,
                 logo: $logo,
                 title: $title,
-                subcontent: $subcontent
+                subcontent: $subcontent,
+                moreContent : options.moreContent
             };
 
 

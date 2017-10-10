@@ -34,14 +34,14 @@ define (
             var $card = $('<div/>', { 'class': 'narrative-card-row' });
             var $mainContent = $('<div/>', { 'class': 'narrative-card-row-main' });
             var $moreContent = $('<div/>', { 'class': 'narrative-card-row-more' });               
+            if(options.moreContent) $moreContent.append(options.moreContent);
 
             var $info = $('<div/>', { 'class': 'kb-data-list-info' });
-
+            
             var $actionButton = options.actionButton;
             var $logo = options.logo;
             var $title = options.title;
             var $subcontent = options.subcontent;
-            var $toggleAdvancedViewBtn;
 
             $info.append($title)
                 //append palleteIcon and toggleIcon
@@ -50,23 +50,27 @@ define (
             if($actionButton) $mainContent.append($actionButton);
 
 
+
             //moreContent;
             var $toggleAdvancedViewBtn =
-                $('<span>').addClass('narrative-card-more') //.addClass('btn btn-default btn-xs kb-data-list-more-btn')
-                    // .hide()
+                $('<div>').addClass('narrative-card-ellipsis') 
+                    .hide()
                     .html($('<button class="btn btn-xs btn-default pull-right" aria-hidden="true">')
                         .append('<span class="fa fa-ellipsis-h" style="color:#888" />'));
             
             $mainContent.append($logo)
                 .append($info)
-                .append($toggleAdvancedViewBtn);
-
+                .append($toggleAdvancedViewBtn)
+                .mouseenter(function () {
+                    $toggleAdvancedViewBtn.show();
+                })
+                .mouseleave(function () {
+                    $toggleAdvancedViewBtn.hide();
+                });
             $card.append($mainContent);
+            $card.append($moreContent);
             
-            if($moreContent){
-                    //add toggle function
-                $card.append($moreContent);
-            }
+
             return $card;
         }
         return KbaseCardLayout;  //end init

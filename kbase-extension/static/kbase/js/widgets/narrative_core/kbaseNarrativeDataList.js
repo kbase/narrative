@@ -1091,7 +1091,6 @@ define([
             var type_tokens = object_info[2].split('.');
             var type_module = type_tokens[0];
             var type = type_tokens[1].split('-')[0];
-            var unversioned_full_type = type_module + '.' + type;
             var $logo = $('<div>');
             var is_set = this.isASet(object_info);
 
@@ -1111,10 +1110,7 @@ define([
             this.dataIconParam[this.itemId(object_info)] = data_icon_param;
             // add behavior
 
-            $logo.click(function (e) {
-                e.stopPropagation();
-                self.insertViewer(object_key);
-            });
+
 
             var shortName = object_info[1];
             var isShortened = false;
@@ -1246,46 +1242,13 @@ define([
                         self.toggleSetExpansion(objId, $box);
                     });
             }
-            var spacerCss = '';
-            if (self.setViewMode) {
-                spacerCss = 'width:1.3em; max-width:1.3em';
-            }
-            var $mainTr = $('<tr>')
-                .append($('<td style="' + spacerCss + '">')
-                    .append($toggleIcon))
-                .append($('<td>')
-                    .css({ 'width': '4em' })
-                    .append($logo))
-                .append($('<td>')
-                    .append($mainDiv));
-
-            var $topTable = $('<table>').attr('kb-oid', object_key)
-                .css({ 'width': '100%', 'background': '#fff' }) // set background to white looks better on DnD
-                .append($mainTr);
-
-            var $row = $('<div>').addClass('kb-data-list-obj-row')
-                .append($('<div>').addClass('kb-data-list-obj-row-main')
-                    .append($topTable))
-                .append($moreRow)
-                // show/hide ellipses on hover, show extra info on click
-                .mouseenter(function () {
-                    $toggleAdvancedViewBtn.show();
-                })
-                .mouseleave(function () {
-                    $toggleAdvancedViewBtn.hide();
-                });
 
 
-            // Drag and drop
-            this.addDragAndDrop($topTable);
 
-            // add a separator
-            $box.append($('<hr>')
-                .addClass('kb-data-list-row-hr')
-                .css({ 'margin-left': '65px' }));
 
-            // add the row
-            $box.append($row);
+
+
+            // create divs to pass to kbaseDataCard
             var objVersion = 'v' + object_info[4];
             var $moreContent = $('<div>').addClass('kb-data-list-more-div')
                 .append(self.addDataControls(object_info, $alertDiv, objData.fromPalette, ref_path)).append($alertDiv)
@@ -1304,12 +1267,17 @@ define([
                     "edit-by": author,
                     moreContent: $moreContent
                 });
-            // $('body').append($card
-            //     .css({
-            //         'position': 'absolute',
-            //         'background-color': 'white'
-            //     }
-            //     ));    
+            //add click events 
+            // $card.find('.kb-data-list-info')
+            $logo.click(function (e) {
+                e.stopPropagation();
+                self.insertViewer(object_key);
+            });
+
+            // Drag and drop
+            $card.attr('kb-oid', object_key);
+            this.addDragAndDrop($card);
+
             return $card;
         },
 
@@ -1374,7 +1342,7 @@ define([
         },
 
         addDragAndDrop: function ($row) {
-            var node = $row.parent().get(0),
+            var node = $row.children().get(0),
                 key = $row.attr('kb-oid'),
                 obj = this.dataObjects[this.keyToObjId[key]], //_.findWhere(this.objectList, {key: key}),
                 info = this.createInfoObject(obj.info, obj.refPath),

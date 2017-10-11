@@ -32,26 +32,20 @@ define (
         kbaseCardLayout,
         $
     ) {
-        function KbaseDataCard(options) {
+        function KbaseDataCard(entry) {
             //add more content
-            // var layout = {
-            //     actionButton: undefined,
-            //     logo: undefined,
-            //     title: undefined,
-            //     subcontent: undefined
-            // };
             //partitions
 
             var $logo = $('<div>');
-            Icon.buildDataIcon($logo, options.type, options.is_set, 0);
+            Icon.buildDataIcon($logo, entry.type, entry.is_set, 0);
             
                 
             //main content
-            var $name = $('<span>').addClass('kb-data-list-name').append(options.name);
-            var $version = $('<span>').addClass('kb-data-list-version').append(options.version);
-            var $type = $('<div>').addClass('kb-data-list-type').append(options.type);
-            var $date = $('<span>').addClass('kb-data-list-date').append(options.date);
-            var $byUser = $('<span>').addClass('kb-data-list-edit-by').append( options["edit-by"]);
+            var $name = $('<span>').addClass('kb-data-list-name').append(entry.name);
+            var $version = $('<span>').addClass('kb-data-list-version').append(entry.version);
+            var $type = $('<div>').addClass('kb-data-list-type').append(entry.type);
+            var $date = $('<span>').addClass('kb-data-list-date').append(entry.date);
+            var $byUser = $('<span>').addClass('kb-data-list-edit-by').append( entry["edit-by"]);
             
             var $title = $('<div>').append($name).append($version);
             var $subcontent = $('<div>').addClass('kb-data-list-subcontent')
@@ -64,7 +58,7 @@ define (
                 logo: $logo,
                 title: $title,
                 subcontent: $subcontent,
-                moreContent : options.moreContent
+                moreContent : entry.moreContent
             };
 
 

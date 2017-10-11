@@ -2270,12 +2270,15 @@ button.kb-data-obj {
 /* card layout */
 .narrative-card-row-main{
     display:flex;
+    width:98%;
 }
+
 
 .narrative-card-ellipsis{
     display:flex;
     align-items: center;
     justify-content: center;
+    width:20px;
 }
 
 
@@ -2301,7 +2304,6 @@ button.kb-data-obj {
     -webkit-box-shadow: 1px 1px 1px 1px #fff;
     moz-box-shadow: 1px 1px 1px 1px #fff;
 
-    width:98%;
 }
 
 .kb-function-dim .kb-data-list-obj-row {
@@ -2313,6 +2315,10 @@ button.kb-data-obj {
     border-left-style: solid;
     border-left-width: 5px;
     border-left-color: #4BB856;
+
+    margin:2px;
+    padding:4px;
+    margin-bottom: 5px;
 
     box-shadow: 1px 1px 1px 1px #aaa;
     -webkit-box-shadow: 1px 1px 1px 1px #aaa;
@@ -2522,6 +2528,7 @@ button.kb-data-obj {
 .kb-data-list-info {
     width: 80%;
     padding: 4px;
+    border-top: 1px solid #E0E0E0;;
 }
 .kb-data-list-name {
     color:#2e618d;

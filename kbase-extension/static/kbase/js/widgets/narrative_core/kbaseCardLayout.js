@@ -35,8 +35,7 @@ define (
             var $mainContent = $('<div/>', { 'class': 'narrative-card-row-main' });
             var $moreContent = $('<div/>', { 'class': 'narrative-card-row-more' }).hide();               
             var $info = $('<div/>', { 'class': 'kb-data-list-info' });
-            var $toggleAdvancedViewBtn =
-                $('<div>').addClass('narrative-card-ellipsis');
+            var $toggleAdvancedViewBtn =$('<div>');
 
             //if have sub content, add toggle    
             if(options.moreContent) {
@@ -61,7 +60,8 @@ define (
           
             $mainContent.append($logo)
                 .append($info)
-                .append($toggleAdvancedViewBtn)
+                .append($('<div>').addClass('narrative-card-ellipsis')
+                        .append($toggleAdvancedViewBtn))
                 .mouseenter(function () {
                     $toggleAdvancedViewBtn.show();
                 })

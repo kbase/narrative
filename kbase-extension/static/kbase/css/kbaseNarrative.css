@@ -2273,7 +2273,7 @@ button.kb-data-obj {
 }
 
 /* data list */
-.kb-data-list-obj-row {
+.kb-data-list-obj-row, .narrative-card-row-main{
     transition: all 0.1s ease;
 
     border-left-style: solid;
@@ -2294,7 +2294,7 @@ button.kb-data-obj {
 
 }
 
-.kb-data-list-obj-row:hover {
+.kb-data-list-obj-row:hover, .narrative-card-row-main:hover {
     border-left-style: solid;
     border-left-width: 5px;
     border-left-color: #4BB856;
@@ -2505,6 +2505,8 @@ button.kb-data-obj {
 }
 
 .kb-data-list-info {
+    width: 80%;
+    padding: 4px;
 }
 .kb-data-list-name {
     color:#2e618d;
@@ -2602,6 +2604,9 @@ button.kb-data-obj {
     color:#777;
     font-size: 10pt;
     margin: 2px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 .kb-data-list-more-div tr {
     color:#777;

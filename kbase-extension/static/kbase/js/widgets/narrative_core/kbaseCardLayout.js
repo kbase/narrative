@@ -58,8 +58,6 @@ define (
             if($actionButton) $mainContent.append($actionButton);
 
 
-
-            //moreContent;
           
             $mainContent.append($logo)
                 .append($info)

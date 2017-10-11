@@ -1124,48 +1124,18 @@ define([
                     e.stopPropagation();
                     self.insertViewer(object_key);
                 });
-            if (isShortened) {
-                $name.tooltip({
-                    title: object_info[1],
-                    placement: 'bottom',
-                    delay: {
-                        show: Config.get('tooltip').showDelay,
-                        hide: Config.get('tooltip').hideDelay
-                    }
-                });
-            }
 
-            var $version = $('<span>').addClass('kb-data-list-version').append('v' + object_info[4]);
-            var $type = $('<div>').addClass('kb-data-list-type').append(type);
-            var $paletteIcon = '';
-            if (objData.fromPalette) {
-                $paletteIcon = $('<span>')
-                    .addClass('pull-right')
-                    .append($('<i>')
-                        .addClass('fa fa-link')
-                        .css({ color: '#888' }))
-                    .tooltip({
-                        title: 'This is a reference to an object in another Narrative.',
-                        placement: 'right',
-                        container: 'body',
-                        delay: {
-                            show: Config.get('tooltip').showDelay,
-                            hide: Config.get('tooltip').hideDelay
-                        }
-                    });
-            }
+            
 
-            var $date = $('<span>').addClass('kb-data-list-date').append(TimeFormat.getTimeStampStr(object_info[3]));
-            var $byUser = $('<span>').addClass('kb-data-list-edit-by');
+            
+            
+            // create divs to pass to kbaseDataCard
             var author = "";
             if (object_info[5] !== self.my_user_id) {
                 author = ' by ' + object_info[5];
-                $byUser.append(' by ' + object_info[5])
-                    .click(function (e) {
-                        e.stopPropagation();
-                        window.open('/#people/' + object_info[5]);
-                    });
             }
+            var objVersion = 'v' + object_info[4];
+
             var metadata = object_info[10] || {};
             var metadataText = '';
             for (var key in metadata) {
@@ -1173,11 +1143,15 @@ define([
                     metadataText += '<tr><th>' + key + '</th><td>' + metadata[key] + '</td></tr>';
                 }
             }
+
+
+
             if (type === 'Genome' || type === 'GenomeAnnotation') {
                 if (metadata.hasOwnProperty('Name')) {
-                    $type.text(type + ': ' + metadata['Name']);
+                    type = type + ': ' + metadata['Name'];
                 }
             }
+
 
             var $savedByUserSpan = $('<td>').addClass('kb-data-list-username-td');
             DisplayUtil.displayRealName(object_info[5], $savedByUserSpan);
@@ -1185,71 +1159,7 @@ define([
             var $alertDiv = $('<div>').css({ 'text-align': 'center', 'margin': '10px 0px' });
             var typeLink = '<a href="/#spec/module/' + type_module + '" target="_blank">' + type_module + '</a>.<wbr>' +
                 '<a href="/#spec/type/' + object_info[2] + '" target="_blank">' + (type_tokens[1].replace('-', '&#8209;')) + '.' + type_tokens[2] + '</a>';
-            var $moreRow = $('<div>').addClass('kb-data-list-more-div').hide()
-                .append($('<div>').css({ 'text-align': 'center', 'margin': '5pt' })
-                    .append(self.addDataControls(object_info, $alertDiv, objData.fromPalette, ref_path)).append($alertDiv))
-                .append(
-                    $('<table style="width:100%;">')
-                        .append('<tr><th>Permament Id</th><td>' + object_info[6] + '/' + object_info[0] + '/' + object_info[4] + '</td></tr>')
-                        .append('<tr><th>Full Type</th><td>' + typeLink + '</td></tr>')
-                        .append($('<tr>').append('<th>Saved by</th>').append($savedByUserSpan))
-                        .append(metadataText));
 
-            var $toggleAdvancedViewBtn =
-                $('<span>').addClass('kb-data-list-more') //.addClass('btn btn-default btn-xs kb-data-list-more-btn')
-                    .hide()
-                    .html($('<button class="btn btn-xs btn-default pull-right" aria-hidden="true">').append('<span class="fa fa-ellipsis-h" style="color:#888" />'));
-            var toggleAdvanced = function () {
-                if (self.selectedObject === object_info[0] && $moreRow.is(':visible')) {
-                    // assume selection handling occurs before this is called
-                    // so if we are now selected and the moreRow is visible, leave it...
-                    return;
-                }
-                if ($moreRow.is(':visible')) {
-                    $moreRow.slideUp('fast');
-                    self.writtingLock = false;
-                    //$toggleAdvancedViewBtn.show();
-                } else {
-                    self.getRichData(object_info, $moreRow);
-                    $moreRow.slideDown('fast');
-                    //$toggleAdvancedViewBtn.hide();
-                }
-            };
-
-            var $mainDiv = $('<div>').addClass('kb-data-list-info').css({ padding: '0px', margin: '0px' })
-                .append($name).append($version).append($paletteIcon).append($toggleIcon).append('<br>')
-                .append($('<table>').css({ width: '100%' })
-                    .append($('<tr>')
-                        .append($('<td>').css({ width: '80%' })
-                            .append($type).append($date).append($byUser))
-                        .append($('<td>')
-                            .append($toggleAdvancedViewBtn))))
-                .click(
-                    function () {
-                        self.setSelected($(this).closest('.kb-data-list-obj-row'), object_info);
-                        toggleAdvanced();
-                    });
-
-            var $toggleIcon = '';
-            if (self.isAViewedSet(object_info)) {
-                $toggleIcon = $('<span>')
-                    .addClass('fa fa-lg fa-' + (objData.expanded ? 'chevron-down' : 'chevron-right'))
-                    .css({ color: '#888', cursor: 'pointer', 'font-size': '1.2em' })
-                    .click(function (e) {
-                        e.stopPropagation();
-                        objData.expanded = !objData.expanded;
-                        $toggleIcon.removeClass().addClass('fa fa-lg fa-' + (objData.expanded ? 'chevron-down' : 'chevron-right'));
-                        self.toggleSetExpansion(objId, $box);
-                    });
-            }
-
-
-
-
-
-
-            // create divs to pass to kbaseDataCard
-            var objVersion = 'v' + object_info[4];
             var $moreContent = $('<div>').addClass('kb-data-list-more-div')
                 .append(self.addDataControls(object_info, $alertDiv, objData.fromPalette, ref_path)).append($alertDiv)
                 .append(
@@ -1265,14 +1175,72 @@ define([
                     date: TimeFormat.getTimeStampStr(object_info[3]),
                     type: type,
                     "edit-by": author,
-                    moreContent: $moreContent
+                    moreContent: $moreContent,
+                    max_name_length: this.options.max_name_length
                 });
             //add click events 
             // $card.find('.kb-data-list-info')
-            $logo.click(function (e) {
+            $card.find('.narrative-card-logo').click(function (e) {
                 e.stopPropagation();
                 self.insertViewer(object_key);
             });
+
+            if (object_info[5] !== self.my_user_id) {
+                $card.find('.kb-data-list-edit-by')
+                    .click(function (e) {
+                        e.stopPropagation();
+                        window.open('/#people/' + object_info[5]);
+                    });
+            }
+
+            var toggleAdvanced = function () {
+                if (self.selectedObject === object_info[0] && $moreContent.is(':visible')) {
+                    // assume selection handling occurs before this is called
+                    // so if we are now selected and the moreContent is visible, leave it...
+                    return;
+                }
+                if ($moreContent.is(':visible')) {
+                    $moreContent.slideUp('fast');
+                    self.writtingLock = false;
+                    //$toggleAdvancedViewBtn.show();
+                } else {
+                    self.getRichData(object_info, $moreContent);
+                    $moreContent.slideDown('fast');
+                    //$toggleAdvancedViewBtn.hide();
+                }
+            };
+            //tooltips 
+            if (isShortened) {
+                $card.find('.kb-data-list-name').tooltip({
+                    title: object_info[1],
+                    placement: 'bottom',
+                    delay: {
+                        show: Config.get('tooltip').showDelay,
+                        hide: Config.get('tooltip').hideDelay
+                    }
+                });
+            }
+
+
+
+            if (objData.fromPalette) {
+                var $paletteIcon = $('<span>')
+                    .addClass('pull-right')
+                    .append($('<i>')
+                        .addClass('fa fa-link')
+                        .css({ color: '#888' }))
+                    .tooltip({
+                        title: 'This is a reference to an object in another Narrative.',
+                        placement: 'right',
+                        container: 'body',
+                        delay: {
+                            show: Config.get('tooltip').showDelay,
+                            hide: Config.get('tooltip').hideDelay
+                        }
+                    });
+                $card.find('.kb-data-list-info').append($paletteIcon);
+            }
+
 
             // Drag and drop
             $card.attr('kb-oid', object_key);

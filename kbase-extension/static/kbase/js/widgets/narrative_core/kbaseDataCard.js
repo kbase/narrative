@@ -38,21 +38,23 @@ define (
 
             var $logo = $('<div>');
             Icon.buildDataIcon($logo, entry.type, entry.is_set, 0);
-            
                 
             //main content
             var $name = $('<span>').addClass('kb-data-list-name').append(entry.name);
             var $version = $('<span>').addClass('kb-data-list-version').append(entry.version);
             var $type = $('<div>').addClass('kb-data-list-type').append(entry.type);
             var $date = $('<span>').addClass('kb-data-list-date').append(entry.date);
-            var $byUser = $('<span>').addClass('kb-data-list-edit-by').append( entry["edit-by"]);
+            var $byUser = $('<span>').addClass('kb-data-list-edit-by').append( entry['edit-by']);
             
             var $title = $('<div>').append($name).append($version);
-            var $subcontent = $('<div>').addClass('kb-data-list-subcontent')
-                                     .append($type)
-                                     .append($date)
-                                     .append($byUser);
-            // debugger;
+            var $subcontent = $('<div>')
+                .addClass('kb-data-list-subcontent')
+                .append($type)
+                .append($date)
+                .append($byUser);
+
+
+                
             var layout = {
                 actionButton: undefined,
                 logo: $logo,

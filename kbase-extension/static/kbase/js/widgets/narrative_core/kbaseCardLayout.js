@@ -47,7 +47,7 @@ define (
             }
             
             var $actionButton = options.actionButton;
-            var $logo = options.logo;
+            var $logo = options.logo.addClass('narrative-card-logo');
             var $title = options.title;
             var $subcontent = options.subcontent;
 

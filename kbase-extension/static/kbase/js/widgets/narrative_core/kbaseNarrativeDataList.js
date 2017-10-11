@@ -1074,15 +1074,13 @@ define([
          * This is the main function for rendering a data object
          * in the data list.
          */
-        renderObjectRowDiv: function (objId, indent) {
+        renderObjectRowDiv: function (objId) {
             var self = this;
             var objData = this.dataObjects[objId];
             var object_info = objData.info;
             var ref_path = objData.refPath;
             var object_key = objData.key;
-            if (!indent) {
-                indent = 0;
-            }
+
             // object_info:
             // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
             // [3] : timestamp save_date // [4] : int version // [5] : username saved_by
@@ -1091,25 +1089,7 @@ define([
             var type_tokens = object_info[2].split('.');
             var type_module = type_tokens[0];
             var type = type_tokens[1].split('-')[0];
-            var $logo = $('<div>');
             var is_set = this.isASet(object_info);
-
-            // +---+
-            // |   | Containing "box" is the top-level <div>
-            // +---+
-            var $box = $('<div>').addClass('kb-data-list-box');
-            if (indent > 0) {
-                $box.addClass('kb-data-list-level' + indent);
-            }
-
-            // Remember the icons
-            var data_icon_param = { elt: $logo, type: type, stacked: is_set, indent: 0 };
-            Icon.buildDataIcon($logo, type, is_set, 0);
-
-            // Save params for this icon, so we can update later when sets get "discovered"
-            this.dataIconParam[this.itemId(object_info)] = data_icon_param;
-            // add behavior
-
 
 
             var shortName = object_info[1];
@@ -1118,17 +1098,13 @@ define([
                 shortName = shortName.substring(0, this.options.max_name_length - 3) + '...';
                 isShortened = true;
             }
-            var $name = $('<span>').addClass('kb-data-list-name').append('<a>' + shortName + '</a>')
-                .css({ 'cursor': 'pointer' })
-                .click(function (e) {
-                    e.stopPropagation();
-                    self.insertViewer(object_key);
-                });
+            var metadata = object_info[10] || {};
+            if (type === 'Genome' || type === 'GenomeAnnotation') {
+                if (metadata.hasOwnProperty('Name')) {
+                    type = type + ': ' + metadata['Name'];
+                }
+            }
 
-            
-
-            
-            
             // create divs to pass to kbaseDataCard
             var author = "";
             if (object_info[5] !== self.my_user_id) {
@@ -1136,22 +1112,12 @@ define([
             }
             var objVersion = 'v' + object_info[4];
 
-            var metadata = object_info[10] || {};
             var metadataText = '';
             for (var key in metadata) {
                 if (metadata.hasOwnProperty(key)) {
                     metadataText += '<tr><th>' + key + '</th><td>' + metadata[key] + '</td></tr>';
                 }
             }
-
-
-
-            if (type === 'Genome' || type === 'GenomeAnnotation') {
-                if (metadata.hasOwnProperty('Name')) {
-                    type = type + ': ' + metadata['Name'];
-                }
-            }
-
 
             var $savedByUserSpan = $('<td>').addClass('kb-data-list-username-td');
             DisplayUtil.displayRealName(object_info[5], $savedByUserSpan);
@@ -1168,6 +1134,8 @@ define([
                         .append('<tr><th>Full Type</th><td>' + typeLink + '</td></tr>')
                         .append($('<tr>').append('<th>Saved by</th>').append($savedByUserSpan))
                         .append(metadataText));
+            
+            //create card
             var $card = new kbaseDataCard(
                 {
                     name: shortName,
@@ -1176,11 +1144,13 @@ define([
                     type: type,
                     "edit-by": author,
                     moreContent: $moreContent,
+                    is_set: is_set,
                     max_name_length: this.options.max_name_length
                 });
+
             //add click events 
-            // $card.find('.kb-data-list-info')
-            $card.find('.narrative-card-logo').click(function (e) {
+            
+            $card.find('.narrative-card-logo , .kb-data-list-name').click(function (e) {
                 e.stopPropagation();
                 self.insertViewer(object_key);
             });
@@ -1194,21 +1164,28 @@ define([
             }
 
             var toggleAdvanced = function () {
-                if (self.selectedObject === object_info[0] && $moreContent.is(':visible')) {
+                //$($(this).children()[1]).is(':visible')
+                var $node = $(this.parentElement).find('.narrative-card-row-more');
+                if (self.selectedObject === object_info[0] && $node.is(':visible')) {
                     // assume selection handling occurs before this is called
                     // so if we are now selected and the moreContent is visible, leave it...
                     return;
                 }
-                if ($moreContent.is(':visible')) {
-                    $moreContent.slideUp('fast');
+                if ($node.is(':visible')) {
+                    // debugger;
+                    $node.slideUp('fast');
+
                     self.writtingLock = false;
-                    //$toggleAdvancedViewBtn.show();
                 } else {
-                    self.getRichData(object_info, $moreContent);
-                    $moreContent.slideDown('fast');
-                    //$toggleAdvancedViewBtn.hide();
+                    // debugger;
+                    self.getRichData(object_info, $node);
+                    $node.slideDown('fast');
+     
                 }
             };
+
+            $card.find('.narrative-card-row-main').click(toggleAdvanced);
+
             //tooltips 
             if (isShortened) {
                 $card.find('.kb-data-list-name').tooltip({
@@ -1220,7 +1197,6 @@ define([
                     }
                 });
             }
-
 
 
             if (objData.fromPalette) {

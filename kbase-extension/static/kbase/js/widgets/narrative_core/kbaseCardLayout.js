@@ -67,9 +67,6 @@ define (
                 })
                 .mouseleave(function () {
                     $toggleAdvancedViewBtn.hide();
-                })
-                .click(function(){
-                    $moreContent.toggle();
                 });
             $card.append($mainContent);
             $card.append($moreContent);

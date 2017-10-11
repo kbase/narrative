@@ -2272,6 +2272,19 @@ button.kb-data-obj {
     display:flex;
 }
 
+.narrative-card-ellipsis{
+    display:flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+.narrative-card-palette-icon{
+    position: relative;
+    color: '#888';
+    left: -10px;
+    top: -70px;
+}
 /* data list */
 .kb-data-list-obj-row, .narrative-card-row-main{
     transition: all 0.1s ease;
@@ -2287,6 +2300,8 @@ button.kb-data-obj {
     box-shadow: 1px 1px 1px 1px #fff;
     -webkit-box-shadow: 1px 1px 1px 1px #fff;
     moz-box-shadow: 1px 1px 1px 1px #fff;
+
+    width:98%;
 }
 
 .kb-function-dim .kb-data-list-obj-row {

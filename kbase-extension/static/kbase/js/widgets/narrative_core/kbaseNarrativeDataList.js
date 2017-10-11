@@ -1091,7 +1091,6 @@ define([
             var type = type_tokens[1].split('-')[0];
             var is_set = this.isASet(object_info);
 
-
             var shortName = object_info[1];
             var isShortened = false;
             if (shortName.length > this.options.max_name_length) {
@@ -1105,7 +1104,6 @@ define([
                 }
             }
 
-            // create divs to pass to kbaseDataCard
             var author = "";
             if (object_info[5] !== self.my_user_id) {
                 author = ' by ' + object_info[5];
@@ -1119,6 +1117,7 @@ define([
                 }
             }
 
+            // create more content
             var $savedByUserSpan = $('<td>').addClass('kb-data-list-username-td');
             DisplayUtil.displayRealName(object_info[5], $savedByUserSpan);
 
@@ -1147,7 +1146,25 @@ define([
                     is_set: is_set,
                     max_name_length: this.options.max_name_length
                 });
-
+            
+            if (objData.fromPalette) {
+                var $paletteIcon = $('<div>')
+                    .addClass('pull-right narrative-card-palette-icon')
+                    .append($('<i>')
+                        .addClass('fa fa-link')
+                    )
+                    .tooltip({
+                        title: 'This is a reference to an object in another Narrative.',
+                        placement: 'right',
+                        container: 'body',
+                        delay: {
+                            show: Config.get('tooltip').showDelay,
+                            hide: Config.get('tooltip').hideDelay
+                        }
+                    });
+                $card.append($paletteIcon);
+                
+            }
             //add click events 
             
             $card.find('.narrative-card-logo , .kb-data-list-name').click(function (e) {
@@ -1164,7 +1181,6 @@ define([
             }
 
             var toggleAdvanced = function () {
-                //$($(this).children()[1]).is(':visible')
                 var $node = $(this.parentElement).find('.narrative-card-row-more');
                 if (self.selectedObject === object_info[0] && $node.is(':visible')) {
                     // assume selection handling occurs before this is called
@@ -1172,12 +1188,9 @@ define([
                     return;
                 }
                 if ($node.is(':visible')) {
-                    // debugger;
                     $node.slideUp('fast');
-
                     self.writtingLock = false;
                 } else {
-                    // debugger;
                     self.getRichData(object_info, $node);
                     $node.slideDown('fast');
      
@@ -1199,23 +1212,7 @@ define([
             }
 
 
-            if (objData.fromPalette) {
-                var $paletteIcon = $('<span>')
-                    .addClass('pull-right')
-                    .append($('<i>')
-                        .addClass('fa fa-link')
-                        .css({ color: '#888' }))
-                    .tooltip({
-                        title: 'This is a reference to an object in another Narrative.',
-                        placement: 'right',
-                        container: 'body',
-                        delay: {
-                            show: Config.get('tooltip').showDelay,
-                            hide: Config.get('tooltip').hideDelay
-                        }
-                    });
-                $card.find('.kb-data-list-info').append($paletteIcon);
-            }
+
 
 
             // Drag and drop

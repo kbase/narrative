@@ -33,13 +33,10 @@ define (
         $
     ) {
         function KbaseDataCard(entry) {
-            //add more content
-            //partitions
 
             var $logo = $('<div>');
             Icon.buildDataIcon($logo, entry.type, entry.is_set, 0);
                 
-            //main content
             var $name = $('<span>').addClass('kb-data-list-name').append(entry.name);
             var $version = $('<span>').addClass('kb-data-list-version').append(entry.version);
             var $type = $('<div>').addClass('kb-data-list-type').append(entry.type);
@@ -52,9 +49,7 @@ define (
                 .append($type)
                 .append($date)
                 .append($byUser);
-
-
-                
+         
             var layout = {
                 actionButton: undefined,
                 logo: $logo,
@@ -62,7 +57,6 @@ define (
                 subcontent: $subcontent,
                 moreContent : entry.moreContent
             };
-
 
             var $card = new kbaseCardLayout(layout);
 

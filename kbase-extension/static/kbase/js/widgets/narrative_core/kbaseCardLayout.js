@@ -1,22 +1,24 @@
 /**
- *  kbaseCard.js -- used for all modeling related modals
+ *  kbaseCard.js -- used for creating narrative cards
  *
  *  Authors:
- *      nconrad@anl.gov
+ *      zzheng@lbl.gov
  *
- *   This is a helper widget for rendering modals using bootstrap v3.0.0+
- *   The aim here is to have the simplest and maintainable API.
- *
+ *   This the templating function for creating consistent card. Should be called through card 
+ *    creating function such as kbaseDataCard.  
+ * 
  *   API
  *
- *   Basic Modal:
- *
- *      var modal =  new kbaseCard($('<div>'), {
- *         title: 'Model Details',
- *         subText: 'some subtext under title'
- *      });
- *
- *   See public methods below for rest of API.  It is self-documenting.
+ *   Expected options:
+ *      
+ *     options : {
+ *          actionButton (optional),
+ *          logo,
+ *          title,
+ *          subcontent
+ *          moreContent (optional)
+ *      }
+ *   
  *
 */
 
@@ -45,13 +47,16 @@ define (
                         .append('<span class="fa fa-ellipsis-h" style="color:#888" />'));
             }
             // .css({ 'white-space': 'nowrap', padding: '10px 15px' })
-            var $actionButton = $('<div>')
-                .addClass('narrative-card-action-button-wrapper')
-                .append($('<button>')
-                    .addClass('kb-primary-btn')
-                    .addClass('narrative-card-action-button')
-                    .append($('<span>').addClass('fa fa-chevron-circle-left'))
-                    .append(options.actionButton));
+            var $actionButtonWrapper = $('<div>')
+                .addClass('narrative-card-action-button-wrapper');
+
+            var $actionButton = $('<button>')
+                .addClass('kb-primary-btn')
+                .addClass('narrative-card-action-button')
+                .append($('<span>').addClass('fa fa-chevron-circle-left'))
+                .append(options.actionButton);
+            $actionButtonWrapper.append($actionButton);
+
             var $logo = options.logo.addClass('narrative-card-logo');
             var $title = options.title;
             var $subcontent = options.subcontent;
@@ -60,7 +65,7 @@ define (
                 //append palleteIcon and toggleIcon
                 .append($subcontent);
                 
-            if(options.actionButton) $mainContent.append($actionButton);
+            if(options.actionButton) $mainContent.append($actionButtonWrapper);
 
 
           
@@ -70,9 +75,11 @@ define (
                     .append($toggleAdvancedViewBtn))
                 .mouseenter(function () {
                     $toggleAdvancedViewBtn.show();
+                    $actionButton.show();
                 })
                 .mouseleave(function () {
                     $toggleAdvancedViewBtn.hide();
+                    $actionButton.hide();
                 });
                 
             $card.append($mainContent);

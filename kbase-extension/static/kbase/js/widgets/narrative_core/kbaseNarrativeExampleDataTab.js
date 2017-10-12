@@ -321,12 +321,7 @@ define ([
                     }
 
                 });
-            $card.mouseenter(function () {
-                $renderedActionButton.show();
-            })
-                .mouseleave(function () {
-                    $renderedActionButton.hide();
-                });
+
             return $card;
         },
 

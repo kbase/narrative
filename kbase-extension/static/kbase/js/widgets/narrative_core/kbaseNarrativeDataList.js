@@ -1091,12 +1091,8 @@ define([
             var type = type_tokens[1].split('-')[0];
             var is_set = this.isASet(object_info);
 
-            var shortName = object_info[1];
-            var isShortened = false;
-            if (shortName.length > this.options.max_name_length) {
-                shortName = shortName.substring(0, this.options.max_name_length - 3) + '...';
-                isShortened = true;
-            }
+            var name = object_info[1];
+
             var metadata = object_info[10] || {};
             if (type === 'Genome' || type === 'GenomeAnnotation') {
                 if (metadata.hasOwnProperty('Name')) {
@@ -1137,7 +1133,7 @@ define([
             //create card
             var $card = new kbaseDataCard(
                 {
-                    name: shortName,
+                    name: name,
                     version:  objVersion,
                     date: TimeFormat.getTimeStampStr(object_info[3]),
                     type: type,
@@ -1198,16 +1194,7 @@ define([
             });
 
             //tooltips 
-            if (isShortened) {
-                $card.find('.kb-data-list-name').tooltip({
-                    title: object_info[1],
-                    placement: 'bottom',
-                    delay: {
-                        show: Config.get('tooltip').showDelay,
-                        hide: Config.get('tooltip').hideDelay
-                    }
-                });
-            }
+
 
             // Drag and drop
             $card.attr('kb-oid', object_key);

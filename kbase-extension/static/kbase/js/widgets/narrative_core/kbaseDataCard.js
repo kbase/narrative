@@ -25,19 +25,26 @@ define (
         'bootstrap',
         'util/icon',
         'kbase/js/widgets/narrative_core/kbaseCardLayout',
+        'narrativeConfig',
         'jquery'
     ], function(
         bootstrap,
         Icon,
         kbaseCardLayout,
+        Config,
         $
     ) {
         function KbaseDataCard(entry) {
-
             var $logo = $('<div>');
             Icon.buildDataIcon($logo, entry.type, entry.is_set, 0);
+            var shortName = entry.name;
+            var isShortened = false;
+            if (shortName.length > entry.max_name_length) {
+                shortName = shortName.substring(0, entry.max_name_length - 3) + '...';
+                isShortened = true;
+            }
                 
-            var $name = $('<span>').addClass('kb-data-list-name').append(entry.name);
+            var $name = $('<span>').addClass('kb-data-list-name').append(shortName);
             var $version = $('<span>').addClass('kb-data-list-version').append(entry.version);
             var $type = $('<div>').addClass('kb-data-list-type').append(entry.type);
             var $date = $('<span>').addClass('kb-data-list-date').append(entry.date);
@@ -51,7 +58,19 @@ define (
                 .append($type);
             if(entry.date) $subcontent.append($date);
             if(entry['edit-by']) $subcontent.append($byUser);
-         
+            
+            //tooltip for long title
+            if (isShortened) {
+                $name.tooltip({
+                    title: entry.name,
+                    placement: 'bottom',
+                    delay: {
+                        show: Config.get('tooltip').showDelay,
+                        hide: Config.get('tooltip').hideDelay
+                    }
+                });
+            }
+            //create card
             var layout = {
                 actionButton: undefined,
                 logo: $logo,

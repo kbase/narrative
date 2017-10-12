@@ -39,7 +39,7 @@ define (
             Icon.buildDataIcon($logo, entry.type, entry.is_set, 0);
             var shortName = entry.name;
             var isShortened = false;
-            if (shortName.length > entry.max_name_length) {
+            if (entry.max_name_length && shortName.length > entry.max_name_length) {
                 shortName = shortName.substring(0, entry.max_name_length - 3) + '...';
                 isShortened = true;
             }
@@ -58,7 +58,7 @@ define (
                 .append($type);
             if(entry.date) $subcontent.append($date);
             if(entry['edit-by']) $subcontent.append($byUser);
-            
+
             //tooltip for long title
             if (isShortened) {
                 $name.tooltip({
@@ -72,7 +72,7 @@ define (
             }
             //create card
             var layout = {
-                actionButton: undefined,
+                actionButton: entry.actionButton,
                 logo: $logo,
                 title: $title,
                 subcontent: $subcontent,

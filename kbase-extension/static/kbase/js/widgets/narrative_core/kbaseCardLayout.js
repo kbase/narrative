@@ -44,8 +44,12 @@ define (
                     .html($('<button class="btn btn-xs btn-default pull-right" aria-hidden="true">')
                         .append('<span class="fa fa-ellipsis-h" style="color:#888" />'));
             }
-            
-            var $actionButton = options.actionButton;
+            // .css({ 'white-space': 'nowrap', padding: '10px 15px' })
+            var $actionButton = $('<button>')
+                                .addClass('kb-primary-btn')
+                                .addClass('narrative-card-action-button')
+                                .append($('<span>').addClass('fa fa-chevron-circle-left'))
+                                .append(options.actionButton);
             var $logo = options.logo.addClass('narrative-card-logo');
             var $title = options.title;
             var $subcontent = options.subcontent;
@@ -54,7 +58,7 @@ define (
                 //append palleteIcon and toggleIcon
                 .append($subcontent);
                 
-            if($actionButton) $mainContent.append($actionButton);
+            if(options.actionButton) $mainContent.append($actionButton);
 
 
           

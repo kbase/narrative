@@ -1180,7 +1180,7 @@ define([
                     });
             }
 
-            var toggleAdvanced = function () {
+            $card.find('.narrative-card-row-main').click(function () {
                 var $node = $(this.parentElement).find('.narrative-card-row-more');
                 if (self.selectedObject === object_info[0] && $node.is(':visible')) {
                     // assume selection handling occurs before this is called
@@ -1193,11 +1193,9 @@ define([
                 } else {
                     self.getRichData(object_info, $node);
                     $node.slideDown('fast');
-     
-                }
-            };
 
-            $card.find('.narrative-card-row-main').click(toggleAdvanced);
+                }
+            });
 
             //tooltips 
             if (isShortened) {
@@ -1210,10 +1208,6 @@ define([
                     }
                 });
             }
-
-
-
-
 
             // Drag and drop
             $card.attr('kb-oid', object_key);

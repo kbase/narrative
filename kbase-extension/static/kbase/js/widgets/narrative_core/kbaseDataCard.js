@@ -43,12 +43,14 @@ define (
             var $date = $('<span>').addClass('kb-data-list-date').append(entry.date);
             var $byUser = $('<span>').addClass('kb-data-list-edit-by').append( entry['edit-by']);
             
-            var $title = $('<div>').append($name).append($version);
+            var $title = $('<div>').append($name);
+            if(entry.version) $title.append($version);
+
             var $subcontent = $('<div>')
                 .addClass('kb-data-list-subcontent')
-                .append($type)
-                .append($date)
-                .append($byUser);
+                .append($type);
+            if(entry.date) $subcontent.append($date);
+            if(entry['edit-by']) $subcontent.append($byUser);
          
             var layout = {
                 actionButton: undefined,

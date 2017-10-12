@@ -45,11 +45,13 @@ define (
                         .append('<span class="fa fa-ellipsis-h" style="color:#888" />'));
             }
             // .css({ 'white-space': 'nowrap', padding: '10px 15px' })
-            var $actionButton = $('<button>')
-                                .addClass('kb-primary-btn')
-                                .addClass('narrative-card-action-button')
-                                .append($('<span>').addClass('fa fa-chevron-circle-left'))
-                                .append(options.actionButton);
+            var $actionButton = $('<div>')
+                .addClass('narrative-card-action-button-wrapper')
+                .append($('<button>')
+                    .addClass('kb-primary-btn')
+                    .addClass('narrative-card-action-button')
+                    .append($('<span>').addClass('fa fa-chevron-circle-left'))
+                    .append(options.actionButton));
             var $logo = options.logo.addClass('narrative-card-logo');
             var $title = options.title;
             var $subcontent = options.subcontent;
@@ -65,7 +67,7 @@ define (
             $mainContent.append($logo)
                 .append($info)
                 .append($('<div>').addClass('narrative-card-ellipsis')
-                        .append($toggleAdvancedViewBtn))
+                    .append($toggleAdvancedViewBtn))
                 .mouseenter(function () {
                     $toggleAdvancedViewBtn.show();
                 })

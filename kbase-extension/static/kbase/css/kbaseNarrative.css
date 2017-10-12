@@ -2269,7 +2269,8 @@ button.kb-data-obj {
 
 /* card layout */
 .narrative-card-row-main{
-    display:flex;
+    display: flex;
+    align-items: center;
     width:98%;
 }
 
@@ -2288,6 +2289,19 @@ button.kb-data-obj {
     left: -10px;
     top: -70px;
 }
+
+
+.narrative-card-action-button-wrapper{
+    width: 70px;
+    margin: 0px 10px;
+}
+.narrative-card-action-button{
+    width: 100%;
+    margin: 10px 5px;
+    display: flex;
+    justify-content: space-evenly;
+}
+
 /* data list */
 .kb-data-list-obj-row, .narrative-card-row-main{
     transition: all 0.1s ease;
@@ -2527,7 +2541,7 @@ button.kb-data-obj {
 
 .kb-data-list-info {
     width: 80%;
-    padding: 4px;
+    padding: 4px 0px;
     border-top: 1px solid #E0E0E0;;
 }
 .kb-data-list-name {

@@ -2292,14 +2292,19 @@ button.kb-data-obj {
 
 
 .narrative-card-action-button-wrapper{
-    width: 70px;
+    width: 80px;
+    height: 50px;
     margin: 0px 10px;
 }
 .narrative-card-action-button{
-    width: 100%;
-    margin: 10px 5px;
+    width: calc(100% - 6px);
+    height: 80%;
     display: flex;
-    justify-content: space-evenly;
+    padding: 0px;
+    justify-content: center;
+}
+.narrative-card-action-button > span{
+    margin-right: 5px;
 }
 
 /* data list */

@@ -1158,7 +1158,7 @@ define([
                 $card.find('.kb-data-list-info').append($paletteIcon);
                 
             }
-            //add click events 
+            //add custom click events 
             
             $card.find('.narrative-card-logo , .kb-data-list-name').click(function (e) {
                 e.stopPropagation();
@@ -1178,9 +1178,6 @@ define([
                     self.getRichData(object_info, $node);
                 }
             });
-
-            //tooltips 
-
 
             // Drag and drop
             $card.attr('kb-oid', object_key);

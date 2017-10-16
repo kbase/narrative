@@ -65,10 +65,13 @@ define (
             $info.append($title)
                 //append palleteIcon and toggleIcon
                 .append($subcontent);
-                
-            if(options.actionButton) $mainContent.append($actionButtonWrapper);
-
-
+            
+            if(options.actionButtonClick){
+                $actionButtonWrapper.click(options.actionButtonClick);
+            }
+            if(options.actionButton) {
+                $mainContent.append($actionButtonWrapper);
+            }
           
             $mainContent.append($logo)
                 .append($info)
@@ -86,7 +89,9 @@ define (
                 });
                 
             $card.append($mainContent);
-            if(options.moreContent) $card.append($moreContent);
+            if(options.moreContent) {
+                $card.append($moreContent);
+            }
             
 
             return $card;

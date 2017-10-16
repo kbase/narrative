@@ -1091,7 +1091,6 @@ define([
             var type = type_tokens[1].split('-')[0];
             var is_set = this.isASet(object_info);
 
-            var name = object_info[1];
 
             var metadata = object_info[10] || {};
             if (type === 'Genome' || type === 'GenomeAnnotation') {
@@ -1100,11 +1099,10 @@ define([
                 }
             }
 
-            var author = "";
+            var author = ' ';
             if (object_info[5] !== self.my_user_id) {
                 author = ' by ' + object_info[5];
             }
-            var objVersion = 'v' + object_info[4];
 
             var metadataText = '';
             for (var key in metadata) {
@@ -1133,14 +1131,13 @@ define([
             //create card
             var $card = new kbaseDataCard(
                 {
-                    name: name,
-                    version:  objVersion,
-                    date: TimeFormat.getTimeStampStr(object_info[3]),
                     type: type,
                     "edit-by": author,
                     moreContent: $moreContent,
                     is_set: is_set,
-                    max_name_length: this.options.max_name_length
+                    max_name_length: this.options.max_name_length,
+                    object_info: object_info,
+                    self: self
                 });
             
             if (objData.fromPalette) {
@@ -1159,7 +1156,6 @@ define([
                         }
                     });
                 $card.find('.kb-data-list-info').append($paletteIcon);
-                // $card.append($paletteIcon);
                 
             }
             //add click events 
@@ -1168,14 +1164,6 @@ define([
                 e.stopPropagation();
                 self.insertViewer(object_key);
             });
-
-            if (object_info[5] !== self.my_user_id) {
-                $card.find('.kb-data-list-edit-by')
-                    .click(function (e) {
-                        e.stopPropagation();
-                        window.open('/#people/' + object_info[5]);
-                    });
-            }
 
             $card.find('.narrative-card-row-main').click(function () {
                 var $node = $(this.parentElement).find('.narrative-card-row-more');

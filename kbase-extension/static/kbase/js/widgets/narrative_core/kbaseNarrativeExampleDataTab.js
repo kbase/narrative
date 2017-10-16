@@ -238,11 +238,7 @@ define ([
         renderObjectRowDiv: function(object_info) {
             var self = this;
             var isCopy = this.loadedData[object_info[1]];
-            // object_info:
-            // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
-            // [3] : timestamp save_date // [4] : int version // [5] : username saved_by
-            // [6] : ws_id wsid // [7] : ws_name workspace // [8] : string chsum
-            // [9] : int size // [10] : usermeta meta
+
             var type = '';
             if (object_info[2]==='TranscriptomeHack') {
                 type='Genome';
@@ -258,68 +254,10 @@ define ([
                     actionButton: $actionButton,
                     name: object_info[1],
                     type: type,
-                    max_name_length: this.options.max_name_length
-                });
-            
-            var $renderedActionButton = $card.find('.narrative-card-action-button');
-                $renderedActionButton.addClass(function () { return object_info[1].split('.').join('--'); })
-                .hide()
-                .on('click', function () { // probably should move action outside of render func, but oh well
-                    var updateButton = function () {
-                        $(this).html('<img src="' + self.options.loadingImage + '">');
-                        var thisBtn = this;
-                        Promise.resolve(self.serviceClient.sync_call(
-                            'NarrativeService.copy_object',
-                            [{
-                                ref: object_info[6] + '/' + object_info[0],
-                                target_ws_name: self.narWs,
-                            }]
-                        ))
-                            .then(function () {
-                                var id = '.' + object_info[1].split('.').join('--');
-                                $(id).html('');
-                                $(id).append($('<span>').addClass('fa fa-chevron-circle-left'))
-                                    .append(' Copy');
-                                self.trigger('updateDataList.Narrative');
-                            })
-                            .catch(function (error) {
-                                $(thisBtn).html('Error');
-                                if (error.error && error.error.message) {
-                                    if (error.error.message.indexOf('may not write to workspace') >= 0) {
-                                        self.options.$importStatus.html($('<div>').css({ 'color': '#F44336', 'width': '500px' }).append('Error: you do not have permission to add data to this Narrative.'));
-                                    } else {
-                                        self.options.$importStatus.html($('<div>').css({ 'color': '#F44336', 'width': '500px' }).append('Error: ' + error.error.message));
-                                    }
-                                } else {
-                                    self.options.$importStatus.html($('<div>').css({ 'color': '#F44336', 'width': '500px' }).append('Unknown error!'));
-                                }
-                                console.error(error);
-                            });
-                    };
-                    if ($(this).text().split(' ')[1] === 'Copy') {
-                        var dialog = new BootstrapDialog({
-                            title: 'Item already exists in workspace under same name.',
-                            body: 'Do you want to override the existing copy?',
-                            buttons: [$('<a type="button" class="btn btn-default">')
-                                .append('Yes')
-                                .click(function () {
-                                    dialog.hide();
-                                    updateButton.call(this);
-
-                                }.bind(this))
-                                , $('<a type="button" class="btn btn-default">')
-                                .append('No')
-                                .click(function () {
-                                    dialog.hide();
-                                })
-                            ],
-                            closeButton: true
-                        });
-                        dialog.show();
-                    } else {
-                        updateButton.call(this);
-                    }
-
+                    max_name_length: this.options.max_name_length,
+                    object_info: object_info,
+                    self: self,
+                    ws_name: self.narWs
                 });
 
             return $card;

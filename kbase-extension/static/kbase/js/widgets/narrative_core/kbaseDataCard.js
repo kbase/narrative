@@ -26,6 +26,7 @@ define (
         'util/icon',
         'bluebird',
         'util/bootstrapDialog',
+        'util/timeFormat',
         'kbase/js/widgets/narrative_core/kbaseCardLayout',
         'narrativeConfig',
         'jquery'
@@ -34,6 +35,7 @@ define (
         Icon,
         Promise,
         BootstrapDialog,
+        TimeFormat,
         kbaseCardLayout,
         Config,
         $
@@ -41,27 +43,43 @@ define (
         function KbaseDataCard(entry) {
             var self = entry.self;
             var object_info = entry.object_info;
+            
             // object_info:
             // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
             // [3] : timestamp save_date // [4] : int version // [5] : username saved_by
             // [6] : ws_id wsid // [7] : ws_name workspace // [8] : string chsum
             // [9] : int size // [10] : usermeta meta
+  
+            //params
+            var shortName = entry.name ? entry.name : object_info[1];
+            var version = entry.version ? entry.version : object_info[4];
+            var date = entry.date ? entry.date : TimeFormat.getTimeStampStr(object_info[3]);
+            var type = entry.type;
+            var editBy = entry['edit-by'] ? entry['edit-by'] : (' by ' + object_info[5]);
 
-            var $logo = $('<div>');
-            Icon.buildDataIcon($logo, entry.type, entry.is_set, 0);
-            var shortName = entry.name;
+            if(!entry.type){
+                var type_tokens = object_info[2].split('.');
+                type = entry.type ? entry.type : type_tokens[1].split('-')[0];
+            }
+
+            //shorten name if applicable
             var isShortened = false;
-            if (entry.max_name_length && shortName.length > entry.max_name_length) {
+            if ((entry.max_name_length && shortName) && shortName.length > entry.max_name_length) {
                 shortName = shortName.substring(0, entry.max_name_length - 3) + '...';
                 isShortened = true;
             }
+
+            var $logo = $('<div>');
+            Icon.buildDataIcon($logo, type, entry.is_set, 0);
                 
             var $name = $('<span>').addClass('kb-data-list-name').append(shortName);
-            var $version = $('<span>').addClass('kb-data-list-version').append(entry.version);
-            var $type = $('<div>').addClass('kb-data-list-type').append(entry.type);
+            var $version = $('<span>').addClass('kb-data-list-version').append(version);
+            var $type = $('<div>').addClass('kb-data-list-type').append(type);
+            var $date = $('<span>').addClass('kb-data-list-date').append(date);
+
+            //no default
+            var $byUser = $('<span>').addClass('kb-data-list-edit-by').append(editBy);
             var $narrative = $('<div>').addClass('kb-data-list-narrative').append(entry.narrative);
-            var $date = $('<span>').addClass('kb-data-list-date').append(entry.date);
-            var $byUser = $('<span>').addClass('kb-data-list-edit-by').append( entry['edit-by']);
             
             var $title = $('<div>').append($name);
             if(entry.version) $title.append($version);
@@ -69,9 +87,22 @@ define (
             var $subcontent = $('<div>')
                 .addClass('kb-data-list-subcontent')
                 .append($type);
-            if(entry.narrative) $subcontent.append($narrative);
-            if(entry.date) $subcontent.append($date);
-            if(entry['edit-by']) $subcontent.append($byUser);
+            if(entry.narrative) {
+                $subcontent.append($narrative);
+            }
+            if(entry.date) {
+                $subcontent.append($date);
+            }
+
+
+            if(entry['edit-by']) {
+                $byUser
+                    .click(function (object_info, e) {
+                        e.stopPropagation();
+                        window.open('/#people/' + object_info[5]);
+                    }.bind( null, object_info));
+                $subcontent.append($byUser);
+            }
 
             //tooltip for long title
             if (isShortened) {
@@ -86,6 +117,9 @@ define (
             }
             //create card
             var actionButtonClick = function (e) {
+                if(!entry.ws_name){
+                    return;
+                }
                 e.preventPropagation; // probably should move action outside of render func, but oh well
                 var updateButton = function () {
                     var thisBtn = $(this).children()[0];
@@ -100,7 +134,7 @@ define (
                     ))
                         .then(function () {
                             $(thisHolder).html('');
-                            $(thisBtn).find('div').text(' Copy');
+                            $(thisBtn).text(' Copy');
                             $(thisHolder).append(thisBtn);
                             self.trigger('updateDataList.Narrative');
                         })
@@ -153,6 +187,10 @@ define (
             };
 
             var $card = new kbaseCardLayout(layout);
+
+            var $renderedActionButton = $card.find('.narrative-card-action-button');
+            $renderedActionButton.addClass(function () { return object_info[1].split('.').join('--'); })
+                .hide();
 
             return $card;
         }

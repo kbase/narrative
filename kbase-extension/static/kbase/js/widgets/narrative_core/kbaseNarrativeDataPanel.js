@@ -1191,31 +1191,7 @@ define([
 
             function rowTemplate(obj, loadedData) {
                 var object_info = obj.info;
-                // object_info:
-                // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
-                // [3] : timestamp save_date // [4] : int version // [5] : username saved_by
-                // [6] : ws_id wsid // [7] : ws_name workspace // [8] : string chsum
-                // [9] : int size // [10] : usermeta meta
-                var type_tokens = object_info[2].split('.');
-                // var type_module = type_tokens[0];
-                var type = type_tokens[1].split('-')[0];
-                // var unversioned_full_type = type_module + '.' + type;
-                // var logo_name = "";
                 var landingPageLink = self.options.lp_url + object_info[6] + '/' + object_info[1];
-              
-                var name = object_info[1];
-                var objVersion = 'v' + object_info[4];
-
-
-
-                var $byUser = $('<span>').addClass('kb-data-list-edit-by');
-                if (object_info[5] !== self.my_user_id) {
-                    $byUser.append(' by ' + object_info[5])
-                        .click(function (e) {
-                            e.stopPropagation();
-                            window.open(Config.url('profile_page') + object_info[5]);
-                        });
-                }
 
                 var metadata = object_info[10] || {};
                 var metadataText = '';
@@ -1224,12 +1200,13 @@ define([
                         metadataText += '<tr><th>' + key + '</th><td>' + metadata[key] + '</td></tr>';
                     }
                 }
-                // if (type === 'Genome') {
-                //     if (metadata.hasOwnProperty('Name')) {
-                //         $type.text(type + ': ' + metadata['Name']);
-                //     }
-                // }
-
+                var type_tokens = object_info[2].split('.');
+                var type = type_tokens[1].split('-')[0];
+                if (type === 'Genome' || type === 'GenomeAnnotation') {
+                    if (metadata.hasOwnProperty('Name')) {
+                        type = type + ': ' + metadata['Name'];
+                    }
+                }
                 var narName = obj.ws;
                 if (narrativeNameLookup[obj.ws]) {
                     narName = narrativeNameLookup[obj.ws];
@@ -1254,17 +1231,14 @@ define([
                     });
                 $btnToolbar.append($openLandingPage).append($openProvenance);
 
-                
+                var name = object_info[1];
+
                 var isCopy = loadedData && loadedData[name];
                 var $actionButton = $('<div>')
                     .append(function () { return (isCopy) ? ' Copy' : ' Add'; });
 
                 var $card = new kbaseDataCard(
-                    {
-                        name: name,
-                        version: objVersion,
-                        date: TimeFormat.getTimeStampStr(object_info[3]),
-                        type: type,
+                    {                      
                         narrative: narName,
                         actionButton: $actionButton,
                         'edit-by': ' by ' + object_info[5],
@@ -1274,9 +1248,8 @@ define([
                         object_info: object_info,
                         ws_name: self.ws_name
                     });
-                var $renderedActionButton = $card.find('.narrative-card-action-button');
-                $renderedActionButton.addClass(function () { return object_info[1].split('.').join('--'); })
-                    .hide();
+                
+
 
                 return $card;
             }

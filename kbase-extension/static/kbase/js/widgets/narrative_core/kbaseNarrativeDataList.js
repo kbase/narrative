@@ -129,8 +129,8 @@ define([
             return obj[6] + '/' + obj[0];
         },
 
-        writtingLock: false,
-        refreshWrittingLock:null,
+        writingLock: false,
+        refreshwritingLock:null,
 
         /**
          * Test if given object is a set.
@@ -329,7 +329,7 @@ define([
             this.serviceClient = new GenericClient(Config.url('service_wizard'), auth);
             this.my_user_id = auth.user_id;
             this.isLoggedIn = true;
-            this.writtingLock = false;
+            this.writingLock = false;
             this.refresh();
             return this;
         },
@@ -359,7 +359,7 @@ define([
         },
 
         refresh: function (showError) {
-            if(this.writtingLock) {
+            if(this.writingLock) {
                 return;
             }
             // Set the refresh timer on the first refresh. From  here, it'll refresh itself
@@ -803,7 +803,7 @@ define([
                                                 .click(function () {
                                                     self.ws.revert_object(revertRefLocal,
                                                         function (reverted_obj_info) {
-                                                            self.writtingLock = false;
+                                                            self.writingLock = false;
                                                             self.refresh();
                                                         },
                                                         function (error) {
@@ -912,12 +912,12 @@ define([
 
                     //lock on refresh expires after 15 min
                     var releaseLock = function(){
-                        if(self.refreshWrittingLock !== null) {
-                            clearTimeout(self.refreshWrittingLock);
+                        if(self.refreshwritingLock !== null) {
+                            clearTimeout(self.refreshwritingLock);
                         }
                         
-                        self.refreshWrittingLock = setTimeout(function () {
-                            self.writtingLock = false;
+                        self.refreshwritingLock = setTimeout(function () {
+                            self.writingLock = false;
                         }, 900000);                        
                     };
                     var $newNameInput = $('<input type="text">')
@@ -925,7 +925,7 @@ define([
                         .val(object_info[1])
                         .on('focus', function () {
                             if (Jupyter && Jupyter.narrative) {
-                                self.writtingLock = true;
+                                self.writingLock = true;
                                 Jupyter.narrative.disableKeyboardManager();
                             }
                         })
@@ -951,7 +951,7 @@ define([
                                             new_name: $newNameInput.val()
                                         },
                                         function (renamed_info) {
-                                            self.writtingLock = false;
+                                            self.writingLock = false;
                                             self.refresh();
                                         },
                                         function (error) {
@@ -964,7 +964,7 @@ define([
                         .append($('<button>').addClass('kb-data-list-cancel-btn')
                             .append('Cancel')
                             .click(function () {
-                                self.writtingLock = false;
+                                self.writingLock = false;
                                 $alertContainer.empty();
                             })));
                 });
@@ -1006,7 +1006,7 @@ define([
                                             self.ws.delete_objects([{ ref: object_info[6] + '/' + object_info[0] }],
                                                 function () {
                                                     $(document).trigger('deleteDataList.Narrative', object_info[1]);
-                                                    self.writtingLock = false;
+                                                    self.writingLock = false;
                                                     self.refresh();
 
                                                 },
@@ -1210,7 +1210,7 @@ define([
                 }
                 if ($moreRow.is(':visible')) {
                     $moreRow.slideUp('fast');
-                    self.writtingLock = false;
+                    self.writingLock = false;
                     //$toggleAdvancedViewBtn.show();
                 } else {
                     self.getRichData(object_info, $moreRow);
@@ -1665,7 +1665,7 @@ define([
                 })
                 .append('<span class="glyphicon glyphicon-refresh"></span>')
                 .on('click', function () {
-                    this.writtingLock = false;
+                    this.writingLock = false;
                     self.refresh();
                 });
             self.$searchInput = $('<input type="text">')

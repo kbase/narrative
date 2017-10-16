@@ -1158,7 +1158,8 @@ define([
                             hide: Config.get('tooltip').hideDelay
                         }
                     });
-                $card.append($paletteIcon);
+                $card.find('.kb-data-list-info').append($paletteIcon);
+                // $card.append($paletteIcon);
                 
             }
             //add click events 

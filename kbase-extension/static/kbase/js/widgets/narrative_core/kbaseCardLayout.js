@@ -42,7 +42,8 @@ define (
             //if have sub content, add toggle    
             if(options.moreContent) {
                 $moreContent.append(options.moreContent);
-                $toggleAdvancedViewBtn.hide()
+                $toggleAdvancedViewBtn
+                    .hide()
                     .html($('<button class="btn btn-xs btn-default pull-right" aria-hidden="true">')
                         .append('<span class="fa fa-ellipsis-h" style="color:#888" />'));
             }
@@ -80,6 +81,8 @@ define (
                 .mouseleave(function () {
                     $toggleAdvancedViewBtn.hide();
                     $actionButton.hide();
+                }).click(function () {
+                    $moreContent.slideToggle('fast');
                 });
                 
             $card.append($mainContent);

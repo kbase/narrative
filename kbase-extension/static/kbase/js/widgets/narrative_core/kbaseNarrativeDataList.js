@@ -1185,12 +1185,9 @@ define([
                     return;
                 }
                 if ($node.is(':visible')) {
-                    $node.slideUp('fast');
                     self.writtingLock = false;
                 } else {
                     self.getRichData(object_info, $node);
-                    $node.slideDown('fast');
-
                 }
             });
 

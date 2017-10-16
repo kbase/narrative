@@ -2306,6 +2306,13 @@ button.kb-data-obj {
 .narrative-card-action-button > span{
     margin-right: 5px;
 }
+.narrative-data-panel-btnToolbar > span{
+    color: #888;
+}
+.narrative-data-panel-btnToolbar{
+    display: flex;
+    justify-content: center;
+}
 
 /* data list */
 .kb-data-list-obj-row, .narrative-card-row{
@@ -2315,8 +2322,6 @@ button.kb-data-obj {
     border-left-width: 5px;
     border-left-color: #fff;
     color:#333;
-
-    /* margin-bottom: 5px; */
 
     box-shadow: 1px 1px 1px 1px #fff;
     -webkit-box-shadow: 1px 1px 1px 1px #fff;
@@ -2337,10 +2342,6 @@ button.kb-data-obj {
     border-left-style: solid;
     border-left-width: 5px;
     border-left-color: #4BB856;
-
-    /* margin:2px;
-    padding:4px; */
-    /* margin-bottom: 5px; */
 
     box-shadow: 1px 1px 1px 1px #aaa;
     -webkit-box-shadow: 1px 1px 1px 1px #aaa;

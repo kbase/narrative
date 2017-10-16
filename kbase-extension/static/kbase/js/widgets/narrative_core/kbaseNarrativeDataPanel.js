@@ -56,9 +56,9 @@ define([
 ) {
     'use strict';
     return KBWidget({
-        name: "kbaseNarrativeDataPanel",
+        name: 'kbaseNarrativeDataPanel',
         parent: kbaseNarrativeControlPanel,
-        version: "1.0.0",
+        version: '1.0.0',
         wsClient: null,
         table: null,
         tableData: [],
@@ -72,7 +72,7 @@ define([
         options: {
             title: 'Data',
             loadingImage: Config.get('loading_gif'),
-            notLoggedInMsg: "Please log in to view a workspace.",
+            notLoggedInMsg: 'Please log in to view a workspace.',
             workspaceURL: Config.url('workspace'),
             lp_url: Config.url('landing_pages'),
             container: null,
@@ -156,7 +156,7 @@ define([
 
             $(document).on('deleteDataList.Narrative', $.proxy(function (event, data) {
                 this.loadedData[data] = false;
-                var className = "." + data.split('.').join('--');
+                var className = '.' + data.split('.').join('--');
                 $(className).html('');
                 $(className).append($('<span>').addClass('fa fa-chevron-circle-left'))
                     .append(' Add');
@@ -377,11 +377,11 @@ define([
             var user = Jupyter.narrative.userId;
 
             if (!user) {
-                console.error("NarrativeDataPanel: user is not defined, parsing token instead...");
-                var tokenParts = this.token.split("|");
+                console.error('NarrativeDataPanel: user is not defined, parsing token instead...');
+                var tokenParts = this.token.split('|');
                 for (var i in tokenParts) {
-                    var keyValue = tokenParts[i].split("=");
-                    if (keyValue.length == 2 && keyValue[0] === "un")
+                    var keyValue = tokenParts[i].split('=');
+                    if (keyValue.length == 2 && keyValue[0] === 'un')
                         user = keyValue[1];
                 }
             }
@@ -398,45 +398,45 @@ define([
                 sharedSelected = [];
 
             var types = [
-                "KBaseGenomes.Genome",
-                "KBaseGenomes.Pangenome",
-                "KBaseGenomes.GenomeComparison",
-                "KBaseGenomes.GenomeDomainData",
-                "GenomeComparison.ProteomeComparison",
+                'KBaseGenomes.Genome',
+                'KBaseGenomes.Pangenome',
+                'KBaseGenomes.GenomeComparison',
+                'KBaseGenomes.GenomeDomainData',
+                'GenomeComparison.ProteomeComparison',
 
-                "KBaseFile.SingleEndLibrary",
-                "KBaseFile.PairedEndLibrary",
-                "KBaseGenomeAnnotations.Assembly",
-                "KBaseGenomes.ContigSet",
+                'KBaseFile.SingleEndLibrary',
+                'KBaseFile.PairedEndLibrary',
+                'KBaseGenomeAnnotations.Assembly',
+                'KBaseGenomes.ContigSet',
 
-                "KBaseTrees.MSA",
-                "KBaseTrees.Tree",
-                "KBaseGeneDomains.DomainAnnotation",
+                'KBaseTrees.MSA',
+                'KBaseTrees.Tree',
+                'KBaseGeneDomains.DomainAnnotation',
 
-                "KBaseBiochem.Media",
-                "KBaseFBA.FBAModel",
-                "KBaseFBA.ModelTemplate",
-                "KBaseFBA.FBA",
-                "KBaseFBA.ReactionSensitivityAnalysis",
-                "KBasePhenotypes.PhenotypeSet",
-                "KBasePhenotypes.PhenotypeSimulationSet",
+                'KBaseBiochem.Media',
+                'KBaseFBA.FBAModel',
+                'KBaseFBA.ModelTemplate',
+                'KBaseFBA.FBA',
+                'KBaseFBA.ReactionSensitivityAnalysis',
+                'KBasePhenotypes.PhenotypeSet',
+                'KBasePhenotypes.PhenotypeSimulationSet',
 
-                "KBaseMetagenomes.BinnedContigs",
+                'KBaseMetagenomes.BinnedContigs',
 
-                "KBaseRNASeq.RNASeqAlignment",
-                "KBaseRNASeq.RNASeqExpression",
-                "KBaseRNASeq.RNASeqSampleSet",
-                "KBaseFeatureValues.ExpressionMatrix",
-                "KBaseFeatureValues.FeatureClusters",
+                'KBaseRNASeq.RNASeqAlignment',
+                'KBaseRNASeq.RNASeqExpression',
+                'KBaseRNASeq.RNASeqSampleSet',
+                'KBaseFeatureValues.ExpressionMatrix',
+                'KBaseFeatureValues.FeatureClusters',
 
-                "KBaseSets.ReadsSet",
-                "KBaseSets.AssemblySet",
-                "KBaseSets.DifferentialExpressionMatrixSet",
-                "KBaseSets.ExpressionSet",
-                "KBaseSets.FeatureSetSet",
+                'KBaseSets.ReadsSet',
+                'KBaseSets.AssemblySet',
+                'KBaseSets.DifferentialExpressionMatrixSet',
+                'KBaseSets.ExpressionSet',
+                'KBaseSets.FeatureSetSet',
                 // "KBaseSets.GenomeSet", // Not clear if this is the GenomeSet in use
-                "KBaseSets.ReadsAlignmentSet",
-                "KBaseCollections.FeatureSet",
+                'KBaseSets.ReadsAlignmentSet',
+                'KBaseCollections.FeatureSet',
             ];
 
             types.sort(function (a, b) {
@@ -621,7 +621,7 @@ define([
                         }
                     })
                     .catch(function (error) {
-                        console.error("ERROR while rendering data...", error);
+                        console.error('ERROR while rendering data...', error);
                     });
             }
 
@@ -821,7 +821,7 @@ define([
                     paramsList.push(curParam);
 
                 if (objCount > maxObjFetch)
-                    console.error("User's object count for owned workspaces was", objCount);
+                    console.error('User\'s object count for owned workspaces was', objCount);
 
                 var headerMessage = '';
                 var requestCounter = 0;
@@ -858,7 +858,7 @@ define([
             // It produces a scrollable dataset
             function render(view, data, container, selected, template) {
     
-                var setDataIconTrigger = $._data($(document)[0], "events")["setDataIcon"];
+                var setDataIconTrigger = $._data($(document)[0], 'events')['setDataIcon'];
                 if (setDataIconTrigger) {
                     renderOnIconsReady(view, data, container, selected, template);
                 } else {
@@ -870,7 +870,7 @@ define([
             function renderOnIconsReady(view, data, container, selected, template) {
                 var headerMessage = '';
                 if (data.length >= maxObjFetch) {
-                    headerMessage = "You have access to over <b>" + maxObjFetch + "</b> data objects, so we're only showing a sample. Please use the Types or Narratives selectors above to filter.";
+                    headerMessage = 'You have access to over <b>' + maxObjFetch + '</b> data objects, so we\'re only showing a sample. Please use the Types or Narratives selectors above to filter.';
                 }
                 setHeaderMessage(view, headerMessage);
 
@@ -880,7 +880,7 @@ define([
                 container.empty();
 
                 if (data.length == 0) {
-                    container.append($('<div>').addClass("kb-data-list-type").css({margin: '15px', 'margin-left': '35px'}).append('No data found'));
+                    container.append($('<div>').addClass('kb-data-list-type').css({margin: '15px', 'margin-left': '35px'}).append('No data found'));
                     setLoading(view, false);
                     return;
                 }
@@ -890,7 +890,7 @@ define([
                 events(container, selected);
 
                 if (rows.children().length == 0) {
-                    container.append($('<div>').addClass("kb-data-list-type").css({margin: '15px', 'margin-left': '35px'}).append('No data found'));
+                    container.append($('<div>').addClass('kb-data-list-type').css({margin: '15px', 'margin-left': '35px'}).append('No data found'));
                     setLoading(view, false);
                     return;
                 }
@@ -930,7 +930,7 @@ define([
                     var name = objs[i].name;
                     proms.push(
                         serviceClient.sync_call(
-                            "NarrativeService.copy_object",
+                            'NarrativeService.copy_object',
                             [{
                                 ref: ref,
                                 target_ws_name: nar_ws_name
@@ -1208,7 +1208,7 @@ define([
 
 
 
-                var $byUser = $('<span>').addClass("kb-data-list-edit-by");
+                var $byUser = $('<span>').addClass('kb-data-list-edit-by');
                 if (object_info[5] !== self.my_user_id) {
                     $byUser.append(' by ' + object_info[5])
                         .click(function (e) {
@@ -1234,32 +1234,27 @@ define([
                 if (narrativeNameLookup[obj.ws]) {
                     narName = narrativeNameLookup[obj.ws];
                 }
-                // var $narName = $('<span>').addClass("kb-data-list-narrative").append(narName);
-
-                var $btnToolbar = $('<span>').addClass('btn-toolbar pull-right').attr('role', 'toolbar');
-                var btnClasses = "btn btn-xs btn-default";
-                var css = {'color': '#888'};
+                var btnClasses = 'btn btn-xs btn-default';
+                var $btnToolbar = $('<div>').addClass('btn-toolbar narrative-data-panel-btnToolbar');
                 var $openLandingPage = $('<span>')
-                    // tooltips showing behind pullout, need to fix!
-                    //.tooltip({title:'Explore data', 'container':'#'+this.mainListId})
                     .addClass(btnClasses)
-                    .append($('<span>').addClass('fa fa-binoculars').css(css))
+                    .append($('<span>').addClass('fa fa-binoculars'))
                     .click(function (e) {
                         e.stopPropagation();
                         window.open(landingPageLink);
                     });
 
                 var $openProvenance = $('<span>')
-                    .addClass(btnClasses).css(css)
+                    .addClass(btnClasses)
                     //.tooltip({title:'View data provenance and relationships', 'container':'body'})
-                    .append($('<span>').addClass('fa fa-sitemap fa-rotate-90').css(css))
+                    .append($('<span>').addClass('fa fa-sitemap fa-rotate-90'))
                     .click(function (e) {
                         e.stopPropagation();
                         window.open('/#objgraphview/' + object_info[7] + '/' + object_info[1]);
                     });
                 $btnToolbar.append($openLandingPage).append($openProvenance);
-                // actionButton
 
+                
                 var isCopy = loadedData && loadedData[name];
                 var $actionButton = $('<div>')
                     .append(function () { return (isCopy) ? ' Copy' : ' Add'; });
@@ -1272,7 +1267,7 @@ define([
                         type: type,
                         narrative: narName,
                         actionButton: $actionButton,
-                        "edit-by": ' by ' + object_info[5],
+                        'edit-by': ' by ' + object_info[5],
                         moreContent: $btnToolbar,
                         max_name_length: 50
                     });

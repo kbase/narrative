@@ -2308,21 +2308,24 @@ button.kb-data-obj {
 }
 
 /* data list */
-.kb-data-list-obj-row, .narrative-card-row-main{
+.kb-data-list-obj-row, .narrative-card-row{
     transition: all 0.1s ease;
 
     border-left-style: solid;
     border-left-width: 5px;
     border-left-color: #fff;
     color:#333;
-    margin:2px;
-    padding:4px;
-    margin-bottom: 5px;
+
+    /* margin-bottom: 5px; */
 
     box-shadow: 1px 1px 1px 1px #fff;
     -webkit-box-shadow: 1px 1px 1px 1px #fff;
     moz-box-shadow: 1px 1px 1px 1px #fff;
 
+}
+.narrative-card-row-main{
+    margin:2px;
+    padding:4px;
 }
 
 .kb-function-dim .kb-data-list-obj-row {
@@ -2330,14 +2333,14 @@ button.kb-data-obj {
 
 }
 
-.kb-data-list-obj-row:hover, .narrative-card-row-main:hover {
+.kb-data-list-obj-row:hover, .narrative-card-row:hover {
     border-left-style: solid;
     border-left-width: 5px;
     border-left-color: #4BB856;
 
-    margin:2px;
-    padding:4px;
-    margin-bottom: 5px;
+    /* margin:2px;
+    padding:4px; */
+    /* margin-bottom: 5px; */
 
     box-shadow: 1px 1px 1px 1px #aaa;
     -webkit-box-shadow: 1px 1px 1px 1px #aaa;

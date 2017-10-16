@@ -33,6 +33,7 @@ define([
     'kbaseNarrativeStagingDataTab',
     'kbase-generic-client-api',
     'util/bootstrapDialog',
+    'kbase/js/widgets/narrative_core/kbaseDataCard',
     'bootstrap'
 ], function (
     KBWidget,
@@ -50,7 +51,8 @@ define([
     kbaseNarrativeExampleDataTab,
     kbaseNarrativeStagingDataTab,
     GenericClient,
-    BootstrapDialog
+    BootstrapDialog,
+    kbaseDataCard
 ) {
     'use strict';
     return KBWidget({
@@ -1200,25 +1202,12 @@ define([
                 // var unversioned_full_type = type_module + '.' + type;
                 // var logo_name = "";
                 var landingPageLink = self.options.lp_url + object_info[6] + '/' + object_info[1];
-                var icons = self.data_icons;
-                var icon = _.has(icons, type) ? icons[type] : icons['DEFAULT'];
-                var $logo = $('<span>');
+              
+                var name = object_info[1];
+                var objVersion = 'v' + object_info[4];
 
-                var shortName = object_info[1];
-                var isShortened = false;
-                if (shortName.length > 50) {
-                    shortName = shortName.substring(0, 50) + '...';
-                    isShortened = true;
-                }
-                var $name = $('<span>').addClass("kb-data-list-name").append('<a href="' + landingPageLink + '" target="_blank">' + shortName + '</a>'); // TODO: make link!!
-                if (isShortened) {
-                    $name.tooltip({title: object_info[1], placement: 'bottom', delay: {show: 750, hide: 0}});
-                }
 
-                var $version = $('<span>').addClass("kb-data-list-version").append('v' + object_info[4]);
-                var $type = $('<span>').addClass("kb-data-list-type").append(type);
 
-                var $date = $('<span>').addClass("kb-data-list-date").append(TimeFormat.getTimeStampStr(object_info[3]));
                 var $byUser = $('<span>').addClass("kb-data-list-edit-by");
                 if (object_info[5] !== self.my_user_id) {
                     $byUser.append(' by ' + object_info[5])
@@ -1245,9 +1234,9 @@ define([
                 if (narrativeNameLookup[obj.ws]) {
                     narName = narrativeNameLookup[obj.ws];
                 }
-                var $narName = $('<span>').addClass("kb-data-list-narrative").append(narName);
+                // var $narName = $('<span>').addClass("kb-data-list-narrative").append(narName);
 
-                var $btnToolbar = $('<span>').addClass('btn-toolbar pull-right').attr('role', 'toolbar').hide();
+                var $btnToolbar = $('<span>').addClass('btn-toolbar pull-right').attr('role', 'toolbar');
                 var btnClasses = "btn btn-xs btn-default";
                 var css = {'color': '#888'};
                 var $openLandingPage = $('<span>')
@@ -1269,126 +1258,88 @@ define([
                         window.open('/#objgraphview/' + object_info[7] + '/' + object_info[1]);
                     });
                 $btnToolbar.append($openLandingPage).append($openProvenance);
+                // actionButton
 
-                var $mainDiv = $('<div>').addClass('kb-data-list-info').css({padding: '0px', margin: '0px'})
-                    .append($btnToolbar)
-                    .append($name).append($version).append('<br>')
-                    .append($type).append('<br>').append($narName).append('<br>').append($date).append($byUser);
+                var isCopy = loadedData && loadedData[name];
+                var $actionButton = $('<div>')
+                    .append(function () { return (isCopy) ? ' Copy' : ' Add'; });
 
-                var isCopy = loadedData && loadedData[shortName];
-                var $addDiv =
-                    $('<div>').append(
-                        $('<button>').addClass('kb-primary-btn').css({'white-space': 'nowrap', padding: '10px 15px'})
-                            .append($('<span>').addClass('fa fa-chevron-circle-left'))
-                            .append(function () { return (isCopy) ? ' Copy' : ' Add'; })
-                            .addClass(function () {return object_info[1].split('.').join('--');})
-                            .on('click', function () {
-                                var updateButton = function () {
-                                    // probably should move action outside of render func, but oh well
-                                    $(this).html('<img src="' + self.options.loadingImage + '">');
+                var $card = new kbaseDataCard(
+                    {
+                        name: name,
+                        version: objVersion,
+                        date: TimeFormat.getTimeStampStr(object_info[3]),
+                        type: type,
+                        narrative: narName,
+                        actionButton: $actionButton,
+                        "edit-by": ' by ' + object_info[5],
+                        moreContent: $btnToolbar,
+                        max_name_length: 50
+                    });
+                var $renderedActionButton = $card.find('.narrative-card-action-button');
+                $renderedActionButton.addClass(function () { return object_info[1].split('.').join('--'); })
+                    .hide()
+                    .on('click', function () { // probably should move action outside of render func, but oh well
+                        var updateButton = function () {
+                            $(this).html('<img src="' + self.options.loadingImage + '">');
+                            var thisBtn = this;
+                            Promise.resolve(self.serviceClient.sync_call(
+                                'NarrativeService.copy_object',
+                                [{
+                                    ref: object_info[6] + '/' + object_info[0],
+                                    target_ws_name: self.narWs,
+                                }]
+                            ))
+                                .then(function () {
+                                    var id = '.' + object_info[1].split('.').join('--');
+                                    $(id).html('');
+                                    $(id).append($('<span>').addClass('fa fa-chevron-circle-left'))
+                                        .append(' Copy');
+                                    self.trigger('updateDataList.Narrative');
+                                })
+                                .catch(function (error) {
+                                    $(thisBtn).html('Error');
+                                    if (error.error && error.error.message) {
+                                        if (error.error.message.indexOf('may not write to workspace') >= 0) {
+                                            self.options.$importStatus.html($('<div>').css({ 'color': '#F44336', 'width': '500px' }).append('Error: you do not have permission to add data to this Narrative.'));
+                                        } else {
+                                            self.options.$importStatus.html($('<div>').css({ 'color': '#F44336', 'width': '500px' }).append('Error: ' + error.error.message));
+                                        }
+                                    } else {
+                                        self.options.$importStatus.html($('<div>').css({ 'color': '#F44336', 'width': '500px' }).append('Unknown error!'));
+                                    }
+                                    console.error(error);
+                                });
+                        };
+                        if ($(this).text().split(' ')[1] === 'Copy') {
+                            var dialog = new BootstrapDialog({
+                                title: 'Item already exists in workspace under same name.',
+                                body: 'Do you want to override the existing copy?',
+                                buttons: [$('<a type="button" class="btn btn-default">')
+                                    .append('Yes')
+                                    .click(function () {
+                                        dialog.hide();
+                                        updateButton.call(this);
 
-                                    var thisBtn = this;
-                                    Promise.resolve(serviceClient.sync_call(
-                                        "NarrativeService.copy_object",
-                                        [{
-                                            ref: object_info[6] + '/' + object_info[0],
-                                            target_ws_name: self.ws_name
-                                        }]
-                                    ))
-                                        .then(function () {
-                                            var id = '.' + object_info[1].split('.').join('--');
-                                            $(id).html('');
-                                            $(id).append($('<span>').addClass('fa fa-chevron-circle-left'))
-                                                .append(' Copy');
-                                            self.trigger('updateDataList.Narrative');
-                                        })
-                                        .catch(function (error) {
-                                            $(thisBtn).html('Error');
-                                            if (error.error && error.error.message) {
-                                                if (error.error.message.indexOf('may not write to workspace') >= 0) {
-                                                    importStatus.html($('<div>').css({ 'color': '#F44336', 'width': '500px' }).append('Error: you do not have permission to add data to this Narrative.'));
-                                                } else {
-                                                    importStatus.html($('<div>').css({ 'color': '#F44336', 'width': '500px' }).append('Error: ' + error.error.message));
-                                                }
-                                            } else {
-                                                importStatus.html($('<div>').css({ 'color': '#F44336', 'width': '500px' }).append('Unknown error!'));
-                                            }
-                                            console.error(error);
-                                        });
+                                    }.bind(this))
+                                    , $('<a type="button" class="btn btn-default">')
+                                    .append('No')
+                                    .click(function () {
+                                        dialog.hide();
+                                    })
+                                ],
+                                closeButton: true
+                            });
+                            dialog.show();
+                        } else {
+                            updateButton.call(this);
+                        }
 
-                                };
-
-                                if ($(this).text().split(" ")[1] === "Copy") {
-                                    var dialog = new BootstrapDialog({
-                                        title: 'Item already exists in workspace under same name.',
-                                        body: 'Do you want to override the existing copy?',                                        
-                                        buttons: [$('<a type="button" class="btn btn-default">')
-                                            .append('Yes')
-                                            .click(function () {
-                                                dialog.hide();   
-                                                updateButton.call(this);
-
-                                            }.bind(this))
-                                            , $('<a type="button" class="btn btn-default">')
-                                            .append('No')
-                                            .click(function () {
-                                                dialog.hide();
-                                            })
-                                        ],
-                                        closeButton: true
-                                    });
-                                    dialog.show();
-                                } else {
-                                    updateButton.call(this);
-                                } 
-                                
-                              
-                            }));
-
-
-                var $topTable = $('<table>')
-                    .css({'width': '100%', 'background': '#fff'})  // set background to white looks better on DnD
-                    .append($('<tr>')
-                        .append($('<td>')
-                            .css({'width': '90px'})
-                            .append($addDiv.hide()))
-                        .append($('<td>')
-                            .css({'width': '50px'})
-                            .append($logo))
-                        .append($('<td>')
-                            .append($mainDiv)));
-                // set icon for data item
-                $(document).trigger("setDataIcon.Narrative", {
-                    elt: $logo,
-                    type: type
-                });
-
-                var $row = $('<div>')
-                    .css({margin: '2px', padding: '4px', 'margin-bottom': '5px'})
-                    //.addClass('kb-data-list-obj-row')
-                    .append($('<div>').addClass('kb-data-list-obj-row-main')
-                        .append($topTable))
-                    //.append($moreRow)
-                    // show/hide ellipses on hover, show extra info on click
-                    .mouseenter(function () {
-                        //if (!$moreRow.is(':visible')) { $toggleAdvancedViewBtn.show(); }
-                        $addDiv.show();
-                        $btnToolbar.show();
-                    })
-                    .mouseleave(function () {
-                        //$toggleAdvancedViewBtn.hide();
-                        $addDiv.hide();
-                        $btnToolbar.hide();
                     });
 
-                var $rowWithHr = $('<div>').data('ref', obj.wsID + '.' + obj.id)
-                    .data('obj-name', obj.name)
-                    .append($('<hr>')
-                        .addClass('kb-data-list-row-hr')
-                        .css({'margin-left': '150px'}))
-                    .append($row);
 
-                return $rowWithHr;
+
+                return $card;
             }
 
             function setHeaderMessage(view, message) {

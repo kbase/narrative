@@ -47,6 +47,7 @@ define (
             var $name = $('<span>').addClass('kb-data-list-name').append(shortName);
             var $version = $('<span>').addClass('kb-data-list-version').append(entry.version);
             var $type = $('<div>').addClass('kb-data-list-type').append(entry.type);
+            var $narrative = $('<div>').addClass('kb-data-list-narrative').append(entry.narrative);
             var $date = $('<span>').addClass('kb-data-list-date').append(entry.date);
             var $byUser = $('<span>').addClass('kb-data-list-edit-by').append( entry['edit-by']);
             
@@ -56,6 +57,7 @@ define (
             var $subcontent = $('<div>')
                 .addClass('kb-data-list-subcontent')
                 .append($type);
+            if(entry.narrative) $subcontent.append($narrative);
             if(entry.date) $subcontent.append($date);
             if(entry['edit-by']) $subcontent.append($byUser);
 

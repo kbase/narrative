@@ -359,7 +359,9 @@ define([
         },
 
         refresh: function (showError) {
-            if(this.writtingLock) return;
+            if(this.writtingLock) {
+                return;
+            }
             // Set the refresh timer on the first refresh. From  here, it'll refresh itself
             // every this.options.refresh_interval (30000) ms
             if (this.refreshTimer === null) {
@@ -908,13 +910,15 @@ define([
                         return;
                     }
 
-                    //lock on refresh expires aftger 5 min
+                    //lock on refresh expires after 15 min
                     var releaseLock = function(){
-                        if(self.refreshWrittingLock !== null) clearTimeout(self.refreshWrittingLock);
+                        if(self.refreshWrittingLock !== null) {
+                            clearTimeout(self.refreshWrittingLock);
+                        }
                         
                         self.refreshWrittingLock = setTimeout(function () {
                             self.writtingLock = false;
-                        }.bind(this), 900000);                        
+                        }, 900000);                        
                     };
                     var $newNameInput = $('<input type="text">')
                         .addClass('form-control')

@@ -1224,11 +1224,11 @@ define([
                         metadataText += '<tr><th>' + key + '</th><td>' + metadata[key] + '</td></tr>';
                     }
                 }
-                if (type === 'Genome') {
-                    if (metadata.hasOwnProperty('Name')) {
-                        $type.text(type + ': ' + metadata['Name']);
-                    }
-                }
+                // if (type === 'Genome') {
+                //     if (metadata.hasOwnProperty('Name')) {
+                //         $type.text(type + ': ' + metadata['Name']);
+                //     }
+                // }
 
                 var narName = obj.ws;
                 if (narrativeNameLookup[obj.ws]) {
@@ -1269,70 +1269,14 @@ define([
                         actionButton: $actionButton,
                         'edit-by': ' by ' + object_info[5],
                         moreContent: $btnToolbar,
-                        max_name_length: 50
+                        max_name_length: 50,
+                        self: self,
+                        object_info: object_info,
+                        ws_name: self.ws_name
                     });
                 var $renderedActionButton = $card.find('.narrative-card-action-button');
                 $renderedActionButton.addClass(function () { return object_info[1].split('.').join('--'); })
-                    .hide()
-                    .on('click', function () { // probably should move action outside of render func, but oh well
-                        var updateButton = function () {
-                            $(this).html('<img src="' + self.options.loadingImage + '">');
-                            var thisBtn = this;
-                            Promise.resolve(self.serviceClient.sync_call(
-                                'NarrativeService.copy_object',
-                                [{
-                                    ref: object_info[6] + '/' + object_info[0],
-                                    target_ws_name: self.narWs,
-                                }]
-                            ))
-                                .then(function () {
-                                    var id = '.' + object_info[1].split('.').join('--');
-                                    $(id).html('');
-                                    $(id).append($('<span>').addClass('fa fa-chevron-circle-left'))
-                                        .append(' Copy');
-                                    self.trigger('updateDataList.Narrative');
-                                })
-                                .catch(function (error) {
-                                    $(thisBtn).html('Error');
-                                    if (error.error && error.error.message) {
-                                        if (error.error.message.indexOf('may not write to workspace') >= 0) {
-                                            self.options.$importStatus.html($('<div>').css({ 'color': '#F44336', 'width': '500px' }).append('Error: you do not have permission to add data to this Narrative.'));
-                                        } else {
-                                            self.options.$importStatus.html($('<div>').css({ 'color': '#F44336', 'width': '500px' }).append('Error: ' + error.error.message));
-                                        }
-                                    } else {
-                                        self.options.$importStatus.html($('<div>').css({ 'color': '#F44336', 'width': '500px' }).append('Unknown error!'));
-                                    }
-                                    console.error(error);
-                                });
-                        };
-                        if ($(this).text().split(' ')[1] === 'Copy') {
-                            var dialog = new BootstrapDialog({
-                                title: 'Item already exists in workspace under same name.',
-                                body: 'Do you want to override the existing copy?',
-                                buttons: [$('<a type="button" class="btn btn-default">')
-                                    .append('Yes')
-                                    .click(function () {
-                                        dialog.hide();
-                                        updateButton.call(this);
-
-                                    }.bind(this))
-                                    , $('<a type="button" class="btn btn-default">')
-                                    .append('No')
-                                    .click(function () {
-                                        dialog.hide();
-                                    })
-                                ],
-                                closeButton: true
-                            });
-                            dialog.show();
-                        } else {
-                            updateButton.call(this);
-                        }
-
-                    });
-
-
+                    .hide();
 
                 return $card;
             }

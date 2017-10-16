@@ -84,7 +84,8 @@ define (
                 .mouseleave(function () {
                     $toggleAdvancedViewBtn.hide();
                     $actionButton.hide();
-                }).click(function () {
+                })
+                .click(function () {
                     $moreContent.slideToggle('fast');
                 });
                 

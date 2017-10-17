@@ -873,7 +873,6 @@ define([
          * @private
          */
         buildAppItem: function(app) {
-            debugger;
             /**
              app.info:
                 authors:["rsutormin"], categories:["annotation"], icon:{url:}, id: str, 
@@ -1012,16 +1011,14 @@ define([
                         .css({ 'width': '15%' })
                         .append($moreBtn.hide())));
 
-            
+
             var $card = new kbaseAppCard(
                 {
 
-                    'edit-by': ' by ' + object_info[5],
-                    moreContent: $btnToolbar,
+
                     max_name_length: 50,
                     self: self,
-                    object_info: app,
-                    ws_name: self.ws_name
+                    app: app,
                 });
             
             // return $('<div>')

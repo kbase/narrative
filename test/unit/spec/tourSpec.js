@@ -33,6 +33,7 @@ define ([
             var tourInstance = new Tour.Tour();
             tourInstance.start();
             expect($.find('.kb-tour')).toBeTruthy();
+            tourInstance.stop();
         });
     });
 });

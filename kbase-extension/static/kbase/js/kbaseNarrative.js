@@ -126,6 +126,7 @@ define([
 
         // The version of the currently loaded Narrative document object.
         this.documentVersionInfo = [];
+        this.stopVersionCheck = false;
 
         //
         this.dataViewers = null;
@@ -227,6 +228,7 @@ define([
         });
         $([Jupyter.events]).on('notebook_saved.Notebook', function () {
             $('#kb-save-btn').find('div.fa-save').removeClass('fa-spin');
+            self.stopVersionCheck = false;
             self.updateDocumentVersion();
         });
         $([Jupyter.events]).on('kernel_idle.Kernel', function () {
@@ -329,7 +331,7 @@ define([
      * an int > 0.
      */
     Narrative.prototype.checkDocumentVersion = function (docInfo) {
-        if (docInfo.length < 5) {
+        if (docInfo.length < 5 || this.stopVersionCheck) {
             return;
         }
         if (docInfo[4] !== this.documentVersionInfo[4]) {
@@ -737,8 +739,6 @@ define([
             }.bind(this))
             .finally(function () {
                 this.sidePanel.render();
-                this.updateDocumentVersion();
-                // this.loadingWidget.remove();
             }.bind(this));
             $([Jupyter.events]).trigger('loaded.Narrative');
             $([Jupyter.events]).on('kernel_ready.Kernel',
@@ -794,6 +794,7 @@ define([
      * This triggers a save, but saves all cell states first.
      */
     Narrative.prototype.saveNarrative = function () {
+        this.stopVersionCheck = true;
         this.narrController.saveAllCellStates();
         Jupyter.notebook.save_checkpoint();
         this.toggleDocumentVersionBtn(false);

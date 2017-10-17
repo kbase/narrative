@@ -152,7 +152,7 @@ define ([
             new DynamicTable($content, {
                 headers: [{
                     id: 'contig_id',
-                    text: 'Contig Id',
+                    text: 'Contig ID',
                     isSortable: true
                 }, {
                     id: 'length',
@@ -160,7 +160,7 @@ define ([
                     isSortable: true
                 }, {
                     id: 'gc',
-                    text: 'GC Content (%)',
+                    text: 'GC Content',
                     isSortable: true
                 }],
                 searchPlaceholder: 'Search contigs',

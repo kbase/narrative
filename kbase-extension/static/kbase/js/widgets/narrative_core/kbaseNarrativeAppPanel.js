@@ -894,74 +894,9 @@ define([
                 $logo.append(DisplayUtil.getAppIcon({ cursor: 'pointer', setColor: true }));
             }
             // add behavior
-            $logo.click(function(e) {
-                e.stopPropagation();
-                self.triggerApp(app);
-            });
 
-            var $star = $('<i>');
-            if(app.favorite) {
-                $star.addClass('fa fa-star kbcb-star-favorite').append('&nbsp;');
-            } else {
-                $star.addClass('fa fa-star kbcb-star-nonfavorite').append('&nbsp;');
-            }
-            $star.on('click', function(event) {
-                event.stopPropagation();
-                var params = {};
-                if(app.info.module_name) {
-                    params['module_name'] = app.info.module_name;
-                    params['id'] = app.info.id.split('/')[1];
-                } else {
-                    params['id'] = app.info.id;
-                }
 
-                if(app.favorite) {
-                    // remove favorite
-                    Promise.resolve(self.catalog.remove_favorite(params))
-                        .then(function() {
-                            $star.removeClass('kbcb-star-favorite').addClass('kbcb-star-nonfavorite');
-                            app.favorite = null; // important to set this if we don't refresh the panel
-                        })
-                        .catch(function(error) {
-                            console.error(error);
-                        });
-                } else {
-                    // add favorite
-                    Promise.resolve(self.catalog.add_favorite(params))
-                        .then(function() {
-                            $star.removeClass('kbcb-star-nonfavorite').addClass('kbcb-star-favorite');
-                            app.favorite = new Date().getTime(); // important to set this if we don't refresh the panel
-                        })
-                        .catch(function(error) {
-                            console.error(error);
-                        });
-                }
-            })
-                .tooltip({
-                    title: 'Add or remove from your favorites',
-                    container: 'body',
-                    placement: 'bottom',
-                    delay: {
-                        show: Config.get('tooltip').showDelay,
-                        hide: Config.get('tooltip').hideDelay
-                    }
-                });
 
-            var $name = $('<div>')
-                .addClass('kb-data-list-name')
-                .css({'white-space':'normal', 'cursor':'pointer'})
-                .append($('<a>')
-                    .append(app.info.name)
-                    .click(function(e) {
-                        e.stopPropagation();
-                        self.triggerApp(app);
-                    }));
-            var versionStr = 'v'+app.info.ver; // note that app versions are meaningless right now; need to update!
-            if (app.info.module_name) {
-                versionStr = '<a href="'+this.options.moduleLink+'/'+app.info.module_name+'" target="_blank">' +
-                                app.info.namespace + '</a> ' + versionStr;
-            }
-            var $version = $('<span>').addClass('kb-data-list-type').append($star).append(versionStr); // use type because it is a new line
 
             var moreLink = '';
             if(app.info.module_name) {
@@ -984,57 +919,22 @@ define([
                         .attr('target', '_blank')
                         .attr('href', moreLink)));
 
-            var $moreBtn =
-                $('<button class="btn btn-xs btn-default pull-right" aria-hidden="true">')
-                    .append($('<span>')
-                        .addClass('fa fa-ellipsis-h')
-                        .css({ 'color': '#999' }));
 
-            var $mainDiv = $('<div>')
-                .addClass('kb-data-list-info')
-                .css({ padding: '0', margin: '0' })
-                .append($name)
-                .append($('<div>')
-                    .append($version)
-                    .append($moreBtn.hide()));
-
-            var $newMethod = $('<table>')
-                .css({ 'width': '100%' })
-                .append($('<tr>')
-                    .append($('<td>')
-                        .css({ 'width': '15%' })
-                        .append($logo))
-                    .append($('<td>')
-                        .css({ 'width': '70%' })
-                        .append($mainDiv))
-                    .append($('<td>')
-                        .css({ 'width': '15%' })
-                        .append($moreBtn.hide())));
 
 
             var $card = new kbaseAppCard(
                 {
-
-
+                    moreContent: $more,
                     max_name_length: 50,
                     self: self,
                     app: app,
                 });
-            
-            // return $('<div>')
-            //     .append($('<hr>').addClass('kb-data-list-row-hr').css({ 'margin-left': '65px' }))
-            //     .append($('<div>')
-            //         .addClass('kb-data-list-obj-row')
-            //         .append($newMethod)
-            //         .append($more.hide())
-            //         .mouseenter(function() {
-            //             $moreBtn.show();
-            //         })
-            //         .mouseleave(function() { $moreBtn.hide(); })
-            //         .click(function() {
-            //             $more.slideToggle('fast');
-            //         }));
-                
+
+            //custome click functions;
+            $card.find('.narrative-card-logo , .kb-data-list-name').click(function (e) {
+                e.stopPropagation();
+                self.triggerApp(app);
+            });
 
             return $card;
 

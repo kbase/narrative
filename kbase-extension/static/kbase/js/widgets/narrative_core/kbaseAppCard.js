@@ -54,7 +54,7 @@ define (
             }
 
             var $star = $('<i>').addClass('fa fa-star kbcb-star-default');
-            if (app.favorite) {
+            if (favorite) {
                 $star.addClass('fa fa-star kbcb-star-favorite').append('&nbsp;');
             }
 
@@ -98,15 +98,6 @@ define (
                     }
                 });
 
-
-          
-            //shorten name if applicable
-            var isShortened = false;
-            if ((entry.max_name_length && shortName) && shortName.length > entry.max_name_length) {
-                shortName = shortName.substring(0, entry.max_name_length - 3) + '...';
-                isShortened = true;
-            }
-
             var $logo = $('<div>');
             if (app.icon && app.icon.url) {
                 var url = self.options.methodStoreURL.slice(0, -3) + app.icon.url;
@@ -114,24 +105,20 @@ define (
             } else {
                 $logo.append(DisplayUtil.getAppIcon({ cursor: 'pointer', setColor: true }));
             }
-            
-            
+                   
             var $name = $('<span>').addClass('kb-data-list-name').append(shortName);
             var $version = $('<span>').addClass('kb-data-list-version').append(version);
 
             //no default
-            var $byUser = $('<div>').addClass('kb-data-list-edit-by').append(authors);
-            
+            var $authors = $('<div>').addClass('kb-data-list-edit-by').append(authors);
             var $title = $('<div>').append($name).append($star);
 
             var $subcontent = $('<div>')
                 .addClass('kb-data-list-subcontent')
                 .append($version)
-                .append($byUser);
+                .append($authors);
     
      
-
-           
 
           
             var layout = {

@@ -881,23 +881,7 @@ define([
                 subtitle: str, tooltip: str, ver: str
              * 
             */
-
             var self = this;
-            // add icon (logo)
-            var $logo = $('<div>');
-
-            if (app.info.icon && app.info.icon.url) {
-                var url = this.options.methodStoreURL.slice(0, -3) + app.info.icon.url;
-                $logo.append( DisplayUtil.getAppIcon({ url: url , cursor: 'pointer' , setColor:true, size:'50px'}) )
-                    .css('padding', '3px');
-            } else {
-                $logo.append(DisplayUtil.getAppIcon({ cursor: 'pointer', setColor: true }));
-            }
-            // add behavior
-
-
-
-
             var moreLink = '';
             if(app.info.module_name) {
                 moreLink = this.options.methodHelpLink + app.info.id + '/' + this.currentTag;
@@ -918,9 +902,6 @@ define([
                         .append('more...')
                         .attr('target', '_blank')
                         .attr('href', moreLink)));
-
-
-
 
             var $card = new kbaseAppCard(
                 {

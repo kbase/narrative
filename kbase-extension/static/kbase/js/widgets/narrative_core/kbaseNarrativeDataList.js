@@ -1096,6 +1096,10 @@ define([
             var type = type_tokens[1].split('-')[0];
             var is_set = this.isASet(object_info);
 
+            var author = ' ';
+            if (object_info[5] !== self.my_user_id) {
+                author = ' by ' + object_info[5];
+            }
 
             var metadata = object_info[10] || {};
             if (type === 'Genome' || type === 'GenomeAnnotation') {
@@ -1104,10 +1108,6 @@ define([
                 }
             }
 
-            var author = ' ';
-            if (object_info[5] !== self.my_user_id) {
-                author = ' by ' + object_info[5];
-            }
 
             var metadataText = '';
             for (var key in metadata) {
@@ -1137,7 +1137,7 @@ define([
             var $card = new kbaseDataCard(
                 {
                     type: type,
-                    "edit-by": author,
+                    editedBy: author,
                     moreContent: $moreContent,
                     is_set: is_set,
                     max_name_length: this.options.max_name_length,

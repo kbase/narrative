@@ -1,22 +1,25 @@
 /**
- *  kbaseCard.js -- used for all modeling related modals
+ *  kbaseAppCard.js -- used making App cards in narrative
  *
- *  Authors:
- *      nconrad@anl.gov
+ *  Authors: diane.z.zheng@gmail.com
  *
- *   This is a helper widget for rendering modals using bootstrap v3.0.0+
- *   The aim here is to have the simplest and maintainable API.
+ *   Example and expected out put:
  *
- *   API
- *
- *   Basic Modal:
- *
- *      var modal =  new kbaseCard($('<div>'), {
- *         title: 'Model Details',
- *         subText: 'some subtext under title'
- *      });
- *
- *   See public methods below for rest of API.  It is self-documenting.
+ *     var $card = new kbaseDataCard(
+                {   
+                    //expected values
+                    app: app,
+                    self: self
+                    favorite: app.favorite,
+
+                    //values with default, passing in value will override default
+                    date: date,
+                    createdBy: author,
+                    type: type,
+
+                    //optional values
+                    moreContent: $moreContent,
+                });
  *
 */
 
@@ -46,9 +49,9 @@ define (
             var app = entry.app.info;
             
             var shortName = entry.name ? entry.name : app.name;
-            var authors = entry.name ? entry.name : app.authors.join(', ');
+            var authors = entry.createdBy ? entry.createdBy : app.authors.join(', ');
             var version = entry.version ? entry.version : ('v' + app.ver);
-            if (app.module_name) {
+            if (app.module_name && (entry.version === undefined)) {
                 version = '<a href="' + self.options.moduleLink + '/' + app.module_name + '" target="_blank">' +
                     app.namespace + '</a> ' + version;
             }
@@ -108,18 +111,14 @@ define (
                    
             var $name = $('<span>').addClass('kb-data-list-name').append(shortName);
             var $version = $('<span>').addClass('kb-data-list-version').append(version);
-
-            //no default
             var $authors = $('<div>').addClass('kb-data-list-edit-by').append(authors);
+
             var $title = $('<div>').append($name).append($star);
 
             var $subcontent = $('<div>')
                 .addClass('kb-data-list-subcontent')
                 .append($version)
                 .append($authors);
-    
-     
-
           
             var layout = {
                 logo: $logo,
@@ -129,8 +128,6 @@ define (
             };
 
             var $card = new kbaseCardLayout(layout);
-
-
 
             return $card;
         }

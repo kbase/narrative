@@ -1,22 +1,29 @@
 /**
- *  kbaseCard.js -- used for all modeling related modals
+ *  kbaseDataCard.js -- used making object cards in narrative
  *
- *  Authors:
- *      nconrad@anl.gov
+ *  Authors: diane.z.zheng@gmail.com
  *
- *   This is a helper widget for rendering modals using bootstrap v3.0.0+
- *   The aim here is to have the simplest and maintainable API.
+ *   Example and expected out put:
  *
- *   API
- *
- *   Basic Modal:
- *
- *      var modal =  new kbaseCard($('<div>'), {
- *         title: 'Model Details',
- *         subText: 'some subtext under title'
- *      });
- *
- *   See public methods below for rest of API.  It is self-documenting.
+ *     var $card = new kbaseDataCard(
+                {   
+                    //expected values
+                    object_info: object_info,
+                    self: self
+
+                    //values with default, enter falsey value to hide; passing in value will override default
+                    version: version,
+                    narrative: narrative,
+                    date: date,
+                    editBy: author,
+                    type: type,
+
+                    //optional values
+                    moreContent: $moreContent,
+                    is_set: is_set,
+                    max_name_length: this.options.max_name_length,
+
+                });
  *
 */
 
@@ -81,22 +88,24 @@ define (
             var $narrative = $('<div>').addClass('kb-data-list-narrative').append(entry.narrative);
             
             var $title = $('<div>').append($name);
+            var $subcontent = $('<div>')
+                .addClass('kb-data-list-subcontent');
+            
             if(entry.version === undefined || entry.version) {
                 $title.append($version);
             }
-
-            var $subcontent = $('<div>')
-                .addClass('kb-data-list-subcontent')
-                .append($type);
-            if(entry.narrative === undefined || entry.version) {
+            
+            if(entry.type === undefined || entry.type) {
+                $subcontent.append($type);
+            }
+            if(entry.narrative === undefined || entry.narrative) {
                 $subcontent.append($narrative);
             }
-            if(entry.date === undefined || entry.version) {
+            if(entry.date === undefined || entry.date) {
                 $subcontent.append($date);
             }
 
-
-            if(entry.editedBy === undefined || entry.version) {
+            if(entry.editedBy === undefined || entry.editedBy) {
                 $byUser
                     .click(function (object_info, e) {
                         e.stopPropagation();
@@ -116,12 +125,13 @@ define (
                     }
                 });
             }
+            
             //create card
             var actionButtonClick = function (e) {
                 if(!entry.ws_name){
                     return;
                 }
-                e.preventPropagation; // probably should move action outside of render func, but oh well
+                e.preventPropagation; 
                 var updateButton = function () {
                     var thisBtn = $(this).children()[0];
                     var thisHolder = this;

@@ -1241,15 +1241,12 @@ define([
                     {                      
                         narrative: narName,
                         actionButton: $actionButton,
-                        'edit-by': ' by ' + object_info[5],
                         moreContent: $btnToolbar,
                         max_name_length: 50,
                         self: self,
                         object_info: object_info,
                         ws_name: self.ws_name
                     });
-                
-
 
                 return $card;
             }

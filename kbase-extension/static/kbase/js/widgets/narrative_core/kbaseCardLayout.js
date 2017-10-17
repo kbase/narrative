@@ -1,25 +1,20 @@
 /**
- *  kbaseCard.js -- used for creating narrative cards
+ *  kbaseCard.js -- used for creating narrative cards layouts
  *
- *  Authors:
- *      zzheng@lbl.gov
+ *  Authors: zzheng@lbl.gov
  *
  *   This the templating function for creating consistent card. Should be called through card 
  *    creating function such as kbaseDataCard.  
- * 
- *   API
  *
  *   Expected options:
- *      
  *     options : {
- *          actionButton (optional),
  *          logo,
+ *          actionButton (optional),
+ *          actionButtonClick (should be passed in with actionButton),
  *          title,
  *          subcontent
  *          moreContent (optional)
  *      }
- *   
- *
 */
 
 define (

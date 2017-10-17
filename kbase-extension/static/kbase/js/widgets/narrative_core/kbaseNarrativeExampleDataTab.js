@@ -250,7 +250,9 @@ define ([
                 .append(function () { return (isCopy) ? ' Copy' : ' Add'; });
 
             var $card = new kbaseDataCard(
-                {
+                {   version: false,
+                    date:false,
+                    editedBy:false,
                     actionButton: $actionButton,
                     name: object_info[1],
                     type: type,

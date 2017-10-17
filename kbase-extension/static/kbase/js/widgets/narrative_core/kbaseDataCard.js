@@ -52,11 +52,10 @@ define (
   
             //params
             var shortName = entry.name ? entry.name : object_info[1];
-            var version = entry.version ? entry.version : object_info[4];
+            var version = entry.version ? entry.version : ('v' + object_info[4]);
             var date = entry.date ? entry.date : TimeFormat.getTimeStampStr(object_info[3]);
             var type = entry.type;
-            var editBy = entry['edit-by'] ? entry['edit-by'] : (' by ' + object_info[5]);
-
+            var editBy = entry.editedBy ? entry.editedBy : (' by ' + object_info[5]);
             if(!entry.type){
                 var type_tokens = object_info[2].split('.');
                 type = entry.type ? entry.type : type_tokens[1].split('-')[0];
@@ -82,20 +81,22 @@ define (
             var $narrative = $('<div>').addClass('kb-data-list-narrative').append(entry.narrative);
             
             var $title = $('<div>').append($name);
-            if(entry.version) $title.append($version);
+            if(entry.version === undefined || entry.version) {
+                $title.append($version);
+            }
 
             var $subcontent = $('<div>')
                 .addClass('kb-data-list-subcontent')
                 .append($type);
-            if(entry.narrative) {
+            if(entry.narrative === undefined || entry.version) {
                 $subcontent.append($narrative);
             }
-            if(entry.date) {
+            if(entry.date === undefined || entry.version) {
                 $subcontent.append($date);
             }
 
 
-            if(entry['edit-by']) {
+            if(entry.editedBy === undefined || entry.version) {
                 $byUser
                     .click(function (object_info, e) {
                         e.stopPropagation();

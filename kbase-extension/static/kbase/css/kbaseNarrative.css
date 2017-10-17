@@ -2267,23 +2267,70 @@ button.kb-data-obj {
     font-size: 13px;
 }
 
+/* card layout */
+.narrative-card-row-main{
+    display: flex;
+    align-items: center;
+    width:98%;
+}
 
+
+.narrative-card-ellipsis{
+    display:flex;
+    align-items: center;
+    justify-content: center;
+    width:20px;
+}
+
+
+.narrative-card-palette-icon{
+    position: relative;
+    color: '#888';
+    left: 15px;
+    top: -50px;
+}
+
+
+.narrative-card-action-button-wrapper{
+    width: 80px;
+    height: 50px;
+    margin: 0px 10px;
+}
+.narrative-card-action-button{
+    width: calc(100% - 6px);
+    height: 80%;
+    display: flex;
+    padding: 0px;
+    justify-content: center;
+}
+.narrative-card-action-button > span{
+    margin-right: 5px;
+}
+.narrative-data-panel-btnToolbar > span{
+    color: #888;
+}
+.narrative-data-panel-btnToolbar{
+    display: flex;
+    justify-content: center;
+}
 
 /* data list */
-.kb-data-list-obj-row {
+.kb-data-list-obj-row, .narrative-card-row{
     transition: all 0.1s ease;
 
     border-left-style: solid;
     border-left-width: 5px;
     border-left-color: #fff;
     color:#333;
-    margin:2px;
-    padding:4px;
-    margin-bottom: 5px;
 
     box-shadow: 1px 1px 1px 1px #fff;
     -webkit-box-shadow: 1px 1px 1px 1px #fff;
     moz-box-shadow: 1px 1px 1px 1px #fff;
+
+}
+.narrative-card-row-main{
+    margin:2px;
+    padding:4px;
 }
 
 .kb-function-dim .kb-data-list-obj-row {
@@ -2291,7 +2338,7 @@ button.kb-data-obj {
 
 }
 
-.kb-data-list-obj-row:hover {
+.kb-data-list-obj-row:hover, .narrative-card-row:hover {
     border-left-style: solid;
     border-left-width: 5px;
     border-left-color: #4BB856;
@@ -2502,6 +2549,9 @@ button.kb-data-obj {
 }
 
 .kb-data-list-info {
+    width: 80%;
+    padding: 4px 0px;
+    border-top: 1px solid #E0E0E0;;
 }
 .kb-data-list-name {
     color:#2e618d;
@@ -2599,6 +2649,9 @@ button.kb-data-obj {
     color:#777;
     font-size: 10pt;
     margin: 2px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 .kb-data-list-more-div tr {
     color:#777;

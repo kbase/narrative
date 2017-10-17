@@ -24,6 +24,7 @@ define([
     'kb_service/client/narrativeMethodStore',
     'uuid',
     'narrative_core/catalog/kbaseCatalogBrowser',
+    'kbase/js/widgets/narrative_core/kbaseAppCard',
     'util/bootstrapAlert',
     'kbaseNarrative',
     'catalog-client-api',
@@ -45,6 +46,7 @@ define([
     NarrativeMethodStore,
     Uuid,
     KBaseCatalogBrowser,
+    kbaseAppCard,
     BootstrapAlert
 ) {
     'use strict';
@@ -271,9 +273,9 @@ define([
                     this.$searchDiv.toggle({ effect: 'blind', duration: 'fast' });
                     var new_height = this.$methodList.height();
                     if(this.app_offset){
-                        new_height = (new_height - 40) + "px";
+                        new_height = (new_height - 40) + 'px';
                     }else{
-                        new_height = (new_height + 40) + "px";
+                        new_height = (new_height + 40) + 'px';
                     }
                     this.$methodList.css('height', new_height);
                     this.app_offset = !this.app_offset;
@@ -460,11 +462,11 @@ define([
             var $helpHeader = $('<div>')
                 .append(
                     $('<h1>')
-                    .css({
-                        display: 'inline',
-                        'padding-right': '8px'
-                    })
-                    .append(this.help.$helpTitle))
+                        .css({
+                            display: 'inline',
+                            'padding-right': '8px'
+                        })
+                        .append(this.help.$helpTitle))
                 .append(this.help.$helpVersion);
 
             this.help.$helpBody = $('<div>')
@@ -497,23 +499,23 @@ define([
             var loadingCalls = [];
             loadingCalls.push(
                 Promise.resolve(self.methClient.list_methods(filterParams))
-                .then(function(methods) {
-                    self.methodSpecs = {};
-                    self.methodInfo = {};
-                    for (var i = 0; i < methods.length; i++) {
+                    .then(function(methods) {
+                        self.methodSpecs = {};
+                        self.methodInfo = {};
+                        for (var i = 0; i < methods.length; i++) {
                         // key should have LC module name if an SDK method
-                        if (methods[i].module_name) {
-                            var idTokens = methods[i].id.split('/');
-                            self.methodSpecs[idTokens[0].toLowerCase() + '/' + idTokens[1]] = { info: methods[i] };
+                            if (methods[i].module_name) {
+                                var idTokens = methods[i].id.split('/');
+                                self.methodSpecs[idTokens[0].toLowerCase() + '/' + idTokens[1]] = { info: methods[i] };
+                            }
                         }
-                    }
-                }));
+                    }));
 
             loadingCalls.push(
                 Promise.resolve(self.methClient.list_categories({}))
-                .then(function(categories) {
-                    self.categories = categories[0];
-                }));
+                    .then(function(categories) {
+                        self.categories = categories[0];
+                    }));
 
             if (!versionTag || versionTag === 'release') {
                 loadingCalls.push(self.catalog.list_basic_module_info({})
@@ -522,8 +524,8 @@ define([
                         return Promise.map(moduleInfoList, function(module) {
                             if (module.dynamic_service === 0) {
                                 return Promise.resolve(
-                                        self.catalog.get_module_version({ module_name: module.module_name })
-                                    )
+                                    self.catalog.get_module_version({ module_name: module.module_name })
+                                )
                                     .then(function(version) {
                                         self.moduleVersions[version.module_name] = version.version;
                                     });
@@ -600,18 +602,18 @@ define([
             }
             if(!app['spec']) {
                 Promise.resolve(self.methClient.get_method_spec({ids: [app.info.id], tag: tag}))
-                .then(function(spec) {
-                    spec = spec[0];
-                    if (self.moduleVersions[spec.info.module_name]) {
-                        spec.info.ver = self.moduleVersions[spec.info.module_name];
-                    }
-                    self.trigger('appClicked.Narrative', [spec, tag, parameters]);
-                })
-                .catch(function (err) {
-                    var errorId = new Uuid(4).format();
-                    console.error('Error getting method spec #' + errorId, err, app, tag);
-                    alert('Error getting app spec, see console for error info #' + errorId);
-                });
+                    .then(function(spec) {
+                        spec = spec[0];
+                        if (self.moduleVersions[spec.info.module_name]) {
+                            spec.info.ver = self.moduleVersions[spec.info.module_name];
+                        }
+                        self.trigger('appClicked.Narrative', [spec, tag, parameters]);
+                    })
+                    .catch(function (err) {
+                        var errorId = new Uuid(4).format();
+                        console.error('Error getting method spec #' + errorId, err, app, tag);
+                        alert('Error getting app spec, see console for error info #' + errorId);
+                    });
             } else {
                 self.trigger('appClicked.Narrative', [app, tag, parameters]);
             }
@@ -647,24 +649,24 @@ define([
             Object.keys(appSet).forEach(function(appId) {
                 var categoryList = [];
                 switch (style) {
-                    default:
-                        case 'category':
-                        categoryList = appSet[appId].info.categories;
+                default:
+                case 'category':
+                    categoryList = appSet[appId].info.categories;
                     var activeIndex = categoryList.indexOf('active');
                     if (activeIndex !== -1) {
                         categoryList.splice(activeIndex, 1);
                     }
                     break;
-                    case 'input':
-                            categoryList = appSet[appId].info.input_types.map(function(input) {
-                            return input.split('.')[1];
-                        });
-                        break;
-                    case 'output':
-                            categoryList = appSet[appId].info.output_types.map(function(output) {
-                            return output.split('.')[1];
-                        });
-                        break;
+                case 'input':
+                    categoryList = appSet[appId].info.input_types.map(function(input) {
+                        return input.split('.')[1];
+                    });
+                    break;
+                case 'output':
+                    categoryList = appSet[appId].info.output_types.map(function(output) {
+                        return output.split('.')[1];
+                    });
+                    break;
                 }
                 if (categoryList.length === 0) {
                     allCategories.uncategorized.push(appId);
@@ -685,7 +687,7 @@ define([
                 });
                 allCategories[cat].sort(function(a, b) {
                     a = appSet[a],
-                        b = appSet[b];
+                    b = appSet[b];
                     return a.info.name.localeCompare(b.info.name);
                 });
             });
@@ -804,19 +806,19 @@ define([
 
             // 2. Switch over panelStyle and build the view based on that.
             switch (panelStyle) {
-                case 'a-z':
-                    buildFlatPanel(true);
-                    break;
-                case 'z-a':
-                    buildFlatPanel(false);
-                    break;
-                case 'category':
-                case 'input':
-                case 'output':
-                    buildAccordionPanel(panelStyle);
-                    break;
-                default:
-                    break;
+            case 'a-z':
+                buildFlatPanel(true);
+                break;
+            case 'z-a':
+                buildFlatPanel(false);
+                break;
+            case 'category':
+            case 'input':
+            case 'output':
+                buildAccordionPanel(panelStyle);
+                break;
+            default:
+                break;
             }
             this.$methodList.empty().append($appPanel);
         },
@@ -843,14 +845,14 @@ define([
             var filteredIds = Object.keys(appSet);
             filteredIds = Object.keys(appSet).filter(function(id) {
                 switch (filterType) {
-                    case 'in_type':
-                        var inputTypes = appSet[id].info.input_types;
-                        return inputTypes.join().toLowerCase().indexOf(filterString) !== -1;
-                    case 'out_type':
-                        var outputTypes = appSet[id].info.output_types;
-                        return outputTypes.join().toLowerCase().indexOf(filterString) !== -1;
-                    default:
-                        return appSet[id].info.name.toLowerCase().indexOf(filterString) !== -1;
+                case 'in_type':
+                    var inputTypes = appSet[id].info.input_types;
+                    return inputTypes.join().toLowerCase().indexOf(filterString) !== -1;
+                case 'out_type':
+                    var outputTypes = appSet[id].info.output_types;
+                    return outputTypes.join().toLowerCase().indexOf(filterString) !== -1;
+                default:
+                    return appSet[id].info.name.toLowerCase().indexOf(filterString) !== -1;
                 }
             });
             var filteredSet = {};
@@ -871,6 +873,15 @@ define([
          * @private
          */
         buildAppItem: function(app) {
+            /**
+             app.info:
+                authors:["rsutormin"], categories:["annotation"], icon:{url:}, id: str, 
+                input_types: ['KbaseGenomeAnnotations.Assembly'], module_name: str, 
+                name: str, namespace: str, output_types:["KBaseGenomes.Genome"],
+                subtitle: str, tooltip: str, ver: str
+             * 
+            */
+
             var self = this;
             // add icon (logo)
             var $logo = $('<div>');
@@ -883,74 +894,9 @@ define([
                 $logo.append(DisplayUtil.getAppIcon({ cursor: 'pointer', setColor: true }));
             }
             // add behavior
-            $logo.click(function(e) {
-                e.stopPropagation();
-                self.triggerApp(app);
-            });
 
-            var $star = $('<i>');
-            if(app.favorite) {
-                $star.addClass('fa fa-star kbcb-star-favorite').append('&nbsp;');
-            } else {
-                $star.addClass('fa fa-star kbcb-star-nonfavorite').append('&nbsp;');
-            }
-            $star.on('click', function(event) {
-                event.stopPropagation();
-                var params = {};
-                if(app.info.module_name) {
-                    params['module_name'] = app.info.module_name;
-                    params['id'] = app.info.id.split('/')[1];
-                } else {
-                    params['id'] = app.info.id;
-                }
 
-                if(app.favorite) {
-                    // remove favorite
-                    Promise.resolve(self.catalog.remove_favorite(params))
-                    .then(function() {
-                        $star.removeClass('kbcb-star-favorite').addClass('kbcb-star-nonfavorite');
-                        app.favorite = null; // important to set this if we don't refresh the panel
-                    })
-                    .catch(function(error) {
-                        console.error(error);
-                    });
-                } else {
-                    // add favorite
-                    Promise.resolve(self.catalog.add_favorite(params))
-                    .then(function() {
-                        $star.removeClass('kbcb-star-nonfavorite').addClass('kbcb-star-favorite');
-                        app.favorite = new Date().getTime(); // important to set this if we don't refresh the panel
-                    })
-                    .catch(function(error) {
-                        console.error(error);
-                    });
-                }
-            })
-            .tooltip({
-                title: 'Add or remove from your favorites',
-                container: 'body',
-                placement: 'bottom',
-                delay: {
-                    show: Config.get('tooltip').showDelay,
-                    hide: Config.get('tooltip').hideDelay
-                }
-            });
 
-            var $name = $('<div>')
-                        .addClass('kb-data-list-name')
-                        .css({'white-space':'normal', 'cursor':'pointer'})
-                        .append($('<a>')
-                                .append(app.info.name)
-                                .click(function(e) {
-                                    e.stopPropagation();
-                                    self.triggerApp(app);
-                                }));
-            var versionStr = 'v'+app.info.ver; // note that app versions are meaningless right now; need to update!
-            if (app.info.module_name) {
-                versionStr = '<a href="'+this.options.moduleLink+'/'+app.info.module_name+'" target="_blank">' +
-                                app.info.namespace + '</a> ' + versionStr;
-            }
-            var $version = $('<span>').addClass('kb-data-list-type').append($star).append(versionStr); // use type because it is a new line
 
             var moreLink = '';
             if(app.info.module_name) {
@@ -963,56 +909,35 @@ define([
 
             if (self.currentTag && self.currentTag !== 'release') {
                 $more.append($('<div style="font-size:8pt">')
-                             .append(app.info.git_commit_hash));
+                    .append(app.info.git_commit_hash));
             }
             $more.append($('<div>')
-                         .append(app.info.subtitle))
-                 .append($('<div>')
-                         .append($('<a>')
-                                 .append('more...')
-                                 .attr('target', '_blank')
-                                 .attr('href', moreLink)));
-
-            var $moreBtn =
-                $('<button class="btn btn-xs btn-default pull-right" aria-hidden="true">')
-                .append($('<span>')
-                    .addClass('fa fa-ellipsis-h')
-                    .css({ 'color': '#999' }));
-
-            var $mainDiv = $('<div>')
-                .addClass('kb-data-list-info')
-                .css({ padding: '0', margin: '0' })
-                .append($name)
+                .append(app.info.subtitle))
                 .append($('<div>')
-                    .append($version)
-                    .append($moreBtn.hide()));
+                    .append($('<a>')
+                        .append('more...')
+                        .attr('target', '_blank')
+                        .attr('href', moreLink)));
 
-            var $newMethod = $('<table>')
-                .css({ 'width': '100%' })
-                .append($('<tr>')
-                    .append($('<td>')
-                        .css({ 'width': '15%' })
-                        .append($logo))
-                    .append($('<td>')
-                        .css({ 'width': '70%' })
-                        .append($mainDiv))
-                    .append($('<td>')
-                        .css({ 'width': '15%' })
-                        .append($moreBtn.hide())));
 
-            return $('<div>')
-                .append($('<hr>').addClass('kb-data-list-row-hr').css({ 'margin-left': '65px' }))
-                .append($('<div>')
-                    .addClass('kb-data-list-obj-row')
-                    .append($newMethod)
-                    .append($more.hide())
-                    .mouseenter(function() {
-                        $moreBtn.show();
-                    })
-                    .mouseleave(function() { $moreBtn.hide(); })
-                    .click(function() {
-                        $more.slideToggle('fast');
-                    }));
+
+
+            var $card = new kbaseAppCard(
+                {
+                    moreContent: $more,
+                    max_name_length: 50,
+                    self: self,
+                    app: app,
+                });
+
+            //custome click functions;
+            $card.find('.narrative-card-logo , .kb-data-list-name').click(function (e) {
+                e.stopPropagation();
+                self.triggerApp(app);
+            });
+
+            return $card;
+
 
         },
 
@@ -1052,7 +977,7 @@ define([
                         callback(results);
                     })
                     .catch(function(err) {
-                        console.error("Error in method panel on 'getFunctionSpecs' when contacting NMS");
+                        console.error('Error in method panel on \'getFunctionSpecs\' when contacting NMS');
                         console.error(err);
                         callback(results); // still return even if we couldn't get the methods
                     });

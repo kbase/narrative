@@ -49,8 +49,16 @@ define (
             var app = entry.app.info;
             
             var shortName = entry.name ? entry.name : app.name;
-            var authors = entry.createdBy ? entry.createdBy : app.authors.join(', ');
+            var authors = entry.createdBy; 
             var type = entry.version ? entry.version : ('v' + app.ver);
+
+            if(entry.createdBy === undefined){
+                if(app.authors.length >2){
+                    authors = app.authors.slice(0,2).join(', ') + '+ ' + (app.authors.length-2) + ' more';
+                }else{
+                    authors = app.authors.join(', ');
+                }
+            }
             if (app.module_name && (entry.version === undefined)) {
                 type = '<a href="' + self.options.moduleLink + '/' + app.module_name + '" target="_blank">' +
                     app.namespace + '</a> ' + type;

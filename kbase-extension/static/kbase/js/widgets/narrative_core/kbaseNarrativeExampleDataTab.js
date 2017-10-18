@@ -249,8 +249,9 @@ define ([
             var $actionButton = $('<div>')
                 .append(function () { return (isCopy) ? ' Copy' : ' Add'; });
 
-            var $card = new kbaseDataCard(
-                {   version: false,
+            var $card = kbaseDataCard.apply(this, [
+                {     
+                    version: false,
                     date:false,
                     editedBy:false,
                     actionButton: $actionButton,
@@ -260,7 +261,7 @@ define ([
                     object_info: object_info,
                     self: self,
                     ws_name: self.narWs
-                });
+                }]);
 
             return $card;
         },

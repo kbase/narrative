@@ -1,29 +1,34 @@
 /**
  *  kbaseDataCard.js -- used making object cards in narrative
  *
- *  Authors: diane.z.zheng@gmail.com
+ *  Authors: zzheng@lbl.gov
  *
- *   Example and expected out put:
+ *   Example and expected out put:s
  *
  *     var $card = new kbaseDataCard(
                 {   
                     //expected values
-                    object_info: object_info,
-                    self: self
+                    object_info: object_info (array)
 
                     //values with default, enter falsey value to hide; passing in value will override default
-                    version: version,
-                    narrative: narrative,
-                    date: date,
-                    editBy: author,
-                    type: type,
+                    version: str or integer,
+                    narrative: str,
+                    date: str,
+                    editBy: str,
+                    type: str,
 
                     //optional values
-                    moreContent: $moreContent,
-                    is_set: is_set,
-                    max_name_length: this.options.max_name_length,
+                    moreContent: jquery object,
+                    is_set: boolean,
+                    max_name_length: int,
 
                 });
+
+                // object_info:
+            // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
+            // [3] : timestamp save_date // [4] : int version // [5] : username saved_by
+            // [6] : ws_id wsid // [7] : ws_name workspace // [8] : string chsum
+            // [9] : int size // [10] : usermeta meta
  *
 */
 
@@ -48,15 +53,9 @@ define (
         $
     ) {
         function KbaseDataCard(entry) {
-            var self = entry.self;
+            var self = this;
             var object_info = entry.object_info;
             
-            // object_info:
-            // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
-            // [3] : timestamp save_date // [4] : int version // [5] : username saved_by
-            // [6] : ws_id wsid // [7] : ws_name workspace // [8] : string chsum
-            // [9] : int size // [10] : usermeta meta
-  
             //params
             var shortName = entry.name ? entry.name : object_info[1];
             var version = entry.version ? entry.version : ('v' + object_info[4]);
@@ -131,7 +130,8 @@ define (
                 if(!entry.ws_name){
                     return;
                 }
-                e.preventPropagation; 
+                e.stopPropagation(); 
+
                 var updateButton = function () {
                     var thisBtn = $(this).children()[0];
                     var thisHolder = this;
@@ -165,7 +165,7 @@ define (
                 };
                 if ($(this).text().split(' ')[1] === 'Copy') {
                     var dialog = new BootstrapDialog({
-                        title: 'Item already exists in workspace under same name.',
+                        title: 'An item with this name already exists in this Narrative.',
                         body: 'Do you want to override the existing copy?',
                         buttons: [$('<a type="button" class="btn btn-default">')
                             .append('Yes')

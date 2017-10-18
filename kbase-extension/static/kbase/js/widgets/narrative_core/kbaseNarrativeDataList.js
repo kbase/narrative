@@ -1128,13 +1128,12 @@ define([
                 .append(self.addDataControls(object_info, $alertDiv, objData.fromPalette, ref_path)).append($alertDiv)
                 .append(
                     $('<table style="width:100%;">')
-                        .append('<tr><th>Permament Id</th><td>' + object_info[6] + '/' + object_info[0] + '/' + object_info[4] + '</td></tr>')
+                        .append('<tr><th>Permanent Id</th><td>' + object_info[6] + '/' + object_info[0] + '/' + object_info[4] + '</td></tr>')
                         .append('<tr><th>Full Type</th><td>' + typeLink + '</td></tr>')
                         .append($('<tr>').append('<th>Saved by</th>').append($savedByUserSpan))
                         .append(metadataText));
             
-            //create card
-            var $card = new kbaseDataCard(
+            var $card =  kbaseDataCard.apply(this,[
                 {
                     type: type,
                     editedBy: author,
@@ -1142,8 +1141,7 @@ define([
                     is_set: is_set,
                     max_name_length: this.options.max_name_length,
                     object_info: object_info,
-                    self: self
-                });
+                }]);
             
             if (objData.fromPalette) {
                 var $paletteIcon = $('<div>')
@@ -1179,7 +1177,7 @@ define([
                 }
 
                 if ($node.is(':visible')) {
-                    self.writtingLock = false;
+                    self.writingLock = false;
                 } else {
                     self.getRichData(object_info, $node);
                 }

@@ -1,26 +1,33 @@
 /**
  *  kbaseAppCard.js -- used making App cards in narrative
  *
- *  Authors: diane.z.zheng@gmail.com
+ *  Authors: zzheng@lbl.gov
  *
  *   Example and expected out put:
  *
- *     var $card = new kbaseDataCard(
+ *     var $card = new kbaseAppCard(
                 {   
                     //expected values
-                    app: app,
-                    self: self
-                    favorite: app.favorite,
+                    app: app (object with info object and favorite field),
+                    favorite: app.favorite (number),
 
                     //values with default, passing in value will override default
-                    date: date,
-                    createdBy: author,
-                    type: type,
+                    date: str,
+                    createdBy: array of strs,
+                    type: str,
 
                     //optional values
-                    moreContent: $moreContent,
+                    moreContent: jquery object,
                 });
  *
+ *             
+        app.info:
+        authors:["rsutormin"], categories:["annotation"], icon:{url:}, id: str,
+        input_types: ['KbaseGenomeAnnotations.Assembly'], module_name: str,
+        name: str, namespace: str, output_types:["KBaseGenomes.Genome"],
+        subtitle: str, tooltip: str, ver: str
+             
+            
 */
 
 define (
@@ -44,7 +51,7 @@ define (
         $
     ) {
         function KbaseAppCard(entry) {
-            var self = entry.self;
+            var self = this;
             var favorite = entry.app.favorite;
             var app = entry.app.info;
             
@@ -111,7 +118,7 @@ define (
 
             var $logo = $('<div>');
             if (app.icon && app.icon.url) {
-                var url = self.options.methodStoreURL.slice(0, -3) + app.icon.url;
+                var url = Config.url('narrative_method_store_image')+ app.icon.url;
                 $logo.append(DisplayUtil.getAppIcon({ url: url, cursor: 'pointer', setColor: true, size: '50px' }));
             } else {
                 $logo.append(DisplayUtil.getAppIcon({ cursor: 'pointer', setColor: true }));

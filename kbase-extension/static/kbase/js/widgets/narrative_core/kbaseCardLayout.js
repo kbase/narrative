@@ -8,12 +8,12 @@
  *
  *   Expected options:
  *     options : {
- *          logo,
- *          actionButton (optional),
- *          actionButtonClick (should be passed in with actionButton),
- *          title,
- *          subcontent
- *          moreContent (optional)
+ *          logo:  jqeuery object containing stylized logo,
+ *          actionButton: jquery obejct of content to be shown on button,
+ *          actionButtonClick :callback attached to actionButton,
+ *          title: jquery object containing text to be shown on title line,
+ *          subcontent: jquery object containing text to be below title line,
+ *          moreContent jquery object shown when expanding card
  *      }
 */
 
@@ -26,12 +26,12 @@ define (
         $
     ) {
         function KbaseCardLayout(options) {
-            var self = this;
             //partitions
-            var $card = $('<div/>', { 'class': 'narrative-card-row' });
-            var $mainContent = $('<div/>', { 'class': 'narrative-card-row-main' });
-            var $moreContent = $('<div/>', { 'class': 'narrative-card-row-more' }).hide();               
-            var $info = $('<div/>', { 'class': 'kb-data-list-info' });
+            var $card = $('<div>').addClass('narrative-card-row');
+            var $mainContent = $('<div>').addClass('narrative-card-row-main');
+            var $moreContent = $('<div>').addClass('narrative-card-row-more').hide();
+            var $info = $('<div>').addClass('kb-data-list-info');
+            
             var $toggleAdvancedViewBtn =$('<div>');
 
             //if have sub content, add toggle    

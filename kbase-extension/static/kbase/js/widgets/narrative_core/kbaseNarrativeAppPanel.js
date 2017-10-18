@@ -951,14 +951,14 @@ define([
                         .append('more...')
                         .attr('target', '_blank')
                         .attr('href', moreLink)));
-
-            var $card = new kbaseAppCard(
+  
+            var $card = kbaseAppCard.apply(this, [
                 {
                     moreContent: $more,
                     max_name_length: 50,
                     self: self,
                     app: app,
-                });
+                }]);
 
             //custome click functions;
             $card.find('.narrative-card-logo , .kb-data-list-name').click(function (e) {

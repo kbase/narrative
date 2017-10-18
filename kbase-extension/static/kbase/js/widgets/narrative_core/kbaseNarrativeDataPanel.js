@@ -92,7 +92,7 @@ define([
         options: {
             title: 'Data',
             loadingImage: Config.get('loading_gif'),
-            notLoggedInMsg: 'Please log in to view a workspace.',
+            notLoggedInMsg: 'Please log in to view Narrative data.',
             workspaceURL: Config.url('workspace'),
             lp_url: Config.url('landing_pages'),
             container: null,
@@ -394,18 +394,6 @@ define([
         dataImporter: function (narWSName) {
             var self = this;
             var maxObjFetch = Config.get('data_panel').ws_max_objs_to_fetch || 30000;
-
-            var user = Jupyter.narrative.userId;
-
-            if (!user) {
-                console.error('NarrativeDataPanel: user is not defined, parsing token instead...');
-                var tokenParts = this.token.split('|');
-                for (var i in tokenParts) {
-                    var keyValue = tokenParts[i].split('=');
-                    if (keyValue.length == 2 && keyValue[0] === 'un')
-                        user = keyValue[1];
-                }
-            }
 
             // models
             var myData = [],
@@ -1228,8 +1216,8 @@ define([
                 var $actionButton = $('<div>')
                     .append(function () { return (isCopy) ? ' Copy' : ' Add'; });
 
-                var $card = new kbaseDataCard(
-                    {                      
+                var $card = kbaseDataCard.apply(this, [
+                    {                     
                         narrative: narName,
                         actionButton: $actionButton,
                         moreContent: $btnToolbar,
@@ -1237,7 +1225,7 @@ define([
                         self: self,
                         object_info: object_info,
                         ws_name: self.ws_name
-                    });
+                    }]);
 
                 return $card;
             }

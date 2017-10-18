@@ -50,10 +50,10 @@ define (
             
             var shortName = entry.name ? entry.name : app.name;
             var authors = entry.createdBy ? entry.createdBy : app.authors.join(', ');
-            var version = entry.version ? entry.version : ('v' + app.ver);
+            var type = entry.version ? entry.version : ('v' + app.ver);
             if (app.module_name && (entry.version === undefined)) {
-                version = '<a href="' + self.options.moduleLink + '/' + app.module_name + '" target="_blank">' +
-                    app.namespace + '</a> ' + version;
+                type = '<a href="' + self.options.moduleLink + '/' + app.module_name + '" target="_blank">' +
+                    app.namespace + '</a> ' + type;
             }
 
             var $star = $('<i>').addClass('fa fa-star kbcb-star-default');
@@ -110,14 +110,16 @@ define (
             }
                    
             var $name = $('<span>').addClass('kb-data-list-name').append(shortName);
-            var $version = $('<span>').addClass('kb-data-list-version').append(version);
-            var $authors = $('<div>').addClass('kb-data-list-edit-by').append(authors);
+            var $type = $('<div>').addClass('kb-data-list-type').append(type);
+            var $date = $('<span>').addClass('kb-data-list-date');
+            var $authors = $('<span>').addClass('kb-data-list-edit-by').append(authors);
 
             var $title = $('<div>').append($name).append($star);
 
             var $subcontent = $('<div>')
                 .addClass('kb-data-list-subcontent')
-                .append($version)
+                .append($type)
+                .append($date)
                 .append($authors);
           
             var layout = {

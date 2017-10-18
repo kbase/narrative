@@ -402,6 +402,26 @@ class JobManager(object):
         status = self._construct_job_status(job, state)
         self._send_comm_message('job_status', status)
 
+    def _lookup_job_info(self, job_id):
+        """
+        Will raise a ValueError if job_id doesn't exist.
+        Sends the info over the comm channel as this packet:
+        {
+            app_id: module/name,
+            app_name: random string,
+            job_id: string,
+            job_params: dictionary
+        }
+        """
+        job = self.get_job(job_id)
+        info = {
+            'app_id': job.app_id,
+            'app_name': job.app_spec()['info']['name'],
+            'job_id': job_id,
+            'job_params': job.inputs
+        }
+        self._send_comm_message('job_info', info)
+
     def _lookup_all_job_status(self, ignore_refresh_flag=False):
         """
         Looks up status for all jobs.
@@ -499,6 +519,10 @@ class JobManager(object):
         * start_job_update
             remove the flag that gets set by stop_job_update (needs an accompanying 'job_id'
             field)
+        * job_info
+            from the given 'job_id' field, returns some basic info about the job, including the app
+            id, version, app name, and key-value pairs for inputs and parameters (in the parameters
+            id namespace specified by the app spec).
         """
 
         if 'request_type' in msg['content']['data']:
@@ -519,6 +543,10 @@ class JobManager(object):
             elif r_type == 'job_status':
                 if job_id is not None:
                     self._lookup_job_status(job_id)
+
+            elif r_type == 'job_info':
+                if job_id is not None:
+                    self._lookup_job_info(job_id)
 
             elif r_type == 'stop_update_loop':
                 self.cancel_job_lookup_loop()

@@ -716,7 +716,7 @@ define([
                 .addClass(btnClasses)
                 .append($('<span>').addClass('fa fa-sign-in').css(css))
                 .click(function () {
-                    this.trigger('filterMethods.Narrative', 'in_type:' + object_info[2].split('-')[0].split('.')[1]);
+                    this.trigger('filterMethods.Narrative', 'input:' + object_info[2].split('-')[0]);
                 }.bind(this));
 
             var $filterMethodOutput = $('<span>')
@@ -731,7 +731,7 @@ define([
                 .addClass(btnClasses)
                 .append($('<span>').addClass('fa fa-sign-out').css(css))
                 .click(function () {
-                    this.trigger('filterMethods.Narrative', 'out_type:' + object_info[2].split('-')[0].split('.')[1]);
+                    this.trigger('filterMethods.Narrative', 'output:' + object_info[2].split('-')[0]);
                 }.bind(this));
 
             var $openLandingPage = $('<span>')
@@ -1439,9 +1439,11 @@ define([
                 .append('type')
                 .on('click', function () {
                     self.sortData(function (a, b) {
-                        if (self.dataObjects[a].info[2].toUpperCase() > self.dataObjects[b].info[2].toUpperCase())
+                        var aType = self.dataObjects[a.objId].info[2].toUpperCase().match(/\.(.+)/)[1];
+                        var bType = self.dataObjects[b.objId].info[2].toUpperCase().match(/\.(.+)/)[1];
+                        if (aType > bType)
                             return -1; // sort by type
-                        if (self.dataObjects[a].info[2].toUpperCase() < self.dataObjects[b].info[2].toUpperCase())
+                        if (aType < bType)
                             return 1;
                         return 0;
                     });

@@ -1,5 +1,6 @@
 /*global define*/
 /*jslint white: true*/
+/*global Catalog*/
 /**
  * A widget that contains functions and function information for the Narrative.
  * When initialized, it uses a loading gif while waiting for functions to load
@@ -139,6 +140,7 @@ define([
                     'overflow-y': 'auto',
                     'overflow-x': 'hidden'
                 });
+
             // Make a function panel for everything to sit inside.
             this.$functionPanel = $('<div>')
                 .addClass('kb-function-body')
@@ -561,6 +563,7 @@ define([
                         });
                 })
                 .catch(function(error) {
+                    console.error(error);
                     self.showError('Sorry, an error occurred while loading Apps.', error);
                 });
         },
@@ -619,8 +622,28 @@ define([
             }
         },
 
+        /**
+         * "Parses" the apps to do some preliminary filtering of ignored categories and
+         * do some internal string chopping (i.e. keep an abbreviated list of objects -
+         * input_types = ['KBaseGenomes.Genome', 'KBaseGenomeAnnotations.Assembly'] ->).
+         *
+         * Sets the renderedApps property of the widget (the set of apps to render)
+         * and runs refreshPanel() when it's done.
+         */
         parseApps: function(catSet, appSet) {
             var self = this;
+
+            var shortenTypes = function(typeList) {
+                var shortTypes = [];
+                if (typeList) {
+                    typeList.forEach(function(t) {
+                        if (t.indexOf('.') !== -1) {
+                            shortTypes.push(t.split('.')[1]);
+                        }
+                    });
+                }
+                return shortTypes;
+            };
 
             this.catSet = catSet;
             this.renderedApps = {};
@@ -628,15 +651,21 @@ define([
                 if (!appSet.hasOwnProperty(app)) {
                     continue;
                 }
+                // skip this if its to be ignored.
                 var ignoreFlag = false;
                 for (var i = 0; i < appSet[app].info.categories.length; i++) {
                     if (self.ignoreCategories[appSet[app].info.categories[i]]) {
                         ignoreFlag = true;
+                        break;
                     }
                 }
-                if (!ignoreFlag) {
-                    this.renderedApps[app] = appSet[app];
+                if (ignoreFlag) {
+                    continue;
                 }
+                // passed all the filters, now add the short version of inputs/outputs...?
+                appSet[app].info.short_input_types = shortenTypes(appSet[app].info.input_types);
+                appSet[app].info.short_output_types = shortenTypes(appSet[app].info.output_types);
+                this.renderedApps[app] = appSet[app];
             }
             this.refreshPanel();
         },
@@ -801,7 +830,6 @@ define([
             };
 
             // 1. Go through filterString and keep those that pass the filter (not yet).
-
             appSet = this.filterApps(filterString, appSet);
 
             // 2. Switch over panelStyle and build the view based on that.
@@ -825,7 +853,6 @@ define([
 
         /**
          * Using the filterString, this returns only those apps that pass the filter.
-         * The string is applied to app names (to start)
          * filterString - just a string. includes prefixes in_type:, out_type:
          * appSet - keys=appIds, values=appSpecs
          */
@@ -837,23 +864,44 @@ define([
             filterString = filterString.toLowerCase();
             var filter = filterString.split(':');
             if (filter.length === 2) {
-                if (filter[0] === 'in_type' || filter[1] === 'out_type') {
+                if (['in_type', 'out_type', 'input', 'output'].indexOf(filter[0]) !== -1) {
                     filterType = filter[0];
                     filterString = filter[1];
                 }
             }
             var filteredIds = Object.keys(appSet);
             filteredIds = Object.keys(appSet).filter(function(id) {
+                var searchSet;
+                var app = appSet[id];
                 switch (filterType) {
                 case 'in_type':
-                    var inputTypes = appSet[id].info.input_types;
-                    return inputTypes.join().toLowerCase().indexOf(filterString) !== -1;
+
+                case 'input':
+                    if (filterString.indexOf('.') !== -1) {
+                        searchSet = app.info.input_types;
+                    }
+                    else {
+                        searchSet = app.info.short_input_types;
+                    }
+                    break;
                 case 'out_type':
-                    var outputTypes = appSet[id].info.output_types;
-                    return outputTypes.join().toLowerCase().indexOf(filterString) !== -1;
+                case 'output':
+                    if (filterString.indexOf('.') !== -1) {
+                        searchSet = app.info.output_types;
+                    }
+                    else {
+                        searchSet = app.info.short_output_types;
+                    }
+                    break;
                 default:
-                    return appSet[id].info.name.toLowerCase().indexOf(filterString) !== -1;
+                    return [
+                        app.info.name,
+                        app.info.input_types.join(';'),
+                        app.info.output_types.join(';')
+                    ].join(';').toLowerCase().indexOf(filterString) !== -1;
                 }
+                var lowerSearchSet = searchSet.map(function(val) { return val.toLowerCase(); });
+                return lowerSearchSet.indexOf(filterString) !== -1;
             });
             var filteredSet = {};
             filteredIds.forEach(function(id) {
@@ -882,6 +930,7 @@ define([
              * 
             */
             var self = this;
+
             var moreLink = '';
             if(app.info.module_name) {
                 moreLink = this.options.methodHelpLink + app.info.id + '/' + this.currentTag;
@@ -958,7 +1007,8 @@ define([
                         callback(results);
                     })
                     .catch(function(err) {
-                        console.error('Error in method panel on \'getFunctionSpecs\' when contacting NMS');
+
+                        console.error('Error in method panel on "getFunctionSpecs" when contacting NMS');
                         console.error(err);
                         callback(results); // still return even if we couldn't get the methods
                     });

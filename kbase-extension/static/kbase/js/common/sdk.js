@@ -162,12 +162,14 @@ define([
         case 'checkbox':
             return 'int';
         case 'file':
-            // file datatype is really a file which is uploaded to shock, which results in a 
+            // file datatype is really a file which is uploaded to shock, which results in a
             // shock file handle. maybe this field type should be "shock_file"
             return 'string';
         case 'textarea':
             return 'string';
         case 'dropdown':
+            return 'string';
+        case 'dynamic_dropdown':
             return 'string';
         case 'textsubdata':
             return 'subdata';
@@ -211,7 +213,7 @@ define([
         // Some parameter specs have valid_ws_types as an empty set, which
         // does not mean what it could, it means that it is not an option.
         if (spec.text_options.valid_ws_types && spec.text_options.valid_ws_types.length > 0) {
-            // we now have refs, but no way of specifying that the 
+            // we now have refs, but no way of specifying that the
             switch (spec.ui_class) {
             case 'input':
             case 'parameter':
@@ -284,6 +286,11 @@ define([
         case 'string':
         case 'text':
             switch (fieldType) {
+            case 'dynamic_dropdown':
+                constraints = {
+                    options: spec.text_options
+                };
+                break;
             case 'text':
                 constraints = {
                     min: Props.getDataItem(spec, 'text_options.min_length'),
@@ -294,7 +301,7 @@ define([
                 break;
             case 'dropdown':
                 constraints = {
-                    options: spec.dropdown_options.options
+                    options: spec.dropdown_options ? spec.dropdown_options.options : {}
                 };
                 break;
             case 'textarea':
@@ -345,6 +352,11 @@ define([
             break;
         case '[]string':
             switch (fieldType) {
+            case 'dynamic_dropdown':
+                constraints = {
+                    options: spec.text_options
+                };
+                break;
             case 'dropdown':
                 break;
             case 'text':
@@ -445,6 +457,7 @@ define([
             case 'checkbox':
             case 'textarea':
             case 'dropdown':
+            case 'dynamic_dropdown':
             case 'custom_button':
             case 'textsubdata':
             case 'file':
@@ -489,7 +502,7 @@ define([
         // This is the spec that applies to each item in the sequence.
         // It is essentially like the main spec, but is not a sequence
         // and they don't have a default value.
-        // The sequence, if it has a default value sequence, will 
+        // The sequence, if it has a default value sequence, will
         // be responsible for creating a sequence of values using
         // those default values.
         var itemSpec = {
@@ -655,7 +668,7 @@ define([
         return structSpec;
     }
 
-    // just differs from the makeParameterSequence in that the 
+    // just differs from the makeParameterSequence in that the
     // group spec is not as fully populated, so we have to
     // fill in some gaps.
     function makeGroupSequence(spec, itemSpec) {

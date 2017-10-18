@@ -69,7 +69,7 @@
     },
     "ci": {
         "auth": "https://ci.kbase.us/services/auth",
-        "ftp_api_url": "https://ci.kbase.us/services/kb-ftp-api/v0",
+        "ftp_api_url": "http://localhost:3000",
         "ftp_api_root": "/data/bulk",
         "awe": "https://ci.kbase.us/services/awe-api",
         "catalog": "https://ci.kbase.us/services/catalog",

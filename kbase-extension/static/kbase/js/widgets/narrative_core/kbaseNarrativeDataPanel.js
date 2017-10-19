@@ -395,6 +395,8 @@ define([
             var self = this;
             var maxObjFetch = Config.get('data_panel').ws_max_objs_to_fetch || 30000;
 
+            var user = Jupyter.narrative.userId;
+
             // models
             var myData = [],
                 sharedData = [];

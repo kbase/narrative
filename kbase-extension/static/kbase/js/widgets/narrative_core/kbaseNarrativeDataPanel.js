@@ -395,6 +395,19 @@ define([
             var self = this;
             var maxObjFetch = Config.get('data_panel').ws_max_objs_to_fetch || 30000;
 
+            var user = Jupyter.narrative.userId;
+
+            if (!user) {
+                console.error('NarrativeDataPanel: user is not defined, parsing token instead...');
+                var tokenParts = this.token.split('|');
+                for (var i in tokenParts) {
+                    var keyValue = tokenParts[i].split('=');
+                    if (keyValue.length == 2 && keyValue[0] === 'un')
+                        user = keyValue[1];
+                }
+            }
+
+
             // models
             var myData = [],
                 sharedData = [];

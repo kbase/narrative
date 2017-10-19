@@ -2296,6 +2296,8 @@ button.kb-data-obj {
     height: 50px;
     margin: 0px 10px;
 }
+
+
 .narrative-card-action-button{
     width: calc(100% - 6px);
     height: 80%;
@@ -2303,8 +2305,12 @@ button.kb-data-obj {
     padding: 0px;
     justify-content: center;
 }
+
 .narrative-card-action-button > span{
     margin-right: 5px;
+}
+.narrative-card-action-button-name{
+    display: inline-block;
 }
 .narrative-data-panel-btnToolbar > span{
     color: #888;

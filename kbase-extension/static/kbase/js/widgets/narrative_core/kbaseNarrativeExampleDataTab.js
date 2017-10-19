@@ -246,15 +246,14 @@ define ([
                 var type_tokens = object_info[2].split('.');
                 type = type_tokens[1].split('-')[0];
             }
-            var $actionButton = $('<div>')
-                .append(function () { return (isCopy) ? ' Copy' : ' Add'; });
+            var actionButtonText = (isCopy) ? ' Copy' : ' Add';
 
             var $card = kbaseDataCard.apply(this, [
                 {     
                     version: false,
                     date:false,
                     editedBy:false,
-                    actionButton: $actionButton,
+                    actionButtonText: actionButtonText,
                     name: object_info[1],
                     type: type,
                     max_name_length: this.options.max_name_length,

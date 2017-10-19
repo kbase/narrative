@@ -26,6 +26,7 @@ define (
         $
     ) {
         function KbaseCardLayout(options) {
+        
             //partitions
             var $card = $('<div>').addClass('narrative-card-row');
             var $mainContent = $('<div>').addClass('narrative-card-row-main');
@@ -42,7 +43,6 @@ define (
                     .html($('<button class="btn btn-xs btn-default pull-right" aria-hidden="true">')
                         .append('<span class="fa fa-ellipsis-h" style="color:#888" />'));
             }
-            // .css({ 'white-space': 'nowrap', padding: '10px 15px' })
             var $actionButtonWrapper = $('<div>')
                 .addClass('narrative-card-action-button-wrapper');
 
@@ -50,7 +50,8 @@ define (
                 .addClass('kb-primary-btn')
                 .addClass('narrative-card-action-button')
                 .append($('<span>').addClass('fa fa-chevron-circle-left'))
-                .append(options.actionButton);
+                .append($('<div>').append(options.actionButtonText).addClass('narrative-card-action-button-name'));
+                
             $actionButtonWrapper.append($actionButton);
 
             var $logo = options.logo.addClass('narrative-card-logo');
@@ -58,13 +59,12 @@ define (
             var $subcontent = options.subcontent;
 
             $info.append($title)
-                //append palleteIcon and toggleIcon
                 .append($subcontent);
             
             if(options.actionButtonClick){
                 $actionButtonWrapper.click(options.actionButtonClick);
             }
-            if(options.actionButton) {
+            if(options.actionButtonText) {
                 $mainContent.append($actionButtonWrapper);
             }
           
@@ -87,8 +87,7 @@ define (
             $card.append($mainContent);
             if(options.moreContent) {
                 $card.append($moreContent);
-            }
-            
+            }    
 
             return $card;
         }

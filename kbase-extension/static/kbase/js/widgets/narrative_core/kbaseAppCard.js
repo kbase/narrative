@@ -90,7 +90,7 @@ define (
                     Promise.resolve(self.catalog.remove_favorite(params))
                         .then(function () {
                             $star.removeClass('kbcb-star-favorite');
-                            app.favorite = null; // important to set this if we don't refresh the panel
+                            favorite = null; // important to set this if we don't refresh the panel
                         })
                         .catch(function (error) {
                             console.error(error);
@@ -99,7 +99,7 @@ define (
                     Promise.resolve(self.catalog.add_favorite(params))
                         .then(function () {
                             $star.addClass('kbcb-star-favorite');
-                            app.favorite = new Date().getTime(); // important to set this if we don't refresh the panel
+                            favorite = new Date().getTime(); // important to set this if we don't refresh the panel
                         })
                         .catch(function (error) {
                             console.error(error);

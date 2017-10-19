@@ -2826,21 +2826,23 @@ button.kb-data-obj {
     font-size: 0.9em;
 }
 
-.kbcb-star {
+
+.kbcb-star-default{
+    color:#888;
 }
+
 .kbcb-star-favorite {
-    cursor:pointer;
     color:orange;
 }
-/*.kbcb-star-favorite:hover {
-    color:inherit;
-}*/
-
-.kbcb-star-nonfavorite {
+.kbcb-star-nonfavorite, .kbcb-star-favorite, .kbcb-star-default{
     cursor:pointer;
 }
-.kbcb-star-nonfavorite:hover {
+.kbcb-star-nonfavorite:hover, .kbcb-star-default:hover {
     color:red;
+}
+
+.kbcb-star-favorite:hover {
+    color:orange;
 }
 
 .kbcb-star-count {

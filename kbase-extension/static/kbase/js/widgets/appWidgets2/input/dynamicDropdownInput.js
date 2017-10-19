@@ -51,44 +51,14 @@ define([
             ui,
             dataSource = 'ftp_staging', // only option for now.
             model = {
-                blacklistValues: undefined,
-                availableValues: undefined,
-                availableValuesMap: {},
                 value: undefined
             },
             fileStaging = new FileStaging(runtime.config('services.ftp_api_url.url'),
                 runtime.userId(), {token: runtime.authToken()}),
             eventListeners = [];
 
-        // TODO: getting rid of blacklist temporarily until we work out how to state-ify everything by reference.
-        model.blacklistValues = [];
-
         function makeInputControl() {
             var selectOptions;
-            if (model.availableValues) {
-                var filteredOptions = [];
-                selectOptions = model.availableValues
-                    .filter(function(fileInfo, idx) {
-                        if (model.blacklistValues) {
-                            return !model.blacklistValues.some(function(value) {
-                                if (fileInfo.path === value || fileInfo.isFolder) {
-                                    filteredOptions.push(idx);
-                                    return true;
-                                }
-                                return false;
-                            });
-                        }
-                    })
-                    .map(function(fileInfo, idx) {
-                        var selected = false;
-                        return option({
-                            value: idx,
-                            selected: selected
-                        }, fileInfo.name);
-                    });
-            }
-
-            // CONTROL
             var selectElem = select({
                 class: 'form-control',
                 dataElement: 'input',
@@ -113,21 +83,18 @@ define([
             return selected.item(0).value;
         }
 
+        /**
+         * Sets the dropdown value to the given value. Constructs an id from it that (should)
+         * be unique enough to apply to the dropdown.
+         */
         function setControlValue(value) {
-            var stringValue;
-            if (value === null) {
-                stringValue = '';
-            } else {
-                stringValue = value;
-            }
-
             var control = ui.getElement('input-container.input');
-
-            // NB id used as String since we are comparing it below to the actual dom
-            // element id
-            var currentSelectionId = String(model.availableValuesMap[stringValue]);
-
-            $(control).val(currentSelectionId).trigger('change.select2');
+            if ($(control).find('option[value="' + value + '"]').length) {
+                $(control).val(value).trigger('change');
+            } else {
+                var newOption = new Option(value, value, true, true);
+                $(control).append(newOption).trigger('change');
+            }
         }
 
         // MODEL
@@ -153,17 +120,13 @@ define([
 
         function validate() {
             return Promise.try(function() {
-                var value = '',
-                    selectedItem = model.availableValues[getControlValue()],
+                var selectedItem = getControlValue(),
                     validationConstraints = {
                         min_length: 1,
                         max_length: 10000,
                         required: spec.data.constraints.required
                     };
-                if (selectedItem && selectedItem.name) {
-                    value = selectedItem.name;
-                }
-                return Validation.validateText(value, validationConstraints);
+                return Validation.validateText(selectedItem, validationConstraints);
             });
         }
 
@@ -199,18 +162,18 @@ define([
          * Formats the display of an object in the dropdown.
          */
         function formatObjectDisplay(file) {
+            console.log('formatObjectDisplay: ', file);
             if (!file.id) {
                 return $('<div style="display:block; height:20px">').append(file.text);
             }
-            var fileInfo = model.availableValues[file.id];
             return $(div([
                 span({ style: 'word-wrap: break-word' }, [
-                    b(fileInfo.name)
+                    b(file.name)
                 ]),
-                ' ' + fileInfo.path + '<br>',
+                ' ' + file.path + '<br>',
                 div({ style: 'margin-left: 7px' }, [
-                    'Size: ' + fileInfo.size + '<br>',
-                    'updated ' + TimeFormat.getTimeStampStr(fileInfo.mtime)
+                    'Size: ' + file.size + '<br>',
+                    'updated ' + TimeFormat.getTimeStampStr(file.mtime)
                 ])
             ]));
         }
@@ -234,7 +197,25 @@ define([
                         if (!object.id) {
                             return object.text;
                         }
-                        return model.availableValues[object.id].path;
+                        return object.id; //model.availableValues[object.id].path;
+                    },
+                    ajax: {
+                        transport: function(params, success, failure) {
+                            console.log(params);
+                            return fetchData(params.data.term)
+                                .then(function(data) {
+                                    console.log(data);
+                                    data.forEach(function(file) {
+                                        file.id = file.path;
+                                        file.text = file.path;
+                                    });
+                                    success({results: data});
+                                })
+                                .catch(function(err) {
+                                    console.error(err);
+                                    failure(err);
+                                });
+                        }
                     }
                 }).on('change', function() {
                     doChange();
@@ -290,11 +271,7 @@ define([
                     model.value = config.initialValue;
                 }
 
-                return fetchData()
-                    .then(function(files) {
-                        model.availableValues = files;
-                        return render();
-                    })
+                return render()
                     .then(function() {
                         channel.on('reset-to-defaults', function() {
                             resetModelValue();

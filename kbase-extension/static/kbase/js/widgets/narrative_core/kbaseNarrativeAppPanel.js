@@ -954,6 +954,7 @@ define([
   
             var $card = kbaseAppCard.apply(this, [
                 {
+                    createdBy:false,
                     moreContent: $more,
                     max_name_length: 50,
                     self: self,

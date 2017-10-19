@@ -88,7 +88,7 @@ define (
             
             var $title = $('<div>').append($name);
             var $subcontent = $('<div>')
-                .addClass('kb-data-list-subcontent');
+                .addClass('narrative-data-list-subcontent');
             
             if(entry.version === undefined || entry.version) {
                 $title.append($version);

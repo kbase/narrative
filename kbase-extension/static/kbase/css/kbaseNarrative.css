@@ -2268,12 +2268,21 @@ button.kb-data-obj {
 }
 
 /* card layout */
+
+.narrative-card-logo{
+    display: flex;
+    width: 50px;
+    margin-right: 2px;
+}
 .narrative-card-row-main{
     display: flex;
     align-items: center;
     width:98%;
 }
 
+.narrative-data-list-subcontent{
+    padding-left :10px;
+}
 
 .narrative-card-ellipsis{
     display:flex;
@@ -2573,21 +2582,18 @@ button.kb-data-obj {
     font-size: 9pt;
     font-style: italic;
     white-space: nowrap;
-    margin: 2px;
     cursor:default;
 }
 .kb-data-list-type {
     color:#777;
     font-size: 10pt;
     margin: 2px;
-    margin-left: 10px;
     cursor:default;
 }
 .kb-data-list-date {
     color:#777;
     font-size: 10pt;
     margin: 2px;
-    margin-left: 10px;
     white-space: nowrap;
     cursor:default;
 }

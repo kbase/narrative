@@ -35,6 +35,7 @@ function KBaseBiochem_Media(tabwidget) {
 
                         for (var i=0; i< self.mediacompounds.length; i++) {
                             var cpd = self.mediacompounds[i];
+                            cpd.img = tabwidget.compoundImage(cpd.id);
                             cpd.name = cpds[i].name;
                             cpd.formula = cpds[i].formula;
                             cpd.charge = cpds[i].charge;
@@ -54,6 +55,9 @@ function KBaseBiochem_Media(tabwidget) {
         return [{
             "label": "Compound",
             "data": cpd.id,
+        }, {
+        "label": "Image",
+            "data": cpd.img
         }, {
             "label": "Name",
             "data": cpd.name

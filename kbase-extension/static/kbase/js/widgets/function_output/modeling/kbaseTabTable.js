@@ -411,16 +411,16 @@ return KBWidget({
         };
 
         this.compoundImage = function(id) {
-            return 'http://bioseed.mcs.anl.gov/~chenry/jpeg/'+id+'.jpeg';
+            return "<img src=http://minedatabase.mcs.anl.gov/compound_images/ModelSEED/"+id.split("_")[0]+".png height='200'>"
         };
 
-        var imageURL = "http://bioseed.mcs.anl.gov/~chenry/jpeg/";
+        var imageURL = "http://minedatabase.mcs.anl.gov/compound_images/ModelSEED/";
         this.pictureEquation = function(eq) {
             var cpds = get_cpds(eq);
 
             for (var i =0; i < cpds.left.length; i++) {
                 var cpd = cpds.left[i];
-                var img_url =  imageURL+cpd+'.jpeg';
+                var img_url =  imageURL+cpd+'.png';
                 panel.append('<div class="pull-left text-center">\
                                     <img src="'+img_url+'" width=150 ><br>\
                                     <div class="cpd-id" data-cpd="'+cpd+'">'+cpd+'</div>\
@@ -456,7 +456,7 @@ return KBWidget({
 
 
             var cpd_ids = cpds.left.concat(cpds.right);
-            var prom = self.kbapi('fba', 'get_compounds', {compounds: cpd_ids})
+            var prom = self.kbapi('biochem', 'get_compounds', {compounds: cpd_ids})
             $.when(prom).done(function(d){
                 var map = {};
                 for (var i in d) {

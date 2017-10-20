@@ -276,8 +276,6 @@ function KBaseFBA_FBAModel(modeltabs) {
 			console.log(rxn.rxnkbid);
 			var p = self.modeltabs.kbapi('biochem', 'get_reactions', {
 				reactions: [rxn.rxnkbid],
-				biochemistry: self.biochem,
-    			biochemistry_workspace: "kbase",
 			}).then(function(data) {
 				if ("deltaG" in data[0]) {
 					output.push({
@@ -331,10 +329,14 @@ function KBaseFBA_FBAModel(modeltabs) {
 
     this.CompoundTab = function (info) {
         var cpd = self.cpdhash[info.id];
+        console.log(cpd)
 		var output = [{
 			"label": "Compound",
 			"data": cpd.dispid,
-		}, {
+		},{
+            "label": "Image",
+            "data":  "<img src=http://minedatabase.mcs.anl.gov/compound_images/ModelSEED/"+cpd.id.split("_")[0]+".png height='200'>"
+        }, {
 			"label": "Name",
 			"data": cpd.name
 		 }, {
@@ -347,11 +349,20 @@ function KBaseFBA_FBAModel(modeltabs) {
 			"label": "Compartment",
 			"data": self.cmphash[cpd.cmpkbid].name+" "+self.cmphash[cpd.cmpkbid].compartmentIndex,
 		}];
+		if (cpd.smiles && cpd.cpdkbid == "cpd00000") {
+		    var p = self.modeltabs.kbapi('biochem', 'depict_compounds', {structures: [cpd.smiles]
+		    }).then(function(data) {
+                    output[1] = {
+						"label": "Image",
+						"data": data[0]
+					};
+					return output;
+                });
+            return p;
+		}
 		if (cpd.cpdkbid != "cpd00000") {
 			var p = self.modeltabs.kbapi('biochem', 'get_compounds', {
 				compounds: [cpd.cpdkbid],
-				biochemistry: self.biochem,
-    			biochemistry_workspace: "kbase",
 			}).then(function(data) {
 				if ("deltaG" in data[0]) {
 					output.push({

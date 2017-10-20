@@ -33,6 +33,7 @@ define([
     'kbaseNarrativeStagingDataTab',
     'kbase-generic-client-api',
     'util/bootstrapDialog',
+    'kbase/js/widgets/narrative_core/kbaseDataCard',
     'bootstrap'
 ], function (
     KBWidget,
@@ -50,7 +51,8 @@ define([
     kbaseNarrativeExampleDataTab,
     kbaseNarrativeStagingDataTab,
     GenericClient,
-    BootstrapDialog
+    BootstrapDialog,
+    kbaseDataCard
 ) {
     'use strict';
 
@@ -74,9 +76,9 @@ define([
     var knownTypes = [];
 
     return KBWidget({
-        name: "kbaseNarrativeDataPanel",
+        name: 'kbaseNarrativeDataPanel',
         parent: kbaseNarrativeControlPanel,
-        version: "1.0.0",
+        version: '1.0.0',
         wsClient: null,
         table: null,
         tableData: [],
@@ -90,7 +92,7 @@ define([
         options: {
             title: 'Data',
             loadingImage: Config.get('loading_gif'),
-            notLoggedInMsg: "Please log in to view a workspace.",
+            notLoggedInMsg: 'Please log in to view Narrative data.',
             workspaceURL: Config.url('workspace'),
             lp_url: Config.url('landing_pages'),
             container: null,
@@ -174,7 +176,7 @@ define([
 
             $(document).on('deleteDataList.Narrative', $.proxy(function (event, data) {
                 this.loadedData[data] = false;
-                var className = "." + data.split('.').join('--');
+                var className = '.' + data.split('.').join('--');
                 $(className).html('');
                 $(className).append($('<span>').addClass('fa fa-chevron-circle-left'))
                     .append(' Add');
@@ -395,16 +397,6 @@ define([
 
             var user = Jupyter.narrative.userId;
 
-            if (!user) {
-                console.error("NarrativeDataPanel: user is not defined, parsing token instead...");
-                var tokenParts = this.token.split("|");
-                for (var i in tokenParts) {
-                    var keyValue = tokenParts[i].split("=");
-                    if (keyValue.length == 2 && keyValue[0] === "un")
-                        user = keyValue[1];
-                }
-            }
-
             // models
             var myData = [],
                 sharedData = [];
@@ -415,7 +407,7 @@ define([
             // model for selected objects to import
             var mineSelected = [],
                 sharedSelected = [];
-
+          
             // tab panels
             var minePanel = $('<div class="kb-import-content kb-import-mine">'),
                 sharedPanel = $('<div class="kb-import-content kb-import-shared">'),
@@ -605,7 +597,7 @@ define([
                         }
                     })
                     .catch(function (error) {
-                        console.error("ERROR while rendering data...", error);
+                        console.error('ERROR while rendering data...', error);
                     });
             }
 
@@ -807,7 +799,7 @@ define([
                     paramsList.push(curParam);
 
                 if (objCount > maxObjFetch)
-                    console.error("User's object count for owned workspaces was", objCount);
+                    console.error('User\'s object count for owned workspaces was', objCount);
 
                 var headerMessage = '';
                 var requestCounter = 0;
@@ -844,7 +836,7 @@ define([
             // It produces a scrollable dataset
             function render(view, data, container, selected, template) {
     
-                var setDataIconTrigger = $._data($(document)[0], "events")["setDataIcon"];
+                var setDataIconTrigger = $._data($(document)[0], 'events')['setDataIcon'];
                 if (setDataIconTrigger) {
                     renderOnIconsReady(view, data, container, selected, template);
                 } else {
@@ -856,7 +848,7 @@ define([
             function renderOnIconsReady(view, data, container, selected, template) {
                 var headerMessage = '';
                 if (data.length >= maxObjFetch) {
-                    headerMessage = "You have access to over <b>" + maxObjFetch + "</b> data objects, so we're only showing a sample. Please use the Types or Narratives selectors above to filter.";
+                    headerMessage = 'You have access to over <b>' + maxObjFetch + '</b> data objects, so we\'re only showing a sample. Please use the Types or Narratives selectors above to filter.';
                 }
                 setHeaderMessage(view, headerMessage);
 
@@ -866,7 +858,7 @@ define([
                 container.empty();
 
                 if (data.length == 0) {
-                    container.append($('<div>').addClass("kb-data-list-type").css({margin: '15px', 'margin-left': '35px'}).append('No data found'));
+                    container.append($('<div>').addClass('kb-data-list-type').css({margin: '15px', 'margin-left': '35px'}).append('No data found'));
                     setLoading(view, false);
                     return;
                 }
@@ -876,7 +868,7 @@ define([
                 events(container, selected);
 
                 if (rows.children().length == 0) {
-                    container.append($('<div>').addClass("kb-data-list-type").css({margin: '15px', 'margin-left': '35px'}).append('No data found'));
+                    container.append($('<div>').addClass('kb-data-list-type').css({margin: '15px', 'margin-left': '35px'}).append('No data found'));
                     setLoading(view, false);
                     return;
                 }
@@ -916,7 +908,7 @@ define([
                     var name = objs[i].name;
                     proms.push(
                         serviceClient.sync_call(
-                            "NarrativeService.copy_object",
+                            'NarrativeService.copy_object',
                             [{
                                 ref: ref,
                                 target_ws_name: nar_ws_name
@@ -1180,44 +1172,7 @@ define([
 
             function rowTemplate(obj, loadedData) {
                 var object_info = obj.info;
-                // object_info:
-                // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
-                // [3] : timestamp save_date // [4] : int version // [5] : username saved_by
-                // [6] : ws_id wsid // [7] : ws_name workspace // [8] : string chsum
-                // [9] : int size // [10] : usermeta meta
-                var type_tokens = object_info[2].split('.');
-                // var type_module = type_tokens[0];
-                var type = type_tokens[1].split('-')[0];
-                // var unversioned_full_type = type_module + '.' + type;
-                // var logo_name = "";
                 var landingPageLink = self.options.lp_url + object_info[6] + '/' + object_info[1];
-                var icons = self.data_icons;
-                var icon = _.has(icons, type) ? icons[type] : icons['DEFAULT'];
-                var $logo = $('<span>');
-
-                var shortName = object_info[1];
-                var isShortened = false;
-                if (shortName.length > 50) {
-                    shortName = shortName.substring(0, 50) + '...';
-                    isShortened = true;
-                }
-                var $name = $('<span>').addClass("kb-data-list-name").append('<a href="' + landingPageLink + '" target="_blank">' + shortName + '</a>'); // TODO: make link!!
-                if (isShortened) {
-                    $name.tooltip({title: object_info[1], placement: 'bottom', delay: {show: 750, hide: 0}});
-                }
-
-                var $version = $('<span>').addClass("kb-data-list-version").append('v' + object_info[4]);
-                var $type = $('<span>').addClass("kb-data-list-type").append(type);
-
-                var $date = $('<span>').addClass("kb-data-list-date").append(TimeFormat.getTimeStampStr(object_info[3]));
-                var $byUser = $('<span>').addClass("kb-data-list-edit-by");
-                if (object_info[5] !== self.my_user_id) {
-                    $byUser.append(' by ' + object_info[5])
-                        .click(function (e) {
-                            e.stopPropagation();
-                            window.open(Config.url('profile_page') + object_info[5]);
-                        });
-                }
 
                 var metadata = object_info[10] || {};
                 var metadataText = '';
@@ -1226,160 +1181,53 @@ define([
                         metadataText += '<tr><th>' + key + '</th><td>' + metadata[key] + '</td></tr>';
                     }
                 }
-                if (type === 'Genome') {
+                var type_tokens = object_info[2].split('.');
+                var type = type_tokens[1].split('-')[0];
+                if (type === 'Genome' || type === 'GenomeAnnotation') {
                     if (metadata.hasOwnProperty('Name')) {
-                        $type.text(type + ': ' + metadata['Name']);
+                        type = type + ': ' + metadata['Name'];
                     }
                 }
-
                 var narName = obj.ws;
                 if (narrativeNameLookup[obj.ws]) {
                     narName = narrativeNameLookup[obj.ws];
                 }
-                var $narName = $('<span>').addClass("kb-data-list-narrative").append(narName);
-
-                var $btnToolbar = $('<span>').addClass('btn-toolbar pull-right').attr('role', 'toolbar').hide();
-                var btnClasses = "btn btn-xs btn-default";
-                var css = {'color': '#888'};
+                var btnClasses = 'btn btn-xs btn-default';
+                var $btnToolbar = $('<div>').addClass('btn-toolbar narrative-data-panel-btnToolbar');
                 var $openLandingPage = $('<span>')
-                    // tooltips showing behind pullout, need to fix!
-                    //.tooltip({title:'Explore data', 'container':'#'+this.mainListId})
                     .addClass(btnClasses)
-                    .append($('<span>').addClass('fa fa-binoculars').css(css))
+                    .append($('<span>').addClass('fa fa-binoculars'))
                     .click(function (e) {
                         e.stopPropagation();
                         window.open(landingPageLink);
                     });
 
                 var $openProvenance = $('<span>')
-                    .addClass(btnClasses).css(css)
+                    .addClass(btnClasses)
                     //.tooltip({title:'View data provenance and relationships', 'container':'body'})
-                    .append($('<span>').addClass('fa fa-sitemap fa-rotate-90').css(css))
+                    .append($('<span>').addClass('fa fa-sitemap fa-rotate-90'))
                     .click(function (e) {
                         e.stopPropagation();
                         window.open('/#objgraphview/' + object_info[7] + '/' + object_info[1]);
                     });
                 $btnToolbar.append($openLandingPage).append($openProvenance);
 
-                var $mainDiv = $('<div>').addClass('kb-data-list-info').css({padding: '0px', margin: '0px'})
-                    .append($btnToolbar)
-                    .append($name).append($version).append('<br>')
-                    .append($type).append('<br>').append($narName).append('<br>').append($date).append($byUser);
+                var name = object_info[1];
 
-                var isCopy = loadedData && loadedData[shortName];
-                var $addDiv =
-                    $('<div>').append(
-                        $('<button>').addClass('kb-primary-btn').css({'white-space': 'nowrap', padding: '10px 15px'})
-                            .append($('<span>').addClass('fa fa-chevron-circle-left'))
-                            .append(function () { return (isCopy) ? ' Copy' : ' Add'; })
-                            .addClass(function () {return object_info[1].split('.').join('--');})
-                            .on('click', function () {
-                                var updateButton = function () {
-                                    // probably should move action outside of render func, but oh well
-                                    $(this).html('<img src="' + self.options.loadingImage + '">');
+                var isCopy = loadedData && loadedData[name];
+                var actionButtonText = (isCopy) ? ' Copy' : ' Add';
 
-                                    var thisBtn = this;
-                                    Promise.resolve(serviceClient.sync_call(
-                                        "NarrativeService.copy_object",
-                                        [{
-                                            ref: object_info[6] + '/' + object_info[0],
-                                            target_ws_name: self.ws_name
-                                        }]
-                                    ))
-                                        .then(function () {
-                                            var id = '.' + object_info[1].split('.').join('--');
-                                            $(id).html('');
-                                            $(id).append($('<span>').addClass('fa fa-chevron-circle-left'))
-                                                .append(' Copy');
-                                            self.trigger('updateDataList.Narrative');
-                                        })
-                                        .catch(function (error) {
-                                            $(thisBtn).html('Error');
-                                            if (error.error && error.error.message) {
-                                                if (error.error.message.indexOf('may not write to workspace') >= 0) {
-                                                    importStatus.html($('<div>').css({ 'color': '#F44336', 'width': '500px' }).append('Error: you do not have permission to add data to this Narrative.'));
-                                                } else {
-                                                    importStatus.html($('<div>').css({ 'color': '#F44336', 'width': '500px' }).append('Error: ' + error.error.message));
-                                                }
-                                            } else {
-                                                importStatus.html($('<div>').css({ 'color': '#F44336', 'width': '500px' }).append('Unknown error!'));
-                                            }
-                                            console.error(error);
-                                        });
+                var $card = kbaseDataCard.apply(self, [
+                    {                     
+                        narrative: narName,
+                        actionButtonText: actionButtonText,
+                        moreContent: $btnToolbar,
+                        max_name_length: 50,
+                        object_info: object_info,
+                        ws_name: self.ws_name
+                    }]);
 
-                                };
-
-                                if ($(this).text().split(" ")[1] === "Copy") {
-                                    var dialog = new BootstrapDialog({
-                                        title: 'Item already exists in workspace under same name.',
-                                        body: 'Do you want to override the existing copy?',                                        
-                                        buttons: [$('<a type="button" class="btn btn-default">')
-                                            .append('Yes')
-                                            .click(function () {
-                                                dialog.hide();   
-                                                updateButton.call(this);
-
-                                            }.bind(this))
-                                            , $('<a type="button" class="btn btn-default">')
-                                            .append('No')
-                                            .click(function () {
-                                                dialog.hide();
-                                            })
-                                        ],
-                                        closeButton: true
-                                    });
-                                    dialog.show();
-                                } else {
-                                    updateButton.call(this);
-                                } 
-                                
-                              
-                            }));
-
-
-                var $topTable = $('<table>')
-                    .css({'width': '100%', 'background': '#fff'})  // set background to white looks better on DnD
-                    .append($('<tr>')
-                        .append($('<td>')
-                            .css({'width': '90px'})
-                            .append($addDiv.hide()))
-                        .append($('<td>')
-                            .css({'width': '50px'})
-                            .append($logo))
-                        .append($('<td>')
-                            .append($mainDiv)));
-                // set icon for data item
-                $(document).trigger("setDataIcon.Narrative", {
-                    elt: $logo,
-                    type: type
-                });
-
-                var $row = $('<div>')
-                    .css({margin: '2px', padding: '4px', 'margin-bottom': '5px'})
-                    //.addClass('kb-data-list-obj-row')
-                    .append($('<div>').addClass('kb-data-list-obj-row-main')
-                        .append($topTable))
-                    //.append($moreRow)
-                    // show/hide ellipses on hover, show extra info on click
-                    .mouseenter(function () {
-                        //if (!$moreRow.is(':visible')) { $toggleAdvancedViewBtn.show(); }
-                        $addDiv.show();
-                        $btnToolbar.show();
-                    })
-                    .mouseleave(function () {
-                        //$toggleAdvancedViewBtn.hide();
-                        $addDiv.hide();
-                        $btnToolbar.hide();
-                    });
-
-                var $rowWithHr = $('<div>').data('ref', obj.wsID + '.' + obj.id)
-                    .data('obj-name', obj.name)
-                    .append($('<hr>')
-                        .addClass('kb-data-list-row-hr')
-                        .css({'margin-left': '150px'}))
-                    .append($row);
-
-                return $rowWithHr;
+                return $card;
             }
 
             function setHeaderMessage(view, message) {

@@ -13,7 +13,7 @@ define([
     'common/ui',
     'common/data',
     'util/timeFormat',
-    'kb_sdk_clients/genericClient',
+    'util/string',
     'select2',
     'bootstrap',
     'css!font-awesome'
@@ -30,7 +30,7 @@ define([
     UI,
     Data,
     TimeFormat,
-    GenericClient) {
+    StringUtil) {
     'use strict';
 
     // Constants
@@ -160,6 +160,13 @@ define([
 
         /**
          * Formats the display of an object in the dropdown.
+         id: "data/bulk/wjriehl/subfolder/i_am_a_file.txt"
+         isFolder: false
+         mtime: 1508441424000
+         name: "i_am_a_file.txt"
+         path: "data/bulk/wjriehl/subfolder/i_am_a_file.txt"
+         size: 0
+         text: "data/bulk/wjriehl/subfolder/i_am_a_file.txt"
          */
         function formatObjectDisplay(file) {
             console.log('formatObjectDisplay: ', file);
@@ -168,11 +175,11 @@ define([
             }
             return $(div([
                 span({ style: 'word-wrap: break-word' }, [
+                    file.subdir,
                     b(file.name)
                 ]),
-                ' ' + file.path + '<br>',
                 div({ style: 'margin-left: 7px' }, [
-                    'Size: ' + file.size + '<br>',
+                    'Size: ' + StringUtil.readableBytes(file.size) + '<br>',
                     'updated ' + TimeFormat.getTimeStampStr(file.mtime)
                 ])
             ]));
@@ -200,6 +207,7 @@ define([
                         return object.id; //model.availableValues[object.id].path;
                     },
                     ajax: {
+                        delay: 250,
                         transport: function(params, success, failure) {
                             console.log(params);
                             return fetchData(params.data.term)

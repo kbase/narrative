@@ -20,6 +20,7 @@ define([
         if (!url.endsWith('/')) {
             url = url + '/';
         }
+        var rootPath = 'data/bulk/';
 
         /**
          * @method
@@ -40,7 +41,13 @@ define([
 
         var searchFiles = function(term) {
             var path = 'search/' + encodeURIComponent(term);
-            return makeFtpCall('GET', path);
+            return makeFtpCall('GET', path)
+                .then(function(files) {
+                    files.forEach(function(file) {
+                        file.subdir = file.path.slice(rootPath.length, -file.name.length);
+                    });
+                    return files;
+                });
         };
 
         var makeFtpCall = function(method, path) {

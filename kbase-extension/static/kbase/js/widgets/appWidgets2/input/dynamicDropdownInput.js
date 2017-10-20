@@ -134,6 +134,9 @@ define([
             searchTerm = searchTerm || '';
             if (dataSource === 'ftp_staging') {
                 return fileStaging.searchFiles(searchTerm);
+            } else {
+                // dynamic service plugin stubs!
+                return [];
             }
         }
 
@@ -209,10 +212,8 @@ define([
                     ajax: {
                         delay: 250,
                         transport: function(params, success, failure) {
-                            console.log(params);
                             return fetchData(params.data.term)
                                 .then(function(data) {
-                                    console.log(data);
                                     data.forEach(function(file) {
                                         file.id = file.path;
                                         file.text = file.path;

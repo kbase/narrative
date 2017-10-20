@@ -9,7 +9,7 @@
  *   Expected options:
  *     options : {
  *          logo:  jqeuery object containing stylized logo,
- *          actionButton: jquery obejct of content to be shown on button,
+ *          actionButtonText: jquery obejct of content to be shown on button,
  *          actionButtonClick :callback attached to actionButton,
  *          title: jquery object containing text to be shown on title line,
  *          subcontent: jquery object containing text to be below title line,

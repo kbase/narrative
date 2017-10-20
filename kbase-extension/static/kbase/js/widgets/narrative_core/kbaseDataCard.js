@@ -146,7 +146,7 @@ define (
                     ))
                         .then(function () {
                             var $button;
-                            for(let i = 0 ; i< btns.length; i++){
+                            for(var i = 0 ; i< btns.length; i++){
                                 $button = btns[i];
                                 $($button).find('div').text(' Copy');
                             }

@@ -1215,16 +1215,14 @@ define([
                 var name = object_info[1];
 
                 var isCopy = loadedData && loadedData[name];
-                var $actionButton = $('<div>')
-                    .append(function () { return (isCopy) ? ' Copy' : ' Add'; });
+                var actionButtonText = (isCopy) ? ' Copy' : ' Add';
 
-                var $card = kbaseDataCard.apply(this, [
+                var $card = kbaseDataCard.apply(self, [
                     {                     
                         narrative: narName,
-                        actionButton: $actionButton,
+                        actionButtonText: actionButtonText,
                         moreContent: $btnToolbar,
                         max_name_length: 50,
-                        self: self,
                         object_info: object_info,
                         ws_name: self.ws_name
                     }]);

@@ -12,7 +12,6 @@
                     favorite: app.favorite (number),
 
                     //values with default, passing in value will override default
-                    date: str,
                     createdBy: array of strs,
                     type: str,
 
@@ -57,7 +56,8 @@ define (
             
             var shortName = entry.name ? entry.name : app.name;
             var authors = entry.createdBy; 
-            var type = entry.version ? entry.version : ('v' + app.ver);
+            var version = entry.version ? entry.version : ('v' + app.ver);
+            var type;
 
             if(entry.createdBy === undefined){
                 if(app.authors.length >2){
@@ -68,7 +68,7 @@ define (
             }
             if (app.module_name && (entry.version === undefined)) {
                 type = '<a href="' + self.options.moduleLink + '/' + app.module_name + '" target="_blank">' +
-                    app.namespace + '</a> ' + type;
+                    app.namespace + '</a> ';
             }
 
             var $star = $('<i>').addClass('fa fa-star kbcb-star-default');
@@ -90,7 +90,7 @@ define (
                     Promise.resolve(self.catalog.remove_favorite(params))
                         .then(function () {
                             $star.removeClass('kbcb-star-favorite');
-                            app.favorite = null; // important to set this if we don't refresh the panel
+                            favorite = null; // important to set this if we don't refresh the panel
                         })
                         .catch(function (error) {
                             console.error(error);
@@ -99,7 +99,7 @@ define (
                     Promise.resolve(self.catalog.add_favorite(params))
                         .then(function () {
                             $star.addClass('kbcb-star-favorite');
-                            app.favorite = new Date().getTime(); // important to set this if we don't refresh the panel
+                            favorite = new Date().getTime(); // important to set this if we don't refresh the panel
                         })
                         .catch(function (error) {
                             console.error(error);
@@ -124,18 +124,23 @@ define (
                 $logo.append(DisplayUtil.getAppIcon({ cursor: 'pointer', setColor: true }));
             }
                    
-            var $name = $('<span>').addClass('kb-data-list-name').append(shortName);
-            var $type = $('<div>').addClass('kb-data-list-type').append(type);
+            var $name = $('<div>').addClass('kb-data-list-name').append(shortName);
+            var $version = $('<span>').addClass('kb-data-list-version').append(version);
+            var $type = $('<span>').addClass('kb-data-list-type').append(type).append($version);
             var $date = $('<span>').addClass('kb-data-list-date');
             var $authors = $('<span>').addClass('kb-data-list-edit-by').append(authors);
 
             var $title = $('<div>').append($name).append($star);
 
             var $subcontent = $('<div>')
-                .addClass('kb-data-list-subcontent')
+                .addClass('narrative-data-list-subcontent')
+                .append($('<span/>').append($star))
                 .append($type)
-                .append($date)
-                .append($authors);
+                .append($date);
+            
+            if (entry.createdBy === undefined || entry.createdBy) {
+                $subcontent.append($authors);
+            }
           
             var layout = {
                 logo: $logo,

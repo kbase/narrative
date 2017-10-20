@@ -88,7 +88,7 @@ define (
             
             var $title = $('<div>').append($name);
             var $subcontent = $('<div>')
-                .addClass('kb-data-list-subcontent');
+                .addClass('narrative-data-list-subcontent');
             
             if(entry.version === undefined || entry.version) {
                 $title.append($version);
@@ -131,10 +131,11 @@ define (
                     return;
                 }
                 e.stopPropagation(); 
-
                 var updateButton = function () {
-                    var thisBtn = $(this).children()[0];
+                    var className = '.' + object_info[1].split('.').join('\\.');
+                    var btns = $(className);
                     var thisHolder = this;
+                    var $thisBtn = $($(this).children()[0]);
                     $(this).html('<img src="' + self.options.loadingImage + '">');
                     Promise.resolve(self.serviceClient.sync_call(
                         'NarrativeService.copy_object',
@@ -144,13 +145,17 @@ define (
                         }]
                     ))
                         .then(function () {
+                            var $button;
+                            for(var i = 0 ; i< btns.length; i++){
+                                $button = btns[i];
+                                $($button).find('div').text(' Copy');
+                            }
                             $(thisHolder).html('');
-                            $(thisBtn).text(' Copy');
-                            $(thisHolder).append(thisBtn);
+                            $(thisHolder).append($thisBtn);
                             self.trigger('updateDataList.Narrative');
                         })
                         .catch(function (error) {
-                            $(thisBtn).html('Error');
+                            $(this).html('Error');
                             if (error.error && error.error.message) {
                                 if (error.error.message.indexOf('may not write to workspace') >= 0) {
                                     self.options.$importStatus.html($('<div>').css({ 'color': '#F44336', 'width': '500px' }).append('Error: you do not have permission to add data to this Narrative.'));
@@ -189,7 +194,7 @@ define (
 
             };
             var layout = {
-                actionButton: entry.actionButton,
+                actionButtonText: entry.actionButtonText,
                 actionButtonClick: actionButtonClick,
                 logo: $logo,
                 title: $title,
@@ -200,7 +205,8 @@ define (
             var $card = new kbaseCardLayout(layout);
 
             var $renderedActionButton = $card.find('.narrative-card-action-button');
-            $renderedActionButton.addClass(function () { return object_info[1].split('.').join('--'); })
+
+            $renderedActionButton.addClass(function () { return object_info[1].split('.').join('\.'); })
                 .hide();
 
             return $card;

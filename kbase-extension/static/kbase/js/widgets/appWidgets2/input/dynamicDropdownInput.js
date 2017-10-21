@@ -183,7 +183,7 @@ define([
                 ]),
                 div({ style: 'margin-left: 7px' }, [
                     'Size: ' + StringUtil.readableBytes(file.size) + '<br>',
-                    'updated ' + TimeFormat.getTimeStampStr(file.mtime)
+                    'Uploaded ' + TimeFormat.getTimeStampStr(file.mtime, true)
                 ])
             ]));
         }

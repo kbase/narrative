@@ -49,7 +49,7 @@ define([
             bus = runtime.bus().connect(),
             channel = bus.channel(config.channelName),
             ui,
-            dataSource = 'ftp_staging', // only option for now.
+            dataSource = 'ftp_staging', // only option now, should come from the parameterSpec.
             model = {
                 value: undefined
             },

@@ -35,3 +35,6 @@ before_script:
   - sleep 3 # give xvfb some time to start
 
 script: make build-travis-narrative && make test
+
+after_script:
+  - coveralls

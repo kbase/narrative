@@ -22,6 +22,7 @@ branches:
 
 before_install:
   - pip install virtualenv coveralls
+  - gem install coveralls-lcov
   - nvm install $TRAVIS_NODE_VERSION
   - npm install -g bower
   - npm install -g grunt-cli
@@ -37,4 +38,5 @@ before_script:
 script: make build-travis-narrative && make test
 
 after_script:
-  - coveralls
+  - coveralls-lcov -v -n js-coverage/lcov/lcov.info > js-coverage.json
+  - coveralls --merge js-coverage.json

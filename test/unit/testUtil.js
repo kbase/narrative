@@ -54,16 +54,16 @@ define('testUtil', [
             throw new Error('Missing an auth token. Please enter one (or null to skip those tests) in test/unit/testConfig.json');
         }
         var tokenFile = TestConfig.token;
-        return new Promise(function(resolve, reject) {
+        return new Promise(function(resolve) {
             require(['text!' + tokenFile],
-            function(loadedToken) {
-                token = loadedToken;
-                resolve(token);
-            },
-            function() {
-                console.warn('Unable to load token file ' + tokenFile + '. Continuing without a token');
-                resolve(null);
-            });
+                function(loadedToken) {
+                    token = loadedToken;
+                    resolve(token);
+                },
+                function() {
+                    console.warn('Unable to load token file ' + tokenFile + '. Continuing without a token');
+                    resolve(null);
+                });
         });
     }
 

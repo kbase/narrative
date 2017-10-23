@@ -21,7 +21,7 @@ branches:
     - travis-firefox
 
 before_install:
-  - pip install virtualenv
+  - pip install virtualenv coveralls
   - nvm install $TRAVIS_NODE_VERSION
   - npm install -g bower
   - npm install -g grunt-cli

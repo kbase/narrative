@@ -30,7 +30,8 @@ module.exports = function (config) {
         ],
         exclude: [
             'kbase-extension/static/buildTools/*.js',
-            'kbase-extension/static/ext_components/**/test/**/*.js'
+            'kbase-extension/static/ext_components/**/test/**/*.js',
+            'kbase-extension/static/kbase/js/patched-components/**/*'
         ],
         // test results reporter to use
         // possible values: 'dots', 'progress'

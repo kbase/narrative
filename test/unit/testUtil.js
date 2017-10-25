@@ -53,7 +53,7 @@ define('testUtil', [
      * Runs the Jasmine pending() function if there's no Auth token available.
      */
     function pendingIfNoToken() {
-        if (!hasToken) {
+        if (!token) {
             pending();
         }
     }
@@ -79,6 +79,7 @@ define('testUtil', [
     return {
         make: factory,
         getToken: getToken,
-        getCurrentNarrative: getCurrentNarrative
+        getCurrentNarrative: getCurrentNarrative,
+        pendingIfNoToken: pendingIfNoToken
     };
 });

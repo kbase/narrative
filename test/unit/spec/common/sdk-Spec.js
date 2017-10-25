@@ -46,7 +46,6 @@ define ([
 
         it('Can convert a rather complex app spec', function() {
             var spec = SDK.convertAppSpec(ComplexAppSpec);
-            console.log(JSON.stringify(spec, null, 4));
             expect(validateConvertedSpec(spec)).toBe(true);
 
         });

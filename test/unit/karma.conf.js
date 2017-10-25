@@ -9,24 +9,29 @@ module.exports = function (config) {
             'karma-jasmine',
             // 'karma-chrome-launcher',
             'karma-phantomjs-launcher',
-            'karma-coverage',
-            'karma-requirejs'
+            'karma-requirejs',
+            'karma-coverage'
         ],
         preprocessors: {
-            'kbase-extension/static/kbase/**/*.js': ['coverage']
+            'kbase-extension/static/kbase/js/**/*.js': ['coverage']
         },
         files: [
-            // {pattern: 'kbase-extension/static/components/**/*.js', included: false},
-            // {pattern: 'kbase-extension/static/kbase/js/*.js', included: false},
-            // {pattern: 'kbase-extension/static/kbase/js/widgets/**/*.js', included: false},
-            // {pattern: 'kbase-extension/static/**/*.json', included: false},
-
             {pattern: 'test/unit/spec/**/*.js', included: false},
+            {pattern: 'kbase-extension/static/**/*.css', included: false, served: true},
+            {pattern: 'kbase-extension/static/kbase/templates/**/*.html', included: false, served: true},
+            {pattern: 'kbase-extension/static/kbase/config/**/*.json', included: false, served: true},
+            {pattern: 'kbase-extension/static/**/*.js', included: false, served: true},
+            {pattern: 'kbase-extension/static/**/*.gif', included: false, served: true},
             'kbase-extension/static/narrative_paths.js',
             {pattern: 'test/unit/testConfig.json', included: false, served: true, nocache: true},
             {pattern: 'test/*.tok', included: false, served: true, nocache: true},
             'test/unit/testUtil.js',
             'test/unit/test-main.js'
+        ],
+        exclude: [
+            'kbase-extension/static/buildTools/*.js',
+            'kbase-extension/static/ext_components/**/test/**/*.js',
+            'kbase-extension/static/kbase/js/patched-components/**/*'
         ],
         // test results reporter to use
         // possible values: 'dots', 'progress'
@@ -34,7 +39,15 @@ module.exports = function (config) {
         reporters: ['progress', 'coverage'],
         coverageReporter: {
             type: 'html',
-            dir: 'js-coverage/'
+            dir: 'js-coverage/',
+            reporters: [{
+                type: 'html',
+                subdir: 'html'
+            }, {
+                type: 'lcov',
+                subdir: 'lcov'
+            }],
+            includeAllSources: true
         },
         // web server port
         port: 9876,
@@ -59,9 +72,13 @@ module.exports = function (config) {
         // },
         singleRun: true,
         proxies: {
-            '/narrative/static/': 'http://localhost:9999/narrative/static/',
-            '/static/': 'http://localhost:9999/narrative/static/',
-            '/test/': '/base/test/'
+            '/narrative/static/': '/base/kbase-extension/static/',
+            '/narrative/static/base': 'http://localhost:9999/narrative/static/base',
+            '/narrative/static/notebook': 'http://localhost:9999/narrative/static/notebook',
+            '/narrative/static/components': 'http://localhost:9999/narrative/static/components',
+            '/narrative/static/services': 'http://localhost:9999/narrative/static/services',
+            '/static/kbase/config': '/base/kbase-extension/static/kbase/config',
+            '/test/': '/base/test/',
         }
 
     });

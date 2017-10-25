@@ -92,15 +92,15 @@ module.exports = function(grunt) {
         'karma': {
             unit: {
                 configFile: 'test/unit/karma.conf.js',
-                reporters: ['progress', 'coverage'],
-                coverageReporter: {
-                    dir: 'build/test-coverage/',
-                    reporters: [
-                        {
-                            type: 'html', subdir: 'html'
-                        }
-                    ]
-                }
+                // reporters: ['progress'], //, 'coverage'],
+                // coverageReporter: {
+                //     dir: 'build/test-coverage/',
+                //     reporters: [
+                //         {
+                //             type: 'html', subdir: 'html'
+                //         }
+                //     ]
+                // }
             },
             dev: {
                 // to do - add watch here

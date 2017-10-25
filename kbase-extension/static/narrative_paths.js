@@ -121,6 +121,10 @@ require.config({
         'kbaseNarrativeCell': 'kbase/js/widgets/narrative_core/kbaseNarrativeCell',
         'kbaseNarrativeDataCell': 'kbase/js/widgets/narrative_core/kbaseNarrativeDataCell',
         'kbaseNarrativeOutputCell': 'kbase/js/widgets/narrative_core/kbaseNarrativeOutputCell',
+        'kbaseDataCard': 'kbase/js/widgets/narrative_core/kbaseDataCard',
+        'kbaseAppCard': 'kbase/js/widgets/narrative_core/kbaseAppCard',
+        'kbaseCardLayout': 'kbase/js/widgets/narrative_core/kbaseCardLayout',
+
         'kbaseNarrativeInput': 'kbase/js/widgets/function_input/kbaseNarrativeInput',
         'kbaseNarrativeMethodInput': 'kbase/js/widgets/function_input/kbaseNarrativeMethodInput',
         'kbaseNarrativeParameterInput': 'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterInput',

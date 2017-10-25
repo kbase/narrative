@@ -8,10 +8,10 @@
 define([
     'require',
     'bluebird',
-    './lang',
-    './sdk',
-    './specValidation',
-    '../widgets/appWidgets2/validators/resolver'
+    'common/lang',
+    'common/sdk',
+    'common/specValidation',
+    'widgets/appWidgets2/validators/resolver'
 ], function(require, Promise, lang, sdk, Validation, validationResolver) {
     'use strict';
 
@@ -33,7 +33,7 @@ define([
         /*
          * Make a "shell" model based on the spec. Recursively build an object
          * with properties as defined by the spec.
-         * Effectively this means that only the top level is represented, since 
+         * Effectively this means that only the top level is represented, since
          */
         function makeEmptyModel() {
             var model = {};
@@ -48,9 +48,9 @@ define([
         from the given spec.
         It does this by:
         The top level spec is treated as a struct.
-        The default value for each paramater is simply set as the value for the given parameter 
+        The default value for each paramater is simply set as the value for the given parameter
         on a model object.
-        One exception is that if a parameter is a 
+        One exception is that if a parameter is a
         */
         function makeDefaultedModel() {
             var model = {};

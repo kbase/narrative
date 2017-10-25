@@ -16,7 +16,8 @@ module.exports = function (config) {
             'kbase-extension/static/kbase/js/**/*.js': ['coverage']
         },
         files: [
-            {pattern: 'test/unit/spec/**/*.js', included: false},
+            // {pattern: 'test/unit/spec/**/*.js', included: false},
+            {pattern: 'test/unit/spec/api/fileStagingSpec.js', included: false},
             {pattern: 'kbase-extension/static/**/*.css', included: false, served: true},
             {pattern: 'kbase-extension/static/kbase/templates/**/*.html', included: false, served: true},
             {pattern: 'kbase-extension/static/kbase/config/**/*.json', included: false, served: true},
@@ -25,6 +26,7 @@ module.exports = function (config) {
             'kbase-extension/static/narrative_paths.js',
             {pattern: 'test/unit/testConfig.json', included: false, served: true, nocache: true},
             {pattern: 'test/*.tok', included: false, served: true, nocache: true},
+            {pattern: 'test/data/**/*', included: false, served: true},
             'test/unit/testUtil.js',
             'test/unit/test-main.js'
         ],
@@ -78,7 +80,7 @@ module.exports = function (config) {
             '/narrative/static/components': 'http://localhost:9999/narrative/static/components',
             '/narrative/static/services': 'http://localhost:9999/narrative/static/services',
             '/static/kbase/config': '/base/kbase-extension/static/kbase/config',
-            '/test/': '/base/test/',
+            '/test/': '/base/test/'
         }
 
     });

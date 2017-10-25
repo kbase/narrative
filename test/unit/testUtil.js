@@ -49,6 +49,15 @@ define('testUtil', [
 
     }
 
+    /**
+     * Runs the Jasmine pending() function if there's no Auth token available.
+     */
+    function pendingIfNoToken() {
+        if (!hasToken) {
+            pending();
+        }
+    }
+
     function initialize() {
         if (TestConfig.token === undefined) {
             throw new Error('Missing an auth token. Please enter one (or null to skip those tests) in test/unit/testConfig.json');

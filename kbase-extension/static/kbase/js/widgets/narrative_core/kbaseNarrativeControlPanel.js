@@ -122,13 +122,13 @@ define ([
 
             this.isMin = false;
             this.$elem.append($('<div>')
-                              .css({'height':'100%', 'overflow-y':'auto'})
+                              .css({'height':'100%'})
                               .addClass('kb-narr-side-panel')
                               .append($('<div>')
                                       .addClass('kb-title')
                                       .append($titleSpan))
                               .append($('<div>')
-                                      .addClass('kb-narr-panel-body')
+                                      .addClass('kb-narr-panel-body-wrapper')
                                       .append(this.$bodyDiv)));
         },
 

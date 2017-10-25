@@ -292,7 +292,7 @@ define([
                         title: 'Contig Length (bp)',
                     },
                     yaxis2: {
-                        title: 'GC Content (%)',
+                        title: 'GC Content',
                         range: [0, 1],
                         side: 'right',
                         overlaying: 'y',
@@ -347,7 +347,7 @@ define([
             new DynamicTable($content, {
                 headers: [{
                     id: 'id',
-                    text: 'Contig Id',
+                    text: 'Contig ID',
                     isSortable: true,
                 }, {
                     id: 'cov',

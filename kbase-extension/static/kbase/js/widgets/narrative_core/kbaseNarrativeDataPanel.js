@@ -32,6 +32,8 @@ define([
     'kbaseNarrativeExampleDataTab',
     'kbaseNarrativeStagingDataTab',
     'kbase-generic-client-api',
+    'util/bootstrapDialog',
+    'kbase/js/widgets/narrative_core/kbaseDataCard',
     'bootstrap'
 ], function (
     KBWidget,
@@ -48,13 +50,35 @@ define([
     kbaseNarrativeSideImportTab,
     kbaseNarrativeExampleDataTab,
     kbaseNarrativeStagingDataTab,
-    GenericClient
-    ) {
+    GenericClient,
+    BootstrapDialog,
+    kbaseDataCard
+) {
     'use strict';
+
+    /*
+      as a bit of trivia, in case it comes up....
+
+      I'm pretty sure this could have a race condition which is not currently manifesting.
+      It rebuilds the list of knownTypes inside the getAndRenderData, which is called when
+      the filtering params are changed or the tab is changed w/o having data already.
+
+      But the list of knownTypes is variable across panes - for example, My Data and Shared With Me
+      may have different sets of types. Right now everything works just fine because the lists of types
+      are refreshed at appropriate times, and the input on an inactive pane doesn't rebuild its typeInput
+      field due to action on an active pane. So we're good. At least, I think we are.
+
+      However, it's easy to come up with a scenario where a list may be properly refreshed on a given pane and
+      reflects incorrect data. So in case anybody starts complaining about the list of types not matching their
+      data, this is probably the cause and should be revisited. For now, I'm going to sweep it under the rug.
+    */
+
+    var knownTypes = [];
+
     return KBWidget({
-        name: "kbaseNarrativeDataPanel",
+        name: 'kbaseNarrativeDataPanel',
         parent: kbaseNarrativeControlPanel,
-        version: "1.0.0",
+        version: '1.0.0',
         wsClient: null,
         table: null,
         tableData: [],
@@ -68,7 +92,7 @@ define([
         options: {
             title: 'Data',
             loadingImage: Config.get('loading_gif'),
-            notLoggedInMsg: "Please log in to view a workspace.",
+            notLoggedInMsg: 'Please log in to view Narrative data.',
             workspaceURL: Config.url('workspace'),
             lp_url: Config.url('landing_pages'),
             container: null,
@@ -115,8 +139,8 @@ define([
                         callback(obj_data);
                     }
                 },
-                    this)
-                );
+                this)
+            );
 
 
             /**
@@ -149,6 +173,14 @@ define([
                     }
                 }.bind(this)
             );
+
+            $(document).on('deleteDataList.Narrative', $.proxy(function (event, data) {
+                this.loadedData[data] = false;
+                var className = '.' + data.split('.').join('--');
+                $(className).html('');
+                $(className).append($('<span>').addClass('fa fa-chevron-circle-left'))
+                    .append(' Add');
+            }, this));
 
             this.$slideoutBtn = $('<button>')
                 .addClass('btn btn-xs btn-default')
@@ -199,6 +231,7 @@ define([
         loggedInCallback: function (event, auth) {
             this.token = auth.token;
             this.wsClient = new Workspace(this.options.workspaceURL, auth);
+
             this.serviceClient = new GenericClient(Config.url('service_wizard'), auth);
             this.isLoggedIn = true;
             if (this.ws_name) {
@@ -306,9 +339,10 @@ define([
         },
 
         buildTabs: function (tabs, isOuter) {
+
             var $header = $('<div style="background-color: #2196F3">');
             var $body = $('<div>');
-
+            
             for (var i = 0; i < tabs.length; i++) {
                 var tab = tabs[i];
                 $header.append($('<div>')
@@ -363,16 +397,6 @@ define([
 
             var user = Jupyter.narrative.userId;
 
-            if (!user) {
-                console.error("NarrativeDataPanel: user is not defined, parsing token instead...");
-                var tokenParts = this.token.split("|");
-                for (var i in tokenParts) {
-                    var keyValue = tokenParts[i].split("=");
-                    if (keyValue.length == 2 && keyValue[0] === "un")
-                        user = keyValue[1];
-                }
-            }
-
             // models
             var myData = [],
                 sharedData = [];
@@ -383,59 +407,7 @@ define([
             // model for selected objects to import
             var mineSelected = [],
                 sharedSelected = [];
-
-            var types = [
-                "KBaseGenomes.Genome",
-                "KBaseGenomes.Pangenome",
-                "KBaseGenomes.GenomeComparison",
-                "KBaseGenomes.GenomeDomainData",
-                "GenomeComparison.ProteomeComparison",
-
-                "KBaseFile.SingleEndLibrary",
-                "KBaseFile.PairedEndLibrary",
-                "KBaseGenomeAnnotations.Assembly",
-                "KBaseGenomes.ContigSet",
-
-                "KBaseTrees.MSA",
-                "KBaseTrees.Tree",
-                "KBaseGeneDomains.DomainAnnotation",
-
-                "KBaseBiochem.Media",
-                "KBaseFBA.FBAModel",
-                "KBaseFBA.ModelTemplate",
-                "KBaseFBA.FBA",
-                "KBaseFBA.ReactionSensitivityAnalysis",
-                "KBasePhenotypes.PhenotypeSet",
-                "KBasePhenotypes.PhenotypeSimulationSet",
-
-                "KBaseMetagenomes.BinnedContigs",
-
-                "KBaseRNASeq.RNASeqAlignment",
-                "KBaseRNASeq.RNASeqExpression",
-                "KBaseRNASeq.RNASeqSampleSet",
-                "KBaseFeatureValues.ExpressionMatrix",
-                "KBaseFeatureValues.FeatureClusters",
-
-                "KBaseSets.ReadsSet",
-                "KBaseSets.AssemblySet",
-                "KBaseSets.DifferentialExpressionMatrixSet",
-                "KBaseSets.ExpressionSet",
-                "KBaseSets.FeatureSetSet",
-                // "KBaseSets.GenomeSet", // Not clear if this is the GenomeSet in use
-                "KBaseSets.ReadsAlignmentSet",
-                "KBaseCollections.FeatureSet",
-            ];
-
-            types.sort(function (a, b) {
-                var aName = a.split('.')[1].toUpperCase();
-                var bName = b.split('.')[1].toUpperCase();
-                if (aName < bName)
-                    return -1; // sort by name
-                if (aName > bName)
-                    return 1;
-                return 0;
-            });
-
+          
             // tab panels
             var minePanel = $('<div class="kb-import-content kb-import-mine">'),
                 sharedPanel = $('<div class="kb-import-content kb-import-shared">'),
@@ -539,11 +511,11 @@ define([
                         $progressBar.css('width', value + '%')
                             .attr('aria-valuenow', value);
                     }
-                }
+                };
 
                 var reset = function () {
                     setValue(minValue);
-                }
+                };
 
                 return {
                     loader: $loadingDiv,
@@ -585,20 +557,37 @@ define([
                 return Promise.try(function () {
                     // data = [].concat.apply([], data);
                     data.sort(function (a, b) {
+                        // enable this if desired - it changes the sort to be by the alphabetical type first, and then the creation date
+                        /*if (
+                          a[2].match(/\.([^-]+)/)[1] < b[2].match(/\.([^-]+)/)[1]
+                          || (a[2].match(/\.([^-]+)/)[1] === b[2].match(/\.([^-]+)/)[1] && a[3] > b[3]))
+                        */
                         if (a[3] > b[3])
                             return -1;
                         return 1;
                     });
+                    
                     return data;
                 });
             }
 
-            function getAndRenderData(view, workspaces, type, specWs, ignoreWs, nameFilter) {
-                return getData(view, workspaces, type, specWs, ignoreWs, nameFilter)
+            function getAndRenderData(view, workspaces, types, specWs, ignoreWs, nameFilter) {
+                return getData(view, workspaces, types, specWs, ignoreWs, nameFilter)
                     .then(function (data) {
                         return cleanupData(data, view);
                     })
                     .then(function (data) {
+                        var dataTypes = {};
+                        data.forEach(function(datum) {
+                          var match = datum[2].match(/([^.]+)\.([^-]+)/)
+                          var module = match[1];
+                          var type = match[2];
+                          if (dataTypes[type] === undefined) {
+                            dataTypes[type] = {};
+                          }
+                          dataTypes[type][module + '.' + type] = true;
+                        });
+                        knownTypes = dataTypes;
                         if (view === 'mine') {
                             myData = data;
                             render(view, myData, $mineScrollPanel, mineSelected);
@@ -608,7 +597,7 @@ define([
                         }
                     })
                     .catch(function (error) {
-                        console.error("ERROR while rendering data...", error);
+                        console.error('ERROR while rendering data...', error);
                     });
             }
 
@@ -704,7 +693,7 @@ define([
              * or just the one named wsName.
              * Also returns only data of the given type, if not undefined
              */
-            function getData(view, workspaces, type, wsName, ignoreWs, nameFilter) {
+            function getData(view, workspaces, types, wsName, ignoreWs, nameFilter) {
                 if (workspaces.length === 0) {
                     return Promise.try(function () {
                         return [];
@@ -755,16 +744,18 @@ define([
                     };
                     if (start.type)
                         param.types = [start.type];
+                    if (start.types)
+                      param.types = start.types;
                     if (start.id)
                         param.workspaces.push(start.id);
                     return param;
-                }
+                };
 
                 // Construct all data requests below.
                 // This grabs everything into the client for now,
                 // until we have some server-side searching.
                 var paramsList = [],
-                    curParam = newParamSet({type: type}),
+                    curParam = newParamSet({types: types}),
                     curTotal = 0,
                     maxRequest = Config.get('data_panel').max_single_request || 1000,
                     totalFetch = 0;
@@ -787,7 +778,7 @@ define([
                     // this ws
                     else if (thisWs.count < maxRequest) {
                         paramsList.push(curParam);
-                        curParam = newParamSet({type: type, id: String(thisWs.id)});
+                        curParam = newParamSet({types: types, id: String(thisWs.id)});
                         curTotal = thisWs.count;
                     }
                     // if there isn't room because that's one big
@@ -796,7 +787,7 @@ define([
                     // kinda inefficient. Don't care.
                     else if (thisWs.count > maxRequest) {
                         for (var j = 0; j < thisWs.count; j += maxRequest) {
-                            var newParam = newParamSet({type: type, id: String(thisWs.id)});
+                            var newParam = newParamSet({types: types, id: String(thisWs.id)});
                             newParam.minObjectID = j + 1;
                             newParam.maxObjectID = j + maxRequest;
                             paramsList.push(newParam);
@@ -808,7 +799,7 @@ define([
                     paramsList.push(curParam);
 
                 if (objCount > maxObjFetch)
-                    console.error("User's object count for owned workspaces was", objCount);
+                    console.error('User\'s object count for owned workspaces was', objCount);
 
                 var headerMessage = '';
                 var requestCounter = 0;
@@ -826,7 +817,7 @@ define([
                             'NarrativeService.list_objects_with_sets',
                             [param]
                         )).then(function (data) {
-                            data = data[0]['data']
+                            data = data[0]['data'];
                             // filter out Narrative objects.
                             for (var i = 0; i < data.length && dataList.length < maxObjFetch; i++) {
                                 if (data[i].object_info[2].startsWith('KBaseNarrative'))
@@ -844,7 +835,8 @@ define([
             // a container to put data in.
             // It produces a scrollable dataset
             function render(view, data, container, selected, template) {
-                var setDataIconTrigger = $._data($(document)[0], "events")["setDataIcon"];
+    
+                var setDataIconTrigger = $._data($(document)[0], 'events')['setDataIcon'];
                 if (setDataIconTrigger) {
                     renderOnIconsReady(view, data, container, selected, template);
                 } else {
@@ -853,11 +845,10 @@ define([
                     }, 100);
                 }
             }
-
             function renderOnIconsReady(view, data, container, selected, template) {
                 var headerMessage = '';
                 if (data.length >= maxObjFetch) {
-                    headerMessage = "You have access to over <b>" + maxObjFetch + "</b> data objects, so we're only showing a sample. Please use the Types or Narratives selectors above to filter.";
+                    headerMessage = 'You have access to over <b>' + maxObjFetch + '</b> data objects, so we\'re only showing a sample. Please use the Types or Narratives selectors above to filter.';
                 }
                 setHeaderMessage(view, headerMessage);
 
@@ -867,7 +858,7 @@ define([
                 container.empty();
 
                 if (data.length == 0) {
-                    container.append($('<div>').addClass("kb-data-list-type").css({margin: '15px', 'margin-left': '35px'}).append('No data found'));
+                    container.append($('<div>').addClass('kb-data-list-type').css({margin: '15px', 'margin-left': '35px'}).append('No data found'));
                     setLoading(view, false);
                     return;
                 }
@@ -877,7 +868,7 @@ define([
                 events(container, selected);
 
                 if (rows.children().length == 0) {
-                    container.append($('<div>').addClass("kb-data-list-type").css({margin: '15px', 'margin-left': '35px'}).append('No data found'));
+                    container.append($('<div>').addClass('kb-data-list-type').css({margin: '15px', 'margin-left': '35px'}).append('No data found'));
                     setLoading(view, false);
                     return;
                 }
@@ -917,7 +908,7 @@ define([
                     var name = objs[i].name;
                     proms.push(
                         serviceClient.sync_call(
-                            "NarrativeService.copy_object",
+                            'NarrativeService.copy_object',
                             [{
                                 ref: ref,
                                 target_ws_name: nar_ws_name
@@ -1055,10 +1046,21 @@ define([
             }
 
 
-            function buildMyRows(data, start, numRows, template) {
+            function buildMyRows (data, start, numRows, template) {
                 // add each set of items to container to be added to DOM
                 var rows = $('<div class="kb-import-items">');
-
+                var loadedData = {};
+                $(document).trigger('dataLoadedQuery.Narrative', [
+                    false, 0,
+                    function (data) {
+                        Object.keys(data).forEach(function (type) {
+                            data[type].forEach(function (obj) {
+                                var name = obj[1];
+                                loadedData[name] = true;
+                            });
+                        });
+                    }
+                ]);  
                 for (var i = start; i < Math.min(start + numRows, data.length); i++) {
                     var obj = data[i];
                     // some logic is not right
@@ -1075,21 +1077,21 @@ define([
                         wsID: obj[6],
                         ws: obj[7],
                         info: obj, // we need to have this all on hand!
-                        relativeTime: TimeFormat.getTimeStampStr(obj[3])} //use the same one as in data list for consistencey  kb.ui.relativeTime( Date.parse(obj[3]) ) }
+                        relativeTime: TimeFormat.getTimeStampStr(obj[3])}; //use the same one as in data list for consistencey  kb.ui.relativeTime( Date.parse(obj[3]) ) }
 
                     // if (item.module=='KBaseNarrative') {
                     //     continue;
                     // }
-                    if (template)
+                    if (template){
                         item = template(item);
+                    }
                     else
-                        item = rowTemplate(item);
+                        item = rowTemplate(item, loadedData);
 
                     rows.append(item);
                 }
                 return rows;
             }
-
             function addFilters(view, workspaces, data, container, filterContainer) {
                 var wsList = workspaces;
                 // possible filter inputs
@@ -1122,18 +1124,21 @@ define([
                 // create type filter
                 var typeInput = $('<select class="form-control kb-import-filter">');
                 typeInput.append('<option>All types...</option>');
-                for (var i = 0; i < types.length; i++) {
-                    typeInput.append('<option data-type="' + types[i] + '">' +
-                        types[i].split('.')[1] +
+                var typeKeys = Object.keys(knownTypes).sort();
+                typeKeys.forEach( function(typeKey) {
+                    typeInput.append('<option data-type="' + Object.keys(knownTypes[typeKey]).sort().join(',') + '">' +
+                        typeKey +
                         '</option>');
-                }
+                });
                 var typeFilter = $('<div class="col-sm-3">').append(typeInput);
 
                 // event for type dropdown
                 typeInput.change(function () {
                     type = $(this).children('option:selected').data('type');
+                    if (type) {
+                      type = type.split(',');
+                    }
                     filterInput.val('');
-
                     // request again with filted type
                     setLoading(view, true);
                     getAndRenderData(view, workspaces, type, ws);
@@ -1146,66 +1151,28 @@ define([
                     var dataToFilter = sharedData;
                     if (view === 'mine')
                         dataToFilter = myData;
-                    var filtered = filterData(dataToFilter, {type: type, ws: ws, query: query})
+                    var filtered = filterData(dataToFilter, {type: type, ws: ws, query: query});
                     render(view, filtered, container, []);
                 });
 
                 var $refreshBtnDiv = $('<div>').addClass('col-sm-1').css({'text-align': 'center'}).append(
                     $('<button>')
-                    .css({'margin-top': '12px'})
-                    .addClass('btn btn-xs btn-default')
-                    .click(function (event) {
-                        container.empty();
-                        setLoading(view, true);
-                        updateView(view);
-                    })
-                    .append($('<span>')
-                        .addClass('glyphicon glyphicon-refresh')));
+                        .css({'margin-top': '12px'})
+                        .addClass('btn btn-xs btn-default')
+                        .click(function (event) {
+                            container.empty();
+                            setLoading(view, true);
+                            updateView(view);
+                        })
+                        .append($('<span>')
+                            .addClass('glyphicon glyphicon-refresh')));
                 filterContainer.empty()
                     .append(searchFilter, typeFilter, wsFilter, $refreshBtnDiv);
             }
 
-
-            function rowTemplate(obj) {
+            function rowTemplate(obj, loadedData) {
                 var object_info = obj.info;
-                // object_info:
-                // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
-                // [3] : timestamp save_date // [4] : int version // [5] : username saved_by
-                // [6] : ws_id wsid // [7] : ws_name workspace // [8] : string chsum
-                // [9] : int size // [10] : usermeta meta
-                var type_tokens = object_info[2].split('.')
-                // var type_module = type_tokens[0];
-                var type = type_tokens[1].split('-')[0];
-                // var unversioned_full_type = type_module + '.' + type;
-                // var logo_name = "";
                 var landingPageLink = self.options.lp_url + object_info[6] + '/' + object_info[1];
-                var icons = self.data_icons;
-                var icon = _.has(icons, type) ? icons[type] : icons['DEFAULT'];
-                var $logo = $('<span>');
-
-                var shortName = object_info[1];
-                var isShortened = false;
-                if (shortName.length > 50) {
-                    shortName = shortName.substring(0, 50) + '...';
-                    isShortened = true;
-                }
-                var $name = $('<span>').addClass("kb-data-list-name").append('<a href="' + landingPageLink + '" target="_blank">' + shortName + '</a>'); // TODO: make link!!
-                if (isShortened) {
-                    $name.tooltip({title: object_info[1], placement: 'bottom', delay: {show: 750, hide: 0}});
-                }
-
-                var $version = $('<span>').addClass("kb-data-list-version").append('v' + object_info[4]);
-                var $type = $('<span>').addClass("kb-data-list-type").append(type);
-
-                var $date = $('<span>').addClass("kb-data-list-date").append(TimeFormat.getTimeStampStr(object_info[3]));
-                var $byUser = $('<span>').addClass("kb-data-list-edit-by");
-                if (object_info[5] !== self.my_user_id) {
-                    $byUser.append(' by ' + object_info[5])
-                        .click(function (e) {
-                            e.stopPropagation();
-                            window.open(Config.url('profile_page') + object_info[5]);
-                        });
-                }
 
                 var metadata = object_info[10] || {};
                 var metadataText = '';
@@ -1214,151 +1181,53 @@ define([
                         metadataText += '<tr><th>' + key + '</th><td>' + metadata[key] + '</td></tr>';
                     }
                 }
-                if (type === 'Genome') {
+                var type_tokens = object_info[2].split('.');
+                var type = type_tokens[1].split('-')[0];
+                if (type === 'Genome' || type === 'GenomeAnnotation') {
                     if (metadata.hasOwnProperty('Name')) {
-                        $type.text(type + ': ' + metadata['Name']);
+                        type = type + ': ' + metadata['Name'];
                     }
                 }
-
                 var narName = obj.ws;
                 if (narrativeNameLookup[obj.ws]) {
                     narName = narrativeNameLookup[obj.ws];
                 }
-                var $narName = $('<span>').addClass("kb-data-list-narrative").append(narName);
-
-                var $btnToolbar = $('<span>').addClass('btn-toolbar pull-right').attr('role', 'toolbar').hide();
-                var btnClasses = "btn btn-xs btn-default";
-                var css = {'color': '#888'};
+                var btnClasses = 'btn btn-xs btn-default';
+                var $btnToolbar = $('<div>').addClass('btn-toolbar narrative-data-panel-btnToolbar');
                 var $openLandingPage = $('<span>')
-                    // tooltips showing behind pullout, need to fix!
-                    //.tooltip({title:'Explore data', 'container':'#'+this.mainListId})
                     .addClass(btnClasses)
-                    .append($('<span>').addClass('fa fa-binoculars').css(css))
+                    .append($('<span>').addClass('fa fa-binoculars'))
                     .click(function (e) {
                         e.stopPropagation();
                         window.open(landingPageLink);
                     });
 
                 var $openProvenance = $('<span>')
-                    .addClass(btnClasses).css(css)
+                    .addClass(btnClasses)
                     //.tooltip({title:'View data provenance and relationships', 'container':'body'})
-                    .append($('<span>').addClass('fa fa-sitemap fa-rotate-90').css(css))
+                    .append($('<span>').addClass('fa fa-sitemap fa-rotate-90'))
                     .click(function (e) {
                         e.stopPropagation();
                         window.open('/#objgraphview/' + object_info[7] + '/' + object_info[1]);
                     });
                 $btnToolbar.append($openLandingPage).append($openProvenance);
 
-                var $mainDiv = $('<div>').addClass('kb-data-list-info').css({padding: '0px', margin: '0px'})
-                    .append($btnToolbar)
-                    .append($name).append($version).append('<br>')
-                    .append($type).append('<br>').append($narName).append('<br>').append($date).append($byUser);
+                var name = object_info[1];
 
+                var isCopy = loadedData && loadedData[name];
+                var actionButtonText = (isCopy) ? ' Copy' : ' Add';
 
-                var $addDiv =
-                    $('<div>').append(
-                    $('<button>').addClass('kb-primary-btn').css({'white-space': 'nowrap', padding: '10px 15px'})
-                    .append($('<span>').addClass('fa fa-chevron-circle-left')).append(' Add')
-                    .on('click', function () { // probably should move action outside of render func, but oh well
-                        $(this).attr("disabled", "disabled");
-                        $(this).html('<img src="' + self.options.loadingImage + '">');
+                var $card = kbaseDataCard.apply(self, [
+                    {                     
+                        narrative: narName,
+                        actionButtonText: actionButtonText,
+                        moreContent: $btnToolbar,
+                        max_name_length: 50,
+                        object_info: object_info,
+                        ws_name: self.ws_name
+                    }]);
 
-                        var thisBtn = this;
-                        // var targetName = object_info[1];
-                        //console.log(object.name + " -> " + targetName);
-                        Promise.resolve(serviceClient.sync_call(
-                            "NarrativeService.copy_object",
-                            [{
-                                ref: object_info[6] + '/' + object_info[0],
-                                target_ws_name: self.ws_name
-                            }]
-                        ))
-                        .then(function() {
-                            $(thisBtn).html('Added');
-                            self.trigger('updateDataList.Narrative');
-                        })
-                        .catch(function(error) {
-                            $(thisBtn).html('Error');
-                            if (error.error && error.error.message) {
-                                if (error.error.message.indexOf('may not write to workspace') >= 0) {
-                                    importStatus.html($('<div>').css({'color': '#F44336', 'width': '500px'}).append('Error: you do not have permission to add data to this Narrative.'));
-                                } else {
-                                    importStatus.html($('<div>').css({'color': '#F44336', 'width': '500px'}).append('Error: ' + error.error.message));
-                                }
-                            } else {
-                                importStatus.html($('<div>').css({'color': '#F44336', 'width': '500px'}).append('Unknown error!'));
-                            }
-                            console.error(error);
-                        })
-
-                        // ws.copy_object({
-                        //
-                        //     to: {ref: self.ws_name + "/" + targetName},
-                        //     from: {ref: object_info[6] + "/" + object_info[0]}},
-                        //     function (info) {
-                        //         $(thisBtn).html('Added');
-                        //         self.trigger('updateDataList.Narrative');
-                        //     },
-                        //     function (error) {
-                        //         $(thisBtn).html('Error');
-                        //         if (error.error && error.error.message) {
-                        //             if (error.error.message.indexOf('may not write to workspace') >= 0) {
-                        //                 importStatus.html($('<div>').css({'color': '#F44336', 'width': '500px'}).append('Error: you do not have permission to add data to this Narrative.'));
-                        //             } else {
-                        //                 importStatus.html($('<div>').css({'color': '#F44336', 'width': '500px'}).append('Error: ' + error.error.message));
-                        //             }
-                        //         } else {
-                        //             importStatus.html($('<div>').css({'color': '#F44336', 'width': '500px'}).append('Unknown error!'));
-                        //         }
-                        //         console.error(error);
-                        //     });
-
-                    }));
-
-
-                var $topTable = $('<table>')
-                    .css({'width': '100%', 'background': '#fff'})  // set background to white looks better on DnD
-                    .append($('<tr>')
-                        .append($('<td>')
-                            .css({'width': '90px'})
-                            .append($addDiv.hide()))
-                        .append($('<td>')
-                            .css({'width': '50px'})
-                            .append($logo))
-                        .append($('<td>')
-                            .append($mainDiv)));
-                // set icon for data item
-                $(document).trigger("setDataIcon.Narrative", {
-                    elt: $logo,
-                    type: type
-                });
-
-                var $row = $('<div>')
-                    .css({margin: '2px', padding: '4px', 'margin-bottom': '5px'})
-                    //.addClass('kb-data-list-obj-row')
-                    .append($('<div>').addClass('kb-data-list-obj-row-main')
-                        .append($topTable))
-                    //.append($moreRow)
-                    // show/hide ellipses on hover, show extra info on click
-                    .mouseenter(function () {
-                        //if (!$moreRow.is(':visible')) { $toggleAdvancedViewBtn.show(); }
-                        $addDiv.show();
-                        $btnToolbar.show();
-                    })
-                    .mouseleave(function () {
-                        //$toggleAdvancedViewBtn.hide();
-                        $addDiv.hide();
-                        $btnToolbar.hide();
-                    });
-
-                var $rowWithHr = $('<div>').data('ref', obj.wsID + '.' + obj.id)
-                    .data('obj-name', obj.name)
-                    .append($('<hr>')
-                        .addClass('kb-data-list-row-hr')
-                        .css({'margin-left': '150px'}))
-                    .append($row);
-
-                return $rowWithHr;
+                return $card;
             }
 
             function setHeaderMessage(view, message) {

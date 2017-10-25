@@ -172,6 +172,8 @@ define(
             buildTabs: function(tabs, isOuter) {
                 var $header = $('<div>');
                 var $body = $('<div>');
+                $body.addClass('narrative-side-panel-content');
+                $body.css('height', 'calc(100% - 45px)');
 
                 $header.append($('<div>')
                     .addClass('kb-side-toggle')
@@ -314,19 +316,17 @@ define(
              */
             buildPanelSet: function(widgets) {
                 var $panelSet = $('<div>')
-                    .addClass('kb-narr-side-panel-set');
+                    .addClass('kb-narr-side-panel-set')
+                    .css('height', '100%');
                 if (!widgets || Object.prototype.toString.call(widgets) !== '[object Array]' || widgets.length === 0)
                     return $panelSet;
 
-                var height = 100 / widgets.length;
-                var minHeight = 200;
 
                 var retObj = {};
                 for (var i = 0; i < widgets.length; i++) {
                     var widgetInfo = widgets[i];
                     var $widgetDiv = $('<div>')
-                        .addClass('kb-side-separator')
-                        .css({ 'height': height + '%' });
+                        .addClass('kb-side-separator');
 
                     var constructor_mapping = {
                         'kbaseNarrativeDataPanel': kbaseNarrativeDataPanel,

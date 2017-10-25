@@ -21,7 +21,8 @@ branches:
     - travis-firefox
 
 before_install:
-  - pip install virtualenv
+  - pip install virtualenv coveralls
+  - gem install coveralls-lcov
   - nvm install $TRAVIS_NODE_VERSION
   - npm install -g bower
   - npm install -g grunt-cli
@@ -35,3 +36,7 @@ before_script:
   - sleep 3 # give xvfb some time to start
 
 script: make build-travis-narrative && make test
+
+after_script:
+  - coveralls-lcov -v -n js-coverage/lcov/lcov.info > js-coverage.json
+  - coveralls --merge js-coverage.json

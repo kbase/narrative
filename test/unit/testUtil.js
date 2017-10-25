@@ -27,8 +27,22 @@ define('testUtil', [
         // add some data to the workspace
     }
 
-    function loadNarrativeData() {
+    function createNarrative() {
 
+    }
+
+    function loadNarrativeData() {
+        /* Steps:
+         * 1. Make a new narrative if there isn't a current one.
+         * 2. Load all data given by TestConfig.data
+         * 3. ...
+         * 4. Profit.
+         */
+    }
+
+    function cleanupTestRun() {
+        /* If we have open Workspaces, delete them.
+         */
     }
 
     function getCurrentWorkspace() {
@@ -40,16 +54,16 @@ define('testUtil', [
             throw new Error('Missing an auth token. Please enter one (or null to skip those tests) in test/unit/testConfig.json');
         }
         var tokenFile = TestConfig.token;
-        return new Promise(function(resolve, reject) {
+        return new Promise(function(resolve) {
             require(['text!' + tokenFile],
-            function(loadedToken) {
-                token = loadedToken;
-                resolve(token);
-            },
-            function() {
-                console.warn('Unable to load token file ' + tokenFile + '. Continuing without a token');
-                resolve(null);
-            });
+                function(loadedToken) {
+                    token = loadedToken;
+                    resolve(token);
+                },
+                function() {
+                    console.warn('Unable to load token file ' + tokenFile + '. Continuing without a token');
+                    resolve(null);
+                });
         });
     }
 

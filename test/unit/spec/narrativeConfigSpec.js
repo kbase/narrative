@@ -27,19 +27,19 @@ define ([
 
         it('tries to update paths from ui-common and gets data source config', function(done) {
             Config.updateConfig()
-            .then(function(config) {
-                expect(config).toBeDefined();
-                done();
-            });
+                .then(function(config) {
+                    expect(config).toBeDefined();
+                    done();
+                });
         });
 
         it('updates paths and sees data sources for both example and public data', function(done) {
             Config.updateConfig()
-            .then(function(config) {
-                expect(config.exampleData).toBeDefined();
-                expect(config.publicCategories).toBeDefined();
-                done();
-            });
+                .then(function(config) {
+                    expect(config.exampleData).toBeDefined();
+                    expect(config.publicCategories).toBeDefined();
+                    done();
+                });
         });
 
         it('can use the url method to fetch a url', function() {

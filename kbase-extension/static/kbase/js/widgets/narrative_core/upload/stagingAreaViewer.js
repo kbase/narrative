@@ -33,6 +33,7 @@ define([
     FtpFileHeaderHtml,
     FilePathHtml
 ) {
+    'use strict';
     return new KBWidget({
         name: 'StagingAreaViewer',
 

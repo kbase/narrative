@@ -9,7 +9,7 @@ define([
     'text!kbase/templates/tour/tour_panel.html',
     'css!kbase/css/kbaseTour.css'
 ], function($, Jupyter, Tour, Handlebars, TourTmpl) {
-    "use strict";
+    'use strict';
 
     var UploadTour = function ($elem, notebook, events) {
         var that = this;
@@ -20,44 +20,44 @@ define([
         this.template = Handlebars.compile(TourTmpl);
         this.tour_steps = [
             {
-                title: "Data Staging Tour",
+                title: 'Data Staging Tour',
                 placement: 'bottom',
                 orphan: true,
                 content: 'This tour shows how to use the Staging panel to upload data files and import them into your Narrative as KBase data objects.',
                 backdrop: true
             },
             {
-                title: "Upload Area",
-                placement: "bottom",
+                title: 'Upload Area',
+                placement: 'bottom',
                 element: that.$elem.find('.kb-dropzone'),
                 content: 'Drag and drop files here, or click within the boundary to select multiple files to upload. Uploads start immediately, and once finished, will be reflected in the file list below.'
             },
             {
-                title: "Staging Path",
-                placement: "right",
+                title: 'Staging Path',
+                placement: 'right',
                 element: that.$elem.find('div.file-path'),
                 content: 'If you are viewing the contents of a folder, you can click links next to that folder name to navigate and show other files. Click the button on the left to manually refresh the list.'
             },
             {
-                title: "Uploaded Files",
-                placement: "top",
+                title: 'Uploaded Files',
+                placement: 'top',
                 element: that.$elem.find('#kb-data-staging-table'),
                 content: 'This table lists your uploaded files, their filenames, their size, and when they were last modified. You can sort by any of the fields.'
             },
             {
-                title: "File or Folder",
-                placement: "top",
+                title: 'File or Folder',
+                placement: 'top',
                 element: that.$elem.find('#kb-data-staging-table > thead > tr > th:nth-child(1)'),
                 content: 'This column shows whether the row is a file <i class="fa fa-file-o"></i> or a folder <i class="fa fa-folder"></i>. Click a folder icon to show the files inside.'
             },
             {
-                title: "Import to this Narrative",
-                placement: "top",
+                title: 'Import to this Narrative',
+                placement: 'top',
                 element: that.$elem.find('#kb-data-staging-table > thead > tr > th:last-child'),
                 content: 'Select an object type for your file, then click the <i class="fa fa-upload"></i> button to create an Import App cell. Check the parameters and click the Play button (green arrow) to transform your data file(s) into an object available for analysis in your Narrative.'
             },
             {
-                title: "End of Tour",
+                title: 'End of Tour',
                 orphan: true,
                 backdrop: true,
                 content: 'This concludes the tour of the data staging tools. If you have any questions, please follow the "Contact Us" link in the menu at the top left of the Narrative.'

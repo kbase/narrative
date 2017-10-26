@@ -19,6 +19,7 @@ define([
     DropzoneAreaHtml,
     DropFileHtml
 ) {
+    'use strict';
     return new KBWidget({
         name: 'fileUploadWidget',
 
@@ -56,63 +57,63 @@ define([
                 parallelUploads: 10,
                 maxFilesize: 20480  //20GB
             })
-            .on('totaluploadprogress', function(progress) {
-                $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': progress + '%'});
-            }.bind(this))
-            .on('addedFile', function(file) {
-                $dropzoneElem.find('#global-info').css({'display': 'inline'});
-                $dropzoneElem.find('#upload-message').text(this.makeUploadMessage());
-            }.bind(this))
-            .on('success', function(file, serverResponse) {
-                $dropzoneElem.find('#clear-completed').css({'display': 'inline'});
-                $dropzoneElem.find('#upload-message').text(this.makeUploadMessage());
-                file.previewElement.querySelector('#status-message').textContent = 'Completed';
-                file.previewElement.querySelector('.progress').style.display = 'none';
-                file.previewElement.querySelector('#status-message').style.display = 'inline';
-                $(file.previewElement.querySelector('.fa-ban')).removeClass('fa-ban').addClass('fa-check');
-                $(file.previewElement.querySelector('.btn-danger')).removeClass('btn-danger').addClass('btn-success');
-                if (this.dropzone.getQueuedFiles().length === 0 &&
-                    this.dropzone.getUploadingFiles().length === 0) {
-                    $($dropzoneElem.find('#total-progress')).fadeOut(1000, function() {
-                        $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': '0%'});
+                .on('totaluploadprogress', function(progress) {
+                    $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': progress + '%'});
+                }.bind(this))
+                .on('addedFile', function(file) {
+                    $dropzoneElem.find('#global-info').css({'display': 'inline'});
+                    $dropzoneElem.find('#upload-message').text(this.makeUploadMessage());
+                }.bind(this))
+                .on('success', function(file, serverResponse) {
+                    $dropzoneElem.find('#clear-completed').css({'display': 'inline'});
+                    $dropzoneElem.find('#upload-message').text(this.makeUploadMessage());
+                    file.previewElement.querySelector('#status-message').textContent = 'Completed';
+                    file.previewElement.querySelector('.progress').style.display = 'none';
+                    file.previewElement.querySelector('#status-message').style.display = 'inline';
+                    $(file.previewElement.querySelector('.fa-ban')).removeClass('fa-ban').addClass('fa-check');
+                    $(file.previewElement.querySelector('.btn-danger')).removeClass('btn-danger').addClass('btn-success');
+                    if (this.dropzone.getQueuedFiles().length === 0 &&
+                        this.dropzone.getUploadingFiles().length === 0) {
+                        $($dropzoneElem.find('#total-progress')).fadeOut(1000, function() {
+                            $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': '0%'});
+                        });
+                    }
+                    $(file.previewElement).fadeOut(1000, function() {
+                        $(file.previewElement.querySelector('.btn')).trigger('click');
                     });
-                }
-                $(file.previewElement).fadeOut(1000, function() {
-                    $(file.previewElement.querySelector('.btn')).trigger('click');
+                }.bind(this))
+                .on('sending', function(file) {
+                    $dropzoneElem.find('#global-info').css({'display': 'inline'});
+                    $($dropzoneElem.find('#total-progress')).show();
+                    $dropzoneElem.find('#upload-message').text(this.makeUploadMessage());
+                }.bind(this))
+                .on('reset', function() {
+                    $dropzoneElem.find('#global-info').css({'display': 'none'});
+                    $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': '0%'});
                 });
-            }.bind(this))
-            .on('sending', function(file) {
-                $dropzoneElem.find('#global-info').css({'display': 'inline'});
-                $($dropzoneElem.find('#total-progress')).show();
-                $dropzoneElem.find('#upload-message').text(this.makeUploadMessage());
-            }.bind(this))
-            .on('reset', function() {
-                $dropzoneElem.find('#global-info').css({'display': 'none'});
-                $($dropzoneElem.find('#total-progress .progress-bar')).css({'width': '0%'});
-            });
         },
 
         makeUploadMessage: function() {
             if (!this.dropzone) {
-                return "No files uploading.";
+                return 'No files uploading.';
             }
             var numUploading = this.dropzone.getUploadingFiles().length;
             var numQueued = this.dropzone.getQueuedFiles().length;
             if (numUploading === 0 && numQueued === 0) {
-                return "No files uploading.";
+                return 'No files uploading.';
             }
-            var queuedText = numQueued ? ("(" + numQueued + " queued)") : "";
-            var pluralFiles = numUploading > 1 ? "s" : "";
+            var queuedText = numQueued ? ('(' + numQueued + ' queued)') : '';
+            var pluralFiles = numUploading > 1 ? 's' : '';
             return [
-                "Uploading ",
+                'Uploading ',
                 numUploading,
-                " file",
+                ' file',
                 pluralFiles,
-                " ",
+                ' ',
                 queuedText,
-                " to ",
+                ' to ',
                 this.getPath()
-            ].join("");
+            ].join('');
         },
 
         setPath: function(path) {

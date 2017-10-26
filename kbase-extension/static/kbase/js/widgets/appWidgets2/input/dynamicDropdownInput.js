@@ -122,8 +122,8 @@ define([
             return Promise.try(function() {
                 var selectedItem = getControlValue(),
                     validationConstraints = {
-                        min_length: 1,
-                        max_length: 10000,
+                        min_length: spec.data.constraints.min_length,
+                        max_length: spec.data.constraints.max_length,
                         required: spec.data.constraints.required
                     };
                 return Validation.validateText(selectedItem, validationConstraints);
@@ -172,7 +172,6 @@ define([
          text: "data/bulk/wjriehl/subfolder/i_am_a_file.txt"
          */
         function formatObjectDisplay(file) {
-            console.log('formatObjectDisplay: ', file);
             if (!file.id) {
                 return $('<div style="display:block; height:20px">').append(file.text);
             }

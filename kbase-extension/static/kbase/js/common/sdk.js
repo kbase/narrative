@@ -288,7 +288,9 @@ define([
             switch (fieldType) {
             case 'dynamic_dropdown':
                 constraints = {
-                    options: spec.text_options
+                    options: spec.text_options,
+                    min_length: Props.getDataItem(spec, 'text_options.min_length', 1),
+                    max_length: Props.getDataItem(spec, 'text_options.max_length', 10000)
                 };
                 break;
             case 'text':

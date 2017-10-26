@@ -44,11 +44,13 @@ define([
         });
 
         it('should instantiate with a test config', function() {
+            TestUtil.pendingIfNoToken();
             var widget = DynamicDropdownInput.make(testConfig);
             expect(widget).toEqual(jasmine.any(Object));
         });
 
         it('should start up and stop correctly', function(done) {
+            TestUtil.pendingIfNoToken();
             var widget = DynamicDropdownInput.make(testConfig);
             widget.start({node: document.createElement('div')})
                 .then(function() {

@@ -104,9 +104,9 @@ define([
      * and just run the callback.
      */
     function updateConfig() {
-        return new Promise.try(function (resolve, reject) {
+        return new Promise(function (resolve, reject) {
             if (window.kbconfig) {
-                return window.kbconfig;
+                resolve(window.kbconfig);
             }
             console.log('Config: checking remote widgets');
             assertConfig();
@@ -147,15 +147,11 @@ define([
                     console.log('Config: processing local data configuration.');
                     config.publicCategories = dataCategories[config.environment].publicData;
                     config.exampleData = dataCategories[config.environment].exampleData;
-                    return Promise.try(function () {
-                        return config;
-                    });
+                    return config;
                 })
                 .catch(function (error) {
                     console.error('Config: unable to process local configuration options, too! Public and Example data unavailable!');
-                    return Promise.try(function () {
-                        return config;
-                    });
+                    return config;
                 });
         });
     }

@@ -1,5 +1,8 @@
 {
-    "token": "/test/wjriehl.tok",
+    "token": {
+        "user": "wjriehl",
+        "file": "/test/wjriehl.tok"
+    },
     "currentNarrative": "bar",
     "data": [{
         "file": "/test/data/blah.xyz",

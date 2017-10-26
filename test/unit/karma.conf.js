@@ -16,8 +16,7 @@ module.exports = function (config) {
             'kbase-extension/static/kbase/js/**/*.js': ['coverage']
         },
         files: [
-            // {pattern: 'test/unit/spec/**/*.js', included: false},
-            {pattern: 'test/unit/spec/api/fileStagingSpec.js', included: false},
+            // {pattern: 'test/unit/spec/api/fileStagingSpec.js', included: false},
             {pattern: 'kbase-extension/static/**/*.css', included: false, served: true},
             {pattern: 'kbase-extension/static/kbase/templates/**/*.html', included: false, served: true},
             {pattern: 'kbase-extension/static/kbase/config/**/*.json', included: false, served: true},
@@ -28,6 +27,7 @@ module.exports = function (config) {
             {pattern: 'test/*.tok', included: false, served: true, nocache: true},
             {pattern: 'test/data/**/*', included: false, served: true},
             'test/unit/testUtil.js',
+            {pattern: 'test/unit/spec/**/*.js', included: false},
             'test/unit/test-main.js'
         ],
         exclude: [

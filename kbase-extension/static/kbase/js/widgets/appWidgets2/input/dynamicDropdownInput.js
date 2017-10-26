@@ -133,7 +133,7 @@ define([
         function fetchData(searchTerm) {
             searchTerm = searchTerm || '';
             if (dataSource === 'ftp_staging') {
-                return fileStaging.searchFiles(searchTerm);
+                return fileStaging.search(searchTerm);
             } else {
                 // dynamic service plugin stubs!
                 return [];

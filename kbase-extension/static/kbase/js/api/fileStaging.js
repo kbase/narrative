@@ -1,7 +1,8 @@
 define([
     'bluebird',
-    'jquery'
-], function(Promise, $) {
+    'jquery',
+    'narrativeConfig'
+], function(Promise, $, Config) {
     'use strict';
 
     /**
@@ -10,17 +11,17 @@ define([
      * auth = { token: token, userId: user id (optional) }
      */
     var FileStaging = function(url, userId, auth) {
-        var token = auth.token;
-        if (!token) {
+        if (!auth || !auth.token) {
             throw new Error('auth token required!');
         }
+        var token = auth.token;
         if (!userId) {
             throw new Error('valid user id required!');
         }
-        if (!url.endsWith('/')) {
+        if (url[url.length-1] !== '/') {
             url = url + '/';
         }
-        var rootPath = 'data/bulk/';
+        var rootPath = Config.url('ftp_api_root');
 
         /**
          * @method
@@ -28,10 +29,10 @@ define([
          * Lists files in the user's directory. A given subdirectory can be
          * used to list files there.
          */
-        var listFiles = function(directory, deep) {
+        var list = function(directory, deep) {
             var path = 'list/' + userId;
             if (directory) {
-                if (!directory.startsWith('/')) {
+                if (directory[0] !== '/') {
                     path += '/';
                 }
                 path += directory;
@@ -39,7 +40,7 @@ define([
             return makeFtpCall('GET', path);
         };
 
-        var searchFiles = function(term) {
+        var search = function(term) {
             var path = 'search/' + encodeURIComponent(term);
             return makeFtpCall('GET', path)
                 .then(function(files) {
@@ -61,8 +62,8 @@ define([
         };
 
         return {
-            listFiles: listFiles,
-            searchFiles: searchFiles
+            list: list,
+            search: search
         };
     };
 

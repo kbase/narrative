@@ -1,3 +1,4 @@
+/*global pending */
 define('testUtil', [
     'bluebird',
     'narrativeConfig',
@@ -5,23 +6,28 @@ define('testUtil', [
 ], function(Promise, Config, TestConfig) {
     'use strict';
 
-    var token = null;
-    var currentNarrative = null;
-    var currentWorkspace = null;
+    var token = null,
+        userId = null,
+        currentNarrative = null,
+        currentWorkspace = null;
 
     function factory() {
         return initialize();
     }
 
-    function getToken() {
+    function getAuthToken() {
         return token;
+    }
+
+    function getUserId() {
+        return userId;
     }
 
     function getCurrentNarrative() {
         if (currentNarrative) {
             return currentNarrative;
         }
-        var token = getToken();
+        var token = getAuthToken();
         // make a new workspace
         // make a new narrative object and add it to the workspace
         // add some data to the workspace
@@ -50,7 +56,8 @@ define('testUtil', [
     }
 
     /**
-     * Runs the Jasmine pending() function if there's no Auth token available.
+     * Runs the Jasmine pending() function if there's no Auth token available. This skips the
+     * current test.
      */
     function pendingIfNoToken() {
         if (!token) {
@@ -62,11 +69,12 @@ define('testUtil', [
         if (TestConfig.token === undefined) {
             throw new Error('Missing an auth token. Please enter one (or null to skip those tests) in test/unit/testConfig.json');
         }
-        var tokenFile = TestConfig.token;
+        userId = TestConfig.token.user;
+        var tokenFile = TestConfig.token.file;
         return new Promise(function(resolve) {
             require(['text!' + tokenFile],
                 function(loadedToken) {
-                    token = loadedToken;
+                    token = loadedToken.trim();
                     resolve(token);
                 },
                 function() {
@@ -78,8 +86,9 @@ define('testUtil', [
 
     return {
         make: factory,
-        getToken: getToken,
+        getAuthToken: getAuthToken,
         getCurrentNarrative: getCurrentNarrative,
-        pendingIfNoToken: pendingIfNoToken
+        pendingIfNoToken: pendingIfNoToken,
+        getUserId: getUserId
     };
 });

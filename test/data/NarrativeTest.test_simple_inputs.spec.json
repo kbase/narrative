@@ -1,0 +1,70 @@
+{
+    "behavior": {
+        "kb_service_input_mapping": [
+            {
+                "input_parameter": "simple_string",
+                "target_property": "simple_string"
+            }
+        ],
+        "kb_service_method": "generic_test",
+        "kb_service_name": "NarrativeTest",
+        "kb_service_output_mapping": [
+            {
+                "service_method_output_path": [
+                    "0",
+                    "simple_string"
+                ],
+                "target_property": "simple_string"
+            }
+        ],
+        "kb_service_url": "",
+        "kb_service_version": "2027c720c473d0acd9bd228434dfbcb2c7de7736"
+    },
+    "fixed_parameters": [],
+    "info": {
+        "app_type": "editor",
+        "authors": [
+            "wjriehl"
+        ],
+        "categories": [
+            "active"
+        ],
+        "git_commit_hash": "2027c720c473d0acd9bd228434dfbcb2c7de7736",
+        "id": "NarrativeTest/test_simple_inputs",
+        "input_types": [],
+        "module_name": "NarrativeTest",
+        "name": "Test Simple Inputs",
+        "namespace": "NarrativeTest",
+        "output_types": [],
+        "subtitle": "A simple test spec with a single input.",
+        "tooltip": "A simple test spec with a single input.",
+        "ver": "0.0.2"
+    },
+    "job_id_output_field": "docker",
+    "parameters": [
+        {
+            "advanced": 0,
+            "allow_multiple": 0,
+            "default_values": [
+                ""
+            ],
+            "description": "",
+            "disabled": 0,
+            "field_type": "text",
+            "id": "simple_string",
+            "optional": 0,
+            "short_hint": "A description string.",
+            "text_options": {
+                "is_output_name": 0,
+                "placeholder": "",
+                "regex_constraint": []
+            },
+            "ui_class": "parameter",
+            "ui_name": "A String"
+        }
+    ],
+    "widgets": {
+        "input": "null",
+        "output": "null"
+    }
+}

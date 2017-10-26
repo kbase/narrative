@@ -25,6 +25,7 @@ module.exports = function (config) {
             'kbase-extension/static/narrative_paths.js',
             {pattern: 'test/unit/testConfig.json', included: false, served: true, nocache: true},
             {pattern: 'test/*.tok', included: false, served: true, nocache: true},
+            {pattern: 'test/data/**/*', included: false, served: true},
             'test/unit/testUtil.js',
             'test/unit/test-main.js'
         ],
@@ -78,7 +79,7 @@ module.exports = function (config) {
             '/narrative/static/components': 'http://localhost:9999/narrative/static/components',
             '/narrative/static/services': 'http://localhost:9999/narrative/static/services',
             '/static/kbase/config': '/base/kbase-extension/static/kbase/config',
-            '/test/': '/base/test/',
+            '/test/': '/base/test/'
         }
 
     });

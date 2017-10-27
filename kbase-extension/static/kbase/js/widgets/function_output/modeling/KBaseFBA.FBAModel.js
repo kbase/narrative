@@ -335,13 +335,19 @@ function KBaseFBA_FBAModel(modeltabs) {
 			"data": cpd.dispid,
 		},{
             "label": "Image",
-            "data":  "<img src=http://minedatabase.mcs.anl.gov/compound_images/ModelSEED/"+cpd.id.split("_")[0]+".png height='200'>"
+            "data":  "<img src=http://minedatabase.mcs.anl.gov/compound_images/ModelSEED/"+cpd.id.split("_")[0]+".png style='height:300px !important;'>"
         }, {
 			"label": "Name",
 			"data": cpd.name
 		 }, {
 			"label": "Formula",
 			"data": cpd.formula
+		}, {
+            "label": "InChIKey",
+			"data": cpd.inchikey
+		}, {
+		    "label": "SMILES",
+			"data": cpd.smiles
 		}, {
 			"label": "Charge",
 			"data": cpd.charge

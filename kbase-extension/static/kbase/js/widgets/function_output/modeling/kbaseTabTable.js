@@ -411,7 +411,7 @@ return KBWidget({
         };
 
         this.compoundImage = function(id) {
-            return "<img src=http://minedatabase.mcs.anl.gov/compound_images/ModelSEED/"+id.split("_")[0]+".png height='200'>"
+            return "<img src=http://minedatabase.mcs.anl.gov/compound_images/ModelSEED/"+id.split("_")[0]+".png style='height:300px !important;'>"
         };
 
         var imageURL = "http://minedatabase.mcs.anl.gov/compound_images/ModelSEED/";

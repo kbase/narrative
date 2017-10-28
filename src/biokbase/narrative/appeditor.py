@@ -13,12 +13,16 @@ def generate_app_cell(validated_spec=None, spec_tuple=None):
     that's always used. if spec_tuple is there, and validated_spec is not, then the
     tuple's used.
 
-    Also, the tuple should be (app_id, spec_json, display_yaml), all as strings.
+    Also, the tuple should be (spec_json, display_yaml), all as strings.
     """
 
     if spec_tuple is not None and validated_spec is None:
         nms = clients.get("narrative_method_store")
-        validated = nms.validate_method(dict(zip(['id', 'spec_json', 'display_yaml'], spec_tuple)))
+        validated = nms.validate_method({
+            "id": "some_test_app",
+            "spec_json": spec_tuple[0],
+            "display_yaml": spec_tuple[1]
+        })
         if validated.get('is_valid', 0) == 1:
             validated_spec = validated['method_spec']
         elif "errors" in validated and validated['errors']:

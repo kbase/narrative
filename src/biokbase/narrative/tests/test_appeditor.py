@@ -24,9 +24,9 @@ class AppEditorTestCase(unittest.TestCase):
         self.assertIsNotNone(js)
 
     def test_gen_app_cell_pre_valid(self):
-        js = generate_app_cell(spec_tuple=("foo", json.dumps(self.spec_json), self.display_yaml))
+        js = generate_app_cell(spec_tuple=(json.dumps(self.spec_json), self.display_yaml))
         self.assertIsNotNone(js)
 
     def test_gen_app_cell_fail_validation(self):
         with self.assertRaises(Exception):
-            generate_app_cell(spec_tuple=("foo", "{}", self.display_yaml))
+            generate_app_cell(spec_tuple=("{}", self.display_yaml))

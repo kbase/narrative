@@ -71,10 +71,7 @@ define([
                 }
                 path += directory;
             }
-            return makeFtpCall('GET', path)
-                .catch(function(error) {
-                    return [];
-                });
+            return makeFtpCall('GET', path);
         };
 
         /**

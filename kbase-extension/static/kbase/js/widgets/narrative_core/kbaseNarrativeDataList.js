@@ -1292,7 +1292,7 @@ define([
             // Add tooltip to indicate this functionality
             $row.attr({
                 'data-toggle': 'tooltip',
-                'title': 'Drag onto narrative &rarr;'
+                'title': 'Drag onto Narrative &rarr;'
             });
 
             $row.tooltip({

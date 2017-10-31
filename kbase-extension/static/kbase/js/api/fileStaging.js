@@ -77,6 +77,16 @@ define([
         /**
          * @method
          * @public
+         * Makes the /search call to the FTP service. This should return a list of files, similar to
+         * the list() function.
+         *
+         * This goes on to create a subdir attribute in each file before returning. This subdir
+         * is relative to the user's directory, as opposed to the FTP service root (which is the
+         * usually returned value).
+         * That is, it'll go from
+         * /data/bulk/some_user/some_directory/some_file
+         * to
+         * some_user/some_directory/some_file
          */
         var search = function(term) {
             var path = 'search/' + encodeURIComponent(term);
@@ -92,6 +102,7 @@ define([
         /**
          * Wraps up the actual AJAX REST call. Given a method and path, it will populate headers
          * as needed, then return a Promise with the call.
+         * It's pretty simple right now, we can adjust as needed.
          */
         var makeFtpCall = function(method, path) {
             return Promise.resolve($.ajax({

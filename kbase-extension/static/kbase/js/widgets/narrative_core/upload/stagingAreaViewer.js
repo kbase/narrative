@@ -1,5 +1,6 @@
 define([
     'jquery',
+    'kbaseTabs',
     'bluebird',
     'kbwidget',
     'narrativeConfig',
@@ -18,6 +19,7 @@ define([
     'select2'
 ], function(
     $,
+    KBaseTabs,
     Promise,
     KBWidget,
     Config,
@@ -37,6 +39,7 @@ define([
         name: 'StagingAreaViewer',
 
         init: function(options) {
+console.log("WHAT THE HELL? INITIALIZE HER1", this, options);
             this._super(options);
             this.ftpFileTableTmpl = Handlebars.compile(FtpFileTableHtml);
             this.ftpFileHeaderTmpl = Handlebars.compile(FtpFileHeaderHtml);
@@ -45,7 +48,7 @@ define([
             this.updatePathFn = options.updatePathFn || this.setPath;
             this.uploaders = Config.get('uploaders');
             this.setPath(options.path);
-
+console.log("WHAT THE HELL? INITIALIZE HERE", this, options, this.render, this.renderFiles, this.renderMoreFileInfo);
             return this;
         },
 
@@ -56,6 +59,7 @@ define([
         updateView: function() {
             this.fetchFtpFiles()
             .then(function(files) {
+            console.log("UPDATES VIEW, GOT ME FILES : ", files);
                 this.$elem.empty();
                 this.renderFileHeader();
                 this.renderFiles(files);
@@ -139,6 +143,7 @@ define([
 
         renderFiles: function(files) {
             var $fileTable = $(this.ftpFileTableTmpl({files: files, uploaders: this.uploaders.dropdown_order}));
+            console.log("FT IS ", $fileTable, files, this);
             this.$elem.append($fileTable);
             this.$elem.find('table').dataTable({
                 dom: '<"file-path pull-left">frtip',
@@ -154,6 +159,10 @@ define([
                             if (isFolder) {
                                 disp = '<button data-name="' + full[1] + '" class="btn btn-xs btn-default">' + disp + '</button>';
                             }
+                            else {
+                              disp = "<i class='fa fa-caret-right' data-name=" + full[1] + " style='cursor : pointer'></i> " + disp;
+                              console.log("BUILDS ", data, type, full);
+                            }
                             return disp;
                         } else {
                             return data;
@@ -164,7 +173,9 @@ define([
                     sClass: 'staging-name',
                     mRender: function(data, type, full) {
                         if (type === 'display') {
-                            return '<div class="kb-data-staging-table-name">' + data + '</div>';
+                            return '<div class="kb-data-staging-table-name">' + data
+                            //+ "<i style='margin-left : '10px' class='fa fa-expand'></i><i class='fa fa-binoculars'></i><i class='fa fa-trash'></i>"
+                            + '</div>';
                         }
                         return data;
                     }
@@ -212,12 +223,81 @@ define([
                     $('td:eq(0)', nRow).find('button[data-name]').on('click', function(e) {
                         this.updatePathFn(this.path += '/' + $(e.currentTarget).data().name);
                     }.bind(this));
+console.log("HOLY HELL! WHO AM I? ", this);
+                    $('td:eq(0)', nRow).find('i[data-name]').on('click', function(e) {
+                        console.log("CLICKED ON CARET",files[iDisplayIndex], this, this.renderMoreFileInfo(files[iDisplayIndex]));
+                        $(e.currentTarget).toggleClass('fa-caret-down fa-caret-right');
+                        var $tr = $(e.currentTarget).parent().parent();
+            var fileData = files[iDisplayIndex];
+                        if ($(e.currentTarget).hasClass('fa-caret-down')) {
+console.log("RMFI : ", this.renderMoreFileInfo, this, this.renderMoreFileInfo(fileData));
+                          $tr.after(
+                            this.renderMoreFileInfo( files[iDisplayIndex] )
+                          );
+                        }
+                        else {
+                          $tr.next().remove();
+                        }
+                    }.bind(this));
                 }.bind(this)
             });
             // this.$elem.find('table button[data-report]').on('click', function(e) {
             //     alert("Show report for reference '" + $(e.currentTarget).data().report + "'");
             // });
             this.renderPath();
+        },
+
+        renderMoreFileInfo (fileData) {
+
+          var $tabsDiv = $.jqElem('div');
+          var $tabs = new KBaseTabs($tabsDiv, {
+            tabs : [
+              {
+                tab : 'Actions',
+                content :
+                  $.jqElem('ul')
+                    .append( $.jqElem('li').append('Decompress') )
+                    .append( $.jqElem('li').append('Delete') )
+              },
+              {
+                tab : 'Info',
+                content :
+                  $.jqElem('ul')
+                    .append( $.jqElem('li').append('Path : ' + fileData.path) )
+                    .append( $.jqElem('li').append('Name : ' + fileData.name) )
+                    .append( $.jqElem('li').append('Size : ' + fileData.size) )
+              },
+              {
+                tab : 'First 10 lines',
+                content : 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.'
+              },
+              {
+                tab : 'Last 10 lines',
+                content : 'Praesent varius velit at enim elementum varius. Aliquam tincidunt elit at maximus lobortis. Nulla ut augue purus. In hac habitasse platea dictumst. Pellentesque ac eros gravida, accumsan purus ac, tristique ligula. Vivamus lacinia diam dui, non sodales leo porta ac. Proin placerat dui elit, iaculis congue dui tristique eu. Phasellus interdum turpis nec felis pretium molestie. Phasellus scelerisque pretium urna, quis volutpat lectus congue eget.'
+              }
+            ]
+          });
+
+          return $.jqElem('tr')
+            .append($.jqElem('td'))
+            .append(
+              $.jqElem('td')
+                .attr('colspan', 4)
+                .append($tabsDiv)
+            );
+
+          return $.jqElem('tr')
+              .append($.jqElem('td'))
+              .append(
+                $.jqElem('td')
+                  .attr('colspan', 4)
+                  .append(
+                    $.jqElem('ul')
+                      .append( $.jqElem('li').append('Path : ' + fileData.path) )
+                      .append( $.jqElem('li').append('Name : ' + fileData.name) )
+                      .append( $.jqElem('li').append('Size : ' + fileData.size) )
+                  )
+              )
         },
 
         initImportApp: function(type, file) {

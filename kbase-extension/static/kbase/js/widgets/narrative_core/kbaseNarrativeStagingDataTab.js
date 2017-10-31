@@ -45,8 +45,8 @@ define([
             this.$elem
                 .empty()
                 .append($mainElem
-                        .append($dropzoneElem)
-                        .append(this.$myFiles));
+                    .append($dropzoneElem)
+                    .append(this.$myFiles));
 
             this.uploadWidget = new FileUploadWidget($dropzoneElem, {
                 path: this.path,

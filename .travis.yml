@@ -10,13 +10,13 @@ addons:
 env:
   - TRAVIS_NODE_VERSION="6.6.0"
 cache:
+  - pip
   directories:
   - kbase-extension/static/ext_components
   - node_modules
 branches:
   only:
     - develop
-    - staging
     - master
     - travis-firefox
 

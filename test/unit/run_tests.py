@@ -18,7 +18,7 @@ import os
 import signal
 
 KARMA_PORT = 9876
-JUPYTER_PORT = 9999
+JUPYTER_PORT = 32323
 
 argparser = argparse.ArgumentParser(
         description='Run KBase Narrative unit tests'
@@ -29,7 +29,7 @@ argparser.add_argument('-d', '--debug', action='store_true',
                        help="Whether to enter debug mode in Karma")
 options = argparser.parse_args(sys.argv[1:])
 
-nb_command = ['kbase-narrative', '--no-browser', '--NotebookApp.allow_origin="*"', '--port={}'.format(JUPYTER_PORT)]
+nb_command = ['kbase-narrative', '--no-browser', '--NotebookApp.allow_origin="*"', '--ip=127.0.0.1', '--port={}'.format(JUPYTER_PORT)]
 
 if not hasattr(sys, 'real_prefix'):
     nb_command[0] = 'narrative-venv/bin/kbase-narrative'
@@ -46,7 +46,7 @@ while 1:
     if not line:
         continue
     print(line)
-    if 'The Jupyter Notebook is running at: http://localhost:{}/'.format(JUPYTER_PORT) in line:
+    if 'The Jupyter Notebook is running at: http://127.0.0.1:{}/'.format(JUPYTER_PORT) in line:
         break
     if 'is already in use' in line:
         os.killpg(os.getpgid(nb_server.pid), signal.SIGTERM)

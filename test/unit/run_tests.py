@@ -18,7 +18,7 @@ import os
 import signal
 
 KARMA_PORT = 9876
-JUPYTER_PORT = 9999
+JUPYTER_PORT = 32323
 
 argparser = argparse.ArgumentParser(
         description='Run KBase Narrative unit tests'

@@ -5,7 +5,7 @@
 /*jslint white: true*/
 
 define ([
-    'api/workspaceObjectApi',
+    'api/upaApi',
     'narrativeConfig',
     'testUtil'
 ], function(
@@ -51,7 +51,7 @@ define ([
 
             testData.forEach(function(pair) {
                 if (typeof pair.upa === 'string') {
-                    expect(upaApi.deserialize(pair.serial)).toBe(upa);
+                    expect(upaApi.deserialize(pair.serial)).toBe(pair.upa);
                 }
             });
         });
@@ -60,16 +60,38 @@ define ([
             TestUtil.pendingIfNoToken();
 
             var upa = '1/2/3';
-            expect(upaApi.serialize(upa)).toBe(upaApi.externalDelimiter + 'upa');
+            expect(upaApi.serialize(upa)).toBe(upaApi.externalTag + upa);
         });
 
         it('Should deserialize an UPA from a different workspace', function() {
             TestUtil.pendingIfNoToken();
 
+            var upa = '1/2/3';
+            var externalUpa = upaApi.externalTag + upa;
+            expect(upaApi.deserialize(externalUpa)).toBe(upa);
         });
 
         it('Should retrieve object info from an UPA (headless or not)', function () {
             TestUtil.pendingIfNoToken();
-
+            // TODO
         });
+
+        it('Should fail to serialize a bad UPA', function () {
+            try {
+                upaApi.serialize('not_an_upa');
+                fail('Should have thrown an error here!');
+            } catch (error) {
+                expect(error).not.toBeNull();
+            }
+        });
+
+        it('Should fail to deserialize a bad UPA', function () {
+            try {
+                upaApi.deserialize('not_a_serial_upa');
+                fail('Should have thrown an error here!');
+            } catch(error) {
+                expect(error).not.toBeNull();
+            }
+        });
+    });
 });

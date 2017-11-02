@@ -5,8 +5,8 @@ define([
 
     var UpaApi = function(mainWorkspace, auth) {
         var externalTag = '&',
-            mainWs = mainWorkspace,
-            wsLen = String(mainWs).length,
+            mainWs = String(mainWorkspace),
+            wsLen = mainWs.length,
             authToken = auth ? auth.token : null;
 
         /**
@@ -15,7 +15,7 @@ define([
          * ws/obj/ver or ws1/obj1/ver1;ws2/obj2/ver2;...
          */
         var testUpa = function(upa) {
-            return upa.test(/^\d+\/\d+\/\d+(;\d+\/\d+\/\d+)*$/);
+            return RegExp(/^\d+\/\d+\/\d+(;\d+\/\d+\/\d+)*$/).test(upa);
         };
 
         var serialize = function(upa) {
@@ -31,7 +31,7 @@ define([
             if (!testUpa(upa)) {
                 throw new Error('This is not a valid UPA. It may already have been serialized');
             }
-            var headWs = upa.match(/^\d+/);
+            var headWs = upa.match(/^\d+/)[0];
             if (headWs === mainWorkspace) {
                 return upa.substring(wsLen + 1);
             }
@@ -52,7 +52,7 @@ define([
             }
             var deserial;
             if (serial[0] === externalTag) {
-                deserial = externalTag.substring(1);
+                deserial = serial.substring(1);
             } else {
                 deserial = mainWs + '/' + serial;
             }
@@ -60,6 +60,18 @@ define([
                 throw new Error('deserialized UPA: ' + deserial + ' is invalid!');
             }
             return deserial;
+        };
+
+        /**
+         * @public
+         * @method
+         * When complete, will effectively wrap workspace.get_object_info3 to use upas/ headless
+         * upas. Might be redundant.
+         * TODO
+         */
+        var getObjectInfo = function(upa) {
+
+            return upa;
         };
 
         return {
@@ -70,9 +82,6 @@ define([
         };
     };
 
-    return {
-        UpaApi: UpaApi,
-        WorkspaceObjectApi: UpaApi
-    };
+    return UpaApi;
 
 });

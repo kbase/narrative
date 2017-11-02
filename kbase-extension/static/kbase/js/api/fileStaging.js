@@ -61,7 +61,7 @@ define([
                 else if (typeof options.userId === 'string') {
                     path += options.userId;
                 }
-                if (!path.endsWith('/')) {
+                if (path[path.length-1] !== '/') {
                     path += '/';
                 }
             }

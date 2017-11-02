@@ -59,29 +59,34 @@ define ([
 
         it('Should retrieve a list of files', function(done) {
             TestUtil.pendingIfNoToken();
-            fileStaging.list()
+            fileStaging.list(null, {userId: true})
                 .then(function(files) {
                     files.forEach(function(file) {
                         expect(file.name).not.toBeNull();
                     });
                 })
                 .catch(function(error) {
-                    fail(error);
+                    fail(JSON.stringify(error));
                 })
                 .finally(function() {
                     done();
                 });
         });
 
-        it('Should retrieve an empty list with a bad subpath', function(done) {
+        it('Should raise an error with a bad subpath', function(done) {
+            pending('waiting on backend fix');
             TestUtil.pendingIfNoToken();
             fileStaging.list('not_a_path')
                 .then(function(files) {
-                    expect(files.length).toBe(0);
-                    done();
+                    if (files !== undefined) {
+                        expect(files.length).toBe(0);
+                    }
+                    else {
+                        expect(files).toBe(undefined);
+                    }
                 })
                 .catch(function(error) {
-                    fail(error.keys());
+                    fail('Call threw an error');
                 })
                 .finally(function() {
                     done();

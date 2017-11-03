@@ -59,7 +59,7 @@ define ([
 
         it('Should retrieve a list of files', function(done) {
             TestUtil.pendingIfNoToken();
-            fileStaging.list(null, {userId: true})
+            fileStaging.list()
                 .then(function(files) {
                     files.forEach(function(file) {
                         expect(file.name).not.toBeNull();

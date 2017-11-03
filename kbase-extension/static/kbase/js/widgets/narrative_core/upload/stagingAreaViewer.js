@@ -1,7 +1,6 @@
 define([
     'jquery',
     'kbaseTabs',
-		'kbase-generic-client-api',
     'StagingServiceClient',
     'bluebird',
     'kbwidget',
@@ -14,7 +13,6 @@ define([
     './uploadTour',
     'util/kbaseApiUtil',
     'util/bootstrapDialog',
-    'api/fileStaging',
     'text!kbase/templates/data_staging/ftp_file_table.html',
     'text!kbase/templates/data_staging/ftp_file_header.html',
     'text!kbase/templates/data_staging/file_path.html',
@@ -23,7 +21,6 @@ define([
 ], function(
     $,
     KBaseTabs,
-		GenericClient,
 		StagingServiceClient,
     Promise,
     KBWidget,
@@ -36,7 +33,6 @@ define([
     UploadTour,
     APIUtil,
     BootstrapDialog,
-    FileStaging,
     FtpFileTableHtml,
     FtpFileHeaderHtml,
     FilePathHtml
@@ -49,25 +45,20 @@ define([
 
             this._super(options);
 
+            var runtime = Runtime.make();
+
             this.stagingServiceClient = new StagingServiceClient({
-              root : 'https://ci.kbase.us/services/staging_service',
-              token : Runtime.make().authToken()
+              root : Config.url('staging_api_url'),
+              token : runtime.authToken()
             });
 
+console.log("FTP API URL : ", Config.url('ftp_api_url'));
             this.ftpFileTableTmpl = Handlebars.compile(FtpFileTableHtml);
             this.ftpFileHeaderTmpl = Handlebars.compile(FtpFileHeaderHtml);
             this.filePathTmpl = Handlebars.compile(FilePathHtml);
-            this.ftpUrl = Config.url('ftp_api_url');
             this.updatePathFn = options.updatePathFn || this.setPath;
             this.uploaders = Config.get('uploaders');
-            var runtime = Runtime.make();
             this.userId = runtime.userId();
-            this.fileStagingClient = new FileStaging(
-                this.ftpUrl, this.userId, {token: runtime.authToken()});
-
-            this.genericClient = new GenericClient(Config.url('service_wizard'), {
-              token: Runtime.make().authToken()
-            });
 
             // Get this party started.
             this.setPath(options.path);
@@ -79,8 +70,9 @@ define([
         },
 
         updateView: function() {
-            this.fileStagingClient.list(this.path)
-                .then(function(files) {
+            this.stagingServiceClient.list()
+                .then(function(data) {
+                  var files = JSON.parse(data);
                     files.forEach(function(f) {
                         if (!f.isFolder) {
                             f.imported = {};
@@ -90,7 +82,7 @@ define([
                     this.renderFileHeader();
                     this.renderFiles(files);
                 }.bind(this))
-                .catch(function(error) {
+                .fail(function(error) {
                     console.error(error);
                 });
         },

@@ -82,7 +82,10 @@ define([
         var path = route.path;
 
         for (var i = 0; i < routeArgs.length; i++) {
-          path = path.replace('${' + routeArgs[i] + '}', fArgs[routeArgs[i]]);
+          var replacement = fArgs[routeArgs[i]] !== undefined
+            ? fArgs[routeArgs[i]]
+            : '';
+          path = path.replace('${' + routeArgs[i] + '}', replacement);
         }
        var restURL = [this.root, path].join('/');
 
@@ -93,9 +96,7 @@ define([
           token : this.token,
           data  : fArgs.data,
         });
-        /*return this.ajax(
-          [this.root, route.path].join('/')
-        );*/
+
       }
     }.bind(this));
 

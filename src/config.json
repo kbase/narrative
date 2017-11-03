@@ -29,6 +29,7 @@
     "appdev": {
         "auth": "https://appdev.kbase.us/services/auth",
         "ftp_api_url": "https://appdev.kbase.us/services/kb-ftp-api/v0",
+        "staging_api_url": 'https://appdev.kbase.us/services/staging_service',
         "ftp_api_root": "/data/bulk",
         "awe": "https://appdev.kbase.us/services/awe-api",
         "catalog": "https://appdev.kbase.us/services/catalog",
@@ -70,6 +71,7 @@
     "ci": {
         "auth": "https://ci.kbase.us/services/auth",
         "ftp_api_url": "https://ci.kbase.us/services/kb-ftp-api/v0",
+        "staging_api_url": 'https://ci.kbase.us/services/staging_service',
         "ftp_api_root": "/data/bulk",
         "awe": "https://ci.kbase.us/services/awe-api",
         "catalog": "https://ci.kbase.us/services/catalog",
@@ -156,6 +158,7 @@
         "fba": "https://next.kbase.us/services/KBaseFBAModeling/",
         "feature_values": "https://next.kbase.us/services/feature_values/jsonrpc",
         "ftp_api_url": "https://next.kbase.us/services/kb-ftp-api/v0",
+        "staging_api_url": 'https://next.kbase.us/services/staging_service',
         "ftp_api_root": "/data/bulk",
         "gene_families": "https://next.kbase.us/services/gene_families",
         "genomeCmp": "https://next.kbase.us/services/genome_comparison/jsonrpc",
@@ -197,6 +200,7 @@
         "fba": "https://kbase.us/services/KBaseFBAModeling/",
         "feature_values": "https://kbase.us/services/feature_values/jsonrpc",
         "ftp_api_url": "https://kbase.us/services/kb-ftp-api/v0",
+        "staging_api_url": 'https://kbase.us/services/staging_service',
         "ftp_api_root": "/data/bulk",
         "gene_families": "https://kbase.us/services/gene_families",
         "genomeCmp": "https://kbase.us/services/genome_comparison/jsonrpc",

@@ -1,6 +1,8 @@
 define([
     'jquery',
     'kbaseTabs',
+		'kbase-generic-client-api',
+    'StagingServiceClient',
     'bluebird',
     'kbwidget',
     'narrativeConfig',
@@ -16,10 +18,12 @@ define([
     'text!kbase/templates/data_staging/ftp_file_header.html',
     'text!kbase/templates/data_staging/file_path.html',
     'jquery-dataTables',
-    'select2'
+    'select2',
 ], function(
     $,
     KBaseTabs,
+		GenericClient,
+		StagingServiceClient,
     Promise,
     KBWidget,
     Config,
@@ -39,8 +43,14 @@ define([
         name: 'StagingAreaViewer',
 
         init: function(options) {
-console.log("WHAT THE HELL? INITIALIZE HER1", this, options);
+
             this._super(options);
+
+            this.stagingServiceClient = new StagingServiceClient({
+              root : 'https://ci.kbase.us/services/staging_service',
+              token : Runtime.make().authToken()
+            });
+
             this.ftpFileTableTmpl = Handlebars.compile(FtpFileTableHtml);
             this.ftpFileHeaderTmpl = Handlebars.compile(FtpFileHeaderHtml);
             this.filePathTmpl = Handlebars.compile(FilePathHtml);
@@ -48,7 +58,11 @@ console.log("WHAT THE HELL? INITIALIZE HER1", this, options);
             this.updatePathFn = options.updatePathFn || this.setPath;
             this.uploaders = Config.get('uploaders');
             this.setPath(options.path);
-console.log("WHAT THE HELL? INITIALIZE HERE", this, options, this.render, this.renderFiles, this.renderMoreFileInfo);
+
+            this.genericClient = new GenericClient(Config.url('service_wizard'), {
+              token: Runtime.make().authToken()
+            });
+
             return this;
         },
 
@@ -59,7 +73,6 @@ console.log("WHAT THE HELL? INITIALIZE HERE", this, options, this.render, this.r
         updateView: function() {
             this.fetchFtpFiles()
             .then(function(files) {
-            console.log("UPDATES VIEW, GOT ME FILES : ", files);
                 this.$elem.empty();
                 this.renderFileHeader();
                 this.renderFiles(files);
@@ -143,7 +156,6 @@ console.log("WHAT THE HELL? INITIALIZE HERE", this, options, this.render, this.r
 
         renderFiles: function(files) {
             var $fileTable = $(this.ftpFileTableTmpl({files: files, uploaders: this.uploaders.dropdown_order}));
-            console.log("FT IS ", $fileTable, files, this);
             this.$elem.append($fileTable);
             this.$elem.find('table').dataTable({
                 dom: '<"file-path pull-left">frtip',
@@ -161,7 +173,6 @@ console.log("WHAT THE HELL? INITIALIZE HERE", this, options, this.render, this.r
                             }
                             else {
                               disp = "<i class='fa fa-caret-right' data-name=" + full[1] + " style='cursor : pointer'></i> " + disp;
-                              console.log("BUILDS ", data, type, full);
                             }
                             return disp;
                         } else {
@@ -223,16 +234,20 @@ console.log("WHAT THE HELL? INITIALIZE HERE", this, options, this.render, this.r
                     $('td:eq(0)', nRow).find('button[data-name]').on('click', function(e) {
                         this.updatePathFn(this.path += '/' + $(e.currentTarget).data().name);
                     }.bind(this));
-console.log("HOLY HELL! WHO AM I? ", this);
+
                     $('td:eq(0)', nRow).find('i[data-name]').on('click', function(e) {
-                        console.log("CLICKED ON CARET",files[iDisplayIndex], this, this.renderMoreFileInfo(files[iDisplayIndex]));
+                        var fileName = $(e.currentTarget).data().name;
+
+                        var myFile = files.filter( function(file) {
+                          return file.name === fileName;
+                        })[0];
+
                         $(e.currentTarget).toggleClass('fa-caret-down fa-caret-right');
                         var $tr = $(e.currentTarget).parent().parent();
-            var fileData = files[iDisplayIndex];
+
                         if ($(e.currentTarget).hasClass('fa-caret-down')) {
-console.log("RMFI : ", this.renderMoreFileInfo, this, this.renderMoreFileInfo(fileData));
                           $tr.after(
-                            this.renderMoreFileInfo( files[iDisplayIndex] )
+                            this.renderMoreFileInfo( myFile )
                           );
                         }
                         else {
@@ -249,55 +264,84 @@ console.log("RMFI : ", this.renderMoreFileInfo, this, this.renderMoreFileInfo(fi
 
         renderMoreFileInfo (fileData) {
 
-          var $tabsDiv = $.jqElem('div');
-          var $tabs = new KBaseTabs($tabsDiv, {
-            tabs : [
-              {
-                tab : 'Actions',
-                content :
-                  $.jqElem('ul')
-                    .append( $.jqElem('li').append('Decompress') )
-                    .append( $.jqElem('li').append('Delete') )
-              },
-              {
-                tab : 'Info',
-                content :
-                  $.jqElem('ul')
-                    .append( $.jqElem('li').append('Path : ' + fileData.path) )
-                    .append( $.jqElem('li').append('Name : ' + fileData.name) )
-                    .append( $.jqElem('li').append('Size : ' + fileData.size) )
-              },
-              {
-                tab : 'First 10 lines',
-                content : 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.'
-              },
-              {
-                tab : 'Last 10 lines',
-                content : 'Praesent varius velit at enim elementum varius. Aliquam tincidunt elit at maximus lobortis. Nulla ut augue purus. In hac habitasse platea dictumst. Pellentesque ac eros gravida, accumsan purus ac, tristique ligula. Vivamus lacinia diam dui, non sodales leo porta ac. Proin placerat dui elit, iaculis congue dui tristique eu. Phasellus interdum turpis nec felis pretium molestie. Phasellus scelerisque pretium urna, quis volutpat lectus congue eget.'
-              }
-            ]
+          if (fileData.loaded) {
+            return fileData.loaded;
+          }
+
+          var $tabsDiv = $.jqElem('div')
+            .append('Loading file info...please wait');
+
+          this.stagingServiceClient.metadata({ path : fileData.name }).then( function(dataString, status, xhr) {
+            $tabsDiv.empty();
+            var data = JSON.parse(dataString);
+
+            var $tabs = new KBaseTabs($tabsDiv, {
+              tabs : [
+                {
+                  tab : 'Info',
+                  content :
+                    $.jqElem('ul')
+                      .append( $.jqElem('li').append($.jqElem('span').css({'font-weight' : 'bold', width : '115px', display : 'inline-block'}).append('Name : ')).append(data.name) )
+                      .append( $.jqElem('li').append($.jqElem('span').css({'font-weight' : 'bold', width : '115px', display : 'inline-block'}).append('Created : ')).append(TimeFormat.reformatDate(new Date(data.mtime)) ) )
+                      .append( $.jqElem('li').append($.jqElem('span').css({'font-weight' : 'bold', width : '115px', display : 'inline-block'}).append('Size : ')).append(StringUtil.readableBytes(Number(data.size)) ) )
+                      .append( $.jqElem('li').append($.jqElem('span').css({'font-weight' : 'bold', width : '115px', display : 'inline-block'}).append('Line Count : ')).append(data.lineCount ) )
+                      .append( $.jqElem('li').append($.jqElem('span').css({'font-weight' : 'bold', width : '115px', display : 'inline-block'}).append('MD5 : ')).append(data.md5 ) )
+                      //.append( $.jqElem('li').append('Imported : ' + data.imported) )
+                },
+                {
+                  tab : 'First 10 lines',
+                  content : $.jqElem('div')
+                    .css({'white-space' : 'pre', 'overflow' : 'scroll'})
+                    .append( data.head )
+                },
+                {
+                  tab : 'Last 10 lines',
+                  content : $.jqElem('div')
+                    .css({'white-space' : 'pre', 'overflow' : 'scroll'})
+                    .append( data.tail )
+                }
+              ]
+            });
+
+          })
+          .fail(function (xhr) {
+            $tabsDiv.empty();
+            $tabsDiv.append(
+              $.jqElem('div')
+                .addClass('alert alert-danger')
+                .append('Error ' + xhr.status + '<br/>' + xhr.responseText)
+            );
           });
 
-          return $.jqElem('tr')
-            .append($.jqElem('td'))
+          return fileData.loaded = $.jqElem('tr')
+            .append(
+              $.jqElem('td')
+                .append(
+                  $.jqElem('i')
+                    .addClass('fa fa-trash')
+                    .on('click', function(e) {
+                      if (window.confirm('Really delete file ' + fileData.name + '?')) {
+                        this.stagingServiceClient.delete({ path : fileData.name}).then(function(d,s,x) {
+                          this.updateView();
+                        }.bind(this))
+                        .fail(function(xhr) {
+                          $tabsDiv.empty();
+                          $tabsDiv.append(
+                            $.jqElem('div')
+                              .addClass('alert alert-danger')
+                              .append('Error ' + xhr.status + '<br/>' + xhr.responseText)
+                          );
+                        }.bind(this));
+                      }
+                    }.bind(this))
+                )
+            )
             .append(
               $.jqElem('td')
                 .attr('colspan', 4)
                 .append($tabsDiv)
             );
 
-          return $.jqElem('tr')
-              .append($.jqElem('td'))
-              .append(
-                $.jqElem('td')
-                  .attr('colspan', 4)
-                  .append(
-                    $.jqElem('ul')
-                      .append( $.jqElem('li').append('Path : ' + fileData.path) )
-                      .append( $.jqElem('li').append('Name : ' + fileData.name) )
-                      .append( $.jqElem('li').append('Size : ' + fileData.size) )
-                  )
-              )
         },
 
         initImportApp: function(type, file) {

@@ -74,10 +74,10 @@ module.exports = function (config) {
         singleRun: true,
         proxies: {
             '/narrative/static/': '/base/kbase-extension/static/',
-            '/narrative/static/base': 'http://localhost:9999/narrative/static/base',
-            '/narrative/static/notebook': 'http://localhost:9999/narrative/static/notebook',
-            '/narrative/static/components': 'http://localhost:9999/narrative/static/components',
-            '/narrative/static/services': 'http://localhost:9999/narrative/static/services',
+            '/narrative/static/base': 'http://localhost:32323/narrative/static/base',
+            '/narrative/static/notebook': 'http://localhost:32323/narrative/static/notebook',
+            '/narrative/static/components': 'http://localhost:32323/narrative/static/components',
+            '/narrative/static/services': 'http://localhost:32323/narrative/static/services',
             '/static/kbase/config': '/base/kbase-extension/static/kbase/config',
             '/test/': '/base/test/'
         }

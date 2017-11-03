@@ -246,11 +246,13 @@ define([
                         var $tr = $(e.currentTarget).parent().parent();
 
                         if ($(e.currentTarget).hasClass('fa-caret-down')) {
+                          $('.kb-dropzone').css('min-height', '75px');
                           $tr.after(
                             this.renderMoreFileInfo( myFile )
                           );
                         }
                         else {
+                          $('.kb-dropzone').css('min-height', '200px');
                           $tr.next().remove();
                         }
                     }.bind(this));

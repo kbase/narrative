@@ -1,7 +1,7 @@
 'use strict';
 
-define(['kbwidget', 'jquery', 'bootstrap', 'kbaseAuthenticatedWidget', 'kbaseTabTableTabs', 'kbasePathways'],
-function(KBWidget, $, bootstrap, kbaseAuthenticatedWidget, kbaseTabTableTabs, kbasePathways) {
+define(['kbwidget', 'jquery', 'bootstrap', 'kbaseAuthenticatedWidget', 'kbaseTabTableTabs', 'kbasePathways', 'narrativeConfig'],
+function(KBWidget, $, bootstrap, kbaseAuthenticatedWidget, kbaseTabTableTabs, kbasePathways, Config) {
 return KBWidget({
     name: "kbaseTabTable",
     parent : kbaseAuthenticatedWidget,
@@ -409,12 +409,11 @@ return KBWidget({
         this.getBiochemCompounds = function(ids) {
             return self.kbapi('biochem', 'get_compounds', {compounds: ids})
         };
-
+        var imageURL = Config.url('compound_img_url');
         this.compoundImage = function(id) {
-            return "<img src=http://minedatabase.mcs.anl.gov/compound_images/ModelSEED/"+id.split("_")[0]+".png style='height:300px !important;'>"
+            return "<img src="+imageURL+id.split("_")[0]+".png style='height:300px !important;'>"
         };
 
-        var imageURL = "http://minedatabase.mcs.anl.gov/compound_images/ModelSEED/";
         this.pictureEquation = function(eq) {
             var cpds = get_cpds(eq);
 

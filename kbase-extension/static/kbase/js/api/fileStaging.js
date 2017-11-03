@@ -26,20 +26,68 @@ define([
         /**
          * @method
          * @public
-         * Lists files in the user's directory. A given subdirectory can be
-         * used to list files there.
+         * Lists files in the given directory path.
+         * options -
+         *   userId {boolean|string} - if true, prepend with the current userId (if a string, use that string)
+         *   deep {boolean} - if true, list deeply by getting the whole file tree from that point
+         *
+         * So now there's options. Our FTP service expects to see the userId at the front of the path.
+         * Other consumers of this (for other reasons) want to include that in the path submitted to
+         * this client. Optionally, it can be separated and set as a boolean. So these all do the
+         * same search (assuming the client was instantiated with user wjriehl):
+         *
+         * list('wjriehl/some_dir')
+         * list('some_dir', { userId: 'wjriehl' })
+         * list('some_dir', { userId: true })
+         *
+         * It also tries to be smart about constructing a path with slashes in the right place.
+         * All of these should reduce down to a GET call against /list/wjriehl/some_dir:
+         *
+         * list('/wjriehl/some_dir')
+         * list('some_dir', {userId: true})
+         * list('/some_dir', {userId: true})
+         * list('wjriehl/some_dir/')
+         *
+         * Note that if options.userId is set, it will ALWAYS be used, even if redundant. You
+         * never know if a crazy user made a top-level subdirectory with their own username in it.
          */
-        var list = function(directory, deep) {
-            var path = 'list/' + userId;
-            if (directory) {
-                if (directory[0] !== '/') {
+        var list = function(directory, options) {
+            options = options || {};
+            var path = 'list/';
+            if (options.userId) {
+                if (typeof options.userId === 'boolean') {
+                    path += userId;
+                }
+                else if (typeof options.userId === 'string') {
+                    path += options.userId;
+                }
+                if (!path.endsWith('/')) {
                     path += '/';
+                }
+            }
+            if (directory) {
+                if (directory[0] === '/') {
+                    directory = directory.substring(1);
                 }
                 path += directory;
             }
             return makeFtpCall('GET', path);
         };
 
+        /**
+         * @method
+         * @public
+         * Makes the /search call to the FTP service. This should return a list of files, similar to
+         * the list() function.
+         *
+         * This goes on to create a subdir attribute in each file before returning. This subdir
+         * is relative to the user's directory, as opposed to the FTP service root (which is the
+         * usually returned value).
+         * That is, it'll go from
+         * /data/bulk/some_user/some_directory/some_file
+         * to
+         * some_user/some_directory/some_file
+         */
         var search = function(term) {
             var path = 'search/' + encodeURIComponent(term);
             return makeFtpCall('GET', path)
@@ -51,6 +99,11 @@ define([
                 });
         };
 
+        /**
+         * Wraps up the actual AJAX REST call. Given a method and path, it will populate headers
+         * as needed, then return a Promise with the call.
+         * It's pretty simple right now, we can adjust as needed.
+         */
         var makeFtpCall = function(method, path) {
             return Promise.resolve($.ajax({
                 url: url + path,

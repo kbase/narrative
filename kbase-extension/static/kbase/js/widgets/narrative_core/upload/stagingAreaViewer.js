@@ -14,6 +14,7 @@ define([
     './uploadTour',
     'util/kbaseApiUtil',
     'util/bootstrapDialog',
+    'api/fileStaging',
     'text!kbase/templates/data_staging/ftp_file_table.html',
     'text!kbase/templates/data_staging/ftp_file_header.html',
     'text!kbase/templates/data_staging/file_path.html',
@@ -35,10 +36,12 @@ define([
     UploadTour,
     APIUtil,
     BootstrapDialog,
+    FileStaging,
     FtpFileTableHtml,
     FtpFileHeaderHtml,
     FilePathHtml
 ) {
+    'use strict';
     return new KBWidget({
         name: 'StagingAreaViewer',
 
@@ -57,12 +60,17 @@ define([
             this.ftpUrl = Config.url('ftp_api_url');
             this.updatePathFn = options.updatePathFn || this.setPath;
             this.uploaders = Config.get('uploaders');
-            this.setPath(options.path);
+            var runtime = Runtime.make();
+            this.userId = runtime.userId();
+            this.fileStagingClient = new FileStaging(
+                this.ftpUrl, this.userId, {token: runtime.authToken()});
 
             this.genericClient = new GenericClient(Config.url('service_wizard'), {
               token: Runtime.make().authToken()
             });
 
+            // Get this party started.
+            this.setPath(options.path);
             return this;
         },
 
@@ -71,17 +79,26 @@ define([
         },
 
         updateView: function() {
-            this.fetchFtpFiles()
-            .then(function(files) {
-                this.$elem.empty();
-                this.renderFileHeader();
-                this.renderFiles(files);
-            }.bind(this))
-            .catch(function(error) {
-                console.error(error);
-            });
+            this.fileStagingClient.list(this.path)
+                .then(function(files) {
+                    files.forEach(function(f) {
+                        if (!f.isFolder) {
+                            f.imported = {};
+                        }
+                    });
+                    this.$elem.empty();
+                    this.renderFileHeader();
+                    this.renderFiles(files);
+                }.bind(this))
+                .catch(function(error) {
+                    console.error(error);
+                });
         },
 
+        /**
+         * Expect that 'path' is only any subdirectories. The root directory is still the
+         * user id.
+         */
         setPath: function(path) {
             this.path = path;
             // factor out the current subdirectory path into its own variable
@@ -92,33 +109,6 @@ define([
             }
             this.subpath = subpath.slice(subpath.length - subpathTokens).join('/');
             this.updateView();
-        },
-
-        fetchFtpFiles: function() {
-            var token = Runtime.make().authToken();
-            return Promise.resolve($.ajax({
-                url: this.ftpUrl + '/list' + this.path,
-                headers: {
-                    'Authorization': token
-                }
-            }))
-            .then(function(files) {
-                return Promise.try(function() {
-                    files.forEach(function(file) {
-                        if (file.isFolder) {
-                            return;
-                        }
-                        file.imported = {
-                            narName: 'narrative',
-                            narUrl: '/narrative/ws.123.obj.456',
-                            objUrl: '/#dataview/123/objectName',
-                            objName: 'myObject',
-                            reportRef: 'reportRef'
-                        };
-                    });
-                    return files;
-                });
-            });
         },
 
         renderFileHeader: function() {
@@ -227,9 +217,9 @@ define([
                         var importType = $(e.currentTarget).prevAll('#import-type').val();
                         var importFile = $(e.currentTarget).data().import;
                         this.initImportApp(importType, importFile)
-                        .then(function() {
-                            this.updateView();
-                        }.bind(this));
+                            .then(function() {
+                                this.updateView();
+                            }.bind(this));
                     }.bind(this));
                     $('td:eq(0)', nRow).find('button[data-name]').on('click', function(e) {
                         this.updatePathFn(this.path += '/' + $(e.currentTarget).data().name);
@@ -347,44 +337,27 @@ define([
         },
 
         initImportApp: function(type, file) {
-            return Promise.try(function() {
-                var appInfo = this.uploaders.app_info[type];
-                if (appInfo) {
-                    var tag = APIUtil.getAppVersionTag();
-                    APIUtil.getAppSpec(appInfo.app_id)
-                    .then(function(spec) {
-                        var newCell = Jupyter.narrative.narrController.buildAppCodeCell(spec, tag);
-                        var meta = newCell.metadata;
-                        var fileParam = file;
-                        if (this.subpath) {
-                            fileParam = this.subpath + '/' + file;
-                        }
-                        if (appInfo.app_input_param_type === 'list') {
-                            fileParam = [fileParam];
-                        }
-                        meta.kbase.appCell.params[appInfo.app_input_param] = fileParam;
-                        meta.kbase.appCell.params[appInfo.app_output_param] = file.replace(/\s/g, '_') + appInfo.app_output_suffix;
-                        for (var p in appInfo.app_static_params) {
-                            if (appInfo.app_static_params.hasOwnProperty(p)) {
-                                meta.kbase.appCell.params[p] = appInfo.app_static_params[p];
-                            }
-                        }
-                        newCell.metadata = meta;
-                        Jupyter.narrative.scrollToCell(newCell);
-                        Jupyter.narrative.hideOverlay();
-                    }.bind(this))
-                    .catch(function(err) {
-                        new BootstrapDialog({
-                            title: 'Can\'t create uploader app!',
-                            body: 'Sorry, unable to create App Cell to start your upload. You may need to set your Apps panel to \'dev\' or \'beta\'.',
-                            buttons: [ $('<button class="btn btn-primary" data-dismiss="modal">OK</button>') ],
-                            closeButton: true,
-                            enterToTrigger: true
-                        }).show();
-                        console.error(err);
-                    });
+            var appInfo = this.uploaders.app_info[type];
+            if (appInfo) {
+                var tag = APIUtil.getAppVersionTag(),
+                    fileParam = file,
+                    inputs = {};
+                if (this.subpath) {
+                    fileParam = this.subpath + '/' + file;
                 }
-            }.bind(this));
+                if (appInfo.app_input_param_type === 'list') {
+                    fileParam = [fileParam];
+                }
+                inputs[appInfo.app_input_param] = fileParam;
+                inputs[appInfo.app_output_param] = file.replace(/\s/g, '_') + appInfo.app_output_suffix;
+                for (var p in appInfo.app_static_params) {
+                    if (appInfo.app_static_params.hasOwnProperty(p)) {
+                        inputs[p] = appInfo.app_static_params[p];
+                    }
+                }
+                Jupyter.narrative.addAndPopulateApp(appInfo.app_id, tag, inputs);
+                Jupyter.narrative.hideOverlay();
+            }
         },
 
         startTour: function() {

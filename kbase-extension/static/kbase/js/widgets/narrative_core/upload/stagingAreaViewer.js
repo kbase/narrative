@@ -254,7 +254,7 @@ define([
             this.renderPath();
         },
 
-        renderMoreFileInfo (fileData) {
+        renderMoreFileInfo : function (fileData) {
 
           if (fileData.loaded) {
             return fileData.loaded;

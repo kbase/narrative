@@ -1,13 +1,11 @@
 define([
-    'kbase-client-api'
-], function(kbaseClientApi) {
+], function() {
     'use strict';
 
-    var UpaApi = function(mainWorkspace, auth) {
+    var UpaApi = function(mainWorkspace) {
         var externalTag = '&',
             mainWs = String(mainWorkspace),
-            wsLen = mainWs.length,
-            authToken = auth ? auth.token : null;
+            wsLen = mainWs.length;
 
         /**
          * Runs a regex that tests the given string to see if it's a valid upa.
@@ -62,22 +60,10 @@ define([
             return deserial;
         };
 
-        /**
-         * @public
-         * @method
-         * When complete, will effectively wrap workspace.get_object_info3 to use upas/ headless
-         * upas. Might be redundant.
-         * TODO
-         */
-        var getObjectInfo = function(upa) {
-
-            return upa;
-        };
 
         return {
             serialize: serialize,
             deserialize: deserialize,
-            getObjectInfo: getObjectInfo,
             externalTag: externalTag
         };
     };

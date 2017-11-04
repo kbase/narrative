@@ -5,16 +5,12 @@
 /*jslint white: true*/
 
 define ([
-    'api/upaApi',
-    'narrativeConfig',
-    'testUtil'
+    'api/upaApi'
 ], function(
-    UpaApi,
-    Config,
-    TestUtil
+    UpaApi
 ) {
     'use strict';
-    describe('Test the Workspace object API', function() {
+    describe('Test the UPA API', function() {
 
         var mainWorkspace = '31',
             upaApi,
@@ -33,22 +29,16 @@ define ([
             }];
 
         beforeEach(function() {
-            if (TestUtil.getAuthToken()) {
-                upaApi = new UpaApi(mainWorkspace, {token: TestUtil.getAuthToken()});
-            }
+            upaApi = new UpaApi(mainWorkspace);
         });
 
         it('Should properly serialize an UPA from this workspace', function () {
-            TestUtil.pendingIfNoToken();
-
             testData.forEach(function(pair) {
                 expect(upaApi.serialize(pair.upa)).toBe(pair.serial);
             });
         });
 
         it('Should properly deserialize an UPA from this workspace', function () {
-            TestUtil.pendingIfNoToken();
-
             testData.forEach(function(pair) {
                 if (typeof pair.upa === 'string') {
                     expect(upaApi.deserialize(pair.serial)).toBe(pair.upa);
@@ -57,23 +47,14 @@ define ([
         });
 
         it('Should serialize an UPA from a different workspace', function () {
-            TestUtil.pendingIfNoToken();
-
             var upa = '1/2/3';
             expect(upaApi.serialize(upa)).toBe(upaApi.externalTag + upa);
         });
 
         it('Should deserialize an UPA from a different workspace', function() {
-            TestUtil.pendingIfNoToken();
-
             var upa = '1/2/3';
             var externalUpa = upaApi.externalTag + upa;
             expect(upaApi.deserialize(externalUpa)).toBe(upa);
-        });
-
-        it('Should retrieve object info from an UPA (headless or not)', function () {
-            TestUtil.pendingIfNoToken();
-            // TODO
         });
 
         it('Should fail to serialize a bad UPA', function () {

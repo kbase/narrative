@@ -52,7 +52,6 @@ define([
               token : runtime.authToken()
             });
 
-console.log("FTP API URL : ", Config.url('ftp_api_url'));
             this.ftpFileTableTmpl = Handlebars.compile(FtpFileTableHtml);
             this.ftpFileHeaderTmpl = Handlebars.compile(FtpFileHeaderHtml);
             this.filePathTmpl = Handlebars.compile(FilePathHtml);

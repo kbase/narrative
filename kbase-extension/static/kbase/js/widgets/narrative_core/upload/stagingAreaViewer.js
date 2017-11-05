@@ -81,9 +81,14 @@ define([
                     this.renderFileHeader();
                     this.renderFiles(files);
                 }.bind(this))
-                .fail(function(error) {
-                    console.error(error);
-                });
+                .fail(function (xhr) {
+                  this.$elem.empty();
+                  this.$elem.append(
+                    $.jqElem('div')
+                      .addClass('alert alert-danger')
+                      .append('Error ' + xhr.status + '<br/>' + xhr.responseText)
+                  );
+                }.bind(this));
         },
 
         /**

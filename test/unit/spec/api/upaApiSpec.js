@@ -5,7 +5,7 @@
 /*jslint white: true*/
 
 define ([
-    'api/upaApi'
+    'api/upa'
 ], function(
     UpaApi
 ) {

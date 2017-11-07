@@ -6,7 +6,8 @@ import mock
 from biokbase.narrative.upa import (
     external_tag,
     serialize,
-    deserialize
+    deserialize,
+    serialize_external
 )
 import os
 
@@ -20,7 +21,7 @@ def mock_sys_var(var):
 class UpaApiTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        self.test_data = [{
+        self.serialize_test_data = [{
             "upa": "31/2/3",
             "serial": "[31]/2/3"
         }, {
@@ -35,7 +36,9 @@ class UpaApiTestCase(unittest.TestCase):
         }, {
             "upa": "31/31/31;31/31/31",
             "serial": "[31]/31/31;31/31/31"
-        }, {
+        }]
+
+        self.serialize_external_test_data = [{
             "upa": "5/1/2",
             "serial": "{}5/1/2".format(external_tag)
         }, {
@@ -82,15 +85,19 @@ class UpaApiTestCase(unittest.TestCase):
         for bad_upa in self.bad_upas:
             self.bad_serials.append(external_tag + bad_upa)
 
-    @mock.patch('biokbase.narrative.upa.system_variable', mock_sys_var)
     def test_serialize_good(self):
-        for pair in self.test_data:
+        for pair in self.serialize_test_data:
             serial_upa = serialize(pair["upa"])
+            self.assertEquals(serial_upa, pair["serial"])
+
+    def test_serialize_external_good(self):
+        for pair in self.serialize_external_test_data:
+            serial_upa = serialize_external(pair["upa"])
             self.assertEquals(serial_upa, pair["serial"])
 
     @mock.patch('biokbase.narrative.upa.system_variable', mock_sys_var)
     def test_deserialize_good(self):
-        for pair in self.test_data:
+        for pair in self.serialize_test_data + self.serialize_external_test_data:
             if type(pair["upa"]) is not list:
                 deserial_upa = deserialize(pair["serial"])
                 self.assertEquals(deserial_upa, pair["upa"])
@@ -125,18 +132,18 @@ class UpaApiTestCase(unittest.TestCase):
                 deserialize(t)
             self.assertEqual(str(e.exception), "Can only deserialize UPAs from strings.")
 
-    def test_missing_ws_serialize(self):
-        tmp = None
-        if 'KB_WORKSPACE_ID' in os.environ:
-            tmp = os.environ.get('KB_WORKSPACE_ID')
-            del os.environ['KB_WORKSPACE_ID']
-        try:
-            with self.assertRaises(RuntimeError) as e:
-                serialize("1/2/3")
-            self.assertEqual(str(e.exception), "Currently loaded workspace is unknown! Unable to serialize UPA.")
-        finally:
-            if tmp is not None:
-                os.environ['KB_WORKSPACE_ID'] = tmp
+    # def test_missing_ws_serialize(self):
+    #     tmp = None
+    #     if 'KB_WORKSPACE_ID' in os.environ:
+    #         tmp = os.environ.get('KB_WORKSPACE_ID')
+    #         del os.environ['KB_WORKSPACE_ID']
+    #     try:
+    #         with self.assertRaises(RuntimeError) as e:
+    #             serialize("1/2/3")
+    #         self.assertEqual(str(e.exception), "Currently loaded workspace is unknown! Unable to serialize UPA.")
+    #     finally:
+    #         if tmp is not None:
+    #             os.environ['KB_WORKSPACE_ID'] = tmp
 
     def test_missing_ws_deserialize(self):
         tmp = None

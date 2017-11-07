@@ -17,6 +17,15 @@ def is_upa(upa):
     return re.match("^\d+(\/\d+){2}(;\d+(\/\d+){2})*$", upa) is not None
 
 
+def _prepare_upa_serialization(upa):
+    if type(upa) is list:
+        upa = ";".join(upa)
+    if not is_upa(upa):
+        raise ValueError('"{}" is not a valid UPA. It may have already been serialized.'
+                         .format(upa))
+    return upa
+
+
 def serialize(upa):
     """
     Serializes an UPA - prepares it for storage as a part of Narrative cell metadata.
@@ -28,25 +37,27 @@ def serialize(upa):
     to
     [ws1]/obj1/ver1;ws2/obj2/ver2;...
 
+    If the passed upa is not properly formatted, this will raise a ValueError.
+    """
+    upa = _prepare_upa_serialization(upa)
+    return re.sub("^(\d+)\/", r"[\1]/", upa)
+
+
+def serialize_external(upa):
+    """
     In the case of UPAs representing objects that are located in a different workspace all
     together (e.g. set items that aren't copied into the Narrative with the set container
     object), they get flagged with a special character. In that case, the UPA is maintained,
     but transformed into:
     &ws1/obj1/ver1;ws2/obj2/ver2;...
+
+    This is an explicit method for handling that serialization. Deserialization of both is handled
+    by the deserialize function.
+
+    If the passed upa is not properly formatted, this will raise a ValueError.
     """
-    if type(upa) is list:
-        upa = ";".join(upa)
-    if not is_upa(upa):
-        raise ValueError('"{}" is not a valid UPA. It may have already been serialized.'
-                         .format(upa))
-    ws_id = system_variable("workspace_id")
-    if ws_id is None:
-        raise RuntimeError("Currently loaded workspace is unknown! Unable to serialize UPA.")
-    ws_id = str(ws_id)
-    if upa.startswith(ws_id):
-        return upa.replace(ws_id, "[{}]".format(ws_id), 1)
-    else:
-        return external_tag + upa
+    upa = _prepare_upa_serialization(upa)
+    return external_tag + upa
 
 
 def deserialize(serial_upa):

@@ -44,7 +44,7 @@ define([
                 }
             }
             if (!isUpa(upa)) {
-                throw new Error('This is not a valid UPA. It may already have been serialized');
+                throw new Error('"' + upa + '" is not a valid UPA. It may already have been serialized.');
             }
             var headWs = upa.match(/^\d+/)[0];
             if (headWs === mainWorkspace) {
@@ -58,8 +58,14 @@ define([
         /**
          * @public
          * @method
-         * serial upa = either [ws]/obj/ver;ws/obj/ver; ... or &ws/obj/ver;ws/obj/ver
-         * deserialize either adds the current ws to the front, or snips the tag from the front.
+         * Deserializes a serialized UPA to one that is valid for use with the Workspace (or other
+         * services that consume Workspace objects).
+         * A serialized UPA is either of the form:
+         * [ws]/obj/ver;ws/obj/ver;...
+         * or
+         * &ws/obj/ver;ws/obj/ver
+         * In the [ws] case, the current workspace id replaces that whole token. In the &ws case,
+         * the & tag is removed.
          */
         var deserialize = function(serial) {
             if (typeof serial !== 'string') {
@@ -67,7 +73,7 @@ define([
             }
             var deserial;
             if (serial[0] === externalTag) {
-                deserial = serial.substring(1);
+                deserial = serial.substring(externalTag.length);
             } else {
                 deserial = serial.replace(/^\[\d+\]/, mainWs);
             }

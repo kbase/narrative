@@ -5,7 +5,7 @@ documents.
 """
 
 import re
-from app_util import (system_variable)
+from app_util import system_variable
 
 external_tag = "&"
 
@@ -68,7 +68,7 @@ def deserialize(serial_upa):
         ws_id = system_variable("workspace_id")
         if ws_id is None:
             raise RuntimeError("Currently loaded workspace is unknown! Unable to deserialize UPA.")
-        deserial = re.sub("^\[(\d+)\]", str(ws_id), serial_upa)
+        deserial = re.sub("^\[(\d+)\]\/", str(ws_id) + "/", serial_upa)
     if not is_upa(deserial):
         raise ValueError('Deserialized UPA: "{}" is invalid!'.format(deserial))
     return deserial

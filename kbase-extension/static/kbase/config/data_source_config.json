@@ -274,7 +274,6 @@
                 },
                 {
                     "name": [
-                        "ContigSet",
 			"Assembly"
                     ],
                     "displayName": "Example Assemblies",

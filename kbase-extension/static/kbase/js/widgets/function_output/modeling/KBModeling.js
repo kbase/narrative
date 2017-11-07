@@ -44,7 +44,7 @@ function KBModeling(token) {
             method = 'fbaModelServices.'+method;
             return call_ajax(url, method, params)
         } else if (service == 'biochem') {
-            s_url = 'https://kbase.us/services/service_wizard';
+            s_url = window.kbconfig.urls.service_wizard || 'https://ci.kbase.us/services/service_wizard';
             s_params = {'module_name' : "BiochemistryAPI", 'version' : 'beta'};
             s_method = 'ServiceWizard.get_service_status';
             callback = function(service_status_ret) {

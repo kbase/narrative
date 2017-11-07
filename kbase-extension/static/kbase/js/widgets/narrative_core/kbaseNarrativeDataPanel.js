@@ -342,7 +342,7 @@ define([
 
             var $header = $('<div style="background-color: #2196F3">');
             var $body = $('<div>');
-            
+
             for (var i = 0; i < tabs.length; i++) {
                 var tab = tabs[i];
                 $header.append($('<div>')
@@ -407,7 +407,7 @@ define([
             // model for selected objects to import
             var mineSelected = [],
                 sharedSelected = [];
-          
+
             // tab panels
             var minePanel = $('<div class="kb-import-content kb-import-mine">'),
                 sharedPanel = $('<div class="kb-import-content kb-import-shared">'),
@@ -421,7 +421,7 @@ define([
                 {tabName: '<small>Shared With Me</small>', content: sharedPanel},
                 {tabName: '<small>Public</small>', content: publicPanel},
                 {tabName: '<small>Example</small>', content: examplePanel},
-                {tabName: '<small>Import</small>', content: importPanel},
+                //{tabName: '<small>Import</small>', content: importPanel},
             ];
 
             if (Config.get('features').stagingDataViewer) {
@@ -566,7 +566,7 @@ define([
                             return -1;
                         return 1;
                     });
-                    
+
                     return data;
                 });
             }
@@ -835,7 +835,7 @@ define([
             // a container to put data in.
             // It produces a scrollable dataset
             function render(view, data, container, selected, template) {
-    
+
                 var setDataIconTrigger = $._data($(document)[0], 'events')['setDataIcon'];
                 if (setDataIconTrigger) {
                     renderOnIconsReady(view, data, container, selected, template);
@@ -1060,7 +1060,7 @@ define([
                             });
                         });
                     }
-                ]);  
+                ]);
                 for (var i = start; i < Math.min(start + numRows, data.length); i++) {
                     var obj = data[i];
                     // some logic is not right
@@ -1218,7 +1218,7 @@ define([
                 var actionButtonText = (isCopy) ? ' Copy' : ' Add';
 
                 var $card = kbaseDataCard.apply(self, [
-                    {                     
+                    {
                         narrative: narName,
                         actionButtonText: actionButtonText,
                         moreContent: $btnToolbar,

@@ -1,10 +1,10 @@
 define([
-], function() {
+    'common/runtime'
+], function(Runtime) {
     'use strict';
 
-    var UpaApi = function(mainWorkspace) {
-        var externalTag = '&',
-            mainWs = String(mainWorkspace);
+    var UpaApi = function() {
+        var externalTag = '&';
 
         /**
          * Runs a regex that tests the given string to see if it's a valid upa.
@@ -13,6 +13,22 @@ define([
          */
         var isUpa = function(upa) {
             return RegExp(/^\d+(\/\d+){2}(;\d+(\/\d+){2})*$/).test(upa);
+        };
+
+        var prepareUpaSerialization = function(upa) {
+            if (typeof upa !== 'string') {
+                // stringify the array version of an UPA, if that's what we have.
+                if (Array.isArray(upa)) {
+                    upa = upa.join(';');
+                }
+                else {
+                    throw {error: 'Can only serialize UPA strings or Arrays of UPA paths'};
+                }
+            }
+            if (!isUpa(upa)) {
+                throw {error: '"' + upa + '" is not a valid UPA. It may already have been serialized.'};
+            }
+            return upa;
         };
 
         /**
@@ -27,32 +43,31 @@ define([
          * to
          * [ws1]/obj1/ver1;ws2/obj2/ver2;...
          *
+         * If the passed upa is not properly formatted, this will throw an Error.
+         */
+        var serialize = function(upa) {
+            upa = prepareUpaSerialization(upa);
+            return upa.replace(/^(\d+)\//, '[$1]/');
+        };
+
+        /**
+         * @public
+         * @method
+         *
          * In the case of UPAs representing objects that are located in a different workspace all
          * together (e.g. set items that aren't copied into the Narrative with the set container
          * object), they get flagged with a special character. In that case, the UPA is maintained,
          * but transformed into:
          * &ws1/obj1/ver1;ws2/obj2/ver2;...
+         *
+         * This is an explicit method for handling that serialization. Deserialization of both is handled
+         * by the deserialize function.
+         *
+         * If the passed upa is not properly formatted, this will throw an Error.
          */
-        var serialize = function(upa) {
-            if (typeof upa !== 'string') {
-                // stringify the array version of an UPA, if that's what we have.
-                if (Array.isArray(upa)) {
-                    upa = upa.join(';');
-                }
-                else {
-                    throw new Error('Can only serialize UPA strings or Arrays of UPA paths');
-                }
-            }
-            if (!isUpa(upa)) {
-                throw new Error('"' + upa + '" is not a valid UPA. It may already have been serialized.');
-            }
-            var headWs = upa.match(/^\d+/)[0];
-            if (headWs === mainWorkspace) {
-                return upa.replace(/^(\d+)/, '[$1]');
-            }
-            else {
-                return externalTag + upa;
-            }
+        var serializeExternal = function(upa) {
+            upa = prepareUpaSerialization(upa);
+            return externalTag + upa;
         };
 
         /**
@@ -69,16 +84,26 @@ define([
          */
         var deserialize = function(serial) {
             if (typeof serial !== 'string') {
-                throw new Error('Can only deserialize UPAs from strings.');
+                throw {
+                    error: 'Can only deserialize UPAs from strings.'
+                };
             }
             var deserial;
             if (serial[0] === externalTag) {
                 deserial = serial.substring(externalTag.length);
             } else {
-                deserial = serial.replace(/^\[\d+\]/, mainWs);
+                var wsId = Runtime.make().workspaceId();
+                if (!wsId) {
+                    throw {
+                        error: 'Currently loaded workspace is unknown! Unable to deserialize UPA.'
+                    };
+                }
+                deserial = serial.replace(/^\[\d+\]\//, Runtime.make().workspaceId() + '/');
             }
             if (!isUpa(deserial)) {
-                throw new Error('deserialized UPA: ' + deserial + ' is invalid!');
+                throw {
+                    error: 'Deserialized UPA: ' + deserial + ' is invalid!'
+                };
             }
             return deserial;
         };
@@ -87,7 +112,9 @@ define([
         return {
             serialize: serialize,
             deserialize: deserialize,
-            externalTag: externalTag
+            serializeExternal: serializeExternal,
+            externalTag: externalTag,
+            isUpa: isUpa
         };
     };
 

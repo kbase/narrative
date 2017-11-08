@@ -21,7 +21,7 @@ define([
 ], function(
     $,
     KBaseTabs,
-		StagingServiceClient,
+    StagingServiceClient,
     Promise,
     KBWidget,
     Config,

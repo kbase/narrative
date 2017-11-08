@@ -132,19 +132,6 @@ class UpaApiTestCase(unittest.TestCase):
                 deserialize(t)
             self.assertEqual(str(e.exception), "Can only deserialize UPAs from strings.")
 
-    # def test_missing_ws_serialize(self):
-    #     tmp = None
-    #     if 'KB_WORKSPACE_ID' in os.environ:
-    #         tmp = os.environ.get('KB_WORKSPACE_ID')
-    #         del os.environ['KB_WORKSPACE_ID']
-    #     try:
-    #         with self.assertRaises(RuntimeError) as e:
-    #             serialize("1/2/3")
-    #         self.assertEqual(str(e.exception), "Currently loaded workspace is unknown! Unable to serialize UPA.")
-    #     finally:
-    #         if tmp is not None:
-    #             os.environ['KB_WORKSPACE_ID'] = tmp
-
     def test_missing_ws_deserialize(self):
         tmp = None
         if 'KB_WORKSPACE_ID' in os.environ:
@@ -153,7 +140,8 @@ class UpaApiTestCase(unittest.TestCase):
         try:
             with self.assertRaises(RuntimeError) as e:
                 deserialize("[1]/2/3")
-            self.assertEqual(str(e.exception), "Currently loaded workspace is unknown! Unable to deserialize UPA.")
+            self.assertEqual(str(e.exception),
+                             "Currently loaded workspace is unknown! Unable to deserialize UPA.")
         finally:
             if tmp is not None:
                 os.environ['KB_WORKSPACE_ID'] = tmp

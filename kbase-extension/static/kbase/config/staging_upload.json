@@ -1,6 +1,10 @@
 {
     "dropdown_order": [
         {
+            "id": "test_fastq_reads",
+            "name": "(TEST) FASTQ Reads"
+        },
+        {
             "id": "fastq_reads",
             "name": "FASTQ Reads"
         },
@@ -38,6 +42,15 @@
         }
     ],
     "app_info": {
+        "test_fastq_reads": {
+            "app_id": "NarrativeTest/example_reads_upload",
+            "app_input_param": "fastq_fwd_staging_file_name",
+            "app_input_param_type": "string",
+            "app_static_params": {"import_type": "FASTQ/FASTA"},
+            "app_output_param": "name",
+            "app_output_suffix": "_reads",
+            "multiselect": false
+        },
         "fastq_reads": {
             "app_id": "kb_uploadmethods/import_fastq_sra_as_reads_from_staging",
             "app_input_param": "fastq_fwd_staging_file_name",

@@ -5,7 +5,7 @@ define([
     'jquery',
     'kb_common/html',
     'kb_common/utils',
-    'api/fileStaging',
+    'StagingServiceClient',
     'kb_service/utils',
     'common/validation',
     'common/events',
@@ -22,7 +22,7 @@ define([
     $,
     html,
     utils,
-    FileStaging,
+    StagingServiceClient,
     serviceUtils,
     Validation,
     Events,
@@ -30,7 +30,8 @@ define([
     UI,
     Data,
     TimeFormat,
-    StringUtil) {
+    StringUtil
+) {
     'use strict';
 
     // Constants
@@ -53,8 +54,10 @@ define([
             model = {
                 value: undefined
             },
-            fileStaging = new FileStaging(runtime.config('services.ftp_api_url.url'),
-                runtime.userId(), {token: runtime.authToken()}),
+            stagingService = new StagingServiceClient({
+                root: runtime.config('services.staging_api_url.url'),
+                token: runtime.authToken()
+            }),
             eventListeners = [];
 
         function makeInputControl() {
@@ -133,7 +136,13 @@ define([
         function fetchData(searchTerm) {
             searchTerm = searchTerm || '';
             if (dataSource === 'ftp_staging') {
-                return fileStaging.search(searchTerm);
+                return Promise.resolve(stagingService.search({path: searchTerm}))
+                    .then(function(results) {
+                        results = JSON.parse(results).filter(function(file) {
+                            return !file.isFolder;
+                        });
+                        return results;
+                    });
             } else {
                 // dynamic service plugin stubs!
                 return [];

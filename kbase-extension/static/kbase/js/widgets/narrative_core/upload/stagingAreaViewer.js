@@ -21,7 +21,7 @@ define([
 ], function(
     $,
     KBaseTabs,
-		StagingServiceClient,
+    StagingServiceClient,
     Promise,
     KBWidget,
     Config,
@@ -158,7 +158,7 @@ define([
                                 disp = '<button data-name="' + full[1] + '" class="btn btn-xs btn-default">' + disp + '</button>';
                             }
                             else {
-                              disp = "<i class='fa fa-caret-right' data-name=" + full[1] + " style='cursor : pointer'></i> " + disp;
+                              disp = "<i class='fa fa-caret-right' data-name='" + full[1] + "' style='cursor : pointer'></i> " + disp;
                             }
                             return disp;
                         } else {

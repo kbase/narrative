@@ -227,7 +227,6 @@ define([
 
                     $('td:eq(0)', nRow).find('i[data-name]').on('click', function(e) {
                         var fileName = $(e.currentTarget).data().name;
-
                         var myFile = getFileFromName(fileName);
 
                         $(e.currentTarget).toggleClass('fa-caret-down fa-caret-right');
@@ -261,7 +260,12 @@ define([
           var $tabsDiv = $.jqElem('div')
             .append('Loading file info...please wait');
 
-          this.stagingServiceClient.metadata({ path : fileData.name }).then( function(dataString, status, xhr) {
+          var filePath = this.subpath;
+          if (filePath.length) {
+              filePath += '/';
+          }
+          filePath += fileData.name;
+          this.stagingServiceClient.metadata({ path : filePath }).then( function(dataString, status, xhr) {
             $tabsDiv.empty();
             var data = JSON.parse(dataString);
 

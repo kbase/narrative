@@ -79,7 +79,7 @@ define([
             var control = ui.getElement('input-container.input'),
                 selected = control.selectedOptions;
             if (selected.length === 0) {
-                return;
+                return '';
             }
             // we are modeling a single string value, so we always just get the
             // first selected element, which is all there should be!
@@ -153,9 +153,10 @@ define([
             validate()
                 .then(function(result) {
                     if (result.isValid) {
-                        model.value = result.parsedValue;
+                        var newValue = result.parsedValue === undefined ? result.value : result.parsedValue;
+                        model.value = newValue;
                         channel.emit('changed', {
-                            newValue: result.parsedValue
+                            newValue: newValue
                         });
                     } else if (result.diagnosis === 'required-missing') {
                         model.value = spec.data.nullValue;

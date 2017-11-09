@@ -198,6 +198,12 @@ define([
                     sType: 'numeric'
                 }],
                 fnRowCallback: function(nRow, aData, iDisplayIndex, iDisplayIndexFull) {
+                    var getFileFromName = function(fileName) {
+                        return files.filter( function(file) {
+                            return file.name === fileName;
+                        })[0];
+                    };
+
                     $('td:eq(1)', nRow).find('.kb-data-staging-table-name').tooltip({
                         title: $('td:eq(1)', nRow).find('.kb-data-staging-table-name').text(),
                         placement: 'top',
@@ -211,11 +217,9 @@ define([
                     });
                     $('td:eq(4)', nRow).find('button[data-import]').on('click', function(e) {
                         var importType = $(e.currentTarget).prevAll('#import-type').val();
-                        var importFile = $(e.currentTarget).data().import;
-                        this.initImportApp(importType, importFile)
-                            .then(function() {
-                                this.updateView();
-                            }.bind(this));
+                        var importFile = getFileFromName($(e.currentTarget).data().import);
+                        this.initImportApp(importType, importFile.path);
+                        this.updateView();
                     }.bind(this));
                     $('td:eq(0)', nRow).find('button[data-name]').on('click', function(e) {
                         this.updatePathFn(this.path += '/' + $(e.currentTarget).data().name);
@@ -224,9 +228,7 @@ define([
                     $('td:eq(0)', nRow).find('i[data-name]').on('click', function(e) {
                         var fileName = $(e.currentTarget).data().name;
 
-                        var myFile = files.filter( function(file) {
-                          return file.name === fileName;
-                        })[0];
+                        var myFile = getFileFromName(fileName);
 
                         $(e.currentTarget).toggleClass('fa-caret-down fa-caret-right');
                         var $tr = $(e.currentTarget).parent().parent();

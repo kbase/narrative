@@ -46,7 +46,7 @@
             "app_id": "NarrativeTest/example_reads_upload",
             "app_input_param": "fastq_fwd_staging_file_name",
             "app_input_param_type": "string",
-            "app_static_params": {"import_type": "FASTQ/FASTA"},
+            "app_static_params": {"import_type": "FASTQ/FASTA", "fastq_rev_staging_file_name": ""},
             "app_output_param": "name",
             "app_output_suffix": "_reads",
             "multiselect": false

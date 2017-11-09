@@ -136,7 +136,7 @@ define([
         function fetchData(searchTerm) {
             searchTerm = searchTerm || '';
             if (dataSource === 'ftp_staging') {
-                return Promise.resolve(stagingService.search({path: searchTerm}))
+                return Promise.resolve(stagingService.search({query: searchTerm}))
                     .then(function(results) {
                         results = JSON.parse(results).filter(function(file) {
                             return !file.isFolder;

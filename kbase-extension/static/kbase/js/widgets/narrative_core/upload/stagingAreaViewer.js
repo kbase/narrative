@@ -69,7 +69,7 @@ define([
         },
 
         updateView: function() {
-            this.stagingServiceClient.list()
+            this.stagingServiceClient.list({path: this.subpath})
                 .then(function(data) {
                   var files = JSON.parse(data);
                     files.forEach(function(f) {

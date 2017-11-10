@@ -182,6 +182,9 @@ define([
                     .append(' Add');
             }, this));
 
+            // note how many times we've clicked on the data browser slideout button.
+            var numDataBrowserClicks = 0;
+
             this.$slideoutBtn = $('<button>')
                 .addClass('btn btn-xs btn-default')
                 .tooltip({
@@ -197,6 +200,10 @@ define([
                     this.$slideoutBtn.tooltip('hide');
                     this.trigger('hideGalleryPanelOverlay.Narrative');
                     this.trigger('toggleSidePanelOverlay.Narrative', this.$overlayPanel);
+                    //once we've clicked it 10 times, meaning we've open and shut the browser 5x, we reveal its TRUE NAME.
+                    if (++numDataBrowserClicks >= 10) {
+                      this.$slideoutBtn.attr('data-original-title', 'Hide / Show Slidey McSliderface')
+                    }
                 }.bind(this));
 
             this.addButton(this.$slideoutBtn);

@@ -10,7 +10,8 @@ module.exports = function (config) {
             // 'karma-chrome-launcher',
             'karma-phantomjs-launcher',
             'karma-requirejs',
-            'karma-coverage'
+            'karma-coverage',
+            'karma-mocha-reporter'
         ],
         preprocessors: {
             'kbase-extension/static/kbase/js/**/*.js': ['coverage']
@@ -40,7 +41,7 @@ module.exports = function (config) {
         // test results reporter to use
         // possible values: 'dots', 'progress'
         // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-        reporters: ['progress', 'coverage'],
+        reporters: ['mocha', 'coverage'],
         coverageReporter: {
             type: 'html',
             dir: 'js-coverage/',

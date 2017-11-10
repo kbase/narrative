@@ -6,35 +6,44 @@
 
 define ([
     'jquery',
-    'kbase/js/widgets/narrative_core/upload/stagingAreaViewer'
+    'kbase/js/widgets/narrative_core/upload/stagingAreaViewer',
+    'base/js/namespace',
+    'testUtil'
 ], function(
     $,
-    StagingAreaViewer
+    StagingAreaViewer,
+    Jupyter,
+    TestUtil
 ) {
     'use strict';
-    describe('Test the module', function() {
-        var myModule;
+    describe('Test the staging area viewer widget', function() {
+        var stagingViewer,
+            $targetNode = $('<div>'),
+            startingPath = '/',
+            updatePathFn = function(newPath) { };
 
-        // Some setup code before each individual test (not always necessary).
-        beforeEach(function () {
-            myModule = Module.make();
+        beforeEach(function() {
+            if (TestUtil.getAuthToken()) {
+                Jupyter.narrative = {
+                    userId: TestUtil.getUserId(),
+                    authToken: TestUtil.getAuthToken()
+                };
+                stagingViewer = new StagingAreaViewer($targetNode, {
+                    path: startingPath,
+                    updatePathFn: updatePathFn
+                });
+            }
         });
 
-        // Some cleanup code after each test (not always necessary).
-        afterEach(function () {
-            myModule.destroy();
-            myModule = null;
+        it('Should initialize properly', function() {
+            TestUtil.pendingIfNoToken();
+            expect(stagingViewer).not.toBeNull();
         });
 
-        // A single test case where the result shouldn't be null.
-        it('Should do stuff', function() {
-            var result = myModule.doStuff();
-            expect(result).not.toBeNull();
-        });
-
-        // A single test case where the result should be any Object.
-        it('Should have things as an object', function () {
-            expect(myModule.things).toEqual(jasmine.any(Object));
+        it('Should render properly', function() {
+            TestUtil.pendingIfNoToken();
+            stagingViewer.render();
+            expect(stagingViewer).not.toBeNull();
         });
     });
 });

@@ -17,8 +17,8 @@ module.exports = function (config) {
             'kbase-extension/static/kbase/js/**/*.js': ['coverage']
         },
         files: [
-            // {pattern: 'test/unit/spec/**/*.js', included: false},
-            {pattern: 'test/unit/spec/narrative_core/upload/stagingAreaViewer-spec.js', included: false},
+            {pattern: 'test/unit/spec/**/*.js', included: false},
+            // {pattern: 'test/unit/spec/narrative_core/upload/stagingAreaViewer-spec.js', included: false},
             {pattern: 'node_modules/string.prototype.startswith/startswith.js', included: true},
             {pattern: 'node_modules/string.prototype.endswith/endswith.js', included: true},
             {pattern: 'kbase-extension/static/**/*.css', included: false, served: true},

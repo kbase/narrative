@@ -2274,10 +2274,13 @@ button.kb-data-obj {
     width: 50px;
     margin-right: 2px;
 }
+
 .narrative-card-row-main{
     display: flex;
     align-items: center;
     width:98%;
+    margin:0px 2px;
+    padding:0px 4px;
 }
 
 .narrative-data-list-subcontent{
@@ -2343,10 +2346,7 @@ button.kb-data-obj {
     moz-box-shadow: 1px 1px 1px 1px #fff;
 
 }
-.narrative-card-row-main{
-    margin:2px;
-    padding:4px;
-}
+
 
 .kb-function-dim .kb-data-list-obj-row {
     border-left-color: #eee;
@@ -2565,9 +2565,12 @@ button.kb-data-obj {
 
 .kb-data-list-info {
     width: 80%;
-    padding: 4px 0px;
-    border-top: 1px solid #E0E0E0;
+    padding: 6px 0px;
+    min-height: 60px;
+    border-bottom: 1px solid #E0E0E0;
 }
+
+
 .kb-data-list-name {
     color:#2e618d;
     font-size: 11pt;

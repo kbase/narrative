@@ -1210,6 +1210,7 @@ div#notebook_panel {
 .kb-narr-panel-body-wrapper {
     height: calc(100% - 40px);
     padding: 3px;
+    border-top: 1px solid #E0E0E0;
 }
 .kb-narr-panel-body-wrapper > div{
     height: 100%;
@@ -2278,6 +2279,7 @@ button.kb-data-obj {
     display: flex;
     align-items: center;
     width:98%;
+    border-bottom: 1px solid #E0E0E0;
 }
 
 .narrative-data-list-subcontent{
@@ -2566,7 +2568,7 @@ button.kb-data-obj {
 .kb-data-list-info {
     width: 80%;
     padding: 4px 0px;
-    border-top: 1px solid #E0E0E0;
+    /*border-top: 1px solid #E0E0E0;*/
 }
 .kb-data-list-name {
     color:#2e618d;

@@ -2279,7 +2279,6 @@ button.kb-data-obj {
     display: flex;
     align-items: center;
     width:98%;
-    border-bottom: 1px solid #E0E0E0;
 }
 
 .narrative-data-list-subcontent{
@@ -2343,6 +2342,7 @@ button.kb-data-obj {
     box-shadow: 1px 1px 1px 1px #fff;
     -webkit-box-shadow: 1px 1px 1px 1px #fff;
     moz-box-shadow: 1px 1px 1px 1px #fff;
+    border-bottom: 1px solid #E0E0E0;
 
 }
 .narrative-card-row-main{
@@ -2575,16 +2575,18 @@ button.kb-data-obj {
     font-size: 11pt;
     font-family: 'OyxgenBold', Arial, sans-serif;
     margin: 2px;
+    cursor: pointer;
 }
 .kb-data-list-name:hover {
     text-decoration: underline;
 }
 .kb-data-list-version {
-    color:#777;
+    color: #777;
     font-size: 9pt;
     font-style: italic;
     white-space: nowrap;
-    cursor:default;
+    cursor: default;
+    margin-left: 3px;
 }
 .kb-data-list-type {
     color:#777;

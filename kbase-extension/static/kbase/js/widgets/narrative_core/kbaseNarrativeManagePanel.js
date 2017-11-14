@@ -321,8 +321,8 @@ define([
         },
 
         renderPanel: function () {
-            var self = this,
-                divider = '<hr class="kb-data-list-row-hr">';
+            var self = this;
+                // divider = '<hr class="kb-data-list-row-hr">';
 
             if (self.$narPanel && self.narData) {
                 self.$narPanel.children().detach(); // this will also hide any loading messages if they exist
@@ -334,7 +334,7 @@ define([
                         if (!self.narData.mine[k].$div) {
                             self.narData.mine[k].$div = self.renderNarrativeDiv(self.narData.mine[k]);
                         }
-                        self.$narPanel.append(divider);
+                        // self.$narPanel.append(divider);
                         self.$narPanel.append(self.narData.mine[k].$div);
                     }
                 }
@@ -346,7 +346,7 @@ define([
                         if (!self.narData.shared[k].$div) {
                             self.narData.shared[k].$div = self.renderNarrativeDiv(self.narData.shared[k]);
                         }
-                        self.$narPanel.append(divider);
+                        // self.$narPanel.append(divider);
                         self.$narPanel.append(self.narData.shared[k].$div);
                     }
                 }
@@ -755,7 +755,7 @@ define([
                 isCurrent = true;
             }
 
-            var $narDiv = $('<div>').addClass('kb-data-list-obj-row');
+            var $narDiv = $('<div>').addClass('kb-data-list-obj-row').css({'padding-top': '5px'});
 
             var $dataCol = $('<td>').css({'text-align': 'left', 'vertical-align': 'top'});
             var $ctrCol = $('<td>').css({'text-align': 'right', 'vertical-align': 'top', 'width': '80px'});
@@ -808,7 +808,7 @@ define([
                 $priv.addClass('fa fa-pencil').prop('title', 'you can edit');
             }
 
-            var $nameLink = $('<a href="' + narRef + '" target="_blank">');
+            var $nameLink = $('<a href="' + narRef + '" target="_blank">').addClass('kb-data-list-name');
             if (isCurrent) {
                 $nameLink.append($('<span>').addClass('fa fa-circle').css({'margin-right': '3px', 'color': '#4BB856'})
                     .tooltip({title: 'You are viewing this Narrative now'}));
@@ -816,8 +816,13 @@ define([
                 $nameLink.append($('<span>').addClass('fa fa-circle').css({'margin-right': '3px', 'color': '#F44336'})
                     .tooltip({title: 'This narrative has been corrupted.'}));
             }
-            $nameLink.append(nameText).append($version).append($priv);
-            $dataCol.append($('<div>').addClass('kb-data-list-name').css({'white-space': 'normal', 'cursor': 'pointer'}).append($nameLink));
+            $nameLink.append(nameText); //.append($version).append($priv);
+            $dataCol.append(
+                $('<div>')
+                    .append($nameLink)
+                    .append($version)
+                    .append($priv)
+            );
 
             // only display the rest if there was no error
             if (!data.error) {

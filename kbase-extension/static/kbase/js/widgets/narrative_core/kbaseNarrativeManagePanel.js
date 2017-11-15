@@ -755,7 +755,7 @@ define([
                 isCurrent = true;
             }
 
-            var $narDiv = $('<div>').addClass('kb-data-list-obj-row').css({'padding-top': '5px'});
+            var $narDiv = $('<div>').addClass('kb-data-list-obj-row').css({'padding-top': '5px', 'border-bottom': '1px solid #E0E0E0'});
 
             var $dataCol = $('<td>').css({'text-align': 'left', 'vertical-align': 'top'});
             var $ctrCol = $('<td>').css({'text-align': 'right', 'vertical-align': 'top', 'width': '80px'});

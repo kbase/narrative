@@ -6,7 +6,7 @@ This is built on the Jupyter Notebook v4.4.1 (more notes will follow).
 
 ### Version 3.5.1
 - TASK-1113/PUBLIC-148 - Import Panel scrolls if panel size is larger than screen size
-- TASK-1114 - Add lock when editing name, that prevents data panel from refreshing with new data. Reliquenishes lock after 15 min if no activity.
+- TASK-1114 - Add lock when editing name, that prevents data panel from refreshing with new data. Relinquishes lock after 15 min if no activity.
 - TASK-1116 - Add PhenotypeSet importer to staging area
 - TASK-1117 - Add importer for FBAModels to staging area
 - TASK-1088 - Data Pane maintains filters after refresh due to changes in narrative

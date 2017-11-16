@@ -8,6 +8,7 @@ define([
     'common/events',
     'common/fsm',
     'kb_common/html',
+    'jquery',
     'css!kbase/css/kbaseJobLog.css'
 ], function(
     Promise,
@@ -16,7 +17,8 @@ define([
     UI,
     Events,
     Fsm,
-    html
+    html,
+    $
 ) {
     'use strict';
 
@@ -216,7 +218,7 @@ define([
                 },
                 ui: {
                     buttons: {
-                        enabled: ['top', 'back', 'forward', 'bottom'],
+                        enabled: ['top', 'back'],
                         disabled: ['play', 'stop']
                     }
                 },
@@ -334,7 +336,7 @@ define([
             jobId,
             model,
             ui,
-            linesPerPage = config.linesPerPage || 10,
+            linesPerPage = config.linesPerPage || 15,
             loopFrequency = 5000,
             looping = false,
             stopped = false,
@@ -573,7 +575,7 @@ define([
 
         function renderLayout() {
             var events = Events.make(),
-                content = div({ dataElement: 'kb-log', style: { marginTop: '10px' } }, [
+                content = div({ dataElement: 'kb-log', style: { marginTop: '10px'}}, [
                     div({ class: 'kblog-header' }, [
                         div({ class: 'kblog-num-wrapper' }, [
                             div({ class: 'kblog-line-num' }, [])
@@ -582,7 +584,10 @@ define([
                             renderControls(events)
                         ])
                     ]),
-                    div({ dataElement: 'panel' })
+                    div({ dataElement: 'panel',
+                        style: {
+                            overflow: 'scroll', height: '300px'
+                        } })
                 ]);
 
             return {
@@ -610,8 +615,6 @@ define([
         }
 
         function renderLine(line) {
-            var extraClass = line.isError ? ' kb-error' : '';
-
             return div({
                 class: 'kblog-line' + extraClass
             }, [
@@ -630,17 +633,36 @@ define([
                 ])
             ]);
         }
+        function renderLine2(line) {
+            var extraClass = line.isError ? ' kb-error' : '';
+            var $line = $('<div />')
+                .addClass('kblog-num-wrapper' )
+                .append($('<span />')
+                    .addClass('kblog-line-num')
+                    .append(String(line.lineNumber)))
+                .append($('<span />')
+                    .addClass('kblog-text')
+                    .append(sanitize(line.text)));
+            return $('<div />')
+                .addClass('kblog-line' + extraClass)
+                .append($line);
+
+        }
 
         function renderLines(lines) {
-            return lines.map(function(line) {
-                return renderLine(line);
-            }).join('\n');
+            var $section = $('<div/>');
+    
+            for(var i = lines.length-1; i>=0; i--){
+                $section.prepend(renderLine2(lines[i]));
+            }
+            return $section;
         }
 
         function render() {
             var startingLine = model.getItem('currentLine'),
                 lines = model.getItem('lines'),
                 viewLines;
+                ui;
 
             if (lines) {
                 if (lines.length === 0) {
@@ -654,7 +676,9 @@ define([
                         lineNumber: startingLine + index + 1
                     };
                 });
-                ui.setContent('panel', renderLines(viewLines));
+                $(ui.getElements('panel')[0]).prepend(renderLines(viewLines));
+                // ui.getElements('panel')[0].prepend(renderLines(viewLines));
+                // ui.setContent('panel', renderLines(viewLines));
             } else {
                 ui.setContent('panel', 'Sorry, no log yet...');
             }
@@ -1055,14 +1079,13 @@ define([
         }
 
         // MAIN
-
         model = Props.make({
             data: {
                 cache: [],
                 lines: [],
                 currentLine: null,
                 lastLine: null,
-                linesPerPage: 10,
+                linesPerPage: 30,
                 fetchedAt: null
             },
             onUpdate: function() {

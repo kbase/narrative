@@ -746,17 +746,14 @@ define([
 
             return $btnToolbar;
         },
+
         renderNarrativeDiv: function (data) {
             var self = this,
                 isError = false;
 
-            var isCurrent = false;
-            if (this.ws_name === data.ws_info[1]) {
-                isCurrent = true;
-            }
+            var isCurrent = this.ws_name === data.ws_info[1];
 
             var $narDiv = $('<div>').addClass('kb-data-list-obj-row').css({'padding-top': '5px', 'border-bottom': '1px solid #E0E0E0'});
-
             var $dataCol = $('<td>').css({'text-align': 'left', 'vertical-align': 'top'});
             var $ctrCol = $('<td>').css({'text-align': 'right', 'vertical-align': 'top', 'width': '80px'});
             var $ctrContent = $('<div>').css({'min-height': '60px'});
@@ -836,31 +833,10 @@ define([
                     $dataCol.append($('<span>')
                         .addClass('kb-data-list-narinfo')
                         .append(summary)
-                        // REMOVE MORE INFO: needs a rethink, because these methods have versions now....
-                        /*.click(
-                            function () {
-                                var opened = self.toggleInteractionPanel($interactionPanel, 'info');
-                                if (!opened) {
-                                    return;
-                                }
-
-                                var $infoDiv = $('<div>')
-                                    .append(self.getNarContent(data.nar_info));
-
-
-                                // var $infoDiv = self.getNarContent(data.nar_info);
-                                self.setInteractionPanel($interactionPanel, 'Narrative Info', $infoDiv);
-                            })*/
                         .append('<br>'));
                 }
                 $dataCol.append($('<span>').addClass('kb-data-list-type').append(TimeFormat.getTimeStampStr(data.nar_info[3], true)));
 
-
-                // Render the share toolbar layout.
-                // it consists of just one button
-                // var $shareContainer = $('<div>').hide();
-
-                /* this is so gross */
                 var $shareToolbarGroup = $('<div>')
                     .addClass('btn-group pull-right')
                     .attr('role', 'group');

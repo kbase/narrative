@@ -218,7 +218,7 @@ define([
                     $('td:eq(4)', nRow).find('button[data-import]').off('click').on('click', function(e) {
                         var importType = $(e.currentTarget).prevAll('#import-type').val();
                         var importFile = getFileFromName($(e.currentTarget).data().import);
-                        this.initImportApp(importType, importFile.path);
+                        this.initImportApp(importType, importFile);
                         this.updateView();
                     }.bind(this));
                     $('td:eq(0)', nRow).find('button[data-name]').off('click').on('click', function(e) {
@@ -342,16 +342,16 @@ define([
             var appInfo = this.uploaders.app_info[type];
             if (appInfo) {
                 var tag = APIUtil.getAppVersionTag(),
-                    fileParam = file,
+                    fileParam = file.name,
                     inputs = {};
                 if (this.subpath) {
-                    fileParam = this.subpath + '/' + file;
+                    fileParam = this.subpath + '/' + file.name;
                 }
                 if (appInfo.app_input_param_type === 'list') {
                     fileParam = [fileParam];
                 }
                 inputs[appInfo.app_input_param] = fileParam;
-                inputs[appInfo.app_output_param] = file.replace(/\s/g, '_') + appInfo.app_output_suffix;
+                inputs[appInfo.app_output_param] = file.name.replace(/\s/g, '_') + appInfo.app_output_suffix;
                 for (var p in appInfo.app_static_params) {
                     if (appInfo.app_static_params.hasOwnProperty(p)) {
                         inputs[p] = appInfo.app_static_params[p];

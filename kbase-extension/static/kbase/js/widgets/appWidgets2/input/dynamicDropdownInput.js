@@ -80,7 +80,15 @@ define([
             var control = ui.getElement('input-container.input'),
                 selected = $(control).select2('data')[0];
             if (!selected || !selected.subpath) {
-                return '';
+                // might have just started up, and we don't have a selection value, but
+                // we might have a model value.
+                var modelVal = getModelValue();
+                if (modelVal) {
+                    return modelVal;
+                }
+                else {
+                    return '';
+                }
             }
             return selected.subpath;
         }

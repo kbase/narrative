@@ -2290,7 +2290,7 @@ button.kb-data-obj {
 }
 
 /* data list */
-.kb-data-list-obj-row, .narrative-card-row{
+.kb-data-list-obj-row, .narrative-card-row {
     transition: all 0.1s ease;
 
     border-left-style: solid;
@@ -2317,6 +2317,11 @@ button.kb-data-obj {
     box-shadow: 1px 1px 1px 1px #aaa;
     -webkit-box-shadow: 1px 1px 1px 1px #aaa;
     moz-box-shadow: 1px 1px 1px 1px #aaa;
+}
+
+.kb-narr-obj-row {
+    padding-top: 5px;
+    border-bottom: 1px solid #E0E0E0;
 }
 
 .palette {

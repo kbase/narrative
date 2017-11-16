@@ -753,7 +753,7 @@ define([
 
             var isCurrent = this.ws_name === data.ws_info[1];
 
-            var $narDiv = $('<div>').addClass('kb-data-list-obj-row').css({'padding-top': '5px', 'border-bottom': '1px solid #E0E0E0'});
+            var $narDiv = $('<div>').addClass('kb-data-list-obj-row kb-narr-obj-row');
             var $dataCol = $('<td>').css({'text-align': 'left', 'vertical-align': 'top'});
             var $ctrCol = $('<td>').css({'text-align': 'right', 'vertical-align': 'top', 'width': '80px'});
             var $ctrContent = $('<div>').css({'min-height': '60px'});

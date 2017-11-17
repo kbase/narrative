@@ -77,13 +77,6 @@ define([
             this.workspaceRef = Jupyter.narrative.workspaceRef;
             this.workspaceId = Jupyter.narrative.workspaceId;
 
-            // Doesn't appear to be used.
-            // $(document).on(
-            //     'copyThis.Narrative', function (e, panel, active, jump) {
-            //         this.copyThisNarrative(panel, active, jump);
-            //     }.bind(this)
-            // );
-
             $([Jupyter.events]).on(
                 'notebook_saved.Notebook', function (e) {
                     this.refresh();
@@ -322,7 +315,6 @@ define([
 
         renderPanel: function () {
             var self = this;
-                // divider = '<hr class="kb-data-list-row-hr">';
 
             if (self.$narPanel && self.narData) {
                 self.$narPanel.children().detach(); // this will also hide any loading messages if they exist
@@ -334,7 +326,6 @@ define([
                         if (!self.narData.mine[k].$div) {
                             self.narData.mine[k].$div = self.renderNarrativeDiv(self.narData.mine[k]);
                         }
-                        // self.$narPanel.append(divider);
                         self.$narPanel.append(self.narData.mine[k].$div);
                     }
                 }
@@ -346,11 +337,9 @@ define([
                         if (!self.narData.shared[k].$div) {
                             self.narData.shared[k].$div = self.renderNarrativeDiv(self.narData.shared[k]);
                         }
-                        // self.$narPanel.append(divider);
                         self.$narPanel.append(self.narData.shared[k].$div);
                     }
                 }
-
 
                 // ADVANCED TAB: allows users to set the default narrative for any workspace
                 var $advancedDiv = $('<div>').hide();

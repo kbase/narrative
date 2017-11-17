@@ -29,6 +29,7 @@ define([
         p = t('p'),
         pre = t('pre'),
         fsm,
+        currentSection,
         appStates = [{
                 state: {
                     mode: 'new'
@@ -218,7 +219,7 @@ define([
                 },
                 ui: {
                     buttons: {
-                        enabled: ['top', 'back'],
+                        enabled: ['top', 'back',  'forward', 'bottom'],
                         disabled: ['play', 'stop']
                     }
                 },
@@ -336,7 +337,7 @@ define([
             jobId,
             model,
             ui,
-            linesPerPage = config.linesPerPage || 15,
+            linesPerPage = config.linesPerPage || 10,
             loopFrequency = 5000,
             looping = false,
             stopped = false,
@@ -429,11 +430,13 @@ define([
         }
 
         function doFetchPreviousLogChunk() {
-            var currentLine = model.getItem('currentLine'),
+            console.log('prev')
+            console.log('currentSection: ', currentSection);
+            console.log('currentLine: ', model.getItem('currentLine'));
+            var currentLine = currentSection ? currentSection : model.getItem('currentLine'),
                 newFirstLine = currentLine - linesPerPage;
 
             doStopPlayLogs();
-
             if (currentLine === 0) {
                 return;
             }
@@ -441,12 +444,29 @@ define([
             if (newFirstLine < 0) {
                 newFirstLine = 0;
             }
+            var $currentSection = $('.' + String(currentLine));
+            if ($currentSection.is(':first-child')){
+                requestJobLog(newFirstLine);
+                currentSection = newFirstLine;
 
-            requestJobLog(newFirstLine);
+            }else{
+                var target = $currentSection.prev();
+
+                $(ui.getElements('panel')[0]).animate({
+                    scrollTop: target.offset().top
+                }, 1000, function () {
+                    currentSection = Number(target.attr('class'));
+                    target.css('background-color', 'pink');
+
+                });   
+            }
         }
 
         function doFetchNextLogChunk() {
-            var currentLine = model.getItem('currentLine'),
+            console.log('next');
+            console.log('currentSection: ', currentSection);
+            console.log('currentLine: ', model.getItem('currentLine'));
+            var currentLine = currentSection ? currentSection : model.getItem('currentLine'),
                 lastLine = model.getItem('lastLine'),
                 newFirstLine;
 
@@ -461,8 +481,21 @@ define([
                 // NB this is actually the next line after the end
                 newFirstLine = currentLine + linesPerPage;
             }
+            var $currentSection = $('.' + String(currentLine));
 
-            requestJobLog(newFirstLine);
+            if ($currentSection.is(':last-child')) {
+                requestJobLog(newFirstLine);
+
+            } else {
+                var target = $currentSection.next();
+                $(ui.getElements('panel')[0]).animate({
+                    scrollTop: target.offset().top
+                }, 1000, function(){
+                    currentSection  = Number(target.attr('class'));
+                    target.css('background-color', 'yellow');
+
+                });            
+            }
         }
 
         function doFetchLastLogChunk() {
@@ -650,11 +683,12 @@ define([
         }
 
         function renderLines(lines) {
-            var $section = $('<div/>');
-    
+            var $section = $('<div/>')
+                            .css('border', '2px solid black');
             for(var i = lines.length-1; i>=0; i--){
                 $section.prepend(renderLine2(lines[i]));
             }
+            $section.addClass(String(model.getItem('currentLine')));
             return $section;
         }
 
@@ -1085,7 +1119,7 @@ define([
                 lines: [],
                 currentLine: null,
                 lastLine: null,
-                linesPerPage: 30,
+                linesPerPage: 10,
                 fetchedAt: null
             },
             onUpdate: function() {

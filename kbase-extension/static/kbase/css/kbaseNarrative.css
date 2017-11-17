@@ -10,6 +10,15 @@
     text-overflow: ellipsis;
 }
 
+.kb-data-staging-footer {
+    font-family : "OxygenBold", Arial, sans-serif;
+    font-size : 105%;
+    text-align : center;
+    background-color : #EEEEEE;
+    height : 32px;
+    padding : 8px;
+}
+
 .kb-dropzone {
     border: 2px dashed #2196F3 !important;
     margin-bottom:5px;

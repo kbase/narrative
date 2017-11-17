@@ -236,6 +236,7 @@ define([], function() {
      * edited from: http://stackoverflow.com/questions/3177836/how-to-format-time-since-xxx-e-g-4-minutes-ago-similar-to-stack-exchange-site
      */
     function getTimeStampStr (objInfoTimeStamp, alwaysExact) {
+
         var date = new Date(objInfoTimeStamp);
         var seconds = Math.floor((new Date() - date) / 1000);
         if (seconds < 0) {
@@ -298,6 +299,22 @@ define([], function() {
         return pluralizeTimeStr(Math.floor(seconds), 'second');
     }
 
+    // There was a request that the staging panel tighten up the display a little bit, which was using getTimeStampStr to format the age.
+    // So this function will just take the output of regular getTimeStampStr and shorten it up a little bit.
+    // * Replace "long" durations with shortened ones.
+    // * drop " ago" from the end.
+
+    function getShortTimeStampStr (objInfoTimeStamp, alwaysExact) {
+      var longTimeStampStr = getTimeStampStr(objInfoTimeStamp, alwaysExact);
+      longTimeStampStr = longTimeStampStr.replace(/month/, 'mon');
+      longTimeStampStr = longTimeStampStr.replace(/hour/, 'hr');
+      longTimeStampStr = longTimeStampStr.replace(/minute/, 'min');
+      longTimeStampStr = longTimeStampStr.replace(/second/, 'sec');
+      longTimeStampStr = longTimeStampStr.replace(/\s*ago\s*/, '');
+
+      return longTimeStampStr;
+    }
+
     /**
      * @private
      * @method
@@ -345,6 +362,7 @@ define([], function() {
         reformatDate: reformatDate,
         reformatISOTimeString: reformatISOTimeString,
         getTimeStampStr: getTimeStampStr,
+        getShortTimeStampStr : getShortTimeStampStr,
         readableTimestamp: readableTimestamp
     };
 });

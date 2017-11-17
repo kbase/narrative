@@ -69,6 +69,7 @@ define([
         },
 
         updateView: function() {
+        console.log("ELEM IS ", this.$elem);
             this.stagingServiceClient.list()
                 .then(function(data) {
                   var files = JSON.parse(data);
@@ -158,7 +159,7 @@ define([
                                 disp = '<button data-name="' + full[1] + '" class="btn btn-xs btn-default">' + disp + '</button>';
                             }
                             else {
-                              disp = "<i class='fa fa-caret-right' data-name='" + full[1] + "' style='cursor : pointer'></i> " + disp;
+                              disp = "<i class='fa fa-caret-right' data-caret='" + full[1] + "' style='cursor : pointer'></i> " + disp;
                             }
                             return disp;
                         } else {
@@ -170,8 +171,15 @@ define([
                     sClass: 'staging-name',
                     mRender: function(data, type, full) {
                         if (type === 'display') {
+
+                            var decompressButton = '';
+console.log("FULL IS ", full);
+                            if (data.match(/\.(zip|tar\.gz|tgz|tar\.bz|tar\.bz2|tar|gz|bz2)$/)) {
+                              decompressButton = " <button class='btn btn-default btn-xs' style='border : 1px solid #cccccc; border-radius : 1px' data-decompress='" + data + "'><i class='fa fa-expand'></i>";
+                            }
+
                             return '<div class="kb-data-staging-table-name">' + data
-                            //+ "<i style='margin-left : '10px' class='fa fa-expand'></i><i class='fa fa-binoculars'></i><i class='fa fa-trash'></i>"
+                              + decompressButton
                             + '</div>';
                         }
                         return data;
@@ -190,7 +198,7 @@ define([
                     aTargets: [ 3 ],
                     mRender: function(data, type) {
                         if (type === 'display') {
-                            return TimeFormat.getTimeStampStr(Number(data));
+                            return TimeFormat.getShortTimeStampStr(Number(data));
                         } else {
                             return data;
                         }
@@ -224,9 +232,9 @@ define([
                     $('td:eq(0)', nRow).find('button[data-name]').on('click', function(e) {
                         this.updatePathFn(this.path += '/' + $(e.currentTarget).data().name);
                     }.bind(this));
-
-                    $('td:eq(0)', nRow).find('i[data-name]').on('click', function(e) {
-                        var fileName = $(e.currentTarget).data().name;
+                    $('td:eq(0)', nRow).find('i[data-caret]').off('click');
+                    $('td:eq(0)', nRow).find('i[data-caret]').on('click', function(e) {
+                        var fileName = $(e.currentTarget).data().caret;
 
                         var myFile = getFileFromName(fileName);
 
@@ -235,14 +243,32 @@ define([
 
                         if ($(e.currentTarget).hasClass('fa-caret-down')) {
                           $('.kb-dropzone').css('min-height', '75px');
+                          $('.dz-message').css('margin', '0em 0');
                           $tr.after(
                             this.renderMoreFileInfo( myFile )
                           );
                         }
                         else {
                           $('.kb-dropzone').css('min-height', '200px');
+                          $('.dz-message').css('margin', '3em 0');
                           $tr.next().remove();
                         }
+                    }.bind(this));
+
+                    $('td:eq(1)', nRow).find('button[data-decompress]').off('click');
+                    $('td:eq(1)', nRow).find('button[data-decompress]').on('click', function(e) {
+                        var fileName = $(e.currentTarget).data().decompress;
+                        var myFile = getFileFromName(fileName);
+console.log("DECOMPRESSES : ", fileName, myFile);
+                        this.stagingServiceClient.decompress({ path : myFile.name })
+                            .then(function(data) {
+                              this.updateView();
+                            }.bind(this))
+                            .fail(function (xhr) {
+                              console.log("FAILED", xhr);
+                              alert(xhr.responseText);
+                            }.bind(this));
+
                     }.bind(this));
                 }.bind(this)
             });
@@ -259,11 +285,21 @@ define([
           }
 
           var $tabsDiv = $.jqElem('div')
+            .css({'width' : '90%', display : 'inline-block'})
             .append('Loading file info...please wait');
 
           this.stagingServiceClient.metadata({ path : fileData.name }).then( function(dataString, status, xhr) {
             $tabsDiv.empty();
             var data = JSON.parse(dataString);
+console.log("GOT ME BACK DATA : " , data);
+            var ulCSS = {
+              'font-family' : 'OxygenBold',
+              width : '115px',
+              display : 'inline-block',
+              'font-size' : '90%',
+            }
+
+            var linesCSS = {'white-space' : 'pre', 'overflow' : 'scroll', 'font-family' : 'monospace', 'font-size' : '90%', 'background-color' : '#DDDDDD'};
 
             var $tabs = new KBaseTabs($tabsDiv, {
               tabs : [
@@ -271,23 +307,24 @@ define([
                   tab : 'Info',
                   content :
                     $.jqElem('ul')
-                      .append( $.jqElem('li').append($.jqElem('span').css({'font-weight' : 'bold', width : '115px', display : 'inline-block'}).append('Name : ')).append(data.name) )
-                      .append( $.jqElem('li').append($.jqElem('span').css({'font-weight' : 'bold', width : '115px', display : 'inline-block'}).append('Created : ')).append(TimeFormat.reformatDate(new Date(data.mtime)) ) )
-                      .append( $.jqElem('li').append($.jqElem('span').css({'font-weight' : 'bold', width : '115px', display : 'inline-block'}).append('Size : ')).append(StringUtil.readableBytes(Number(data.size)) ) )
-                      .append( $.jqElem('li').append($.jqElem('span').css({'font-weight' : 'bold', width : '115px', display : 'inline-block'}).append('Line Count : ')).append(data.lineCount ) )
-                      .append( $.jqElem('li').append($.jqElem('span').css({'font-weight' : 'bold', width : '115px', display : 'inline-block'}).append('MD5 : ')).append(data.md5 ) )
-                      //.append( $.jqElem('li').append('Imported : ' + data.imported) )
+                      .css('list-style', 'none')
+                      .append( $.jqElem('li').append($.jqElem('span').css(ulCSS).append('Name')).append(data.name) )
+                      .append( $.jqElem('li').append($.jqElem('span').css(ulCSS).append('Created')).append(TimeFormat.reformatDate(new Date(data.mtime)) ) )
+                      .append( $.jqElem('li').append($.jqElem('span').css(ulCSS).append('Size')).append(StringUtil.readableBytes(Number(data.size)) ) )
+                      .append( $.jqElem('li').append($.jqElem('span').css(ulCSS).append('Line Count')).append(parseInt(data.lineCount).toLocaleString() ) )
+                      .append( $.jqElem('li').append($.jqElem('span').css(ulCSS).append('MD5')).append(data.md5 ) )
+                      .append( $.jqElem('li').append($.jqElem('span').css(ulCSS).append('Imported as')).append(data.UPA ) )
                 },
                 {
                   tab : 'First 10 lines',
                   content : $.jqElem('div')
-                    .css({'white-space' : 'pre', 'overflow' : 'scroll'})
+                    .css(linesCSS)
                     .append( data.head )
                 },
                 {
                   tab : 'Last 10 lines',
                   content : $.jqElem('div')
-                    .css({'white-space' : 'pre', 'overflow' : 'scroll'})
+                    .css(linesCSS)
                     .append( data.tail )
                 }
               ]
@@ -306,9 +343,14 @@ define([
           return fileData.loaded = $.jqElem('tr')
             .append(
               $.jqElem('td')
+                .attr('colspan', 5)
+                .css('vertical-align', 'top')
+                .append($tabsDiv)
                 .append(
-                  $.jqElem('i')
-                    .addClass('fa fa-trash')
+                  $.jqElem('button')
+                    .css({'float' : 'right', border : '1px solid #CCCCCC', 'border-radius' : '2px'})
+                    .addClass('btn btn-default btn-xs')
+                    .tooltip({ title : 'Delete ' + fileData.name })
                     .on('click', function(e) {
                       if (window.confirm('Really delete file ' + fileData.name + '?')) {
                         this.stagingServiceClient.delete({ path : fileData.name}).then(function(d,s,x) {
@@ -321,17 +363,13 @@ define([
                               .addClass('alert alert-danger')
                               .append('Error ' + xhr.status + '<br/>' + xhr.responseText)
                           );
-                        }.bind(this));
+                        }.bind(this))
                       }
                     }.bind(this))
+                  .append($.jqElem('i').addClass('fa fa-trash'))
+
                 )
             )
-            .append(
-              $.jqElem('td')
-                .attr('colspan', 4)
-                .append($tabsDiv)
-            );
-
         },
 
         initImportApp: function(type, file) {

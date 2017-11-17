@@ -48,8 +48,8 @@ define([
             var runtime = Runtime.make();
 
             this.stagingServiceClient = new StagingServiceClient({
-              root : Config.url('staging_api_url'),
-              token : runtime.authToken()
+                root : Config.url('staging_api_url'),
+                token : runtime.authToken()
             });
 
             this.ftpFileTableTmpl = Handlebars.compile(FtpFileTableHtml);
@@ -69,10 +69,9 @@ define([
         },
 
         updateView: function() {
-        console.log("ELEM IS ", this.$elem);
-            this.stagingServiceClient.list()
+            return this.stagingServiceClient.list({path: this.subpath})
                 .then(function(data) {
-                  var files = JSON.parse(data);
+                    var files = JSON.parse(data);
                     files.forEach(function(f) {
                         if (!f.isFolder) {
                             f.imported = {};
@@ -173,7 +172,7 @@ define([
                         if (type === 'display') {
 
                             var decompressButton = '';
-console.log("FULL IS ", full);
+
                             if (data.match(/\.(zip|tar\.gz|tgz|tar\.bz|tar\.bz2|tar|gz|bz2)$/)) {
                               decompressButton = " <button class='btn btn-default btn-xs' style='border : 1px solid #cccccc; border-radius : 1px' data-decompress='" + data + "'><i class='fa fa-expand'></i>";
                             }
@@ -205,9 +204,9 @@ console.log("FULL IS ", full);
                     },
                     sType: 'numeric'
                 }],
-                fnRowCallback: function(nRow, aData, iDisplayIndex, iDisplayIndexFull) {
+                rowCallback: function(nRow, aData, iDisplayIndex, iDisplayIndexFull) {
                     var getFileFromName = function(fileName) {
-                        return files.filter( function(file) {
+                        return files.filter(function(file) {
                             return file.name === fileName;
                         })[0];
                     };
@@ -223,19 +222,19 @@ console.log("FULL IS ", full);
                     $('td:eq(4)', nRow).find('select').select2({
                         placeholder: 'Select a format'
                     });
-                    $('td:eq(4)', nRow).find('button[data-import]').on('click', function(e) {
+                    $('td:eq(4)', nRow).find('button[data-import]').off('click').on('click', function(e) {
                         var importType = $(e.currentTarget).prevAll('#import-type').val();
                         var importFile = getFileFromName($(e.currentTarget).data().import);
-                        this.initImportApp(importType, importFile.path);
+                        this.initImportApp(importType, importFile);
                         this.updateView();
                     }.bind(this));
-                    $('td:eq(0)', nRow).find('button[data-name]').on('click', function(e) {
+                    $('td:eq(0)', nRow).find('button[data-name]').off('click').on('click', function(e) {
                         this.updatePathFn(this.path += '/' + $(e.currentTarget).data().name);
                     }.bind(this));
+
                     $('td:eq(0)', nRow).find('i[data-caret]').off('click');
                     $('td:eq(0)', nRow).find('i[data-caret]').on('click', function(e) {
                         var fileName = $(e.currentTarget).data().caret;
-
                         var myFile = getFileFromName(fileName);
 
                         $(e.currentTarget).toggleClass('fa-caret-down fa-caret-right');
@@ -259,7 +258,7 @@ console.log("FULL IS ", full);
                     $('td:eq(1)', nRow).find('button[data-decompress]').on('click', function(e) {
                         var fileName = $(e.currentTarget).data().decompress;
                         var myFile = getFileFromName(fileName);
-console.log("DECOMPRESSES : ", fileName, myFile);
+
                         this.stagingServiceClient.decompress({ path : myFile.name })
                             .then(function(data) {
                               this.updateView();
@@ -288,10 +287,15 @@ console.log("DECOMPRESSES : ", fileName, myFile);
             .css({'width' : '90%', display : 'inline-block'})
             .append('Loading file info...please wait');
 
-          this.stagingServiceClient.metadata({ path : fileData.name }).then( function(dataString, status, xhr) {
+          var filePath = this.subpath;
+          if (filePath.length) {
+              filePath += '/';
+          }
+          filePath += fileData.name;
+          this.stagingServiceClient.metadata({ path : filePath }).then( function(dataString, status, xhr) {
             $tabsDiv.empty();
             var data = JSON.parse(dataString);
-console.log("GOT ME BACK DATA : " , data);
+
             var ulCSS = {
               'font-family' : 'OxygenBold',
               width : '115px',
@@ -376,16 +380,16 @@ console.log("GOT ME BACK DATA : " , data);
             var appInfo = this.uploaders.app_info[type];
             if (appInfo) {
                 var tag = APIUtil.getAppVersionTag(),
-                    fileParam = file,
+                    fileParam = file.name,
                     inputs = {};
                 if (this.subpath) {
-                    fileParam = this.subpath + '/' + file;
+                    fileParam = this.subpath + '/' + file.name;
                 }
                 if (appInfo.app_input_param_type === 'list') {
                     fileParam = [fileParam];
                 }
                 inputs[appInfo.app_input_param] = fileParam;
-                inputs[appInfo.app_output_param] = file.replace(/\s/g, '_') + appInfo.app_output_suffix;
+                inputs[appInfo.app_output_param] = file.name.replace(/\s/g, '_') + appInfo.app_output_suffix;
                 for (var p in appInfo.app_static_params) {
                     if (appInfo.app_static_params.hasOwnProperty(p)) {
                         inputs[p] = appInfo.app_static_params[p];

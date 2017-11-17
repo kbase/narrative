@@ -4,11 +4,31 @@
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
 define([
-    'kbaseNarrativeStagingDataTab'
-], function(Widget) {
-    describe('Test the kbaseNarrativeSidePublicTab widget', function() {
-        it('Should do things', function() {
+    'jquery',
+    'kbaseNarrativeStagingDataTab',
+    'base/js/namespace'
+], function(
+    $,
+    StagingDataTab,
+    Jupyter
+) {
+    'use strict';
+    describe('Test the kbaseNarrativeStagingDataTab widget', function() {
+        var $dummyNode = $('<div>'),
+            stagingWidget;
+        beforeEach(function() {
+            Jupyter.narrative = { userId: 'fakeUser' };
+            stagingWidget = new StagingDataTab($dummyNode);
+        });
 
+        it('load properly with a real user', function() {
+            expect(stagingWidget).not.toBeNull();
+        });
+
+        it('can update its path properly', function() {
+            var newPath = 'a_new_path';
+            stagingWidget.updatePath(newPath);
+            expect(stagingWidget.path).toEqual(newPath);
         });
     });
 });

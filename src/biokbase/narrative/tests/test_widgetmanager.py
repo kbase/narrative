@@ -81,5 +81,8 @@ class WidgetManagerTestCase(unittest.TestCase):
                                               auth_required=True)
         self.assertIsInstance(widget, IPython.core.display.Javascript)
 
+    def test_show_data_cell(self):
+        pass
+
 if __name__ == '__main__':
     unittest.main()

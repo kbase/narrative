@@ -398,7 +398,6 @@ class WidgetManager(object):
                                              timestamp=int(round(time.time()*1000)))
         return Javascript(data=js, lib=None, css=None)
 
-
     def show_data_widget(self, ref, title="", cell_id=None, tag="release"):
         """
         Renders a widget using the generic kbaseNarrativeOutputWidget container.
@@ -447,31 +446,40 @@ class WidgetManager(object):
             (output_widget, output) = map_outputs_from_state([], input_params, spec)
             input_data['output'] = output
 
-        if cell_id is not None:
-            cell_id = "\"{}\"".format(cell_id)
+        # if cell_id is not None:
+        #     cell_id = "\"{}\"".format(cell_id)
+    # def show_output_widget(self, widget_name, params, tag="release", title="", type="method", cell_id=None, check_widget=False, **kwargs):
 
-        input_template = """
-        element.html("<div id='{{input_id}}' class='kb-vis-area'></div>");
+        return self.show_output_widget(
+            input_data['app_spec']['widgets']['output'],
+            input_data['output'],
+            title=title,
+            type="viewer",
+            cell_id=cell_id
+        )
 
-        require(['kbaseNarrativeOutputCell'], function(KBaseNarrativeOutputCell) {
-            var w = new KBaseNarrativeOutputCell($('#{{input_id}}'), {
-                "data": {{input_data}},
-                "type":"viewer",
-                "widget":"{{widget_name}}",
-                "cellId":{{cell_id}},
-                "title":"{{cell_title}}",
-                "time":{{timestamp}}
-            });
-        });
-        """
-
-        js = Template(input_template).render(input_id=self._cell_id_prefix + str(uuid.uuid4()),
-                                             widget_name=widget_name,
-                                             input_data=json.dumps(input_data),
-                                             cell_title=title,
-                                             cell_id=cell_id,
-                                             timestamp=int(round(time.time()*1000)))
-        return Javascript(data=js, lib=None, css=None)
+        # input_template = """
+        # element.html("<div id='{{input_id}}' class='kb-vis-area'></div>");
+        #
+        # require(['kbaseNarrativeOutputCell'], function(KBaseNarrativeOutputCell) {
+        #     var w = new KBaseNarrativeOutputCell($('#{{input_id}}'), {
+        #         "data": {{input_data}},
+        #         "type":"viewer",
+        #         "widget":"{{widget_name}}",
+        #         "cellId":{{cell_id}},
+        #         "title":"{{cell_title}}",
+        #         "time":{{timestamp}}
+        #     });
+        # });
+        # """
+        #
+        # js = Template(input_template).render(input_id=self._cell_id_prefix + str(uuid.uuid4()),
+        #                                      widget_name=widget_name,
+        #                                      input_data=json.dumps(input_data),
+        #                                      cell_title=title,
+        #                                      cell_id=cell_id,
+        #                                      timestamp=int(round(time.time()*1000)))
+        # return Javascript(data=js, lib=None, css=None)
 
     def show_external_widget(self, widget, widget_title, objects, options, auth_required=True):
         """

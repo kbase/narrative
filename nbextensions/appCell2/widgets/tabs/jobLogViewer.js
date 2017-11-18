@@ -430,9 +430,6 @@ define([
         }
 
         function doFetchPreviousLogChunk() {
-            console.log('prev')
-            console.log('currentSection: ', currentSection);
-            console.log('currentLine: ', model.getItem('currentLine'));
             var currentLine = currentSection ? currentSection : model.getItem('currentLine'),
                 newFirstLine = currentLine - linesPerPage;
 
@@ -451,21 +448,17 @@ define([
 
             }else{
                 var target = $currentSection.prev();
-
-                $(ui.getElements('panel')[0]).animate({
-                    scrollTop: target.offset().top
+                var $panel = $(ui.getElements('panel')[0])
+                $panel.animate({
+                    scrollTop: target.offset().top - ($panel.offset().top - $panel.scrollTop()) 
                 }, 1000, function () {
                     currentSection = Number(target.attr('class'));
-                    target.css('background-color', 'pink');
 
                 });   
             }
         }
 
         function doFetchNextLogChunk() {
-            console.log('next');
-            console.log('currentSection: ', currentSection);
-            console.log('currentLine: ', model.getItem('currentLine'));
             var currentLine = currentSection ? currentSection : model.getItem('currentLine'),
                 lastLine = model.getItem('lastLine'),
                 newFirstLine;
@@ -483,16 +476,17 @@ define([
             }
             var $currentSection = $('.' + String(currentLine));
 
+
             if ($currentSection.is(':last-child')) {
                 requestJobLog(newFirstLine);
 
             } else {
                 var target = $currentSection.next();
-                $(ui.getElements('panel')[0]).animate({
-                    scrollTop: target.offset().top
+                var $panel = $(ui.getElements('panel')[0])
+                $panel.animate({
+                    scrollTop: $currentSection.offset().top - ($panel.offset().top - $panel.scrollTop()) + $currentSection.height()
                 }, 1000, function(){
                     currentSection  = Number(target.attr('class'));
-                    target.css('background-color', 'yellow');
 
                 });            
             }

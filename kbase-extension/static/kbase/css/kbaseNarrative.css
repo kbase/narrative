@@ -19,6 +19,21 @@
     padding : 8px;
 }
 
+.kb-data-staging-metadata-list {
+  font-family : 'OxygenBold';
+  width : 115px;
+  display : inline-block;
+  font-size : 90%;
+}
+
+.kb-data-staging-metadata-file-lines {
+  white-space : pre;
+ overflow : scroll;
+ font-family : monospace;
+ font-size : 90%;
+ background-color : #DDDDDD
+}
+
 .kb-dropzone {
     border: 2px dashed #2196F3 !important;
     margin-bottom:5px;

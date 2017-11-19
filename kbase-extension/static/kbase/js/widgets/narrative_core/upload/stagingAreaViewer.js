@@ -296,14 +296,9 @@ define([
             $tabsDiv.empty();
             var data = JSON.parse(dataString);
 
-            var ulCSS = {
-              'font-family' : 'OxygenBold',
-              width : '115px',
-              display : 'inline-block',
-              'font-size' : '90%',
-            }
-
-            var linesCSS = {'white-space' : 'pre', 'overflow' : 'scroll', 'font-family' : 'monospace', 'font-size' : '90%', 'background-color' : '#DDDDDD'};
+            var $upa = data.UPA
+              ? $.jqElem('li').append($.jqElem('span').addClass('kb-data-staging-metadata-list').append('Imported as')).append(data.UPA )
+              : '';
 
             var $tabs = new KBaseTabs($tabsDiv, {
               tabs : [
@@ -312,23 +307,23 @@ define([
                   content :
                     $.jqElem('ul')
                       .css('list-style', 'none')
-                      .append( $.jqElem('li').append($.jqElem('span').css(ulCSS).append('Name')).append(data.name) )
-                      .append( $.jqElem('li').append($.jqElem('span').css(ulCSS).append('Created')).append(TimeFormat.reformatDate(new Date(data.mtime)) ) )
-                      .append( $.jqElem('li').append($.jqElem('span').css(ulCSS).append('Size')).append(StringUtil.readableBytes(Number(data.size)) ) )
-                      .append( $.jqElem('li').append($.jqElem('span').css(ulCSS).append('Line Count')).append(parseInt(data.lineCount).toLocaleString() ) )
-                      .append( $.jqElem('li').append($.jqElem('span').css(ulCSS).append('MD5')).append(data.md5 ) )
-                      .append( $.jqElem('li').append($.jqElem('span').css(ulCSS).append('Imported as')).append(data.UPA ) )
+                      .append( $.jqElem('li').append($.jqElem('span').addClass('kb-data-staging-metadata-list').append('Name')).append(data.name) )
+                      .append( $.jqElem('li').append($.jqElem('span').addClass('kb-data-staging-metadata-list').append('Created')).append(TimeFormat.reformatDate(new Date(data.mtime)) ) )
+                      .append( $.jqElem('li').append($.jqElem('span').addClass('kb-data-staging-metadata-list').append('Size')).append(StringUtil.readableBytes(Number(data.size)) ) )
+                      .append( $.jqElem('li').append($.jqElem('span').addClass('kb-data-staging-metadata-list').append('Line Count')).append(parseInt(data.lineCount).toLocaleString() ) )
+                      .append( $.jqElem('li').append($.jqElem('span').addClass('kb-data-staging-metadata-list').append('MD5')).append(data.md5 ) )
+                      .append( $upa )
                 },
                 {
                   tab : 'First 10 lines',
                   content : $.jqElem('div')
-                    .css(linesCSS)
+                    .addClass('kb-data-staging-metadata-file-lines')
                     .append( data.head )
                 },
                 {
                   tab : 'Last 10 lines',
                   content : $.jqElem('div')
-                    .css(linesCSS)
+                    .addClass('kb-data-staging-metadata-file-lines')
                     .append( data.tail )
                 }
               ]

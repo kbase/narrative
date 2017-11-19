@@ -285,15 +285,15 @@ define([], function() {
             }
         }
         interval = Math.floor(seconds / 86400);
-        if (interval > 1) {
+        if (interval >= 1) {
             return pluralizeTimeStr(interval, 'day');
         }
         interval = Math.floor(seconds / 3600);
-        if (interval > 1) {
+        if (interval >= 1) {
             return pluralizeTimeStr(interval, 'hour');
         }
         interval = Math.floor(seconds / 60);
-        if (interval > 1) {
+        if (interval >= 1) {
             return pluralizeTimeStr(interval, 'minute');
         }
         return pluralizeTimeStr(Math.floor(seconds), 'second');

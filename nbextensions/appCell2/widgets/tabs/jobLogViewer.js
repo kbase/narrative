@@ -555,7 +555,7 @@ define([
                         handler: doFetchFirstLogChunk
                     })
                 }, [
-                    span({ class: 'fa fa-fast-backward' })
+                    span({ class: 'fa fa-angle-double-up' })
                 ]),
                 button({
                     class: 'btn btn-sm btn-default',
@@ -568,7 +568,7 @@ define([
                         handler: doFetchPreviousLogChunk
                     })
                 }, [
-                    span({ class: 'fa fa-backward' })
+                    span({ class: 'fa fa-angle-up' })
                 ]),
                 button({
                     class: 'btn btn-sm btn-default',
@@ -581,7 +581,7 @@ define([
                         handler: doFetchNextLogChunk
                     })
                 }, [
-                    span({ class: 'fa fa-forward' })
+                        span({ class: 'fa fa-angle-down' })
                 ]),
                 button({
                     class: 'btn btn-sm btn-default',
@@ -595,7 +595,7 @@ define([
                     })
 
                 }, [
-                    span({ class: 'fa fa-fast-forward' })
+                        span({ class: 'fa fa-angle-double-down' })
                 ]),
                 div({ dataElement: 'spinner', class: 'pull-right hidden' }, [
                     span({ class: 'fa fa-spinner fa-pulse fa-ex fa-fw' })
@@ -643,7 +643,7 @@ define([
 
             return fixed.join(' ');
         }
-
+        //left in because oher methods depend on it
         function renderLine(line) {
             return div({
                 class: 'kblog-line' + extraClass
@@ -680,8 +680,7 @@ define([
         }
 
         function renderLines(lines) {
-            var $section = $('<div/>')
-                            .css('border', '2px solid black');
+            var $section = $('<div/>');
             for(var i = lines.length-1; i>=0; i--){
                 $section.prepend(renderLine2(lines[i]));
             }
@@ -707,9 +706,11 @@ define([
                         lineNumber: startingLine + index + 1
                     };
                 });
-                $(ui.getElements('panel')[0]).prepend(renderLines(viewLines));
-                // ui.getElements('panel')[0].prepend(renderLines(viewLines));
-                // ui.setContent('panel', renderLines(viewLines));
+                if (fsm.getCurrentState().state.mode === "complete"){
+                    $(ui.getElements('panel')[0]).prepend(renderLines(viewLines));
+                }else{
+                    $(ui.getElements('panel')[0]).html(renderLines(viewLines)[0]);
+                }
             } else {
                 ui.setContent('panel', 'Sorry, no log yet...');
             }

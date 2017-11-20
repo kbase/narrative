@@ -79,6 +79,8 @@ require.config({
         'GenomeSearchUtil-client-api': 'kbase/js/api/GenomeSearchUtilClient',
         'SetAPI-client-api': 'kbase/js/api/SetAPIClient',
         'Taxonomy-client-api': 'kbase/js/api/TaxonomyAPIClient',
+        'RestAPIClient' : 'kbase/js/api/RestAPIClient',
+        'StagingServiceClient' : 'kbase/js/api/StagingServiceClient',
 
         'njs-wrapper-client-api': 'kbase/js/api/NarrativeJobServiceWrapper',
         kbaseNarrativeJobStatus: 'kbase/js/widgets/narrative_core/kbaseNarrativeJobStatus',
@@ -318,7 +320,6 @@ require.config({
         'kbaseExpressionVolcanoPlot': 'kbase/js/widgets/function_output/kbaseExpressionVolcanoPlot',
 
         'kbaseRESKESearchResultDemo': 'kbase/js/widgets/function_output/kbaseRESKESearchResultDemo',
-        'kbaseGenericSetViewer': 'kbase/js/widgets/function_output/kbaseGenericSetViewer',
         'kbaseDifferentialExpressionMatrixSetViewer': 'kbase/js/widgets/function_output/kbaseDifferentialExpressionMatrixSetViewer',
 
 

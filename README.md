@@ -5,7 +5,6 @@
 | Branch | Status |
 | :--- | :--- |
 | master | [![Build Status](https://travis-ci.org/kbase/narrative.svg?branch=master)](https://travis-ci.org/kbase/narrative) [![Coverage Status](https://coveralls.io/repos/kbase/narrative/badge.svg?branch=master)](https://coveralls.io/r/kbase/narrative?branch=master) |
-| staging | [![Build Status](https://travis-ci.org/kbase/narrative.svg?branch=staging)](https://travis-ci.org/kbase/narrative) [![Coverage Status](https://coveralls.io/repos/kbase/narrative/badge.svg?branch=staging)](https://coveralls.io/r/kbase/narrative?branch=staging) |
 | develop | [![Build Status](https://travis-ci.org/kbase/narrative.svg?branch=develop)](https://travis-ci.org/kbase/narrative) [![Coverage Status](https://coveralls.io/repos/kbase/narrative/badge.svg?branch=develop)](https://coveralls.io/r/kbase/narrative?branch=develop)|
 
 This is the repository for the KBase Narrative Interface.

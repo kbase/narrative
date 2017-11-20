@@ -182,6 +182,9 @@ define([
                     .append(' Add');
             }, this));
 
+            // note how many times we've clicked on the data browser slideout button.
+            var numDataBrowserClicks = 0;
+
             this.$slideoutBtn = $('<button>')
                 .addClass('btn btn-xs btn-default')
                 .tooltip({
@@ -194,9 +197,14 @@ define([
                 })
                 .append('<span class="fa fa-arrow-right"></span>')
                 .click(function () {
+                    this.$slideoutBtn.children().toggleClass('fa-arrow-right fa-arrow-left');
                     this.$slideoutBtn.tooltip('hide');
                     this.trigger('hideGalleryPanelOverlay.Narrative');
                     this.trigger('toggleSidePanelOverlay.Narrative', this.$overlayPanel);
+                    //once we've clicked it 10 times, meaning we've open and shut the browser 5x, we reveal its TRUE NAME.
+                    if (++numDataBrowserClicks >= 10) {
+                      this.$slideoutBtn.attr('data-original-title', 'Hide / Show Slidey McSliderface')
+                    }
                 }.bind(this));
 
             this.addButton(this.$slideoutBtn);
@@ -342,7 +350,7 @@ define([
 
             var $header = $('<div style="background-color: #2196F3">');
             var $body = $('<div>');
-            
+
             for (var i = 0; i < tabs.length; i++) {
                 var tab = tabs[i];
                 $header.append($('<div>')
@@ -407,7 +415,7 @@ define([
             // model for selected objects to import
             var mineSelected = [],
                 sharedSelected = [];
-          
+
             // tab panels
             var minePanel = $('<div class="kb-import-content kb-import-mine">'),
                 sharedPanel = $('<div class="kb-import-content kb-import-shared">'),
@@ -421,7 +429,7 @@ define([
                 {tabName: '<small>Shared With Me</small>', content: sharedPanel},
                 {tabName: '<small>Public</small>', content: publicPanel},
                 {tabName: '<small>Example</small>', content: examplePanel},
-                {tabName: '<small>Import</small>', content: importPanel},
+                //{tabName: '<small>Import</small>', content: importPanel},
             ];
 
             if (Config.get('features').stagingDataViewer) {
@@ -542,6 +550,7 @@ define([
             var serviceClient = new GenericClient(Config.url('service_wizard'), auth);
 
             closeBtn.click(function () {
+                self.$slideoutBtn.children().toggleClass('fa-arrow-right fa-arrow-left');
                 self.trigger('hideSidePanelOverlay.Narrative');
             });
             footer.append(closeBtn);
@@ -566,7 +575,7 @@ define([
                             return -1;
                         return 1;
                     });
-                    
+
                     return data;
                 });
             }
@@ -835,7 +844,7 @@ define([
             // a container to put data in.
             // It produces a scrollable dataset
             function render(view, data, container, selected, template) {
-    
+
                 var setDataIconTrigger = $._data($(document)[0], 'events')['setDataIcon'];
                 if (setDataIconTrigger) {
                     renderOnIconsReady(view, data, container, selected, template);
@@ -1060,7 +1069,7 @@ define([
                             });
                         });
                     }
-                ]);  
+                ]);
                 for (var i = start; i < Math.min(start + numRows, data.length); i++) {
                     var obj = data[i];
                     // some logic is not right
@@ -1218,7 +1227,7 @@ define([
                 var actionButtonText = (isCopy) ? ' Copy' : ' Add';
 
                 var $card = kbaseDataCard.apply(self, [
-                    {                     
+                    {
                         narrative: narName,
                         actionButtonText: actionButtonText,
                         moreContent: $btnToolbar,

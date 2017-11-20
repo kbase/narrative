@@ -16,7 +16,8 @@ define([
         workspaceObjectRef: 'workspaceObjectRef',
         subdata: 'subdata',
         customSubdata: 'customSubdata',
-        custom: 'custom'
+        custom: 'custom',
+        dynamicDropdown: 'dynamicDropdown'
     };
 
     function getValidatorModule(fieldSpec) {

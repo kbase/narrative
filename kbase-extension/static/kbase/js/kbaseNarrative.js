@@ -733,13 +733,13 @@ define([
             // this.initSettingsDialog();
 
             this.updateDocumentVersion()
-            .then(function() {
-                // init the controller
-                return this.narrController.render();
-            }.bind(this))
-            .finally(function () {
-                this.sidePanel.render();
-            }.bind(this));
+                .then(function() {
+                    // init the controller
+                    return this.narrController.render();
+                }.bind(this))
+                .finally(function () {
+                    this.sidePanel.render();
+                }.bind(this));
             $([Jupyter.events]).trigger('loaded.Narrative');
             $([Jupyter.events]).on('kernel_ready.Kernel',
                 function () {

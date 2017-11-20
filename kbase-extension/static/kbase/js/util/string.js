@@ -39,16 +39,17 @@ define([], function() {
     /**
      * Given a number in bytes, converts to most relevant
      * order - KB, MB, GB, etc., up to TB
-     * Lots of dividing by 1024.
+     * Adapted from https://stackoverflow.com/questions/15900485/correct-way-to-convert-size-in-bytes-to-kb-mb-gb-in-javascript
      */
     function readableBytes (value) {
-        var unitList = ["B", "KB", "MB", "GB", "TB", "PB"];
-        var unit = 0;
-        while (value >= 1024 && unit < 5) {
-            value /= 1024;
-            unit++;
+        if (value === 0) {
+            return '0 B';
         }
-        return String(value.toFixed(2)) + " " + unitList[unit];
+        var k = 1024,
+            unitList = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'],
+            unitIndex = Math.min(Math.floor(Math.log(value) / Math.log(k)), unitList.length-1),
+            readableValue = parseFloat((value / Math.pow(k, unitIndex)).toFixed(2)) + ' ' + unitList[unitIndex];
+        return readableValue;
     }
 
     function prettyPrintJSON (obj) {

@@ -15,18 +15,20 @@ define ([
     'util/display',
     'catalog-client-api',
     'kbase-client-api',
-    'kbaseAuthenticatedWidget'
+    'kbaseAuthenticatedWidget',
+    'base/js/namespace'
 ], function(
-	KBWidget,
-	bootstrap,
-	$,
-	Promise,
-	Config,
-	AppCard,
-	DisplayUtil,
-	catalog_client_api,
-	kbase_client_api,
-	kbaseAuthenticatedWidget
+    KBWidget,
+    bootstrap,
+    $,
+    Promise,
+    Config,
+    AppCard,
+    DisplayUtil,
+    catalog_client_api,
+    kbase_client_api,
+    kbaseAuthenticatedWidget,
+    Jupyter
 ) {
     'use strict';
     return KBWidget({
@@ -218,21 +220,8 @@ define ([
 
         // Used to trigger
         clickCallback: function(appCard) {
-            var self = this;
-            self.trigger('hideSidePanelOverlay.Narrative');
-            if(appCard.type === 'method') {
-                self.nms.get_method_spec({ids:[appCard.info.id],tag:self.options.tag})
-                        .then(function(spec){
-                            // todo: cache this sped into the methods list
-                            self.trigger('methodClicked.Narrative', [spec[0], self.options.tag]);
-                        });
-            } else if (appCard.type === 'app'){
-                self.nms.get_app_spec({ids:[appCard.info.id],tag:self.options.tag})
-                        .then(function(spec){
-                            // todo: cache this sped into the methods list
-                            self.trigger('appClicked.Narrative', [spec[0], self.options.tag]);
-                        });
-            }
+            this.trigger('hideSidePanelOverlay.Narrative');
+            Jupyter.narrative.addAndPopulateApp(appCard.info.id, this.options.tag);
         },
 
         renderControlToolbar: function () {

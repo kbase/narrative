@@ -42,9 +42,14 @@ define([
                                 input: 'taxonomyRefInput',
                                 view: 'taxonomyRefView'
                             };
+                        case 'dynamic_dropdown':
+                            return {
+                                input: 'dynamicDropdownInput',
+                                view: 'dynamicDropdownView'
+                            };
                         case 'text':
                         default:
-                            // A string type is normally entered as a 
+                            // A string type is normally entered as a
                             // simple text input.
                             return {
                                 input: 'textInput',
@@ -78,7 +83,7 @@ define([
                 case 'workspaceObjectRef':
                     switch (spec.ui.class) {
                         case 'input':
-                            //return 'singleObjectInput';                            
+                            //return 'singleObjectInput';
                             return {
                                 input: 'select2ObjectInput',
                                 view: 'select2ObjectView'
@@ -95,7 +100,7 @@ define([
                                 view: 'undefinedView'
                             };
                     }
-                    // IS THIS used anywhere other than in output areas?? 
+                    // IS THIS used anywhere other than in output areas??
                 case 'workspaceObjectName':
                     switch (spec.ui.class) {
                         case 'parameter':

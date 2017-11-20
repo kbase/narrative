@@ -130,8 +130,8 @@ define([
                 },
                 ui: {
                     buttons: {
-                        enabled: ['stop', 'top', 'back', 'forward', 'bottom'],
-                        disabled: ['play']
+                        enabled: ['stop'],
+                        disabled: ['play', 'top', 'back', 'forward', 'bottom']
                     }
                 },
                 next: [{
@@ -719,12 +719,14 @@ define([
         }
 
         function renderLines(lines) {
-            var $section = $('<div/>')
-            .css('border', '1px solid black');
+            var $section = $('<div/>');
             for(var i = lines.length-1; i>=0; i--){
                 $section.prepend(renderLine2(lines[i]));
             }
-            $section.addClass(String(model.getItem('currentLine')));
+            $section.addClass(String(model.getItem('currentLine')))
+                .mouseenter(function(){
+                    currentSection = Number($section.attr('class'));
+                });
             return $section;
         }
 

@@ -30,6 +30,9 @@ define([
         pre = t('pre'),
         fsm,
         currentSection,
+        smallPanelHeight = '300px',
+        largePanelHeight = '600px',
+        panelHeight = smallPanelHeight,
         appStates = [{
                 state: {
                     mode: 'new'
@@ -433,7 +436,7 @@ define([
 
                 $panel.animate({
                     scrollTop: target.offset().top - ($panel.offset().top - $panel.scrollTop())
-                }, 1000, function () {
+                }, 500, function () {
                     currentSection = Number(target.attr('class'));
                 });  
             } 
@@ -461,7 +464,7 @@ define([
                 var $panel = $(ui.getElements('panel')[0])
                 $panel.animate({
                     scrollTop: target.offset().top - ($panel.offset().top - $panel.scrollTop()) 
-                }, 1000, function () {
+                }, 500, function () {
                     currentSection = Number(target.attr('class'));
 
                 });   
@@ -495,7 +498,7 @@ define([
                 var $panel = $(ui.getElements('panel')[0])
                 $panel.animate({
                     scrollTop: target.offset().top - ($panel.offset().top - $panel.scrollTop()) 
-                }, 1000, function(){
+                }, 500, function(){
                     currentSection  = Number(target.attr('class'));
                 });            
             }
@@ -509,15 +512,36 @@ define([
 
             $panel.animate({
                 scrollTop: target.offset().top - ($panel.offset().top - $panel.scrollTop())
-            }, 1000, function () {
+            }, 500, function () {
                 currentSection = Number(target.attr('class'));
             });          
+        }
+        function test(){
+            if(panelHeight === smallPanelHeight){
+                panelHeight = largePanelHeight;
+            }else{
+                panelHeight = smallPanelHeight;
+            }
+            $(ui.getElements('panel')[0]).animate({height: panelHeight}, 500);
         }
 
         // VIEW
 
         function renderControls(events) {
             return div({ dataElement: 'header', style: { margin: '0 0 10px 0' } }, [
+                button({
+                    class: 'btn btn-sm btn-default',
+                    dataButton: 'expand',
+                    dataToggle: 'tooltip',
+                    dataPlacement: 'top',
+                    title: 'Start fetching logs',
+                    id: events.addEvent({
+                        type: 'click',
+                        handler: test
+                    })
+                }, [
+                    span({ class: 'fa fa-expand' })
+                ]),
                 button({
                     class: 'btn btn-sm btn-default',
                     dataButton: 'play',
@@ -616,7 +640,7 @@ define([
                     ]),
                     div({ dataElement: 'panel',
                         style: {
-                            overflow: 'scroll', height: '300px'
+                            overflow: 'scroll', height: panelHeight
                         } })
                 ]);
 
@@ -680,7 +704,8 @@ define([
         }
 
         function renderLines(lines) {
-            var $section = $('<div/>');
+            var $section = $('<div/>')
+            .css('border', '1px solid black');
             for(var i = lines.length-1; i>=0; i--){
                 $section.prepend(renderLine2(lines[i]));
             }

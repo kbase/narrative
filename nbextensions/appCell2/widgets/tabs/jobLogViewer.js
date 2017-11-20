@@ -420,14 +420,23 @@ define([
 
         function doFetchFirstLogChunk() {
             doStopPlayLogs();
-            var $panel = $(ui.getElements('panel')[0])
-            var target = $panel.children().first()
+            var currentLine = currentSection ? currentSection : model.getItem('currentLine')
+            var $currentSection = $('.' + String(currentLine));
+            if ($currentSection.is(':first-child')) {
+                var newFirstLine = currentLine - linesPerPage;
+                requestJobLog(newFirstLine);
+                currentSection = newFirstLine;
 
-            $panel.animate({
-                scrollTop: target.offset().top - ($panel.offset().top - $panel.scrollTop())
-            }, 1000, function () {
-                currentSection = Number(target.attr('class'));
-            });   
+            } else {
+                var $panel = $(ui.getElements('panel')[0])
+                var target = $panel.children().first()
+
+                $panel.animate({
+                    scrollTop: target.offset().top - ($panel.offset().top - $panel.scrollTop())
+                }, 1000, function () {
+                    currentSection = Number(target.attr('class'));
+                });  
+            } 
         }
 
         function doFetchPreviousLogChunk() {

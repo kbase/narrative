@@ -20,7 +20,7 @@ requirejs.config({
         bootstraptour: 'components/bootstrap-tour/build/js/bootstrap-tour.min',
         bootstrap: 'components/bootstrap/js/bootstrap.min',
         testUtil: '../../test/unit/testUtil',
-        bluebird: 'ext_components/bluebird/js/browser/bluebird.min',
+        bluebird: 'ext_components/bluebird/js/browser/bluebird.min'
     },
     map: {
         '*': {

@@ -420,13 +420,14 @@ define([
 
         function doFetchFirstLogChunk() {
             doStopPlayLogs();
+            var $panel = $(ui.getElements('panel')[0])
+            var target = $panel.children().first()
 
-            var currentLine = model.getItem('currentLine');
-            if (currentLine === 0) {
-                return;
-            }
-
-            requestJobLog(0);
+            $panel.animate({
+                scrollTop: target.offset().top - ($panel.offset().top - $panel.scrollTop())
+            }, 1000, function () {
+                currentSection = Number(target.attr('class'));
+            });   
         }
 
         function doFetchPreviousLogChunk() {
@@ -484,31 +485,24 @@ define([
                 var target = $currentSection.next();
                 var $panel = $(ui.getElements('panel')[0])
                 $panel.animate({
-                    scrollTop: $currentSection.offset().top - ($panel.offset().top - $panel.scrollTop()) + $currentSection.height()
+                    scrollTop: target.offset().top - ($panel.offset().top - $panel.scrollTop()) 
                 }, 1000, function(){
                     currentSection  = Number(target.attr('class'));
-
                 });            
             }
         }
 
         function doFetchLastLogChunk() {
-            var firstLine,
-                lastLine = model.getItem('lastLine');
 
             doStopPlayLogs();
+            var $panel = $(ui.getElements('panel')[0])
+            var target = $panel.children().last()
 
-            if (!lastLine) {
-                requestLatestJobLog();
-            } else {
-                firstLine = lastLine - (lastLine % linesPerPage);
-                firstLine = lastLine - linesPerPage;
-                if (firstLine < 0) {
-                    firstLine = 0;
-                }
-
-                requestJobLog(firstLine);
-            }
+            $panel.animate({
+                scrollTop: target.offset().top - ($panel.offset().top - $panel.scrollTop())
+            }, 1000, function () {
+                currentSection = Number(target.attr('class'));
+            });          
         }
 
         // VIEW

@@ -32,6 +32,7 @@ define([
         currentSection,
         smallPanelHeight = '300px',
         largePanelHeight = '600px',
+        numLines = 10,
         panelHeight = smallPanelHeight,
         appStates = [{
                 state: {
@@ -332,6 +333,7 @@ define([
         ];
 
     function factory(config) {
+        console.log('config', config);
         var config = config || {},
             runtime = Runtime.make(),
             bus = runtime.bus().makeChannelBus({ description: 'Log Viewer Bus' }),
@@ -340,7 +342,7 @@ define([
             jobId,
             model,
             ui,
-            linesPerPage = config.linesPerPage || 10,
+            linesPerPage = config.linesPerPage || numLines,
             loopFrequency = 5000,
             looping = false,
             stopped = false,
@@ -400,13 +402,14 @@ define([
             stopAutoFetch();
         }
 
-        function requestJobLog(firstLine) {
+        function requestJobLog(firstLine, numLines) {
             ui.showElement('spinner');
+            var numLines = numLines ? numLines : linesPerPage;
             runtime.bus().emit('request-job-log', {
                 jobId: jobId,
                 options: {
                     first_line: firstLine,
-                    num_lines: linesPerPage
+                    num_lines: numLines
                 }
             });
         }
@@ -423,11 +426,21 @@ define([
 
         function doFetchFirstLogChunk() {
             doStopPlayLogs();
-            var currentLine = currentSection ? currentSection : model.getItem('currentLine')
-            var $currentSection = $('.' + String(currentLine));
+            var currentLine = currentSection ? currentSection : model.getItem('currentLine'),
+                $currentSection = $('.' + String(currentLine)),
+                newFirstLine = currentLine - linesPerPage,
+                numLines;
+            
+            if (currentLine === 0) {
+                return;
+            }
+
+            if (newFirstLine < 0) {
+                newFirstLine = 0;
+                numLines = Number(currentLine);
+            }
             if ($currentSection.is(':first-child')) {
-                var newFirstLine = currentLine - linesPerPage;
-                requestJobLog(newFirstLine);
+                requestJobLog(newFirstLine, numLines);
                 currentSection = newFirstLine;
 
             } else {
@@ -443,20 +456,22 @@ define([
         }
 
         function doFetchPreviousLogChunk() {
-            var currentLine = currentSection ? currentSection : model.getItem('currentLine'),
-                newFirstLine = currentLine - linesPerPage;
-
             doStopPlayLogs();
+            var currentLine = currentSection ? currentSection : model.getItem('currentLine'),
+                $currentSection = $('.' + String(currentLine)),
+                newFirstLine = currentLine - linesPerPage,
+                numLines;
+
             if (currentLine === 0) {
                 return;
             }
-
             if (newFirstLine < 0) {
                 newFirstLine = 0;
+                numLines = Number(currentLine);
+
             }
-            var $currentSection = $('.' + String(currentLine));
             if ($currentSection.is(':first-child')){
-                requestJobLog(newFirstLine);
+                requestJobLog(newFirstLine, numLines);
                 currentSection = newFirstLine;
 
             }else{
@@ -1142,7 +1157,7 @@ define([
                 lines: [],
                 currentLine: null,
                 lastLine: null,
-                linesPerPage: 10,
+                linesPerPage: numLines,
                 fetchedAt: null
             },
             onUpdate: function() {

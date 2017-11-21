@@ -5,6 +5,7 @@ import IPython
 import mock
 import os
 from util import TestConfig
+from narrative_mock.mockclients import get_mock_client
 
 """
 Tests for the WidgetManager class
@@ -14,19 +15,13 @@ __author__ = 'Bill Riehl <wjriehl@lbl.gov>'
 
 class WidgetManagerTestCase(unittest.TestCase):
     @classmethod
-    @mock.patch('biokbase.narrative.widgetmanager.SpecManager')
-    def setUpClass(self, mock_sm):
+    def setUpClass(self):
         config = TestConfig()
         os.environ['KB_WORKSPACE_ID'] = '12345'  # That's the same workspace as my luggage!
-        specs_list = config.load_json_file(config.get('specs', 'app_specs_file'))
-        specs_dict = dict()
-        for s in specs_list:
-            specs_dict[s['info']['id']] = s
-        mock_sm.return_value.app_specs = {
-            'release': specs_dict,
-            'beta': specs_dict,
-            'dev': specs_dict
-        }
+        app_specs_list = config.load_json_file(config.get('specs', 'app_specs_file'))
+        app_specs_dict = dict()
+        for s in app_specs_list:
+            app_specs_dict[s['info']['id']] = s
         self.wm = WidgetManager()
         self.good_widget = "kbaseTabTable"
         self.bad_widget = "notAWidget"
@@ -81,8 +76,32 @@ class WidgetManagerTestCase(unittest.TestCase):
                                               auth_required=True)
         self.assertIsInstance(widget, IPython.core.display.Javascript)
 
+    @mock.patch('biokbase.narrative.widgetmanager.clients.get', get_mock_client)
     def test_show_data_cell(self):
-        pass
+        """
+        Tests - should do the following:
+            def show_data_widget(self, upa, title=None, cell_id=None, tag="release"):
+        fail message with no upa
+        fail message with malformed upa
+        shouldn't care what title or cell_id are, but should test to make sure they wind up in
+            output code properly
+        fail if type spec'd app isn't present for some tag
+        otherwise, succeed and produce JS code.
+
+        test mocks.
+        """
+        js_obj = self.wm.show_data_widget("18836/5/1", "some title", "no_id")
+        print(js_obj.data)
+        self.assertIsValidCellCode(js_obj, {}, "viewer", "kbaseGenomeView", "no_id", "some title")
+
+    def assertIsValidCellCode(self, js_obj, data, type, widget, cellId, title):
+        code_lines = js_obj.data.strip().split('\n')
+        print("wat{}wat".format(code_lines[0]))
+        self.assertTrue(code_lines[0].strip().startswith('element.html("<div id=\'kb-vis'))
+        self.assertEquals(code_lines[1].strip(), "require(['kbaseNarrativeOutputCell'], function(KBaseNarrativeOutputCell) {")
+        self.assertTrue(code_lines[2].strip().startswith(r"var w = new KBaseNarrativeOutputCell($('#kb-vis"))
+
+
 
 if __name__ == '__main__':
     unittest.main()

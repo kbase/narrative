@@ -48,8 +48,9 @@
 }
 
 .kb-error, .kb-error .kblog-line-num  {
-    color: #350202;
+    color: darkred;
     font-weight: bold;
+    background-color: rgb(255, 245, 245);
 
 }
 

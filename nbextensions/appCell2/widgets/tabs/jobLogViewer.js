@@ -130,8 +130,8 @@ define([
                 },
                 ui: {
                     buttons: {
-                        enabled: ['stop', 'top', 'back', 'forward', 'bottom'],
-                        disabled: ['play']
+                        enabled: ['stop'],
+                        disabled: ['play', 'top', 'back', 'forward', 'bottom']
                     }
                 },
                 next: [{
@@ -333,7 +333,6 @@ define([
         ];
 
     function factory(config) {
-        console.log('config', config);
         var config = config || {},
             runtime = Runtime.make(),
             bus = runtime.bus().makeChannelBus({ description: 'Log Viewer Bus' }),
@@ -402,7 +401,7 @@ define([
             stopAutoFetch();
         }
 
-        function requestJobLog(firstLine, numLines) {
+        function requestJobLog(firstLine, numLines, params) {
             ui.showElement('spinner');
             var numLines = numLines ? numLines : linesPerPage;
             runtime.bus().emit('request-job-log', {
@@ -411,7 +410,7 @@ define([
                     first_line: firstLine,
                     num_lines: numLines
                 }
-            });
+            })
         }
 
         function requestLatestJobLog() {
@@ -423,72 +422,69 @@ define([
                 }
             });
         }
+        function fetchNewLogs(currentLine) {
+            if (currentLine === 0) {
+                return;
+            }
+            var newFirstLine = currentLine - linesPerPage,
+                numLines = linesPerPage;
+
+            if (newFirstLine < 0) {
+                newFirstLine = 0;
+                numLines = Number(currentLine);
+            }
+
+            requestJobLog(newFirstLine, numLines);
+            currentSection = newFirstLine;
+        }
+
+        function scrollToLog($panel, target, scrollTime){
+            var scrollTime = scrollTime ? scrollTime : 500;
+            $panel.animate({
+                scrollTop: target.offset().top - ($panel.offset().top - $panel.scrollTop())
+            }, scrollTime, function () {
+                currentSection = Number(target.attr('class'));
+            });  
+        }
 
         function doFetchFirstLogChunk() {
             doStopPlayLogs();
             var currentLine = currentSection ? currentSection : model.getItem('currentLine'),
-                $currentSection = $('.' + String(currentLine)),
-                newFirstLine = currentLine - linesPerPage,
-                numLines;
-            
-            if (currentLine === 0) {
-                return;
-            }
+                $currentSection = $('.' + String(currentLine));
 
-            if (newFirstLine < 0) {
-                newFirstLine = 0;
-                numLines = Number(currentLine);
-            }
             if ($currentSection.is(':first-child')) {
-                requestJobLog(newFirstLine, numLines);
-                currentSection = newFirstLine;
-
+                fetchNewLogs(currentLine);
             } else {
-                var $panel = $(ui.getElements('panel')[0])
-                var target = $panel.children().first()
+                var $panel = $(ui.getElements('panel')[0]),
+                    target = $panel.children().first();
+                
+                scrollToLog($panel, target);
 
-                $panel.animate({
-                    scrollTop: target.offset().top - ($panel.offset().top - $panel.scrollTop())
-                }, 500, function () {
-                    currentSection = Number(target.attr('class'));
-                });  
             } 
         }
+
 
         function doFetchPreviousLogChunk() {
             doStopPlayLogs();
             var currentLine = currentSection ? currentSection : model.getItem('currentLine'),
-                $currentSection = $('.' + String(currentLine)),
-                newFirstLine = currentLine - linesPerPage,
-                numLines;
+                $currentSection = $('.' + String(currentLine));
 
-            if (currentLine === 0) {
-                return;
-            }
-            if (newFirstLine < 0) {
-                newFirstLine = 0;
-                numLines = Number(currentLine);
+            if ($currentSection.is(':first-child')) {
+                fetchNewLogs(currentLine);
+            } else {
+                var $panel = $(ui.getElements('panel')[0]),
+                    target = $currentSection.prev();
 
-            }
-            if ($currentSection.is(':first-child')){
-                requestJobLog(newFirstLine, numLines);
-                currentSection = newFirstLine;
+                scrollToLog($panel, target);
 
-            }else{
-                var target = $currentSection.prev();
-                var $panel = $(ui.getElements('panel')[0])
-                $panel.animate({
-                    scrollTop: target.offset().top - ($panel.offset().top - $panel.scrollTop()) 
-                }, 500, function () {
-                    currentSection = Number(target.attr('class'));
 
-                });   
             }
         }
 
         function doFetchNextLogChunk() {
             var currentLine = currentSection ? currentSection : model.getItem('currentLine'),
                 lastLine = model.getItem('lastLine'),
+                $panel = $(ui.getElements('panel')[0]),
                 newFirstLine;
 
             doStopPlayLogs();
@@ -504,18 +500,14 @@ define([
             }
             var $currentSection = $('.' + String(currentLine));
 
-
             if ($currentSection.is(':last-child')) {
                 requestJobLog(newFirstLine);
 
             } else {
                 var target = $currentSection.next();
-                var $panel = $(ui.getElements('panel')[0])
-                $panel.animate({
-                    scrollTop: target.offset().top - ($panel.offset().top - $panel.scrollTop()) 
-                }, 500, function(){
-                    currentSection  = Number(target.attr('class'));
-                });            
+
+                scrollToLog($panel, target);
+
             }
         }
 
@@ -523,13 +515,10 @@ define([
 
             doStopPlayLogs();
             var $panel = $(ui.getElements('panel')[0])
-            var target = $panel.children().last()
+            var target = $panel.children().last();
 
-            $panel.animate({
-                scrollTop: target.offset().top - ($panel.offset().top - $panel.scrollTop())
-            }, 500, function () {
-                currentSection = Number(target.attr('class'));
-            });          
+            scrollToLog($panel, target);
+       
         }
         function test(){
             if(panelHeight === smallPanelHeight){
@@ -720,19 +709,22 @@ define([
 
         function renderLines(lines) {
             var $section = $('<div/>')
-            .css('border', '1px solid black');
+            // .css('border', '1px solid black');
             for(var i = lines.length-1; i>=0; i--){
                 $section.prepend(renderLine2(lines[i]));
             }
-            $section.addClass(String(model.getItem('currentLine')));
+            $section.addClass(String(model.getItem('currentLine')))
+                .mouseenter(function(){
+                    currentSection = Number($section.attr('class'));
+                });
             return $section;
         }
 
         function render() {
             var startingLine = model.getItem('currentLine'),
                 lines = model.getItem('lines'),
-                viewLines;
-                ui;
+                viewLines,
+                $panel;
 
             if (lines) {
                 if (lines.length === 0) {
@@ -746,10 +738,17 @@ define([
                         lineNumber: startingLine + index + 1
                     };
                 });
+                $panel = $(ui.getElements('panel')[0]);
+
                 if (fsm.getCurrentState().state.mode === "complete"){
-                    $(ui.getElements('panel')[0]).prepend(renderLines(viewLines));
+                    var target = renderLines(viewLines)
+                                .hide()
+                                .prependTo($panel)
+                                .slideDown();
+                    // $panel.prepend(target);
+                    // scrollToLog($panel, target);
                 }else{
-                    $(ui.getElements('panel')[0]).html(renderLines(viewLines)[0]);
+                    $panel.html(renderLines(viewLines)[0]);
                 }
             } else {
                 ui.setContent('panel', 'Sorry, no log yet...');
@@ -911,6 +910,22 @@ define([
         var externalEventListeners = [];
 
         function startEventListeners() {
+            var $panel = $(ui.getElements('panel')[0])
+                .on('scroll', function () {
+
+                    //at begining
+                    var top = $(this).scrollTop()
+                    if ( top === 0) {
+                        
+                        var $panel = $(ui.getElements('panel')[0]),
+                            $currentSection = $panel.children(':first'), 
+                            currentLine = Number($currentSection.attr('class'));
+
+                            fetchNewLogs(currentLine);
+
+                    }
+
+                });
             var ev;
 
             ev = runtime.bus().listen({
@@ -1039,7 +1054,7 @@ define([
                     ui.hideElement(element);
                 });
             }
-
+         
             // Emit messages for this state.
             // if (state.ui.messages) {
             //     state.ui.messages.forEach(function (message) {
@@ -1101,6 +1116,8 @@ define([
             fsm.bus.on('on-job-not-found', function(message) {
                 doJobNotFound(message);
             })
+
+
         }
 
         function startJobUpdates() {

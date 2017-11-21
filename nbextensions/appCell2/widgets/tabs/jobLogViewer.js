@@ -743,8 +743,12 @@ define([
                 if (fsm.getCurrentState().state.mode === "complete"){
                     var target = renderLines(viewLines)
                                 .hide()
-                                .prependTo($panel)
-                                .slideDown();
+                                .prependTo($panel);
+                    if(target.is(':last-child')){
+                        target.show();
+                    }else{
+                        target.slideDown();
+                    }
                     // $panel.prepend(target);
                     // scrollToLog($panel, target);
                 }else{

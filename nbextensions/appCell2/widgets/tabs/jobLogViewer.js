@@ -32,7 +32,7 @@ define([
         currentSection,
         smallPanelHeight = '300px',
         largePanelHeight = '600px',
-        numLines = 10,
+        numLines = 20,
         panelHeight = smallPanelHeight,
         appStates = [{
                 state: {
@@ -427,22 +427,10 @@ define([
         function doFetchFirstLogChunk() {
             doStopPlayLogs();
             var currentLine = currentSection ? currentSection : model.getItem('currentLine'),
-                $currentSection = $('.' + String(currentLine)),
-                newFirstLine = currentLine - linesPerPage,
-                numLines;
-            
-            if (currentLine === 0) {
-                return;
-            }
+                $currentSection = $('.' + String(currentLine));
 
-            if (newFirstLine < 0) {
-                newFirstLine = 0;
-                numLines = Number(currentLine);
-            }
             if ($currentSection.is(':first-child')) {
-                requestJobLog(newFirstLine, numLines);
-                currentSection = newFirstLine;
-
+                fetchNewLogs(currentLine);
             } else {
                 var $panel = $(ui.getElements('panel')[0])
                 var target = $panel.children().first()
@@ -454,34 +442,37 @@ define([
                 });  
             } 
         }
+        function fetchNewLogs(currentLine){
+            if (currentLine === 0) {
+                return;
+            }
+            var newFirstLine = currentLine - linesPerPage,
+            numLines;
+
+            if (newFirstLine < 0) {
+                newFirstLine = 0;
+                numLines = Number(currentLine);
+            }
+
+            requestJobLog(newFirstLine, numLines);
+            currentSection = newFirstLine;
+        }
 
         function doFetchPreviousLogChunk() {
             doStopPlayLogs();
             var currentLine = currentSection ? currentSection : model.getItem('currentLine'),
-                $currentSection = $('.' + String(currentLine)),
-                newFirstLine = currentLine - linesPerPage,
-                numLines;
+                $currentSection = $('.' + String(currentLine));
 
-            if (currentLine === 0) {
-                return;
-            }
-            if (newFirstLine < 0) {
-                newFirstLine = 0;
-                numLines = Number(currentLine);
+            if ($currentSection.is(':first-child')) {
+                fetchNewLogs(currentLine);
+            } else {
+                var $panel = $(ui.getElements('panel')[0]),
+                    target = $currentSection.prev();
 
-            }
-            if ($currentSection.is(':first-child')){
-                requestJobLog(newFirstLine, numLines);
-                currentSection = newFirstLine;
-
-            }else{
-                var target = $currentSection.prev();
-                var $panel = $(ui.getElements('panel')[0])
                 $panel.animate({
                     scrollTop: target.offset().top - ($panel.offset().top - $panel.scrollTop()) 
                 }, 500, function () {
                     currentSection = Number(target.attr('class'));
-
                 });   
             }
         }
@@ -489,6 +480,7 @@ define([
         function doFetchNextLogChunk() {
             var currentLine = currentSection ? currentSection : model.getItem('currentLine'),
                 lastLine = model.getItem('lastLine'),
+                $panel = $(ui.getElements('panel')[0]),
                 newFirstLine;
 
             doStopPlayLogs();
@@ -504,13 +496,11 @@ define([
             }
             var $currentSection = $('.' + String(currentLine));
 
-
             if ($currentSection.is(':last-child')) {
                 requestJobLog(newFirstLine);
 
             } else {
                 var target = $currentSection.next();
-                var $panel = $(ui.getElements('panel')[0])
                 $panel.animate({
                     scrollTop: target.offset().top - ($panel.offset().top - $panel.scrollTop()) 
                 }, 500, function(){
@@ -733,8 +723,8 @@ define([
         function render() {
             var startingLine = model.getItem('currentLine'),
                 lines = model.getItem('lines'),
-                viewLines;
-                ui;
+                viewLines,
+                $panel;
 
             if (lines) {
                 if (lines.length === 0) {
@@ -748,10 +738,12 @@ define([
                         lineNumber: startingLine + index + 1
                     };
                 });
+                $panel = $(ui.getElements('panel')[0]);
+
                 if (fsm.getCurrentState().state.mode === "complete"){
-                    $(ui.getElements('panel')[0]).prepend(renderLines(viewLines));
+                    $panel.prepend(renderLines(viewLines));
                 }else{
-                    $(ui.getElements('panel')[0]).html(renderLines(viewLines)[0]);
+                    $panel.html(renderLines(viewLines)[0]);
                 }
             } else {
                 ui.setContent('panel', 'Sorry, no log yet...');
@@ -913,6 +905,35 @@ define([
         var externalEventListeners = [];
 
         function startEventListeners() {
+            var $panel = $(ui.getElements('panel')[0])
+                .on('scroll', function () {
+                    var $panel = $(ui.getElements('panel')[0]),
+                                    numLines = linesPerPage;
+                    //at begining
+                    if ($(this).scrollTop() === 0) {
+                        
+                        var $currentSection = $panel.children(':first'), 
+                            currentLine = Number($currentSection.attr('class')),
+                            newFirstLine = currentLine- linesPerPage;
+                            console.log('newline ', newFirstLine);
+
+                        if (currentLine === 0) {
+                            return;
+                        }
+                        if (newFirstLine < 0) {
+                            newFirstLine = 0;
+                            numLines = Number(currentLine);
+
+                        }
+
+                            requestJobLog(newFirstLine, numLines);
+                            currentSection = newFirstLine;                    
+                    }
+                    //at end
+                    if ($(this).scrollTop() + $(this).innerHeight() >= this.scrollHeight) {
+                        doFetchNextLogChunk();
+                    }
+                });
             var ev;
 
             ev = runtime.bus().listen({
@@ -1041,7 +1062,7 @@ define([
                     ui.hideElement(element);
                 });
             }
-
+         
             // Emit messages for this state.
             // if (state.ui.messages) {
             //     state.ui.messages.forEach(function (message) {
@@ -1103,6 +1124,8 @@ define([
             fsm.bus.on('on-job-not-found', function(message) {
                 doJobNotFound(message);
             })
+
+
         }
 
         function startJobUpdates() {

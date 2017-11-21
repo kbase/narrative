@@ -739,12 +739,17 @@ define([
                     };
                 });
                 $panel = $(ui.getElements('panel')[0]);
-
-                if (fsm.getCurrentState().state.mode === "complete"){
+                var fsmState = fsm.getCurrentState().state.mode;
+                console.log('state: ', fsmState)
+                if (fsmState === "complete" || fsmState === "canceled"){
                     var target = renderLines(viewLines)
                                 .hide()
-                                .prependTo($panel)
-                                .slideDown();
+                                .prependTo($panel);
+                    if(target.is(':last-child')){
+                        target.show();
+                    }else{
+                        target.slideDown();
+                    }
                     // $panel.prepend(target);
                     // scrollToLog($panel, target);
                 }else{

@@ -49,7 +49,11 @@
 
 .kb-error, .kb-error .kblog-line-num  {
     color: darkred;
+    text-decoration: underline;
+    text-decoration-style: solid;
+    text-decoration-color: red;
     font-weight: bold;
+    font-size: 12px;
     background-color: rgb(255, 245, 245);
 
 }
@@ -60,5 +64,5 @@
 
 #kblog-err {
     margin-top: 5px;
-    color: #660000;
+    /* color: #660000; */
 }

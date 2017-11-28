@@ -748,6 +748,7 @@ define([
                     if(target.is(':last-child')){
                         target.show();
                     }else{
+                        // target.show('slide', {direction: 'up'});
                         target.slideDown();
                     }
                     // $panel.prepend(target);

@@ -14,7 +14,7 @@
         },
         {
             "id": "genbank_genome",
-            "name": "Genbank Genome"
+            "name": "GenBank Genome"
         },
         {
             "id": "gff_genome",

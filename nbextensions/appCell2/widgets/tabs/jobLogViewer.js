@@ -8,6 +8,7 @@ define([
     'common/events',
     'common/fsm',
     'kb_common/html',
+    'jquery',
     'css!kbase/css/kbaseJobLog.css'
 ], function(
     Promise,
@@ -16,7 +17,8 @@ define([
     UI,
     Events,
     Fsm,
-    html
+    html,
+    $
 ) {
     'use strict';
 
@@ -27,6 +29,11 @@ define([
         p = t('p'),
         pre = t('pre'),
         fsm,
+        currentSection,
+        smallPanelHeight = '300px',
+        largePanelHeight = '600px',
+        numLines = 10,
+        panelHeight = smallPanelHeight,
         appStates = [{
                 state: {
                     mode: 'new'
@@ -123,8 +130,8 @@ define([
                 },
                 ui: {
                     buttons: {
-                        enabled: ['stop', 'top', 'back', 'forward', 'bottom'],
-                        disabled: ['play']
+                        enabled: ['stop'],
+                        disabled: ['play', 'top', 'back', 'forward', 'bottom']
                     }
                 },
                 next: [{
@@ -216,7 +223,7 @@ define([
                 },
                 ui: {
                     buttons: {
-                        enabled: ['top', 'back', 'forward', 'bottom'],
+                        enabled: ['top', 'back',  'forward', 'bottom'],
                         disabled: ['play', 'stop']
                     }
                 },
@@ -334,7 +341,7 @@ define([
             jobId,
             model,
             ui,
-            linesPerPage = config.linesPerPage || 10,
+            linesPerPage = config.linesPerPage || numLines,
             loopFrequency = 5000,
             looping = false,
             stopped = false,
@@ -394,15 +401,16 @@ define([
             stopAutoFetch();
         }
 
-        function requestJobLog(firstLine) {
+        function requestJobLog(firstLine, numLines, params) {
             ui.showElement('spinner');
+            var numLines = numLines ? numLines : linesPerPage;
             runtime.bus().emit('request-job-log', {
                 jobId: jobId,
                 options: {
                     first_line: firstLine,
-                    num_lines: linesPerPage
+                    num_lines: numLines
                 }
-            });
+            })
         }
 
         function requestLatestJobLog() {
@@ -414,38 +422,69 @@ define([
                 }
             });
         }
-
-        function doFetchFirstLogChunk() {
-            doStopPlayLogs();
-
-            var currentLine = model.getItem('currentLine');
+        function fetchNewLogs(currentLine) {
             if (currentLine === 0) {
                 return;
             }
-
-            requestJobLog(0);
-        }
-
-        function doFetchPreviousLogChunk() {
-            var currentLine = model.getItem('currentLine'),
-                newFirstLine = currentLine - linesPerPage;
-
-            doStopPlayLogs();
-
-            if (currentLine === 0) {
-                return;
-            }
+            var newFirstLine = currentLine - linesPerPage,
+                numLines = linesPerPage;
 
             if (newFirstLine < 0) {
                 newFirstLine = 0;
+                numLines = Number(currentLine);
             }
 
-            requestJobLog(newFirstLine);
+            requestJobLog(newFirstLine, numLines);
+            currentSection = newFirstLine;
+        }
+
+        function scrollToLog($panel, target, scrollTime){
+            var scrollTime = scrollTime ? scrollTime : 500;
+            $panel.animate({
+                scrollTop: target.offset().top - ($panel.offset().top - $panel.scrollTop())
+            }, scrollTime, function () {
+                currentSection = Number(target.attr('class'));
+            });  
+        }
+
+        function doFetchFirstLogChunk() {
+            doStopPlayLogs();
+            var currentLine = currentSection ? currentSection : model.getItem('currentLine'),
+                $currentSection = $('.' + String(currentLine));
+
+            if ($currentSection.is(':first-child')) {
+                fetchNewLogs(currentLine);
+            } else {
+                var $panel = $(ui.getElements('panel')[0]),
+                    target = $panel.children().first();
+                
+                scrollToLog($panel, target);
+
+            } 
+        }
+
+
+        function doFetchPreviousLogChunk() {
+            doStopPlayLogs();
+            var currentLine = currentSection ? currentSection : model.getItem('currentLine'),
+                $currentSection = $('.' + String(currentLine));
+
+            if ($currentSection.is(':first-child')) {
+                fetchNewLogs(currentLine);
+            } else {
+                var $panel = $(ui.getElements('panel')[0]),
+                    target = $currentSection.prev();
+
+                scrollToLog($panel, target);
+
+
+            }
         }
 
         function doFetchNextLogChunk() {
-            var currentLine = model.getItem('currentLine'),
+            var currentLine = currentSection ? currentSection : model.getItem('currentLine'),
                 lastLine = model.getItem('lastLine'),
+                $panel = $(ui.getElements('panel')[0]),
                 newFirstLine;
 
             doStopPlayLogs();
@@ -459,33 +498,54 @@ define([
                 // NB this is actually the next line after the end
                 newFirstLine = currentLine + linesPerPage;
             }
+            var $currentSection = $('.' + String(currentLine));
 
-            requestJobLog(newFirstLine);
+            if ($currentSection.is(':last-child')) {
+                requestJobLog(newFirstLine);
+
+            } else {
+                var target = $currentSection.next();
+
+                scrollToLog($panel, target);
+
+            }
         }
 
         function doFetchLastLogChunk() {
-            var firstLine,
-                lastLine = model.getItem('lastLine');
 
             doStopPlayLogs();
+            var $panel = $(ui.getElements('panel')[0])
+            var target = $panel.children().last();
 
-            if (!lastLine) {
-                requestLatestJobLog();
-            } else {
-                firstLine = lastLine - (lastLine % linesPerPage);
-                firstLine = lastLine - linesPerPage;
-                if (firstLine < 0) {
-                    firstLine = 0;
-                }
-
-                requestJobLog(firstLine);
+            scrollToLog($panel, target);
+       
+        }
+        function test(){
+            if(panelHeight === smallPanelHeight){
+                panelHeight = largePanelHeight;
+            }else{
+                panelHeight = smallPanelHeight;
             }
+            $(ui.getElements('panel')[0]).animate({height: panelHeight}, 500);
         }
 
         // VIEW
 
         function renderControls(events) {
             return div({ dataElement: 'header', style: { margin: '0 0 10px 0' } }, [
+                button({
+                    class: 'btn btn-sm btn-default',
+                    dataButton: 'expand',
+                    dataToggle: 'tooltip',
+                    dataPlacement: 'top',
+                    title: 'Start fetching logs',
+                    id: events.addEvent({
+                        type: 'click',
+                        handler: test
+                    })
+                }, [
+                    span({ class: 'fa fa-expand' })
+                ]),
                 button({
                     class: 'btn btn-sm btn-default',
                     dataButton: 'play',
@@ -523,7 +583,7 @@ define([
                         handler: doFetchFirstLogChunk
                     })
                 }, [
-                    span({ class: 'fa fa-fast-backward' })
+                    span({ class: 'fa fa-angle-double-up' })
                 ]),
                 button({
                     class: 'btn btn-sm btn-default',
@@ -536,7 +596,7 @@ define([
                         handler: doFetchPreviousLogChunk
                     })
                 }, [
-                    span({ class: 'fa fa-backward' })
+                    span({ class: 'fa fa-angle-up' })
                 ]),
                 button({
                     class: 'btn btn-sm btn-default',
@@ -549,7 +609,7 @@ define([
                         handler: doFetchNextLogChunk
                     })
                 }, [
-                    span({ class: 'fa fa-forward' })
+                        span({ class: 'fa fa-angle-down' })
                 ]),
                 button({
                     class: 'btn btn-sm btn-default',
@@ -563,7 +623,7 @@ define([
                     })
 
                 }, [
-                    span({ class: 'fa fa-fast-forward' })
+                        span({ class: 'fa fa-angle-double-down' })
                 ]),
                 div({ dataElement: 'spinner', class: 'pull-right hidden' }, [
                     span({ class: 'fa fa-spinner fa-pulse fa-ex fa-fw' })
@@ -573,7 +633,7 @@ define([
 
         function renderLayout() {
             var events = Events.make(),
-                content = div({ dataElement: 'kb-log', style: { marginTop: '10px' } }, [
+                content = div({ dataElement: 'kb-log', style: { marginTop: '10px'}}, [
                     div({ class: 'kblog-header' }, [
                         div({ class: 'kblog-num-wrapper' }, [
                             div({ class: 'kblog-line-num' }, [])
@@ -582,7 +642,10 @@ define([
                             renderControls(events)
                         ])
                     ]),
-                    div({ dataElement: 'panel' })
+                    div({ dataElement: 'panel',
+                        style: {
+                            overflow: 'scroll', height: panelHeight
+                        } })
                 ]);
 
             return {
@@ -608,10 +671,8 @@ define([
 
             return fixed.join(' ');
         }
-
+        //left in because oher methods depend on it
         function renderLine(line) {
-            var extraClass = line.isError ? ' kb-error' : '';
-
             return div({
                 class: 'kblog-line' + extraClass
             }, [
@@ -630,17 +691,39 @@ define([
                 ])
             ]);
         }
+        function renderLine2(line) {
+            var extraClass = line.isError ? ' kb-error' : '';
+            var $line = $('<div />')
+                .addClass('kblog-num-wrapper' )
+                .append($('<span />')
+                    .addClass('kblog-line-num')
+                    .append(String(line.lineNumber)))
+                .append($('<span />')
+                    .addClass('kblog-text')
+                    .append(sanitize(line.text)));
+            return $('<div />')
+                .addClass('kblog-line' + extraClass)
+                .append($line);
+
+        }
 
         function renderLines(lines) {
-            return lines.map(function(line) {
-                return renderLine(line);
-            }).join('\n');
+            var $section = $('<div/>');
+            for(var i = lines.length-1; i>=0; i--){
+                $section.prepend(renderLine2(lines[i]));
+            }
+            $section.addClass(String(model.getItem('currentLine')))
+                .mouseenter(function(){
+                    currentSection = Number($section.attr('class'));
+                });
+            return $section;
         }
 
         function render() {
             var startingLine = model.getItem('currentLine'),
                 lines = model.getItem('lines'),
-                viewLines;
+                viewLines,
+                $panel;
 
             if (lines) {
                 if (lines.length === 0) {
@@ -654,7 +737,21 @@ define([
                         lineNumber: startingLine + index + 1
                     };
                 });
-                ui.setContent('panel', renderLines(viewLines));
+                $panel = $(ui.getElements('panel')[0]);
+                var fsmState = fsm.getCurrentState().state.mode;
+                console.log('state: ', fsmState)
+                if (fsmState === "complete" || fsmState === "canceled"){
+                    var target = renderLines(viewLines)
+                                .hide()
+                                .prependTo($panel);
+                    if(target.is(':last-child')){
+                        target.show();
+                    }else{
+                        target.slideDown();
+                    }
+                }else{
+                    $panel.html(renderLines(viewLines)[0]);
+                }
             } else {
                 ui.setContent('panel', 'Sorry, no log yet...');
             }
@@ -815,6 +912,18 @@ define([
         var externalEventListeners = [];
 
         function startEventListeners() {
+            var $panel = $(ui.getElements('panel')[0])
+                .on('scroll', function () {
+                    //at begining
+                    var top = $(this).scrollTop();
+                    if ( top === 0) {         
+                        var $panel = $(ui.getElements('panel')[0]),
+                            $currentSection = $panel.children(':first'), 
+                            currentLine = Number($currentSection.attr('class'));
+                            fetchNewLogs(currentLine);
+                    }
+
+                });
             var ev;
 
             ev = runtime.bus().listen({
@@ -920,7 +1029,6 @@ define([
         }
 
         // LIFECYCLE API
-
         function renderFSM() {
             var state = fsm.getCurrentState();
 
@@ -943,13 +1051,6 @@ define([
                     ui.hideElement(element);
                 });
             }
-
-            // Emit messages for this state.
-            // if (state.ui.messages) {
-            //     state.ui.messages.forEach(function (message) {
-            //         bus.send(message.message, message.address);
-            //     });
-            // }
         }
 
         function doOnQueued(message) {
@@ -1004,7 +1105,7 @@ define([
             });
             fsm.bus.on('on-job-not-found', function(message) {
                 doJobNotFound(message);
-            })
+            });
         }
 
         function startJobUpdates() {
@@ -1055,14 +1156,13 @@ define([
         }
 
         // MAIN
-
         model = Props.make({
             data: {
                 cache: [],
                 lines: [],
                 currentLine: null,
                 lastLine: null,
-                linesPerPage: 10,
+                linesPerPage: numLines,
                 fetchedAt: null
             },
             onUpdate: function() {

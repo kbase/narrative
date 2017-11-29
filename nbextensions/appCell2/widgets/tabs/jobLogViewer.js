@@ -708,8 +708,7 @@ define([
         }
 
         function renderLines(lines) {
-            var $section = $('<div/>')
-            // .css('border', '1px solid black');
+            var $section = $('<div/>');
             for(var i = lines.length-1; i>=0; i--){
                 $section.prepend(renderLine2(lines[i]));
             }
@@ -748,11 +747,8 @@ define([
                     if(target.is(':last-child')){
                         target.show();
                     }else{
-                        // target.show('slide', {direction: 'up'});
                         target.slideDown();
                     }
-                    // $panel.prepend(target);
-                    // scrollToLog($panel, target);
                 }else{
                     $panel.html(renderLines(viewLines)[0]);
                 }
@@ -918,17 +914,13 @@ define([
         function startEventListeners() {
             var $panel = $(ui.getElements('panel')[0])
                 .on('scroll', function () {
-
                     //at begining
-                    var top = $(this).scrollTop()
-                    if ( top === 0) {
-                        
+                    var top = $(this).scrollTop();
+                    if ( top === 0) {         
                         var $panel = $(ui.getElements('panel')[0]),
                             $currentSection = $panel.children(':first'), 
                             currentLine = Number($currentSection.attr('class'));
-
                             fetchNewLogs(currentLine);
-
                     }
 
                 });
@@ -1037,7 +1029,6 @@ define([
         }
 
         // LIFECYCLE API
-
         function renderFSM() {
             var state = fsm.getCurrentState();
 
@@ -1060,13 +1051,6 @@ define([
                     ui.hideElement(element);
                 });
             }
-         
-            // Emit messages for this state.
-            // if (state.ui.messages) {
-            //     state.ui.messages.forEach(function (message) {
-            //         bus.send(message.message, message.address);
-            //     });
-            // }
         }
 
         function doOnQueued(message) {
@@ -1121,9 +1105,7 @@ define([
             });
             fsm.bus.on('on-job-not-found', function(message) {
                 doJobNotFound(message);
-            })
-
-
+            });
         }
 
         function startJobUpdates() {

@@ -153,7 +153,7 @@ define([
                             file.text = file.path;
                             file.subdir = file.path.substring(0, file.path.length - file.name.length);
                             file.subpath = file.path.substring(userId.length + 1);
-                            file.id = file.path;
+                            file.id = file.subpath;
                         });
                         return results;
                     });

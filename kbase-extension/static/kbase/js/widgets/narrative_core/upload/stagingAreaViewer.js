@@ -393,15 +393,20 @@ define([
                               .addClass('alert alert-danger')
                               .append('Error ' + xhr.status + '<br/>' + xhr.responseText)
                           );
-                        }.bind(this))
+                      }.bind(this));
                       }
                     }.bind(this))
                   .append($.jqElem('i').addClass('fa fa-trash'))
-
                 )
-            )
+            );
         },
 
+        /**
+         * Initializes an import app using the given file info as input.
+         * Expects 'type' to match a KBase object type string that maps onto an importer.
+         * Expects 'file' to be an object with the following attributes:
+         *   name = string, name of the file
+         */
         initImportApp: function(type, file) {
             var appInfo = this.uploaders.app_info[type];
             if (appInfo) {

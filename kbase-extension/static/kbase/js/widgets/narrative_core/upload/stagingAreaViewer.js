@@ -16,6 +16,7 @@ define([
     'text!kbase/templates/data_staging/ftp_file_table.html',
     'text!kbase/templates/data_staging/ftp_file_header.html',
     'text!kbase/templates/data_staging/file_path.html',
+    'kb_service/client/workspace',
     'jquery-dataTables',
     'select2',
 ], function(
@@ -35,7 +36,8 @@ define([
     BootstrapDialog,
     FtpFileTableHtml,
     FtpFileHeaderHtml,
-    FilePathHtml
+    FilePathHtml,
+    Workspace
 ) {
     'use strict';
     return new KBWidget({
@@ -46,6 +48,10 @@ define([
             this._super(options);
 
             var runtime = Runtime.make();
+
+            this.workspaceClient = new Workspace(Config.url('workspace'), {
+              token: runtime.authToken(),
+            });
 
             this.stagingServiceClient = new StagingServiceClient({
                 root : Config.url('staging_api_url'),
@@ -279,6 +285,8 @@ define([
 
         renderMoreFileInfo : function (fileData) {
 
+          var self = this;
+
           if (fileData.loaded) {
             return fileData.loaded;
           }
@@ -296,9 +304,32 @@ define([
             $tabsDiv.empty();
             var data = JSON.parse(dataString);
 
+            var $upaField = $.jqElem('span')
+              .append('<i class="fa fa-spinner fa-spin">')
+            ;
+
             var $upa = data.UPA
-              ? $.jqElem('li').append($.jqElem('span').addClass('kb-data-staging-metadata-list').append('Imported as')).append(data.UPA )
+              ? $.jqElem('li').append($.jqElem('span').addClass('kb-data-staging-metadata-list').append('Imported as')).append($upaField )
               : '';
+
+            self.workspaceClient.get_object_info_new({ objects : [{ref : data.UPA}] } )
+              .then( function (name) {
+                $upaField.empty();
+                $upaField.append(
+                  $.jqElem('a')
+                    .attr('href', '/#dataview/' + data.UPA)
+                    .attr('target', '_blank')
+                    .append(name[0][1])
+                );
+              })
+            .catch(function(xhr) {
+              $upaField.empty();
+              $upaField.addClass('alert alert-danger');
+              $upaField.css({padding : '0px', margin : '0px'});
+              $upaField.append(xhr.error.message);
+            });
+
+
 
             var $tabs = new KBaseTabs($tabsDiv, {
               tabs : [

@@ -156,7 +156,6 @@ header[role="banner"] {
 
 nav[role="navigation"] ul {
     margin: 1.2em 0 .5em 0;
-    /*text-align: center;*/
     padding-left: 0;
 }
 
@@ -411,20 +410,6 @@ p#site-title {
 /* center pane */
 
 
-#content-column {
-    /* height: 100%;
-    margin-left: 380px;
-    */
-    /*
-    position: fixed;
-    left: 380px;
-    top: 70px;
-    right: 0;
-    bottom: 0;
-    overflow: auto;
-    */
-}
-
 #workspace {
     position: fixed;
     width: 878px;
@@ -459,7 +444,6 @@ p#site-title {
     border-right: 5px solid #CECECE;
     top: 70px;
     bottom: 0;
-    /* overflow-y: auto; */
 }
 
 .kb-side-overlay-container {
@@ -821,8 +805,7 @@ fieldset {
 }
 
 fieldset label {
-/*  display: block;
-*/  margin: 0 0 3px 0;
+    margin: 0 0 3px 0;
     font-weight: bold;
     font-size: 1em;
 
@@ -1034,10 +1017,6 @@ div#notebook_panel {
     box-shadow: none; /* 0 -1px 0px rgba(0, 0, 0, 0.1); */
 }
 
-/*#notebook {
-    padding-top: 1em;
-}
-*/
 .version-stamp a {
     padding-right: 320px;
     text-align: right;
@@ -1073,7 +1052,6 @@ div#notebook_panel {
     font-family: "OxygenBold", Arial, sans-serif;
     text-transform: uppercase;
     color: #2e618d;
-    /*border-bottom: 1px solid #CECECE;*/
 }
 
 .kb-narr-side-panel .btn {
@@ -1234,6 +1212,7 @@ div#notebook_panel {
 .kb-narr-panel-body-wrapper {
     height: calc(100% - 40px);
     padding: 3px;
+    border-top: 1px solid #E0E0E0;
 }
 .kb-narr-panel-body-wrapper > div{
     height: 100%;
@@ -1244,15 +1223,14 @@ div#notebook_panel {
     margin-top: -4px;
     cursor: pointer;
     color: #888;
-    -webkit-user-select: none; /* Chrome/Safari */
-       -moz-user-select: none; /* Firefox */
-        -ms-user-select: none; /* IE10+ */
+    -webkit-user-select: none;
+       -moz-user-select: none;
+        -ms-user-select: none;
 }
 
 /* Container for func list */
 .kb-function-body {
     height: 100%;
-    /* overflow-y: auto; */
     width: 100%;
 }
 
@@ -1405,12 +1383,10 @@ div#notebook_panel {
 
 .kb-function-dim {
     background-color: #eee !important;
-    /* border-color: #ddd !important; */
 }
 
 .kb-function-dim .panel-heading {
     background-color: #eee !important;
-    /*border-color: #000 !important; */
 }
 
 .kb-function-cat-dim {
@@ -1649,12 +1625,6 @@ div#notebook_panel {
 
 .kb-func-panel > .panel-footer + .panel-collapse .panel-body {
   border-bottom-color: #bce8f1;
-}
-
-.kb-func-panel .panel-footer {
-    /*background-color: #fff;
-    border-top: none; */
-    /*padding: 2px 15px;*/
 }
 
 /** output cell styling */
@@ -1930,7 +1900,6 @@ control with padding, and then scooting the icon back into its column.
    font-size: 16pt;
    line-height: 18px;
    color:#555;
-   /*background:#f2dede;*/
    text-align: left;
    padding-left:20px;
    margin-top:20px;
@@ -1944,9 +1913,6 @@ control with padding, and then scooting the icon back into its column.
 .kb-app-step-running {
     border: 3px solid #2196F3;
     z-index: auto;
-    /*animation: pulse 1s ease infinite;
-    -webkit-animation: pulse 1s ease infinite; */
-    /*opacity: 0.7;*/
 }
 
 /* -- "next steps" text and links -- */
@@ -2093,13 +2059,6 @@ div[class="tooltip-inner"] {
     max-height: 425px;
 }
 
-#kb-ws {
-/*    background-color: #fff;
-    width: 100%;
-    padding-bottom: 5px;
-    height: 425px !important;
-*/}
-
 #data-tabs {
     height: 375px !important;
 }
@@ -2203,14 +2162,12 @@ button.kb-data-obj {
     width: 90px;
     text-align: right;
     color: rgba(0, 0, 0, 0.5);
-    /*padding: 0 0 5px 0;*/
 }
 .kb-data-obj-panel-info dl dt:after {
     content: ":";
 }
 .kb-data-obj-panel-info dl dd {
     margin: 0 0 0 100px;
-    /*padding: 0 0 5px 0;*/
 }
 .kb-data-obj-panel-verlist span {
     padding: 0px 5px;
@@ -2357,7 +2314,7 @@ button.kb-data-obj {
 }
 
 /* data list */
-.kb-data-list-obj-row, .narrative-card-row{
+.kb-data-list-obj-row, .narrative-card-row {
     transition: all 0.1s ease;
 
     border-left-style: solid;
@@ -2368,7 +2325,6 @@ button.kb-data-obj {
     box-shadow: 1px 1px 1px 1px #fff;
     -webkit-box-shadow: 1px 1px 1px 1px #fff;
     moz-box-shadow: 1px 1px 1px 1px #fff;
-
 }
 
 
@@ -2385,6 +2341,11 @@ button.kb-data-obj {
     box-shadow: 1px 1px 1px 1px #aaa;
     -webkit-box-shadow: 1px 1px 1px 1px #aaa;
     moz-box-shadow: 1px 1px 1px 1px #aaa;
+}
+
+.kb-narr-obj-row {
+    padding-top: 5px;
+    border-bottom: 1px solid #E0E0E0;
 }
 
 .palette {
@@ -2600,16 +2561,17 @@ button.kb-data-obj {
     font-size: 11pt;
     font-family: 'OyxgenBold', Arial, sans-serif;
     margin: 2px;
+    cursor: pointer;
 }
 .kb-data-list-name:hover {
     text-decoration: underline;
 }
 .kb-data-list-version {
-    color:#777;
+    color: #777;
     font-size: 9pt;
     font-style: italic;
     white-space: nowrap;
-    cursor:default;
+    cursor: default;
 }
 .kb-data-list-type {
     color:#777;
@@ -2641,11 +2603,6 @@ button.kb-data-obj {
     font-size: 10pt;
     margin: 2px;
     margin-left: 10px;
-    /* Not a link anymore, so we disable for now
-    cursor: pointer;*/
-}
-.kb-data-list-narinfo:hover {
-    /*color:#444;*/
 }
 
 .kb-data-list-narrative-error {
@@ -2659,11 +2616,6 @@ button.kb-data-obj {
     font-size: 10pt;
     margin: 2px;
     margin-left: 10px;
-    /* cursor:pointer; */
-}
-.kb-data-list-narrative:hover {
-    /* narrative btn isn't a link yet, so don't highlight
-     *color:#444;*/
 }
 
 .kb-data-list-more {
@@ -2748,7 +2700,6 @@ button.kb-data-obj {
 /* APP CATALOG SLIDEOUT BROWSER STYLES */
 .kbcb-browser-container {
     margin: 0 auto;
-    /*background: #eeeded;*/
 }
 
 .kbcb-back-link {
@@ -2827,8 +2778,6 @@ button.kb-data-obj {
 
 .kbcb-app-card-title {
     font-size:1.1em;
-    /*max-height: 2.6em;
-    overflow:hidden;*/
 }
 
 .kbcb-app-card-module {
@@ -2920,8 +2869,6 @@ button.kb-data-obj {
 
 .kbcb-app-page-title {
     font-size:2em;
-    /*max-height: 2.6em;
-    overflow:hidden;*/
 }
 
 .kbcb-app-page-module {
@@ -3002,9 +2949,6 @@ button.kb-data-obj {
 .kb-import-content {
     position:relative;
     margin: 0 0 0 0px;
-    /*overflow-x: hidden;
-    overflow-y: auto;*/
-    /*height: 830px;*/
     display: block;
 }
 
@@ -3052,10 +2996,6 @@ button.kb-data-obj {
     margin-top: 15px; /*override*/
     margin-bottom: 0;
 }
-/*
-.kb-import-item input[type="checkbox"] {
-    margin: 15px 30px 15px 0px;
-}*/
 
 .kb-import-item .kb-import-checkbox {
     font-size: 1.5em;
@@ -3114,12 +3054,9 @@ button.kb-data-obj {
 }
 #kb-view-mode-narr div {
     display: inline-block;
-    /*background-color: #2196F3;
-    color: #BBDEFB;*/
     color: #2196F3;
     font-family: 'OxygenBold', Arial, sans-serif;
     font-size: 16px;
-    /* font-weight: bold; */
     padding: 3px;
     margin-top: -3px;
     width: 147px;
@@ -3147,7 +3084,6 @@ button.kb-data-obj {
 .navbar-right div.label-warning {
     font-family: 'OxygenBold', Arial, sans-serif;
     font-size: 16px;
-    /* font-weight: bold; */
 }
 
 /* Show this over the whole narrative UI until the
@@ -3184,11 +3120,6 @@ button.kb-data-obj {
     text-align: left;
     line-height: 1.5em;
 }
-
-/* Override the default max-width of the narrative box */
-/*.container {*/
-    /*max-width: 2000px !important;*/
-/*}*/
 
 /* Styles for KNHX trees to remove its document.write nonsense that breaks asynchronous loading */
 #popdiv {

@@ -77,13 +77,6 @@ define([
             this.workspaceRef = Jupyter.narrative.workspaceRef;
             this.workspaceId = Jupyter.narrative.workspaceId;
 
-            // Doesn't appear to be used.
-            // $(document).on(
-            //     'copyThis.Narrative', function (e, panel, active, jump) {
-            //         this.copyThisNarrative(panel, active, jump);
-            //     }.bind(this)
-            // );
-
             $([Jupyter.events]).on(
                 'notebook_saved.Notebook', function (e) {
                     this.refresh();
@@ -321,8 +314,7 @@ define([
         },
 
         renderPanel: function () {
-            var self = this,
-                divider = '<hr class="kb-data-list-row-hr">';
+            var self = this;
 
             if (self.$narPanel && self.narData) {
                 self.$narPanel.children().detach(); // this will also hide any loading messages if they exist
@@ -334,7 +326,6 @@ define([
                         if (!self.narData.mine[k].$div) {
                             self.narData.mine[k].$div = self.renderNarrativeDiv(self.narData.mine[k]);
                         }
-                        self.$narPanel.append(divider);
                         self.$narPanel.append(self.narData.mine[k].$div);
                     }
                 }
@@ -346,11 +337,9 @@ define([
                         if (!self.narData.shared[k].$div) {
                             self.narData.shared[k].$div = self.renderNarrativeDiv(self.narData.shared[k]);
                         }
-                        self.$narPanel.append(divider);
                         self.$narPanel.append(self.narData.shared[k].$div);
                     }
                 }
-
 
                 // ADVANCED TAB: allows users to set the default narrative for any workspace
                 var $advancedDiv = $('<div>').hide();
@@ -746,17 +735,14 @@ define([
 
             return $btnToolbar;
         },
+
         renderNarrativeDiv: function (data) {
             var self = this,
                 isError = false;
 
-            var isCurrent = false;
-            if (this.ws_name === data.ws_info[1]) {
-                isCurrent = true;
-            }
+            var isCurrent = this.ws_name === data.ws_info[1];
 
-            var $narDiv = $('<div>').addClass('kb-data-list-obj-row');
-
+            var $narDiv = $('<div>').addClass('kb-data-list-obj-row kb-narr-obj-row');
             var $dataCol = $('<td>').css({'text-align': 'left', 'vertical-align': 'top'});
             var $ctrCol = $('<td>').css({'text-align': 'right', 'vertical-align': 'top', 'width': '80px'});
             var $ctrContent = $('<div>').css({'min-height': '60px'});
@@ -808,7 +794,7 @@ define([
                 $priv.addClass('fa fa-pencil').prop('title', 'you can edit');
             }
 
-            var $nameLink = $('<a href="' + narRef + '" target="_blank">');
+            var $nameLink = $('<a href="' + narRef + '" target="_blank">').addClass('kb-data-list-name');
             if (isCurrent) {
                 $nameLink.append($('<span>').addClass('fa fa-circle').css({'margin-right': '3px', 'color': '#4BB856'})
                     .tooltip({title: 'You are viewing this Narrative now'}));
@@ -816,8 +802,13 @@ define([
                 $nameLink.append($('<span>').addClass('fa fa-circle').css({'margin-right': '3px', 'color': '#F44336'})
                     .tooltip({title: 'This narrative has been corrupted.'}));
             }
-            $nameLink.append(nameText).append($version).append($priv);
-            $dataCol.append($('<div>').addClass('kb-data-list-name').css({'white-space': 'normal', 'cursor': 'pointer'}).append($nameLink));
+            $nameLink.append(nameText); //.append($version).append($priv);
+            $dataCol.append(
+                $('<div>')
+                    .append($nameLink)
+                    .append($version)
+                    .append($priv)
+            );
 
             // only display the rest if there was no error
             if (!data.error) {
@@ -831,31 +822,10 @@ define([
                     $dataCol.append($('<span>')
                         .addClass('kb-data-list-narinfo')
                         .append(summary)
-                        // REMOVE MORE INFO: needs a rethink, because these methods have versions now....
-                        /*.click(
-                            function () {
-                                var opened = self.toggleInteractionPanel($interactionPanel, 'info');
-                                if (!opened) {
-                                    return;
-                                }
-
-                                var $infoDiv = $('<div>')
-                                    .append(self.getNarContent(data.nar_info));
-
-
-                                // var $infoDiv = self.getNarContent(data.nar_info);
-                                self.setInteractionPanel($interactionPanel, 'Narrative Info', $infoDiv);
-                            })*/
                         .append('<br>'));
                 }
                 $dataCol.append($('<span>').addClass('kb-data-list-type').append(TimeFormat.getTimeStampStr(data.nar_info[3], true)));
 
-
-                // Render the share toolbar layout.
-                // it consists of just one button
-                // var $shareContainer = $('<div>').hide();
-
-                /* this is so gross */
                 var $shareToolbarGroup = $('<div>')
                     .addClass('btn-group pull-right')
                     .attr('role', 'group');

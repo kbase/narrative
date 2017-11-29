@@ -19,6 +19,7 @@ define([
                 upload      : { method : 'post', path : 'upload' },
                 delete      : { method : 'delete', path : 'delete/${path}' },
                 rename      : { method : 'post', path : 'rename/${path}' },
+                decompress  : { method : 'patch', path : 'decompress/${path}' },
             }
         });
     };

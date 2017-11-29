@@ -197,6 +197,7 @@ define([
                 })
                 .append('<span class="fa fa-arrow-right"></span>')
                 .click(function () {
+                    this.$slideoutBtn.children().toggleClass('fa-arrow-right fa-arrow-left');
                     this.$slideoutBtn.tooltip('hide');
                     this.trigger('hideGalleryPanelOverlay.Narrative');
                     this.trigger('toggleSidePanelOverlay.Narrative', this.$overlayPanel);
@@ -549,6 +550,7 @@ define([
             var serviceClient = new GenericClient(Config.url('service_wizard'), auth);
 
             closeBtn.click(function () {
+                self.$slideoutBtn.children().toggleClass('fa-arrow-right fa-arrow-left');
                 self.trigger('hideSidePanelOverlay.Narrative');
             });
             footer.append(closeBtn);

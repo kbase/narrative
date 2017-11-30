@@ -54,14 +54,19 @@ class WidgetManagerTestCase(unittest.TestCase):
             self.wm.show_output_widget(
                 self.good_widget,
                 {'obj': 'TestObject'},
-                upa="1/2/3"
+                upas={'obj': '1/2/3'}
             ),
             IPython.core.display.Javascript
         )
 
     def test_show_output_widget_bad(self):
         with self.assertRaises(ValueError):
-            self.wm.show_output_widget(self.bad_widget, {'bad': 'inputs'}, upa="1/2/3", check_widget=True)
+            self.wm.show_output_widget(
+                self.bad_widget,
+                {'bad': 'inputs'},
+                upas={'bad': '1/2/3'},
+                check_widget=True
+            )
 
     def test_show_external_widget(self):
         widget = self.wm.show_external_widget(

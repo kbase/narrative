@@ -284,7 +284,7 @@ class WidgetManager(object):
                     constants[p] = params[p]["allowed_values"][0]
         return constants
 
-    def show_output_widget(self, widget_name, params, upa=None, tag="release", title="", type="method", cell_id=None, check_widget=False, **kwargs):
+    def show_output_widget(self, widget_name, params, upas=None, tag="release", title="", type="method", cell_id=None, check_widget=False, **kwargs):
         """
         Renders a widget using the generic kbaseNarrativeOutputWidget container.
 
@@ -302,8 +302,8 @@ class WidgetManager(object):
             If True, checks for the presense of the widget_name and get its known constants from
             the various app specs that invoke it. Raises a ValueError if the widget isn't found.
             If False, skip that step.
-        upa : string -- REQUIRED! but left as a kwarg for backwards compatibility
-            The UPA for the object that should be shown.
+        upas : dict -- REQUIRED! but left as a kwarg for backwards compatibility
+            The set of UPAs to be displayed in the output widget
         **kwargs:
             These vary, based on the widget. Look up required variable names
             with WidgetManager.print_widget_inputs()
@@ -323,10 +323,10 @@ class WidgetManager(object):
         if cell_id is not None:
             cell_id = "\"{}\"".format(cell_id)
 
-        if upa is None:
+        if upas is None:
             # infer what it is based on mapping and inputs
             try:
-                upa = self.infer_upa(widget_name, input_data)
+                upas = self.infer_upas(widget_name, input_data)
             except:
                 raise
 
@@ -334,7 +334,7 @@ class WidgetManager(object):
         element.html("<div id='{{input_id}}' class='kb-vis-area'></div>");
         require(['kbaseNarrativeOutputCell'], function(KBaseNarrativeOutputCell) {
             var w = new KBaseNarrativeOutputCell($('#{{input_id}}'), {
-                "upa": "{{upa}}",
+                "upas": {{upas}},
                 "data": {{input_data}},
                 "type": "{{output_type}}",
                 "widget": "{{widget_name}}",
@@ -348,7 +348,7 @@ class WidgetManager(object):
         js = Template(input_template).render(input_id=self._cell_id_prefix + str(uuid.uuid4()),
                                              output_type=type,
                                              widget_name=widget_name,
-                                             upa=upa,
+                                             upas=json.dumps(upas),
                                              input_data=json.dumps(input_data),
                                              cell_title=title,
                                              cell_id=cell_id,
@@ -543,12 +543,14 @@ class WidgetManager(object):
         """
         widget_name = 'kbaseNarrativeError'  # default, expecting things to bomb.
         widget_data = dict()
+        upas = dict()
         info_tuple = clients.get('workspace').get_object_info_new({'objects': [{'ref': upa}],
                                                                    'includeMetadata': 1})[0]
         bare_type = info_tuple[2].split('-')[0]
 
         type_spec = self._sm.get_type_spec(bare_type, raise_exception=False)
         print(type_spec['subtitle'])
+
         if type_spec is None:
             widget_data = {
                 "error": {
@@ -558,19 +560,18 @@ class WidgetManager(object):
                 }
             }
         else:
-            method_id = type_spec['view_method_ids'][0]
+            app_id = type_spec['view_method_ids'][0]
+            app_spec = None
             try:
-                app_spec = self._sm.get_spec(method_id, tag=tag)
+                app_spec = self._sm.get_spec(app_id, tag=tag)
             except Exception as e:
-                app_spec = None
                 widget_data = {
                     "error": {
-                        "msg": "Unable to find specification for viewer app {}".format(),
+                        "msg": "Unable to find specification for viewer app {}".format(app_id),
                         "method_name": "WidgetManager.show_data_widget",
                         "traceback": e.message
                     }
                 }
-            # Let's build output according to mappings in method-spec
             if app_spec is not None:
                 spec_params = self._sm.app_params(app_spec)
                 input_params = {}
@@ -579,20 +580,27 @@ class WidgetManager(object):
                 # it's not safe to use reference yet (until we switch to them all over the Apps)
                 # But in case we deal with ref-path we have to do it anyway:
                 obj_param_value = upa if (is_ref_path or is_external) else info_tuple[1]
+                upa_params = list()
                 for param in spec_params:
                     if any(t == bare_type for t in param['allowed_types']):
                         input_params[param['id']] = obj_param_value
+                        upa_params.append(param['id'])
 
-                (input_params, ws_refs) = validate_parameters(method_id, tag,
+                (input_params, ws_refs) = validate_parameters(app_id, tag,
                                                               spec_params, input_params)
                 (output_widget, output) = map_outputs_from_state([], input_params, app_spec)
                 widget_name = app_spec['widgets']['output']
                 widget_data = output
 
+                # Figure out params for upas.
+                for mapping in app_spec.get('behavior', {}).get('output_mapping', []):
+                    if mapping.get('input_parameter', '') in upa_params and 'target_property' in mapping:
+                        upas[mapping['target_property']] = upa
+
         return self.show_output_widget(
             widget_name,
             widget_data,
-            upa=upa,
+            upas=upas,
             title=title,
             type="viewer",
             cell_id=cell_id

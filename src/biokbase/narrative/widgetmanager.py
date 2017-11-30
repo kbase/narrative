@@ -13,6 +13,11 @@ from biokbase.narrative.app_util import (
     check_tag,
     system_variable
 )
+from upa import (
+    is_upa,
+    is_ref
+)
+
 """
 widgetmanager.py
 
@@ -55,6 +60,12 @@ class WidgetManager(object):
 
     def __init__(self):
         self._sm = SpecManager()
+        try:
+            nar_path = os.environ["NARRATIVE_DIR"]
+            widget_param_file = open(os.path.join(nar_path, "src", "widget_param_mapping.json"))
+            self.widget_param_map = json.loads(widget_param_file.read())
+        except:
+            self.widget_param_map = dict()
         self.reload_info()
 
     def reload_info(self):
@@ -273,7 +284,7 @@ class WidgetManager(object):
                     constants[p] = params[p]["allowed_values"][0]
         return constants
 
-    def show_output_widget(self, widget_name, params, tag="release", title="", type="method", cell_id=None, check_widget=False, **kwargs):
+    def show_output_widget(self, widget_name, params, upa=None, tag="release", title="", type="method", cell_id=None, check_widget=False, **kwargs):
         """
         Renders a widget using the generic kbaseNarrativeOutputWidget container.
 
@@ -291,6 +302,8 @@ class WidgetManager(object):
             If True, checks for the presense of the widget_name and get its known constants from
             the various app specs that invoke it. Raises a ValueError if the widget isn't found.
             If False, skip that step.
+        upa : string -- REQUIRED! but left as a kwarg for backwards compatibility
+            The UPA for the object that should be shown.
         **kwargs:
             These vary, based on the widget. Look up required variable names
             with WidgetManager.print_widget_inputs()
@@ -310,16 +323,24 @@ class WidgetManager(object):
         if cell_id is not None:
             cell_id = "\"{}\"".format(cell_id)
 
+        if upa is None:
+            # infer what it is based on mapping and inputs
+            try:
+                upa = self.infer_upa(widget_name, input_data)
+            except:
+                raise
+
         input_template = """
         element.html("<div id='{{input_id}}' class='kb-vis-area'></div>");
         require(['kbaseNarrativeOutputCell'], function(KBaseNarrativeOutputCell) {
             var w = new KBaseNarrativeOutputCell($('#{{input_id}}'), {
+                "upa": "{{upa}}",
                 "data": {{input_data}},
-                "type":"{{output_type}}",
-                "widget":"{{widget_name}}",
-                "cellId":{{cell_id}},
-                "title":"{{cell_title}}",
-                "time":{{timestamp}}
+                "type": "{{output_type}}",
+                "widget": "{{widget_name}}",
+                "cellId": {{cell_id}},
+                "title": "{{cell_title}}",
+                "time": {{timestamp}}
             });
         });
         """
@@ -327,13 +348,112 @@ class WidgetManager(object):
         js = Template(input_template).render(input_id=self._cell_id_prefix + str(uuid.uuid4()),
                                              output_type=type,
                                              widget_name=widget_name,
+                                             upa=upa,
                                              input_data=json.dumps(input_data),
                                              cell_title=title,
                                              cell_id=cell_id,
                                              timestamp=int(round(time.time()*1000)))
         return Javascript(data=js, lib=None, css=None)
 
-    def show_advanced_viewer_widget(self, widget_name, params, output_state, tag="release", title="", type="method", cell_id=None, check_widget=False, **kwargs):
+    def infer_upas(self, widget_name, params):
+        """
+        Use the given widget_name and parameters (to be passed to the widget) to infer any upas.
+        This will generally mean using the workspace object name and workspace name to do a
+        lookup in the Workspace and constructing the upa or upa path from there.
+        """
+        param_to_context = self.widget_param_map.get(widget_name, {})
+        obj_names = list()  # list of tuples - first = param id, second = object name
+        obj_refs = list()   # list of tuples - first = param id, second = UPA
+        obj_name_list = list()  # list of tuples, but the second is a list of names
+        obj_ref_list = list()   # list of tuples, but second is a list of upas
+        ws = None
+        for param in params.keys():
+            if param in param_to_context:
+                context = param_to_context[param]
+                if context == "ws_id" or context == "ws_name":
+                    ws = params[param]
+                elif context == "obj_name" or context == "obj_id":
+                    obj_names.append((param, params[param]))
+                elif context == "obj_name_list":
+                    obj_name_list.append((param, params[param]))
+                elif context == "obj_ref":
+                    obj_refs.append((param, params[param]))
+                elif context == "obj_ref_list":
+                    obj_ref_list.append((param, params[param]))
+
+        # return value should look like this:
+        # {
+        #   param1: upa,
+        #   param2: upa
+        #   param3: [upa1, upa2],
+        #   ... etc
+        # }
+        upas = dict()
+
+        # First, test obj_refs, and obj_refs_list
+        # These might be references of the form ws_name/obj_name, which are not proper UPAs and
+        # need to be resolved. Gotta test 'em all.
+        lookup_params = list()
+        info_params = list()
+
+        for (param, ref) in obj_refs:
+            if is_upa(ref):
+                upas[param] = ref
+            elif is_ref(ref):
+                info_params.append({"ref": ref})
+                lookup_params.append(param)
+            else:
+                raise ValueError('Parameter {} has value {} which was expected to refer to an object'.format(param, ref))
+
+        # params for get_object_info3
+        for (param, name) in obj_names:
+            # it's possible that these are misnamed and are actually upas already. test and add to
+            # the upas dictionary if so.
+            if is_upa(name):
+                upas[param] = name
+            elif is_ref(name):
+                info_params.append({"ref": name})
+                lookup_params.append(param)
+            else:
+                info_params.append({"ref": "{}/{}".format(ws, name)})
+                lookup_params.append(param)
+
+        ws_client = clients.get('workspace')
+        ws_info = ws_client.get_object_info3({'objects': info_params})
+        for (idx, path) in enumerate(ws_info['paths']):
+            upas[lookup_params[idx]] = ';'.join(path)
+
+        # obj_refs and obj_names are done. Do the list versions now.
+        lookup_params = list()
+        info_params = list()
+        for (param, ref_list) in obj_ref_list:
+            # error fast if any member of a list isn't actually a ref.
+            # this might be me being lazy, but I suspect there's a problem if the inputs aren't
+            # actually uniform.
+            for ref in ref_list:
+                if not is_ref(ref):
+                    raise ValueError('Parameter {} has value {} which contains an item that is not a valid object reference'.format(param, ref_list))
+            lookup_params.append(param)
+            info_params.append([{'ref': ref} for ref in ref_list])
+
+        for (param, name_list) in obj_name_list:
+            info_param = list()
+            for name in name_list:
+                if is_ref(name):
+                    info_param.append({'ref': name})
+                else:
+                    info_param.append({'ref': "{}/{}".format(ws, name)})
+            info_params.append(info_param)
+            lookup_params.append(param)
+
+        # This time we have a one->many mapping from params to each list. Run ws lookup in a loop
+        for (idx, param) in lookup_params:
+            ws_info = ws_client.get_object_info3({'objects': info_params[idx]})
+            upas[param] = [';'.join(path) for path in ws_info['paths']]
+
+    def show_advanced_viewer_widget(self, widget_name, params, output_state, tag="release",
+                                    title="", type="method", cell_id=None, check_widget=False,
+                                    **kwargs):
         """
         Renders a widget using the generic kbaseNarrativeOutputWidget container.
 
@@ -471,6 +591,7 @@ class WidgetManager(object):
         return self.show_output_widget(
             widget_name,
             widget_data,
+            upa=upa,
             title=title,
             type="viewer",
             cell_id=cell_id

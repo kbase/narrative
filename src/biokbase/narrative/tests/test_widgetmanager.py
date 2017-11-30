@@ -53,6 +53,7 @@ class WidgetManagerTestCase(unittest.TestCase):
         self.assertIsInstance(
             self.wm.show_output_widget(
                 self.good_widget,
+                '1/2/3',
                 {'obj': 'TestObject'}
             ),
             IPython.core.display.Javascript
@@ -60,7 +61,7 @@ class WidgetManagerTestCase(unittest.TestCase):
 
     def test_show_output_widget_bad(self):
         with self.assertRaises(ValueError):
-            self.wm.show_output_widget(self.bad_widget, {'bad': 'inputs'}, check_widget=True)
+            self.wm.show_output_widget(self.bad_widget, '1/2/3', {'bad': 'inputs'}, check_widget=True)
 
     def test_show_external_widget(self):
         widget = self.wm.show_external_widget(
@@ -96,7 +97,6 @@ class WidgetManagerTestCase(unittest.TestCase):
 
     def assertIsValidCellCode(self, js_obj, data, type, widget, cellId, title):
         code_lines = js_obj.data.strip().split('\n')
-        print("wat{}wat".format(code_lines[0]))
         self.assertTrue(code_lines[0].strip().startswith('element.html("<div id=\'kb-vis'))
         self.assertEquals(code_lines[1].strip(), "require(['kbaseNarrativeOutputCell'], function(KBaseNarrativeOutputCell) {")
         self.assertTrue(code_lines[2].strip().startswith(r"var w = new KBaseNarrativeOutputCell($('#kb-vis"))

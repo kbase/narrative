@@ -672,12 +672,12 @@ def resolve_single_ref(workspace, value):
         ret = "{}/{}/{}".format(info[6], info[0], info[4])
     return ret
 
+
 def resolve_ref(workspace, value):
     if isinstance(value, list):
         return [resolve_single_ref(workspace, v) for v in value]
     else:
         return resolve_single_ref(workspace, value)
-
 
 
 def resolve_ref_if_typed(value, spec_param):

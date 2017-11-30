@@ -17,8 +17,31 @@ def is_upa(upa):
     return re.match("^\d+(\/\d+){2}(;\d+(\/\d+){2})*$", upa) is not None
 
 
+def is_ref(ref):
+    """
+    Returns True if the given string is a reference or upa, False otherwise.
+    That is, if it has this structure:
+    blahblah/blahblah
+    or
+    1/2
+    or
+    1/2/3
+    or
+    blahblah/blahblah/1
+    """
+    if is_upa(ref):
+        return True
+    else:
+        split_path = ref.split(";")
+        for sub_ref in split_path:
+            c = sub_ref.count("/")
+            if c < 2 or c > 3:
+                return False
+        return True
+
+
 def _prepare_upa_serialization(upa):
-    if type(upa) is list:
+    if isinstance(upa, list):
         upa = ";".join(upa)
     if not is_upa(upa):
         raise ValueError('"{}" is not a valid UPA. It may have already been serialized.'
@@ -71,7 +94,7 @@ def deserialize(serial_upa):
     In the [ws] case, the current workspace id replaces that whole token. In the &ws case,
     the & tag is removed.
     """
-    if type(serial_upa) is not str:
+    if not isinstance(serial_upa, basestring):
         raise ValueError("Can only deserialize UPAs from strings.")
     if serial_upa.startswith(external_tag):
         deserial = serial_upa[len(external_tag):]

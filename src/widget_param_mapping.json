@@ -250,5 +250,16 @@
     "kbaseExpressionFeatureClusters": {
         "clusterSetID": "obj_name",
         "workspaceID": "ws_name"
+    },
+    "testCrazyExample": {
+        "obj_name1": "obj_name",
+        "obj_name2": "obj_name",
+        "obj_id1": "obj_id",
+        "obj_id2": "obj_id",
+        "ws_name": "ws_name",
+        "obj_ref1": "obj_ref",
+        "obj_ref2": "obj_ref",
+        "obj_names": "obj_name_list",
+        "obj_refs": "obj_ref_list"
     }
 }

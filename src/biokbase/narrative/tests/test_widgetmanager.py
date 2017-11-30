@@ -53,15 +53,15 @@ class WidgetManagerTestCase(unittest.TestCase):
         self.assertIsInstance(
             self.wm.show_output_widget(
                 self.good_widget,
-                '1/2/3',
-                {'obj': 'TestObject'}
+                {'obj': 'TestObject'},
+                upa="1/2/3"
             ),
             IPython.core.display.Javascript
         )
 
     def test_show_output_widget_bad(self):
         with self.assertRaises(ValueError):
-            self.wm.show_output_widget(self.bad_widget, '1/2/3', {'bad': 'inputs'}, check_widget=True)
+            self.wm.show_output_widget(self.bad_widget, {'bad': 'inputs'}, upa="1/2/3", check_widget=True)
 
     def test_show_external_widget(self):
         widget = self.wm.show_external_widget(
@@ -94,6 +94,32 @@ class WidgetManagerTestCase(unittest.TestCase):
         js_obj = self.wm.show_data_widget("18836/5/1", "some title", "no_id")
         print(js_obj.data)
         self.assertIsValidCellCode(js_obj, {}, "viewer", "kbaseGenomeView", "no_id", "some title")
+
+    @mock.patch('biokbase.narrative.widgetmanager.clients.get', get_mock_client)
+    def test_infer_upas(self):
+        test_result_upa = "18836/5/1"
+        upas = self.wm.infer_upas("testCrazyExample", {
+            "obj_id1": 1,
+            "obj_id2": 2,
+            "obj_name1": "foo",
+            "obj_name2": "bar",
+            "obj_names": ["a", "b", "c"],
+            "obj_ref1": "1/2/3",
+            "obj_ref2": "4/5/6",
+            "obj_refs": ["7/8/9", "0/1/2"],
+            "ws_name": "some_ws",
+            "extra_param": "extra_value",
+            "other_extra_param": 0
+        })
+        self.assertEquals(upas['obj_id1'], test_result_upa)
+        self.assertEquals(upas['obj_id2'], test_result_upa)
+        self.assertEquals(upas['obj_name1'], test_result_upa)
+        self.assertEquals(upas['obj_name2'], test_result_upa)
+        self.assertEquals(upas['obj_names'], [test_result_upa]*3)
+        self.assertEquals(upas['obj_ref1'], "1/2/3")
+        self.assertEquals(upas['obj_ref2'], "4/5/6")
+        self.assertEquals(upas['obj_refs'], [test_result_upa]*2)
+        self.assertEquals(len(upas.keys()), 8)
 
     def assertIsValidCellCode(self, js_obj, data, type, widget, cellId, title):
         code_lines = js_obj.data.strip().split('\n')

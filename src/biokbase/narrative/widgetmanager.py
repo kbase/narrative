@@ -397,9 +397,9 @@ class WidgetManager(object):
         info_params = list()
 
         for (param, ref) in obj_refs:
-            if is_upa(ref):
+            if is_upa(str(ref)):
                 upas[param] = ref
-            elif is_ref(ref):
+            elif is_ref(str(ref)):
                 info_params.append({"ref": ref})
                 lookup_params.append(param)
             else:
@@ -409,9 +409,9 @@ class WidgetManager(object):
         for (param, name) in obj_names:
             # it's possible that these are misnamed and are actually upas already. test and add to
             # the upas dictionary if so.
-            if is_upa(name):
+            if is_upa(str(name)):
                 upas[param] = name
-            elif is_ref(name):
+            elif is_ref(str(name)):
                 info_params.append({"ref": name})
                 lookup_params.append(param)
             else:
@@ -431,7 +431,7 @@ class WidgetManager(object):
             # this might be me being lazy, but I suspect there's a problem if the inputs aren't
             # actually uniform.
             for ref in ref_list:
-                if not is_ref(ref):
+                if not is_ref(str(ref)):
                     raise ValueError('Parameter {} has value {} which contains an item that is not a valid object reference'.format(param, ref_list))
             lookup_params.append(param)
             info_params.append([{'ref': ref} for ref in ref_list])
@@ -439,7 +439,7 @@ class WidgetManager(object):
         for (param, name_list) in obj_name_list:
             info_param = list()
             for name in name_list:
-                if is_ref(name):
+                if is_ref(str(name)):
                     info_param.append({'ref': name})
                 else:
                     info_param.append({'ref': "{}/{}".format(ws, name)})
@@ -447,9 +447,10 @@ class WidgetManager(object):
             lookup_params.append(param)
 
         # This time we have a one->many mapping from params to each list. Run ws lookup in a loop
-        for (idx, param) in lookup_params:
+        for (idx, param) in enumerate(lookup_params):
             ws_info = ws_client.get_object_info3({'objects': info_params[idx]})
             upas[param] = [';'.join(path) for path in ws_info['paths']]
+        return upas
 
     def show_advanced_viewer_widget(self, widget_name, params, output_state, tag="release",
                                     title="", type="method", cell_id=None, check_widget=False,

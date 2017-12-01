@@ -1,4 +1,4 @@
-/*global define,require */
+/*global define,require, KBError */
 /*jslint white:true,browser:true*/
 define([
     'jquery',
@@ -63,15 +63,16 @@ define([
              * too heavy-weight a check once there are 100+ elements to worry about.
              */
             if (Config.get('features').lazyWidgetRender) {
-                var nbContainer = $('#notebook-container');
+                var $nbContainer = $('#notebook-container');
                 this.visibleSettings = {
-                    container: nbContainer,
+                    container: $nbContainer,
                     threshold: 100
                 };
                 this.lazyRender({data: this}); // try to render at first view
                 if (!this.isRendered) {
                     // Not initially rendered, so add handler to re-check after scroll events
-                    nbContainer.scroll(this, this.lazyRender);
+                    // $nbContainer.scroll(this, this.lazyRender);
+                    this.visibleSettings.container.scroll(this, this.lazyRender);
                 }
             }
             /* For testing/comparison, do eager-rendering instead */
@@ -81,10 +82,7 @@ define([
 
             return this;
         },
-        // Return true if cell is visible on page, false otherwise
-        lazyVisible: function () {
-            return this.inviewport(this.$elem, this.visibleSettings);
-        },
+
         // Possibly render lazily not-yet-rendered cell
         lazyRender: function (event) {
             var self = event.data;
@@ -94,73 +92,19 @@ define([
                 return;
             }
             // see if it is visible before trying to render
-            if (!self.lazyVisible()) {
+            if (!self.inViewport(self.$elem, self.visibleSettings)) {
                 return;
             }
             return self.render();
         },
-        // Render cell (unconditionally)
+
         render: function () {
-            // render the cell
-            switch (this.options.type) {
-            case 'method':
-                this.renderMethodOutputCell();
-                break;
-            case 'app':
-                this.renderAppOutputCell();
-                break;
-            case 'error':
-                this.renderErrorOutputCell();
-                break;
-            case 'viewer':
-                this.renderViewerCell();
-                break;
-            default:
-                this.renderErrorOutputCell();
-                break;
-            }
-            // remember; don't render again
-            this.isRendered = true;
-        },
-        renderViewerCell: function () {
-            var $label = $('<span>').addClass('label label-info').append('Viewer');
-            this.renderCell('kb-cell-output', 'panel-default', 'kb-out-desc', $label, 'data viewer');
-            var $cell = this.$elem.closest('.cell');
-            $cell.trigger('set-icon.cell', ['<i class="fa fa-2x fa-table data-viewer-icon"></i>']);
-        },
-        renderMethodOutputCell: function () {
-            var $label = $('<span>').addClass('label label-info').append('Output');
-            this.renderCell('kb-cell-output', 'panel-default', 'kb-out-desc', $label, 'app output');
-            var $cell = this.$elem.closest('.cell');
-            $cell.trigger('set-icon.cell', ['<i class="fa fa-2x fa-file-o method-output-icon"></i>']);
-        },
-        // same as method for now
-        renderAppOutputCell: function () {
-            var $label = $('<span>').addClass('label label-info').append('Output');
-            this.renderCell('kb-cell-output', 'panel-default', 'kb-out-desc', $label, 'app output');
-            var $cell = this.$elem.closest('.cell');
-            $cell.trigger('set-icon.cell', ['<i class="fa fa-2x fa-file-o app-output-icon"></i>']);
-        },
-        renderErrorOutputCell: function () {
-            require(['kbaseNarrativeError'], function () {
-                if (!this.options.title) {
-                    this.options.title = 'Narrative Error';
-                }
-                var $label = $('<span>').addClass('label label-danger').append('Error');
-                this.renderCell('kb-cell-error', 'panel-danger', 'kb-err-desc', $label);
-                var $cell = this.$elem.closest('.cell');
-                $cell.trigger('set-icon.cell', ['<i class="fa fa-2x fa-exclamation-triangle error-icon"></i>']);
-                $cell.addClass('kb-error');
-            }.bind(this));
-        },
-        renderCell: function (baseClass, panelClass, headerClass, $label, titleSuffix) {
             // set up the widget line
+            // todo find cell and trigger icon setting.
+
             var widget = this.options.widget;
             var methodName = this.options.title ? this.options.title : 'Unknown App';
             var title = methodName;
-            if (titleSuffix) {
-                title += ' (' + titleSuffix + ')';
-            }
 
             if (this.cell) {
                 var meta = this.cell.metadata;
@@ -183,7 +127,6 @@ define([
                 }
                 this.cell.metadata = meta;
             }
-
 
             var widgetData = this.options.data;
             if (widget === 'kbaseDefaultNarrativeOutput')
@@ -214,35 +157,29 @@ define([
                     }.bind(this))
                     .catch(function (err) {
                         // If we fail, render the error widget and log the error.
-                        KBError("Output::" + this.options.title, "failed to render output widget: '" + widget);
-                        this.options.title = 'App Error';
-                        this.options.data = {
-                            error: {
-                                msg: 'An error occurred while showing your output:',
-                                method_name: 'kbaseNarrativeOutputCell.renderCell',
-                                type: 'Output',
-                                severity: '',
-                                traceback: err.stack
-                            }
-                        };
-                        this.options.widget = this.OUTPUT_ERROR_WIDGET;
-                        this.renderErrorOutputCell();
+                        this.renderError(err);
                     }.bind(this));
 
             } catch (err) {
-                this.options.title = 'App Error';
-                this.options.data = {
-                    error: {
-                        msg: 'An error occurred while showing your output:',
-                        method_name: 'kbaseNarrativeOutputCell.renderCell',
-                        type: 'Output',
-                        severity: '',
-                        trace: err.trace
-                    }
-                };
-                this.options.widget = this.OUTPUT_ERROR_WIDGET;
-                this.renderErrorOutputCell();
+                this.renderError(err);
             }
+            this.isRendered = true;
+        },
+
+        renderError: function(err) {
+            KBError('Output::' + this.options.title, 'failed to render output widget: "' + this.options.widget + '"');
+            this.options.title = 'App Error';
+            this.options.data = {
+                error: {
+                    msg: 'An error occurred while showing your output:',
+                    method_name: 'kbaseNarrativeOutputCell.renderCell',
+                    type: 'Output',
+                    severity: '',
+                    traceback: err.stack
+                }
+            };
+            this.options.widget = this.OUTPUT_ERROR_WIDGET;
+            this.render();
         },
 
         getState: function () {
@@ -271,7 +208,7 @@ define([
          * Licensed under the MIT license
          * Project home: http://www.appelsiini.net/projects/lazyload
          */
-        inviewport: function (element, settings) {
+        inViewport: function (element, settings) {
             var fold = settings.container.offset().top + settings.container.height(),
                 elementTop = $(element).offset().top - settings.threshold;
             return elementTop <= fold; // test if it is "above the fold"

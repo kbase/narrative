@@ -85,14 +85,14 @@ define([
 
             if (url) {
                 return a({
-                        href: url,
-                        target: '_blank',
-                        id: events.addEvent({
-                            type: 'click',
-                            handler: doShowInfoModal
-                        })
-                    },
-                    label || 'ref');
+                    href: url,
+                    target: '_blank',
+                    id: events.addEvent({
+                        type: 'click',
+                        handler: doShowInfoModal
+                    })
+                },
+                label || 'ref');
             }
             return '';
         }
@@ -372,19 +372,6 @@ define([
                             span({ class: 'fa fa-arrow-down fa-lg', style: 'xfont-size: 18px' })
                         ])),
                         renderOptions(cell, events),
-                        //                    button({
-                        //                        type: 'button',
-                        //                        class: 'btn btn-default btn-xs',
-                        //                        dataToggle: 'tooltip',
-                        //                        dataPlacement: 'left',
-                        //                        title: true,
-                        //                        dataOriginalTitle: 'Delete Cell',
-                        //                        id: events.addEvent({type: 'click', handler: doDeleteCell})
-                        //                    }, [
-                        //                        span({class: 'fa fa-times-circle', style: {fontSize: '14pt', color: 'red'}})
-                        //                    ]),
-                        // enable the following
-                        // function to add the min / max button
                         (function() {
                             var toggleMinMax = utils.getCellMeta(cell, 'kbase.cellState.toggleMinMax', 'maximized'),
                                 toggleIcon = (toggleMinMax === 'maximized' ? 'minus' : 'plus'),
@@ -426,10 +413,6 @@ define([
                                     dataElement: 'icon',
                                     class: 'icon',
                                     style: {
-                                        xposition: 'relative',
-                                        xtop: '0',
-                                        xleft: '0',
-                                        xdisplay: 'inline-block',
                                         flexShrink: '0',
                                         width: '56px',
                                         height: '56px',
@@ -441,7 +424,6 @@ define([
                                 div({ style: { flexGrow: '1' } }, [
                                     div({ dataElement: 'title', class: 'title', style: { lineHeight: '20px', height: '20px', marginTop: '8px', overflow: 'hidden' } }, [getCellTitle(cell)]),
                                     div({ dataElement: 'subtitle', class: 'subtitle', style: { lineHeight: '20px', height: '20px', overflow: 'hidden' } }, [getCellSubtitle(cell)])
-                                    // div({dataElement: 'info-link', class: 'info-link'}, [getCellInfoLink(cell, events)])
                                 ])
                             ])
                         ]),
@@ -451,10 +433,6 @@ define([
                         ])
                     ])
                 ]);
-            // if (Jupyter.narrative.readonly) {
-            //     $(content).find('.buttons-container').hide();
-            // }
-
             return {
                 events: events,
                 content: content

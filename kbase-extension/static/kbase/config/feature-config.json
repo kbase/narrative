@@ -2,5 +2,6 @@
     "stagingDataViewer": true,
     "jgiPublicStaging": true,
     "advanced": false,
-    "developer": false
+    "developer": false,
+    "lazyWidgetRender": true
 }

@@ -549,7 +549,6 @@ class WidgetManager(object):
         bare_type = info_tuple[2].split('-')[0]
 
         type_spec = self._sm.get_type_spec(bare_type, raise_exception=False)
-        print(type_spec['subtitle'])
 
         if type_spec is None:
             widget_data = {

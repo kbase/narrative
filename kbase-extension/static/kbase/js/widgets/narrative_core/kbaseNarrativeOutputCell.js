@@ -4,14 +4,18 @@ define([
     'jquery',
     'bluebird',
     'kbwidget',
-    'base/js/namespace'
+    'base/js/namespace',
+    'util/timeFormat',
+    'narrativeConfig'
 ], function (
     $,
     Promise,
     KBWidget,
-    Jupyter
-    ) {
-    "use strict";
+    Jupyter,
+    TimeFormat,
+    Config
+) {
+    'use strict';
     return KBWidget({
         name: 'kbaseNarrativeOutputCell',
         version: '1.0.0',
@@ -25,8 +29,13 @@ define([
             showMenu: true,
             lazyRender: true // used in init()
         },
+        isRendered: false,
         OUTPUT_ERROR_WIDGET: 'kbaseNarrativeError',
         init: function (options) {
+            // handle where options.widget == null.
+            options.widget = options.widget || this.options.widget;
+            // handle where options.widget == 'null' string. I know. It happens.
+            options.widget = options.widget === 'null' ? this.options.widget : options.widget;
             this._super(options);
 
             this.data = this.options.data;
@@ -43,9 +52,6 @@ define([
                     this.cell.element.trigger('hideCodeArea.cell');
                 }
             }
-            if (this.options.widget.toLowerCase() === "null") {
-                this.options.widget = 'kbaseDefaultNarrativeOutput';
-            }
 
             /*
              * This sets up "lazy" rendering.
@@ -56,16 +62,16 @@ define([
              * XXX: Not sure whether "on every scroll event" is going to be
              * too heavy-weight a check once there are 100+ elements to worry about.
              */
-            if (this.options.lazyRender) {
-                this.is_rendered = false;
-                var nb_container = $('#notebook-container');
-                this.visible_settings = {
-                    container: nb_container,
-                    threshold: 100};
+            if (Config.get('features').lazyWidgetRender) {
+                var nbContainer = $('#notebook-container');
+                this.visibleSettings = {
+                    container: nbContainer,
+                    threshold: 100
+                };
                 this.lazyRender({data: this}); // try to render at first view
-                if (!this.is_rendered) {
+                if (!this.isRendered) {
                     // Not initially rendered, so add handler to re-check after scroll events
-                    nb_container.scroll(this, this.lazyRender);
+                    nbContainer.scroll(this, this.lazyRender);
                 }
             }
             /* For testing/comparison, do eager-rendering instead */
@@ -75,26 +81,20 @@ define([
 
             return this;
         },
-        // Log debug message with cell id
-        cellDebug: function (msg) {
-            console.debug('cell ' + this.options.cellId + ': ' + msg);
-        },
         // Return true if cell is visible on page, false otherwise
         lazyVisible: function () {
-            return this.inviewport(this.$elem, this.visible_settings);
+            return this.inviewport(this.$elem, this.visibleSettings);
         },
         // Possibly render lazily not-yet-rendered cell
         lazyRender: function (event) {
             var self = event.data;
-            if (self.is_rendered) {
-                //self.cellDebug('already rendered');
+            if (self.isRendered) {
                 // Note: We could also see if a cell that is rendered, is now
                 // no longer visible, and somehow free its resources.
                 return;
             }
             // see if it is visible before trying to render
             if (!self.lazyVisible()) {
-                //self.cellDebug('do not render cell. not visible');
                 return;
             }
             return self.render();
@@ -102,34 +102,31 @@ define([
         // Render cell (unconditionally)
         render: function () {
             // render the cell
-            var icon;
             switch (this.options.type) {
-                case 'method':
-                    this.renderMethodOutputCell();
-                    break;
-                case 'app':
-                    this.renderAppOutputCell();
-                    break;
-                case 'error':
-                    this.renderErrorOutputCell();
-                    break;
-                case 'viewer':
-                    this.renderViewerCell();
-                    break;
-                default:
-                    this.renderErrorOutputCell();
-                    break;
+            case 'method':
+                this.renderMethodOutputCell();
+                break;
+            case 'app':
+                this.renderAppOutputCell();
+                break;
+            case 'error':
+                this.renderErrorOutputCell();
+                break;
+            case 'viewer':
+                this.renderViewerCell();
+                break;
+            default:
+                this.renderErrorOutputCell();
+                break;
             }
             // remember; don't render again
-            this.is_rendered = true;
+            this.isRendered = true;
         },
         renderViewerCell: function () {
-            require(['kbaseNarrativeDataCell'], $.proxy(function () {
-                var $label = $('<span>').addClass('label label-info').append('Viewer');
-                this.renderCell('kb-cell-output', 'panel-default', 'kb-out-desc', $label, 'data viewer');
-                var $cell = this.$elem.closest('.cell');
-                $cell.trigger('set-icon.cell', ['<i class="fa fa-2x fa-table data-viewer-icon"></i>']);
-            }, this));
+            var $label = $('<span>').addClass('label label-info').append('Viewer');
+            this.renderCell('kb-cell-output', 'panel-default', 'kb-out-desc', $label, 'data viewer');
+            var $cell = this.$elem.closest('.cell');
+            $cell.trigger('set-icon.cell', ['<i class="fa fa-2x fa-table data-viewer-icon"></i>']);
         },
         renderMethodOutputCell: function () {
             var $label = $('<span>').addClass('label label-info').append('Output');
@@ -197,18 +194,9 @@ define([
 
             if (this.options.time) {
                 this.$timestamp.append($('<span>')
-                    .append(this.readableTimestamp(this.options.time)));
+                    .append(TimeFormat.readableTimestamp(this.options.time)));
                 this.$elem.closest('.cell').find('.button_container').trigger('set-timestamp.toolbar', this.options.time);
             }
-
-            var $headerLabel = $('<span>')
-                .addClass('label label-info')
-                .append('Output');
-
-            var $headerInfo = $('<span>')
-                .addClass(headerClass)
-                .append($('<b>').append(methodName))
-                .append(this.$timestamp);
 
             var $body = $('<div class="kb-cell-output-content">');
 
@@ -221,9 +209,7 @@ define([
                     }
                 })
                     .then(function (W) {
-                        // If we successfully Require the widget code, render it:
                         this.$outWidget = new W($body, widgetData);
-                        // this.$outWidget = $body.find('.panel-body > div')[widget](widgetData);
                         this.$elem.append($body);
                     }.bind(this))
                     .catch(function (err) {
@@ -237,9 +223,6 @@ define([
                                 type: 'Output',
                                 severity: '',
                                 traceback: err.stack
-                                //traceback: 'Failed while trying to show a "' + widget + '"\n' +
-                                //    'With inputs ' + JSON.stringify(widgetData) + '\n\n' +
-                                //    err.message
                             }
                         };
                         this.options.widget = this.OUTPUT_ERROR_WIDGET;
@@ -247,7 +230,6 @@ define([
                     }.bind(this));
 
             } catch (err) {
-                KBError("Output::" + this.options.title, "failed to render output widget: '" + widget);
                 this.options.title = 'App Error';
                 this.options.data = {
                     error: {
@@ -256,26 +238,13 @@ define([
                         type: 'Output',
                         severity: '',
                         trace: err.trace
-                        //traceback: 'Failed while trying to show a "' + widget + '"\n' +
-                        //    'With inputs ' + JSON.stringify(widgetData) + '\n\n' +
-                        //    err.message
                     }
                 };
                 this.options.widget = this.OUTPUT_ERROR_WIDGET;
                 this.renderErrorOutputCell();
-
-                // this.$outWidget = $body.find('.panel-body > div')[this.OUTPUT_ERROR_WIDGET]({'error': {
-                //     'msg': 'An error occurred while showing your output:',
-                //     'method_name': 'kbaseNarrativeOutputCell.renderCell',
-                //     'type': 'Output',
-                //     'severity': '',
-                //     'traceback': 'Failed while trying to show a "' + widget + '"\n' +
-                //                  'With inputs ' + JSON.stringify(widgetData) + '\n\n' +
-                //                  err.message
-                // }});
             }
-
         },
+
         getState: function () {
             var state = null;
             if (this.$outWidget && this.$outWidget.getState) {
@@ -283,49 +252,18 @@ define([
             }
             return state;
         },
+
         loadState: function (state) {
             if (state) {
                 if (state.time) {
-                    this.$timestamp.html(readableTimestamp(state.time));
+                    this.$timestamp.html(TimeFormat.readableTimestamp(state.time));
                 }
                 if (this.$outWidget && this.$outWidget.loadState) {
                     this.$outWidget.loadState(state);
                 }
             }
         },
-        /**
-         * Returns a timestamp in milliseconds since the epoch.
-         * (This is a one-liner, but kept as a separate function in case our needs change.
-         * Maybe we'll want to use UTC or whatever...)
-         * @public
-         */
-        getTimestamp: function () {
-            return new Date().getTime();
-        },
-        /**
-         * Converts a timestamp to a simple string.
-         * Do this American style - HH:MM:SS MM/DD/YYYY
-         *
-         * @param {string} timestamp - a timestamp in number of milliseconds since the epoch.
-         * @return {string} a human readable timestamp
-         */
-        readableTimestamp: function (timestamp) {
-            var format = function (x) {
-                if (x < 10)
-                    x = '0' + x;
-                return x;
-            };
 
-            var d = new Date(timestamp);
-            var hours = format(d.getHours());
-            var minutes = format(d.getMinutes());
-            var seconds = format(d.getSeconds());
-            var month = d.getMonth() + 1;
-            var day = format(d.getDate());
-            var year = d.getFullYear();
-
-            return hours + ":" + minutes + ":" + seconds + ", " + month + "/" + day + "/" + year;
-        },
         /* -------------------------------------------------------
          * Code modified from:
          * Lazy Load - jQuery plugin for lazy loading images
@@ -335,8 +273,8 @@ define([
          */
         inviewport: function (element, settings) {
             var fold = settings.container.offset().top + settings.container.height(),
-                element_top = $(element).offset().top - settings.threshold;
-            return element_top <= fold; // test if it is "above the fold"
+                elementTop = $(element).offset().top - settings.threshold;
+            return elementTop <= fold; // test if it is "above the fold"
         }
         /* End of Lazy Load code.
          * ------------------------------------------------------- */

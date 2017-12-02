@@ -6,14 +6,16 @@ define([
     'kbwidget',
     'base/js/namespace',
     'util/timeFormat',
-    'narrativeConfig'
+    'narrativeConfig',
+    'kbase/js/widgets/narrative_core/objectCellHeader'
 ], function (
     $,
     Promise,
     KBWidget,
     Jupyter,
     TimeFormat,
-    Config
+    Config,
+    ObjectCellHeader
 ) {
     'use strict';
     return KBWidget({
@@ -52,6 +54,20 @@ define([
                     this.cell.element.trigger('hideCodeArea.cell');
                 }
             }
+
+            /* handle upas here! Needs to do the following:
+             * - check cell metadata. if no field present for upas, drop them in. if present, use
+             *   them instead.
+             *     - might need to double check key names. maybe a silly user repurposed/re-ran the
+             *       cell? Should try to get the Python stack to reset the metadata in that case.
+             *       Not sure if that's possible.
+             * - have cell header widget control which version of objects are seen.
+             *   - should auto-serialize on change
+             *   - should re-render widget as appropriate
+             * - Finally, all widgets should take upas as inputs. Enforce that here.
+             * - All widgets should have an 'upas' input that handles the mapping. Part of spec?
+             * - Need to start writing widget spec / standard. Share with Jim & Erik & Steve/Shane
+             */
 
             /*
              * This sets up "lazy" rendering.
@@ -141,7 +157,13 @@ define([
                 this.$elem.closest('.cell').find('.button_container').trigger('set-timestamp.toolbar', this.options.time);
             }
 
-            var $body = $('<div class="kb-cell-output-content">');
+            var $headController = $('<div>');
+            var $widgetBody = $('<div>');
+            var $body = $('<div class="kb-cell-output-content">')
+                .append($headController)
+                .append($widgetBody);
+
+            this.headerWidget = new ObjectCellHeader($headController, { upas: this.options.upas });
 
             try {
                 new Promise(function (resolve, reject) {
@@ -152,7 +174,7 @@ define([
                     }
                 })
                     .then(function (W) {
-                        this.$outWidget = new W($body, widgetData);
+                        this.$outWidget = new W($widgetBody, widgetData);
                         this.$elem.append($body);
                     }.bind(this))
                     .catch(function (err) {

@@ -118,13 +118,55 @@ define([
             return newUpa;
         };
 
+        var serializeAll = function(upas) {
+            if (typeof upas === 'string') {
+                return serialize(upas);
+            }
+            else if (Array.isArray(upas)) {
+                var serialArr = [];
+                upas.forEach(function(upa) {
+                    serialArr.push(serialize(upa));
+                });
+                return serialArr;
+            }
+            else {
+                var serialSt = {};
+                Object.keys(upas).forEach(function(key) {
+                    serialSt[key] = serialize(upas[key]);
+                });
+                return serialSt;
+            }
+        };
+
+        var deserializeAll = function(upas) {
+            if (typeof upas === 'string') {
+                return deserialize(upas);
+            }
+            else if (Array.isArray(upas)) {
+                var deserialArr = [];
+                upas.forEach(function(upa) {
+                    deserialArr.push(deserialize(upa));
+                });
+                return deserialArr;
+            }
+            else {
+                var deserialSt = {};
+                Object.keys(upas).forEach(function(key) {
+                    deserialSt[key] = deserialize(upas[key]);
+                });
+                return deserialSt;
+            }
+        };
+
         return {
             serialize: serialize,
             deserialize: deserialize,
             serializeExternal: serializeExternal,
             externalTag: externalTag,
             isUpa: isUpa,
-            changeUpaVersion: changeUpaVersion
+            changeUpaVersion: changeUpaVersion,
+            serializeAll: serializeAll,
+            deserializeAll: deserializeAll
         };
     };
 

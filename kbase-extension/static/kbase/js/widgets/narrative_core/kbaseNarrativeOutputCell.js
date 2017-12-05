@@ -47,6 +47,7 @@ define([
 
             this.data = this.options.data;
             this.options.type = this.options.type.toLowerCase();
+
             if (this.options.cellId) {
                 this.cell = Jupyter.narrative.getCellByKbaseId(this.options.cellId);
                 if (!this.cell) {
@@ -60,20 +61,9 @@ define([
                 }
             }
 
-            /* handle upas here! Needs to do the following:
-             * - check cell metadata. if no field present for upas, drop them in. if present, use
-             *   them instead.
-             *     - might need to double check key names. maybe a silly user repurposed/re-ran the
-             *       cell? Should try to get the Python stack to reset the metadata in that case.
-             *       Not sure if that's possible.
-             * - have cell header widget control which version of objects are seen.
-             *   - should auto-serialize on change
-             *   - should re-render widget as appropriate
-             * - Finally, all widgets should take upas as inputs. Enforce that here.
-             * - All widgets should have an 'upas' input that handles the mapping. Part of spec?
-             * - Need to start writing widget spec / standard. Share with Jim & Erik & Steve/Shane
-             */
-            this.handleUpas();
+            if (this.cell) {
+                this.handleUpas();
+            }
 
             /*
              * This sets up "lazy" rendering.
@@ -106,11 +96,38 @@ define([
         },
 
         /**
+         * handle upas here! Needs to do the following:
+         * - check cell metadata. if no field present for upas, drop them in. if present, use
+         *   them instead.
+         *     - might need to double check key names. maybe a silly user repurposed/re-ran the
+         *       cell? Should try to get the Python stack to reset the metadata in that case.
+         *       Not sure if that's possible.
+         * - have cell header widget control which version of objects are seen.
+         *   - should auto-serialize on change
+         *   - should re-render widget as appropriate
+         * - Finally, all widgets should take upas as inputs. Enforce that here.
+         * - All widgets should have an 'upas' input that handles the mapping. Part of spec?
+         * - Need to start writing widget spec / standard. Share with Jim & Erik & Steve/Shane
+         *
          * useLocal - forces the serialization to use only the locally defined upas
-         *          in this.upas, NOT the ones in the cell metadata.
+         *            in this.upas, NOT the ones in the cell metadata.
          */
         handleUpas: function(useLocal) {
-
+            // get metadata
+            var metadata = this.cell.metadata;
+            // if useLocal, then drop the current values in this.upas into the metadata.
+            // otherwise, if there's existing upas in metadata, supplant this.upas with those.
+            if (!metadata.kbase.dataCell) {
+                metadata.kbase.dataCell = {
+                    upas: this.upaApi.serializeAll(this.options.upas)
+                };
+            }
+            else if (!useLocal && metadata.kbase.dataCell.upas) {
+                this.options.upas = this.upaApi.deserializeAll(metadata.kbase.dataCell.upas);
+            }
+            else {
+                metadata.kbase.dataCell.upas = this.upaApi.serializeAll(this.options.upas);
+            }
         },
 
         // Possibly render lazily not-yet-rendered cell
@@ -206,7 +223,6 @@ define([
                 widgetData = { data: this.options.data };
             }
             widgetData.upas = this.options.upas;
-            // this.$widgetBody.empty();
 
             require([widget],
                 function (W) {
@@ -221,26 +237,6 @@ define([
                     this.renderError(err);
                 }.bind(this)
             );
-
-            // try {
-            //     new Promise(function (resolve, reject) {
-            //         try {
-            //             require([widget], resolve, reject);
-            //         } catch (ex) {
-            //             reject(ex);
-            //         }
-            //     })
-            //         .then(function (W) {
-            //             this.$outWidget = new W(this.$widgetBody, widgetData);
-            //         }.bind(this))
-            //         .catch(function (err) {
-            //             // If we fail, render the error widget and log the error.
-            //             this.renderError(err);
-            //         }.bind(this));
-            //
-            // } catch (err) {
-            //     this.renderError(err);
-            // }
         },
 
         displayVersionChange: function(upaId, newVersion) {
@@ -250,7 +246,7 @@ define([
              */
             var newUpa = this.upaApi.changeUpaVersion(this.options.upas[upaId], newVersion);
             this.options.upas[upaId] = newUpa;
-            this.handleUpas();
+            this.handleUpas(true);
             this.render();
         },
 

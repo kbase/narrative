@@ -108,13 +108,23 @@ define([
             return deserial;
         };
 
+        var changeUpaVersion = function(upa, newVersion) {
+            if (!isUpa(upa)) {
+                throw {
+                    error: upa + ' is not a valid upa, so its version cannot be changed!'
+                };
+            }
+            var newUpa = upa.replace(/^(.+\/)(\d+)$/, '$1' + newVersion);
+            return newUpa;
+        };
 
         return {
             serialize: serialize,
             deserialize: deserialize,
             serializeExternal: serializeExternal,
             externalTag: externalTag,
-            isUpa: isUpa
+            isUpa: isUpa,
+            changeUpaVersion: changeUpaVersion
         };
     };
 

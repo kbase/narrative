@@ -7,7 +7,8 @@ define([
     'base/js/namespace',
     'util/timeFormat',
     'narrativeConfig',
-    'kbase/js/widgets/narrative_core/objectCellHeader'
+    'kbase/js/widgets/narrative_core/objectCellHeader',
+    'api/upa'
 ], function (
     $,
     Promise,
@@ -15,7 +16,8 @@ define([
     Jupyter,
     TimeFormat,
     Config,
-    ObjectCellHeader
+    ObjectCellHeader,
+    UpaApi
 ) {
     'use strict';
     return KBWidget({
@@ -33,12 +35,15 @@ define([
         },
         isRendered: false,
         OUTPUT_ERROR_WIDGET: 'kbaseNarrativeError',
+        headerShown: false,
+
         init: function (options) {
             // handle where options.widget == null.
             options.widget = options.widget || this.options.widget;
             // handle where options.widget == 'null' string. I know. It happens.
             options.widget = options.widget === 'null' ? this.options.widget : options.widget;
             this._super(options);
+            this.upaApi = new UpaApi();
 
             this.data = this.options.data;
             this.options.type = this.options.type.toLowerCase();
@@ -68,6 +73,7 @@ define([
              * - All widgets should have an 'upas' input that handles the mapping. Part of spec?
              * - Need to start writing widget spec / standard. Share with Jim & Erik & Steve/Shane
              */
+            this.handleUpas();
 
             /*
              * This sets up "lazy" rendering.
@@ -99,6 +105,14 @@ define([
             return this;
         },
 
+        /**
+         * useLocal - forces the serialization to use only the locally defined upas
+         *          in this.upas, NOT the ones in the cell metadata.
+         */
+        handleUpas: function(useLocal) {
+
+        },
+
         // Possibly render lazily not-yet-rendered cell
         lazyRender: function (event) {
             var self = event.data;
@@ -118,7 +132,6 @@ define([
             // set up the widget line
             // todo find cell and trigger icon setting.
 
-            var widget = this.options.widget;
             var methodName = this.options.title ? this.options.title : 'Unknown App';
             var title = methodName;
 
@@ -144,10 +157,6 @@ define([
                 this.cell.metadata = meta;
             }
 
-            var widgetData = this.options.data;
-            if (widget === 'kbaseDefaultNarrativeOutput')
-                widgetData = {data: this.options.data};
-
             this.$timestamp = $('<span>')
                 .addClass('pull-right kb-func-timestamp');
 
@@ -157,35 +166,92 @@ define([
                 this.$elem.closest('.cell').find('.button_container').trigger('set-timestamp.toolbar', this.options.time);
             }
 
-            var $headController = $('<div>');
-            var $widgetBody = $('<div>');
-            var $body = $('<div class="kb-cell-output-content">')
-                .append($headController)
-                .append($widgetBody);
-
-            this.headerWidget = new ObjectCellHeader($headController, { upas: this.options.upas });
-
-            try {
-                new Promise(function (resolve, reject) {
-                    try {
-                        require([widget], resolve, reject);
-                    } catch (ex) {
-                        reject(ex);
-                    }
-                })
-                    .then(function (W) {
-                        this.$outWidget = new W($widgetBody, widgetData);
-                        this.$elem.append($body);
-                    }.bind(this))
-                    .catch(function (err) {
-                        // If we fail, render the error widget and log the error.
-                        this.renderError(err);
-                    }.bind(this));
-
-            } catch (err) {
-                this.renderError(err);
+            if (this.isRendered) {
+                // update the header
+                this.headerWidget.updateUpas(this.options.upas);
             }
+            else {
+                var $headController = $('<div>').hide();
+                this.headerWidget = new ObjectCellHeader($headController, {
+                    upas: this.options.upas,
+                    versionCallback: this.displayVersionChange.bind(this),
+                });
+                var $headerBtn = $('<button>')
+                    .addClass('btn btn-default kb-data-obj')
+                    .attr('type', 'button')
+                    .text('Details...')
+                    .click(function() {
+                        if (this.headerShown) {
+                            $headController.hide();
+                            this.headerShown = false;
+                        } else {
+                            $headController.show();
+                            this.headerShown = true;
+                        }
+                    }.bind(this));
+                this.$body = $('<div class="kb-cell-output-content">')
+                    .append($headController)
+                    .append($headerBtn);
+                this.$elem.append(this.$body);
+            }
+
+            this.renderBody();
             this.isRendered = true;
+        },
+
+        renderBody: function() {
+            var widget = this.options.widget,
+                widgetData = this.options.data;
+            if (widget === 'kbaseDefaultNarrativeOutput') {
+                widgetData = { data: this.options.data };
+            }
+            widgetData.upas = this.options.upas;
+            // this.$widgetBody.empty();
+
+            require([widget],
+                function (W) {
+                    if (this.$widgetBody) {
+                        this.$widgetBody.remove();
+                    }
+                    this.$widgetBody = $('<div>');
+                    this.$body.append(this.$widgetBody);
+                    this.$outWidget = new W(this.$widgetBody, widgetData);
+                }.bind(this),
+                function (err) {
+                    this.renderError(err);
+                }.bind(this)
+            );
+
+            // try {
+            //     new Promise(function (resolve, reject) {
+            //         try {
+            //             require([widget], resolve, reject);
+            //         } catch (ex) {
+            //             reject(ex);
+            //         }
+            //     })
+            //         .then(function (W) {
+            //             this.$outWidget = new W(this.$widgetBody, widgetData);
+            //         }.bind(this))
+            //         .catch(function (err) {
+            //             // If we fail, render the error widget and log the error.
+            //             this.renderError(err);
+            //         }.bind(this));
+            //
+            // } catch (err) {
+            //     this.renderError(err);
+            // }
+        },
+
+        displayVersionChange: function(upaId, newVersion) {
+            /* Modify upa.
+             * Serialize.
+             * re-render all the things.
+             */
+            var newUpa = this.upaApi.changeUpaVersion(this.options.upas[upaId], newVersion);
+            this.options.upas[upaId] = newUpa;
+            this.handleUpas();
+            this.render();
         },
 
         renderError: function(err) {

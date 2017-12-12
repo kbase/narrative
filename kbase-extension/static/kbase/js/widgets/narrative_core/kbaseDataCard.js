@@ -19,8 +19,9 @@
  *
  *      //optional values
  *      moreContent: jquery object,
- *      is_set: boolean, true if this is a Set object
- *
+ *      is_set: boolean, true if this is a Set object,
+ *      max_name_length: int, overrides the Config'd max_name_length if present (chops down the
+ *                       objects name to some maximum number of characters)
  *  });
  */
 
@@ -48,6 +49,9 @@ define ([
         var self = this,
             object_info = entry.object_info,
             maxNameLength = Config.get('data_panel').max_name_length;
+        if (entry.max_name_length) {
+            maxNameLength = entry.max_name_length;
+        }
 
         //params
         var shortName = entry.name ? entry.name : object_info[1],
@@ -116,7 +120,7 @@ define ([
                 var btns = $(className);
                 var thisHolder = this;
                 var $thisBtn = $($(this).children()[0]);
-                $(this).html('<img src="' + self.options.loadingImage + '">');
+                $(this).html('<img src="' + Config.get('loading_gif') + '">');
                 Promise.resolve(self.serviceClient.sync_call(
                     'NarrativeService.copy_object',
                     [{

@@ -474,7 +474,7 @@ define([
 
                     this.populateAvailableTypes();
                     var typeSelected = this.$filterTypeSelect.val();
-                    if(this.selectedType === 'filterTypeSelect'){            
+                    if(this.selectedType === 'filterTypeSelect'){
                         this.currentMatch = this.viewOrder;
                         this.filterByType(typeSelected);
                     }else if(this.selectedType === 'sortData'){
@@ -918,10 +918,10 @@ define([
                         if(self.refreshwritingLock !== null) {
                             clearTimeout(self.refreshwritingLock);
                         }
-                        
+
                         self.refreshwritingLock = setTimeout(function () {
                             self.writingLock = false;
-                        }, 900000);                        
+                        }, 900000);
                     };
                     var $newNameInput = $('<input type="text">')
                         .addClass('form-control')
@@ -937,7 +937,7 @@ define([
                                 Jupyter.narrative.enableKeyboardManager();
                             }
                         });
-                    
+
                     $newNameInput.unbind('focus',releaseLock);
                     $newNameInput.bind('focus',releaseLock);
 
@@ -1102,12 +1102,12 @@ define([
             }
 
             var metadata = object_info[10] || {};
+            var viewType = type;
             if (type === 'Genome' || type === 'GenomeAnnotation') {
                 if (metadata.hasOwnProperty('Name')) {
-                    type = type + ': ' + metadata['Name'];
+                    viewType = type + ': ' + metadata['Name'];
                 }
             }
-
 
             var metadataText = '';
             for (var key in metadata) {
@@ -1132,17 +1132,16 @@ define([
                         .append('<tr><th>Full Type</th><td>' + typeLink + '</td></tr>')
                         .append($('<tr>').append('<th>Saved by</th>').append($savedByUserSpan))
                         .append(metadataText));
-            
-            var $card =  kbaseDataCard.apply(this,[
-                {
-                    type: type,
-                    editedBy: author,
-                    moreContent: $moreContent,
-                    is_set: is_set,
-                    max_name_length: this.options.max_name_length,
-                    object_info: object_info,
-                }]);
-            
+
+            var $card = kbaseDataCard.apply(this,[{
+                viewType: viewType,
+                type: type,
+                editedBy: author,
+                moreContent: $moreContent,
+                is_set: is_set,
+                object_info: object_info,
+            }]);
+
             if (objData.fromPalette) {
                 var $paletteIcon = $('<div>')
                     .addClass('pull-right narrative-card-palette-icon')
@@ -1159,10 +1158,10 @@ define([
                         }
                     });
                 $card.find('.kb-data-list-info').append($paletteIcon);
-                
+
             }
-            //add custom click events 
-            
+            //add custom click events
+
             $card.find('.narrative-card-logo , .kb-data-list-name').click(function (e) {
                 e.stopPropagation();
                 self.insertViewer(object_key);

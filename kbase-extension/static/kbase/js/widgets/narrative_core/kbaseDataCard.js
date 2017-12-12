@@ -61,8 +61,15 @@ define ([
 
         // in order - entry.viewType > entry.type > parsing it out of the object_info type string.
         var objectType = entry.type ? entry.type : object_info[2].split('.')[1].split('-')[0],
-            viewType = entry.viewType ? entry.viewType : entry.type;
-        viewType = viewType ? viewType : objectType;
+            viewType = entry.viewType;
+        if (!viewType) {
+            if (entry.type) {
+                viewType = entry.type;
+            }
+            else {
+                viewType = objectType;
+            }
+        }
 
         //shorten name if applicable
         var isShortened = false;

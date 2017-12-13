@@ -357,8 +357,6 @@ define([
               $upaField.append(xhr.error.message);
             });
 
-console.log("DATA IS : ", data);
-
             var lineCount = parseInt(data.lineCount, 10);
             if (!Number.isNaN(lineCount)) {
               lineCount = lineCount.toLocaleString()

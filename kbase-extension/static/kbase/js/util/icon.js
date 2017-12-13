@@ -14,10 +14,29 @@ define([
         iconColors = icons.colors,
         iconColorMapping = icons.color_mapping;
 
+    /**
+     * Legacy code that overwrites any existing DOM elements in params.elt. Used for passing in
+     * a set of parameters to buildDataIcon as an object instead of a list.
+     * @param {object} params - The set of parameters to use.
+     * @param {object} params.elt - The JQuery element containing the logo to overwrite.
+     * @param {string} params.type - The type of object to build a logo from.
+     * @param {boolean} params.stacked - If true, creates a stacked effect of multiple icons on each other
+     * @param {int} params.indent - How many spaces to indent (can be null or undefined)
+     */
     function overwriteDataIcon(params) {
         return buildDataIcon(params.elt, params.type, params.stacked, params.indent);
     }
 
+    /**
+     * @method
+     * @public
+     * Builds a data icon in the given $logo div.
+     * @param {object} $logo The div in which to insert an icon.
+     * @param {string} type The shortened type of object to fetch the icon for. E.g. "Genome" not
+     * "KBaseGenomes.Genome-2.1"
+     * @param {boolean} stacked If true, creates a stacked effect of multiple 'icons'.
+     * @param {int} indent How many spaces to indent the icon (typically 0 or just null)
+     */
     function buildDataIcon($logo, type, stacked, indent) {
         if (indent === undefined || indent === null) {
             indent = 0;
@@ -27,7 +46,7 @@ define([
         var icons = dataIcons;
         var icon = _.has(icons, type) ? icons[type] : icons.DEFAULT;
         // background circle
-        $logo.addClass("fa-stack fa-2x").css({
+        $logo.addClass('fa-stack fa-2x').css({
             'cursor': 'pointer'
         });
 
@@ -78,8 +97,8 @@ define([
         }
 
         $logo.append($('<i>')
-                .addClass(circle_classes)
-                .css({'color': circle_color}));
+            .addClass(circle_classes)
+            .css({'color': circle_color}));
         // to avoid repetition, define the func. here that will
         // add one set of icons
         var addLogoFunc = function(fa_icon, $logo, cls) {
@@ -100,7 +119,7 @@ define([
      * Whether the stack of icons is using font-awesome
      * or our own custom set.
      *
-     * @param iconList {list of str} Icon classes, from icons.json
+     * @param {list of str} iconList  Icon classes, from icons.json
      * @returns {boolean}
      */
     function isCustomIcon(iconList) {
@@ -110,7 +129,7 @@ define([
 
     /**
      * Get color for data or method icon.
-     * @param type
+     * @param {string} type String that gets "hashed" into a color.
      * @returns {string} Color code
      */
     function logoColorLookup (type) {
@@ -127,5 +146,5 @@ define([
     return {
         overwriteDataIcon: overwriteDataIcon,
         buildDataIcon: buildDataIcon
-    }
+    };
 });

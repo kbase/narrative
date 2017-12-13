@@ -16,6 +16,8 @@ define([
     'text!kbase/templates/data_staging/ftp_file_table.html',
     'text!kbase/templates/data_staging/ftp_file_header.html',
     'text!kbase/templates/data_staging/file_path.html',
+    'kb_service/client/workspace',
+    'api/auth',
     'jquery-dataTables',
     'select2',
 ], function(
@@ -35,7 +37,9 @@ define([
     BootstrapDialog,
     FtpFileTableHtml,
     FtpFileHeaderHtml,
-    FilePathHtml
+    FilePathHtml,
+    Workspace,
+    Auth
 ) {
     'use strict';
     return new KBWidget({
@@ -46,6 +50,10 @@ define([
             this._super(options);
 
             var runtime = Runtime.make();
+
+            this.workspaceClient = new Workspace(Config.url('workspace'), {
+              token: runtime.authToken(),
+            });
 
             this.stagingServiceClient = new StagingServiceClient({
                 root : Config.url('staging_api_url'),
@@ -58,6 +66,22 @@ define([
             this.updatePathFn = options.updatePathFn || this.setPath;
             this.uploaders = Config.get('uploaders');
             this.userId = runtime.userId();
+
+            var self = this; // GAH I miss fat arrow functions.
+            this.authClient = Auth.make({url: Config.url('auth')});
+            this.authClient.getCurrentProfile( runtime.authToken() ).then( function(res) {
+
+              // check out the identities available for the user - if globus is a provider, then hang onto the user name and re-render the page.
+              res.idents.forEach( function(i) {
+                if (i.provider === 'Globus') {
+                  self.globus_name = res.user;
+                  this.render();
+                }
+              });
+            })
+            .catch(function(xhr) {
+              // we really don't care here, honestly. If the auth service fails, it'll just prevent the globus link from showing up.
+            });
 
             // Get this party started.
             this.setPath(options.path);
@@ -109,6 +133,16 @@ define([
 
         renderFileHeader: function() {
             this.$elem.append(this.ftpFileHeaderTmpl());
+
+            if (this.globus_name) {
+              var $globus_link = this.$elem.find('.globus_link');
+              var href = $globus_link.attr('href');
+              href += this.globus_name;
+              $globus_link.attr('href', href);
+            }
+            else {
+              this.$elem.find('.globus_div').remove();
+            }
             this.$elem.find('button#help').click(function() {
                 this.startTour();
             }.bind(this));
@@ -279,6 +313,8 @@ define([
 
         renderMoreFileInfo : function (fileData) {
 
+          var self = this;
+
           if (fileData.loaded) {
             return fileData.loaded;
           }
@@ -296,9 +332,38 @@ define([
             $tabsDiv.empty();
             var data = JSON.parse(dataString);
 
+            var $upaField = $.jqElem('span')
+              .append('<i class="fa fa-spinner fa-spin">')
+            ;
+
             var $upa = data.UPA
-              ? $.jqElem('li').append($.jqElem('span').addClass('kb-data-staging-metadata-list').append('Imported as')).append(data.UPA )
+              ? $.jqElem('li').append($.jqElem('span').addClass('kb-data-staging-metadata-list').append('Imported as')).append($upaField )
               : '';
+
+            self.workspaceClient.get_object_info_new({ objects : [{ref : data.UPA}] } )
+              .then( function (name) {
+                $upaField.empty();
+                $upaField.append(
+                  $.jqElem('a')
+                    .attr('href', '/#dataview/' + data.UPA)
+                    .attr('target', '_blank')
+                    .append(name[0][1])
+                );
+              })
+            .catch(function(xhr) {
+              $upaField.empty();
+              $upaField.addClass('alert alert-danger');
+              $upaField.css({padding : '0px', margin : '0px'});
+              $upaField.append(xhr.error.message);
+            });
+
+            var lineCount = parseInt(data.lineCount, 10);
+            if (!Number.isNaN(lineCount)) {
+              lineCount = lineCount.toLocaleString()
+            }
+            else {
+              lineCount = 'Not provided';
+            }
 
             var $tabs = new KBaseTabs($tabsDiv, {
               tabs : [
@@ -310,8 +375,8 @@ define([
                       .append( $.jqElem('li').append($.jqElem('span').addClass('kb-data-staging-metadata-list').append('Name')).append(data.name) )
                       .append( $.jqElem('li').append($.jqElem('span').addClass('kb-data-staging-metadata-list').append('Created')).append(TimeFormat.reformatDate(new Date(data.mtime)) ) )
                       .append( $.jqElem('li').append($.jqElem('span').addClass('kb-data-staging-metadata-list').append('Size')).append(StringUtil.readableBytes(Number(data.size)) ) )
-                      .append( $.jqElem('li').append($.jqElem('span').addClass('kb-data-staging-metadata-list').append('Line Count')).append(parseInt(data.lineCount).toLocaleString() ) )
-                      .append( $.jqElem('li').append($.jqElem('span').addClass('kb-data-staging-metadata-list').append('MD5')).append(data.md5 ) )
+                      .append( $.jqElem('li').append($.jqElem('span').addClass('kb-data-staging-metadata-list').append('Line Count')).append( lineCount ) )
+                      .append( $.jqElem('li').append($.jqElem('span').addClass('kb-data-staging-metadata-list').append('MD5')).append(data.md5 || 'Not provided' ) )
                       .append( $upa )
                 },
                 {

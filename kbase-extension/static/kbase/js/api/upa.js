@@ -132,7 +132,7 @@ define([
             else {
                 var serialSt = {};
                 Object.keys(upas).forEach(function(key) {
-                    serialSt[key] = serialize(upas[key]);
+                    serialSt[key] = serializeAll(upas[key]);
                 });
                 return serialSt;
             }
@@ -152,7 +152,7 @@ define([
             else {
                 var deserialSt = {};
                 Object.keys(upas).forEach(function(key) {
-                    deserialSt[key] = deserialize(upas[key]);
+                    deserialSt[key] = deserializeAll(upas[key]);
                 });
                 return deserialSt;
             }

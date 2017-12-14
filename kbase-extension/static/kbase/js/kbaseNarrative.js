@@ -933,6 +933,9 @@ define([
      * get_cell_elements, which does this searching).
      */
     Narrative.prototype.getCellIndexByKbaseId = function (id) {
+        if (!Jupyter.notebook) {
+            return null;
+        }
         var cells = Jupyter.notebook.get_cells();
         for (var i = 0; i < cells.length; i++) {
             var c = cells[i];

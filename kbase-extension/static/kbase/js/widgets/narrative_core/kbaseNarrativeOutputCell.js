@@ -37,6 +37,28 @@ define([
         OUTPUT_ERROR_WIDGET: 'kbaseNarrativeError',
         headerShown: false,
 
+        initMetadata: function () {
+            var baseMeta = {
+                kbase: {
+                    dataCell: {}
+                }
+            };
+            if (!this.cell) {
+                return baseMeta;
+            }
+            else {
+                var metadata = this.cell.metadata;
+                if (!metadata || !metadata.kbase) {
+                    metadata = baseMeta;
+                    this.cell.metadata = metadata;
+                }
+                if (!metadata.kbase.dataCell) {
+                    metadata.kbase.dataCell = {};
+                }
+                return metadata;
+            }
+        },
+
         init: function (options) {
             // handle where options.widget == null.
             options.widget = options.widget || this.options.widget;
@@ -60,6 +82,8 @@ define([
                     this.cell.element.trigger('hideCodeArea.cell');
                 }
             }
+
+            this.metadata = this.initMetadata();
 
             if (this.cell) {
                 this.handleUpas();
@@ -113,20 +137,16 @@ define([
          *            in this.upas, NOT the ones in the cell metadata.
          */
         handleUpas: function(useLocal) {
-            // get metadata
-            var metadata = this.cell.metadata;
             // if useLocal, then drop the current values in this.upas into the metadata.
             // otherwise, if there's existing upas in metadata, supplant this.upas with those.
-            if (!metadata.kbase.dataCell) {
-                metadata.kbase.dataCell = {
-                    upas: this.upaApi.serializeAll(this.options.upas)
-                };
+            if (!this.metadata.kbase.dataCell.upas) {
+                this.metadata.kbase.dataCell.upas = this.upaApi.serializeAll(this.options.upas);
             }
-            else if (!useLocal && metadata.kbase.dataCell.upas) {
-                this.options.upas = this.upaApi.deserializeAll(metadata.kbase.dataCell.upas);
+            else if (!useLocal && this.metadata.kbase.dataCell.upas) {
+                this.options.upas = this.upaApi.deserializeAll(this.metadata.kbase.dataCell.upas);
             }
             else {
-                metadata.kbase.dataCell.upas = this.upaApi.serializeAll(this.options.upas);
+                this.metadata.kbase.dataCell.upas = this.upaApi.serializeAll(this.options.upas);
             }
         },
 
@@ -188,6 +208,9 @@ define([
                 this.headerWidget.updateUpas(this.options.upas);
             }
             else {
+                if (this.$body) {
+                    this.$body.remove();
+                }
                 var $headController = $('<div>').hide();
                 this.headerWidget = new ObjectCellHeader($headController, {
                     upas: this.options.upas,
@@ -212,31 +235,37 @@ define([
                 this.$elem.append(this.$body);
             }
 
-            this.renderBody();
-            this.isRendered = true;
+            return this.renderBody()
+                .then(function() {
+                    this.isRendered = true;
+                }.bind(this));
         },
 
         renderBody: function() {
-            var widget = this.options.widget,
-                widgetData = this.options.data;
-            if (widget === 'kbaseDefaultNarrativeOutput') {
-                widgetData = { data: this.options.data };
-            }
-            widgetData.upas = this.options.upas;
+            var self = this;
+            return new Promise(function(resolve) {
+                var widget = self.options.widget,
+                    widgetData = self.options.data;
+                if (widget === 'kbaseDefaultNarrativeOutput') {
+                    widgetData = { data: self.options.data };
+                }
+                widgetData.upas = self.options.upas;
 
-            require([widget],
-                function (W) {
-                    if (this.$widgetBody) {
-                        this.$widgetBody.remove();
+                require([widget],
+                    function (W) {
+                        if (self.$widgetBody) {
+                            self.$widgetBody.remove();
+                        }
+                        self.$widgetBody = $('<div>');
+                        self.$body.append(self.$widgetBody);
+                        self.$outWidget = new W(self.$widgetBody, widgetData);
+                        resolve();
+                    },
+                    function (err) {
+                        return self.renderError(err);
                     }
-                    this.$widgetBody = $('<div>');
-                    this.$body.append(this.$widgetBody);
-                    this.$outWidget = new W(this.$widgetBody, widgetData);
-                }.bind(this),
-                function (err) {
-                    this.renderError(err);
-                }.bind(this)
-            );
+                );
+            });
         },
 
         displayVersionChange: function(upaId, newVersion) {
@@ -251,7 +280,7 @@ define([
         },
 
         renderError: function(err) {
-            KBError('Output::' + this.options.title, 'failed to render output widget: "' + this.options.widget + '"');
+            // KBError('Output::' + this.options.title, 'failed to render output widget: "' + this.options.widget + '"');
             this.options.title = 'App Error';
             this.options.data = {
                 error: {
@@ -263,7 +292,7 @@ define([
                 }
             };
             this.options.widget = this.OUTPUT_ERROR_WIDGET;
-            this.render();
+            return this.render();
         },
 
         getState: function () {
@@ -293,6 +322,9 @@ define([
          * Project home: http://www.appelsiini.net/projects/lazyload
          */
         inViewport: function (element, settings) {
+            if (!element || !settings) {
+                return true;
+            }
             var fold = settings.container.offset().top + settings.container.height(),
                 elementTop = $(element).offset().top - settings.threshold;
             return elementTop <= fold; // test if it is "above the fold"

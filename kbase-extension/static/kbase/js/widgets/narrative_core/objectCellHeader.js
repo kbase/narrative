@@ -88,9 +88,12 @@ define([
                     allPromises.push(histPromise);
                 }
             });
-            Promise.all(Object.values(allPromises))
+            Promise.all(allPromises)
                 .then(function() {
                     self.render();
+                })
+                .catch(function(error) {
+                    // console.error(error);
                 });
         },
 

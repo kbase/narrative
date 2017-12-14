@@ -69,7 +69,23 @@ define ([
                 '[myws]/myobj/myver',
                 '[1]2/23/4',
                 '[1]2/3/4;5/6/7'
-            ];
+            ],
+            upaStruct = {
+                foo: '1/2/3',
+                bar: ['4/5/6', '7/8/9'],
+                baz: {
+                    a: '1/2/3',
+                    b: '1/2/3'
+                }
+            },
+            upaStructSerial = {
+                foo: '[1]/2/3',
+                bar: ['[4]/5/6', '[7]/8/9'],
+                baz: {
+                    a: '[1]/2/3',
+                    b: '[1]/2/3'
+                }
+            };
 
         beforeEach(function () {
             history.pushState(null, null, '/narrative/ws.31.obj.1');
@@ -162,5 +178,20 @@ define ([
                 expect(error.error).toEqual('Can only serialize UPA strings or Arrays of UPA paths');
             }
         });
+
+        it('Should serialize all elements of a structure', function () {
+            var serialized = upaApi.serializeAll(upaStruct);
+            Object.keys(serialized).forEach(function(key) {
+                if (typeof upaStructSerial[key] === 'string') {
+                    expect(serialized[key]).toEqual(upaStructSerial[key]);
+                }
+                else if (Array.isArray(upaStructSerial[key])) {
+                    upaStructSerial[key].forEach(function(serialUpa) {
+                        expect(serialized[key].indexOf(serialUpa)).toBeGreaterThan(-1);
+                    });
+                }
+            });
+        });
+
     });
 });

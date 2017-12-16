@@ -837,8 +837,6 @@ define([
             nearIdx = 0;
         if (cell) {
             nearIdx = Jupyter.notebook.find_cell_index(cell);
-            $(cell.element).off('dblclick');
-            $(cell.element).off('keydown');
         }
         var objInfo = {};
         // If a string, expect a ref, and fetch the info.
@@ -846,7 +844,7 @@ define([
             objInfo = this.sidePanel.$dataWidget.getDataObjectByRef(obj, true);
         }
         // If an array, expect it to be an array of the info, and convert it.
-        else if (obj instanceof Array) {
+        else if (Array.isArray(obj)) {
             objInfo = ServiceUtils.objectInfoToObject(obj);
         }
         // If not an array or a string, it's our object already.

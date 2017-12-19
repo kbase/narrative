@@ -4,6 +4,14 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 This is built on the Jupyter Notebook v4.4.1 (more notes will follow).
 
 
+### Version 3.5.2
+- PTV-682 - Fix problem with rendering a Pangenome widget in a copied Narrative.
+- KBASE-5405 (in progress) - new version of app log viewer.
+- PTV-225 - Fix and clarify data sorting by name, type, and date.
+- PTV-833 - Restore missing genome icons to the data panel.
+- KBASE-5410 - Put the user id onto the link to Globus in the staging upload area.
+- Adds new functionality to the data staging area, including showing file metadata and whether a file has been uploaded before.
+
 ### Version 3.5.1
 - TASK-1113/PUBLIC-148 - Import Panel scrolls if panel size is larger than screen size
 - TASK-1114 - Add lock when editing name, that prevents data panel from refreshing with new data. Relinquishes lock after 15 min if no activity.

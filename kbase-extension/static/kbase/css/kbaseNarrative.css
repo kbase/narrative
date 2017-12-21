@@ -31,7 +31,8 @@
  overflow : scroll;
  font-family : monospace;
  font-size : 90%;
- background-color : #DDDDDD
+ background-color : #DDDDDD;
+ max-height : 200px;
 }
 
 .kb-dropzone {

@@ -130,10 +130,10 @@ define([
             // This property is only set in accordance with the Jupyter.notebook.writable property.
             // It is set here, at the outset, and also in a listener for the
             // 'updateReadOnlyMode.Narrative' jquery event, which, as far as I can tell
-            // is not issued anywhere in the system. The effect of this would be to 
+            // is not issued anywhere in the system. The effect of this would be to
             // cause a narrative to flip from edit->view or view->edit while a user is
-            // engaged with the narrative. This seems like a jarring experience, and would 
-            // certainly need some ui mechanism like a dialog to explain what is happening 
+            // engaged with the narrative. This seems like a jarring experience, and would
+            // certainly need some ui mechanism like a dialog to explain what is happening
             // to the user.
             // So, effectively, this is a constant.
             this.narrativeIsReadOnly = !Jupyter.notebook.writable;
@@ -147,21 +147,21 @@ define([
 
             // The "inReadOnlyMode" is the user-configurable setting for this.
             // TODO: it should be renamed to something else. It is confusing to have
-            // the permanent "not writable == narrativeIsReadOnly == readonly"  setting, 
-            // which reflects the (during this runtime session) permanent state of the 
+            // the permanent "not writable == narrativeIsReadOnly == readonly"  setting,
+            // which reflects the (during this runtime session) permanent state of the
             // narrative.
             // this.inReadOnlyMode = false;
 
             // isViewMode is really a cheap way of representing edit mode.
             // If false, the mode is 'edit', if true the mode is 'view'.
-            // If there were more than two modes, we would need to store this as 
+            // If there were more than two modes, we would need to store this as
             // another type of value -- string or number.
             // this.isViewMode = false;
             // uiMode is one of 'edit', view'.
-            // A string enum, because although we have two ui states now, 
-            // edit, which basically follows read-write 
+            // A string enum, because although we have two ui states now,
+            // edit, which basically follows read-write
             // view, which shadows read-only
-            // we may have additional modes (as has been discussed) - 
+            // we may have additional modes (as has been discussed) -
             this.uiMode = this.narrativeIsReadOnly ? 'view' : 'edit';
             Jupyter.narrative.uiMode = this.uiMode;
 
@@ -764,11 +764,11 @@ define([
             // within these enter... calls above.
 
             // In true read-only (non-writable) mode, the view-mode toggle button
-            // is not available. Interestingly, this function can only be called 
+            // is not available. Interestingly, this function can only be called
             // from the toggle button itself..., so I've disabled that logic and it
             // should just be removed...
             // If this narrative became read-only after the toggle button was rendered,
-            // then simply disabling the class-switching is not enough, the entire 
+            // then simply disabling the class-switching is not enough, the entire
             // mechanism should be disabled (and the button hidden as well.)
             // if (!this.narrativeIsReadOnly) {
             var icon = $('#kb-view-mode span');
@@ -779,7 +779,7 @@ define([
 
             // Warning, do not look for the code for this ... it will burn your
             // eyes out to their bare sockets.
-            // Note also, there is code in this module which supposdly does the same thing 
+            // Note also, there is code in this module which supposdly does the same thing
             // (see readOnlyMode, readWriteMode), but doesn't seem to work.
             Jupyter.CellToolbar.rebuild_all();
             this.runtime.bus().emit('read-only-changed', {
@@ -972,10 +972,10 @@ define([
          * This is called during initialization and by the view-mode toggle.
          * Note that this is for the view-only ui mode, and thus the narrative
          * itself may be writable (read-write). This crossover of terminology is
-         * a bit confusing to follow, and thus I've attempted to introduct the 
-         * ui view/edit mode as orthgonal to narrative 
+         * a bit confusing to follow, and thus I've attempted to introduct the
+         * ui view/edit mode as orthgonal to narrative
          * permission (read-only/read-write/read-write-share).
-         * 
+         *
          * TODO: probably a better design to set the read / view only flags
          * and thsn simply render everything that is interested in this.
          * Otherwise, we just have to propogate the state that _will_ be true when
@@ -1039,7 +1039,7 @@ define([
 
         /**
          * Set narrative from read-only mode to read-write mode
-         * This is only called in the context of an editable Narrative 
+         * This is only called in the context of an editable Narrative
          * in which the user is togging between view/edit mode in order
          * to evaluate how the narrative appears on view-only mode.
          *
@@ -1979,9 +1979,8 @@ define([
         },
 
 
-        createViewerCell: function (cellIndex, data, widget) {
+        createViewerCell: function (cellIndex, data) {
             var placement = data.placement || 'below';
-            var cell;
             var cellData = {
                 type: 'data',
                 objectInfo: data.info
@@ -1991,31 +1990,6 @@ define([
             } else {
                 Jupyter.notebook.insert_cell_below('code', cellIndex, cellData);
             }
-            // var title = (data.info && data.info.name) ? data.info.name : 'Data Viewer';
-            // var type = 'viewer';
-            // $(cell.element).trigger('toggleCodeArea.cell');
-
-
-            // var meta = {
-            //     'kbase': {
-            //         'attributes': {
-            //             'status': 'new',
-            //             'title': title
-            //         },
-            //         'type': 'output',
-            // 				'subtype': 'data'
-            //     }
-            // };
-            // cell.metadata = meta;
-            // cell.execute();
-            // $([Jupyter.events]).trigger('inserted.Cell', {
-            //     cell: cell,
-            //     kbase: {
-            //         type: 'data'
-            //     },
-            //     objectInfo: data.info
-            // });
-
         },
 
         /**

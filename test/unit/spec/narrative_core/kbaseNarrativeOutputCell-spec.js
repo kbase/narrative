@@ -112,6 +112,10 @@ define([
 
         });
 
+        it('inViewport should return true by default, if it\'s missing parameters', function() {
+            expect(myWidget.inViewport()).toBe(true);
+        });
+
         it('Should render properly', function(done) {
             myWidget.render()
                 .then(function() {

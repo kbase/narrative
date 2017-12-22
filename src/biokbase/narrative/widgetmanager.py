@@ -360,6 +360,32 @@ class WidgetManager(object):
         Use the given widget_name and parameters (to be passed to the widget) to infer any upas.
         This will generally mean using the workspace object name and workspace name to do a
         lookup in the Workspace and constructing the upa or upa path from there.
+
+        widget_name - string - Name of the widget to be used, this gets looked up in the widget
+                    param map. This maps all widget input parameters onto some sensible language.
+        params - dict - keys = id of parameter, values = value of parameter.
+
+        So the general flow is something like this. We go through all parameters, see what context
+        those map on to, and infer, from that, what are the workspace objects. We can then look up
+        those objects by the workspace and object name, and use the info to construct UPAs.
+
+        Example: wm.infer_upas("kbasePanGenome", { "ws": "my_workspace", "name": "my_pangenome" })
+        The widget parameter map has this entry:
+        "kbasePanGenome": {
+            "ws": "ws_name",
+            "name": "obj_name"
+        }
+        So we know, by inference, that "my_workspace" is a workspace name, and "my_pangenome" is an
+        object name.
+
+        We can use this info to look up the object info from the Workspace, let's say it's 3/4/5.
+        This then gets returned as another dict:
+        {
+            "name": "3/4/5"
+        }
+
+        This applies for lists, too. If, above, the value for the "name" parameter was a list of
+        strings, this would treat all of those as objects, and try to return a list of UPAs instead.
         """
         param_to_context = self.widget_param_map.get(widget_name, {})
         obj_names = list()  # list of tuples - first = param id, second = object name
@@ -381,7 +407,7 @@ class WidgetManager(object):
                 elif context == "obj_ref_list":
                     obj_ref_list.append((param, params[param]))
 
-        # return value should look like this:
+        # return value will look like this:
         # {
         #   param1: upa,
         #   param2: upa

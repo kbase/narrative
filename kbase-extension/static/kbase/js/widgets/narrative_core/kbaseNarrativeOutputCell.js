@@ -140,6 +140,11 @@ define([
             // if useLocal, then drop the current values in this.upas into the metadata.
             // otherwise, if there's existing upas in metadata, supplant this.upas with those.
             if (!this.metadata.kbase.dataCell.upas) {
+                // bail out silently if we don't have any upas, AND there's non in the cell meta.
+                // This likely means that we're dealing with a non-updated Narrative.
+                if (!this.options.upas) {
+                    return;
+                }
                 this.metadata.kbase.dataCell.upas = this.upaApi.serializeAll(this.options.upas);
             }
             else if (!useLocal && this.metadata.kbase.dataCell.upas) {
@@ -165,12 +170,26 @@ define([
             return self.render();
         },
 
+        /**
+         * Tests the current UPAs by testing to see if the user has permission to see them all.
+         * If they don't, then we shouldn't even bother to try showing the viewer, and instead
+         * show a permissions error instead.
+         */
+        testUpas: function() {
+            return {};
+        },
+
         render: function () {
             // set up the widget line
             // todo find cell and trigger icon setting.
 
             var methodName = this.options.title ? this.options.title : 'Unknown App';
             var title = methodName;
+
+            var upaTest = this.testUpas();
+            if (upaTest.error) {
+                this.renderError(upaTest.error);
+            }
 
             if (this.cell) {
                 var meta = this.cell.metadata;

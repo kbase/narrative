@@ -30,6 +30,7 @@ define([
         objectInfo: {},
 
         init: function(options) {
+            options.upas = options.upas || {};
             this._super(options);
             var runtime = Runtime.make();
             this.workspace = new Workspace(runtime.config('services.workspace.url'), {

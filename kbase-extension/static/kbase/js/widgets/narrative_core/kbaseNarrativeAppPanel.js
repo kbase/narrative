@@ -26,7 +26,6 @@ define([
     'uuid',
     'narrative_core/catalog/kbaseCatalogBrowser',
     'kbase/js/widgets/narrative_core/kbaseAppCard',
-    'util/bootstrapAlert',
     'kbaseNarrative',
     'catalog-client-api',
     'kbase-client-api',
@@ -47,8 +46,7 @@ define([
     NarrativeMethodStore,
     Uuid,
     KBaseCatalogBrowser,
-    kbaseAppCard,
-    BootstrapAlert
+    kbaseAppCard
 ) {
     'use strict';
     return KBWidget({
@@ -580,10 +578,11 @@ define([
          */
         triggerApp: function(app, tag, parameters) {
             if (Jupyter.narrative.narrController.uiModeIs('view')) {
-                new BootstrapAlert({
+                new BootstrapDialog({
                     type: 'warning',
                     title: 'Warning',
-                    body: 'Read-only Narrative -- you may not add apps to this Narrative'
+                    body: 'Read-only Narrative -- you may not add apps to this Narrative',
+                    alertOnly: true
                 });
                 // alert('Read-only Narrative -- may not add apps to this Narrative');
                 return;
@@ -923,11 +922,11 @@ define([
         buildAppItem: function(app) {
             /**
              app.info:
-                authors:["rsutormin"], categories:["annotation"], icon:{url:}, id: str, 
-                input_types: ['KbaseGenomeAnnotations.Assembly'], module_name: str, 
+                authors:["rsutormin"], categories:["annotation"], icon:{url:}, id: str,
+                input_types: ['KbaseGenomeAnnotations.Assembly'], module_name: str,
                 name: str, namespace: str, output_types:["KBaseGenomes.Genome"],
                 subtitle: str, tooltip: str, ver: str
-             * 
+             *
             */
             var self = this;
 
@@ -951,7 +950,7 @@ define([
                         .append('more...')
                         .attr('target', '_blank')
                         .attr('href', moreLink)));
-  
+
             var $card = kbaseAppCard.apply(this, [
                 {
                     createdBy:false,

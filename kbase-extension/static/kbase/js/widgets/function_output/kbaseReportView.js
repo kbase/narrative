@@ -19,7 +19,6 @@ define([
     'common/ui',
     'common/iframe/hostMessages',
     'common/events',
-    'util/bootstrapAlert',
 
     'jquery-dataTables',
     'jquery-dataTables-bootstrap'
@@ -38,8 +37,7 @@ define([
     ServiceUtils,
     UI,
     HostMessages,
-    Events,
-    Alert
+    Events
 ) {
     'use strict';
     return KBWidget({

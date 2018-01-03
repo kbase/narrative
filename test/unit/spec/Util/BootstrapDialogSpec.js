@@ -83,11 +83,6 @@ define ([
             var wasTriggered = false;
             var btnFn = function() {
                 wasTriggered = true;
-                console.log('was clicked!');
-                console.log('was clicked!');
-                console.log('was clicked!');
-                console.log('was clicked!');
-                console.log('was clicked!');
             };
             var dialog = new Dialog({
                 title: 'test',
@@ -106,10 +101,31 @@ define ([
             dialog.destroy();
         });
 
+        it('Should create a simple alert', function() {
+            var alert = new Dialog({
+                title: 'Alert',
+                body: $('<div>').append('an alert'),
+                alertOnly: true
+            });
+
+            var btns = alert.getButtons();
+            expect(btns.length).toBe(1);
+            expect(btns[0].innerHTML).toBe('Close');
+        });
+
+        it('Should set the title based on type', function() {
+            var d = new Dialog({
+                title: 'Foo',
+                type: 'warning'
+            });
+            expect(d.$headerTitle.hasClass('text-warning')).toBe(true);
+        });
+
         it('Should destroy the modal on command', function() {
             var ret = simpleDialog.destroy();
             expect(ret).toBe(null);
             expect(simpleDialog.getElement()).toBe(null);
         });
+
     });
 });

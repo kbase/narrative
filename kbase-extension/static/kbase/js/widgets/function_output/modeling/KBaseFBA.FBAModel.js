@@ -242,6 +242,7 @@ function KBaseFBA_FBAModel(modeltabs) {
 
     this.ReactionTab = function (info) {
         var rxn = self.rxnhash[info.id];
+        console.log(rxn)
 		var output = [{
 			"label": "Reaction",
 			"data": rxn.dispid,
@@ -283,10 +284,12 @@ function KBaseFBA_FBAModel(modeltabs) {
 						"data": data[0].deltaG+" ("+data[0].deltaGErr+") kcal/mol"
 					});
 				}
-				output.push({
-					"label": "Enzymes",
-					"data": data[0].enzymes.join(", ")
-				});
+				if ("enzymes" in data[0]) {
+                    output.push({
+                        "label": "Enzymes",
+                        "data": data[0].enzymes.join(", ")
+                    });
+                }
 				var aliashash = {};
 				var finalaliases = [];
 				for (var i=0; i < data[0].aliases.length; i++) {

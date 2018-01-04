@@ -110,7 +110,7 @@ define ([
                 .append('&nbsp;<a href="' + self.shortMarkdownDesc(self.obj_info,
                     self.options.lp_url) + '" target="_blank">' + self.obj_info.name + '</a>');
 
-                self.metadataRender(self.$elem);
+                // self.metadataRender(self.$elem);
                 self.$elem.append(widget.widget);
                 self.$elem.closest('.cell').trigger('set-title', [self.obj_info.name]);
             };

@@ -30,7 +30,6 @@ define([
     'notebook/js/notebook',
     'util/display',
     'util/bootstrapDialog',
-    'util/bootstrapAlert',
     'util/timeFormat',
     'text!kbase/templates/update_dialog_body.html',
     'text!kbase/templates/document_version_change.html',
@@ -65,7 +64,6 @@ define([
     Notebook,
     DisplayUtil,
     BootstrapDialog,
-    BootstrapAlert,
     TimeFormat,
     UpdateDialogBodyTemplate,
     DocumentVersionDialogBodyTemplate,
@@ -375,7 +373,7 @@ define([
     Narrative.prototype.showDocumentVersionDialog = function (newVerInfo) {
         var bodyTemplate = Handlebars.compile(DocumentVersionDialogBodyTemplate);
 
-        var versionDialog = new BootstrapAlert({
+        var versionDialog = new BootstrapDialog({
             title: 'Showing an older Narrative document',
             body: bodyTemplate({
                 currentVer: this.documentVersionInfo,
@@ -384,7 +382,8 @@ define([
                 newDate: TimeFormat.readableTimestamp(newVerInfo[3]),
                 sameUser: this.documentVersionInfo[5] === newVerInfo[5],
                 readOnly: this.readonly
-            })
+            }),
+            alertOnly: true
         });
 
         versionDialog.show();
@@ -826,10 +825,11 @@ define([
      */
     Narrative.prototype.addViewerCell = function(obj) {
         if (Jupyter.narrative.readonly) {
-            new BootstrapAlert({
+            new BootstrapDialog({
                 type: 'warning',
                 title: 'Warning',
-                body: 'Read-only Narrative -- may not add a data viewer to this Narrative'
+                body: 'Read-only Narrative -- may not add a data viewer to this Narrative',
+                alertOnly: true
             });
             return;
         }

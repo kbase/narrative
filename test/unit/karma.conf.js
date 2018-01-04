@@ -10,13 +10,17 @@ module.exports = function (config) {
             // 'karma-chrome-launcher',
             'karma-phantomjs-launcher',
             'karma-requirejs',
-            'karma-coverage'
+            'karma-coverage',
+            'karma-mocha-reporter'
         ],
         preprocessors: {
             'kbase-extension/static/kbase/js/**/*.js': ['coverage']
         },
         files: [
             {pattern: 'test/unit/spec/**/*.js', included: false},
+            // {pattern: 'test/unit/spec/narrative_core/upload/stagingAreaViewer-spec.js', included: false},
+            {pattern: 'node_modules/string.prototype.startswith/startswith.js', included: true},
+            {pattern: 'node_modules/string.prototype.endswith/endswith.js', included: true},
             {pattern: 'kbase-extension/static/**/*.css', included: false, served: true},
             {pattern: 'kbase-extension/static/kbase/templates/**/*.html', included: false, served: true},
             {pattern: 'kbase-extension/static/kbase/config/**/*.json', included: false, served: true},
@@ -25,6 +29,7 @@ module.exports = function (config) {
             'kbase-extension/static/narrative_paths.js',
             {pattern: 'test/unit/testConfig.json', included: false, served: true, nocache: true},
             {pattern: 'test/*.tok', included: false, served: true, nocache: true},
+            {pattern: 'test/data/**/*', included: false, served: true},
             'test/unit/testUtil.js',
             'test/unit/test-main.js'
         ],
@@ -36,7 +41,7 @@ module.exports = function (config) {
         // test results reporter to use
         // possible values: 'dots', 'progress'
         // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-        reporters: ['progress', 'coverage'],
+        reporters: ['mocha', 'coverage'],
         coverageReporter: {
             type: 'html',
             dir: 'js-coverage/',
@@ -73,12 +78,12 @@ module.exports = function (config) {
         singleRun: true,
         proxies: {
             '/narrative/static/': '/base/kbase-extension/static/',
-            '/narrative/static/base': 'http://localhost:9999/narrative/static/base',
-            '/narrative/static/notebook': 'http://localhost:9999/narrative/static/notebook',
-            '/narrative/static/components': 'http://localhost:9999/narrative/static/components',
-            '/narrative/static/services': 'http://localhost:9999/narrative/static/services',
+            '/narrative/static/base': 'http://localhost:32323/narrative/static/base',
+            '/narrative/static/notebook': 'http://localhost:32323/narrative/static/notebook',
+            '/narrative/static/components': 'http://localhost:32323/narrative/static/components',
+            '/narrative/static/services': 'http://localhost:32323/narrative/static/services',
             '/static/kbase/config': '/base/kbase-extension/static/kbase/config',
-            '/test/': '/base/test/',
+            '/test/': '/base/test/'
         }
 
     });

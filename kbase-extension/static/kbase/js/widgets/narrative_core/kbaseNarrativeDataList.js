@@ -27,7 +27,6 @@ define([
     'kb_service/utils',
     'util/bootstrapAlert',
     'kbase/js/widgets/narrative_core/kbaseDataCard',
-
     'bootstrap',
     'jquery-nearest'
 ], function (
@@ -91,6 +90,7 @@ define([
         controlClickHnd: {}, // click handlers for control buttons
         my_user_id: null,
         serviceClient: null,
+        sortOrder: -1,  // order for sorting the list. 1 = increasing, -1 = decreasing
 
         objectRowTmpl: Handlebars.compile(ObjectRowHtml),
 
@@ -474,7 +474,7 @@ define([
 
                     this.populateAvailableTypes();
                     var typeSelected = this.$filterTypeSelect.val();
-                    if(this.selectedType === 'filterTypeSelect'){            
+                    if(this.selectedType === 'filterTypeSelect'){
                         this.currentMatch = this.viewOrder;
                         this.filterByType(typeSelected);
                     }else if(this.selectedType === 'sortData'){
@@ -918,10 +918,10 @@ define([
                         if(self.refreshwritingLock !== null) {
                             clearTimeout(self.refreshwritingLock);
                         }
-                        
+
                         self.refreshwritingLock = setTimeout(function () {
                             self.writingLock = false;
-                        }, 900000);                        
+                        }, 900000);
                     };
                     var $newNameInput = $('<input type="text">')
                         .addClass('form-control')
@@ -937,7 +937,7 @@ define([
                                 Jupyter.narrative.enableKeyboardManager();
                             }
                         });
-                    
+
                     $newNameInput.unbind('focus',releaseLock);
                     $newNameInput.bind('focus',releaseLock);
 
@@ -1102,12 +1102,12 @@ define([
             }
 
             var metadata = object_info[10] || {};
+            var viewType = type;
             if (type === 'Genome' || type === 'GenomeAnnotation') {
                 if (metadata.hasOwnProperty('Name')) {
-                    type = type + ': ' + metadata['Name'];
+                    viewType = type + ': ' + metadata['Name'];
                 }
             }
-
 
             var metadataText = '';
             for (var key in metadata) {
@@ -1132,17 +1132,16 @@ define([
                         .append('<tr><th>Full Type</th><td>' + typeLink + '</td></tr>')
                         .append($('<tr>').append('<th>Saved by</th>').append($savedByUserSpan))
                         .append(metadataText));
-            
-            var $card =  kbaseDataCard.apply(this,[
-                {
-                    type: type,
-                    editedBy: author,
-                    moreContent: $moreContent,
-                    is_set: is_set,
-                    max_name_length: this.options.max_name_length,
-                    object_info: object_info,
-                }]);
-            
+
+            var $card = kbaseDataCard.apply(this,[{
+                viewType: viewType,
+                type: type,
+                editedBy: author,
+                moreContent: $moreContent,
+                is_set: is_set,
+                object_info: object_info,
+            }]);
+
             if (objData.fromPalette) {
                 var $paletteIcon = $('<div>')
                     .addClass('pull-right narrative-card-palette-icon')
@@ -1159,10 +1158,10 @@ define([
                         }
                     });
                 $card.find('.kb-data-list-info').append($paletteIcon);
-                
+
             }
-            //add custom click events 
-            
+            //add custom click events
+
             $card.find('.narrative-card-logo , .kb-data-list-name').click(function (e) {
                 e.stopPropagation();
                 self.insertViewer(object_key);
@@ -1292,7 +1291,7 @@ define([
             // Add tooltip to indicate this functionality
             $row.attr({
                 'data-toggle': 'tooltip',
-                'title': 'Drag onto narrative &rarr;'
+                'title': 'Drag onto Narrative &rarr;'
             });
 
             $row.tooltip({
@@ -1406,16 +1405,21 @@ define([
         renderController: function () {
             var self = this;
 
+            var $upOrDown = $('<button class="btn btn-default btn-sm" type="button">').css({ 'margin-left': '5px' })
+                .append('<span class="fa fa-sort-amount-asc" style="color:#777" aria-hidden="true" />')
+                .on('click', function () {
+                    self.reverseData();
+                    self.sortOrder *= -1;
+                    $upOrDown.find('.fa').toggleClass('fa-sort-amount-desc fa-sort-amount-asc');
+                });
+
             var $byDate = $('<label id="nar-data-list-default-sort-label" class="btn btn-default">').addClass('btn btn-default')
                 .append($('<input type="radio" name="options" id="nar-data-list-default-sort-option" autocomplete="off">'))
                 .append('date')
                 .on('click', function () {
                     self.sortData(function (a, b) {
-                        if (self.dataObjects[a.objId].info[3] > self.dataObjects[b.objId].info[3])
-                            return -1; // sort by date
-                        if (self.dataObjects[a.objId].info[3] < self.dataObjects[b.objId].info[3])
-                            return 1; // sort by date
-                        return 0;
+                        return self.sortOrder * self.dataObjects[a.objId].info[3]
+                            .localeCompare(self.dataObjects[b.objId].info[3]);
                     });
                 });
 
@@ -1424,11 +1428,8 @@ define([
                 .append('name')
                 .on('click', function () {
                     self.sortData(function (a, b) {
-                        if (self.dataObjects[a.objId].info[1].toUpperCase() < self.dataObjects[b.objId].info[1].toUpperCase())
-                            return -1; // sort by name
-                        if (self.dataObjects[a.objId].info[1].toUpperCase() > self.dataObjects[b.objId].info[1].toUpperCase())
-                            return 1;
-                        return 0;
+                        return -1 * self.sortOrder * self.dataObjects[a.objId].info[1].toUpperCase()
+                            .localeCompare(self.dataObjects[b.objId].info[1].toUpperCase());
                     });
                 });
 
@@ -1439,18 +1440,10 @@ define([
                     self.sortData(function (a, b) {
                         var aType = self.dataObjects[a.objId].info[2].toUpperCase().match(/\.(.+)/)[1];
                         var bType = self.dataObjects[b.objId].info[2].toUpperCase().match(/\.(.+)/)[1];
-                        if (aType > bType)
-                            return -1; // sort by type
-                        if (aType < bType)
-                            return 1;
-                        return 0;
+                        return -1 * self.sortOrder * aType.localeCompare(bType);
                     });
                 });
-            var $upOrDown = $('<button class="btn btn-default btn-sm" type="button">').css({ 'margin-left': '5px' })
-                .append('<span class="glyphicon glyphicon-sort" style="color:#777" aria-hidden="true" />')
-                .on('click', function () {
-                    self.reverseData();
-                });
+
 
             var $sortByGroup = $('<div data-toggle="buttons">')
                 .addClass('btn-group btn-group-sm')
@@ -1460,7 +1453,6 @@ define([
                 .append($byType);
 
             /** Set view mode toggle */
-            var viewModeDisableCtl = ['search', 'sort', 'filter'];
             self.viewModeDisableHnd = {};
             var $viewMode = $('<span>')
                 .addClass('btn btn-xs btn-default kb-data-list-ctl')
@@ -1494,7 +1486,8 @@ define([
                 } else {
                     self.$searchDiv.hide({ effect: 'blind', duration: 'fast' });
                 }
-            }
+            };
+
             var $openSearch = $('<span>')
                 .addClass('btn btn-xs btn-default kb-data-list-ctl')
                 .attr('id', 'kb-data-list-searchctl')

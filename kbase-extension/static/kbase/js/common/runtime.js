@@ -59,6 +59,10 @@ define([
             return Jupyter.narrative.authToken;
         }
 
+        function userId() {
+            return Jupyter.narrative.userId;
+        }
+
         function getConfig(key, defaultValue) {
             return narrativeConfig.getItem(key, defaultValue);
         }
@@ -88,7 +92,7 @@ define([
 
         /*
          * This is how the narrative core object does this.
-         * We should really hook into a single method which gets this 
+         * We should really hook into a single method which gets this
          * source of truth, validates it against the workspace to get a workspace
          * info, and makes that info available in the runtime at load time.
          * But for now, it is very helpful to have a single runtime object/module
@@ -109,7 +113,8 @@ define([
             getUserSetting: getUserSetting,
             setEnv: setEnv,
             getEnv: getEnv,
-            workspaceId: workspaceId
+            workspaceId: workspaceId,
+            userId: userId
         };
     }
 

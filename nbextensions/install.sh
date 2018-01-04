@@ -11,13 +11,6 @@ export IPYTHONDIR=$narrdir/kbase-extension/ipython
 echo 'Root dir'
 echo ${dir}
 
-#jupyter nbextension disable appCell/main --sys-prefix
-#jupyter nbextension uninstall ${dir}/appCell --sys-prefix
-#jupyter nbextension install ${dir}/appCell --symlink --sys-prefix
-#jupyter nbextension enable appCell/main --sys-prefix
-
-#jupyter nbextension disable methodViewCell/main --sys-prefix
-#jupyter nbextension uninstall ${dir}/methodViewCell --sys-prefix
 jupyter nbextension install ${dir}/viewCell --symlink --sys-prefix
 jupyter nbextension enable viewCell/main --sys-prefix
 
@@ -38,9 +31,3 @@ jupyter nbextension enable advancedViewCell/main --sys-prefix
 
 jupyter nbextension install ${dir}/codeCell --symlink --sys-prefix
 jupyter nbextension enable codeCell/main --sys-prefix
-
-# jupyter nbextension disable codeCell/main --sys-prefix
-# jupyter nbextension install ${dir}/codeCell --symlink --sys-prefix
-
-#jupyter nbextension disable customView/main --sys-prefix
-#jupyter nbextension uninstall ${dir}/customView --sys-prefix

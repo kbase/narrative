@@ -144,7 +144,7 @@ class KBaseWSManagerMixin(object):
         self._test_obj_ref(obj_ref)
         try:
             if content:
-                nar_data = self.ws_client().get_objects([{'ref':obj_ref}])
+                nar_data = self.ws_client().get_objects([{'ref': obj_ref}])
                 if nar_data:
                     nar = nar_data[0]
                     nar['data'] = update_narrative(nar['data'])
@@ -211,6 +211,7 @@ class KBaseWSManagerMixin(object):
                 meta[u'job_ids'][u'apps'] = list()
             if 'job_usage' not in meta[u'job_ids']:
                 meta[u'job_ids'][u'job_usage'] = {u'queue_time': 0, u'run_time': 0}
+            meta[u'is_temporary'] = 'false'
             meta[u'format'] = u'ipynb'
 
             if len(meta[u'name']) > MAX_METADATA_STRING_BYTES - len(u'name'):

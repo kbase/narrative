@@ -193,5 +193,27 @@ define ([
             });
         });
 
+        it('Should throw an error when changing the version of an UPA that isn\t an UPA', function () {
+            try {
+                upaApi.changeUpaVersion('not an upa', 'no new version');
+                fail('Should have failed here!');
+            } catch (error) {
+                expect(error).not.toBeNull();
+                expect(error.error).toContain('is not a valid upa, so its version cannot be changed!');
+            }
+        });
+
+        it('Should throw an error when changing the version of an UPA to a bad value', function () {
+            var badVersionValues = [0, -1, '-1', '0', 'abc', '12V', 'V12', '1v3'];
+            badVersionValues.forEach(function(badVal) {
+                try {
+                    var newUpa = upaApi.changeUpaVersion('1/2/3', badVal);
+                    fail(newUpa + ' -- Should have failed here!');
+                } catch (error) {
+                    expect(error).not.toBeNull();
+                    expect(error.error).toContain(badVal + ' is not a valid version number!');
+                }
+            });
+        });
     });
 });

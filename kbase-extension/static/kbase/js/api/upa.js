@@ -114,6 +114,11 @@ define([
                     error: upa + ' is not a valid upa, so its version cannot be changed!'
                 };
             }
+            if ((!(/^\d+$/.test(newVersion)) || newVersion <= 0)) {
+                throw {
+                    error: newVersion + ' is not a valid version number!'
+                };
+            }
             var newUpa = upa.replace(/^(.+\/)(\d+)$/, '$1' + newVersion);
             return newUpa;
         };
@@ -123,18 +128,15 @@ define([
                 return serialize(upas);
             }
             else if (Array.isArray(upas)) {
-                var serialArr = [];
-                upas.forEach(function(upa) {
-                    serialArr.push(serialize(upa));
+                return upas.map(function(upa) {
+                    return serialize(upa);
                 });
-                return serialArr;
             }
             else {
-                var serialSt = {};
-                Object.keys(upas).forEach(function(key) {
-                    serialSt[key] = serializeAll(upas[key]);
-                });
-                return serialSt;
+                return Object.keys(upas).reduce(function(acc, key) {
+                    acc[key] = serializeAll(upas[key]);
+                    return acc;
+                }, {});
             }
         };
 
@@ -143,18 +145,15 @@ define([
                 return deserialize(upas);
             }
             else if (Array.isArray(upas)) {
-                var deserialArr = [];
-                upas.forEach(function(upa) {
-                    deserialArr.push(deserialize(upa));
+                return upas.map(function(upa) {
+                    return deserialize(upa);
                 });
-                return deserialArr;
             }
             else {
-                var deserialSt = {};
-                Object.keys(upas).forEach(function(key) {
-                    deserialSt[key] = deserializeAll(upas[key]);
-                });
-                return deserialSt;
+                return Object.keys(upas).reduce(function(acc, key) {
+                    acc[key] = deserializeAll(upas[key]);
+                    return acc;
+                }, {});
             }
         };
 

@@ -52,6 +52,10 @@ class Helper(object):
         except urllib2.URLError, e:
             error_msg = 'The server could not fulfill the request.\n'
 
+            server_msg = e.read()
+            if server_msg:
+                error_msg += 'Server message: {server_msg}\n'.format(server_msg=server_msg)
+
             if hasattr(e, 'reason'):
                 error_msg += 'Reason: {reason}\n'.format(reason=e.reason)
 
@@ -85,3 +89,33 @@ class Helper(object):
                 file_list.append(file.get('path'))
 
         return sorted(file_list)
+
+    def metadata(self, path=''):
+        """
+        Calling METADATA endpoint and return metadata in JSON format
+        """
+
+        if not path:
+            raise ValueError('Must provide path argument')
+
+        end_point = self._staging_url + 'metadata/' + path
+        response = self.__fetch_url(end_point)
+
+        resp_json = json.loads(response)
+
+        return resp_json
+
+    def jgi_metadata(self, path=''):
+        """
+        Calling JGI-METADATA endpoint and return metadata in JSON format
+        """
+
+        if not path:
+            raise ValueError('Must provide path argument')
+
+        end_point = self._staging_url + 'jgi-metadata/' + path
+        response = self.__fetch_url(end_point)
+
+        resp_json = json.loads(response)
+
+        return resp_json

@@ -442,7 +442,7 @@ define([
             $panel.animate({
                 scrollTop: target.offset().top - ($panel.offset().top - $panel.scrollTop())
             }, scrollTime, function () {
-                currentSection = Number(target.attr('class'));
+                currentSection = target.parent().attr('class');
             });  
         }
 
@@ -452,16 +452,10 @@ define([
                 $currentSection = $('.' + String(currentLine));
 
             if ($currentSection.is(':first-child')) {
-                var $panel = $(ui.getElements('panel')[0])
-
-                scrollToLog($panel, $currentSection);
-
                 fetchNewLogs(currentLine);
-   
-
             } else {
                 var $panel = $(ui.getElements('panel')[0]),
-                    target = $panel.children().first();
+                    target = $panel.children().first().children().first();
                 
                 scrollToLog($panel, target);
 
@@ -473,15 +467,12 @@ define([
             doStopPlayLogs();
             var currentLine = currentSection ? currentSection : model.getItem('currentLine'),
                 $currentSection = $('.' + String(currentLine));
-            debugger;
 
             if (!$currentSection.is(':first-child')) {
                 var $panel = $(ui.getElements('panel')[0]),
-                    target = $currentSection.prev();
+                    target = $currentSection.prev().children().first();
                     scrollToLog($panel, target);
             } else {
-                // var $panel = $(ui.getElements('panel')[0])
-                // scrollToLog($panel, $currentSection);
 
                 fetchNewLogs(currentLine);
 
@@ -512,8 +503,8 @@ define([
 
             if ($currentSection.is(':last-child')) {
                 requestJobLog(newFirstLine);
-                var last_child = $currentSection.children().last();
-                scrollToLog($panel, last_child);
+                // var last_child = $currentSection.children().last();
+                // scrollToLog($panel, last_child);
 
             } else {
                 var target = $currentSection.next().children().last();
@@ -526,8 +517,7 @@ define([
 
             doStopPlayLogs();
             var $panel = $(ui.getElements('panel')[0])
-            var target = $panel.children().last();
-
+            var target = $panel.children().last().children().last();
             scrollToLog($panel, target);
        
         }

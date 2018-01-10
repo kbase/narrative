@@ -433,7 +433,6 @@ define([
                 newFirstLine = 0;
                 numLines = Number(currentLine);
             }
-
             requestJobLog(newFirstLine, numLines);
             currentSection = newFirstLine;
         }
@@ -453,7 +452,13 @@ define([
                 $currentSection = $('.' + String(currentLine));
 
             if ($currentSection.is(':first-child')) {
+                var $panel = $(ui.getElements('panel')[0])
+
+                scrollToLog($panel, $currentSection);
+
                 fetchNewLogs(currentLine);
+   
+
             } else {
                 var $panel = $(ui.getElements('panel')[0]),
                     target = $panel.children().first();
@@ -468,17 +473,20 @@ define([
             doStopPlayLogs();
             var currentLine = currentSection ? currentSection : model.getItem('currentLine'),
                 $currentSection = $('.' + String(currentLine));
+            debugger;
 
-            if ($currentSection.is(':first-child')) {
-                fetchNewLogs(currentLine);
-            } else {
+            if (!$currentSection.is(':first-child')) {
                 var $panel = $(ui.getElements('panel')[0]),
                     target = $currentSection.prev();
+                    scrollToLog($panel, target);
+            } else {
+                // var $panel = $(ui.getElements('panel')[0])
+                // scrollToLog($panel, $currentSection);
 
-                scrollToLog($panel, target);
-
+                fetchNewLogs(currentLine);
 
             }
+
         }
 
         function doFetchNextLogChunk() {
@@ -499,13 +507,16 @@ define([
                 newFirstLine = currentLine + linesPerPage;
             }
             var $currentSection = $('.' + String(currentLine));
+            currentSection = currentLine;
+
 
             if ($currentSection.is(':last-child')) {
                 requestJobLog(newFirstLine);
+                var last_child = $currentSection.children().last();
+                scrollToLog($panel, last_child);
 
             } else {
-                var target = $currentSection.next();
-
+                var target = $currentSection.next().children().last();
                 scrollToLog($panel, target);
 
             }
@@ -644,7 +655,7 @@ define([
                     ]),
                     div({ dataElement: 'panel',
                         style: {
-                            overflow: 'scroll', height: panelHeight
+                            "overflow-y": 'scroll', height: panelHeight
                         } })
                 ]);
 
@@ -739,7 +750,6 @@ define([
                 });
                 $panel = $(ui.getElements('panel')[0]);
                 var fsmState = fsm.getCurrentState().state.mode;
-                console.log('state: ', fsmState)
                 if (fsmState === "complete" || fsmState === "canceled"){
                     var target = renderLines(viewLines)
                                 .hide()
@@ -915,14 +925,15 @@ define([
             var $panel = $(ui.getElements('panel')[0])
                 .on('scroll', function () {
                     //at begining
+                    
+                    var autoState = fsm.getCurrentState().state.state;
                     var top = $(this).scrollTop();
-                    if ( top === 0) {         
+                    if (!autoState &&  top === 0) {   
                         var $panel = $(ui.getElements('panel')[0]),
                             $currentSection = $panel.children(':first'), 
                             currentLine = Number($currentSection.attr('class'));
                             fetchNewLogs(currentLine);
                     }
-
                 });
             var ev;
 
@@ -946,12 +957,12 @@ define([
                         // Don't update if we don't have additional lines.
                         var needUpdate = true;
                         var lines = model.getItem('lines');
-                        if (lines && lines.length > 0) {
-                            if (lines.length === message.logs.lines.length &&
-                                lines[0].line === message.logs.lines[0].line) {
-                                needUpdate = false;
-                            }
-                        }
+                        // if (lines && lines.length > 0) {
+                        //     if (lines.length === message.logs.lines.length &&
+                        //         lines[0].line === message.logs.lines[0].line) {
+                        //         needUpdate = false;
+                        //     }
+                        // }
 
                         if (needUpdate) {
                             model.setItem('lines', message.logs.lines);

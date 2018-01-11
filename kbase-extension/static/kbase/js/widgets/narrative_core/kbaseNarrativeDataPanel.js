@@ -203,7 +203,7 @@ define([
                     this.trigger('toggleSidePanelOverlay.Narrative', this.$overlayPanel);
                     //once we've clicked it 10 times, meaning we've open and shut the browser 5x, we reveal its TRUE NAME.
                     if (++numDataBrowserClicks >= 10) {
-                      this.$slideoutBtn.attr('data-original-title', 'Hide / Show Slidey McSliderface')
+                        this.$slideoutBtn.attr('data-original-title', 'Hide / Show Slidey McSliderface')
                     }
                 }.bind(this));
 
@@ -429,11 +429,11 @@ define([
                 {tabName: '<small>Shared With Me</small>', content: sharedPanel},
                 {tabName: '<small>Public</small>', content: publicPanel},
                 {tabName: '<small>Example</small>', content: examplePanel},
-                //{tabName: '<small>Import</small>', content: importPanel},
+                {tabName: '<small>Import</small>', content: importPanel},
             ];
 
             if (Config.get('features').stagingDataViewer) {
-                tabList.push({tabName: '<small>Staging (Beta)<small>', content: stagingPanel});
+                tabList.push({tabName: '<small>Import (New)<small>', content: stagingPanel});
             }
 
             // add tabs

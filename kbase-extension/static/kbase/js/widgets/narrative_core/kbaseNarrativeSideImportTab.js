@@ -75,6 +75,8 @@ define(
                 var self = this;
                 this.inputWidget = {};
                 this.tabs = {};
+                var $depWarning = $('<div class="alert alert-danger" style="margin-bottom:0">This is going away real quick-like.</div>');
+
                 var errorModalId = 'app-error-modal-' + StringUtil.uuid();
                 var modalLabel = 'app-error-modal-lablel-' + StringUtil.uuid();
 
@@ -170,7 +172,7 @@ define(
 
                 this.infoPanel = $('<div style="margin: 20px 30px 0px 30px;">');
 
-                this.$mainPanel = $('<div>').css({ 'overflow-y': 'auto', 'height': '604px' });
+                this.$mainPanel = $('<div>').css({ 'overflow-y': 'auto', 'height': '604px' }).append($depWarning);
                 this.$elem.append(this.$mainPanel);
                 this.$mainPanel.append(this.widgetPanel);
                 this.$mainPanel.append(this.infoPanel);
@@ -529,7 +531,7 @@ define(
                     'JobManager().get_job(' + jobId + ')'
                 ].join('\n');
                 cell.set_text(cellText);
-                
+
                 cell.events.one('output_appended.OutputArea', function() {
                     Jupyter.narrative.saveNarrative();
                 });

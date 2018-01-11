@@ -321,7 +321,8 @@ define([
 
           var $tabsDiv = $.jqElem('div')
             .css({'width' : '90%', display : 'inline-block'})
-            .append('Loading file info...please wait');
+            .append('<i class="fa fa-spinner fa-spin"></i> Loading file info...please wait')
+          ;
 
           var filePath = this.subpath;
           if (filePath.length) {
@@ -330,8 +331,15 @@ define([
 
           filePath += fileData.name;
 
+          // define our tabs externally. This is so we can do our metadata call and our jgi_metadata call (in serial) and then update
+          // the UI after they're completed. It's a smidgen slower this way (maybe 0.25 seconds) - we could load the metadata and display
+          // it to the user immediately, then add the JGI tab if it exists. But that causes a brief blink where the JGI tab isn't there and
+          // pops into being later. This way, it all shows up fully built. It seemed like the lesser of the evils.
+          var $tabs;
+
           this.stagingServiceClient.metadata({ path : filePath }).then( function(dataString, status, xhr) {
-            $tabsDiv.empty();
+
+            var $tabsContainer = $.jqElem('div');
             var data = JSON.parse(dataString);
 
             var $upaField = $.jqElem('span')
@@ -367,7 +375,7 @@ define([
               lineCount = 'Not provided';
             }
 
-            var $tabs = new KBaseTabs($tabsDiv, {
+            $tabs = new KBaseTabs($tabsContainer, {
               tabs : [
                 {
                   tab : 'Info',
@@ -397,8 +405,7 @@ define([
             });
 
             // attempt to load up a jgi metadata file, via the jgi-metadata endpoint. It'll only succeed if a jgi metadata file exists
-            // We can't do it in parallel, since if the metadata file doesn't exist the promise wouldn't properly complete. The net effect is a quick blink
-            // wherein the table loads and a split second later we get the metadata tab.
+            // We can't do it in parallel, since if the metadata file doesn't exist the promise wouldn't properly complete.
 
             self.stagingServiceClient.jgi_metadata({ path : filePath }).then( function(dataString, status, xhr) {
               // XXX - while doing this, I ran into a NaN issue in the file, specifically on the key illumina_read_insert_size_avg_insert.
@@ -414,10 +421,17 @@ define([
                     .append( metadataContents )
                 }
               );
+
+              // finally, empty and append the tabs container.
+              $tabsDiv.empty();
+              $tabsDiv.append($tabsContainer);
             })
             .fail(function (xhr) {
-                // Don't actually need to do anything here - we assume that if it failed, it was due to the metadata file not existing. Yes, we generate
-                // a lot of messy extra metadata calls here since it's the only way to know if there's metadata is to look.
+              // if we failed, then there's no JGI metadata. That's fine. We still want to empty and append the tabs container.
+              // yes, yes, I could abstract this out into a separate function call so the code is DRY and not WET, but it's a duplicate
+              // of two lines that are right next to each other. I felt this was easier.
+              $tabsDiv.empty();
+              $tabsDiv.append($tabsContainer);
             });
 
           })

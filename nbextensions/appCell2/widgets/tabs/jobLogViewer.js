@@ -403,12 +403,11 @@ define([
 
         function requestJobLog(firstLine, numLines, params) {
             ui.showElement('spinner');
-            var numLines = numLines ? numLines : linesPerPage;
             runtime.bus().emit('request-job-log', {
                 jobId: jobId,
                 options: {
                     first_line: firstLine,
-                    num_lines: numLines
+                    num_lines: linesPerPage
                 }
             })
         }
@@ -424,18 +423,18 @@ define([
         }
         function fetchNewLogs(currentLine) {
             var $panel = $(ui.getElements('panel')[0]),
-                first = $panel.children().first().attr('class');
-            if (currentLine == 0 && first == "0") {
+                first = Number($panel.children().first().attr('class'));
+            if (currentLine === 0 && first === 0) {
                 return;
             }
-            var newFirstLine = currentLine - linesPerPage,
+            var newFirstLine = currentLine - Number(linesPerPage),
                 numLines = linesPerPage;
 
             if (newFirstLine < 0) {
                 newFirstLine = 0;
-                numLines = Number(currentLine);
+                numLines = currentLine;
             }
-            requestJobLog(newFirstLine, numLines);
+            requestJobLog(newFirstLine, Number(numLines));
             currentSection = newFirstLine;
         }
 
@@ -448,7 +447,7 @@ define([
                     currentSection = target.parent().attr('class');
                 });  
             }else{
-                fetchNewLogs(model.getItem('currentLine'));
+                fetchNewLogs(Number(model.getItem('currentLine')));
             }
 
         }
@@ -457,7 +456,7 @@ define([
             doStopPlayLogs();
             renderAbove = true;
 
-            var currentLine = currentSection ? currentSection : model.getItem('currentLine'),
+            var currentLine = currentSection ? currentSection : Number(model.getItem('currentLine')),
                 $currentSection = $('.' + String(currentLine));
 
             if ($currentSection.is(':first-child')) {
@@ -476,7 +475,7 @@ define([
             doStopPlayLogs();
             renderAbove = true;
 
-            var currentLine = currentSection ? currentSection : model.getItem('currentLine'),
+            var currentLine = currentSection ? currentSection : Number(model.getItem('currentLine')),
                 $currentSection = $('.' + String(currentLine));
 
             if (!$currentSection.is(':first-child')) {
@@ -484,9 +483,7 @@ define([
                     target = $currentSection.prev().children().first();
                     scrollToLog($panel, target);
             } else {
-
                 fetchNewLogs(currentLine);
-
             }
 
         }
@@ -494,36 +491,19 @@ define([
         function doFetchNextLogChunk() {
             renderAbove = false;
 
-            var currentLine = currentSection ? currentSection : model.getItem('currentLine'),
-                lastLine = model.getItem('lastLine'),
-                $panel = $(ui.getElements('panel')[0]),
-                newFirstLine;
-
             doStopPlayLogs();
+            var currentLine = currentSection ? currentSection : Number(model.getItem('currentLine')),
+                lastLine = model.getItem('lastLine'),
+                $panel = $(ui.getElements('panel')[0])
 
-            // Get the current set of log lines again, since we don't have 
-            // a full page. 
-            // TODO: don't do this if the job state is completed
-            if ((lastLine - currentLine) < linesPerPage) {
-                newFirstLine = currentLine;
-            } else {
-                // NB this is actually the next line after the end
-                newFirstLine = currentLine + linesPerPage;
-            }
             var $currentSection = $('.' + String(currentLine));
             currentSection = currentLine;
 
-
-            if ($currentSection.is(':last-child') && !$currentSection.is(':first-child')) {
-                console.log("newFirstLine: " + newFirstLine)
-                requestJobLog(newFirstLine);
-                // var last_child = $currentSection.children().last();
-                // scrollToLog($panel, last_child);
-
+            if ($currentSection.is(':last-child')) {
+                requestJobLog(lastLine);
             } else {
                 var target = $currentSection.next().children().last();
                 scrollToLog($panel, target);
-
             }
         }
 
@@ -534,7 +514,6 @@ define([
             var $panel = $(ui.getElements('panel')[0])
             var target = $panel.children().last().children().last();
             scrollToLog($panel, target);
-       
         }
         function test(){
             if(panelHeight === smallPanelHeight){
@@ -760,7 +739,7 @@ define([
                 if (!autoState){
                     var target = renderLines(viewLines).hide();
                     if(renderAbove){
-                        target.prependTo($panel).show().slideDown();
+                        target.prependTo($panel).slideDown();
                     }else{
                         target.appendTo($panel).show();
                     }
@@ -1171,7 +1150,7 @@ define([
                 lines: [],
                 currentLine: null,
                 lastLine: null,
-                linesPerPage: numLines,
+                linesPerPage: linesPerPage,
                 fetchedAt: null
             },
             onUpdate: function() {

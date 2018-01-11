@@ -27,9 +27,9 @@ define([
         button = t('button'),
         span = t('span'),
         p = t('p'),
-        pre = t('pre'),
         fsm,
         currentSection,
+        renderAbove = true,
         smallPanelHeight = '300px',
         largePanelHeight = '600px',
         numLines = 10,
@@ -423,7 +423,9 @@ define([
             });
         }
         function fetchNewLogs(currentLine) {
-            if (currentLine === 0) {
+            var $panel = $(ui.getElements('panel')[0]),
+                first = $panel.children().first().attr('class');
+            if (currentLine == 0 && first == "0") {
                 return;
             }
             var newFirstLine = currentLine - linesPerPage,
@@ -438,16 +440,23 @@ define([
         }
 
         function scrollToLog($panel, target, scrollTime){
-            var scrollTime = scrollTime ? scrollTime : 500;
-            $panel.animate({
-                scrollTop: target.offset().top - ($panel.offset().top - $panel.scrollTop())
-            }, scrollTime, function () {
-                currentSection = target.parent().attr('class');
-            });  
+            if(target.length){
+                var scrollTime = scrollTime ? scrollTime : 500;
+                $panel.animate({
+                    scrollTop: target.offset().top - ($panel.offset().top - $panel.scrollTop())
+                }, scrollTime, function () {
+                    currentSection = target.parent().attr('class');
+                });  
+            }else{
+                fetchNewLogs(model.getItem('currentLine'));
+            }
+
         }
 
         function doFetchFirstLogChunk() {
             doStopPlayLogs();
+            renderAbove = true;
+
             var currentLine = currentSection ? currentSection : model.getItem('currentLine'),
                 $currentSection = $('.' + String(currentLine));
 
@@ -465,6 +474,8 @@ define([
 
         function doFetchPreviousLogChunk() {
             doStopPlayLogs();
+            renderAbove = true;
+
             var currentLine = currentSection ? currentSection : model.getItem('currentLine'),
                 $currentSection = $('.' + String(currentLine));
 
@@ -481,6 +492,8 @@ define([
         }
 
         function doFetchNextLogChunk() {
+            renderAbove = false;
+
             var currentLine = currentSection ? currentSection : model.getItem('currentLine'),
                 lastLine = model.getItem('lastLine'),
                 $panel = $(ui.getElements('panel')[0]),
@@ -501,7 +514,8 @@ define([
             currentSection = currentLine;
 
 
-            if ($currentSection.is(':last-child')) {
+            if ($currentSection.is(':last-child') && !$currentSection.is(':first-child')) {
+                console.log("newFirstLine: " + newFirstLine)
                 requestJobLog(newFirstLine);
                 // var last_child = $currentSection.children().last();
                 // scrollToLog($panel, last_child);
@@ -514,6 +528,7 @@ define([
         }
 
         function doFetchLastLogChunk() {
+            renderAbove = false;
 
             doStopPlayLogs();
             var $panel = $(ui.getElements('panel')[0])
@@ -674,6 +689,8 @@ define([
         }
         //left in because oher methods depend on it
         function renderLine(line) {
+            var extraClass = line.isError ? ' kb-error' : '';
+
             return div({
                 class: 'kblog-line' + extraClass
             }, [
@@ -739,15 +756,13 @@ define([
                     };
                 });
                 $panel = $(ui.getElements('panel')[0]);
-                var fsmState = fsm.getCurrentState().state.mode;
-                if (fsmState === "complete" || fsmState === "canceled"){
-                    var target = renderLines(viewLines)
-                                .hide()
-                                .prependTo($panel);
-                    if(target.is(':last-child')){
-                        target.show();
+                var autoState = fsm.getCurrentState().state.auto;
+                if (!autoState){
+                    var target = renderLines(viewLines).hide();
+                    if(renderAbove){
+                        target.prependTo($panel).show().slideDown();
                     }else{
-                        target.slideDown();
+                        target.appendTo($panel).show();
                     }
                 }else{
                     $panel.html(renderLines(viewLines)[0]);
@@ -916,8 +931,10 @@ define([
                 .on('scroll', function () {
                     //at begining
                     
-                    var autoState = fsm.getCurrentState().state.state;
+                    var autoState = fsm.getCurrentState().state.auto;
                     var top = $(this).scrollTop();
+                    
+                    //when not on autoplay then scrolling to top will fetch new logs
                     if (!autoState &&  top === 0) {   
                         var $panel = $(ui.getElements('panel')[0]),
                             $currentSection = $panel.children(':first'), 
@@ -944,33 +961,24 @@ define([
                             console.warn('No log entries returned', message);
                         }
                     } else {
-                        // Don't update if we don't have additional lines.
-                        var needUpdate = true;
                         var lines = model.getItem('lines');
-                        // if (lines && lines.length > 0) {
-                        //     if (lines.length === message.logs.lines.length &&
-                        //         lines[0].line === message.logs.lines[0].line) {
-                        //         needUpdate = false;
-                        //     }
-                        // }
 
-                        if (needUpdate) {
-                            model.setItem('lines', message.logs.lines);
-                            model.setItem('currentLine', message.logs.first);
-                            model.setItem('latest', true);
-                            model.setItem('fetchedAt', new Date().toUTCString());
-                            // Detect end of log.
-                            var lastLine = model.getItem('lastLine'),
-                                batchLastLine = message.logs.first + message.logs.lines.length;
-                            if (!lastLine) {
+                        model.setItem('lines', message.logs.lines);
+                        model.setItem('currentLine', message.logs.first);
+                        model.setItem('latest', true);
+                        model.setItem('fetchedAt', new Date().toUTCString());
+                        // Detect end of log.
+                        var lastLine = model.getItem('lastLine'),
+                            batchLastLine = message.logs.first + message.logs.lines.length;
+                        if (!lastLine) {
+                            lastLine = batchLastLine;
+                        } else {
+                            if (batchLastLine > lastLine) {
                                 lastLine = batchLastLine;
-                            } else {
-                                if (batchLastLine > lastLine) {
-                                    lastLine = batchLastLine;
-                                }
                             }
-                            model.setItem('lastLine', lastLine);
                         }
+                        model.setItem('lastLine', lastLine);
+                        
                     }
                     if (looping) {
                         scheduleNextRequest();

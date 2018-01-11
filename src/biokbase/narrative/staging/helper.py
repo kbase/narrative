@@ -1,8 +1,11 @@
 
-import os
+import biokbase.auth as auth
+from biokbase.narrative.common.url_config import URLS
+
 import urllib
 import urllib2
 import json
+
 
 """
 KBase staging.helper class
@@ -17,7 +20,7 @@ class Helper(object):
         Authorization token passed in from front-end.
         """
 
-        token = os.environ.get('KB_AUTH_TOKEN')
+        token = auth.get_auth_token()
 
         if not token:
             raise ValueError('Cannot retrieve auth token')
@@ -29,7 +32,7 @@ class Helper(object):
         Staging service host URL
         """
 
-        staging_url = 'https://ci.kbase.us/services/staging_service/'
+        staging_url = URLS.staging_api_url
 
         return staging_url
 
@@ -78,7 +81,7 @@ class Helper(object):
         Calling LIST endpoint and return a list of file path
         """
 
-        end_point = self._staging_url + 'list/' + dir
+        end_point = self._staging_url + '/list/' + dir
         response = self.__fetch_url(end_point)
 
         resp_json = json.loads(response)
@@ -98,7 +101,7 @@ class Helper(object):
         if not path:
             raise ValueError('Must provide path argument')
 
-        end_point = self._staging_url + 'metadata/' + path
+        end_point = self._staging_url + '/metadata/' + path
         response = self.__fetch_url(end_point)
 
         resp_json = json.loads(response)
@@ -113,7 +116,7 @@ class Helper(object):
         if not path:
             raise ValueError('Must provide path argument')
 
-        end_point = self._staging_url + 'jgi-metadata/' + path
+        end_point = self._staging_url + '/jgi-metadata/' + path
         response = self.__fetch_url(end_point)
 
         resp_json = json.loads(response)

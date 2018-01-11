@@ -21,8 +21,8 @@ class StagingHelperTest(unittest.TestCase):
         self.assertEqual(self.good_fake_token, self.staging_helper._token)
 
     def test_staging_url(self):
-        self.assertEqual('https://ci.kbase.us/services/staging_service/',
-                         self.staging_helper._staging_url)
+        self.assertTrue('kbase.us/services/staging_service' in
+                        self.staging_helper._staging_url)
 
     def test_unauthorized_token(self):
         with self.assertRaises(ValueError) as context:

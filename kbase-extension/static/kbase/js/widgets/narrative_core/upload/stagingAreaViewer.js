@@ -328,11 +328,6 @@ define([
               filePath += '/';
           }
 
-          // we need to chop up the file to see if a metadata file exists. Assume that the first part of the file name is the ID
-          // and that it ends in .metadata. Route it into the appropriate subfolder.
-          var fileParts = fileData.name.split('.');
-          var metaDataFilePath = filePath + fileParts[0] + '.metadata';
-
           filePath += fileData.name;
 
           this.stagingServiceClient.metadata({ path : filePath }).then( function(dataString, status, xhr) {
@@ -401,33 +396,29 @@ define([
               ]
             });
 
-            // if the metaDataFilePath is not our file (i.e., the user didn't click on a metadata file, then we want to extract out that metadata file itself.
+            // attempt to load up a jgi metadata file, via the jgi-metadata endpoint. It'll only succeed if a jgi metadata file exists
             // We can't do it in parallel, since if the metadata file doesn't exist the promise wouldn't properly complete. The net effect is a quick blink
             // wherein the table loads and a split second later we get the metadata tab.
-            if (filePath !== metaDataFilePath) {
-              self.stagingServiceClient.metadata({ path : metaDataFilePath }).then( function(dataString, status, xhr) {
-                var metadataFile = JSON.parse(dataString);
-                // these files are always a single line, so the head will contain the contents.
-                // but we parse it out and re-stringify it so it's pretty.
-                // XXX - while doing this, I ran into a NaN issue in the file, specifically on the key illumina_read_insert_size_avg_insert.
-                //       So we nuke any NaN fields to make it valid again.
-                var metadataJSON = JSON.parse(metadataFile.head.replace(/NaN/g, '\"\"'));
-                var metadataContents = JSON.stringify(metadataJSON, null, 2)
 
-                $tabs.addTab(
-                  {
-                    tab : 'Metadata',
-                    content : $.jqElem('div')
-                      .addClass('kb-data-staging-metadata-file-lines')
-                      .append( metadataContents )
-                  }
-                );
-              })
-              .fail(function(xhr) {
+            self.stagingServiceClient.jgi_metadata({ path : filePath }).then( function(dataString, status, xhr) {
+              // XXX - while doing this, I ran into a NaN issue in the file, specifically on the key illumina_read_insert_size_avg_insert.
+              //       So we nuke any NaN fields to make it valid again.
+              var metadataJSON      = JSON.parse(dataString.replace(/NaN/g, '\"\"'));
+              var metadataContents  = JSON.stringify(metadataJSON, null, 2)
+
+              $tabs.addTab(
+                {
+                  tab : 'JGI Metadata',
+                  content : $.jqElem('div')
+                    .addClass('kb-data-staging-metadata-file-lines')
+                    .append( metadataContents )
+                }
+              );
+            })
+            .fail(function (xhr) {
                 // Don't actually need to do anything here - we assume that if it failed, it was due to the metadata file not existing. Yes, we generate
                 // a lot of messy extra metadata calls here since it's the only way to know if there's metadata is to look.
-              });
-            }
+            });
 
           })
           .fail(function (xhr) {

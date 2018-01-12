@@ -494,7 +494,7 @@ define([
             doStopPlayLogs();
             var currentLine = currentSection ? currentSection : Number(model.getItem('currentLine')),
                 lastLine = model.getItem('lastLine'),
-                $panel = $(ui.getElements('panel')[0])
+                $panel = $(ui.getElements('panel')[0]);
 
             var $currentSection = $('.' + String(currentLine));
             currentSection = currentLine;
@@ -511,7 +511,7 @@ define([
             renderAbove = false;
 
             doStopPlayLogs();
-            var $panel = $(ui.getElements('panel')[0])
+            var $panel = $(ui.getElements('panel')[0]);
             var target = $panel.children().last().children().last();
             scrollToLog($panel, target);
         }

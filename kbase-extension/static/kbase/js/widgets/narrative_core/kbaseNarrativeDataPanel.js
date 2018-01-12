@@ -203,7 +203,7 @@ define([
                     this.trigger('toggleSidePanelOverlay.Narrative', this.$overlayPanel);
                     //once we've clicked it 10 times, meaning we've open and shut the browser 5x, we reveal its TRUE NAME.
                     if (++numDataBrowserClicks >= 10) {
-                        this.$slideoutBtn.attr('data-original-title', 'Hide / Show Slidey McSliderface')
+                        this.$slideoutBtn.attr('data-original-title', 'Hide / Show Slidey McSliderface');
                     }
                 }.bind(this));
 

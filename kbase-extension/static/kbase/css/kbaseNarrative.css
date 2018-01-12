@@ -2706,6 +2706,7 @@ button.kb-data-obj {
     text-align: left;
     margin: 2px;
     padding-left: 8px;
+    word-break: break-all;
 }
 .kb-data-list-job-name:hover {
     text-decoration: none;

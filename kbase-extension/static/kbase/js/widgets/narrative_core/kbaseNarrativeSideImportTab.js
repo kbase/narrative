@@ -75,6 +75,12 @@ define(
                 var self = this;
                 this.inputWidget = {};
                 this.tabs = {};
+                var $depWarning = $('<div>')
+                    .addClass('alert alert-danger')
+                    .css({'margin-bottom': '0'})
+                    .append($('<b>NOTE: </b>'))
+                    .append('This import interface is deprecated and will be replaced by the new interface (see next tab) in early 2018.');
+
                 var errorModalId = 'app-error-modal-' + StringUtil.uuid();
                 var modalLabel = 'app-error-modal-lablel-' + StringUtil.uuid();
 
@@ -170,7 +176,7 @@ define(
 
                 this.infoPanel = $('<div style="margin: 20px 30px 0px 30px;">');
 
-                this.$mainPanel = $('<div>').css({ 'overflow-y': 'auto', 'height': '604px' });
+                this.$mainPanel = $('<div>').css({ 'overflow-y': 'auto', 'height': '604px' }).append($depWarning);
                 this.$elem.append(this.$mainPanel);
                 this.$mainPanel.append(this.widgetPanel);
                 this.$mainPanel.append(this.infoPanel);
@@ -529,7 +535,7 @@ define(
                     'JobManager().get_job(' + jobId + ')'
                 ].join('\n');
                 cell.set_text(cellText);
-                
+
                 cell.events.one('output_appended.OutputArea', function() {
                     Jupyter.narrative.saveNarrative();
                 });

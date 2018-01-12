@@ -39,6 +39,13 @@
     text-align: right;
     color: #999;
     white-space: nowrap;
+
+    /* makes text unselectabe */
+    -moz-user-select: -moz-none;
+    -khtml-user-select: none;
+    -webkit-user-select: none;
+    -o-user-select: none;
+    user-select: none;
 }
 
 .kblog-text {

@@ -75,7 +75,11 @@ define(
                 var self = this;
                 this.inputWidget = {};
                 this.tabs = {};
-                var $depWarning = $('<div class="alert alert-danger" style="margin-bottom:0">This is going away real quick-like.</div>');
+                var $depWarning = $('<div>')
+                    .addClass('alert alert-danger')
+                    .css({'margin-bottom': '0'})
+                    .append($('<b>NOTE: </b>'))
+                    .append('This import interface is deprecated and will be replaced by the new interface (see next tab) in early 2018.');
 
                 var errorModalId = 'app-error-modal-' + StringUtil.uuid();
                 var modalLabel = 'app-error-modal-lablel-' + StringUtil.uuid();

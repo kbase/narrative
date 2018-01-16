@@ -1,4 +1,4 @@
-/* global casper, phantom */
+/* global casper, phantom, Jupyter, $ */
 
 var fs = require('fs');
 var token = fs.read('test/wjriehl.tok').trim();
@@ -64,8 +64,18 @@ casper.test.begin('Can add a functioning widget to a Narrative', function suite(
             return (metadata.kbase.dataCell.upas.id === '[28238]/2/8');
         });
 
-        // next, we can go through the widget layout and all that...
+        // next, we can go through the widget layout and all that... (need to have that code so
+        // we can test it on a copied narrative)
     });
+
+    /* NEXT STEPS (for Tuesday and beyond...)
+     * 1. Automatically create a new narrative and add data.
+     * 2. Save the narrative after adding the viewer cell(s)
+     * 3. Share that with user B
+     * 4. User B should copy Narrative.
+     * 5. User B should open new Narrative and see valid viewer cell.
+     */
+
 
     casper.run(function() {
         test.done();

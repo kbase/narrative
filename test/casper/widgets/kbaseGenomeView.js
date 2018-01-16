@@ -1,27 +1,35 @@
 /* global casper, phantom, Jupyter, $ */
 
-var fs = require('fs');
-var token = fs.read('test/wjriehl.tok').trim();
+var TestUtil = require('../casperUtil');
+var token = TestUtil.authToken;
+casper.echo(token);
 
 var pageTitle = 'Widget Test Bed';
 casper.test.begin('Can add a functioning widget to a Narrative', function suite(test) {
     'use strict';
-    phantom.addCookie({
-        'name': 'kbase_session',
-        'value': token,
-        'domain': 'localhost',
-        'path': '/'
-    });
+    TestUtil.setAuthCookie('wjriehl');
+    // phantom.addCookie({
+    //     'name': 'kbase_session',
+    //     'value': token,
+    //     'domain': 'localhost',
+    //     'path': '/'
+    // });
 
+    // Start the test at this page.
+    // TODO: rewire to work with the port loaded up with test/unit/run_tests.py (32323?)
     casper.start('http://localhost:8888/narrative/ws.28238.obj.1');
 
+    // Wait for the narrative to get going. We get the first line from Jupyter's test util,
+    // and add the second to wait for the KBase loading screen to go away.
     casper.wait_for_kernel_ready();
-    casper.waitWhileVisible('#kb-loading-blocker', function() {
-        test.assertTitle(pageTitle);
-    });
+    casper.waitWhileVisible('#kb-loading-blocker');
 
+    // Smoketest stuff - make sure the title's right and the creator's in place.
+    // This checks that the Jupyter stuff works (title) and our stuff can talk to the
+    // server (user name)
     casper.then(function() {
         test.assertSelectorHasText('span#kb-narr-creator', 'William Riehl');
+        test.assertTitle(pageTitle);
     });
 
     // Now, evaluate a data panel click to make a viewer cell
@@ -33,7 +41,8 @@ casper.test.begin('Can add a functioning widget to a Narrative', function suite(
         });
     });
 
-    // wait a second for it to run (the utility "wait_for_output" isn't working...)
+    // wait a second for it to run (the utility "wait_for_output" isn't working...), but this
+    // shouldn't take longer than a second.
     casper.then(function() {
         casper.wait(1000);
     });
@@ -75,7 +84,6 @@ casper.test.begin('Can add a functioning widget to a Narrative', function suite(
      * 4. User B should copy Narrative.
      * 5. User B should open new Narrative and see valid viewer cell.
      */
-
 
     casper.run(function() {
         test.done();

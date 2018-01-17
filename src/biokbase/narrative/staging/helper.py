@@ -36,7 +36,7 @@ class Helper(object):
 
         return staging_url
 
-    def __fetch_url(self, end_point, values=None, headers=None):
+    def __fetch_url(self, end_point, values=None, headers=None, method='GET'):
         """
         Fetching URL
         By default, it sends a GET request with {"Authorization": $KB_AUTH_TOKEN} header
@@ -50,6 +50,7 @@ class Helper(object):
             headers = {"Authorization": self._token}
 
         req = urllib2.Request(end_point, data, headers)
+        req.get_method = lambda: method
         try:
             response = urllib2.urlopen(req)
         except urllib2.URLError, e:
@@ -122,3 +123,48 @@ class Helper(object):
         resp_json = json.loads(response)
 
         return resp_json
+
+    def search(self, path=''):
+        """
+        Calling SEARCH endpoint and return server response in JSON format
+        """
+
+        if not path:
+            raise ValueError('Must provide path argument')
+
+        end_point = self._staging_url + '/search/' + path
+        response = self.__fetch_url(end_point)
+
+        resp_json = json.loads(response)
+
+        return resp_json
+
+    def delete(self, path=''):
+        """
+        Calling DELETE endpoint and return server response in JSON format
+        """
+
+        if not path:
+            raise ValueError('Must provide path argument')
+
+        end_point = self._staging_url + '/delete/' + path
+        response = self.__fetch_url(end_point, method='DELETE')
+
+        return {'server_response': response}
+
+    def mv(self, path='', new_path=''):
+        """
+        Calling MV endpoint and return server response in JSON format
+        """
+
+        if not path:
+            raise ValueError('Must provide path argument')
+
+        if not new_path:
+            raise ValueError('Must provide new_path argument')
+
+        end_point = self._staging_url + '/mv/' + path
+        body_values = {'newPath': new_path}
+        response = self.__fetch_url(end_point, values=body_values, method='PATCH')
+
+        return {'server_response': response}

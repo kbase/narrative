@@ -23,17 +23,15 @@ casper.test.begin('Can add a functioning widget to a Narrative', function suite(
         test.assertSelectorHasText('span#kb-narr-creator', config.creatorName);
         test.assertTitle(config.narrativeName);
         test.assertEquals(casper.get_cells_length(), config.numCells);
+    });
+
+    casper.then(function() {
+        // Now, evaluate a data panel click to make a viewer cell
+        // gotta be inside a .then block, otherwise will just run while outside of the
+        // evaluation cycle.
         TestUtil.addDataWidgetFromIcon('.icon-genome');
     });
 
-
-    // // Now, evaluate a data panel click to make a viewer cell
-    // casper.then(function() {
-    //     casper.thenEvaluate(function(cellIdx) {
-    //         Jupyter.notebook.select(cellIdx);
-    //         $('.kb-narr-panel-body-wrapper .icon-genome').click();
-    //     }, config.numCells-1);
-    // });
     //
     // wait a second for it to run (the utility "wait_for_output" isn't working...), but this
     // shouldn't take longer than a second.

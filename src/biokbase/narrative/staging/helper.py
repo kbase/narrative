@@ -6,7 +6,6 @@ import urllib
 import urllib2
 import json
 
-
 """
 KBase staging.helper class
 """

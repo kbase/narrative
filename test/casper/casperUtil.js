@@ -4,14 +4,15 @@ var fs = require('fs'),
     users = {},
     tokenConfigFile = 'test/unit/testConfig.json',
     testConfigFile = 'test/casper/testConfig.json',
-    tokenConfig = JSON.parse(fs.read(tokenConfigFile, 'utf8').trim()),
+    tokenConfig = JSON.parse(fs.read(tokenConfigFile).trim()),
     userId = tokenConfig.token.user,
     tokenFile = tokenConfig.token.file,
-    testConfig = JSON.parse(fs.read(testConfigFile, 'utf8').trim());
+    testConfig = JSON.parse(fs.read(testConfigFile).trim()),
+    jupyterPort = 8888; // not true. but leave it for now.
 
 // gotta munge the token file a bit to work with nodejs/ Casperjs, as opposed to Karma.
 tokenFile = tokenFile.substring(1);
-var token = fs.read(tokenFile, 'utf8').trim();
+var token = fs.read(tokenFile).trim();
 users[userId] = token;
 
 /**
@@ -66,10 +67,36 @@ function setAuthCookie(user) {
     });
 }
 
+function getNarrativeUrl(configKey) {
+    if (!testConfig[configKey]) {
+        throw new Error('Unable to build Narrative URL - unknown test config key "' + configKey + '"');
+    }
+    return 'http://localhost:' + jupyterPort + '/narrative/' + testConfig[configKey].narrativeId;
+}
+
+/**
+ * @method
+ * @public
+ * Adds a data widget to the bottom of the Narrative (the last cell) by clicking the icon in the
+ * Data panel. Really, this can be any selector relative to a Data panel card, but it should be a
+ * unique sub-selector. That selector will have a .click() applied to it.
+ */
+
+function addDataWidgetFromIcon(selector) {
+    var cardSelector = '.narrative-side-panel-content > .kb-side-tab:first-child .kb-side-separator:first-child .narrative-card-row ' + selector;
+    casper.evaluate(function(selector) {
+        var numCells = Jupyter.notebook.get_cells().length;
+        Jupyter.notebook.select(numCells-1);
+        $(selector).click();
+    }, cardSelector);
+}
+
 module.exports = {
     userId: userId,
     authToken: token,
     getWidgetConfig: getWidgetConfig,
     getUserToken: getUserToken,
-    setAuthCookie: setAuthCookie
+    setAuthCookie: setAuthCookie,
+    getNarrativeUrl: getNarrativeUrl,
+    addDataWidgetFromIcon: addDataWidgetFromIcon
 };

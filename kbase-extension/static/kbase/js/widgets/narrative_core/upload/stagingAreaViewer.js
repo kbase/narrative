@@ -208,11 +208,11 @@ define([
                             var decompressButton = '';
 
                             if (data.match(/\.(zip|tar\.gz|tgz|tar\.bz|tar\.bz2|tar|gz|bz2)$/)) {
-                              decompressButton = " <button class='btn btn-default btn-xs' style='border : 1px solid #cccccc; border-radius : 1px' data-decompress='" + data + "'><i class='fa fa-expand'></i>";
+                              decompressButton = "<button class='btn btn-default btn-xs' style='border : 1px solid #cccccc; border-radius : 1px' data-decompress='" + data + "'><i class='fa fa-expand'></i></button> ";
                             }
 
-                            return '<div class="kb-data-staging-table-name">' + data
-                              + decompressButton
+                            return '<div class="kb-data-staging-table-name">' + decompressButton
+                              + data
                             + '</div>';
                         }
                         return data;

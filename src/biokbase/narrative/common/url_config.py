@@ -1,5 +1,6 @@
 import os
 import json
+from util import kbase_env
 
 
 class Struct:
@@ -24,7 +25,10 @@ try:
     nar_path = os.environ["NARRATIVE_DIR"]
     config_json = open(os.path.join(nar_path, "src", "config.json")).read()
     config = json.loads(config_json)
-    url_config = config[config['config']]  # fun, right?
+    env = config['config']
+    kbase_env.env = env
+    url_config = config[env]  # fun, right?
+
 
     URLS = Struct(**url_config)
 except:

@@ -3,6 +3,12 @@ import socket
 from .url_config import URLS
 from .util import kbase_env
 
+# TODO:
+# * add more log events (or generalize further. don't much like using magic strings, tho)
+# * TESTS
+# * local log testing mode, for when we point this to the prod logstash
+# * include environment
+
 
 class NarrativeLogger(object):
     def __init__(self):
@@ -18,7 +24,8 @@ class NarrativeLogger(object):
         message = {
             "type": "narrative",
             "user": kbase_env.user,
-            "operation": event
+            "operation": event,
+            "env": kbase_env.env
         }
         message.update(context)
         try:

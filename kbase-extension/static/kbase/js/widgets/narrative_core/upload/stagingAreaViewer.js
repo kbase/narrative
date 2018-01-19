@@ -67,10 +67,9 @@ define([
             this.uploaders = Config.get('uploaders');
             this.userId = runtime.userId();
 
-            var self = this; // GAH I miss fat arrow functions.
+            var self = this; // GAH I miss fat arrow functions. (Me too.)
             this.authClient = Auth.make({url: Config.url('auth')});
             this.authClient.getCurrentProfile( runtime.authToken() ).then( function(res) {
-
               // check out the identities available for the user - if globus is a provider, then hang onto the user name and re-render the page.
               res.idents.forEach( function(i) {
                 if (i.provider === 'Globus') {
@@ -93,6 +92,7 @@ define([
         },
 
         updateView: function() {
+            console.log("UPDATING VIEW");
             return this.stagingServiceClient.list({path: this.subpath})
                 .then(function(data) {
                     var files = JSON.parse(data);
@@ -134,6 +134,7 @@ define([
         renderFileHeader: function() {
             this.$elem.append(this.ftpFileHeaderTmpl());
 
+            // Set up the globus link if we have a user id. Otherwise, hide it.
             if (this.globus_name) {
               var $globus_link = this.$elem.find('.globus_link');
               var href = $globus_link.attr('href');
@@ -143,6 +144,13 @@ define([
             else {
               this.$elem.find('.globus_div').remove();
             }
+
+            // Set up the link to the web upload app.
+            this.$elem.find('.web_upload_div').click(function() {
+                this.initImportApp('web_upload');
+            }.bind(this));
+
+            // Bind the help button to start the tour.
             this.$elem.find('button#help').click(function() {
                 this.startTour();
             }.bind(this));
@@ -486,19 +494,25 @@ define([
             var appInfo = this.uploaders.app_info[type];
             if (appInfo) {
                 var tag = APIUtil.getAppVersionTag(),
-                    fileParam = file.name,
+                    fileParam = file ? file.name : '',
                     inputs = {};
                 if (this.subpath) {
                     fileParam = this.subpath + '/' + file.name;
                 }
-                if (appInfo.app_input_param_type === 'list') {
+                if (appInfo.app_input_param_type && appInfo.app_input_param_type === 'list') {
                     fileParam = [fileParam];
                 }
-                inputs[appInfo.app_input_param] = fileParam;
-                inputs[appInfo.app_output_param] = file.name.replace(/\s/g, '_') + appInfo.app_output_suffix;
-                for (var p in appInfo.app_static_params) {
-                    if (appInfo.app_static_params.hasOwnProperty(p)) {
-                        inputs[p] = appInfo.app_static_params[p];
+                if (appInfo.app_input_param) {
+                    inputs[appInfo.app_input_param] = fileParam;
+                }
+                if (appInfo.app_output_param) {
+                    inputs[appInfo.app_output_param] = file.name.replace(/\s/g, '_') + appInfo.app_output_suffix;
+                }
+                if (appInfo.app_static_params) {
+                    for (var p in appInfo.app_static_params) {
+                        if (appInfo.app_static_params.hasOwnProperty(p)) {
+                            inputs[p] = appInfo.app_static_params[p];
+                        }
                     }
                 }
                 Jupyter.narrative.addAndPopulateApp(appInfo.app_id, tag, inputs);
@@ -507,8 +521,13 @@ define([
         },
 
         startTour: function() {
+            var tourStartFn = function () {
+            }
+
             if (!this.tour) {
-                this.tour = new UploadTour.Tour(this.$elem.parent());
+                this.tour = new UploadTour.Tour(
+                    this.$elem.parent(), this.globus_name, tourStartFn, this.updateView.bind(this)
+                );
             }
             this.tour.start();
         }

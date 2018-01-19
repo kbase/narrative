@@ -147,8 +147,6 @@ define([
             // Set up the link to the web upload app.
             this.$elem.find('.web_upload_div').click(function() {
                 this.initImportApp('web_upload');
-                // Jupyter.narrative.addAndPopulateApp('kb_uploadmethods/upload_web_file', 'dev');
-                // Jupyter.narrative.hideOverlay();
             }.bind(this));
 
             // Bind the help button to start the tour.

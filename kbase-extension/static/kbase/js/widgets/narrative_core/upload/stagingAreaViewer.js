@@ -92,6 +92,7 @@ define([
         },
 
         updateView: function() {
+            console.log("UPDATING VIEW");
             return this.stagingServiceClient.list({path: this.subpath})
                 .then(function(data) {
                     var files = JSON.parse(data);
@@ -520,8 +521,13 @@ define([
         },
 
         startTour: function() {
+            var tourStartFn = function () {
+            }
+
             if (!this.tour) {
-                this.tour = new UploadTour.Tour(this.$elem.parent());
+                this.tour = new UploadTour.Tour(
+                    this.$elem.parent(), this.globus_name, tourStartFn, this.updateView.bind(this)
+                );
             }
             this.tour.start();
         }

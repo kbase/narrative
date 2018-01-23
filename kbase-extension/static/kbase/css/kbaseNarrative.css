@@ -10,6 +10,31 @@
     text-overflow: ellipsis;
 }
 
+.kb-data-staging-footer {
+    font-family : "OxygenBold", Arial, sans-serif;
+    font-size : 105%;
+    text-align : center;
+    background-color : #EEEEEE;
+    height : 32px;
+    padding : 8px;
+}
+
+.kb-data-staging-metadata-list {
+  font-family : 'OxygenBold';
+  width : 115px;
+  display : inline-block;
+  font-size : 90%;
+}
+
+.kb-data-staging-metadata-file-lines {
+  white-space : pre;
+ overflow : scroll;
+ font-family : monospace;
+ font-size : 90%;
+ background-color : #DDDDDD;
+ max-height : 200px;
+}
+
 .kb-dropzone {
     border: 2px dashed #2196F3 !important;
     margin-bottom:5px;
@@ -2274,10 +2299,13 @@ button.kb-data-obj {
     width: 50px;
     margin-right: 2px;
 }
+
 .narrative-card-row-main{
     display: flex;
     align-items: center;
     width:98%;
+    margin:0px 2px;
+    padding:0px 4px;
 }
 
 .narrative-data-list-subcontent{
@@ -2343,10 +2371,7 @@ button.kb-data-obj {
     moz-box-shadow: 1px 1px 1px 1px #fff;
 
 }
-.narrative-card-row-main{
-    margin:2px;
-    padding:4px;
-}
+
 
 .kb-function-dim .kb-data-list-obj-row {
     border-left-color: #eee;
@@ -2565,9 +2590,12 @@ button.kb-data-obj {
 
 .kb-data-list-info {
     width: 80%;
-    padding: 4px 0px;
-    border-top: 1px solid #E0E0E0;
+    padding: 6px 0px;
+    min-height: 60px;
+    border-bottom: 1px solid #E0E0E0;
 }
+
+
 .kb-data-list-name {
     color:#2e618d;
     font-size: 11pt;
@@ -2692,6 +2720,7 @@ button.kb-data-obj {
     text-align: left;
     margin: 2px;
     padding-left: 8px;
+    word-break: break-all;
 }
 .kb-data-list-job-name:hover {
     text-decoration: none;

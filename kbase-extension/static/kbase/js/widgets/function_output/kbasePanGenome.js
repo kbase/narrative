@@ -36,7 +36,11 @@ define([
 
         init: function(options) {
             this._super(options);
-            this.objRef = this.options.ws + '/' + this.options.name;
+            if (this.options.name.indexOf('/') > -1) {
+                this.objRef = this.options.name;
+            } else {
+                this.objRef = this.options.ws + '/' + this.options.name;
+            }
             if (!ApiUtil.checkObjectRef(this.objRef)) {
                 this.$elem.append(Display.createError('Bad object.', 'PanGenome Object Unavailable.'));
                 this.isError = true;

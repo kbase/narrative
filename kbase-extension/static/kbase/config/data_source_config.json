@@ -70,7 +70,6 @@
                 },
                 {
                     "name": [
-                        "ContigSet",
                         "Assembly"
                     ],
                     "displayName": "Example Assemblies",
@@ -166,7 +165,6 @@
                 },
                 {
                     "name": [
-                        "ContigSet",
                         "Assembly"
                     ],
                     "displayName": "Example Assemblies",
@@ -274,7 +272,6 @@
                 },
                 {
                     "name": [
-                        "ContigSet",
 			"Assembly"
                     ],
                     "displayName": "Example Assemblies",
@@ -370,7 +367,6 @@
                 },
                 {
                     "name": [
-                        "ContigSet",
                         "Assembly"
                     ],
                     "displayName": "Example Assemblies",

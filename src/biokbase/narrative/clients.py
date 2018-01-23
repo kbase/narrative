@@ -31,7 +31,7 @@ def __init_client(client_name):
         c = UserAndJobState(URLS.user_and_job_state)
     elif client_name == 'catalog':
         c = Catalog(URLS.catalog)
-    elif client_name == 'service':
+    elif client_name == 'service' or client_name == 'service_wizard':
         c = ServiceClient(URLS.service_wizard, use_url_lookup=True)
 
     else:

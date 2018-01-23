@@ -39,11 +39,13 @@
     text-align: right;
     color: #999;
     white-space: nowrap;
-}
 
-.kb-error .kblog-line-num {
-    color: #F00;
-    font-weight: bold;
+    /* makes text unselectabe */
+    -moz-user-select: -moz-none;
+    -khtml-user-select: none;
+    -webkit-user-select: none;
+    -o-user-select: none;
+    user-select: none;
 }
 
 .kblog-text {
@@ -52,9 +54,15 @@
     margin-left: 6px;
 }
 
-.kb-error {
-    background-color: rgba(200, 0, 0, 0.2);
-    color: #660000;
+.kb-error, .kb-error .kblog-line-num  {
+    color: darkred;
+    text-decoration: underline;
+    text-decoration-style: solid;
+    text-decoration-color: red;
+    font-weight: bold;
+    font-size: 12px;
+    background-color: rgb(255, 245, 245);
+
 }
 
 #kblog-msg {
@@ -63,5 +71,5 @@
 
 #kblog-err {
     margin-top: 5px;
-    color: #660000;
+    /* color: #660000; */
 }

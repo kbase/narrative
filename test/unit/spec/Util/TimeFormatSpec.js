@@ -35,6 +35,69 @@ define ([
             expect(d).toBe('2 days ago');
         });
 
+        it('getTimeStampStr should return a fuzzy relative time string @ 2 days 2 hours', function() {
+            var prevDay = new Date();
+            prevDay.setDate(prevDay.getDate()-2);
+            prevDay.setHours(prevDay.getHours()-2);
+            var d = TF.getTimeStampStr(prevDay, false);
+            expect(d).toBe('2 days ago');
+        });
+
+        it('getTimeStampStr should return a fuzzy relative time string @ 1 day', function() {
+            var prevDay = new Date();
+            prevDay.setDate(prevDay.getDate()-1);
+            var d = TF.getTimeStampStr(prevDay, false);
+            expect(d).toBe('1 day ago');
+        });
+
+        it('getTimeStampStr should return a fuzzy relative time string @ 1 hour', function() {
+            var prevDay = new Date();
+            prevDay.setHours(prevDay.getHours()-1);
+            var d = TF.getTimeStampStr(prevDay, false);
+            expect(d).toBe('1 hour ago');
+        });
+
+        it('getTimeStampStr should return a fuzzy relative time string @ 1 minute', function() {
+            var prevDay = new Date();
+            prevDay.setMinutes(prevDay.getMinutes()-1);
+            var d = TF.getTimeStampStr(prevDay, false);
+            expect(d).toBe('1 minute ago');
+        });
+
+        it('getShortTimeStampStr should properly output an exact time string', function() {
+            var d = TF.getShortTimeStampStr(testISOTime, true);
+            expect(d).toBe(testExactDayStr);
+        });
+
+        it('getShortTimeStampStr should return a fuzzy relative time string [ 2 mons ]', function() {
+            var prevDay = new Date();
+            prevDay.setMonth(prevDay.getMonth()-2);
+            var d = TF.getShortTimeStampStr(prevDay, false);
+            expect(d).toBe('2 mons');
+        });
+
+        it('getShortTimeStampStr should return a fuzzy relative time string [ 1 hr ]', function() {
+            var prevDay = new Date();
+            prevDay.setHours(prevDay.getHours()-1);
+            var d = TF.getShortTimeStampStr(prevDay, false);
+            expect(d).toBe('1 hr');
+        });
+
+        it('getShortTimeStampStr should return a fuzzy relative time string [ 3 mins ]', function() {
+            var prevDay = new Date();
+            prevDay.setSeconds(prevDay.getSeconds()-5);
+            var d = TF.getShortTimeStampStr(prevDay, false);
+            expect(d).toBe('5 secs');
+        });
+
+        it('getShortTimeStampStr should return a fuzzy relative time string [ 5 secs ]', function() {
+            var prevDay = new Date();
+            prevDay.setMinutes(prevDay.getMinutes()-3);
+            var d = TF.getShortTimeStampStr(prevDay, false);
+            expect(d).toBe('3 mins');
+        });
+
+
         it('parseDate should properly parse an ISO date string', function() {
             var d = TF.parseDate(testISOTime);
             expect(d).toEqual(jasmine.any(Object));

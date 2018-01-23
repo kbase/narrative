@@ -5,7 +5,7 @@ define([
     'jquery',
     'kb_common/html',
     'kb_common/utils',
-    'api/fileStaging',
+    'StagingServiceClient',
     'kb_service/utils',
     'common/validation',
     'common/events',
@@ -22,7 +22,7 @@ define([
     $,
     html,
     utils,
-    FileStaging,
+    StagingServiceClient,
     serviceUtils,
     Validation,
     Events,
@@ -30,7 +30,8 @@ define([
     UI,
     Data,
     TimeFormat,
-    StringUtil) {
+    StringUtil
+) {
     'use strict';
 
     // Constants
@@ -53,8 +54,11 @@ define([
             model = {
                 value: undefined
             },
-            fileStaging = new FileStaging(runtime.config('services.ftp_api_url.url'),
-                runtime.userId(), {token: runtime.authToken()}),
+            stagingService = new StagingServiceClient({
+                root: runtime.config('services.staging_api_url.url'),
+                token: runtime.authToken()
+            }),
+            userId = runtime.userId(),
             eventListeners = [];
 
         function makeInputControl() {
@@ -74,13 +78,19 @@ define([
         // CONTROL
         function getControlValue() {
             var control = ui.getElement('input-container.input'),
-                selected = control.selectedOptions;
-            if (selected.length === 0) {
-                return;
+                selected = $(control).select2('data')[0];
+            if (!selected || !selected.subpath) {
+                // might have just started up, and we don't have a selection value, but
+                // we might have a model value.
+                var modelVal = getModelValue();
+                if (modelVal) {
+                    return modelVal;
+                }
+                else {
+                    return '';
+                }
             }
-            // we are modeling a single string value, so we always just get the
-            // first selected element, which is all there should be!
-            return selected.item(0).value;
+            return selected.subpath;
         }
 
         /**
@@ -120,6 +130,7 @@ define([
 
         function validate() {
             return Promise.try(function() {
+
                 var selectedItem = getControlValue(),
                     validationConstraints = {
                         min_length: spec.data.constraints.min_length,
@@ -133,7 +144,19 @@ define([
         function fetchData(searchTerm) {
             searchTerm = searchTerm || '';
             if (dataSource === 'ftp_staging') {
-                return fileStaging.search(searchTerm);
+                return Promise.resolve(stagingService.search({query: searchTerm}))
+                    .then(function(results) {
+                        results = JSON.parse(results).filter(function(file) {
+                            return !file.isFolder;
+                        });
+                        results.forEach(function(file) {
+                            file.text = file.path;
+                            file.subdir = file.path.substring(0, file.path.length - file.name.length);
+                            file.subpath = file.path.substring(userId.length + 1);
+                            file.id = file.subpath;
+                        });
+                        return results;
+                    });
             } else {
                 // dynamic service plugin stubs!
                 return [];
@@ -144,9 +167,10 @@ define([
             validate()
                 .then(function(result) {
                     if (result.isValid) {
-                        model.value = result.parsedValue;
+                        var newValue = result.parsedValue === undefined ? result.value : result.parsedValue;
+                        model.value = newValue;
                         channel.emit('changed', {
-                            newValue: result.parsedValue
+                            newValue: newValue
                         });
                     } else if (result.diagnosis === 'required-missing') {
                         model.value = spec.data.nullValue;
@@ -206,17 +230,13 @@ define([
                         if (!object.id) {
                             return object.text;
                         }
-                        return object.id; //model.availableValues[object.id].path;
+                        return object.id;
                     },
                     ajax: {
                         delay: 250,
                         transport: function(params, success, failure) {
                             return fetchData(params.data.term)
                                 .then(function(data) {
-                                    data.forEach(function(file) {
-                                        file.id = file.path;
-                                        file.text = file.path;
-                                    });
                                     success({results: data});
                                 })
                                 .catch(function(err) {

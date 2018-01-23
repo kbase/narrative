@@ -14,13 +14,12 @@ class NarrativeLogger(object):
     def __init__(self):
         self.host = URLS.log_host
         self.port = URLS.log_port
-        self._open_socket()
-
-    def _open_socket(self):
-        self._log_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self._log_socket.connect((self.host, self.port))
 
     def _log_event(self, event, context):
+        # If there's no log host, do nothing
+        if self.host is None:
+            return
+
         message = {
             "type": "narrative",
             "user": kbase_env.user,
@@ -28,13 +27,14 @@ class NarrativeLogger(object):
             "env": kbase_env.env
         }
         message.update(context)
+        log_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
-            self._log_socket.sendall(json.dumps(message) + "\n")
+            log_socket.connect((self.host, self.port))
+            log_socket.sendall(json.dumps(message) + "\n")
         except:
-            # assume the socket's dead. re-init and try again. Just once, though.
-            self._log_socket.close()
-            self._open_socket()
-            self._log_event(event, context)
+            pass  # just bomb out silently. We can lose a log or two.
+        finally:
+            log_socket.close()
 
     def narrative_open(self, narrative, version):
         self._log_event("open", {"narrative": narrative, "narr_ver": version})

@@ -42,7 +42,7 @@ class _KBaseEnv(object):
                  'client_ip': '0.0.0.0',
                  'user': 'anonymous',
                  'workspace': 'none',
-                 'env': 'ci'}
+                 'env': 'none'}
 
     def __getattr__(self, name):
         ename = "env_" + name

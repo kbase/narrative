@@ -155,10 +155,14 @@ define([
                     var setupData = payload.data;
                     var jupyterCellType = payload.type;
 
+                    if (setupData.type === 'app2') {
+                        setupData.type = 'app';
+                    }
+
                     if (jupyterCellType !== 'code' ||
-                        !setupData || 
-                        !(setupData.type === 'app2' || 
-                          setupData.type === 'app')) {
+                        !setupData ||
+                        !(setupData.type === 'app'  ||
+                          setupData.type === 'devapp')) {
                         return;
                     }
 
@@ -166,7 +170,7 @@ define([
                         cell: cell,
                         workspaceInfo: workspaceInfo
                     });
-                    appCell.upgradeToAppCell(setupData.appSpec, setupData.appTag)
+                    appCell.upgradeToAppCell(setupData.appSpec, setupData.appTag, setupData.type)
                         .catch(function(err) {
                             console.error('ERROR creating cell', err);
                             Jupyter.notebook.delete_cell(Jupyter.notebook.find_cell_index(cell));

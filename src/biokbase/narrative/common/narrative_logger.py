@@ -3,6 +3,10 @@ import socket
 from .url_config import URLS
 from .util import kbase_env
 
+"""
+A simple ELK stack logger for a few Narrative events.
+"""
+
 # TODO:
 # * add more log events (or generalize further. don't much like using magic strings, tho)
 # * TESTS
@@ -11,20 +15,28 @@ from .util import kbase_env
 
 
 class NarrativeLogger(object):
+    """
+    This is a very simple logger that talks to Elastic search.
+    It's initialized from the internally configured log host and port, along with
+    the environment it uses. On each log event, it opens a socket to Elastic, writes a
+    JSON packet, then closes off the socket. If there's any errors while writing, it just
+    ignores them and moves on - if we lose a log or two, it's not a big deal.
+    """
     def __init__(self):
         self.host = URLS.log_host
         self.port = URLS.log_port
+        self.env = kbase_env.env
 
     def _log_event(self, event, context):
         # If there's no log host, do nothing
-        if self.host is None:
+        if self.host is None or self.port is None:
             return
 
         message = {
             "type": "narrative",
             "user": kbase_env.user,
             "operation": event,
-            "env": kbase_env.env
+            "env": self.env
         }
         message.update(context)
         log_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

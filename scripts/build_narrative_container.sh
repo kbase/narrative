@@ -7,9 +7,9 @@ DS=$( date +%Y%m%d%H%M )
 NAR_NAME="kbase/narrative"
 HEADLESS_NAME="kbase/narrative_headless"
 NAR_BASE="kbase/narrbase"
-NAR_BASE_VER="4.7"
+NAR_BASE_VER="4.8"
 NAR_PREREQ="kbase/narrprereq"
-NAR_PREREQ_VER="1.2"
+NAR_PREREQ_VER="1.3"
 WEBROOT_DIR="/kb/deployment/services/kbase-ui"
 DOCKERFILE_HEADLESS="Dockerfile_headless"
 
@@ -59,7 +59,7 @@ docker images |grep "^$NAR_PREREQ "|grep " $NAR_PREREQ_VER " > /dev/null
 
 if [ $? -eq 1 ] ; then
     echo "Prereq image not found! Building..."
-    docker build -q -t $NAR_PREREQ:$NAR_PREREQ_VER narrprereq-image/
+    docker build --no-cache -q -t $NAR_PREREQ:$NAR_PREREQ_VER narrprereq-image/
 fi
 
 # Make sure the base image is there. If not, build it.

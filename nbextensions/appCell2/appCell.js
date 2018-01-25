@@ -42,7 +42,9 @@ define([
         if (!cell.metadata.kbase) {
             return false;
         }
-        if (cell.metadata.kbase.type === 'app2' || cell.metadata.kbase.type === 'app') {
+        if (cell.metadata.kbase.type === 'app2' ||
+            cell.metadata.kbase.type === 'app' ||
+            cell.metadata.kbase.type === 'devapp') {
             return true;
         }
         return false;
@@ -228,48 +230,53 @@ define([
             });
         }
 
-        function upgradeToAppCell(appSpec, appTag) {
+        /**
+         * appSpec = the appSpec structure
+         * appTag = a string, one of 'release', 'beta', 'dev'
+         * appType = a string, typically 'app', also 'devapp' for spec edit mode.
+         */
+        function upgradeToAppCell(appSpec, appTag, appType) {
             return Promise.try(function() {
-                    // Create base app cell
+                // Create base app cell
 
-                    // TODO: this should capture the entire app spec, so don't need
-                    // to carry appSpec around.
-                    spec = Spec.make({
-                        appSpec: appSpec
-                    });
+                // TODO: this should capture the entire app spec, so don't need
+                // to carry appSpec around.
+                spec = Spec.make({
+                    appSpec: appSpec
+                });
 
-                    var meta = {
-                        kbase: {
-                            type: 'app',
-                            attributes: {
-                                id: new Uuid(4).format(),
-                                status: 'new',
-                                created: (new Date()).toUTCString()
+                var meta = {
+                    kbase: {
+                        type: appType,
+                        attributes: {
+                            id: new Uuid(4).format(),
+                            status: 'new',
+                            created: (new Date()).toUTCString()
+                        },
+                        appCell: {
+                            app: {
+                                id: appSpec.info.id,
+                                gitCommitHash: appSpec.info.git_commit_hash,
+                                version: appSpec.info.ver,
+                                tag: appTag,
+                                // TODO: remove the spec from the cell metadata
+                                spec: appSpec
                             },
-                            appCell: {
-                                app: {
-                                    id: appSpec.info.id,
-                                    gitCommitHash: appSpec.info.git_commit_hash,
-                                    version: appSpec.info.ver,
-                                    tag: appTag,
-                                    // TODO: remove the spec from the cell metadata
-                                    spec: appSpec
-                                },
-                                params: null,
-                                output: {
-                                    byJob: {}
-                                }
+                            params: null,
+                            output: {
+                                byJob: {}
                             }
                         }
-                    };
-                    cell.metadata = meta;
+                    }
+                };
+                cell.metadata = meta;
 
-                    // Add the params
-                    utils.setCellMeta(cell, 'kbase.appCell.params', spec.makeDefaultedModel());
-                    // initializeParams(appSpec);
-                    // Complete the cell setup.
-                    return setupCell();
-                })
+                // Add the params
+                utils.setCellMeta(cell, 'kbase.appCell.params', spec.makeDefaultedModel());
+                // initializeParams(appSpec);
+                // Complete the cell setup.
+                return setupCell();
+            })
                 .then(function(cellStuff) {
                     // Initialize the cell to its default state.
                     // cellStuff.bus.emit('reset-to-defaults');

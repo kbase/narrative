@@ -1233,8 +1233,8 @@ div#notebook_panel {
     height: 100%;
 }
 .kb-narr-panel-body-wrapper {
-    height: calc(100% - 40px);
-    padding: 3px;
+    overflow-y: auto;
+    height: 100%;
 }
 .kb-narr-panel-body-wrapper > div{
     height: 100%;
@@ -2720,6 +2720,7 @@ button.kb-data-obj {
     text-align: left;
     margin: 2px;
     padding-left: 8px;
+    word-break: break-all;
 }
 .kb-data-list-job-name:hover {
     text-decoration: none;

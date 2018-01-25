@@ -414,7 +414,6 @@ define (
                     n_results = results['num_found'];
                     showViewInfo(results['start'], features.length, results['num_found']);
                     showPaginate(results['num_found']);
-                    console.log('here');
                     if(hasFunc) {
                         $table.find('.feature-tbl-function').css('width',BIG_COL_WIDTH);
                     } else {
@@ -1597,6 +1596,9 @@ define (
 
 
             function showGene(featureData) {
+                if (featureData['feature_array'] === null){
+                    featureData['feature_array'] = 'features'
+                }
                 var fid = featureData['feature_id'];
                 var $div = openTabGetId(fid);
                 if ($div === null) {
@@ -1735,6 +1737,7 @@ define (
                         .get_genome_v1({ 
                             genomes: [{
                                 ref: genome_ref,
+                                feature_array: featureData['feature_array'],
                                 included_feature_position_index: [featureData['feature_idx']]
                             }]
                         })

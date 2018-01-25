@@ -11,19 +11,17 @@ define([
 ], function($, Jupyter, Tour, Handlebars, TourTmpl) {
     'use strict';
 
-    var UploadTour = function ($elem, notebook, events) {
+    var UploadTour = function ($elem, useGlobus, tourStartFn, tourEndFn) {
         var that = this;
         this.$elem = $elem;
-        this.notebook = notebook;
         this.step_duration = 0;
-        this.events = events;
         this.template = Handlebars.compile(TourTmpl);
         this.tour_steps = [
             {
-                title: 'Data Staging Tour',
+                title: 'Data Upload and Import Tour',
                 placement: 'bottom',
                 orphan: true,
-                content: 'This tour shows how to use the Staging panel to upload data files and import them into your Narrative as KBase data objects.',
+                content: 'This tour shows how to use the Import panel to upload data files and import them into your Narrative as KBase data objects.',
                 backdrop: true
             },
             {
@@ -31,6 +29,18 @@ define([
                 placement: 'bottom',
                 element: that.$elem.find('.kb-dropzone'),
                 content: 'Drag and drop files here, or click within the boundary to select multiple files to upload. Uploads start immediately, and once finished, will be reflected in the file list below.'
+            },
+            {
+                title: 'Globus Upload',
+                placement: 'bottom',
+                element: that.$elem.find('.globus_div > a'),
+                content: 'Click here to use Globus Online to upload your files. Clicking this link will open the Globus Online file transfer page, already linked your directory in KBase.'
+            },
+            {
+                title: 'Web Upload',
+                placement: 'bottom',
+                element: that.$elem.find('.web_upload_div > a'),
+                content: 'Click here to add an App to your Narrative that will walk you through uploading files from a publically accessible website, FTP, Dropbox, or Google Drive.'
             },
             {
                 title: 'Staging Path',
@@ -64,6 +74,11 @@ define([
             }
         ];
 
+        // remove the globus step if we're not using it.
+        if (!useGlobus) {
+            this.tour_steps.splice(2, 1);
+        }
+
         this.tour = new Tour({
             storage: false, // start tour from beginning every time
             debug: true,
@@ -72,9 +87,14 @@ define([
             duration: this.step_duration,
             onPause: this.toggle_pause_play,
             onResume: this.toggle_pause_play,
+            // onStart: tourStartFn,
+            // onEnd: tourEndFn,
             steps: this.tour_steps,
             template: function(i, step) {
-                return that.template({step: (i+1), totalSteps: that.tour_steps.length});
+                return that.template({
+                    step: (i+1),
+                    totalSteps: that.tour_steps.length
+                });
             },
             orphan: true
         });

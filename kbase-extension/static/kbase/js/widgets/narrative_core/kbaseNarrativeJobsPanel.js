@@ -434,7 +434,6 @@ define([
 
             case 'job_logs':
                 var jobId = msg.content.data.content.job_id;
-
                 this.sendJobMessage('job-logs', jobId, {
                     jobId: jobId,
                     logs: msg.content.data.content,

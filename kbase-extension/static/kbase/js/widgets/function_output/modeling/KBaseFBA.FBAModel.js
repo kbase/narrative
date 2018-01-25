@@ -242,7 +242,6 @@ function KBaseFBA_FBAModel(modeltabs) {
 
     this.ReactionTab = function (info) {
         var rxn = self.rxnhash[info.id];
-        console.log(rxn)
 		var output = [{
 			"label": "Reaction",
 			"data": rxn.dispid,

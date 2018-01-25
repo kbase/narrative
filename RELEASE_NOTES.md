@@ -10,11 +10,12 @@ This is built on the Jupyter Notebook v4.4.1 (more notes will follow).
   - Adds a link to create an app for uploading from a public URL into the staging area.
   - Cleans up unclear text in the new Import panel.
   - Adds new (hopefully informative) steps to the Import panel tour.
-- PTV-225 - Add more icon clarity to the data sorting options
-- PTV-886 - Restore missing scrollbar in the Narratives panel
-- KBASE-5410 - Improve job log viewer, add different
-- SCT-291 - Initial addition of tools for programmatically accessing the FTP file staging area
-- SCT-405 - Custom compounds will now display properly in the media viewer
+  - Move the 'decompress file' button so it should always be visible for archives.
+- PTV-225 - Add more icon clarity to the data sorting options.
+- PTV-886 - Restore missing scrollbar in the Narratives panel.
+- KBASE-5410 - Improve job log viewer, add different.
+- SCT-291 - Initial addition of tools for programmatically accessing the FTP file staging area.
+- SCT-405 - Custom compounds will now display properly in the media viewer.
 - KBASE-5417 - Fix long strings not wrapping correctly when showing object metadata in the Data panel.
 
 

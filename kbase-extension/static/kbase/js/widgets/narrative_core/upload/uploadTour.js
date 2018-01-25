@@ -78,7 +78,6 @@ define([
         if (!useGlobus) {
             this.tour_steps.splice(2, 1);
         }
-        console.log("BUILDING NEW TOUR");
 
         this.tour = new Tour({
             storage: false, // start tour from beginning every time

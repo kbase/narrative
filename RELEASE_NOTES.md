@@ -3,6 +3,21 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v4.4.1 (more notes will follow).
 
+### Version 3.6.0
+- SCT-400 - Deprecates the old Import panel, change text from "Staging (beta)" -> "Import (new)"
+- SCT-417
+  - All older Import functionality should now be available in the new Import panel.
+  - Adds a link to create an app for uploading from a public URL into the staging area.
+  - Cleans up unclear text in the new Import panel.
+  - Adds new (hopefully informative) steps to the Import panel tour.
+  - Move the 'decompress file' button so it should always be visible for archives.
+- PTV-225 - Add more icon clarity to the data sorting options.
+- PTV-886 - Restore missing scrollbar in the Narratives panel.
+- KBASE-5410 - Improve job log viewer, add different.
+- SCT-291 - Initial addition of tools for programmatically accessing the FTP file staging area.
+- SCT-405 - Custom compounds will now display properly in the media viewer.
+- KBASE-5417 - Fix long strings not wrapping correctly when showing object metadata in the Data panel.
+
 
 ### Version 3.5.2
 - PTV-682 - Fix problem with rendering a Pangenome widget in a copied Narrative.

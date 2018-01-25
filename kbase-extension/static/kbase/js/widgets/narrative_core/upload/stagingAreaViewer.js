@@ -92,7 +92,6 @@ define([
         },
 
         updateView: function() {
-            console.log("UPDATING VIEW");
             return this.stagingServiceClient.list({path: this.subpath})
                 .then(function(data) {
                     var files = JSON.parse(data);

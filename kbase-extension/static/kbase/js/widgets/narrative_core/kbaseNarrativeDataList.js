@@ -1410,8 +1410,21 @@ define([
                 .on('click', function () {
                     self.reverseData();
                     self.sortOrder *= -1;
-                    $upOrDown.find('.fa').toggleClass('fa-sort-amount-desc fa-sort-amount-asc');
+                    var $icon = $upOrDown.find('.fa');
+                    if ($icon.is('.fa-sort-amount-desc,.fa-sort-amount-asc')) {
+                        $icon.toggleClass('fa-sort-amount-desc fa-sort-amount-asc');
+                    }
+                    else {
+                        $icon.toggleClass('fa-sort-alpha-desc fa-sort-alpha-asc');
+                    }
                 });
+
+            var setSortIcon = function(newIcon) {
+                $upOrDown
+                    .find('.fa')
+                    .removeClass()
+                    .addClass('fa ' + newIcon);
+            }
 
             var $byDate = $('<label id="nar-data-list-default-sort-label" class="btn btn-default">').addClass('btn btn-default')
                 .append($('<input type="radio" name="options" id="nar-data-list-default-sort-option" autocomplete="off">'))
@@ -1421,6 +1434,7 @@ define([
                         return self.sortOrder * self.dataObjects[a.objId].info[3]
                             .localeCompare(self.dataObjects[b.objId].info[3]);
                     });
+                    setSortIcon(self.sortOrder > 0 ? 'fa-sort-amount-desc' : 'fa-sort-amount-asc');
                 });
 
             var $byName = $('<label class="btn btn-default">')
@@ -1431,6 +1445,7 @@ define([
                         return -1 * self.sortOrder * self.dataObjects[a.objId].info[1].toUpperCase()
                             .localeCompare(self.dataObjects[b.objId].info[1].toUpperCase());
                     });
+                    setSortIcon(self.sortOrder > 0 ? 'fa-sort-alpha-desc' : 'fa-sort-alpha-asc');
                 });
 
             var $byType = $('<label class="btn btn-default">')
@@ -1442,6 +1457,7 @@ define([
                         var bType = self.dataObjects[b.objId].info[2].toUpperCase().match(/\.(.+)/)[1];
                         return -1 * self.sortOrder * aType.localeCompare(bType);
                     });
+                    setSortIcon(self.sortOrder > 0 ? 'fa-sort-alpha-desc' : 'fa-sort-alpha-asc');
                 });
 
 

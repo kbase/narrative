@@ -56,23 +56,22 @@ define(
             init: function(options) {
                 this._super(options);
                 var analysisWidgets = this.buildPanelSet([{
-                        name: 'kbaseNarrativeDataPanel',
-                        params: {
-                            collapseCallback: $.proxy(function(isMinimized) {
-                                this.handleMinimizedDataPanel(isMinimized);
-                            }, this)
-                        }
-                    },
-                    {
-                        name: 'kbaseNarrativeAppPanel',
-                        params: {
-                            autopopulate: false,
-                            collapseCallback: $.proxy(function(isMinimized) {
-                                this.handleMinimizedMethodPanel(isMinimized);
-                            }, this)
-                        }
+                    name: 'kbaseNarrativeDataPanel',
+                    params: {
+                        collapseCallback: $.proxy(function(isMinimized) {
+                            this.handleMinimizedDataPanel(isMinimized);
+                        }, this)
                     }
-                ]);
+                },
+                {
+                    name: 'kbaseNarrativeAppPanel',
+                    params: {
+                        autopopulate: false,
+                        collapseCallback: $.proxy(function(isMinimized) {
+                            this.handleMinimizedMethodPanel(isMinimized);
+                        }, this)
+                    }
+                }]);
                 this.$dataWidget = analysisWidgets['kbaseNarrativeDataPanel'];
                 this.$methodsWidget = analysisWidgets['kbaseNarrativeAppPanel'];
 
@@ -94,17 +93,16 @@ define(
                 var $jobsPanel = jobsWidget['panelSet'];
 
                 this.$tabs = this.buildTabs([{
-                        tabName: 'Analyze',
-                        content: $analysisPanel
-                    },
-                    {
-                        tabName: 'Narratives',
-                        content: $managePanel
-                    },
-                    // {
-                    //     tabName : this.$jobsWidget.title,
-                    //     content: $jobsPanel
-                    // }
+                    tabName: 'Analyze',
+                    content: $analysisPanel
+                }, {
+                    tabName: 'Narratives',
+                    content: $managePanel
+                },
+                // {
+                //     tabName : this.$jobsWidget.title,
+                //     content: $jobsPanel
+                // }
                 ], true);
 
                 this.$elem.addClass('kb-side-panel');
@@ -129,10 +127,7 @@ define(
 
                 if (this.autorender) {
                     this.render();
-                } else {
-
                 }
-
 
                 return this;
             },
@@ -404,11 +399,9 @@ define(
                 this.$jobsWidget.setHeight(fullSize);
             },
 
-
             render: function() {
                 this.initOverlay();
-                // this.$methodsWidget.refreshFromService();
             }
 
-        })
+        });
     });

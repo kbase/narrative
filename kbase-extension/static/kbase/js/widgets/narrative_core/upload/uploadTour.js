@@ -34,7 +34,7 @@ define([
                 title: 'Globus Upload',
                 placement: 'bottom',
                 element: that.$elem.find('.globus_div > a'),
-                content: 'Click here to use Globus Online to upload your files. Clicking this link will open the Globus Online file transfer page, already linked your directory in KBase.'
+                content: 'Click here to use Globus Online to upload your files. Clicking this link will open the Globus Online file transfer page, pointing to your directory in KBase.'
             },
             {
                 title: 'Web Upload',

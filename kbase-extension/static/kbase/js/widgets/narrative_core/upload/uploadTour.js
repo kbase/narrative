@@ -70,7 +70,7 @@ define([
                 title: 'End of Tour',
                 orphan: true,
                 backdrop: true,
-                content: 'This concludes the tour of the data staging tools. If you have any questions, please follow the "Contact Us" link in the menu at the top left of the Narrative.'
+                content: 'This concludes the tour of the data staging tools. If you have any questions, please follow the "Contact Us" link in the Help menu near the top right of the Narrative.'
             }
         ];
 

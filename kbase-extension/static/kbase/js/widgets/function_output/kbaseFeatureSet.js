@@ -158,7 +158,7 @@ define (
                                     var aliases = "None";
                                     if (g.features[f].aliases && g.features[f].aliases.length>0){
                                         if (g.features[f].aliases[0] instanceof Array){
-                                            g.features[f].aliases = g.features[f].aliases.map(x => x[1]);
+                                            g.features[f].aliases = g.features[f].aliases.map(function(x) { return x[1]; });
                                         }
                                         aliases= g.features[f].aliases.join(', ');
                                     }

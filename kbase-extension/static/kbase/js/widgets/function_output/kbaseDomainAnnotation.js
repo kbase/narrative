@@ -27,7 +27,7 @@ define (
     return KBWidget({
         name: 'kbaseDomainAnnotation',
         parent : kbaseAuthenticatedWidget,
-        version: '1.0.3',
+        version: '1.0.4',
         options: {
             domainAnnotationID: null,
             workspaceID: null,
@@ -208,7 +208,7 @@ define (
 			$.each(self.prefixToURL, function(prefix,url) {
 			    if (domainID.match(prefix)) {
 				self.accessionToPrefix[domainID] = prefix;
-				domainRef += ' <small><a href="'+url+domainID+'" target="_blank">(more&nbsp;info)</a></small>';
+				domainRef += ' <small><a href="'+url+domainID.replace(prefix,"")+'" target="_blank">(more&nbsp;info)</a></small>';
 				return false;
 			    }
 			});
